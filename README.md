@@ -36,13 +36,13 @@ Number of planets in the model
     Planet2   5  900.0   25000.0  126.0  150.0    0.20 1.0
 For each planet:
 
-* Number of parameters (3 for circular orbit, 5 for eccentric one)
+Number of parameters (3 for circular orbit, 5 for eccentric one)
 
-* Lower and upper limits on Period (in days)
+Lower and upper limits on Period (in days)
 
-* Lower and upper limits on K semi-amplitude (m/s)
+Lower and upper limits on K semi-amplitude (m/s)
 
-* Lower and upper limits on eccentricity (not read if first parameter is 3)
+Lower and upper limits on eccentricity (not read if first parameter is 3)
 
 
 
