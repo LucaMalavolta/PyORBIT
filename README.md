@@ -40,12 +40,13 @@ For each planet:
   * Lower and upper limits on K semi-amplitude (m/s)
   * Lower and upper limits on eccentricity (not read if first parameter is 3)
 
+
     Prot      4    7.83     8.00
 Use 4 to include sinusoidal modeling of activity , 0 otherwise
   Lower and upper limits on rotational period of the star (days)
 
     Nperiods  3
-Use this to split the full observational range in several "periods"_
+Use this to split the full observational range in several "periods"
 
     Period0  6300 6600
     Period1  6600 6900
@@ -53,8 +54,8 @@ Use this to split the full observational range in several "periods"_
 Lower and upper limits of each temporal "period" (here BJD-2450000.0 following the convention in the datasets_
 
     Spec_dataset 2 2 1
-The first parameter is the number of spectroscopic datasets in Input_RV_
-  Then for each dataset the number of harmonics to be used to correct for activity_
+The first parameter is the number of spectroscopic datasets in Input_RV
+  Then for each dataset the number of harmonics to be used to correct for activity
 
     Phase_coherence 0
 Turn on if you want all the harmonics to be at the same phase
