@@ -1,5 +1,5 @@
 # PyORBIT
-PyORBIT_MultiPhase*.py files are from the old version of the code (the one used in Malavolta et al. 2016)\
+PyORBIT_MultiPhase*.py files are from the old version of the code (the one used in Malavolta et al. 2016)/
 The main program is in PyORBIT_MultiPhase_Sinfit.py
 
 You can start it by executing in a terminal:
@@ -15,49 +15,30 @@ I'm working on a new version (PyORBIT_V2*.py) with the same functionalities but 
 This is a brief guide on how to write the file requested at PyORBIT  file (see OC102_HT_Act_2pEE.config in the example directory) for V1 of PyORBIT:
 (OC102 is just the GAPS name of Pr0211)
 
-Name      OC102
+    Name      OC102
+Name of the star
+    Input_RV  Py_OC102_RV.dat
+File with all the radial velocities from different instruments
+    Input_P1  Py_OC102_PH_B.dat
+First photometry dataset
+    Input_P2  Py_OC102_PH_R.dat
+Second photometry dataset
+    Output    OC102_HT_Act_2pEE
+String pre-pended to output files
+    Nplanets  2
+Number of planets in the model
+    Planet1   5    2.14     2.15  300.0  317.0    0.00 0.4
+    Planet2   5  900.0   25000.0  126.0  150.0    0.20 1.0
+For each planet:
+  * Number of parameters (3 for circular orbit, 5 for eccentric one)
+  * Lower and upper limits on Period (in days)
+  * Lower and upper limits on K semi-amplitude (m/s)
+  * Lower and upper limits on eccentricity (not read if first parameter is 3)
 
-  _Name of the star_
+  Prot      4    7.83     8.00
 
-Input_RV  Py_OC102_RV.dat
-
-  _File with all the radial velocities from different instruments_
-
-Input_P1  Py_OC102_PH_B.dat
-
-  _First photometry dataset_
-
-Input_P2  Py_OC102_PH_R.dat
-
-  _Second photometry dataset_
-
-Output    OC102_HT_Act_2pEE
-
-  _String pre-pended to output files_
-
-Nplanets  2
-
-  _Number of planets in the model_
-
-Planet1   5    2.14     2.15  300.0  317.0    0.00 0.4
-
-Planet2   5  900.0   25000.0  126.0  150.0    0.20 1.0
-
-  _For each planet:
-
-    _Number of parameters (3 for circular orbit, 5 for eccentric one)_
-
-    _Lower and upper limits on Period (in days)_
-
-    _Lower and upper limits on K semi-amplitude (m/s)_
-
-    _Lower and upper limits on eccentricity (not read if first parameter is 3)_
-
-Prot      4    7.83     8.00
-
-  _4 to include sinusoidal modeling of activity , 0 otherwise_
-
-  _Lower and upper limits on rotational period of the star (days)_
+Use 4 to include sinusoidal modeling of activity , 0 otherwise
+Lower and upper limits on rotational period of the star (days)
 
 Nperiods  3
 
@@ -79,7 +60,7 @@ Spec_dataset 2 2 1
 
 Phase_coherence 0
 
-    _Turn on if you want all the harmonics to be at the same phase_
+    *Turn on if you want all the harmonics to be at the same phase*
 
 Phase_synchro   0
 
