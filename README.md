@@ -1,5 +1,5 @@
 # PyORBIT
-PyORBIT_MultiPhase*.py files are from the old version of the code (the one used in Malavolta et al. 2016)
+PyORBIT_MultiPhase*.py files are from the old version of the code (the one used in Malavolta et al. 2016)\
 The main program is in PyORBIT_MultiPhase_Sinfit.py
 
 You can start it by executing in a terminal:
@@ -117,16 +117,16 @@ _Py_OC102_RV.dat:_
 
 _For each row:
 
-BJD (either BJD-2450000.0 or just BJD)
+1. BJD (either BJD-2450000.0 or just BJD)
 
-RV (in m/s)
+2. RV (in m/s)
 
-error on RV (in m/s)
+3. error on RV (in m/s)
 
-flag on jitter: -1 to not use any jitter term, increase +1 for each dataset with a different jitter
+4. flag on jitter: -1 to not use any jitter term, increase +1 for each dataset with a different jitter
 
-flag on offset: as for jitter
+5. flag on offset: as for jitter
 
-flag for linear trend: as for jitter
+6. flag for linear trend: as for jitter
 
-flag on activity (RV only!) as for jitter_
+7. flag on activity (RV only!) as for jitter_
