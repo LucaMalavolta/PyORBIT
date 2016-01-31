@@ -79,13 +79,12 @@ Spec_dataset 2 2 1
 
 Phase_coherence 0
 
-  _Turn on if you want all the harmonics to be at the same phase_
+    _Turn on if you want all the harmonics to be at the same phase_
 
 Phase_synchro   0
 
-  _Turn on if you do not want any phase offset between photometry and other observations_
-
-  _Phase_coherence and Phase_synchro have been introduced for testing purpose and they should be kept to 0 for physical reasons_
+    _Turn on if you do not want any phase offset between photometry and other observations_
+    _Phase_coherence and Phase_synchro have been introduced for testing purpose and they should be kept to 0 for physical reasons_
 
 Ngen      16000
 
