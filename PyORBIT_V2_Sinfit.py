@@ -2,65 +2,89 @@ from PyORBIT_V2_Classes import *
 import numpy as np
 import emcee
 from pyde.de import DiffEvol
+import h5py
+import cPickle as pickle
+import os
+#import json
 
+file_conf  = raw_input()
 
-file_conf="OC102_test.config"
+mc = ModelContainer()
 
+get_pyorbit_input(file_conf, mc)
 
-mc = Model_Container()
+dir_output = './' + mc.planet_name + '/'
+if not os.path.exists(dir_output):
+    os.makedirs(dir_output)
 
-Get_PyOrbit_Input(file_conf,mc)
-
-mc.Model_setup()
 mc.create_bounds()
 print 'Dimensions = ', mc.ndim
 
 mc.nwalkers = mc.ndim * mc.npop_mult
-if (mc.nwalkers%2==1): mc.nwalkers+=1
+if mc.nwalkers%2 == 1: mc.nwalkers += 1
 
 print 'Nwalkers = ', mc.nwalkers
 
-print 'PyDE'
-de = DiffEvol(mc, mc.bounds, mc.nwalkers, maximize=True)
-de.optimize(mc.ngen)
-print 'PyDE completed'
+if os.path.isfile(dir_output + 'pyde_pops.pick'):
+        population = pickle.load(open(dir_output + 'pyde_pops.pick', 'rb'))
+        pyde_mean = pickle.load(open(dir_output + 'pyde_mean.pick', 'rb'))
+else:
+    print 'PyDE'
+    de = DiffEvol(mc, mc.bounds, mc.nwalkers, maximize=True)
+    de.optimize(mc.ngen)
+    print 'PyDE completed'
 
-pyde_mean = np.mean(de.population, axis=0)
+    population = de.population
+    pyde_mean = np.mean(population, axis=0)
+    pickle.dump(pyde_mean, open(dir_output + 'pyde_mean.pick', 'wb'))
 
-# fix for PyDE anomalous results
-for ii in xrange(0,mc.ndim):
-    if np.amax(de.population[:,ii])-np.amin(de.population[:,ii]) < 10e-7 :
-        range_restricted = (mc.bounds[ii,1]-mc.bounds[ii,0])/1000.
-        min_bound = np.maximum((pyde_mean[ii]-range_restricted/2.0),mc.bounds[ii,0])
-        max_bound = np.minimum((pyde_mean[ii]+range_restricted/2.0),mc.bounds[ii,1])
-        de.population[:,ii] =  np.random.uniform(min_bound,max_bound,mc.nwalkers)
+    #np.savetxt(dir_output + 'pyDEout_original_bounds.dat', mc.bounds)
+    #np.savetxt(dir_output + 'pyDEout_original_pops.dat', population)
 
-if mc.recenter_bounds_flag:
-    de.population = mc.recenter_bounds(pyde_mean,de.population)
-    np.savetxt('output/' + mc.planet_name + '_pyDEout_redefined_bounds.dat',mc.bounds)
-    np.savetxt('output/' + mc.planet_name + '_pyDEout_redefined_pops.dat',de.population)
+    # bounds redefinition and fix for PyDE anomalous results
+    if mc.recenter_bounds_flag:
+        pickle.dump(mc.bounds, open(dir_output + 'bounds_orig.pick', 'wb'))
+        pickle.dump(population, open(dir_output + 'pyde_pops_orig.pick', 'wb'))
+        mc.recenter_bounds(pyde_mean, population)
+        pickle.dump(mc.bounds, open(dir_output + 'bounds.pick', 'wb'))
+        pickle.dump(population, open(dir_output + 'pyde_pops.pick', 'wb'))
 
+        #np.savetxt(dir_output + 'pyDEout_redefined_bounds.dat', mc.bounds)
+        #np.savetxt(dir_output + 'pyDEout_redefined_pops.dat', de.population)
+        print 'REDEFINED BOUNDS'
 
-print pyde_mean
-print mc.results_resumen(pyde_mean)
-print 'REDEFINED BOUNDS'
-print mc.bounds
+    else:
+        pickle.dump(mc.bounds, open(dir_output + 'bounds.pick', 'wb'))
+        pickle.dump(population, open(dir_output + 'pyde_pops.pick', 'wb'))
 
+mc.results_resumen(pyde_mean)
+
+#json.dump(mc.variable_list, open('output/' + mc.planet_name + '_vlist.json', 'wb'))
+pickle.dump(mc.variable_list, open(dir_output + 'vlist.pick', 'wb'))
+pickle.dump(mc.scv.use_offset,  open(dir_output + 'scv_offset.pick', 'wb'))
 
 print 'emcee'
 sampler = emcee.EnsembleSampler(mc.nwalkers, mc.ndim, mc, threads=24)
-sampler.run_mcmc(de.population, mc.nsteps, thin=mc.thin)
+sampler.run_mcmc(population, mc.nsteps, thin=mc.thin)
 
 print 'emcee completed'
-h5f = h5py.File('output/' + mc.planet_name + '.hdf5', "w")
+
+# json.dump(mc.variable_list, open('output/' + mc.planet_name + '_vlist.json', 'wb'))
+# pickle.dump(mc.variable_list, open(dir_output + 'vlist.pick', 'wb'))
+# pickle.dump(mc.scv.use_offset,  open(dir_output + 'scv_offset.pick', 'wb'))
+
+h5f = h5py.File(dir_output + mc.planet_name + '.hdf5', "w")
 
 data_grp = h5f.create_group("data")
 data_grp.attrs.create('file_conf',data=file_conf)
-data_grp.create_dataset("variable_list", data=mc.variable_list, compression="gzip")
+
+data_grp.create_dataset("pyDE_mean", data=pyde_mean, compression="gzip")
+data_grp.create_dataset("pyDE_pops", data=de.population, compression="gzip")
 
 emcee_grp = h5f.create_group("emcee")
 emcee_grp.attrs.create("nwalkers", data=mc.nwalkers)
 emcee_grp.attrs.create("ndim", data=mc.ndim)
+
 
 emcee_grp.create_dataset("bound", data=mc.bounds, compression="gzip")
 emcee_grp.create_dataset("chain", data=sampler.chain, compression="gzip")

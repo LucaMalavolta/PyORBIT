@@ -34,11 +34,11 @@ off = np.zeros(n_periods,dtype=np.double)
 off[:] = 0.56424
 
 
-amp = np.zeros([n_periods,n_pha],dtype=np.double)
+amp = np.zeros([n_periods, n_pha],dtype=np.double)
 amp[0,:] = [35.0, 24.0, 17.0, 7.0]
 amp[1,:] = [30.0, 19.0, 12.0, 8.0]
 
-p_mask = np.zeros([n_periods,np.size(x)],dtype=np.bool)
+p_mask = np.zeros([n_periods, np.size(x)],dtype=np.bool)
 p_mask[0,:] = (x>5000) & (x<6250)
 p_mask[1,:] = (x>6250) & (x<7000)
 
@@ -53,7 +53,7 @@ for ii in xrange(0,n_periods):
     for jj in xrange (0,n_pha):
         mod_ind[ii,:] = p_mask[ii,:] * amp[ii,jj] * np.sin((har[jj] * xph + pha[ii,jj] + off[ii])* 2. * np.pi)
         mod_rv +=  mod_ind[ii,:]
-        #plt.plot(x[p_mask[ii,:]],mod_ind[ii,p_mask[ii,:]])
+        # plt.plot(x[p_mask[ii,:]],mod_ind[ii,p_mask[ii,:]])
 
 
 amp = np.zeros([n_periods,n_pha],dtype=np.double)
@@ -64,7 +64,7 @@ for ii in xrange(0,n_periods):
     for jj in xrange (0,n_pha):
         mod_ind[ii,:] = p_mask[ii,:] * amp[ii,jj] * np.sin((har[jj] * xph + pha[ii,jj])* 2. * np.pi)
         mod_ph1 +=  mod_ind[ii,:]
-        #plt.plot(x[p_mask[ii,:]],mod_ind[ii,p_mask[ii,:]])
+        # plt.plot(x[p_mask[ii,:]],mod_ind[ii,p_mask[ii,:]])
 
 
 mod_ph = np.random.normal(mod_ph1,0.002)
