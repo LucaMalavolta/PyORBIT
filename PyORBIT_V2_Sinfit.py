@@ -5,9 +5,17 @@ from pyde.de import DiffEvol
 import h5py
 import cPickle as pickle
 import os
+import argparse
 #import json
 
-file_conf  = raw_input()
+parser = argparse.ArgumentParser(prog='PyORBIT_V2_GetResults.py', description='Extract results from output MCMC')
+# parser.add_argument('-l', type=str, nargs='+', help='line identificator')
+parser.add_argument('-i', type=str, nargs='+', required=True, help='config file')
+
+
+args = parser.parse_args()
+
+file_conf = args.i[0]
 
 mc = ModelContainer()
 

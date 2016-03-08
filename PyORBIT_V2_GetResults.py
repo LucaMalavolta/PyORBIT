@@ -175,9 +175,6 @@ x0 = 1. / 150
 
 M_star1_rand = np.random.normal(M_star1, M_star1_err, n_kept)
 
-sbuffo_output = np.zeros([n_kept, 9])
-i_sbuffo = 0
-
 if 'kepler' in mc.model_list:
     for planet_name in mc.pcv.name_ref:
 
@@ -261,11 +258,6 @@ if 'kepler' in mc.model_list:
         fig.savefig(dir_output + planet_name + "_corners.pdf", bbox_inches='tight')
         plt.close()
 
-        sbuffo_output[:, i_sbuffo+0] =  sample_plan[:,0]
-        sbuffo_output[:, i_sbuffo+1] =  sample_plan[:,2]
-        sbuffo_output[:, i_sbuffo+2] =  sample_plan[:,6]
-        i_sbuffo += 3
-
         print
         print '-----------------------------'
         print
@@ -309,8 +301,10 @@ if 'kepler' in mc.model_list:
                     x_edges = data_edg[ii, :]
                     y_edges = data_edg[jj, :]
 
+                    print 'X_edges', x_edges
+                    print 'Y_edges', y_edges
                     if ii != jj:
-                        hist2d = np.histogram2d(x_data, y_data, bins=[x_edges,y_edges], normed=True)
+                        hist2d = np.histogram2d(x_data, y_data, bins=[x_edges, y_edges], normed=True)
                         hist1d_y = np.histogram(y_data, bins=y_edges, normed=True)
 
                         Hflat = hist2d[0].flatten()
@@ -418,11 +412,3 @@ if 'kepler' in mc.model_list:
                     x_pha[ii], (y_pha[ii, 1]+y_pha[ii, 0])/2, (y_pha[ii, 1]-y_pha[ii, 0])/2))
             fileout.close()
 
-    #f1_out = open('output_sbuffo.dat', 'w')
-    #f1_out.write('P_b phase_b M_b P_c phase_c M_c P_d phase_d m_c \n')
-    #for ii in xrange(0, n_kept):
-    #    f1_out.write('{0:17.12e} {1:17.12e} {2:17.12e} {3:17.12e} {4:17.12e} {5:17.12e} {6:17.12e}  {7:17.12e}  {8:17.12e} \n'.format(
-    #        sbuffo_output[ii,0], sbuffo_output[ii,1], sbuffo_output[ii,2], sbuffo_output[ii,3], sbuffo_output[ii,4],
-    #        sbuffo_output[ii,5], sbuffo_output[ii,6], sbuffo_output[ii,7], sbuffo_output[ii,8]))
-
-    #f1_out.close()

@@ -50,6 +50,10 @@ class SinusoidsCommonVariables:
         self.n_datasets = 0
 
         self.offset_coherence = True  # Same phase offset across seasons
+        self.offset_common_id = -1
+        self.offset_reference_name = ''
+        self.use_offset = {}
+
         self.phase_coherence = False
         self.phase_sincro = False
 
@@ -70,8 +74,6 @@ class SinusoidsCommonVariables:
 
         self.phase_list = []
 
-        self.use_offset = {}
-        self.offset_skip_first = True
 
     def add_period_range(self, range_input, phase_input):
         # Reset default values at first call
@@ -89,22 +91,25 @@ class SinusoidsCommonVariables:
         self.phase = np.asarray(self.phase_list, dtype=np.int64)
         self.n_pha = np.amax(self.phase, axis=1)  # maximum value for each period
         self.n_pha_max = np.amax(self.n_pha)  # maximum value for each period
+
         self.n_periods += 1
         return
 
-    def add_phase_offset(self, dataset):
-        add_bound = False
-        try:
-            value = self.use_offset[dataset.kind]
-        except KeyError:
-            # Key is not present
-            if self.offset_skip_first:
-                self.use_offset[dataset.kind] = False
-                self.offset_skip_first = False
-            else:
-                self.use_offset[dataset.kind] = True
-                add_bound = True
-        return add_bound
+    # def add_phase_offset(self, dataset, period_name):
+    #    # Check if the dataset needs an offset with respect to the
+    #    # reference dataset (simply the first one)
+    #    add_bound = False
+    #    try:
+    #        value = self.use_offset[dataset.kind][period_name + '_off']
+    #    except KeyError:
+    #        # Key is not present
+    #        if self.offset_skip_first:
+    #            self.use_offset[dataset.kind][period_name] = False
+    #            self.offset_skip_first = False
+    #        else:
+    #            self.use_offset[dataset.kind][period_name] = True
+    #            add_bound = True
+    #    return add_bound
 
     def setup_model_sinusoids(self, dataset):
         dataset.n_amp = self.phase[:, dataset.ind]
@@ -112,11 +117,21 @@ class SinusoidsCommonVariables:
         dataset.n_periods = 0
         dataset.periods_flag = np.zeros(self.n_periods, dtype=bool)
 
+        # If this is the first dataset, it is assumed as the reference one for the offset
+        # otherwise, the offset is applied
+        try:
+            value = self.use_offset[dataset.kind]
+        except KeyError:
+            if self.offset_reference_name == '':
+                self.offset_reference_name = dataset.kind
+                self.use_offset[dataset.kind] = False
+            else:
+                self.use_offset[dataset.kind] = not self.phase_sincro #True
+
         for ii in xrange(0, self.n_periods):
             p_sel = (self.period_range[ii, 0] < dataset.x) & (dataset.x < self.period_range[ii, 1])
             if np.sum(p_sel) == 0:
                 'No data points within the specified range'
-                break
             else:
                 dataset.periods_flag[ii] = True
                 dataset.p_mask[ii, :] = p_sel[:]
@@ -126,6 +141,7 @@ class SinusoidsCommonVariables:
         if dataset.kind == 'Phot': dataset.sinamp_bounds = np.asarray([0., 0.5], dtype=np.double)
         if dataset.kind == 'FWHM': dataset.sinamp_bounds = np.asarray([0., 2000.], dtype=np.double)
         if dataset.kind == 'BIS': dataset.sinamp_bounds = np.asarray([0., 60.], dtype=np.double)
+        if dataset.kind == 'Act': dataset.sinamp_bounds = np.asarray([0., 10.], dtype=np.double)
         return
 
     @staticmethod
@@ -269,8 +285,10 @@ class ModelContainer:
         self.n_datasets = np.size(self.dataset_list)
         for dataset in self.dataset_list:
             # if 'kepler' in dataset.models:
+
             if 'sinusoids' in dataset.models:
                 self.scv.setup_model_sinusoids(dataset)
+
             dataset.model_reset()
             for data_model in dataset.models:
                 if not (data_model in self.model_list):
@@ -293,7 +311,9 @@ class ModelContainer:
             for jj in xrange(0, dataset.n_l):
                 bounds_list.append([-1., 1.])
 
+            self.variable_list[dataset.kind] = {}
             self.variable_list[dataset.name_ref] = {}
+
             self.variable_list[dataset.name_ref]['jitter'] = np.arange(var_count, var_count + dataset.n_j, 1)
             var_count += dataset.n_j
             self.variable_list[dataset.name_ref]['offset'] = np.arange(var_count, var_count + dataset.n_o, 1)
@@ -341,24 +361,25 @@ class ModelContainer:
             for dataset in self.dataset_list:
 
                 # two nested case:
-                # 1) dataset has an offset or not (if it is the reference offset)
+                # 1) dataset.kind has an offset or not (if it is the reference offset)
                 # 2) the offset is the same for every season or not
-                add_bound = self.scv.add_phase_offset(dataset)
-                if add_bound and self.scv.offset_coherence:
-                    bounds_list.append(self.scv.pof_bounds[:])
-                    for jj in range(0, self.scv.n_periods):
-                        if dataset.periods_flag[jj]:
-                            self.variable_list[dataset.name_ref][self.scv.period_name[jj] + '_off'] = var_count
-                    var_count += 1
-                if add_bound and (not self.scv.offset_coherence):
-                    for jj in range(0, self.scv.n_periods):
-                        if dataset.periods_flag[jj]:
-                            bounds_list.append(self.scv.pof_bounds[:])
-                            self.variable_list[dataset.name_ref][self.scv.period_name[jj] + '_off'] = var_count
-                            var_count += 1
+                # WARNING: the offset is defined for each DATASET.KIND and not for each DATASET.NAME_REF
+                # since the offset is a phyisical effect (not an instrumental one)
 
                 for jj in range(0, self.scv.n_periods):
+
                     if dataset.periods_flag[jj]:
+
+                        if self.scv.use_offset[dataset.kind]:
+                            if (not self.scv.offset_coherence) or \
+                                    (self.scv.offset_coherence and self.scv.offset_common_id < 0):
+                                bounds_list.append(self.scv.pof_bounds[:])
+                                self.variable_list[dataset.kind][self.scv.period_name[jj] + '_off'] = var_count
+                                self.scv.offset_common_id = var_count
+                                var_count += 1
+                            else:
+                                self.variable_list[dataset.kind][self.scv.period_name[jj] + '_off'] = \
+                                    self.scv.offset_common_id
 
                         for kk in xrange(0, dataset.n_amp[jj]):
                             bounds_list.append(dataset.sinamp_bounds)
@@ -418,7 +439,7 @@ class ModelContainer:
 
                     if dataset.periods_flag[jj]:
                         if self.scv.use_offset[dataset.kind]:
-                            off_in[:] = theta[self.variable_list[dataset.name_ref][self.scv.period_name[jj] + '_off']]
+                            off_in[:] = theta[self.variable_list[dataset.kind][self.scv.period_name[jj] + '_off']]
                         amp_in[jj, :dataset.n_amp[jj]] = \
                             theta[self.variable_list[dataset.name_ref][self.scv.period_name[jj] + '_amp']]
 
@@ -485,18 +506,18 @@ class ModelContainer:
                 for jj in range(0, self.scv.n_periods):
                     if dataset.periods_flag[jj]:
                         if self.scv.use_offset[dataset.kind]:
-                            id_var = self.variable_list[dataset.name_ref][self.scv.period_name[jj] + '_off']
+                            id_var = self.variable_list[dataset.kind][self.scv.period_name[jj] + '_off']
                             if np.size(id_var) == 0:
                                 continue
                             if np.size(id_var) == 1:
-                                self.pam_names[id_var] = dataset.name_ref[:-4] + '_' + self.scv.period_name[jj] + '_off'
+                                self.pam_names[id_var] = dataset.kind + '_' + self.scv.period_name[jj] + '_off'
                             else:
                                 for ii in id_var:
-                                    self.pam_names[ii] = dataset.name_ref[:-4] + '_' + self.scv.period_name[jj] + \
+                                    self.pam_names[ii] = dataset.kind + '_' + self.scv.period_name[jj] + \
                                                          '_' + repr(ii - id_var[0]) + '_off'
 
-                            print dataset.name_ref, self.scv.period_name[jj], '_off', \
-                                theta[self.variable_list[dataset.name_ref][self.scv.period_name[jj] + '_off']]
+                            print dataset.name_ref, dataset.kind, self.scv.period_name[jj], '_off', \
+                                theta[self.variable_list[dataset.kind][self.scv.period_name[jj] + '_off']]
 
                         id_var = self.variable_list[dataset.name_ref][self.scv.period_name[jj] + '_amp']
                         if np.size(id_var) == 0:
@@ -537,7 +558,7 @@ class ModelContainer:
                     if dataset.periods_flag[jj]:
                         # ind_list.extend(self.variable_list[dataset.name_ref][self.scv.period_name[jj] + '_amp'])
                         if self.scv.use_offset[dataset.kind]:
-                            ind_list.append(self.variable_list[dataset.name_ref][self.scv.period_name[jj] + '_off'])
+                            ind_list.append(self.variable_list[dataset.kind][self.scv.period_name[jj] + '_off'])
 
         if np.size(ind_list) > 0:
             tmp_range = (self.bounds[:, 1]-self.bounds[:, 0])/2
