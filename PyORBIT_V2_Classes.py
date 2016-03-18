@@ -29,6 +29,61 @@ class PlanetsCommonVariables:
     #        out_pams[3] = in_pams[3] ** 2 + in_pams[4] ** 2
     #        out_pams[4] = np.arctan2(in_pams[3], in_pams[4])
     #    return out_pams
+    def compute(self, mc, theta, dataset, planet_name):
+        in_pams = theta[mc.variable_list[planet_name]['kepler_pams']]
+        if self.n_orbpams[planet_name] == 5:
+            conv_pams = self.convert_params(in_pams[0], in_pams[1], in_pams[2], in_pams[3], in_pams[4])
+        else:
+            conv_pams = self.convert_params(in_pams[0], in_pams[1], in_pams[2], 0.00, 0.00)
+        return self.model_kepler(conv_pams, dataset.x0)
+
+    def print_vars(self, mc, theta):
+        for planet_name in self.name_ref:
+            in_pams = theta[mc.variable_list[planet_name]['kepler_pams']]
+            if self.n_orbpams[planet_name] == 5:
+                for param in ['logP', 'logK', 'phase', 'esino', 'ecoso']:
+                    mc.pam_names[mc.variable_list[planet_name][param]] = planet_name + '_' + param
+                conv_pams = self.convert_params(in_pams[0], in_pams[1], in_pams[2], in_pams[3], in_pams[4])
+            else:
+                for param in ['logP', 'logK', 'phase']:
+                    mc.pam_names[mc.variable_list[planet_name][param]] = planet_name + '_' + param
+                conv_pams = self.convert_params(in_pams[0], in_pams[1], in_pams[2], 0.00, 0.00)
+
+            print planet_name, ' vars: ', np.asarray(theta[mc.variable_list[planet_name]['kepler_pams']])
+            print planet_name, ' pams: ', conv_pams[:]
+
+    def define_bounds(self, mc):
+        for planet_name in self.name_ref:
+            mc.bounds_list.append(self.logP_bounds[planet_name][:])
+            mc.bounds_list.append(self.logK_bounds[planet_name][:])
+            mc.bounds_list.append([0, 2 * np.pi])
+            if self.n_orbpams[planet_name] == 5:
+                mc.bounds_list.append([-1.0, 1.0])
+                mc.bounds_list.append([-1.0, 1.0])
+
+            mc.variable_list[planet_name] = {}
+            if self.n_orbpams[planet_name] == 5:
+                mc.variable_list[planet_name]['logP'] = mc.ndim
+                mc.variable_list[planet_name]['logK'] = mc.ndim + 1
+                mc.variable_list[planet_name]['phase'] = mc.ndim + 2
+                mc.variable_list[planet_name]['esino'] = mc.ndim + 3
+                mc.variable_list[planet_name]['ecoso'] = mc.ndim + 4
+                mc.variable_list[planet_name]['kepler_pams'] = np.arange(mc.ndim, mc.ndim + 5, 1)
+                mc.ndim += 5
+            else:
+                mc.variable_list[planet_name]['logP'] = mc.ndim
+                mc.variable_list[planet_name]['logK'] = mc.ndim + 1
+                mc.variable_list[planet_name]['phase'] = mc.ndim + 2
+                mc.variable_list[planet_name]['kepler_pams'] = np.arange(mc.ndim, mc.ndim + 3, 1)
+                mc.ndim += 3
+
+
+    @staticmethod
+    def model_kepler(orbit_pams, x0):
+        P, K, phase, e, omega = orbit_pams
+        rv_out = kp.kepler_RV_T0P(x0, phase, P, K, e, omega)
+        return rv_out
+
     @staticmethod
     def convert_params(logP, logK, phase, esino, ecoso):
         P = np.exp2(logP)
@@ -36,12 +91,6 @@ class PlanetsCommonVariables:
         e = np.square(ecoso) + np.square(esino)
         o = np.arctan2(esino, ecoso)
         return P, K, phase, e, o
-
-    @staticmethod
-    def model_kepler(orbit_pams, x0):
-        P, K, phase, e, omega = orbit_pams
-        rv_out = kp.kepler_RV_T0P(x0, phase, P, K, e, omega)
-        return rv_out
 
 
 class SinusoidsCommonVariables:
@@ -73,7 +122,6 @@ class SinusoidsCommonVariables:
         self.pha_bounds = [0., 1.0]
 
         self.phase_list = []
-
 
     def add_period_range(self, range_input, phase_input):
         # Reset default values at first call
@@ -144,6 +192,115 @@ class SinusoidsCommonVariables:
         if dataset.kind == 'Act': dataset.sinamp_bounds = np.asarray([0., 10.], dtype=np.double)
         return
 
+    def compute(self, mc, theta, dataset):
+        # MC = Model_Container object
+        # Prot and pha_in could be brought out from the llop, but I would not work
+        # for plaet-only analysis
+        Prot = theta[mc.variable_list['Prot']]
+        pha_in = np.zeros([self.n_periods, self.n_pha_max], dtype=np.double)
+        off_in = np.zeros([self.n_periods], dtype=np.double)
+        amp_in = np.zeros([self.n_periods, self.n_pha_max], dtype=np.double)
+        for jj in range(0, self.n_periods):
+            pha_in[jj, :self.n_pha[jj]] = theta[mc.variable_list[self.period_name[jj] + '_pha']]
+
+            if dataset.periods_flag[jj]:
+                if self.use_offset[dataset.kind]:
+                    off_in[:] = theta[mc.variable_list[dataset.kind][self.period_name[jj] + '_off']]
+                amp_in[jj, :dataset.n_amp[jj]] = \
+                        theta[mc.variable_list[dataset.name_ref][self.period_name[jj] + '_amp']]
+
+        return self.model_sinusoids(dataset, Prot, amp_in, pha_in, off_in)
+
+    def print_vars(self, mc, theta):
+        # Prot and pha_in could be brought out from the llop, but I would not work
+        # for plaet-only analysis
+        mc.pam_names[mc.variable_list['Prot']] = 'Prot'
+        print 'Prot ', theta[mc.variable_list['Prot']]
+
+        for jj in range(0, self.n_periods):
+            id_var = mc.variable_list[self.period_name[jj] + '_pha']
+            if np.size(id_var) == 0:
+                continue
+            if np.size(id_var) == 1:
+                mc.pam_names[id_var] = self.period_name[jj] + '_pha'
+            else:
+                for ii in id_var:
+                    mc.pam_names[ii] = self.period_name[jj] + '_' + repr(ii - id_var[0]) + '_pha'
+
+            print self.period_name[jj], '_pha', theta[id_var]
+
+        for dataset in mc.dataset_list:
+            for jj in range(0, self.n_periods):
+                if dataset.periods_flag[jj]:
+                    if self.use_offset[dataset.kind]:
+                        id_var = mc.variable_list[dataset.kind][self.period_name[jj] + '_off']
+                        if np.size(id_var) == 0:
+                            continue
+                        if np.size(id_var) == 1:
+                            mc.pam_names[id_var] = dataset.kind + '_' + self.period_name[jj] + '_off'
+                        else:
+                            for ii in id_var:
+                                mc.pam_names[ii] = dataset.kind + '_' + self.period_name[jj] + \
+                                                     '_' + repr(ii - id_var[0]) + '_off'
+
+                        print dataset.name_ref, dataset.kind, self.period_name[jj], '_off', \
+                            theta[mc.variable_list[dataset.kind][self.period_name[jj] + '_off']]
+
+                    id_var = mc.variable_list[dataset.name_ref][self.period_name[jj] + '_amp']
+                    if np.size(id_var) == 0:
+                        continue
+                    if np.size(id_var) == 1:
+                        mc.pam_names[id_var] = dataset.name_ref[:-4] + '_' + self.period_name[jj] + '_amp'
+                    else:
+                        for ii in id_var:
+                            mc.pam_names[ii] = dataset.name_ref[:-4] + '_' + self.period_name[jj] + \
+                                                 '_' + repr(ii - id_var[0]) + '_amp'
+
+                    print dataset.name_ref, self.period_name[jj], '_amp',\
+                        theta[mc.variable_list[dataset.name_ref][self.period_name[jj] + '_amp']]
+
+    def define_bounds(self, mc):
+        mc.bounds_list.append(self.Prot_bounds[:])
+        mc.variable_list['Prot'] = mc.ndim
+        mc.ndim += 1
+
+        for jj in range(0, self.n_periods):
+            for kk in range(0, self.n_pha[jj]):
+                mc.bounds_list.append(self.pha_bounds[:])
+            mc.variable_list[self.period_name[jj] + '_pha'] = np.arange(mc.ndim,
+                mc.ndim + self.n_pha[jj], 1)
+            mc.ndim += self.n_pha[jj]
+
+        for dataset in mc.dataset_list:
+
+            # two nested case:
+            # 1) dataset.kind has an offset or not (if it is the reference offset)
+            # 2) the offset is the same for every season or not
+            # WARNING: the offset is defined for each DATASET.KIND and not for each DATASET.NAME_REF
+            # since the offset is a phyisical effect (not an instrumental one)
+
+            for jj in range(0, self.n_periods):
+
+                if dataset.periods_flag[jj]:
+
+                    if self.use_offset[dataset.kind]:
+                        if (not self.offset_coherence) or \
+                                (self.offset_coherence and self.offset_common_id < 0):
+                            mc.bounds_list.append(self.pof_bounds[:])
+                            mc.variable_list[dataset.kind][self.period_name[jj] + '_off'] = mc.ndim
+                            self.offset_common_id = mc.ndim
+                            mc.ndim += 1
+                        else:
+                            mc.variable_list[dataset.kind][self.period_name[jj] + '_off'] = \
+                                self.offset_common_id
+
+                    for kk in xrange(0, dataset.n_amp[jj]):
+                        mc.bounds_list.append(dataset.sinamp_bounds)
+
+                    mc.variable_list[dataset.name_ref][self.period_name[jj] + '_amp'] = \
+                        np.arange(mc.ndim, mc.ndim + dataset.n_amp[jj], 1)
+                    mc.ndim += dataset.n_amp[jj]
+
     @staticmethod
     def model_sinusoids(dataset, p_rot, amp, pha, off):
         # np.size(SinAmp)==np.sum(n_amp) ???? What if an activity dataset is missing?
@@ -164,7 +321,6 @@ class SinusoidsCommonVariables:
                 model += dataset.p_mask[ii, :] * amp[ii, jj] * np.sin(
                         (har[jj] * xph + pha[ii, jj] + off[ii]) * 2. * np.pi)
         return model
-
 
 class Dataset:
     def __init__(self, ind, kind, input_file, models):
@@ -223,6 +379,8 @@ class Dataset:
         self.model = np.zeros(self.n, dtype=np.double)
         self.jitter = np.zeros(self.n, dtype=np.double)
 
+        self.y_model = self.y * 0.00
+
     def common_Tref(self, Tref_in):
         self.Tref = Tref_in
         self.x0 = self.x - self.Tref
@@ -252,6 +410,23 @@ class Dataset:
         env = 1.0 / (self.e ** 2.0 + self.jitter ** 2.0)
         return -0.5 * (np.sum((self.y - self.model) ** 2 * env - np.log(env)))
 
+    def define_bounds(self, mc):
+        for jj in xrange(0, self.n_j):
+            mc.bounds_list.append([0., 50 * np.max(self.e)])  # bounds for jitter
+        for jj in xrange(0, self.n_o):
+            mc.bounds_list.append([np.min(self.y), np.max(self.y)])
+        for jj in xrange(0, self.n_l):
+            mc.bounds_list.append([-1., 1.])
+
+        mc.variable_list[self.kind] = {}
+        mc.variable_list[self.name_ref] = {}
+
+        mc.variable_list[self.name_ref]['jitter'] = np.arange(mc.ndim, mc.ndim + self.n_j, 1)
+        mc.ndim += self.n_j
+        mc.variable_list[self.name_ref]['offset'] = np.arange(mc.ndim, mc.ndim + self.n_o, 1)
+        mc.ndim += self.n_o
+        mc.variable_list[self.name_ref]['linear'] = np.arange(mc.ndim, mc.ndim + self.n_l, 1)
+        mc.ndim += self.n_l
 
 class ModelContainer:
     def __init__(self):
@@ -275,6 +450,7 @@ class ModelContainer:
         self.planet_name = ''
 
         self.variable_list = {}
+        self.bound_list = []
         self.bounds = 0
         self.ndim = 0
         self.pam_names = ''
@@ -299,97 +475,20 @@ class ModelContainer:
         # creates a dictionary with the name of the arrays and their
         # positions in bounds/theta array so that they can be accessed
         # without using nested counters
-        bounds_list = []
 
-        var_count = 0
+        self.bounds_list = []
+        self.ndim = 0
 
         for dataset in self.dataset_list:
-            for jj in xrange(0, dataset.n_j):
-                bounds_list.append([0., 50 * np.max(dataset.e)])  # bounds for jitter
-            for jj in xrange(0, dataset.n_o):
-                bounds_list.append([np.min(dataset.y), np.max(dataset.y)])
-            for jj in xrange(0, dataset.n_l):
-                bounds_list.append([-1., 1.])
-
-            self.variable_list[dataset.kind] = {}
-            self.variable_list[dataset.name_ref] = {}
-
-            self.variable_list[dataset.name_ref]['jitter'] = np.arange(var_count, var_count + dataset.n_j, 1)
-            var_count += dataset.n_j
-            self.variable_list[dataset.name_ref]['offset'] = np.arange(var_count, var_count + dataset.n_o, 1)
-            var_count += dataset.n_o
-            self.variable_list[dataset.name_ref]['linear'] = np.arange(var_count, var_count + dataset.n_l, 1)
-            var_count += dataset.n_l
+            dataset.define_bounds(self)
 
         if 'kepler' in self.model_list:
-            for planet_name in self.pcv.name_ref:
-                bounds_list.append(self.pcv.logP_bounds[planet_name][:])
-                bounds_list.append(self.pcv.logK_bounds[planet_name][:])
-                bounds_list.append([0, 2 * np.pi])
-                if self.pcv.n_orbpams[planet_name] == 5:
-                    bounds_list.append([-1.0, 1.0])
-                    bounds_list.append([-1.0, 1.0])
-
-                self.variable_list[planet_name] = {}
-                if self.pcv.n_orbpams[planet_name] == 5:
-                    self.variable_list[planet_name]['logP'] = var_count
-                    self.variable_list[planet_name]['logK'] = var_count + 1
-                    self.variable_list[planet_name]['phase'] = var_count + 2
-                    self.variable_list[planet_name]['esino'] = var_count + 3
-                    self.variable_list[planet_name]['ecoso'] = var_count + 4
-                    self.variable_list[planet_name]['kepler_pams'] = np.arange(var_count, var_count + 5, 1)
-                    var_count += 5
-                else:
-                    self.variable_list[planet_name]['logP'] = var_count
-                    self.variable_list[planet_name]['logK'] = var_count + 1
-                    self.variable_list[planet_name]['phase'] = var_count + 2
-                    self.variable_list[planet_name]['kepler_pams'] = np.arange(var_count, var_count + 3, 1)
-                    var_count += 3
+            self.pcv.define_bounds(self)
 
         if 'sinusoids' in self.model_list:
-            bounds_list.append(self.scv.Prot_bounds[:])
-            self.variable_list['Prot'] = var_count
-            var_count += 1
+            self.scv.define_bounds(self)
 
-            for jj in range(0, self.scv.n_periods):
-                for kk in range(0, self.scv.n_pha[jj]):
-                    bounds_list.append(self.scv.pha_bounds[:])
-                self.variable_list[self.scv.period_name[jj] + '_pha'] = np.arange(var_count,
-                    var_count + self.scv.n_pha[jj], 1)
-                var_count += self.scv.n_pha[jj]
-
-            for dataset in self.dataset_list:
-
-                # two nested case:
-                # 1) dataset.kind has an offset or not (if it is the reference offset)
-                # 2) the offset is the same for every season or not
-                # WARNING: the offset is defined for each DATASET.KIND and not for each DATASET.NAME_REF
-                # since the offset is a phyisical effect (not an instrumental one)
-
-                for jj in range(0, self.scv.n_periods):
-
-                    if dataset.periods_flag[jj]:
-
-                        if self.scv.use_offset[dataset.kind]:
-                            if (not self.scv.offset_coherence) or \
-                                    (self.scv.offset_coherence and self.scv.offset_common_id < 0):
-                                bounds_list.append(self.scv.pof_bounds[:])
-                                self.variable_list[dataset.kind][self.scv.period_name[jj] + '_off'] = var_count
-                                self.scv.offset_common_id = var_count
-                                var_count += 1
-                            else:
-                                self.variable_list[dataset.kind][self.scv.period_name[jj] + '_off'] = \
-                                    self.scv.offset_common_id
-
-                        for kk in xrange(0, dataset.n_amp[jj]):
-                            bounds_list.append(dataset.sinamp_bounds)
-
-                        self.variable_list[dataset.name_ref][self.scv.period_name[jj] + '_amp'] = \
-                            np.arange(var_count, var_count + dataset.n_amp[jj], 1)
-                        var_count += dataset.n_amp[jj]
-
-        self.bounds = np.asarray(bounds_list)
-        self.ndim = var_count
+        self.bounds = np.asarray(self.bounds_list)
 
     def check_bounds(self, theta):
         # former lnprior(theta)
@@ -400,8 +499,6 @@ class ModelContainer:
             if self.pcv.n_orbpams[planet_name] == 5:
                 e = theta[self.variable_list[planet_name]['esino']] ** 2 + \
                     theta[self.variable_list[planet_name]['ecoso']] ** 2
-            # omega = np.arctan2(theta[self.variable_list[self.pcv.name_ref[pp]]['ecoso']],
-            # theta[self.variable_list[self.pcv.name_ref[pp]]['esino']])
                 if not self.pcv.e_bounds[planet_name][0] <= e < self.pcv.e_bounds[planet_name][1]:
                     return False
 
@@ -420,33 +517,46 @@ class ModelContainer:
 
             if 'kepler' in dataset.models:
                 for planet_name in self.pcv.name_ref:
-                    in_pams = theta[self.variable_list[planet_name]['kepler_pams']]
-                    if self.pcv.n_orbpams[planet_name] == 5:
-                        conv_pams = self.pcv.convert_params(in_pams[0], in_pams[1], in_pams[2], in_pams[3], in_pams[4])
-                    else:
-                        conv_pams = self.pcv.convert_params(in_pams[0], in_pams[1], in_pams[2], 0.00, 0.00)
-                    dataset.model += self.pcv.model_kepler(conv_pams, dataset.x0)
+                    dataset.model += self.pcv.compute(self, theta, dataset, planet_name)
+                    #in_pams = theta[self.variable_list[planet_name]['kepler_pams']]
+                    #if self.pcv.n_orbpams[planet_name] == 5:
+                    #    conv_pams = self.pcv.convert_params(in_pams[0], in_pams[1], in_pams[2], in_pams[3], in_pams[4])
+                    #else:
+                    #    conv_pams = self.pcv.convert_params(in_pams[0], in_pams[1], in_pams[2], 0.00, 0.00)
+                    #dataset.model += self.pcv.model_kepler(conv_pams, dataset.x0)
 
             if 'sinusoids' in dataset.models:
-                # Prot and pha_in could be brought out from the llop, but I would not work
-                # for plaet-only analysis
-                Prot = theta[self.variable_list['Prot']]
-                pha_in = np.zeros([self.scv.n_periods, self.scv.n_pha_max], dtype=np.double)
-                off_in = np.zeros([self.scv.n_periods], dtype=np.double)
-                amp_in = np.zeros([self.scv.n_periods, self.scv.n_pha_max], dtype=np.double)
-                for jj in range(0, self.scv.n_periods):
-                    pha_in[jj, :self.scv.n_pha[jj]] = theta[self.variable_list[self.scv.period_name[jj] + '_pha']]
-
-                    if dataset.periods_flag[jj]:
-                        if self.scv.use_offset[dataset.kind]:
-                            off_in[:] = theta[self.variable_list[dataset.kind][self.scv.period_name[jj] + '_off']]
-                        amp_in[jj, :dataset.n_amp[jj]] = \
-                            theta[self.variable_list[dataset.name_ref][self.scv.period_name[jj] + '_amp']]
-
-                dataset.model += self.scv.model_sinusoids(dataset, Prot, amp_in, pha_in, off_in)
+                #dataset.model += self.sinusoids_model(theta,dataset)
+                dataset.model += self.scv.compute(self, theta, dataset)
 
             chi2_out += dataset.model_logchi2()
         return chi2_out
+
+    # def sinusoids_model(self,theta,dataset):
+    #     # Prot and pha_in could be brought out from the llop, but I would not work
+    #     # for plaet-only analysis
+    #     Prot = theta[self.variable_list['Prot']]
+    #     pha_in = np.zeros([self.scv.n_periods, self.scv.n_pha_max], dtype=np.double)
+    #     off_in = np.zeros([self.scv.n_periods], dtype=np.double)
+    #     amp_in = np.zeros([self.scv.n_periods, self.scv.n_pha_max], dtype=np.double)
+    #     for jj in range(0, self.scv.n_periods):
+    #         pha_in[jj, :self.scv.n_pha[jj]] = theta[self.variable_list[self.scv.period_name[jj] + '_pha']]
+    #
+    #         if dataset.periods_flag[jj]:
+    #             if self.scv.use_offset[dataset.kind]:
+    #                 off_in[:] = theta[self.variable_list[dataset.kind][self.scv.period_name[jj] + '_off']]
+    #             amp_in[jj, :dataset.n_amp[jj]] = \
+    #                     theta[self.variable_list[dataset.name_ref][self.scv.period_name[jj] + '_amp']]
+    #
+    #     return self.scv.model_sinusoids(dataset, Prot, amp_in, pha_in, off_in)
+    #
+    # def kepler_model(self, theta, dataset, planet_name):
+    #     in_pams = theta[self.variable_list[planet_name]['kepler_pams']]
+    #     if self.pcv.n_orbpams[planet_name] == 5:
+    #         conv_pams = self.pcv.convert_params(in_pams[0], in_pams[1], in_pams[2], in_pams[3], in_pams[4])
+    #     else:
+    #         conv_pams = self.pcv.convert_params(in_pams[0], in_pams[1], in_pams[2], 0.00, 0.00)
+    #     return self.pcv.model_kepler(conv_pams, dataset.x0)
 
     def results_resumen(self, theta):
         # Function with two goals:
@@ -469,69 +579,30 @@ class ModelContainer:
                 print dataset.name_ref, param, ' : ', theta[self.variable_list[dataset.name_ref][param]]
 
         if 'kepler' in self.model_list:
-
-            for planet_name in self.pcv.name_ref:
-                in_pams = theta[self.variable_list[planet_name]['kepler_pams']]
-                if self.pcv.n_orbpams[planet_name] == 5:
-                    for param in ['logP', 'logK', 'phase', 'esino', 'ecoso']:
-                        self.pam_names[self.variable_list[planet_name][param]] = planet_name + '_' + param
-                    conv_pams = self.pcv.convert_params(in_pams[0], in_pams[1], in_pams[2], in_pams[3], in_pams[4])
-                else:
-                    for param in ['logP', 'logK', 'phase']:
-                        self.pam_names[self.variable_list[planet_name][param]] = planet_name + '_' + param
-                    conv_pams = self.pcv.convert_params(in_pams[0], in_pams[1], in_pams[2], 0.00, 0.00)
-
-                print planet_name, ' vars: ', np.asarray(theta[self.variable_list[planet_name]['kepler_pams']])
-                print planet_name, ' pams: ', conv_pams[:]
+            self.pcv.print_vars(self, theta)
 
         if 'sinusoids' in self.model_list:
-            # Prot and pha_in could be brought out from the llop, but I would not work
-            # for plaet-only analysis
-            self.pam_names[self.variable_list['Prot']] = 'Prot'
-            print 'Prot ', theta[self.variable_list['Prot']]
+            self.scv.print_vars(self, theta)
 
-            for jj in range(0, self.scv.n_periods):
-                id_var = self.variable_list[self.scv.period_name[jj] + '_pha']
-                if np.size(id_var) == 0:
-                    continue
-                if np.size(id_var) == 1:
-                    self.pam_names[id_var] = self.scv.period_name[jj] + '_pha'
-                else:
-                    for ii in id_var:
-                        self.pam_names[ii] = self.scv.period_name[jj] + '_' + repr(ii - id_var[0]) + '_pha'
+    # it return the RV model for a single planet, after removing the activity from the RV curve and removing the offsets
+    # between the datasets
+    def rv_1planet_model(self, theta, planet_ref, dataset):
 
-                print self.scv.period_name[jj], '_pha', theta[id_var]
+        dataset.model_reset()
+        dataset.model_offset(theta[self.variable_list[dataset.name_ref]['offset']])
+        dataset.model_linear(theta[self.variable_list[dataset.name_ref]['linear']])
 
-            for dataset in self.dataset_list:
-                for jj in range(0, self.scv.n_periods):
-                    if dataset.periods_flag[jj]:
-                        if self.scv.use_offset[dataset.kind]:
-                            id_var = self.variable_list[dataset.kind][self.scv.period_name[jj] + '_off']
-                            if np.size(id_var) == 0:
-                                continue
-                            if np.size(id_var) == 1:
-                                self.pam_names[id_var] = dataset.kind + '_' + self.scv.period_name[jj] + '_off'
-                            else:
-                                for ii in id_var:
-                                    self.pam_names[ii] = dataset.kind + '_' + self.scv.period_name[jj] + \
-                                                         '_' + repr(ii - id_var[0]) + '_off'
+        if 'kepler' in dataset.models:
+            for planet_name in self.pcv.name_ref:
+                dataset.model += self.pcv.model(self, theta, dataset, planet_name)
 
-                            print dataset.name_ref, dataset.kind, self.scv.period_name[jj], '_off', \
-                                theta[self.variable_list[dataset.kind][self.scv.period_name[jj] + '_off']]
+        if 'sinusoids' in dataset.models:
+            dataset.model += self.scv.model(self, theta, dataset)
 
-                        id_var = self.variable_list[dataset.name_ref][self.scv.period_name[jj] + '_amp']
-                        if np.size(id_var) == 0:
-                            continue
-                        if np.size(id_var) == 1:
-                            self.pam_names[id_var] = dataset.name_ref[:-4] + '_' + self.scv.period_name[jj] + '_amp'
-                        else:
-                            for ii in id_var:
-                                self.pam_names[ii] = dataset.name_ref[:-4] + '_' + self.scv.period_name[jj] + \
-                                                     '_' + repr(ii - id_var[0]) + '_amp'
+        return dataset.y - dataset.model, self.pvc.model(self, theta, dataset, planet_ref)
 
-                        print dataset.name_ref, self.scv.period_name[jj], '_amp',\
-                            theta[self.variable_list[dataset.name_ref][self.scv.period_name[jj] + '_amp']]
-
+    # This function recenters the bounds limits for circular variables
+    # Also, it extends the range of a variable if the output of PyDE is a fixed number
     def recenter_bounds(self, pop_mean, population):
         ind_list = []
 

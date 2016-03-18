@@ -48,14 +48,14 @@ def get_mass(M_star2, M_star1, Period, K1, e0):
 
 parser = argparse.ArgumentParser(prog='PyORBIT_V2_GetResults.py', description='Extract results from output MCMC')
 # parser.add_argument('-l', type=str, nargs='+', help='line identificator')
-parser.add_argument('-i', type=str, nargs='+', required=True, help='config file')
+parser.add_argument('config_file', type=str, nargs=1, help='config file')
 parser.add_argument('-v', type=str, nargs='?', default='False', help='Create Veusz ancillary files')
 parser.add_argument('-t', type=str, nargs='?', default='False', help='Create GR traces')
 parser.add_argument('-nburn', type=int, nargs='?', default=0, help='emcee burn-ins')
 
 args = parser.parse_args()
 
-file_conf = args.i[0]
+file_conf = args.config_file[0]
 
 # file_conf = raw_input()
 
@@ -268,6 +268,23 @@ if 'kepler' in mc.model_list:
 
         if args.v != 'False':
 
+            veusz_dir = dir_output + '/Veuz_plot/'
+            if not os.path.exists(veusz_dir):
+                os.makedirs(veusz_dir)
+
+            # Write down the residuals
+            for dataset in mc.dataset_list:
+                if dataset.kind == 'RV':
+                    rv_res, rv_pla = mc.rv_1planet_model(chain_med[:, 0], planet_name, dataset)
+                    fileout = open(veusz_dir + planet_name + '_' + dataset.name_ref + '_ONLYkep.dat','w')
+                    fileout.write('descriptor BJD pha RV,+- RVpla,+- RVmod,+- RVres,+- \n')
+                    for ii in xrange(0, dataset.n):
+                        fileout.write('{0:14f} {1:14f} {2:14f} {3:14f} {4:14f} {5:14f} {6:14f} {7:14f} {8:14f} {9:14f}'
+                                      '\n'.format(dataset.x[ii], (dataset.x0[ii]/sample_med[0, 0])%1,
+                                                  dataset.y[ii], dataset.e[ii], rv_res[ii]+rv_pla[ii], dataset.e[ii],
+                                                  rv_pla[ii], dataset.e[ii], rv_res[ii], dataset.e[ii]))
+                    fileout.close()
+
             list_labels = ['P', 'K', 'e', 'm']
 
             n_int = 4
@@ -292,6 +309,8 @@ if 'kepler' in mc.model_list:
             data_edg = np.zeros([n_int, n_bins], dtype=np.double)
             for ii in xrange(0, n_int):
                 data_lim[ii, :] = [np.amin(output_plan[:, ii]), np.amax(output_plan[:, ii])]
+                if mc.pcv.n_orbpams[planet_name] == 3:
+                    data_lim[ii, :] = [0.0, 0.1]
                 data_edg[ii, :] = np.linspace(data_lim[ii, 0], data_lim[ii, 1], n_bins)
 
             for ii in xrange(0, n_int):
@@ -301,8 +320,6 @@ if 'kepler' in mc.model_list:
                     x_edges = data_edg[ii, :]
                     y_edges = data_edg[jj, :]
 
-                    print 'X_edges', x_edges
-                    print 'Y_edges', y_edges
                     if ii != jj:
                         hist2d = np.histogram2d(x_data, y_data, bins=[x_edges, y_edges], normed=True)
                         hist1d_y = np.histogram(y_data, bins=y_edges, normed=True)
@@ -335,19 +352,18 @@ if 'kepler' in mc.model_list:
 
             #plot lower-upper limits for the mass
 
-            pams_limits = np.zeros([mc.pcv.n_orbpams[planet_name], 2])
+            pams_limits = np.zeros([n_int, 2])
             for ii in xrange(0, mc.pcv.n_orbpams[planet_name]):
                 pams_limits[ii, :] = np.percentile(sample_plan[:, ii], [0.135, 99.865])
-                print ii, pams_limits[ii, :]
 
-            random_n = 2000
+            random_n = 10000
             ii_kep = np.random.randint(low=0, high=n_kept, size=random_n)
 
             x_kep = np.arange(5900, 7900, 2)
-            y_kep = np.zeros([np.size(x_kep), 2])
+            y_kep = np.zeros([np.size(x_kep), 3])
 
             x_pha = np.arange(-1.00, 2.00, 0.005,dtype=np.double)
-            y_pha = np.zeros([np.size(x_pha), 2])
+            y_pha = np.zeros([np.size(x_pha), 3])
 
             y_flg = np.ones(random_n, dtype=bool)
 
@@ -355,16 +371,18 @@ if 'kepler' in mc.model_list:
             y_pha_tmp = np.zeros(np.size(x_pha))
 
             if pams_limits[3, 0] < 0.02 : pams_limits[3, 0] = 0.00
-            for ii in xrange(0, 4):
+            for ii in xrange(0, n_int):
                 y_flg = y_flg & (sample_plan[ii_kep, ii] >= pams_limits[ii,0]) & (sample_plan[ii_kep, ii] <= pams_limits[ii, 1])
 
-            y_kep[:, 0] = kp.kepler_RV_T0P(x_kep - mc.Tref, sample_med[2, 0], sample_med[0, 0], sample_med[1, 0],
+            y_kep[:, 2] = kp.kepler_RV_T0P(x_kep - mc.Tref, sample_med[2, 0], sample_med[0, 0], sample_med[1, 0],
                                            sample_med[3, 0], sample_med[4, 0])
-            y_kep[:, 1] = y_kep[:,0]
+            y_kep[:, 0] = y_kep[:, 2]
+            y_kep[:, 1] = y_kep[:, 2]
             # value initialization
-            y_pha[:, 0] = kp.kepler_RV_T0P(x_pha*sample_med[0, 0], sample_med[2, 0], sample_med[0, 0], sample_med[1, 0],
+            y_pha[:, 2] = kp.kepler_RV_T0P(x_pha*sample_med[0, 0], sample_med[2, 0], sample_med[0, 0], sample_med[1, 0],
                                            sample_med[3, 0], sample_med[4, 0])
-            y_pha[:, 1] = y_pha[:, 0]
+            y_pha[:, 0] = y_pha[:, 2]
+            y_pha[:, 1] = y_pha[:, 2]
 
             fig1 = plt.plot(x_kep, y_kep[:, 0], c='g')
             fig2 = plt.plot(x_pha, y_pha[:, 0], c='g')
@@ -399,16 +417,18 @@ if 'kepler' in mc.model_list:
             # h5f.close()
 
             fileout = open(veusz_dir + planet_name + '_kep.dat','w')
-            fileout.write('descriptor x_kep y_kep,+- \n')
+            fileout.write('descriptor x_kep m_kep y_kep,+- \n')
             for ii in xrange(0,np.size(x_kep)):
-                fileout.write('{0:14f} {1:14f} {2:14f}  \n'.format(\
-                    x_kep[ii], (y_kep[ii, 1]+y_kep[ii, 0])/2, (y_kep[ii, 1]-y_kep[ii, 0])/2))
+                fileout.write('{0:14f} {1:14f} {2:14f} {3:14f}  \n'.format(\
+                    x_kep[ii], y_kep[ii, 2], (y_kep[ii, 1]+y_kep[ii, 0])/2, (y_kep[ii, 1]-y_kep[ii, 0])/2))
             fileout.close()
 
             fileout = open(veusz_dir + planet_name + '_pha.dat','w')
-            fileout.write('descriptor x_pha y_pha,+- \n')
+            fileout.write('descriptor x_pha m_pha y_pha,+- \n')
             for ii in xrange(0,np.size(x_pha)):
-                fileout.write('{0:14f} {1:14f} {2:14f}  \n'.format(\
-                    x_pha[ii], (y_pha[ii, 1]+y_pha[ii, 0])/2, (y_pha[ii, 1]-y_pha[ii, 0])/2))
+                fileout.write('{0:14f} {1:14f} {2:14f} {3:14f} \n'.format(\
+                    x_pha[ii], y_pha[ii, 2], (y_pha[ii, 1]+y_pha[ii, 0])/2, (y_pha[ii, 1]-y_pha[ii, 0])/2))
             fileout.close()
 
+        print 'Planet ', planet_name, ' completed'
+        print

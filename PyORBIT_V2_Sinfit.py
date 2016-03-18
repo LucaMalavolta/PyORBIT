@@ -10,12 +10,12 @@ import argparse
 
 parser = argparse.ArgumentParser(prog='PyORBIT_V2_GetResults.py', description='Extract results from output MCMC')
 # parser.add_argument('-l', type=str, nargs='+', help='line identificator')
-parser.add_argument('-i', type=str, nargs='+', required=True, help='config file')
+parser.add_argument('config_file', type=str, nargs=1, help='config file')
 
 
 args = parser.parse_args()
 
-file_conf = args.i[0]
+file_conf = args.config_file[0]
 
 mc = ModelContainer()
 
@@ -87,7 +87,7 @@ data_grp = h5f.create_group("data")
 data_grp.attrs.create('file_conf',data=file_conf)
 
 data_grp.create_dataset("pyDE_mean", data=pyde_mean, compression="gzip")
-data_grp.create_dataset("pyDE_pops", data=de.population, compression="gzip")
+data_grp.create_dataset("pyDE_pops", data=population, compression="gzip")
 
 emcee_grp = h5f.create_group("emcee")
 emcee_grp.attrs.create("nwalkers", data=mc.nwalkers)
