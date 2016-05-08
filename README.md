@@ -1,87 +1,77 @@
 # PyORBIT
-PyORBIT_MultiPhase*.py files are from the old version of the code (the one used in Malavolta et al. 2016)
+News: added support to central time of transit fit, fixed orbital parameters, and gaussian processing model (still under testing)
 
 The main program is in PyORBIT_MultiPhase_Sinfit.py, you can start it by executing in a terminal:
 
-    *python PyORBIT_MultiPhase_Sinfit.py*
+    *python PyORBIT_V2_Sinfit.py*
 
-and then entering the name of the *config* file
+and then entering the name of the *yaml* file
 
-I'm working on a new version (PyORBIT_V2*.py) with the same functionalities but better coding style.
+V1 is the old version of the code (the one used in Malavolta et al. 2016)
 
 
 #Help on config file
-This is a brief guide on how to write the file requested at PyORBIT  file (see OC102_HT_Act_2pEE.config in the example directory) for V1 of PyORBIT:
-(OC102 is just the GAPS name of Pr0211)
+This is a brief guide on how to write the file requested by PyORBIT (see the example files)
 
-    Name      OC102
+    Name:      PyORBIT_test1
 Name of the star
 
-    Input_RV  Py_OC102_RV.dat
-File with all the radial velocities from different instruments
+    Output:   PyORBIT_test1
+Directory where all the output files are stored
 
-    Input_P1  Py_OC102_PH_B.dat
-First photometry dataset
+    Inputs:  
+List here all the input files, starting from 0
 
-    Input_P2  Py_OC102_PH_R.dat
-Second photometry dataset
+      0:
+        File: test1_PH.dat
+        Kind: Phot
+        Models: ['sinusoids']
 
-    Output    OC102_HT_Act_2pEE
-String pre-pended to output files
-
-    Nplanets  2
-Number of planets in the model
-
-    Planet1   5    2.14     2.15  300.0  317.0    0.00 0.4
-    Planet2   5  900.0   25000.0  126.0  150.0    0.20 1.0
-For each planet:
-
-Number of parameters (3 for circular orbit, 5 for eccentric one)
-
-Lower and upper limits on Period (in days)
-
-Lower and upper limits on K semi-amplitude (m/s)
-
-Lower and upper limits on eccentricity (not read if first parameter is 3)
+List the input file name, its kind (RV, Phot, BIS etc) and the models you want to use for this dataset (currently sinusoids, kepler or gaussian for GP)
 
 
+    Planets:
+List here the characteristics of each planet, starting from 0, as in the example below
 
-    Prot      4    7.83     8.00
-Use 4 to include sinusoidal modeling of activity , 0 otherwise
-  Lower and upper limits on rotational period of the star (days)
+    0:
+      Orbit: kepler
+      Boundaries:
+        P: [2.0, 50.0]
+        K: [25.0, 60.0]
+      Fixed:
+        e: 0.13
+      Tcent: Tcent_0.dat
 
-    Nperiods  3
-Use this to split the full observational range in several "periods"
+    Sinusoids:
+Use this set of options if the sinusoid model is used for any of the datasets
 
-    Period0  6300 6600
-    Period1  6600 6900
-    Period2  6900 9000
-Lower and upper limits of each temporal "period" (here BJD-2450000.0 following the convention in the datasets_
+      Prot: [5.00, 12.00]
+      Seasons:
+        0: [5000, 6250, 4, 4]
+        1: [6250, 7000, 4, 4]
 
-    Spec_dataset 2 2 1
-The first parameter is the number of spectroscopic datasets in Input_RV
-  Then for each dataset the number of harmonics to be used to correct for activity
+Prot: Lower and upper limits on rotational period of the star (days)
+Seasons: Use this to split the full observational range in several "Seasons"
+(here BJD-2450000.0 following the convention in the datasets). Then for each dataset the number of harmonics to be used to correct for activity.
 
-    Phase_coherence 0
+      Phase_coherence: 0
 Turn on if you want all the harmonics to be at the same phase
 
-    Phase_synchro   0
+    Phase_dataset: False
 Turn on if you do not want any phase offset between photometry and other observations
   Phase_coherence and Phase_synchro have been introduced for testing purpose and they should be kept to 0 for physical reasons
 
-    Ngen      16000  
-    Nsteps   400000
-    Nburn    200000
-*emcee* parameters
+    emcee:
+      Ngen: 5000
+      Nsteps: 5000
+      Nburn: 4000
+      Npop_mult: 2
+      Thin: 100
+      Recenter_Bounds: True
 
-  Npop_mult     8
-
-number of walkers is Npop_mult x number of parameters
-
-  Thin        100
-
-Thinning factor for posterior sampling
-
+*emcee* parameters. Pay attention to those ones
+Npop_mult: number of walkers is Npop_mult x number of parameters
+Thin: thinning factor for posterior sampling
 
 #Help on dataset files
 
@@ -107,4 +97,4 @@ _For each row:
 
 6. flag for linear trend: as for jitter
 
-7. flag on activity (RV only!) as for jitter_
+Last flag can be omitted if no linear trend due to the instrument is present 

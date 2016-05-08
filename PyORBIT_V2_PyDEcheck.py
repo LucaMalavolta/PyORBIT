@@ -22,7 +22,8 @@ file_conf = args.i[0]
 # file_conf = raw_input()
 
 mc = ModelContainer()
-get_pyorbit_input(file_conf, mc)
+yaml_parser(file_conf, mc)
+#get_pyorbit_input(file_conf, mc)
 
 mc.create_bounds()
 print 'Dimensions = ', mc.ndim

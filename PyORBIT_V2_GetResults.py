@@ -49,6 +49,7 @@ def get_mass(M_star2, M_star1, Period, K1, e0):
 parser = argparse.ArgumentParser(prog='PyORBIT_V2_GetResults.py', description='Extract results from output MCMC')
 # parser.add_argument('-l', type=str, nargs='+', help='line identificator')
 parser.add_argument('config_file', type=str, nargs=1, help='config file')
+parser.add_argument('-p', type=str, nargs='?', default='False', help='Create plot ancillary files')
 parser.add_argument('-v', type=str, nargs='?', default='False', help='Create Veusz ancillary files')
 parser.add_argument('-t', type=str, nargs='?', default='False', help='Create GR traces')
 parser.add_argument('-nburn', type=int, nargs='?', default=0, help='emcee burn-ins')
@@ -60,7 +61,9 @@ file_conf = args.config_file[0]
 # file_conf = raw_input()
 
 mc = ModelContainer()
-get_pyorbit_input(file_conf, mc)
+yaml_parser(file_conf, mc)
+#get_pyorbit_input(file_conf, mc)
+mc.create_bounds()
 
 
 M_star1 = mc.star_mass_val
@@ -176,114 +179,191 @@ x0 = 1. / 150
 M_star1_rand = np.random.normal(M_star1, M_star1_err, n_kept)
 
 if 'kepler' in mc.model_list:
+
+    if args.p != 'False' or args.v != 'False':
+
+        plot_dir = dir_output + '/files_plot/'
+
+        if not os.path.exists(plot_dir):
+            os.makedirs(plot_dir)
+
+        boundaries = np.asarray([mc.Tref, mc.Tref])
+        plot_dir = dir_output + '/files_plot/'
+
+        if not os.path.exists(plot_dir):
+            os.makedirs(plot_dir)
+        for dataset in mc.dataset_list:
+            if dataset.kind == 'RV':
+                boundaries[0] = min(boundaries[0], dataset.x[0])
+                boundaries[1] = max(boundaries[1], dataset.x[-1])
+        # tenpercent = (boundaries[1] - boundaries[0]) / 10.
+        # boundaries = [boundaries[0] - tenpercent, boundaries[1] + tenpercent]
+        boundaries += np.asarray([-1.0, 1.0])*(boundaries[1] - boundaries[0]) / 10.
+
+        x_range = np.arange(boundaries[0], boundaries[1], 2)
+        x_phase = np.arange(-0.50, 1.50, 0.005, dtype=np.double)
+
+        model_dsys, model_plan, model_orbs, model_actv = mc.rv_make_model(chain_med[:, 0], x_range, x_phase)
+
+
     for planet_name in mc.pcv.name_ref:
 
-        print planet_name
+        print 'Planet ', planet_name, ' summary'
+        print
 
-        if mc.pcv.n_orbpams[planet_name] == 5:
+        sample_plan = np.zeros([n_kept, 9])
 
-            sample_plan = np.zeros([n_kept, 8])
-            sample_plan[:, 0], sample_plan[:, 1], sample_plan[:, 2], sample_plan[:, 3], sample_plan[:, 4] = \
-                mc.pcv.convert_params(flatchain[:, mc.variable_list[planet_name]['logP']],
-                                      flatchain[:, mc.variable_list[planet_name]['logK']],
-                                      flatchain[:, mc.variable_list[planet_name]['phase']],
-                                      flatchain[:, mc.variable_list[planet_name]['esino']],
-                                      flatchain[:, mc.variable_list[planet_name]['ecoso']])
+        for ii in xrange(0, n_kept):
+            sample_plan[ii, 0:5] = mc.pcv.convert(planet_name, flatchain[ii, :])
 
-            # Time of periastron
-            sample_plan[:, 5] = mc.Tref + (-sample_plan[:, 2] + sample_plan[:, 4]) / 360.00 * sample_plan[:, 0]
+        # Time of periastron
+        sample_plan[:, 6] = mc.Tref + (-sample_plan[:, 2] + sample_plan[:, 4]) / (2*np.pi) * sample_plan[:, 0]
 
-            for ii in xrange(0, n_kept):
-                # Planet mass
-                sample_plan[ii, 6] = M_ratio * scipy.optimize.fsolve(get_mass, x0, args=(
-                    M_star1_rand[ii], sample_plan[ii, 0], sample_plan[ii, 1], sample_plan[ii, 3]))
-                # semi-major axis
-                sample_plan[ii, 7] = np.power(
-                    (Mu_sun * np.power(sample_plan[ii, 0] * seconds_in_day / (2 * np.pi), 2) / (AU_km ** 3.0)) *
-                    M_star1_rand[ii], 1.00 / 3.00)
+        #Time of central transit
+        sample_plan[:, 7] = mc.Tref + kp.kepler_Tcent_T0P(sample_plan[:, 0], sample_plan[:, 2], sample_plan[:, 3],
+                                                             sample_plan[:, 4])
+        for ii in xrange(0, n_kept):
+            # Planet mass
+            sample_plan[ii, 5] = M_ratio * scipy.optimize.fsolve(get_mass, x0, args=(
+                M_star1_rand[ii], sample_plan[ii, 0], sample_plan[ii, 1], sample_plan[ii, 3]))
+            # semi-major axis
+            sample_plan[ii, 8] = np.power(
+                (Mu_sun * np.power(sample_plan[ii, 0] * seconds_in_day / (2 * np.pi), 2) / (AU_km ** 3.0)) *
+                M_star1_rand[ii], 1.00 / 3.00)
 
-            sample_med = np.asarray(map(lambda v: (v[1], v[2] - v[1], v[1] - v[0]),
-                                        zip(*np.percentile(sample_plan[:, :], [15.865, 50, 84.135], axis=0))))
+        sample_med = np.asarray(map(lambda v: (v[1], v[2] - v[1], v[1] - v[0]),
+                                    zip(*np.percentile(sample_plan[:, :], [15.865, 50, 84.135], axis=0))))
 
-            print 'Period = ', sample_med[0, 0], ' +\sigma ', sample_med[0, 1], ' -\sigma ', sample_med[0, 2]
-            print 'K      = ', sample_med[1, 0], ' +\sigma ', sample_med[1, 1], ' -\sigma ', sample_med[1, 2]
-            print 'phase  = ', sample_med[2, 0], ' +\sigma ', sample_med[2, 1], ' -\sigma ', sample_med[2, 2]
-            print 'e      = ', sample_med[3, 0], ' +\sigma ', sample_med[3, 1], ' -\sigma ', sample_med[3, 2]
-            print 'o      = ', sample_med[4, 0], ' +\sigma ', sample_med[4, 1], ' -\sigma ', sample_med[4, 2]
-            print 'Tperi  = ', sample_med[5, 0], ' +\sigma ', sample_med[5, 1], ' -\sigma ', sample_med[5, 2]
-            print 'Mass_J = ', sample_med[6, 0], ' +\sigma ', sample_med[6, 1], ' -\sigma ', sample_med[6, 2]
-            print 'Mass_E = ', sample_med[6, 0]*EJ_ratio, \
-                ' +\sigma ', sample_med[6, 1]*EJ_ratio, ' -\sigma ', sample_med[6, 2]*EJ_ratio
-            print 'a      = ', sample_med[7, 0], ' +\sigma ', sample_med[7, 1], ' -\sigma ', sample_med[7, 2]
+        print 'Period = ', sample_med[0, 0], ' +\sigma ', sample_med[0, 1], ' -\sigma ', sample_med[0, 2]
+        print 'K      = ', sample_med[1, 0], ' +\sigma ', sample_med[1, 1], ' -\sigma ', sample_med[1, 2]
+        print 'phase  = ', sample_med[2, 0], ' +\sigma ', sample_med[2, 1], ' -\sigma ', sample_med[2, 2]
+        print 'e      = ', sample_med[3, 0], ' +\sigma ', sample_med[3, 1], ' -\sigma ', sample_med[3, 2]
+        print 'o      = ', sample_med[4, 0], ' +\sigma ', sample_med[4, 1], ' -\sigma ', sample_med[4, 2]
+        print 'Mass_J = ', sample_med[5, 0], ' +\sigma ', sample_med[5, 1], ' -\sigma ', sample_med[5, 2]
+        print 'Mass_E = ', sample_med[5, 0]*EJ_ratio, \
+            ' +\sigma ', sample_med[5, 1]*EJ_ratio, ' -\sigma ', sample_med[5, 2]*EJ_ratio
+        print 'Tperi  = ', sample_med[6, 0], ' +\sigma ', sample_med[6, 1], ' -\sigma ', sample_med[6, 2]
+        print 'Tcent  = ', sample_med[7, 0], ' +\sigma ', sample_med[7, 1], ' -\sigma ', sample_med[7, 2]
+        print 'a      = ', sample_med[8, 0], ' +\sigma ', sample_med[8, 1], ' -\sigma ', sample_med[8, 2]
 
-            sel_list = [0, 1, 2, 3, 4, 6]
-            sel_label = ['P', 'K', 'phase', 'e', 'omega', 'Mass_J']
 
-        else:
+        sel_list = []
+        sel_label = []
 
-            sample_plan = np.zeros([n_kept, 8])
-            sample_plan[:, 0], sample_plan[:, 1], sample_plan[:, 2], sample_plan[:, 3], sample_plan[:, 4] = \
-                mc.pcv.convert_params(flatchain[:, mc.variable_list[planet_name]['logP']],
-                                      flatchain[:, mc.variable_list[planet_name]['logK']],
-                                      flatchain[:, mc.variable_list[planet_name]['phase']],
-                                      np.zeros(n_kept), np.zeros(n_kept))
+        if 'logP' in mc.variable_list[planet_name]:
+            sel_list.append(0)
+            sel_label.append('P')
+        if 'logK' in mc.variable_list[planet_name]:
+            sel_list.append(1)
+            sel_label.append('K')
+        if 'phase' in mc.variable_list[planet_name]:
+            sel_list.append(2)
+            sel_label.append('phase')
+        if 'e' in mc.variable_list[planet_name]:
+            sel_list.append(4)
+            sel_label.append('e')
+        if 'o' in mc.variable_list[planet_name]:
+            sel_list.append(5)
+            sel_label.append('o')
+        if 'ecoso' in mc.variable_list[planet_name]:
+            sel_list.append(3)
+            sel_label.append('e')
+            sel_list.append(4)
+            sel_label.append('omega')
 
-            for ii in xrange(0, n_kept):
-                # Planet mass
-                sample_plan[ii, 6] = M_ratio * \
-                                     scipy.optimize.fsolve(get_mass, x0,
-                                                           args=(
-                                                                 M_star1_rand[ii], sample_plan[ii, 0],
-                                                                 sample_plan[ii, 1], sample_plan[ii, 3]))
-                # semi-major axis
-                sample_plan[ii, 7] = np.power(
-                    (Mu_sun * np.power(sample_plan[ii, 0] * seconds_in_day / (2 * np.pi), 2) / (AU_km ** 3.0)) *
-                    M_star1_rand[ii], 1.00 / 3.00)
+        sel_list.append(5)
+        sel_label.append('Mass_J')
 
-            sample_med = np.asarray(map(lambda v: (v[1], v[2] - v[1], v[1] - v[0]),
-                                        zip(*np.percentile(sample_plan[:, :], [15.865, 50, 84.135], axis=0))))
-
-            print 'Period = ', sample_med[0, 0], ' +\sigma ', sample_med[0, 1], ' -\sigma ', sample_med[0, 2]
-            print 'K      = ', sample_med[1, 0], ' +\sigma ', sample_med[1, 1], ' -\sigma ', sample_med[1, 2]
-            print 'phase  = ', sample_med[2, 0], ' +\sigma ', sample_med[2, 1], ' -\sigma ', sample_med[2, 2]
-            print 'Mass_J = ', sample_med[6, 0], ' +\sigma ', sample_med[6, 1], ' -\sigma ', sample_med[6, 2]
-            print 'Mass_E = ', sample_med[6, 0]*EJ_ratio, \
-                ' +\sigma ', sample_med[6, 1]*EJ_ratio, ' -\sigma ', sample_med[6, 2]*EJ_ratio
-            print 'a      = ', sample_med[7, 0], ' +\sigma ', sample_med[7, 1], ' -\sigma ', sample_med[7, 2]
-
-            sel_list = [0, 1, 2, 6]
-            sel_label = ['P', 'K', 'phase', 'Mass_J']
+        #sel_list = [0, 1, 2, 3, 4, 6]
+        #sel_label = ['P', 'K', 'phase', 'e', 'omega', 'Mass_J']
 
         fig = corner.corner(sample_plan[:, sel_list], labels=sel_label, truths=sample_med[sel_list, 0])
         fig.savefig(dir_output + planet_name + "_corners.pdf", bbox_inches='tight')
         plt.close()
 
-        print
-        print '-----------------------------'
-        print
+        if args.p != 'False':
+            # Write down the residuals
+            color_list = ['b', 'g', 'r', 'c', 'm', 'y', 'k']
 
-        #print ' Makes the phase plot'
-        #mc(chain_med[0,:])
-        #for dataset in mc.dataset_list:
+            f1, (ax1, ax2) = plt.subplots(2, sharex=True, sharey=True)
+            f2, (ax3, ax4) = plt.subplots(2, sharex=True, sharey=True)
+
+            ax1.plot(x_range, model_plan['BJD'][planet_name], c='g')
+            ax3.plot(x_phase, model_plan['pha'][planet_name], c='g')
+
+            color_count = 0
+            for dataset in mc.dataset_list:
+                if dataset.kind == 'RV':
+                    col_sel = color_list[color_count % 7]
+                    color_count += 1
+                    p_pha = (dataset.x0 / sample_med[0, 0]) % 1
+                    y_det = dataset.y-model_dsys[dataset.name_ref]
+                    y_res = dataset.y-model_dsys[dataset.name_ref]-model_orbs[dataset.name_ref]
+                    y_1pl = y_res + model_plan[dataset.name_ref][planet_name]
+
+                    ax1.errorbar(dataset.x, y_1pl, yerr=dataset.e, fmt=col_sel+'.', zorder=2)
+                    ax2.errorbar(dataset.x, y_res, yerr=dataset.e, fmt=col_sel+'.', zorder=2)
+
+                    ax3.errorbar(p_pha, y_1pl, yerr=dataset.e, fmt=col_sel+'.', zorder=2)
+                    ax4.errorbar(p_pha, y_res, yerr=dataset.e, fmt=col_sel+'.', zorder=2)
+
+                    fileout = open(plot_dir + planet_name + '_' + dataset.name_ref + '_kep.dat','w')
+                    fileout.write('descriptor BJD pha RV,+- RVdet,+- RVpla,+- RVres,+- RVmod,+- \n')
+                    for ii in xrange(0, dataset.n):
+                        fileout.write('{0:14f} {1:14f} {2:14f} {3:14f} {4:14f} {5:14f} {6:14f} {7:14f} '
+                                      '{8:14f} {9:14f} {10:14f} {11:14f}'
+                                      '\n'.format(dataset.x[ii], p_pha[ii],
+                                                  dataset.y[ii], dataset.e[ii],
+                                                  y_det[ii],  dataset.e[ii], y_1pl[ii], dataset.e[ii],
+                                                  y_res[ii], dataset.e[ii],
+                                                  model_orbs[dataset.name_ref][ii], dataset.e[ii]))
+                    fileout.close()
+            #'\n'.format(dataset.x[ii], (dataset.x0[ii] / sample_med[0, 0]) % 1,
+
+            f1.subplots_adjust(hspace=0)
+            f1.savefig(plot_dir + planet_name + '_kep.pdf', bbox_inches='tight')
+            f2.subplots_adjust(hspace=0)
+            f2.savefig(plot_dir + planet_name + '_pha.pdf', bbox_inches='tight')
+            plt.close()
+            #
+            #f1, (ax1, ax2) = plt.subplots(2, sharex=True, sharey=True)
+            #ax1.plot(x_kep, model_plan['BJD'][planet_name], c='g')
+            #for dataset in mc.dataset_list:
+            #    if dataset.kind == 'RV':
+            #        ax1.errorbar(dataset.x, rv_res+rv_pla, yerr=dataset.e, fmt='b.', zorder=2)
+            #        ax2.errorbar(dataset.x, rv_res, yerr=dataset.e, fmt='b.', zorder=2)
+            #f1.subplots_adjust(hspace=0)
+            #f1.savefig(plot_dir + planet_name + '_kep.pdf', bbox_inches='tight')
+            #plt.close()
+
+            #f1, (ax1, ax2) = plt.subplots(2, sharex=True, sharey=True)
+            #ax1.plot(x_pha, y_pha, c='g')
+            #for dataset in mc.dataset_list:
+            #    if dataset.kind == 'RV':
+            #        pp_pha = (dataset.x0 / sample_med[0, 0]) % 1
+            #        ax1.errorbar(pp_pha, rv_res+rv_pla, yerr=dataset.e, fmt='b.', zorder=2)
+            #        ax2.errorbar(pp_pha, rv_res, yerr=dataset.e, fmt='b.', zorder=2)
+            #f1.subplots_adjust(hspace=0)
+            #f1.savefig(plot_dir + planet_name + '_pha.pdf', bbox_inches='tight')
+            #plt.close()
+
+            fileout = open(plot_dir + planet_name + '_kep.dat', 'w')
+            fileout.write('descriptor x_range m_keplr \n')
+            for ii in xrange(0, np.size(x_range)):
+                fileout.write('{0:14f} {1:14f} \n'.format(x_range[ii], model_plan['BJD'][planet_name][ii]))
+            fileout.close()
+
+            fileout = open(plot_dir + planet_name + '_pha.dat', 'w')
+            fileout.write('descriptor x_phase m_phase \n')
+            for ii in xrange(0, np.size(x_phase)):
+                fileout.write('{0:14f} {1:14f} \n'.format(x_phase[ii], model_plan['pha'][planet_name][ii]))
+            fileout.close()
 
         if args.v != 'False':
 
             veusz_dir = dir_output + '/Veuz_plot/'
             if not os.path.exists(veusz_dir):
                 os.makedirs(veusz_dir)
-
-            # Write down the residuals
-            for dataset in mc.dataset_list:
-                if dataset.kind == 'RV':
-                    rv_res, rv_pla = mc.rv_1planet_model(chain_med[:, 0], planet_name, dataset)
-                    fileout = open(veusz_dir + planet_name + '_' + dataset.name_ref + '_ONLYkep.dat','w')
-                    fileout.write('descriptor BJD pha RV,+- RVpla,+- RVmod,+- RVres,+- \n')
-                    for ii in xrange(0, dataset.n):
-                        fileout.write('{0:14f} {1:14f} {2:14f} {3:14f} {4:14f} {5:14f} {6:14f} {7:14f} {8:14f} {9:14f}'
-                                      '\n'.format(dataset.x[ii], (dataset.x0[ii]/sample_med[0, 0])%1,
-                                                  dataset.y[ii], dataset.e[ii], rv_res[ii]+rv_pla[ii], dataset.e[ii],
-                                                  rv_pla[ii], dataset.e[ii], rv_res[ii], dataset.e[ii]))
-                    fileout.close()
 
             list_labels = ['P', 'K', 'e', 'm']
 
@@ -293,12 +373,12 @@ if 'kepler' in mc.model_list:
             output_plan[:, 0] = sample_plan[:, 0]
             output_plan[:, 1] = sample_plan[:, 1]
             output_plan[:, 2] = sample_plan[:, 4]
-            output_plan[:, 3] = sample_plan[:, 6]
+            output_plan[:, 3] = sample_plan[:, 5]
             plot_truths = np.percentile(output_plan[:, :], [15.865, 50, 84.135], axis=0)
 
-            veusz_dir = dir_output + '/Veuz_plot/'
-            if not os.path.exists(veusz_dir):
-                os.makedirs(veusz_dir)
+            #veusz_dir = dir_output + '/Veuz_plot/'
+            #if not os.path.exists(veusz_dir):
+            #    os.makedirs(veusz_dir)
 
             n_bins = 60 + 1
 
@@ -309,7 +389,7 @@ if 'kepler' in mc.model_list:
             data_edg = np.zeros([n_int, n_bins], dtype=np.double)
             for ii in xrange(0, n_int):
                 data_lim[ii, :] = [np.amin(output_plan[:, ii]), np.amax(output_plan[:, ii])]
-                if mc.pcv.n_orbpams[planet_name] == 3:
+                if data_lim[ii, 0] == data_lim[ii, 1]:
                     data_lim[ii, :] = [0.0, 0.1]
                 data_edg[ii, :] = np.linspace(data_lim[ii, 0], data_lim[ii, 1], n_bins)
 
@@ -353,7 +433,7 @@ if 'kepler' in mc.model_list:
             #plot lower-upper limits for the mass
 
             pams_limits = np.zeros([n_int, 2])
-            for ii in xrange(0, mc.pcv.n_orbpams[planet_name]):
+            for ii in xrange(0, n_int):
                 pams_limits[ii, :] = np.percentile(sample_plan[:, ii], [0.135, 99.865])
 
             random_n = 10000
@@ -384,9 +464,6 @@ if 'kepler' in mc.model_list:
             y_pha[:, 0] = y_pha[:, 2]
             y_pha[:, 1] = y_pha[:, 2]
 
-            fig1 = plt.plot(x_kep, y_kep[:, 0], c='g')
-            fig2 = plt.plot(x_pha, y_pha[:, 0], c='g')
-
             print 'Accepted randomizations: ', np.sum(y_flg)
             for ii in xrange(0, random_n):
                 ir = ii_kep[ii]
@@ -400,10 +477,17 @@ if 'kepler' in mc.model_list:
                     y_pha[:, 0] = np.minimum(y_pha[:, 0],y_pha_tmp)
                     y_pha[:, 1] = np.maximum(y_pha[:, 1],y_pha_tmp)
 
+            fig1 = plt.plot(x_kep, y_kep[:, 2], c='g')
             fig1 = plt.plot(x_kep, y_kep[:, 0], c='r')
             fig1 = plt.plot(x_kep, y_kep[:, 1], c='b')
+            plt.savefig(veusz_dir + planet_name + '_kep.png', bbox_inches='tight')
+            plt.close()
+
+            fig2 = plt.plot(x_pha, y_pha[:, 2], c='g')
             fig2 = plt.plot(x_pha, y_pha[:, 0], c='r')
             fig2 = plt.plot(x_pha, y_pha[:, 1], c='b')
+            plt.savefig(veusz_dir + planet_name + '_pha.png', bbox_inches='tight')
+            plt.close()
 
             # h5f = h5py.File('output/'+planet_name+"planet"+`pp`+'_kep.hdf5', "w")
             # data_grp = h5f.create_group("data")
@@ -431,4 +515,6 @@ if 'kepler' in mc.model_list:
             fileout.close()
 
         print 'Planet ', planet_name, ' completed'
+        print
+        print '-----------------------------'
         print

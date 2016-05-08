@@ -19,7 +19,8 @@ file_conf = args.config_file[0]
 
 mc = ModelContainer()
 
-get_pyorbit_input(file_conf, mc)
+yaml_parser(file_conf, mc)
+#get_pyorbit_input(file_conf, mc)
 
 dir_output = './' + mc.planet_name + '/'
 if not os.path.exists(dir_output):
@@ -27,7 +28,11 @@ if not os.path.exists(dir_output):
 
 mc.create_bounds()
 print 'Dimensions = ', mc.ndim
-
+print '   '
+print 'Variable list:', mc.variable_list
+print
+print 'Variable bounds:', mc.bounds
+print
 mc.nwalkers = mc.ndim * mc.npop_mult
 if mc.nwalkers%2 == 1: mc.nwalkers += 1
 
@@ -72,7 +77,7 @@ pickle.dump(mc.variable_list, open(dir_output + 'vlist.pick', 'wb'))
 pickle.dump(mc.scv.use_offset,  open(dir_output + 'scv_offset.pick', 'wb'))
 
 print 'emcee'
-sampler = emcee.EnsembleSampler(mc.nwalkers, mc.ndim, mc, threads=24)
+sampler = emcee.EnsembleSampler(mc.nwalkers, mc.ndim, mc, threads=mc.nwalkers)
 sampler.run_mcmc(population, mc.nsteps, thin=mc.thin)
 
 print 'emcee completed'
