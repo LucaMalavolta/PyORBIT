@@ -6,6 +6,7 @@ import george
 def get_var_log(var, fix, i):
     return np.log2(var[i], dtype=np.double)
 
+
 def get_var_exp(var, fix, i):
     return np.exp2(var[i], dtype=np.double)
 
@@ -14,40 +15,8 @@ def get_var_val(var, fix, i):
     return var[i]
 
 
-def get_var_sqr(var, fix, i):
-    return var[i]**2
-
-
-def get_var_inv(var, fix, i):
-    return 1./var[i]
-
-
-def get_var_2inv(var, fix, i):
-    return 1./(2*var[i])
-
-
-def get_fix_log(var, fix, i):
-    return np.log2(fix[i], dtype=np.double)
-
-
-def get_fix_exp(var, fix, i):
-    return np.exp2(fix[i], dtype=np.double)
-
-
 def get_fix_val(var, fix, i):
     return fix[i]
-
-
-def get_fix_sqr(var, fix, i):
-    return fix[i]**2
-
-
-def get_fix_inv(var, fix, i):
-    return 1./fix[i]
-
-
-def get_fix_2inv(var, fix, i):
-    return 1./(2*fix[i])
 
 
 def get_2var_e(var, fix, i):
@@ -62,6 +31,12 @@ def get_2var_o(var, fix, i):
     return np.arctan2(esino, ecoso, dtype=np.double)
 
 
+def giveback_priors(kind, pams, val):
+    if kind == 'Gaussian':
+        return -(val-pams[0])**2 / (2*pams[1]**2)
+    if kind == 'Uniform':
+        return 0.0
+
 # A class for common variables (number of planets, number of sinusoids...)
 # Info to unpack the variables inside emcee must be included here
 # Physical effects must be included here
@@ -75,6 +50,11 @@ class PlanetsCommonVariables:
         self.variables = {}
         self.var_list = {}
         self.fix_list = {}
+
+        self.prior_kind = {}
+        self.prior_pams = {}
+
+        self.inclination = {}
 
         self.circular = {}
 
@@ -91,14 +71,19 @@ class PlanetsCommonVariables:
         self.var_list[name_ref] = {}
         self.variables[name_ref] = {}
 
+        self.prior_kind[name_ref] = {}
+        self.prior_pams[name_ref] = {}
+
         self.bounds[name_ref] = {}
         self.bounds[name_ref]['logP'] = [0.0, 7.0]
         self.bounds[name_ref]['logK'] = [0.0, 7.0]
         self.bounds[name_ref]['phase'] = [0.0, 2 * np.pi]
-        self.bounds[name_ref]['ecoso'] = [0.0, 1.0]
-        self.bounds[name_ref]['esino'] = [0.0, 1.0]
+        self.bounds[name_ref]['ecoso'] = [-1.0, 1.0]
+        self.bounds[name_ref]['esino'] = [-1.0, 1.0]
         self.bounds[name_ref]['e'] = [0.0, 1.0]
         self.bounds[name_ref]['o'] = [0.0, 2 * np.pi]
+
+        self.inclination[name_ref] = 90.000
 
     # def convert_params(self,in_pams):
     #    out_pams = np.zeros(5,dtype=np.double)
@@ -192,6 +177,14 @@ class PlanetsCommonVariables:
                 mc.bounds_list.append(self.bounds[planet_name]['esino'])
                 mc.ndim += 2
             mc.variable_list[planet_name]['kepler_pams'] = np.arange(ndim_buffer, mc.ndim, 1)
+
+    def return_priors(self, planet_name, theta):
+        prior_out = 0.00
+        kep_pams = self.convert(planet_name, theta)
+        for key in self.prior_pams[planet_name]:
+            ii = self.list_pams.index(key)
+            prior_out += giveback_priors(self.prior_kind[planet_name][key], self.prior_pams[planet_name][key], kep_pams[ii])
+        return prior_out
 
     def convert(self, planet_name, theta):
         list_out = []
@@ -342,13 +335,11 @@ class SinusoidsCommonVariables:
         amp_in = np.zeros([self.n_seasons, self.n_pha_max], dtype=np.double)
         for jj in range(0, self.n_seasons):
             pha_in[jj, :self.n_pha[jj]] = theta[mc.variable_list[self.season_name[jj] + '_pha']]
-
             if dataset.season_flag[jj]:
                 if self.use_offset[dataset.kind]:
                     off_in[:] = theta[mc.variable_list[dataset.kind][self.season_name[jj] + '_off']]
                 amp_in[jj, :dataset.n_amp[jj]] = \
                     theta[mc.variable_list[dataset.name_ref][self.season_name[jj] + '_amp']]
-
         return self.model_sinusoids(dataset, Prot, amp_in, pha_in, off_in)
 
     def print_vars(self, mc, theta):
@@ -441,8 +432,7 @@ class SinusoidsCommonVariables:
                         np.arange(mc.ndim, mc.ndim + dataset.n_amp[jj], 1)
                     mc.ndim += dataset.n_amp[jj]
 
-    @staticmethod
-    def model_sinusoids(dataset, p_rot, amp, pha, off):
+    def model_sinusoids(self, dataset, p_rot, amp, pha, off):
         # np.size(SinAmp)==np.sum(n_amp) ???? What if an activity dataset is missing?
         # cycle for np.sum(rva_mask[:, jj]) <= 0 ??
 
@@ -452,11 +442,12 @@ class SinusoidsCommonVariables:
         # sin = phase of each sinusoid
         # off = overall offset of the sinusoids
         # sel = if the model has to be restricted to a specific temporal range
+
         model = np.zeros(dataset.n, dtype=np.double)
         xph = (dataset.x0 / p_rot) % 1
         har = np.arange(1, np.size(amp, axis=1) + 1, 1., dtype=np.double)
 
-        for ii in xrange(0, dataset.n_seasons):
+        for ii in xrange(0, self.n_seasons):
             for jj in xrange(0, np.size(pha[ii, :])):
                 model += dataset.p_mask[ii, :] * amp[ii, jj] * np.sin(
                     (har[jj] * xph + pha[ii, jj] + off[ii]) * 2. * np.pi)
@@ -476,41 +467,35 @@ class GaussianProcessCommonVariables:
 
         # Three parameters out of four are the same for all the datasets, since they are
         # related
-        # From Affer et al. 2016
+        # From Grunblatt+2015, Affer+2016
         # - theta: is usually related to the rotation period of the star( or one of its harmonics);
         # - lambda: is the correlation decay timescale, and it can be related to the lifetime of the active regions.
         # - omega: is the length scale of the periodic component, and can be linked to the size evolution of the active regions;
         # - h: represents the amplitude of the correlations;
 
-        self.list_pams_human = ['Prot', 'Pdec', 'Oamp', 'Hamp']
-        self.list_pams_george = ['lnProt', 'Pds2', 'inv2O', 'H2']
-
         # There si a 1-1 correspondence ("biunivoca") between variables, so we use this trick
-        self.list_pams_corr = {'Prot': 'lnProt', 'Pdec': 'Pds2', 'Oamp': 'inv2O', 'Hamp': 'H2'}
+        #self.list_pams_corr = {'Prot': 'lnProt', 'Pdec': 'Pds2', 'Oamp': 'inv2O', 'Hamp': 'H2'}
 
-        self.list_pams_common = ['lnProt', 'Pds2', 'inv2O']
-        self.list_pams_dataset = ['H2']
+        self.list_pams_common = ['Prot', 'Pdec', 'Oamp']
+        self.list_pams_dataset = ['Hamp']
 
         return
 
-    def convert_val(self, name, input_pam):
-        # conversion of the GP parameters into physically meaningful ones
-        if name == self.list_pams_george[0]:
-            return np.exp(input_pam)
-        if name == self.list_pams_human[0]:
-            return np.log(input_pam)
-        if name == self.list_pams_george[1]:
-            return np.sqrt(input_pam)
-        if name == self.list_pams_human[1]:
-            return input_pam**2
-        if name == self.list_pams_george[2]:
-            return np.sqrt(1./(2.0*input_pam))
-        if name == self.list_pams_human[2]:
-            return 1./(2*input_pam**2)
-        if name == self.list_pams_george[3]:
-            return np.sqrt(input_pam)
-        if name == self.list_pams_human[3]:
-            return input_pam*input_pam
+    def convert_val2gp_common(self, input_pam):
+        # conversion of the  physically meaningful parameters to GP ones
+        return [np.log(input_pam[0]), input_pam[1]**2, 1./(2*input_pam[2]**2)]
+
+    def convert_val2gp_dataset(self, input_pam):
+        # conversion of the  physically meaningful parameters to GP ones
+        return [input_pam[0]*input_pam[0]]
+
+    def convert_gp2val_common(self, input_pam):
+        # conversion of the  GP input parameters to physical values
+        return [np.exp(input_pam[0]), np.sqrt(input_pam[1]), np.sqrt(1./(2.0*input_pam[2]))]
+
+    def convert_gp2val_dataset(self, input_pam):
+        # conversion of the  GP input parameters to physical values
+        return [np.sqrt(input_pam[0])]
 
     def add_dataset(self, name_ref='Common'):
         # name_ref : name of the dataset, otherwise 'common'
@@ -524,7 +509,7 @@ class GaussianProcessCommonVariables:
             self.fix_list[name_ref] = {}
             self.var_list[name_ref] = {}
             for name in self.list_pams_common:
-                self.bounds[name_ref][name]= [0.00001, 20]
+                self.bounds[name_ref][name] = [0.00001, 20]
 
     def define_bounds(self, mc):
 
@@ -556,45 +541,54 @@ class GaussianProcessCommonVariables:
                         mc.bounds_list.append(self.bounds[dataset.name_ref][var])
                         mc.ndim += 1
 
-    def obtain(self, dataset_name, theta):
+    def convert_common(self, theta):
         list_out = []
         for name in self.list_pams_common:
             list_out.append(self.variables[name](theta, self.fixed, self.var_list[name]))
+        return list_out
+
+    def convert_dataset(self, dataset_name, theta):
+        list_out = []
         for name in self.list_pams_dataset:
             list_out.append(self.variables[dataset_name][name](theta, self.fixed, self.var_list[dataset_name][name]))
         return list_out
 
-    def lnlk_compute(self, mc, theta, dataset):
+    def lnlk_compute(self, theta, dataset):
 
-        gp_pams = self.obtain(dataset.name_ref, theta)
+        gp_pams_common = self.convert_val2gp_common(self.convert_common(theta))
+        gp_pams_dataset = self.convert_val2gp_dataset(self.convert_dataset(dataset.name_ref, theta))
+
         # gp_pams[0] = ln_theta = ln_Period -> ExpSine2Kernel(gamma, ln_period)
         # gp_pams[1] = metric = r^2 = lambda**2  -> ExpSquaredKernel(metric=r^2)
         # gp_pams[2] = Gamma =  1/ (2 omega**2) -> ExpSine2Kernel(gamma, ln_period)
         # gp_pams[3] = h^2 -> h^2 * ExpSquaredKernel * ExpSine2Kernel
-        kernel = gp_pams[3] * george.kernels.ExpSquaredKernel(metric=gp_pams[1]) * \
-            george.kernels.ExpSine2Kernel(gamma=gp_pams[2], ln_period=gp_pams[0])
+        kernel = gp_pams_dataset[0] * george.kernels.ExpSquaredKernel(metric=gp_pams_common[1]) * \
+            george.kernels.ExpSine2Kernel(gamma=gp_pams_common[2], ln_period=gp_pams_common[0])
 
         gp = george.GP(kernel)
-        gp.compute(dataset.x0, dataset.e)
+        env = np.sqrt(dataset.e ** 2.0 + dataset.jitter ** 2.0)
+        gp.compute(dataset.x0, env)
 
         return gp.lnlikelihood(dataset.y - dataset.model, quiet=True)
 
     def print_vars(self, mc, theta):
 
+        gp_pams_common = self.convert_val2gp_common(self.convert_common(theta))
+
         for ii in xrange(0,np.size(self.list_pams_common)):
             name = self.list_pams_common[ii]
+            mc.pam_names[mc.variable_list[name]] = name
             var  = self.variables[name](theta, self.fixed, self.var_list[name])
-            print 'GaussianProcess ', self.list_pams_common[ii], var, '     ',\
-                self.list_pams_human[ii], '  ', self.convert_val(name, var)
+            print 'GaussianProcess ', self.list_pams_common[ii], var, '  (', gp_pams_common[ii],') '
 
         for dataset in mc.dataset_list:
+            gp_pams_dataset = self.convert_val2gp_dataset(self.convert_dataset(dataset.name_ref, theta))
             for ii in xrange(0, np.size(self.list_pams_dataset)):
                 name = self.list_pams_dataset[ii]
-                ii_add = ii + np.size(self.list_pams_common)
+                mc.pam_names[mc.variable_list[dataset.name_ref][name]] = name
+                #ii_add = ii + np.size(self.list_pams_common)
                 var = self.variables[dataset.name_ref][name](theta, self.fixed, self.var_list[dataset.name_ref][name])
-                print 'GaussianProcess ', dataset.name_ref, '   ',\
-                    self.list_pams_dataset[ii], var, '     ', \
-                    self.list_pams_human[ii+ii_add], '  ', self.convert_val(name, var)
+                print 'GaussianProcess ', self.list_pams_dataset[ii], var, '  (', gp_pams_dataset[ii], ') '
 
 
 class Dataset:
@@ -631,7 +625,6 @@ class Dataset:
             self.l = np.asarray(self.data[:, 5], dtype=np.double)
         else:
             self.l = np.zeros(self.n, dtype=np.double) -1
-
 
 
         # use different offsets for the data
@@ -820,6 +813,10 @@ class TransitCentralTimes(Dataset):
         self.x = np.asarray(self.data[:, 0], dtype=np.double)
         self.e = np.asarray(self.data[:, 1], dtype=np.double)
 
+        if np.size(self.data[0,:]) > 2:
+            print 'TTV jitter found in the dataset'
+            self.e = np.sqrt(self.data[:, 1]**2+self.data[:, 2], dtype=np.double)
+
         self.n = np.size(self.x)
         self.model = np.zeros(self.n, dtype=np.double)
 
@@ -844,7 +841,7 @@ class TransitCentralTimes(Dataset):
     def compute(self, mc, theta):
         # By default, dataset.name_ref == planet_name
         period, _, f, e, o = mc.pcv.convert(self.planet_name, theta)
-        model = np.rint(self.x0 / period) * period + kp.kepler_Tcent_T0P(period, f, e, o)
+        model = np.rint(self.x0 / period - 1) * period + kp.kepler_Tcent_T0P(period, f, e, o)
         return model
 
     def model_logchi2(self):
@@ -856,9 +853,9 @@ class TransitCentralTimes(Dataset):
         return -0.5 * (np.sum((self.x0 - self.model) ** 2 * env - np.log(env)))
 
     def print_vars(self, mc, theta):
-        period, _, f, e, o = mc.pcv.convert(self.planet_name, theta)
-        model = np.rint(self.x0 / period) * period + kp.kepler_Tcent_T0P(period, f, e, o)
-
+        #period, _, f, e, o = mc.pcv.convert(self.planet_name, theta)
+        #model = np.rint(self.x0 / period) * period + kp.kepler_Tcent_T0P(period, f, e, o)
+        model = self.compute(mc, theta)
         print 'Tc ', self.planet_name
         for ii in xrange(0,self.n):
                 print 'Input Tc: ',  self.x0[ii] , '  Model Tc: ', model[ii],\
@@ -946,6 +943,10 @@ class ModelContainer:
             return -np.inf
         chi2_out = 0.0
 
+        if 'kepler' in self.model_list:
+            for planet_name in self.pcv.name_ref:
+                chi2_out += self.pcv.return_priors(planet_name, theta)
+
         for dataset in self.dataset_list:
             dataset.model_reset()
             dataset.model_offset(theta[self.variable_list[dataset.name_ref]['offset']])
@@ -964,7 +965,7 @@ class ModelContainer:
 
             # Gaussian Process check MUST be the last one or the program will fail
             if 'gaussian' in dataset.models:
-                chi2_out += self.gcv.lnlk_compute(self, theta, dataset)
+                chi2_out += self.gcv.lnlk_compute(theta, dataset)
             else:
                 chi2_out += dataset.model_logchi2()
 
@@ -1161,6 +1162,12 @@ def yaml_parser(file_conf, mc):
                 for var in fixed_conf:
                     mc.pcv.fix_list[planet_name][var] = np.asarray(fixed_conf[var], dtype=np.double)
 
+            if 'Priors' in planet_conf:
+                prior_conf = planet_conf['Priors']
+                for var in prior_conf:
+                    mc.pcv.prior_kind[planet_name][var] = prior_conf[var][0]
+                    mc.pcv.prior_pams[planet_name][var] = np.asarray(prior_conf[var][1:], dtype=np.double)
+
             if 'Orbit' in planet_conf and planet_conf['Orbit'] == 'circular':
                 mc.pcv.circular[planet_name] = True
                 mc.pcv.fix_list[planet_name]['e'] = 0.00000
@@ -1169,6 +1176,9 @@ def yaml_parser(file_conf, mc):
             if 'Tcent' in planet_conf:
                 mc.dataset_list.append(TransitCentralTimes(planet_name, planet_conf['Tcent']))
                 mc.dataset_list[-1].common_Tref(mc.Tref)
+
+            if 'Inclination' in planet_conf:
+                mc.pcv.inclination[planet_name] = planet_conf['Inclination']
 
     if 'Sinusoids' in config_in:
         conf = config_in['Sinusoids']
@@ -1187,18 +1197,11 @@ def yaml_parser(file_conf, mc):
         for name_ref in conf:
             if name_ref == 'Common':
                 mc.gcv.add_dataset(name_ref)
-                for var in conf[name_ref] :
-                    if var in mc.gcv.list_pams_george:
-                        var_gp = var
-                        converted = np.asarray(conf[name_ref][var], dtype=np.double)
-                    else:
-                        var_gp = mc.gcv.list_pams_corr[var]
-                        converted = mc.gcv.convert_val(var, np.asarray(conf[name_ref][var], dtype=np.double))
-
+                for var in conf[name_ref]:
                     if np.size(conf[name_ref][var]) == 1:
-                        mc.gcv.fix_list[var_gp] = converted
+                        mc.gcv.fix_list[var] = np.asarray(conf[name_ref][var], dtype=np.double)
                     else:
-                        mc.gcv.bounds[var_gp] = np.sort(converted)
+                        mc.gcv.bounds[var] = np.asarray(conf[name_ref][var], dtype=np.double)
             else:
                 #num_ref = np.asarray(name_ref, dtype=np.double)
                 # dataset_name = mc.dataset_list[num_ref].name_ref
@@ -1206,17 +1209,10 @@ def yaml_parser(file_conf, mc):
                 mc.gcv.add_dataset(dataset_name)
 
                 for var in conf[name_ref]:
-                    if var in mc.gcv.list_pams_george:
-                        var_gp = var
-                        converted = np.asarray(conf[name_ref][var], dtype=np.double)
-                    else:
-                        var_gp = mc.gcv.list_pams_corr[var]
-                        converted = mc.gcv.convert_val(var, np.asarray(conf[name_ref][var], dtype=np.double))
-
                     if np.size(conf[name_ref][var]) == 1:
-                        mc.gcv.fix_list[dataset_name][var_gp] = converted
+                        mc.gcv.fix_list[dataset_name][var] = np.asarray(conf[name_ref][var], dtype=np.double)
                     else:
-                        mc.gcv.bounds[dataset_name][var_gp] = np.sort(converted)
+                        mc.gcv.bounds[dataset_name][var] = np.asarray(conf[name_ref][var], dtype=np.double)
 
     if 'Tref' in config_in:
         mc.Tref = np.asarray(config_in['Tref'])

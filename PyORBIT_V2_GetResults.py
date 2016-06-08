@@ -5,11 +5,11 @@ import cPickle as pickle
 import scipy.optimize
 import csv
 import os
-import corner
 import argparse
 import matplotlib as mpl
 mpl.use('Agg')
 from matplotlib import pyplot as plt
+import corner
 
 G_grav = 6.67398e-11
 M_sun = 1.98892e30
@@ -36,7 +36,7 @@ def GelmanRubin(chains_input):
 def get_mass(M_star2, M_star1, Period, K1, e0):
     # M_star1, M_star2 in solar masses
     # P in days -> Period is converted in seconds in the routine
-    # i in degrees
+    # inclination assumed to be 90 degrees
     # Gravitational constant is given in m^3 kg^-1 s^-2
     # output in m/s
     output = K1 - (2. * np.pi * G_grav * M_sun / 86400.0) ** (1.0 / 3.0) * (1.000 / np.sqrt(1.0 - e0 ** 2.0)) * (
@@ -49,7 +49,8 @@ def get_mass(M_star2, M_star1, Period, K1, e0):
 parser = argparse.ArgumentParser(prog='PyORBIT_V2_GetResults.py', description='Extract results from output MCMC')
 # parser.add_argument('-l', type=str, nargs='+', help='line identificator')
 parser.add_argument('config_file', type=str, nargs=1, help='config file')
-parser.add_argument('-p', type=str, nargs='?', default='False', help='Create plot ancillary files')
+parser.add_argument('-p', type=str, nargs='?', default='False', help='Create plot files')
+parser.add_argument('-mp', type=str, nargs='?', default='False', help='Create MEGA plot')
 parser.add_argument('-v', type=str, nargs='?', default='False', help='Create Veusz ancillary files')
 parser.add_argument('-t', type=str, nargs='?', default='False', help='Create GR traces')
 parser.add_argument('-nburn', type=int, nargs='?', default=0, help='emcee burn-ins')
@@ -94,6 +95,8 @@ chain = h5f['/emcee/chain']
 lnprobability = h5f['/emcee/lnprobability']
 acceptance_fraction = h5f['/emcee/acceptance_fraction']
 acor = h5f['/emcee/acor']
+
+print mc.bounds[:]
 
 print
 print '*************************************************************'
@@ -157,6 +160,19 @@ print
 print '*************************************************************'
 print
 
+if args.mp != 'False':
+
+    print 'MEGA plot'
+
+    # plotting mega-corner plot
+    fig = corner.corner(flatchain[:, :], labels=mc.pam_names, truths=chain_med[:, 0])
+    fig.savefig(dir_output + "ALL_corners.pdf", bbox_inches='tight')
+    plt.close()
+
+    print
+    print '*************************************************************'
+    print
+
 if args.t != 'False':
     for nd in xrange(0, mc.ndim):  # (0,ndim):
         out_absc = np.arange(0, mc.nburnin, 1)
@@ -204,7 +220,6 @@ if 'kepler' in mc.model_list:
         x_phase = np.arange(-0.50, 1.50, 0.005, dtype=np.double)
 
         model_dsys, model_plan, model_orbs, model_actv = mc.rv_make_model(chain_med[:, 0], x_range, x_phase)
-
 
     for planet_name in mc.pcv.name_ref:
 
@@ -260,11 +275,11 @@ if 'kepler' in mc.model_list:
             sel_list.append(2)
             sel_label.append('phase')
         if 'e' in mc.variable_list[planet_name]:
-            sel_list.append(4)
+            sel_list.append(3)
             sel_label.append('e')
         if 'o' in mc.variable_list[planet_name]:
-            sel_list.append(5)
-            sel_label.append('o')
+            sel_list.append(4)
+            sel_label.append('omega')
         if 'ecoso' in mc.variable_list[planet_name]:
             sel_list.append(3)
             sel_label.append('e')
