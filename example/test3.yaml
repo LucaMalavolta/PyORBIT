@@ -1,0 +1,23 @@
+Name: PyORBIT_test3
+Output: PyORBIT_test3
+Inputs:
+  0:
+      File: test2_RV.dat
+      Kind: RV
+      Models: ['kepler']
+Planets:
+  0:
+    Orbit: circular
+    Boundaries:
+      P: [23.0, 24.0]
+      K: [25.0, 60.0]
+    Tcent: Tcent_0.dat
+    #Fixed:
+    #  e: 0.13
+emcee:
+  Ngen: 16000
+  Nsteps: 10000
+  Nburn: 5000
+  Npop_mult: 4
+  Thin: 1
+  Recenter_Bounds: True
