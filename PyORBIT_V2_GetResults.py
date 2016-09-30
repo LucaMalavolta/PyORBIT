@@ -10,6 +10,7 @@ import matplotlib as mpl
 mpl.use('Agg')
 from matplotlib import pyplot as plt
 import corner
+from chainconsumer import ChainConsumer
 
 G_grav = 6.67398e-11
 M_sun = 1.98892e30
@@ -54,6 +55,7 @@ parser.add_argument('-mp', type=str, nargs='?', default='False', help='Create ME
 parser.add_argument('-v', type=str, nargs='?', default='False', help='Create Veusz ancillary files')
 parser.add_argument('-t', type=str, nargs='?', default='False', help='Create GR traces')
 parser.add_argument('-nburn', type=int, nargs='?', default=0, help='emcee burn-ins')
+parser.add_argument('-cc', type=str, nargs='?', default='False', help='Use ChainConsumer')
 
 args = parser.parse_args()
 
@@ -190,6 +192,20 @@ if args.t != 'False':
     print '*************************************************************'
     print
 
+if args.cc != 'False':
+    cc = ChainConsumer()
+    for nd in xrange(0, mc.ndim):  # (0,ndim):
+        cc.add_chain(chain[:, :, nd].flatten(), walkers=mc.nwalkers)
+
+    #print(cc.get_latex_table())
+    print cc.get_summary()
+
+    print cc.diagnostic_gelman_rubin(threshold=0.05)
+    print cc.diagnostic_geweke()
+    print
+    print '*************************************************************'
+    print
+
 x0 = 1. / 150
 
 M_star1_rand = np.random.normal(M_star1, M_star1_err, n_kept)
@@ -246,13 +262,19 @@ if 'kepler' in mc.model_list:
                 (Mu_sun * np.power(sample_plan[ii, 0] * seconds_in_day / (2 * np.pi), 2) / (AU_km ** 3.0)) *
                 M_star1_rand[ii], 1.00 / 3.00)
 
+        if mc.pcv.inclination[planet_name][0] > 0.:
+            sample_plan[:, 5] = sample_plan[:, 5] / np.sin(np.pi/180. * np.random.normal(
+                mc.pcv.inclination[planet_name][0], mc.pcv.inclination[planet_name][1], n_kept))
+            print ' Orbital inclination included in mass computation '
+
         sample_med = np.asarray(map(lambda v: (v[1], v[2] - v[1], v[1] - v[0]),
                                     zip(*np.percentile(sample_plan[:, :], [15.865, 50, 84.135], axis=0))))
+        e_med = np.percentile(sample_plan[:, 3], 65.865, axis=0)
 
         print 'Period = ', sample_med[0, 0], ' +\sigma ', sample_med[0, 1], ' -\sigma ', sample_med[0, 2]
         print 'K      = ', sample_med[1, 0], ' +\sigma ', sample_med[1, 1], ' -\sigma ', sample_med[1, 2]
         print 'phase  = ', sample_med[2, 0], ' +\sigma ', sample_med[2, 1], ' -\sigma ', sample_med[2, 2]
-        print 'e      = ', sample_med[3, 0], ' +\sigma ', sample_med[3, 1], ' -\sigma ', sample_med[3, 2]
+        print 'e      = ', sample_med[3, 0], ' +\sigma ', sample_med[3, 1], ' -\sigma ', sample_med[3, 2], ', < ', e_med
         print 'o      = ', sample_med[4, 0], ' +\sigma ', sample_med[4, 1], ' -\sigma ', sample_med[4, 2]
         print 'Mass_J = ', sample_med[5, 0], ' +\sigma ', sample_med[5, 1], ' -\sigma ', sample_med[5, 2]
         print 'Mass_E = ', sample_med[5, 0]*EJ_ratio, \
@@ -533,3 +555,28 @@ if 'kepler' in mc.model_list:
         print
         print '-----------------------------'
         print
+
+if 'gaussian' in mc.model_list:
+    n_vars = 0
+    sample_plan_transpose = []
+    sel_label = []
+
+    for name in mc.gcv.list_pams_common:
+        if name in mc.variable_list:
+            n_vars += 1
+            sample_plan_transpose.append(flatchain[:, mc.gcv.var_list[name]])
+            sel_label.append(name)
+
+    for dataset in mc.dataset_list:
+        for name in mc.gcv.list_pams_dataset:
+            n_vars += 1
+            sample_plan_transpose.append(flatchain[:, mc.gcv.var_list[dataset.name_ref][name]])
+            sel_label.append(dataset.name_ref + '_' + name)
+
+    sample_plan = np.asarray(sample_plan_transpose).T
+    sample_med = np.asarray(map(lambda v: (v[1], v[2] - v[1], v[1] - v[0]),
+                                    zip(*np.percentile(sample_plan[:, :], [15.865, 50, 84.135], axis=0))))
+
+    fig = corner.corner(sample_plan[:, :], labels=sel_label, truths=sample_med[:, 0])
+    fig.savefig(dir_output + "GPs_corners.pdf", bbox_inches='tight')
+    plt.close()

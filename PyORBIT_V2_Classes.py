@@ -2,6 +2,8 @@ import numpy as np
 import kepler_exo as kp
 import yaml
 import george
+import spotpy
+
 
 def get_var_log(var, fix, i):
     return np.log2(var[i], dtype=np.double)
@@ -83,7 +85,7 @@ class PlanetsCommonVariables:
         self.bounds[name_ref]['e'] = [0.0, 1.0]
         self.bounds[name_ref]['o'] = [0.0, 2 * np.pi]
 
-        self.inclination[name_ref] = 90.000
+        self.inclination[name_ref] = [0.000, 0.000]
 
     # def convert_params(self,in_pams):
     #    out_pams = np.zeros(5,dtype=np.double)
@@ -213,6 +215,8 @@ class PlanetsCommonVariables:
     @staticmethod
     def model_kepler(orbit_pams, x0):
         P, K, phase, e, omega = orbit_pams
+        if e > 1.0:
+            e = 1.0
         rv_out = kp.kepler_RV_T0P(x0, phase, P, K, e, omega)
         return rv_out
 
@@ -254,6 +258,9 @@ class SinusoidsCommonVariables:
         self.pha_bounds = [0., 1.0]
 
         self.phase_list = []
+
+        self.prior_kind = {}
+        self.prior_pams = {}
 
     def add_season_range(self, range_input, phase_input):
         # Reset default values at first call
@@ -462,6 +469,10 @@ class GaussianProcessCommonVariables:
         self.fix_list = {}
         self.variables = {}
 
+        self.prior_kind = {}
+        self.prior_pams = {}
+        self.prior_pams['Common'] = {}
+
         self.fixed = []
         self.nfix = 0
 
@@ -476,14 +487,21 @@ class GaussianProcessCommonVariables:
         # There si a 1-1 correspondence ("biunivoca") between variables, so we use this trick
         #self.list_pams_corr = {'Prot': 'lnProt', 'Pdec': 'Pds2', 'Oamp': 'inv2O', 'Hamp': 'H2'}
 
-        self.list_pams_common = ['Prot', 'Pdec', 'Oamp']
-        self.list_pams_dataset = ['Hamp']
+        #self.list_pams_common = ['Prot', 'Pdec', 'Oamp']
+        #self.list_pams_dataset = ['Hamp']
+        self.list_pams_common = {}
+        self.list_pams_common['Prot'] = 'U'
+        self.list_pams_common['Pdec'] = 'LU'
+        self.list_pams_common['Oamp'] = 'LU'
+
+        self.list_pams_dataset = {}
+        self.list_pams_dataset['Hamp'] = 'U'
 
         return
 
     def convert_val2gp_common(self, input_pam):
         # conversion of the  physically meaningful parameters to GP ones
-        return [np.log(input_pam[0]), input_pam[1]**2, 1./(2*input_pam[2]**2)]
+        return [np.log(input_pam[0]), input_pam[1]**2, 2./(input_pam[2]**2)]
 
     def convert_val2gp_dataset(self, input_pam):
         # conversion of the  physically meaningful parameters to GP ones
@@ -491,7 +509,7 @@ class GaussianProcessCommonVariables:
 
     def convert_gp2val_common(self, input_pam):
         # conversion of the  GP input parameters to physical values
-        return [np.exp(input_pam[0]), np.sqrt(input_pam[1]), np.sqrt(1./(2.0*input_pam[2]))]
+        return [np.exp(input_pam[0]), np.sqrt(input_pam[1]), np.sqrt(2./input_pam[2])]
 
     def convert_gp2val_dataset(self, input_pam):
         # conversion of the  GP input parameters to physical values
@@ -502,17 +520,21 @@ class GaussianProcessCommonVariables:
 
         if name_ref == 'Common':
             for name in self.list_pams_common:
-                self.bounds[name] = [0.1, 20]
+                self.bounds[name] = [0.01, 100]
+
         else:
             self.bounds[name_ref] = {}
             self.variables[name_ref] = {}
             self.fix_list[name_ref] = {}
             self.var_list[name_ref] = {}
-            for name in self.list_pams_common:
+
+            self.prior_kind[name_ref] = {}
+            self.prior_pams[name_ref] = {}
+
+            for name in self.list_pams_dataset:
                 self.bounds[name_ref][name] = [0.00001, 20]
 
     def define_bounds(self, mc):
-
         for var in self.list_pams_common:
             if var in self.fix_list:
                 self.variables[var] = get_fix_val
@@ -520,10 +542,15 @@ class GaussianProcessCommonVariables:
                 self.fixed.append(self.fix_list[var])
                 self.nfix += 1
             else:
-                self.variables[var] = get_var_val
+                if self.list_pams_common[var] == 'U':
+                    self.variables[var] = get_var_val
+                    mc.bounds_list.append(self.bounds[var])
+                if self.list_pams_common[var] == 'LU':
+                    self.variables[var] = get_var_exp
+                    mc.bounds_list.append(np.log2(self.bounds[var]))
+
                 self.var_list[var] = mc.ndim
                 mc.variable_list[var] = mc.ndim
-                mc.bounds_list.append(self.bounds[var])
                 mc.ndim += 1
 
         for dataset in mc.dataset_list:
@@ -535,10 +562,14 @@ class GaussianProcessCommonVariables:
                         self.fixed.append(self.fix_list[dataset.name_ref][var])
                         self.nfix += 1
                     else:
-                        self.variables[dataset.name_ref][var] = get_var_val
+                        if self.list_pams_dataset[var] == 'U':
+                            self.variables[dataset.name_ref][var] = get_var_val
+                            mc.bounds_list.append(self.bounds[dataset.name_ref][var])
+                        if self.list_pams_dataset[var] == 'LU':
+                            self.variables[dataset.name_ref][var] = get_var_exp
+                            mc.bounds_list.append(np.log2(self.bounds[dataset.name_ref][var]))
                         self.var_list[dataset.name_ref][var] = mc.ndim
                         mc.variable_list[dataset.name_ref][var] = mc.ndim
-                        mc.bounds_list.append(self.bounds[dataset.name_ref][var])
                         mc.ndim += 1
 
     def convert_common(self, theta):
@@ -553,8 +584,24 @@ class GaussianProcessCommonVariables:
             list_out.append(self.variables[dataset_name][name](theta, self.fixed, self.var_list[dataset_name][name]))
         return list_out
 
-    def lnlk_compute(self, theta, dataset):
+    def return_priors_common(self, theta):
+        prior_out = 0.00
+        kep_pams_common = self.convert_common(theta)
+        for key in self.prior_pams['Common']:
+            ii = self.list_pams_common.index(key)
+            prior_out += giveback_priors(self.prior_kind[key], self.prior_pams['Common'][key], kep_pams_common[ii])
+        return prior_out
 
+    def return_priors_dataset(self, dataset_name, theta):
+        prior_out = 0.00
+        kep_pams_dataset = self.convert_dataset(dataset_name, theta)
+        for key in self.prior_pams[dataset_name]:
+            ii = self.list_pams_common.index(key)
+            prior_out += giveback_priors(self.prior_kind[dataset_name][key], self.prior_pams[dataset_name][key],
+                                         kep_pams_dataset[ii])
+        return prior_out
+
+    def lnlk_compute(self, theta, dataset):
         gp_pams_common = self.convert_val2gp_common(self.convert_common(theta))
         gp_pams_dataset = self.convert_val2gp_dataset(self.convert_dataset(dataset.name_ref, theta))
 
@@ -571,24 +618,44 @@ class GaussianProcessCommonVariables:
 
         return gp.lnlikelihood(dataset.y - dataset.model, quiet=True)
 
+    def sample_compute(self, theta, dataset):
+
+        gp_pams_common = self.convert_val2gp_common(self.convert_common(theta))
+        gp_pams_dataset = self.convert_val2gp_dataset(self.convert_dataset(dataset.name_ref, theta))
+
+        # gp_pams[0] = ln_theta = ln_Period -> ExpSine2Kernel(gamma, ln_period)
+        # gp_pams[1] = metric = r^2 = lambda**2  -> ExpSquaredKernel(metric=r^2)
+        # gp_pams[2] = Gamma =  1/ (2 omega**2) -> ExpSine2Kernel(gamma, ln_period)
+        # gp_pams[3] = h^2 -> h^2 * ExpSquaredKernel * ExpSine2Kernel
+        kernel = gp_pams_dataset[0] * george.kernels.ExpSquaredKernel(metric=gp_pams_common[1]) * \
+            george.kernels.ExpSine2Kernel(gamma=gp_pams_common[2], ln_period=gp_pams_common[0])
+
+        gp = george.GP(kernel)
+        env = np.sqrt(dataset.e ** 2.0 + dataset.jitter ** 2.0)
+        gp.compute(dataset.x0, env)
+
+        return gp.sample_conditional(dataset.y - dataset.model, dataset.x)
+
     def print_vars(self, mc, theta):
 
         gp_pams_common = self.convert_val2gp_common(self.convert_common(theta))
 
-        for ii in xrange(0,np.size(self.list_pams_common)):
-            name = self.list_pams_common[ii]
-            mc.pam_names[mc.variable_list[name]] = name
-            var  = self.variables[name](theta, self.fixed, self.var_list[name])
-            print 'GaussianProcess ', self.list_pams_common[ii], var, '  (', gp_pams_common[ii],') '
+        #for ii in xrange(0,np.size(self.list_pams_common)):
+
+        for name in self.list_pams_common:
+            if name in mc.variable_list:
+                mc.pam_names[mc.variable_list[name]] = name
+                var = self.variables[name](theta, self.fixed, self.var_list[name])
+                print 'GaussianProcess ', name,  var, self.var_list[name], theta[self.var_list[name]]
 
         for dataset in mc.dataset_list:
             gp_pams_dataset = self.convert_val2gp_dataset(self.convert_dataset(dataset.name_ref, theta))
-            for ii in xrange(0, np.size(self.list_pams_dataset)):
-                name = self.list_pams_dataset[ii]
-                mc.pam_names[mc.variable_list[dataset.name_ref][name]] = name
-                #ii_add = ii + np.size(self.list_pams_common)
-                var = self.variables[dataset.name_ref][name](theta, self.fixed, self.var_list[dataset.name_ref][name])
-                print 'GaussianProcess ', self.list_pams_dataset[ii], var, '  (', gp_pams_dataset[ii], ') '
+            for name in self.list_pams_dataset:
+                if name in mc.variable_list[dataset.name_ref]:
+                    mc.pam_names[mc.variable_list[dataset.name_ref][name]] = name
+                    #ii_add = ii + np.size(self.list_pams_common)
+                    var = self.variables[dataset.name_ref][name](theta, self.fixed, self.var_list[dataset.name_ref][name])
+                    print 'GaussianProcess ', dataset.name_ref, name, var
 
 
 class Dataset:
@@ -728,74 +795,6 @@ class Dataset:
             print self.name_ref, param, ' : ', theta[mc.variable_list[self.name_ref][param]]
 
 
-# Transit times cannot be trated as regular datasets since they miss the independent value - they are just
-#a collection of epochs. So a different Class to treat them is created. Moreover, each dataset is specific
-# to a given planet, while the other datasets
-# class TransitCentralTimes(Dataset):
-#     def __init__(self, planet_name, input_file):
-#
-#         self.kind = 'Tcent'
-#         self.models = ['Tcent']
-#         # 'RV', 'PHOT', 'ACT'...
-#         self.name_ref = input_file
-#         self.planet_name = planet_name
-#
-#         self.deltaT = 1.10
-#
-#         print 'Opening: ', input_file
-#         self.data = np.atleast_2d(np.loadtxt(input_file))
-#
-#         self.x = np.asarray(self.data[:, 0], dtype=np.double)
-#         self.e = np.asarray(self.data[:, 1], dtype=np.double)
-#
-#         self.n = np.size(self.x)
-#         self.model = np.zeros(self.n, dtype=np.double)
-#
-#         n_cols = np.size(self.data, axis=1)
-#         if n_cols > 2:
-#             self.j = np.asarray(self.data[:, 2], dtype=np.double)
-#         else:
-#             self.j = np.zeros(self.n, dtype=np.double)
-#         # fit for different time measurement jitters (different instruments for the same planet)
-#
-#         self.n_j = np.max(self.j.astype(np.int64)) + 1
-#
-#         self.Tref = np.mean(self.x, dtype=np.double)
-#         self.x0 = self.x - self.Tref
-#
-#         print 'N = ', self.n
-#         print 'N jitter = ', self.n_j
-#         print
-#
-#         self.j_mask = np.zeros([self.n, self.n_j], dtype=bool)
-#         for ii in xrange(0, self.n_j):
-#             self.j_mask[(abs(self.j - ii) < 0.1), ii] = True
-#
-#         self.n_o = 0
-#         self.o_mask = np.zeros([self.n, self.n_o], dtype=bool)
-#
-#         self.n_l = 0
-#         self.l_mask = np.zeros([self.n, self.n_l], dtype=bool)
-#
-#         self.model = np.zeros(self.n, dtype=np.double)
-#         self.jitter = np.zeros(self.n, dtype=np.double)
-#
-#     def compute(self, mc, theta):
-#         # By default, dataset.name_ref == planet_name
-#         period, _, f, e, o = mc.pcv.convert(self.planet_name, theta)
-#         model = np.rint(self.x0 / period) * period + kp.kepler_Tcent_T0P(period, f, e, o)
-#         #print self.x0, model, self.x0-model, period, f, e, o
-#         return model
-#
-#     def model_logchi2(self):
-#         # boundaries in Tcent are specific of the dataset and not of a common
-#         # parameter for different dataset. The check can be internal
-#         #if np.sum(np.abs(self.x0 - self.model) < self.deltaT) < self.n:
-#         #    return -np.inf
-#         env = 1.0 / (self.e ** 2.0 + self.jitter ** 2.0)
-#         return -0.5 * (np.sum((self.x0 - self.model) ** 2 * env - np.log(env)))
-
-#Without jitter
 class TransitCentralTimes(Dataset):
     def __init__(self, planet_name, input_file):
 
@@ -947,6 +946,13 @@ class ModelContainer:
             for planet_name in self.pcv.name_ref:
                 chi2_out += self.pcv.return_priors(planet_name, theta)
 
+        if 'sinusoid' in self.model_list:
+            chi2_out += giveback_priors(
+                self.prior_kind['Prot'], self.prior_pams['Prot'], theta[self.variable_list['Prot']])
+
+        if 'gaussian' in self.model_list:
+            chi2_out += self.gcv.return_priors_common(theta)
+
         for dataset in self.dataset_list:
             dataset.model_reset()
             dataset.model_offset(theta[self.variable_list[dataset.name_ref]['offset']])
@@ -965,41 +971,8 @@ class ModelContainer:
 
             # Gaussian Process check MUST be the last one or the program will fail
             if 'gaussian' in dataset.models:
+                chi2_out += self.gcv.return_priors_dataset(dataset.name_ref, theta)
                 chi2_out += self.gcv.lnlk_compute(theta, dataset)
-            else:
-                chi2_out += dataset.model_logchi2()
-
-        return chi2_out
-
-    def pymultinest_priors(self, theta, ndim, nparams):
-        theta = (self.bounds[:, 1]-self.bounds[:, 0])*theta
-        return theta
-
-    def pymultinest_call(self, theta, ndim, nparams, lnew):
-        if not self.check_bounds(theta):
-            return -0.5e10
-
-        chi2_out = 0.0
-
-        for dataset in self.dataset_list:
-            dataset.model_reset()
-            dataset.model_offset(theta[self.variable_list[dataset.name_ref]['offset']])
-            dataset.model_jitter(theta[self.variable_list[dataset.name_ref]['jitter']])
-            dataset.model_linear(theta[self.variable_list[dataset.name_ref]['linear']])
-
-            if 'kepler' in dataset.models:
-                for planet_name in self.pcv.name_ref:
-                    dataset.model += self.pcv.compute(theta, dataset, planet_name)
-
-            if 'sinusoids' in dataset.models:
-                dataset.model += self.scv.compute(self, theta, dataset)
-
-            if 'Tcent' in dataset.models:
-                dataset.model += dataset.compute(self, theta)
-
-            # Gaussian Process check MUST be the last one or the program will fail
-            if 'gaussian' in dataset.models:
-                chi2_out += self.gcv.lnlk_compute(self, theta, dataset)
             else:
                 chi2_out += dataset.model_logchi2()
 
@@ -1126,6 +1099,116 @@ class ModelContainer:
                 population[:, ii] = np.random.uniform(min_bound, max_bound, self.nwalkers)
 
 
+class ModelContainerMultiNest(ModelContainer):
+    def pymultinest_priors(self, theta, ndim, nparams):
+        theta = (self.bounds[:, 1]-self.bounds[:, 0])*theta
+        return theta
+
+    def pymultinest_call(self, theta, ndim, nparams, lnew):
+        if not self.check_bounds(theta):
+            return -0.5e10
+
+        chi2_out = 0.0
+
+        for dataset in self.dataset_list:
+            dataset.model_reset()
+            dataset.model_offset(theta[self.variable_list[dataset.name_ref]['offset']])
+            dataset.model_jitter(theta[self.variable_list[dataset.name_ref]['jitter']])
+            dataset.model_linear(theta[self.variable_list[dataset.name_ref]['linear']])
+
+            if 'kepler' in dataset.models:
+                for planet_name in self.pcv.name_ref:
+                    dataset.model += self.pcv.compute(theta, dataset, planet_name)
+
+            if 'sinusoids' in dataset.models:
+                dataset.model += self.scv.compute(self, theta, dataset)
+
+            if 'Tcent' in dataset.models:
+                dataset.model += dataset.compute(self, theta)
+
+            # Gaussian Process check MUST be the last one or the program will fail
+            if 'gaussian' in dataset.models:
+                chi2_out += self.gcv.lnlk_compute(self, theta, dataset)
+            else:
+                chi2_out += dataset.model_logchi2()
+
+        return chi2_out
+
+
+class ModelContainerSPOTPY(ModelContainer):
+
+    def spotpy_priors(self, theta_med):
+        pams_priors = []
+        for ii in xrange(0, self.ndim):
+            pams_priors.append(
+                spotpy.parameter.Uniform(
+                    'theta'+repr(ii), self.bounds[ii, 0], self.bounds[ii, 1], optguess=theta_med[ii]))
+
+        if 'kepler' in self.model_list:
+            for planet_name in self.pcv.name_ref:
+                for key in self.pcv.prior_pams[planet_name]:
+                    ind = self.variable_list[planet_name][key]
+                    pams_priors[ind] = self.assign_priors(self.pcv.prior_kind[planet_name][key], 'theta' + repr(ind), self.pcv.prior_pams[planet_name][key], theta_med[ind])
+
+        if 'sinusoids' in self.model_list:
+            if 'Prot' in self.scv.prior_pams:
+                ind = self.variable_list['Prot']
+                pams_priors[ind] = self.assign_priors(self.scv.prior_kind[key], 'theta' + repr(ind),
+                                                      self.scv.prior_pams[key], theta_med[ind])
+
+        if 'gaussian' in self.model_list:
+            for key in self.gcv.prior_pams['Common']:
+                ind = self.variable_list[key]
+                pams_priors[ind] = self.assign_priors(self.gcv.prior_kind[key], 'theta' + repr(ind),
+                                                      self.gcv.prior_pams['Common'][key], theta_med[ind])
+            for dataset in mc.dataset_list:
+                for key in self.gcv.prior_pams[dataset.name_ref]:
+                    ind = self.variable_list[dataset.name_ref][key]
+                    pams_priors[ind] = self.assign_priors(self.pcv.prior_kind[dataset.name_ref][key], 'theta' + repr(ind),
+                                                          self.pcv.prior_pams[dataset.name_ref][key], theta_med[ind])
+        return pams_priors
+
+    def assign_priors(self, key_name, prior_name, prior_val, prior_med):
+        if key_name == 'Normal' or key_name == 'Gaussian':
+            return spotpy.parameter.Normal(prior_name, prior_val[0], prior_val[1], optguess=prior_med)
+        if key_name == 'logNormal':
+            return spotpy.parameter.logNormal(prior_name, prior_val[0], prior_val[1], optguess=prior_med)
+        if key_name == 'Exponential':
+            return spotpy.parameter.Exponential(prior_name, prior_val[0], optguess=prior_med)
+        return spotpy.parameter.Uniform(prior_name, prior_val[0], prior_val[1], optguess=prior_med)
+
+    def output_concatenated(self):
+        output_array = []
+        for dataset in self.dataset_list:
+            output_array = np.concatenate((output_array,dataset.y), axis=0)
+        return output_array
+
+    def __call__(self, theta):
+        output_array = []
+        for dataset in self.dataset_list:
+            dataset.model_reset()
+            dataset.model_offset(theta[self.variable_list[dataset.name_ref]['offset']])
+            dataset.model_jitter(theta[self.variable_list[dataset.name_ref]['jitter']])
+            dataset.model_linear(theta[self.variable_list[dataset.name_ref]['linear']])
+
+            if 'kepler' in dataset.models:
+                for planet_name in self.pcv.name_ref:
+                    dataset.model += self.pcv.compute(theta, dataset, planet_name)
+
+            if 'sinusoids' in dataset.models:
+                dataset.model += self.scv.compute(self, theta, dataset)
+
+            if 'Tcent' in dataset.models:
+                dataset.model += dataset.compute(self, theta)
+
+            # Gaussian Process check MUST be the last one or the program will fail
+            if 'gaussian' in dataset.models:
+                dataset.model += self.gcv.sample_compute(theta, dataset)
+            output_array = np.concatenate((output_array,dataset.model),axis=0)
+
+        return output_array
+
+
 def yaml_parser(file_conf, mc):
     stream = file(file_conf, 'r')
     config_in = yaml.load(stream)
@@ -1183,6 +1266,10 @@ def yaml_parser(file_conf, mc):
     if 'Sinusoids' in config_in:
         conf = config_in['Sinusoids']
         mc.scv.Prot_bounds = np.asarray(conf['Prot'], dtype=np.double)
+        if 'Priors' in conf:
+            mc.scv.prior_kind[var] = conf['Priors'][var][0]
+            mc.scv.prior_pams[var] = np.asarray(conf['Priors'][var][1:], dtype=np.double)
+
         for counter in conf['Seasons']:
             mc.scv.add_season_range(np.asarray(conf['Seasons'][counter][:2], dtype=np.double),
                                     conf['Seasons'][counter][2:])
@@ -1202,6 +1289,7 @@ def yaml_parser(file_conf, mc):
                         mc.gcv.fix_list[var] = np.asarray(conf[name_ref][var], dtype=np.double)
                     else:
                         mc.gcv.bounds[var] = np.asarray(conf[name_ref][var], dtype=np.double)
+
             else:
                 #num_ref = np.asarray(name_ref, dtype=np.double)
                 # dataset_name = mc.dataset_list[num_ref].name_ref
@@ -1213,6 +1301,12 @@ def yaml_parser(file_conf, mc):
                         mc.gcv.fix_list[dataset_name][var] = np.asarray(conf[name_ref][var], dtype=np.double)
                     else:
                         mc.gcv.bounds[dataset_name][var] = np.asarray(conf[name_ref][var], dtype=np.double)
+
+            if 'Priors' in conf[name_ref]:
+                prior_conf = conf[name_ref]['Priors']
+                for var in prior_conf:
+                    mc.gcv.prior_kind[name_ref][var] = prior_conf[var][0]
+                    mc.gcv.prior_pams[name_ref][var] = np.asarray(prior_conf[var][1:], dtype=np.double)
 
     if 'Tref' in config_in:
         mc.Tref = np.asarray(config_in['Tref'])
