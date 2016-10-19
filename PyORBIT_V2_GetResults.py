@@ -250,7 +250,7 @@ if 'kepler' in mc.model_list:
         # Time of periastron
         sample_plan[:, 6] = mc.Tref + (-sample_plan[:, 2] + sample_plan[:, 4]) / (2*np.pi) * sample_plan[:, 0]
 
-        #Time of central transit
+        # Time of transit center
         sample_plan[:, 7] = mc.Tref + kp.kepler_Tcent_T0P(sample_plan[:, 0], sample_plan[:, 2], sample_plan[:, 3],
                                                              sample_plan[:, 4])
         for ii in xrange(0, n_kept):
@@ -564,18 +564,28 @@ if 'gaussian' in mc.model_list:
     for name in mc.gcv.list_pams_common:
         if name in mc.variable_list:
             n_vars += 1
-            sample_plan_transpose.append(flatchain[:, mc.gcv.var_list[name]])
+            # mc.gcv.var_list[name] select the corresponding value in the emcee input array (theta)
+            var = flatchain[:, mc.gcv.var_list[name]]
+            # mc.gcv.variables[name](theta, mc.gcv.fixed, :) convert the value into physical unit
+            # e.g. from logarithmic to linear space)
+            var_phys = mc.gcv.variables[name](var, var, xrange(0, n_kept))
+            sample_plan_transpose.append(var_phys)
             sel_label.append(name)
 
     for dataset in mc.dataset_list:
         for name in mc.gcv.list_pams_dataset:
             n_vars += 1
-            sample_plan_transpose.append(flatchain[:, mc.gcv.var_list[dataset.name_ref][name]])
+            var = flatchain[:, mc.gcv.var_list[dataset.name_ref][name]]
+            var_phys = mc.gcv.variables[dataset.name_ref][name](var, var, xrange(0, n_kept))
+            sample_plan_transpose.append(var_phys)
             sel_label.append(dataset.name_ref + '_' + name)
 
     sample_plan = np.asarray(sample_plan_transpose).T
     sample_med = np.asarray(map(lambda v: (v[1], v[2] - v[1], v[1] - v[0]),
                                     zip(*np.percentile(sample_plan[:, :], [15.865, 50, 84.135], axis=0))))
+
+    for lab, sam in zip(sel_label, sample_med):
+        print lab,' = ', sam[0], ' +\sigma ', sam[1], ' -\sigma ', sam[2]
 
     fig = corner.corner(sample_plan[:, :], labels=sel_label, truths=sample_med[:, 0])
     fig.savefig(dir_output + "GPs_corners.pdf", bbox_inches='tight')

@@ -212,6 +212,7 @@ class PlanetsCommonVariables:
             print planet_name, ' vars: ', np.asarray(theta[mc.variable_list[planet_name]['kepler_pams']])
             print planet_name, ' pams: ', out_list[:]
 
+    #Compute the expected RV from a single planet, assuming non-interacting orbits in multi-planet systems
     @staticmethod
     def model_kepler(orbit_pams, x0):
         P, K, phase, e, omega = orbit_pams
@@ -219,14 +220,6 @@ class PlanetsCommonVariables:
             e = 1.0
         rv_out = kp.kepler_RV_T0P(x0, phase, P, K, e, omega)
         return rv_out
-
-    #@staticmethod
-    #def convert_params(logP, logK, phase, esino, ecoso):
-    #    P = np.exp2(logP)
-    #    K = np.exp2(logK)
-    #    e = np.square(ecoso) + np.square(esino)
-    #    o = np.arctan2(esino, ecoso)
-    #    return P, K, phase, e, o
 
 
 class SinusoidsCommonVariables:
@@ -244,6 +237,8 @@ class SinusoidsCommonVariables:
 
         self.n_pha = 0
 
+        # No 'Season' selection in the configuration file, so we make believe the code that all the data
+        # is contained within one season
         self.season_sel = False
         self.n_seasons = 1
         self.season_name = ['Season_0']
@@ -602,9 +597,11 @@ class GaussianProcessCommonVariables:
         return prior_out
 
     def lnlk_compute(self, theta, dataset):
+        # 2 steps:
+        #   1) theta parameters must be converted in physical units (e.g. from logarithmic to linear space)
+        #   2) physical values must be converted to {\tt george} input parameters
         gp_pams_common = self.convert_val2gp_common(self.convert_common(theta))
         gp_pams_dataset = self.convert_val2gp_dataset(self.convert_dataset(dataset.name_ref, theta))
-
         # gp_pams[0] = ln_theta = ln_Period -> ExpSine2Kernel(gamma, ln_period)
         # gp_pams[1] = metric = r^2 = lambda**2  -> ExpSquaredKernel(metric=r^2)
         # gp_pams[2] = Gamma =  1/ (2 omega**2) -> ExpSine2Kernel(gamma, ln_period)
@@ -646,7 +643,7 @@ class GaussianProcessCommonVariables:
             if name in mc.variable_list:
                 mc.pam_names[mc.variable_list[name]] = name
                 var = self.variables[name](theta, self.fixed, self.var_list[name])
-                print 'GaussianProcess ', name,  var, self.var_list[name], theta[self.var_list[name]]
+                print 'GaussianProcess ', name,  var, self.var_list[name], '(', theta[self.var_list[name]], ')'
 
         for dataset in mc.dataset_list:
             gp_pams_dataset = self.convert_val2gp_dataset(self.convert_dataset(dataset.name_ref, theta))
@@ -655,7 +652,7 @@ class GaussianProcessCommonVariables:
                     mc.pam_names[mc.variable_list[dataset.name_ref][name]] = name
                     #ii_add = ii + np.size(self.list_pams_common)
                     var = self.variables[dataset.name_ref][name](theta, self.fixed, self.var_list[dataset.name_ref][name])
-                    print 'GaussianProcess ', dataset.name_ref, name, var
+                    print 'GaussianProcess ', dataset.name_ref, name, var, '(', theta[self.var_list[dataset.name_ref][name]], ')'
 
 
 class Dataset:
@@ -1161,7 +1158,7 @@ class ModelContainerSPOTPY(ModelContainer):
                 ind = self.variable_list[key]
                 pams_priors[ind] = self.assign_priors(self.gcv.prior_kind[key], 'theta' + repr(ind),
                                                       self.gcv.prior_pams['Common'][key], theta_med[ind])
-            for dataset in mc.dataset_list:
+            for dataset in self.dataset_list:
                 for key in self.gcv.prior_pams[dataset.name_ref]:
                     ind = self.variable_list[dataset.name_ref][key]
                     pams_priors[ind] = self.assign_priors(self.pcv.prior_kind[dataset.name_ref][key], 'theta' + repr(ind),
