@@ -1,4 +1,4 @@
-from PyORBIT_V2_Classes import *
+from PyORBIT_V3_Classes import *
 import numpy as np
 import h5py
 import cPickle as pickle
@@ -11,7 +11,7 @@ import matplotlib as mpl
 mpl.use('Agg')
 from matplotlib import pyplot as plt
 
-parser = argparse.ArgumentParser(prog='PyORBIT_V2_PyDEcheck.py', description='Extract results from PyDE output')
+parser = argparse.ArgumentParser(prog='PyORBIT_V3_PyDEcheck.py', description='Extract results from PyDE output')
 # parser.add_argument('-l', type=str, nargs='+', help='line identificator')
 parser.add_argument('-i', type=str, nargs='+', required=True, help='config file')
 

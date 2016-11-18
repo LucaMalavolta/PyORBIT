@@ -1,4 +1,4 @@
-from PyORBIT_V2_Classes import *
+from PyORBIT_V3_Classes import *
 import numpy as np
 import emcee
 from pyde.de import DiffEvol
@@ -8,7 +8,7 @@ import os
 import argparse
 #import json
 
-parser = argparse.ArgumentParser(prog='PyORBIT_V2_PyDE.py', description='Run PyDE without any other sampler runner')
+parser = argparse.ArgumentParser(prog='PyORBIT_V3_PyDE.py', description='Run PyDE without any other sampler runner')
 # parser.add_argument('-l', type=str, nargs='+', help='line identificator')
 parser.add_argument('config_file', type=str, nargs=1, help='config file')
 

@@ -1,11 +1,11 @@
-from PyORBIT_V2_Classes import *
+from PyORBIT_V3_Classes import *
 import numpy as np
 import spotpy
 import cPickle as pickle
 import os
 import argparse
 
-parser = argparse.ArgumentParser(prog='PyORBIT_V2_emcee.py', description='PyDE+emcee runner')
+parser = argparse.ArgumentParser(prog='PyORBIT_V3_SPOTPY.py', description='PyDE+emcee runner')
 # parser.add_argument('-l', type=str, nargs='+', help='line identificator')
 parser.add_argument('config_file', type=str, nargs=1, help='config file')
 
