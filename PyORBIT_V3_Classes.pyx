@@ -4,6 +4,10 @@ import yaml
 import george
 import spotpy
 import ttvfast
+import sys
+sys.path.append('/home/malavolta/CODE/trades/pytrades')
+from pytrades_lib import pytrades
+import constants
 
 
 def get_var_log(var, fix, i):
@@ -60,9 +64,11 @@ class PlanetsCommonVariables:
         self.prior_pams = {}
 
         self.inclination = {}
+        self.radius = {}
 
         self.circular = {}
         self.dynamical = {}
+        self.dynamical_integrator = 'TRADES'
 
         self.list_pams = {}
 
@@ -88,7 +94,7 @@ class PlanetsCommonVariables:
             'e': 'U',  # eccentricity, uniform prior - to be fixed
             'o': 'U'}  # argument of pericenter
 
-        """These default bounds are used when the user does not define them in the yaml file"""
+        """These default boundaries are used when the user does not define them in the yaml file"""
         self.default_bounds = {
             'P': [0.4, 100000.0],
             'K': [0.5, 2000.0],
@@ -302,16 +308,253 @@ class PlanetsCommonVariables:
         return rv_out
 
     def prepare_dynamical(self, mc):
+        """
+        Prepare the input parameters according to chosen dynamical integrator
+        :param mc:
+        :return:
+        """
+
+        if self.dynamical_integrator == 'TRADES':
+            self.prepare_dynamical_trades(mc)
+        if self.dynamical_integrator == 'ttvfast':
+            self.prepare_dynamical_ttvfast(mc)
+        return
+
+    def compute_dynamical(self, mc,  *args, **kwargs):
+        """
+        Run the appropriate subroutine according to chosen dynamical integrator
+        :param mc:
+        :return:
+        """
+        if self.dynamical_integrator == 'TRADES':
+            output = self.compute_dynamical_trades(mc, *args, **kwargs)
+        if self.dynamical_integrator == 'ttvfast':
+            output = self.compute_dynamical_ttvfast(mc, *args, **kwargs)
+        return output
+
+    def prepare_dynamical_trades(self, mc):
+        """
+        :param mc:
+        :return:
+        """
+        dataset_rv = 0
+        int_buffer = dict(rv_times=[], t0_times=[], rv_ref=[], t0_ref=[], key_ref={})
+
+        """ Putting all the RV epochs in the same array, flagging in the temporary buffer
+            the stored values according to their dataset of origin
+        """
+        for dataset in mc.dataset_list:
+            if dataset.kind == 'RV':
+                int_buffer['rv_times'].extend(dataset.x.tolist())
+                int_buffer['rv_ref'].extend(dataset.x * 0 + dataset_rv)
+                int_buffer['key_ref'][dataset.name_ref] = dataset_rv
+                dataset_rv += 1
+            elif dataset.kind == 'Tcent':
+                int_buffer['t0_times'].extend(dataset.x.tolist())
+
+        """ Creating the flag array after all the RV epochs have been mixed
+        """
+        self.dynamical_set['data'] = {'selection': {}}
+        for dataset in mc.dataset_list:
+            if dataset.kind == 'RV':
+                self.dynamical_set['data']['selection'][dataset.name_ref] = \
+                    (np.asarray(int_buffer['rv_ref']) == int_buffer['key_ref'][dataset.name_ref])
+
+        self.dynamical_set['data']['rv_times'] = np.float64(int_buffer['rv_times'])
+
+        """ Substituting empty arrays with None to allow minimum determination
+            We give for granted that at least one of the two vector is not null, otherwise
+            it doesn't make any sense to run the program at all
+        """
+        if np.size(int_buffer['rv_times']) == 0:
+            int_buffer['rv_times'] = int_buffer['t0_times']
+
+        if np.size(int_buffer['t0_times']) == 0:
+            int_buffer['t0_times'] = int_buffer['rv_times']
+
+        rv_minmax = [np.amin(int_buffer['rv_times']), np.amax(int_buffer['rv_times'])]
+        t0_minmax = [np.amin(int_buffer['t0_times']), np.amax(int_buffer['t0_times'])]
+
+        self.dynamical_set['trades'] = {
+            'ti_beg': np.min([rv_minmax[0], t0_minmax[0]]) - 10,
+            'ti_end': np.max([rv_minmax[1], t0_minmax[1]]) + 10}
+        self.dynamical_set['trades']['ti_int'] = \
+            self.dynamical_set['trades']['ti_end'] - self.dynamical_set['trades']['ti_beg']
+        self.dynamical_set['trades']['ti_ref'] = np.float64(mc.Tref)
+        self.dynamical_set['trades']['i_step'] = np.float64(1.e-3)
+
+        self.dynamical_set['data']['plan_ref'] = {}
+
+        """First iteration to identify the number of transits
+        stored for each planet, including the planets in the dynamical
+        simulation but without observed transit
+        """
+        t0_ntot = [0]
+        t0_flag = [False]
+        n_body = 1 # The star is included among the bodies
+        for pl_name in self.dynamical:
+            tmp_t0_ntot = [0]
+            tmp_t0_flag = [False]
+            if pl_name in mc.t0_list:
+                tmp_t0_ntot = [mc.t0_list[pl_name].n]
+                tmp_t0_flag = [True]
+            t0_ntot.extend(tmp_t0_ntot)
+            t0_flag.extend(tmp_t0_flag)
+            self.dynamical_set['data']['plan_ref'][pl_name] = np.asarray(n_body).astype(int)
+            n_body += 1
+
+
+        """ TRADES requires at least one planet to be observed transiting, since it was create primarily for
+         TTV analysis. We use a workaround in case there are no T_cent observed by creating and passing to
+          TRADES a fake dataset that  is not include in the chi^2 computation
+        """
+        if np.max(t0_ntot) == 0:
+            self.dynamical_set['fake_t0s'] = True
+            t0_flag[1] = True
+            t0_ntot[1] = 3
+        else:
+            self.dynamical_set['fake_t0s'] = False
+
+        """ Identification the maximum number of transit """
+        n_max_t0 = np.max(t0_ntot)
+
+        self.dynamical_set['data']['t0_tot'] = np.asarray(t0_ntot).astype(int)
+        self.dynamical_set['data']['t0_flg'] = np.asarray(t0_flag)
+
+        self.dynamical_set['data']['t0_num'] = np.zeros([n_max_t0, n_body]).astype(int)
+        self.dynamical_set['data']['t0_obs'] = np.zeros([n_max_t0, n_body], dtype=np.float64)
+        self.dynamical_set['data']['t0_err'] = np.zeros([n_max_t0, n_body], dtype=np.float64)
+
+        for pl_name in self.dynamical:
+            plan_n = self.dynamical_set['data']['plan_ref'][pl_name]
+            if pl_name in mc.t0_list:
+                self.dynamical_set['data']['t0_num'][0:t0_ntot[plan_n], plan_n] = mc.t0_list[pl_name].n_transit[:].astype(int)
+                self.dynamical_set['data']['t0_obs'][0:t0_ntot[plan_n], plan_n] = mc.t0_list[pl_name].x
+                self.dynamical_set['data']['t0_err'][0:t0_ntot[plan_n], plan_n] = mc.t0_list[pl_name].e
+
+        if self.dynamical_set['fake_t0s']:
+                self.dynamical_set['data']['t0_num'][0:3, 1] = np.arange(0, 3, 1, dtype=int)
+                self.dynamical_set['data']['t0_obs'][0:3, 1] = np.arange(-1, 2, 1, dtype=np.float64)*10.0 + mc.Tref
+                self.dynamical_set['data']['t0_err'][0:3, 1] = 0.1
+
+        self.dynamical_set['trades']['n_body'] = n_body
+
+        pytrades.args_init(self.dynamical_set['trades']['ti_beg'],
+                           self.dynamical_set['trades']['ti_ref'],
+                           self.dynamical_set['trades']['ti_int'],
+                           self.dynamical_set['trades']['n_body'],
+                           self.dynamical_set['data']['t0_tot'],
+                           self.dynamical_set['data']['t0_num'],
+                           self.dynamical_set['data']['t0_obs'],
+                           self.dynamical_set['data']['t0_err'])
+
+        print 'TRADES parameters', self.dynamical_set['trades']
+        print
+
+        return
+
+    def compute_dynamical_trades(self, mc, theta, full_orbit=None):
+        """ This function compute the expected TTV and RVs for dynamically interacting planets.
+            The user can specify which planets are subject to interactions, e.g. long-period planets can be approximated
+            with a Keplerian function"""
+
+        """ setting up the dictionaries with the orbital parameters required by TRADES,
+        """
+
+        self.dynamical_set['pams'] = {
+            'M': np.zeros(self.dynamical_set['trades']['n_body'], dtype=np.float64),
+            'R': np.zeros(self.dynamical_set['trades']['n_body'], dtype=np.float64),
+            'P': np.zeros(self.dynamical_set['trades']['n_body'], dtype=np.float64),
+            'e': np.zeros(self.dynamical_set['trades']['n_body'], dtype=np.float64),
+            'o': np.zeros(self.dynamical_set['trades']['n_body'], dtype=np.float64),
+            'i': np.zeros(self.dynamical_set['trades']['n_body'], dtype=np.float64),
+            'lN': np.zeros(self.dynamical_set['trades']['n_body'], dtype=np.float64),
+            'mA': np.zeros(self.dynamical_set['trades']['n_body'], dtype=np.float64)
+        }
+
+        """ Adding star parameters"""
+        self.dynamical_set['pams']['M'][0] = mc.star_mass[0]
+        self.dynamical_set['pams']['R'][0] = mc.star_radius[0]
+
+        for pl_name in self.dynamical:
+            n_plan = self.dynamical_set['data']['plan_ref'][pl_name]
+            dict_pams = self.convert(pl_name, theta)
+
+            self.dynamical_set['pams']['M'][n_plan] = dict_pams['M'] / mc.M_SEratio
+            self.dynamical_set['pams']['R'][n_plan] = mc.pcv.radius[pl_name][0] / mc.R_SEratio
+            self.dynamical_set['pams']['P'][n_plan] = dict_pams['P']
+            self.dynamical_set['pams']['e'][n_plan] = dict_pams['e']
+            self.dynamical_set['pams']['o'][n_plan] = dict_pams['o'] * (180. / np.pi)
+            self.dynamical_set['pams']['i'][n_plan] = dict_pams['i']
+            self.dynamical_set['pams']['lN'][n_plan] = dict_pams['lN'] * (180. / np.pi)
+            self.dynamical_set['pams']['mA'][n_plan] = (dict_pams['f']-dict_pams['o']) * (180. / np.pi)
+
+        #sample_plan[:, convert_out['Tcent']] = mc.Tref + kp.kepler_Tcent_T0P(
+        #    sample_plan[:, convert_out['P']], sample_plan[:, convert_out['f']],
+        #    sample_plan[:, convert_out['e']], sample_plan[:, convert_out['o']])
+
+        if full_orbit is None:
+            rv_sim, t0_sim = pytrades.kelements_to_data(
+                self.dynamical_set['trades']['ti_beg'],
+                self.dynamical_set['trades']['ti_ref'],
+                self.dynamical_set['trades']['i_step'],
+                self.dynamical_set['trades']['ti_int'],
+                self.dynamical_set['pams']['M'],
+                self.dynamical_set['pams']['R'],
+                self.dynamical_set['pams']['P'],
+                self.dynamical_set['pams']['e'],
+                self.dynamical_set['pams']['o'],
+                self.dynamical_set['pams']['mA'],
+                self.dynamical_set['pams']['i'],
+                self.dynamical_set['pams']['lN'],
+                self.dynamical_set['data']['rv_times'],
+                self.dynamical_set['data']['t0_flg'],
+                self.dynamical_set['data']['t0_tot'],
+                self.dynamical_set['data']['t0_num'])
+        else:
+            rv_sim, t0_sim = pytrades.kelements_to_data(
+                self.dynamical_set['trades']['ti_beg'],
+                self.dynamical_set['trades']['ti_ref'],
+                self.dynamical_set['trades']['i_step'],
+                self.dynamical_set['trades']['ti_int'],
+                self.dynamical_set['pams']['M'],
+                self.dynamical_set['pams']['R'],
+                self.dynamical_set['pams']['P'],
+                self.dynamical_set['pams']['e'],
+                self.dynamical_set['pams']['o'],
+                self.dynamical_set['pams']['mA'],
+                self.dynamical_set['pams']['i'],
+                self.dynamical_set['pams']['lN'],
+                full_orbit,
+                self.dynamical_set['data']['t0_flg'],
+                self.dynamical_set['data']['t0_tot'],
+                self.dynamical_set['data']['t0_num'])
+
+        output = {}
+
+        for dataset in mc.dataset_list:
+            if dataset.kind == 'RV' and full_orbit is None:
+                output[dataset.name_ref] = rv_sim[self.dynamical_set['data']['selection'][dataset.name_ref]]
+
+            elif dataset.kind == 'Tcent':
+                output[dataset.name_ref] = t0_sim[:, self.dynamical_set['data']['plan_ref'][dataset.planet_name]]
+
+        if full_orbit is not None:
+            output['full_orbit'] = rv_sim
+
+        return output
+
+    def prepare_dynamical_ttvfast(self, mc):
 
         self.dynamical_set['rv_times'] = []
         self.dynamical_set['data_selection'] = {}
 
         dataset_rv = 0
-        int_buffer = dict(t0_times=[], rv_ref=[], t0_ref=[], key_ref={})
+        int_buffer = dict(rv_times=[], t0_times=[], rv_ref=[], t0_ref=[], key_ref={})
 
         for dataset in mc.dataset_list:
             if dataset.kind == 'RV':
-                self.dynamical_set['rv_times'].extend(dataset.x0.tolist())
+                int_buffer['rv_times'].extend(dataset.x0.tolist())
                 int_buffer['rv_ref'].extend(dataset.x0 * 0 + dataset_rv)
                 int_buffer['key_ref'][dataset.name_ref] = dataset_rv
                 dataset_rv += 1
@@ -319,28 +562,34 @@ class PlanetsCommonVariables:
                 int_buffer['t0_times'].extend(dataset.x0.tolist())
 
         if np.size(int_buffer['t0_times']) == 0:
-            int_buffer['t0_times'] = self.dynamical_set['rv_times']
+            int_buffer['t0_times'] = int_buffer['rv_times']
 
         for dataset in mc.dataset_list:
             if dataset.kind == 'RV':
                 self.dynamical_set['data_selection'][dataset.name_ref] = \
                     (np.asarray(int_buffer['rv_ref']) == int_buffer['key_ref'][dataset.name_ref])
 
+        self.dynamical_set['rv_times'] = int_buffer['rv_times']
         self.dynamical_set['len_rv'] = np.size(self.dynamical_set['rv_times'])
         if self.dynamical_set['len_rv'] == 0:
             self.dynamical_set['rv_times'] = None
+            int_buffer['rv_times'] = int_buffer['t0_times']
 
-        '''We assumed that each planet in the dynamical integrations has well defined period boundaries
-            AND that its period has not been fixed (or the whole dynamical analysis would be meaningless'''
-
-        rv_minmax = [np.amin(self.dynamical_set['rv_times']), np.amax(self.dynamical_set['rv_times'])]
+        rv_minmax = [np.amin(int_buffer['rv_times']), np.amax(int_buffer['rv_times'])]
         t0_minmax = [np.amin(int_buffer['t0_times']), np.amax(int_buffer['t0_times'])]
 
         self.dynamical_set['ttvfast'] = {
             't_beg': np.min([rv_minmax[0], t0_minmax[0]]) - 10,
             't_end': np.max([rv_minmax[1], t0_minmax[1]]) + 10}
 
-    def compute_dynamical(self, mc, theta, full_orbit=None):
+        if self.dynamical_set['ttvfast']['t_beg'] > -10. :
+            """It means that both rv_minmax[0] and t0_minmax[0] are greater than zero, i.e. that both
+            RV and TTV epochs start after Tref """
+            self.dynamical_set['ttvfast']['t_beg'] = 0.0000
+
+        ####printself.dynamical_set['ttvfast']['t_beg']
+
+    def compute_dynamical_ttvfast(self, mc, theta, full_orbit=None):
         """ This function compute the expected TTV and RVs for dynamically interacting planets.
             The user can specify which planets are subject to interactions, e.g. long-period planets can be approximated
             with a Keplerian function"""
@@ -351,7 +600,7 @@ class PlanetsCommonVariables:
         P_min = None
 
         plan_ref = {}
-        params = [mc.G_ttvfast, mc.star_mass_val]
+        params = [mc.G_ttvfast, mc.star_mass[0]]
 
         for pl_name in self.dynamical:
             plan_ref[pl_name] = n_plan
@@ -437,10 +686,124 @@ class PlanetsCommonVariables:
         return {
             'P': dict_pams['P'],
             'K': kp.kepler_K1(
-                mc.star_mass_val, dict_pams['M']/mc.M_SEratio, dict_pams['P'], dict_pams['i'], dict_pams['e']),
+                mc.star_mass[0], dict_pams['M']/mc.M_SEratio, dict_pams['P'], dict_pams['i'], dict_pams['e']),
             'f': dict_pams['f'],
             'e': dict_pams['e'],
             'o': dict_pams['o']}
+
+
+class CurvatureCommonVariables:
+    """Class to define the curvature of the dataset
+    The zero-point of the curvature is always zero, since this parameter is already defined
+    as the zero-point of each dataset """
+    def __init__(self):
+
+        self.bounds = {}
+        self.starts = {}
+
+        self.variables = {}
+        self.var_list = {}
+        self.fix_list = {}
+
+        self.prior_kind = {}
+        self.prior_pams = {}
+
+        self.fix_list = {}
+        self.fixed = []
+        self.nfix = 0
+        self.list_pams = {}
+
+        self.order = 0
+        self.order_ind = {}
+        """order =0 means no trend
+        RVtrend = a1*(t-Tref) + a2*(t-Tref)^2 + ... an*(t-Tref)^n """
+
+        """These default bounds are used when the user does not define them in the yaml file"""
+        self.default_bounds = {}
+
+    def define_bounds(self, mc):
+
+        mc.variable_list['Curvature'] = {}
+        for n_ord in xrange(1,self.order+1):
+            var = 'curvature_'+repr(n_ord)
+            self.list_pams[var] = 'U'
+            self.order_ind[var] = n_ord
+            self.default_bounds[var] = np.asarray([-1000.0, 1000.0])
+
+        for var in self.list_pams:
+            if var in self.fix_list:
+                self.variables[var] = get_fix_val
+                self.var_list[var] = self.nfix
+                self.fixed.append(self.fix_list[var])
+                self.nfix += 1
+            else:
+                '''If no bounds have been specified in the input file, we use the default ones
+                     Bounds must be provided in any case to avoid a failure of PyDE '''
+                if var in self.bounds:
+                    bounds_tmp = self.bounds[var]
+                else:
+                    bounds_tmp = self.default_bounds[var]
+
+                if self.list_pams[var] == 'U':
+                    self.variables[var] = get_var_val
+                    mc.bounds_list.append(bounds_tmp)
+                elif self.list_pams[var] == 'LU':
+                    self.variables[var] = get_var_exp
+                    mc.bounds_list.append(np.log2(bounds_tmp))
+
+                self.var_list[var] = mc.ndim
+                mc.variable_list['Curvature'][var] = mc.ndim
+                mc.ndim += 1
+
+    def starting_point(self, mc):
+
+        """Default values are already set in the array"""
+
+        for var in self.list_pams:
+            if var in self.starts:
+                if self.list_pams[var] == 'U':
+                    start_converted = self.starts[var]
+                elif self.list_pams[var] == 'LU':
+                    start_converted = np.log2(self.starts[var])
+
+                mc.starting_point[mc.variable_list['Curvature'][var]] = start_converted
+
+    def return_priors(self, theta):
+        prior_out = 0.00
+        kep_pams = self.convert(theta)
+        for key in self.prior_pams:
+            prior_out += giveback_priors(self.prior_kind[key], self.prior_pams[key], kep_pams[key])
+        return prior_out
+
+    def convert(self, theta):
+        dict_out = {}
+        for key in self.list_pams:
+            dict_out[key] = (self.variables[key](theta, self.fixed, self.var_list[key]))
+        return dict_out
+
+        # return self.variables[pl_name]['P'](theta, fixed, ), self.variables[pl_name]['K'](theta, fixed, 2), \
+        #       self.variables[pl_name]['f'](theta, fixed, 2), self.variables[pl_name]['e'](theta, fixed, 2), \
+        #       self.variables[pl_name]['o'](theta, fixed, 2)
+
+    def compute(self, theta, dataset):
+        dict_pams = self.convert(theta)
+        coeff = np.zeros(self.order+1)
+        for var in self.list_pams:
+            coeff[self.order_ind[var]] = dict_pams[var]
+        return np.polynomial.polynomial.polyval(dataset.x0, coeff)
+
+    def model_curvature(self, dict_pams, x0):
+        coeff = np.zeros(self.order+1)
+        for var in self.list_pams:
+            coeff[self.order_ind[var]] = dict_pams[var]
+        return np.polynomial.polynomial.polyval(x0, coeff)
+
+    def print_vars(self, mc, theta):
+        for var in self.list_pams:
+            mc.pam_names[mc.variable_list['Curvature'][var]] = var
+            val = self.variables[var](theta, self.fixed, self.var_list[var])
+            print 'Curvature ', var, val, self.var_list[var], '(', theta[
+                    self.var_list[var]], ')'
 
 
 class SinusoidsCommonVariables:
@@ -964,7 +1327,7 @@ class Dataset:
         self.jitter = np.zeros(self.n, dtype=np.double)
 
         """Default boundaries are defined according to the characteristic of the dataset"""
-        self.default_bounds = {'offset': [np.min(self.y), np.max(self.y)],
+        self.default_bounds = {'offset': [np.min(self.y)-50., np.max(self.y)+50.],
                                'jitter': [0., 50 * np.max(self.e)],
                                'linear': [-1., 1.]}
 
@@ -1026,7 +1389,7 @@ class Dataset:
             if np.size(id_var) == 0:
                 continue
             if np.size(id_var) == 1:
-                mc.pam_names[id_var] = self.name_ref[:-4] + '_' + param
+                mc.pam_names[id_var[0]] = self.name_ref[:-4] + '_' + param
             else:
                 for ii in id_var:
                     mc.pam_names[ii] = self.name_ref[:-4] + '_' + param + '_' + repr(ii - id_var[0])
@@ -1095,7 +1458,9 @@ class TransitCentralTimes(Dataset):
         # if np.sum(np.abs(self.x0 - self.model) < self.deltaT) < self.n:
         #    return -np.inf
         env = 1.0 / (self.e ** 2.0)
-        return -0.5 * (np.sum((self.x0 - self.model) ** 2 * env - np.log(env)))
+        time_dif = np.abs(self.x0 - self.model)
+        time_dif[np.where(time_dif > 6*self.e)] = 6*self.e
+        return -0.5 * (np.sum(time_dif**2 * env - np.log(env)))
 
     def print_vars(self, mc, theta):
         # period, _, f, e, o = mc.pcv.convert(self.planet_name, theta)
@@ -1117,9 +1482,13 @@ class ModelContainer:
     def __init__(self):
         self.dataset_list = []
         self.n_datasets = 0
+
+        self.t0_list = {}
+
         self.scv = SinusoidsCommonVariables()
         self.pcv = PlanetsCommonVariables()
         self.gcv = GaussianProcessCommonVariables()
+        self.ccv = CurvatureCommonVariables()
 
         # pyde/emcee variables
         self.ngen = 0
@@ -1143,21 +1512,27 @@ class ModelContainer:
         self.bounds = 0
         self.ndim = 0
         self.pam_names = ''
-        self.star_mass_val = 1.0000
-        self.star_mass_err = 0.1000
+        self.star_mass = [1.0000,  0.1000]
+        self.star_radius = [1.0000,  0.1000]
 
-        "Physical parameters are included here, so they are available to all the classes"
+        """
+        Values have been taken from TRADES
+        These variables will be renamed in the next release, right now I'm keeping the original names
+        to avoid breaking the code
+        """
+        self.G_grav = constants.Gsi # Gravitational Constants in SI system [m^3/kg/s^2]
+        self.G_ttvfast = constants.Giau  # G [AU^3/Msun/d^2]
+        self.M_SJratio = constants.Msjup
+        self.M_SEratio = constants.Msear
+        self.M_JEratio = constants.Mjear
 
-        self.G_grav = 6.67398e-11  # Gravitational constant is given in m^3 kg^-1 s^-2
-        self.G_ttvfast = 0.000295994511  # Gravitational constant in unknown units from TTVfast
-        self.M_sun = 1.98892e30
-        self.M_jup = 1.89813e27
-        self.M_SJratio = self.M_sun / self.M_jup
-        self.M_JEratio = 317.83
-        self.M_SEratio = self.M_SJratio * self.M_JEratio
-        self.Mu_sun = 132712440018.9
-        self.seconds_in_day = 86400
-        self.AU_km = 1.4960 * 10 ** 8
+        self.R_SJratio = constants.Rsjup
+        self.R_JEratio = constants.Rjear
+        self.R_SEratio = constants.Rsjup * constants.Rjear
+
+        self.Mu_sun = constants.Gsi * constants.Msun
+        self.seconds_in_day = constants.d2s
+        self.AU_km = constants.AU
         self.AUday2ms = self.AU_km / self.seconds_in_day * 1000.0
 
     def model_setup(self):
@@ -1186,6 +1561,9 @@ class ModelContainer:
         if 'kepler' in self.model_list:
             self.pcv.define_bounds(self)
 
+        if 'curvature' in self.model_list:
+            self.ccv.define_bounds(self)
+
         if 'sinusoids' in self.model_list:
             self.scv.define_bounds(self)
 
@@ -1203,6 +1581,9 @@ class ModelContainer:
 
         if 'kepler' in self.model_list:
             self.pcv.starting_point(self)
+
+        if 'curvature' in self.model_list:
+            self.ccv.starting_point(self)
 
         if 'sinusoids' in self.model_list:
             self.scv.starting_point(self)
@@ -1236,6 +1617,9 @@ class ModelContainer:
             we must do it here because all the planet are involved"""
             dyn_output = self.pcv.compute_dynamical(self, theta)
 
+        if 'curvature' in self.model_list:
+            chi2_out += self.ccv.return_priors(theta)
+
         if 'sinusoid' in self.model_list:
             chi2_out += giveback_priors(
                 self.scv.prior_kind['Prot'], self.scv.prior_pams['Prot'], theta[self.variable_list['Common']['Prot']])
@@ -1262,6 +1646,9 @@ class ModelContainer:
 
             if 'sinusoids' in dataset.models:
                 dataset.model += self.scv.compute(self, theta, dataset)
+
+            if 'curvature' in dataset.models:
+                dataset.model += self.ccv.compute(theta, dataset)
 
             if 'Tcent' in dataset.models:
                 if dataset.planet_name in self.pcv.dynamical:
@@ -1294,6 +1681,10 @@ class ModelContainer:
             self.pcv.print_vars(self, theta)
             print
 
+        if 'curvature' in self.model_list:
+            self.ccv.print_vars(self, theta)
+            print
+
         if 'sinusoids' in self.model_list:
             self.scv.print_vars(self, theta)
             print
@@ -1308,11 +1699,12 @@ class ModelContainer:
 
         model_actv = {}
         model_plan = {}
-        model_orbs = {}
         model_dsys = {}
+        model_curv = {}
 
-        model_orbs['BJD'] = x_range * 0.0
-        model_orbs['pha'] = x_phase * 0.0
+        model_orbs = {'BJD': x_range * 0.0, 'pha':x_phase * 0.0}
+        model_curv['BJD'] = x_range * 0.0
+        model_curv['pha'] = x_phase * 0.0
         model_plan['BJD'] = {}
         model_plan['pha'] = {}
 
@@ -1340,10 +1732,15 @@ class ModelContainer:
             if not dyn_flag:
                 model_orbs['BJD'] += model_plan['BJD'][pl_name]
 
+        if 'curvature' in self.model_list:
+            curv_pams = self.ccv.convert(theta)
+            model_curv['BJD'] = self.ccv.model_curvature(curv_pams, x_range - self.Tref)
+
         for dataset in self.dataset_list:
 
             model_actv[dataset.name_ref] = np.zeros(dataset.n)
             model_orbs[dataset.name_ref] = np.zeros(dataset.n)
+            model_curv[dataset.name_ref] = np.zeros(dataset.n)
             model_plan[dataset.name_ref] = {}
 
             dataset.model_reset()
@@ -1351,6 +1748,9 @@ class ModelContainer:
             dataset.model_linear(theta[self.variable_list[dataset.name_ref]['linear']])
 
             model_dsys[dataset.name_ref] = dataset.model
+
+            if 'curvature' in dataset.models:
+                model_curv[dataset.name_ref] = self.ccv.model_curvature(curv_pams, dataset.x0)
 
             if 'kepler' in dataset.models:
                 if bool(self.pcv.dynamical):
@@ -1369,7 +1769,7 @@ class ModelContainer:
             if 'sinusoids' in dataset.models:
                 model_actv[dataset.name_ref] += self.scv.compute(self, theta, dataset)
 
-        return model_dsys, model_plan, model_orbs, model_actv
+        return model_dsys, model_plan, model_orbs, model_actv, model_curv
 
     # This function recenters the bounds limits for circular variables
     # Also, it extends the range of a variable if the output of PyDE is a fixed number
@@ -1608,9 +2008,12 @@ def yaml_parser(file_conf, mc):
             if 'Tcent' in planet_conf:
                 mc.dataset_list.append(TransitCentralTimes(planet_name, planet_conf['Tcent']))
                 mc.dataset_list[-1].common_Tref(mc.Tref)
+                mc.t0_list[planet_name] = mc.dataset_list[-1]
 
             if 'Inclination' in planet_conf:
                 mc.pcv.inclination[planet_name] = planet_conf['Inclination']
+            if 'Radius' in planet_conf:
+                mc.pcv.radius[planet_name] = planet_conf['Radius']
 
     if 'Sinusoids' in config_in:
         conf = config_in['Sinusoids']
@@ -1659,6 +2062,34 @@ def yaml_parser(file_conf, mc):
                 for var in starts_conf:
                     mc.gcv.starts[dataset_name][var] = np.asarray(starts_conf[var], dtype=np.double)
 
+    if 'Curvature' in config_in:
+        conf = config_in['Curvature']
+
+        if 'Order' in conf:
+            mc.ccv.order = np.asarray(conf['Order'], dtype=np.int64)
+
+        if 'Boundaries' in conf:
+            bound_conf = conf['Boundaries']
+            for var in bound_conf:
+                mc.ccv.bounds[var] = np.asarray(bound_conf[var], dtype=np.double)
+
+        if 'Fixed' in conf:
+            fixed_conf = conf['Fixed']
+            for var in fixed_conf:
+                mc.ccv.fix_list[var] = np.asarray(fixed_conf[var], dtype=np.double)
+
+        if 'Priors' in conf:
+            prior_conf = conf['Priors']
+            for var in prior_conf:
+                mc.ccv.prior_kind[var] = prior_conf[var][0]
+                mc.ccv.prior_pams[var] = np.asarray(prior_conf[var][1:], dtype=np.double)
+
+        if 'Starts' in conf:
+            mc.starting_point_flag = True
+            starts_conf = conf['Starts']
+            for var in starts_conf:
+                mc.ccv.starts[var] = np.asarray(starts_conf[var], dtype=np.double)
+
     if 'Tref' in config_in:
         mc.Tref = np.asarray(config_in['Tref'])
         for dataset in mc.dataset_list:
@@ -1686,7 +2117,11 @@ def yaml_parser(file_conf, mc):
         mc.recenter_bounds_flag = config_in['emcee']['Recenter_Bounds']
 
     if 'Star_Mass' in config_in:
-        mc.star_mass_val = np.asarray(config_in['Star_Mass'][0], dtype=np.double)
-        mc.star_mass_err = np.asarray(config_in['Star_Mass'][1], dtype=np.double)
+        mc.star_mass = np.asarray(config_in['Star_Mass'][:], dtype=np.double)
+    if 'Star_Radius' in config_in:
+        mc.star_radius = np.asarray(config_in['Star_Radius'][:], dtype=np.double)
+
+    if 'Dynamical_Integrator' in config_in:
+        mc.pcv.dynamical_integrator = config_in['Dynamical_Integrator']
 
     mc.model_setup()

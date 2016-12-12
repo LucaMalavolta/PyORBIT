@@ -11,8 +11,9 @@ mpl.use('Agg')
 from matplotlib import pyplot as plt
 import corner
 from chainconsumer import ChainConsumer
+import constants
 
-def GelmanRubin(chains_input):
+def GelmanRubin_old(chains_input):
     n_iters, n_chain = np.shape(chains_input)
     W = np.asarray(0., dtype=np.double)
     z_pc = np.sum(chains_input, axis=0) / n_iters  # eq 20
@@ -22,6 +23,26 @@ def GelmanRubin(chains_input):
     B = np.sum(np.power(z_pc - z_pp, 2)) * (n_chain / (n_iters - 1))
     var = W * (n_chain - 1) / n_chain + B / n_chain
     return np.sqrt(var / W)
+
+def GelmanRubin(chains_T):
+    # Courtesy of Luca "Sbuffo" Borsato
+    n, M = np.shape(chains_T)
+
+    theta_m = [np.mean(chains_T[:,i_m]) for i_m in range(0, M)]
+    theta = np.mean(theta_m)
+
+    d_theta2 = (theta_m - theta)**2
+    B_n = np.sum(d_theta2) / (M-1)
+
+    arg_W = [np.sum((chains_T[:,i_m] - theta_m[i_m])**2) / (n-1) for i_m in range(0, M)]
+    W = np.mean(arg_W)
+
+    n_frac = (n-1)/n
+    var_plus = n_frac*W + B_n
+    Var = var_plus + (B_n/M)
+
+    Rc = np.sqrt(Var / W)
+    return Rc
 
 
 def get_mass(M_star2, M_star1, Period, K1, e0):
@@ -36,14 +57,23 @@ def get_mass(M_star2, M_star1, Period, K1, e0):
                       M_star2 * (M_star1 + M_star2) ** (-2.0 / 3.0))
     return output
 
+G_grav = constants.Gsi # Gravitational Constants in SI system [m^3/kg/s^2]
+G_ttvfast = constants.Giau  # G [AU^3/Msun/d^2]
+M_SJratio = constants.Msjup
+M_SEratio = constants.Msear
+M_JEratio = constants.Mjear
 
-G_grav = 6.67398e-11
-M_sun = 1.98892e30
-M_jup = 1.89813e27
-M_ratio = M_sun / M_jup
-Mu_sun = 132712440018.9
-seconds_in_day = 86400
-AU_km = 1.4960 * 10 ** 8
+R_SJratio = constants.Rsjup
+R_JEratio = constants.Rjear
+R_SEratio = constants.Rsjup * constants.Rjear
+
+M_sun = constants.Msun
+M_jup = constants.Mjup
+
+Mu_sun = constants.Gsi * constants.Msun
+seconds_in_day = constants.d2s
+AU_km = constants.AU
+AUday2ms = AU_km / seconds_in_day * 1000.0
 
 
 parser = argparse.ArgumentParser(prog='PyORBIT_V3_GetResults.py', description='Extract results from output MCMC')
@@ -69,8 +99,8 @@ mc.create_bounds()
 if bool(mc.pcv.dynamical):
     mc.pcv.prepare_dynamical(mc)
 
-M_star1 = mc.star_mass_val
-M_star1_err = mc.star_mass_err
+M_star1 = mc.star_mass[0]
+M_star1_err = mc.star_mass[1]
 
 dir_output = './' + mc.planet_name + '/'
 
@@ -103,6 +133,9 @@ print '*************************************************************'
 print
 print 'Acceptance Fraction for all walkers:'
 print acceptance_fraction[:]
+print
+print 'Autocorrelation time'
+print acor[:]
 print
 print '*************************************************************'
 print
@@ -180,7 +213,7 @@ if args.t != 'False':
         for ii in xrange(20, mc.nburnin):
             out_lines[ii] = GelmanRubin(chain_T[:ii, :, nd])
 
-        plt.ylim(0.95, 2.3)
+        #plt.ylim(0.95, 2.3)
         plt.plot(out_absc[20:], out_lines[20:], '-', color='k')
         plt.axhline(1.01)
         plt.savefig(dir_output + 'GRtrace_pam_' + repr(nd) + '.png', bbox_inches='tight')
@@ -233,7 +266,13 @@ if 'kepler' in mc.model_list:
         x_range = np.arange(boundaries[0], boundaries[1], 0.01)
         x_phase = np.arange(-0.50, 1.50, 0.005, dtype=np.double)
 
-        model_dsys, model_plan, model_orbs, model_actv = mc.rv_make_model(chain_med[:, 0], x_range, x_phase)
+        model_dsys, model_plan, model_orbs, model_actv, model_curv = mc.rv_make_model(chain_med[:, 0], x_range, x_phase)
+
+        fileout = open(plot_dir + 'curvature.dat', 'w')
+        fileout.write('descriptor x_range m_curv \n')
+        for ii in xrange(0, np.size(x_range)):
+            fileout.write('{0:14f} {1:14f} \n'.format(x_range[ii], model_curv['BJD'][ii]))
+        fileout.close()
 
     for planet_name in mc.pcv.planet_name:
 
@@ -248,7 +287,9 @@ if 'kepler' in mc.model_list:
         n_orbital = len(mc.pcv.var_list[planet_name])
         n_fitted = len(mc.pcv.var_list[planet_name]) - len(mc.pcv.fix_list[planet_name])
 
-        sample_plan = np.zeros([n_kept, n_orbital+6])
+        n_curv = mc.ccv.order
+
+        sample_plan = np.zeros([n_kept, n_orbital+6+n_curv])
 
         """Let's put all the human variables - including those that have been fixed - in sample_plan"""
         """An index is assigned to each variable to keep track of them in   """
@@ -276,11 +317,20 @@ if 'kepler' in mc.model_list:
 
         if dynamical_flag:
             convert_out['K'] = n_orbital + 5
-            sample_plan[:, convert_out['K']] = kp.kepler_K1(mc.star_mass_val,
+            sample_plan[:, convert_out['K']] = kp.kepler_K1(mc.star_mass[0],
                                                          sample_plan[:, convert_out['M']]/mc.M_SEratio,
                                                          sample_plan[:, convert_out['P']],
                                                          sample_plan[:, convert_out['i']],
                                                          sample_plan[:, convert_out['e']])
+
+        if 'curvature' in mc.model_list:
+            for n_var, var in enumerate(mc.ccv.list_pams):
+                convert_out[var] = n_orbital + 6 + n_var
+
+            for ii in xrange(0, n_kept):
+                convert_tmp = mc.ccv.convert(flatchain[ii, :])
+                for var in mc.ccv.list_pams:
+                    sample_plan[ii, convert_out[var]] = convert_tmp[var]
 
         for n, (P, K, e, M) in enumerate(zip(sample_plan[:, convert_out['P']],
                                              sample_plan[:, convert_out['K']],
@@ -319,11 +369,11 @@ if 'kepler' in mc.model_list:
         print 'Tperi  = ', sample_med[convert_out['Tperi'], 0], ' +\sigma ', sample_med[convert_out['Tperi'], 1], ' -\sigma ', sample_med[convert_out['Tperi'], 2]
         print 'Tcent  = ', sample_med[convert_out['Tcent'], 0], ' +\sigma ', sample_med[convert_out['Tcent'], 1], ' -\sigma ', sample_med[convert_out['Tcent'], 2]
         print 'a      = ', sample_med[convert_out['a_smj'], 0], ' +\sigma ', sample_med[convert_out['a_smj'], 1], ' -\sigma ', sample_med[convert_out['a_smj'], 2]
+        print
 
         sel_list = []
         sel_label = []
 
-        print mc.variable_list[planet_name]
         if 'P' in mc.variable_list[planet_name]:
             sel_list.append(convert_out['P'])
             sel_label.append('P')
@@ -354,9 +404,10 @@ if 'kepler' in mc.model_list:
             sel_list.append(convert_out['M_kep'])
             sel_label.append('M_j')
 
-
-        # sel_list = [0, 1, 2, 3, 4, 6]
-        # sel_label = ['P', 'K', 'phase', 'e', 'omega', 'Mass_J']
+        if 'curvature' in mc.model_list:
+            for var in mc.ccv.list_pams:
+                sel_list.append(convert_out[var])
+                sel_label.append(var)
 
         fig = corner.corner(sample_plan[:, sel_list], labels=sel_label, truths=sample_med[sel_list, 0])
         fig.savefig(dir_output + planet_name + "_corners.pdf", bbox_inches='tight')
@@ -378,10 +429,10 @@ if 'kepler' in mc.model_list:
                     col_sel = color_list[color_count % 7]
                     color_count += 1
                     p_pha = (dataset.x0 / sample_med[0, 0]) % 1
-                    y_det = dataset.y - model_dsys[dataset.name_ref]
-                    y_res = dataset.y - model_dsys[dataset.name_ref] - model_orbs[dataset.name_ref]
+                    y_det = dataset.y - model_dsys[dataset.name_ref] - model_curv[dataset.name_ref]
+                    y_res = dataset.y - model_dsys[dataset.name_ref] - \
+                            model_orbs[dataset.name_ref] - model_curv[dataset.name_ref]
                     y_1pl = y_res + model_plan[dataset.name_ref][planet_name]
-
                     ax1.errorbar(dataset.x, y_1pl, yerr=dataset.e, fmt=col_sel + '.', zorder=2)
                     #ax1.errorbar(dataset.x, y_det, yerr=dataset.e, fmt=col_sel + '.', zorder=2)
                     ax2.errorbar(dataset.x, y_res, yerr=dataset.e, fmt=col_sel + '.', zorder=2)
@@ -400,7 +451,6 @@ if 'kepler' in mc.model_list:
                                                   y_res[ii], dataset.e[ii],
                                                   model_orbs[dataset.name_ref][ii], dataset.e[ii]))
                     fileout.close()
-            # '\n'.format(dataset.x[ii], (dataset.x0[ii] / sample_med[0, 0]) % 1,
 
             f1.subplots_adjust(hspace=0)
             f1.savefig(plot_dir + planet_name + '_kep.pdf', bbox_inches='tight')
@@ -420,7 +470,8 @@ if 'kepler' in mc.model_list:
                 fileout.write('{0:14f} {1:14f} \n'.format(x_phase[ii], model_plan['pha'][planet_name][ii]))
             fileout.close()
 
-
+        """ TO BE FIXED """
+        """ Unsupported OLD section before using dictionaries """
         if 3 > 5:
 
             sample_plan = np.zeros([n_kept, 9])
@@ -795,11 +846,29 @@ if 'gaussian' in mc.model_list:
 
     for lab, sam in zip(sel_label, sample_med):
         print lab,' = ', sam[0], ' +\sigma ', sam[1], ' -\sigma ', sam[2]
+    print
 
     fig = corner.corner(sample_plan[:, :], labels=sel_label, truths=sample_med[:, 0])
     fig.savefig(dir_output + "GPs_corners.pdf", bbox_inches='tight')
     plt.close()
 
 
+if 'curvature' in mc.model_list:
+    n_vars = 0
+    sample_plan_transpose = []
+    sel_label = []
 
+    for name in mc.ccv.list_pams:
+        n_vars += 1
+        var = flatchain[:, mc.ccv.var_list[name]]
+        var_phys = mc.ccv.variables[name](var, var, xrange(0, n_kept))
+        sample_plan_transpose.append(var_phys)
+        sel_label.append(name)
 
+    sample_plan = np.asarray(sample_plan_transpose).T
+    sample_med = np.asarray(map(lambda v: (v[1], v[2] - v[1], v[1] - v[0]),
+                                    zip(*np.percentile(sample_plan[:, :], [15.865, 50, 84.135], axis=0))))
+
+    for lab, sam in zip(sel_label, sample_med):
+        print lab,' = ', sam[0], ' +\sigma ', sam[1], ' -\sigma ', sam[2]
+    print

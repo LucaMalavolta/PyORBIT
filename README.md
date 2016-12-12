@@ -1,5 +1,44 @@
 # PyORBIT
-News: added support to central time of transit fit, fixed orbital parameters, and gaussian processing model (still under testing)
+
+**`PyORBIT` v3.1 by Luca Malavolta - 2016**    
+
+Most of the information can be found in the paper by [Malavolta et al. (2016)][Malavolta2016]
+
+---
+
+## PyORBIT user guide
+1. [Introduction](### Introduction)
+2. [Install and Compile](### Install and Compile)
+3. [Configuration file](### Configuration file)
+4. [Data files](### Data files)
+5. [Run the code](### Run the code)
+6. [Analyze the output](### Analyze the output)
+
+### Introduction
+
+I started writing this code because I needed a versatile RV fitting code, with the ability of including different models for stellar activity. At the same time I used this project to improve my knowledge of Python, which was very limited at the time I started this project. If you dig into the code you may notice some inconsistencies in the way I treat data and variables, I'm trying to homogenize the code as long I'm learning new Pythonic tricks but it will take some time.  
+
+### Install and Compile
+
+ `PyORBIT` is avaialble at [https://github.com/LucaMalavolta/PyORBIT](https://github.com/LucaMalavolta/PyORBIT)
+
+  Download the .zip files or clone the repository.
+
+  To take advantage of dynamical integration, you need to install either `TRADES` ([Borsato et al. 2014][Borsato2014], available at [here](https://github.com/lucaborsato/trades)) or `TTVFast` ([Deck et al. 2014][Deck2014]) using the Python wrapper interface available [here](https://github.com/mindriot101/ttvfast-python).
+  After installing `TRADES`, you have to specify its path in `PyORBIT_V3_Classes.pyx` (before importing the `pytrades_lib` library).
+  `PyORBIT` can work without these codes installed, however some editing is required. Furthermore, the file `pytrades/constants.py` from the `TRADES` repository must be copied in the `PyORBIT` main folder
+
+  To compile the program using `Cython`, simply execute `./compile.bash` in a `Bash` terminal. `kepler_exo.py` and `PyORBIT_V3_Classes.py` provide symbolic links to the respective `*.pyx` files, so that the program can be executed without using Cython. Be aware that the `*.so` libraries will be preferred to the `*.py` symbolic links, so remember to recompile or delete the `*.so` files if you are modifying the files.
+
+  Older versions of the code can be found in the `V1` and `V2` folders.
+
+### Configuration file
+
+### Data files
+
+### Run the code
+
+### Analyze the output
 
 The main program is in PyORBIT_MultiPhase_Sinfit.py, you can start it by executing in a terminal:
 
@@ -97,4 +136,9 @@ _For each row:
 
 6. flag for linear trend: as for jitter
 
-Last flag can be omitted if no linear trend due to the instrument is present 
+Last flag can be omitted if no linear trend due to the instrument is present
+
+
+[Malavolta2016]: http://adsabs.harvard.edu/abs/2016A%26A...588A.118M
+[Borsato2014]: http://adsabs.harvard.edu/abs/2014A%26A...571A..38B
+[Deck2014]: http://adsabs.harvard.edu/abs/2014ApJ...787..132D

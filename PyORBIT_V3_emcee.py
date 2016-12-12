@@ -90,7 +90,7 @@ else:
             pickle.dump(mc.bounds, open(dir_output + 'bounds.pick', 'wb'))
             pickle.dump(population, open(dir_output + 'pyde_pops.pick', 'wb'))
 
-
+print 'PyDE completed'
 mc.results_resumen(starting_point)
 
     #json.dump(mc.variable_list, open('output/' + mc.planet_name + '_vlist.json', 'wb'))
