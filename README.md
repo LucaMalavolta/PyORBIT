@@ -34,7 +34,71 @@ I started writing this code because I needed a versatile RV fitting code, with t
 
 ### Configuration file
 
+This file contains all the information regarding:
+* datasets to be analyzed (e.g. RV, photometry, stellar activity indicators)
+* number of planets and their characteristics (e.g. priors on orbital parameters, )
+* models to be used to fit the data (e.g. gaussian processes for activity, long-term trends)
+
+
+```yaml
+Name: PyORBIT_test1
+Output: PyORBIT_test1
+```
+The first two keywords identify the name of the planet and the name of the directory where all the output files are stored.
+
+```yaml
+Inputs:
+  0:
+      File: test1_PH.dat
+      Kind: Phot
+      Models: ['sinusoids']
+  1:
+      File: test1_RV.dat
+      Kind: RV
+      Models: ['kepler', 'sinusoids']
+```
+The ```Input``` section includes all the data files to be analyzed. Following th ePython standard, file must be listed starting from ```0``` without gaps.
+
+The main goal of ```Kind``` is to distinguish between Radial Velocities (```RV```) and other kinds of data ( ```Phot```, while ```BIS```, ```FWHM``` and ```Act```, although only in the case of the ```sinusoid``` model a real distinction is made).
+
+```Models``` specificies how you want to fit the data. The avaialble models are:
+  * ```kepler```: keplerian curve, avaialble only for RVs.
+  * ```curvature```: polynomial trend of order _n_ . The same trend is applied to each dataset with this keyword listed among the models. Instrumental trend (specific of a given dataset) can be corrected with a keyword inside the dataset file
+  * ```sinusoid```: activity modelling with sinusoids at the rotational period of the star and its harmonics, following [Boisse et al. (2011)][Boisse2011]
+  * ```gaussian```: activity modeling with gaussian processes
+
+```yaml
+Planets:
+  0:
+    Orbit: dynamical
+    Boundaries:
+      P: [20.0, 50.0]
+      M: [10.0, 1000.0]
+      e: [0.00, 0.40]
+    Fixed:
+      lN : 90.0
+      i: 90.0
+    Priors:
+      P: ['Gaussian', 35.50, 0.01]
+    Starts:
+      o: 0.345
+      f: 2.145
+    Tcent: obsT0.dat
+    Radius: [11.200, 0.100]
+    Inclination: [90.0, 0.01]
+```
+In this section the characteristics of the planets can be specified. As before, the planets must be numbered starting from zero and without gaps.
+
+*  ```Orbit```: the model to be used for the RV planetary signal:
+  * ```circular```: circular orbit with the period of the planet ```P```, the RV semi-amplitude ```K``` and the phase ```f``` (not to be confused with the _true anomaly_) as free parameters.
+  * ```keplerian```: keplerian (eccentric) orbit, same parameters as *circular* with the addition of the eccentricity ```e``` and the argument of pericenter ```o```
+  * ```dynamical```: RVs are modelled using a N-body integration instead of non-interacting keplerians. The parameters in the fit are ```P```, ```e```, ```f```, ```o``` as in the previous models, the mass of the planet ```M```, the inclination of the planet ```i```, the longitude of the ascending node ```lN```.
+
+  Note that ```f = o + mA``` where _mA_ is the mean anomaly at the epoch of reference  ```Tref``` (to be introduced later)
+* ```Boundaries```: to be continued....
+
 ### Data files
+
 
 ### Run the code
 
@@ -142,3 +206,4 @@ Last flag can be omitted if no linear trend due to the instrument is present
 [Malavolta2016]: http://adsabs.harvard.edu/abs/2016A%26A...588A.118M
 [Borsato2014]: http://adsabs.harvard.edu/abs/2014A%26A...571A..38B
 [Deck2014]: http://adsabs.harvard.edu/abs/2014ApJ...787..132D
+[Boisse2011]: http://adsabs.harvard.edu/abs/2011A%26A...528A...4B
