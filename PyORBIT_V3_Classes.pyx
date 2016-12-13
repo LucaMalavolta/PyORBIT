@@ -531,7 +531,7 @@ class PlanetsCommonVariables:
                 self.dynamical_set['data']['t0_num'])
 
         output = {}
-
+        t0_sim -= mc.Tref
         for dataset in mc.dataset_list:
             if dataset.kind == 'RV' and full_orbit is None:
                 output[dataset.name_ref] = rv_sim[self.dynamical_set['data']['selection'][dataset.name_ref]]
