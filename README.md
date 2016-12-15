@@ -2,6 +2,8 @@
 
 **`PyORBIT` v3.1 by Luca Malavolta - 2016**    
 
+PyORBIT handles several kinds of datasets, such as radial velocity (RV), activity indexes, and photometry, to simultaneously characterize the orbital parameters of exoplanets and the noise induced by the activity of the host star. RV computation is performed using either non-interacting Kepler orbits or n-body integration. Stellar activity can be modeled either with sinusoids at the rotational period and its harmonics or gaussian process. Offsets and systematics in measurements from several instruments can be modeled as well. Thanks to the modular approach, new methods for stellar activity modeling or parameter estimation can be easily incorporated into the code.
+
 Most of the information can be found in the paper by [Malavolta et al. (2016)][Malavolta2016]
 
 ---
@@ -162,7 +164,7 @@ Last flag can be omitted if no linear trend due to the instrument is present. Fo
 ### Run the code
 The main program is ```PyORBIT_V3_emcee.py```, you can start it by executing in a terminal:
 ```text
-$ python PyORBIT_V3_emcee.py 
+$ python PyORBIT_V3_emcee.py
 ```
 followed by the ```yaml``` configuration file.
 This program run the sampler and the outcome is store in the ```Outpout``` directory. Other samplers are currently under testing.
