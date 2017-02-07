@@ -1,5 +1,4 @@
-from classes.model_container import ModelContainer
-from classes.input_parser import yaml_parser
+from PyORBIT_V3_Classes import *
 import numpy as np
 import emcee
 from pyde.de import DiffEvol
@@ -9,41 +8,13 @@ import os
 import argparse
 #import json
 
-
-def save_to_hdf5(samples):
-    # json.dump(mc.variable_list, open('output/' + mc.planet_name + '_vlist.json', 'wb'))
-    # pickle.dump(mc.variable_list, open(dir_output + 'vlist.pick', 'wb'))
-    # pickle.dump(mc.scv.use_offset,  open(dir_output + 'scv_offset.pick', 'wb'))
-
-    h5f = h5py.File(dir_output + mc.planet_name + '.hdf5', "w")
-
-    data_grp = h5f.create_group("data")
-    data_grp.attrs.create('file_conf', data=file_conf)
-
-    data_grp.create_dataset("starting_point", data=starting_point, compression="gzip")
-    data_grp.create_dataset("starting_population", data=population, compression="gzip")
-
-    emcee_grp = h5f.create_group("emcee")
-    emcee_grp.attrs.create("nwalkers", data=mc.nwalkers)
-    emcee_grp.attrs.create("ndim", data=mc.ndim)
-
-    emcee_grp.attrs.create("nsave", data=mc.nsave)
-    emcee_grp.attrs.create("nsample", data=samples)
-
-    emcee_grp.create_dataset("bound", data=mc.bounds, compression="gzip")
-    emcee_grp.create_dataset("chain", data=sampler.chain, compression="gzip")
-
-    emcee_grp.create_dataset("lnprobability", data=sampler.lnprobability, compression="gzip")
-    emcee_grp.create_dataset("acceptance_fraction", data=sampler.acceptance_fraction, compression="gzip")
-    # emcee_grp.create_dataset("acor", data=sampler.acor, compression="gzip")
-
-    h5f.close()
-
 parser = argparse.ArgumentParser(prog='PyORBIT_V3_emcee.py', description='PyDE+emcee runner')
 # parser.add_argument('-l', type=str, nargs='+', help='line identificator')
 parser.add_argument('config_file', type=str, nargs=1, help='config file')
 
+
 args = parser.parse_args()
+
 file_conf = args.config_file[0]
 
 mc = ModelContainer()
@@ -57,8 +28,10 @@ if not os.path.exists(dir_output):
 
 mc.create_bounds()
 
+
+
 if bool(mc.pcv.dynamical):
-        mc.pcv.prepare_dynamical(mc)
+    mc.pcv.prepare_dynamical(mc)
 
 print 'Dimensions = ', mc.ndim
 print '   '
@@ -72,8 +45,6 @@ if mc.nwalkers%2 == 1: mc.nwalkers += 1
 print 'Nwalkers = ', mc.nwalkers
 
 print mc.starting_point
-
-
 
 if mc.starting_point_flag:
     mc.create_starting_point()
@@ -127,22 +98,34 @@ pickle.dump(mc.variable_list, open(dir_output + 'vlist.pick', 'wb'))
 pickle.dump(mc.scv.use_offset,  open(dir_output + 'scv_offset.pick', 'wb'))
 
 print 'emcee'
-state = None
 sampler = emcee.EnsembleSampler(mc.nwalkers, mc.ndim, mc, threads=mc.nwalkers)
-
-if mc.nsave > 0:
-    print ' Saving temporary steps'
-    niter = int(mc.nsteps/mc.nsave)
-    sampled = 0
-    for i in xrange(0, niter):
-        population, prob, state = sampler.run_mcmc(population, mc.nsave, thin=mc.thin, rstate0=state)
-        sampled += mc.nsave
-        save_to_hdf5(sampled)
-        print sampled, '  steps completed, average lnprob:, ', np.median(prob)
-
-else:
-    population, prob, state = sampler.run_mcmc(population, mc.nsteps, thin=mc.thin)
-    save_to_hdf5(mc.nsteps)
+sampler.run_mcmc(population, mc.nsteps, thin=mc.thin)
 
 print 'emcee completed'
+
+# json.dump(mc.variable_list, open('output/' + mc.planet_name + '_vlist.json', 'wb'))
+# pickle.dump(mc.variable_list, open(dir_output + 'vlist.pick', 'wb'))
+# pickle.dump(mc.scv.use_offset,  open(dir_output + 'scv_offset.pick', 'wb'))
+
+h5f = h5py.File(dir_output + mc.planet_name + '.hdf5', "w")
+
+data_grp = h5f.create_group("data")
+data_grp.attrs.create('file_conf',data=file_conf)
+
+data_grp.create_dataset("starting_point", data=starting_point, compression="gzip")
+data_grp.create_dataset("starting_population", data=population, compression="gzip")
+
+emcee_grp = h5f.create_group("emcee")
+emcee_grp.attrs.create("nwalkers", data=mc.nwalkers)
+emcee_grp.attrs.create("ndim", data=mc.ndim)
+
+
+emcee_grp.create_dataset("bound", data=mc.bounds, compression="gzip")
+emcee_grp.create_dataset("chain", data=sampler.chain, compression="gzip")
+
+emcee_grp.create_dataset("lnprobability", data=sampler.lnprobability, compression="gzip")
+emcee_grp.create_dataset("acceptance_fraction", data=sampler.acceptance_fraction, compression="gzip")
+emcee_grp.create_dataset("acor", data=sampler.acor, compression="gzip")
+
+h5f.close()
 
