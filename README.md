@@ -1,6 +1,6 @@
 # PyORBIT
 
-**`PyORBIT` v3.1 by Luca Malavolta - 2016**    
+**`PyORBIT` v4.0 by Luca Malavolta - 2017**    
 
 PyORBIT handles several kinds of datasets, such as radial velocity (RV), activity indexes, and photometry, to simultaneously characterize the orbital parameters of exoplanets and the noise induced by the activity of the host star. RV computation is performed using either non-interacting Kepler orbits or n-body integration. Stellar activity can be modeled either with sinusoids at the rotational period and its harmonics or gaussian process. Offsets and systematics in measurements from several instruments can be modeled as well. Thanks to the modular approach, new methods for stellar activity modeling or parameter estimation can be easily incorporated into the code.
 
@@ -8,7 +8,19 @@ Most of the information can be found in the paper by [Malavolta et al. (2016)][M
 
 ---
 
+** Changelog from version 3.1
+
+* 'PolyChord' available and tested!
+* One program to analyze the output of 'emcee' and 'PolyChord'
+* Loglikelihood computed as in [Malavolta et al. (2017)][Malavolta2017]
+* Transit Times data moved to Input section
+* Fixed the Theta parameter conversion in Gaussian Processes module
+* Jitter parameters now moves in logarithmic space
+
+---
+
 ## PyORBIT user guide
+*** FOR 3.1 version! ***
 1. [Introduction](### Introduction)
 2. [Install and Compile](### Install and Compile)
 3. [Configuration file](### Configuration file)
@@ -183,3 +195,4 @@ followed by the ```yaml``` configuration file and the appropriate flag. Use the 
 [Deck2014]: http://adsabs.harvard.edu/abs/2014ApJ...787..132D
 [Boisse2011]: http://adsabs.harvard.edu/abs/2011A%26A...528A...4B
 [Foreman-Mackey2013]: http://adsabs.harvard.edu/abs/2013PASP..125..306F
+[Malavolta2017]: https://arxiv.org/abs/1703.06885

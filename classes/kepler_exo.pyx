@@ -12,19 +12,21 @@ import numpy as np
 #       Newton-Raphson iteration to extend the applicability of this
 #       function to higher eccentricities
 
-G_grav = 6.67398e-11
-M_sun = 1.98892e30
+
+G_grav = 6.67428e-11 # Gravitational Constants in SI system [m^3/kg/s^2]
+M_sun = 1.9884e30 # Value from TRADES
 
 
-def kepler_E(M, ec):
+def kepler_E(M_in, ec):
     E = 0.0
     E0 = 0.0
+    M = np.atleast_1d(M_in)
     ecc = np.asarray(ec, dtype=np.double)
     eccanom = np.zeros(np.size(M), dtype=np.double)
 
     for ii in xrange(0, np.size(M)):
         # -np.pi < M < np.pi
-        mx = np.asarray(M[ii], dtype=np.double)
+        mx = M[ii]
         if mx > np.pi:
             mx = mx % (2. * np.pi)
             if mx > np.pi:
@@ -32,7 +34,7 @@ def kepler_E(M, ec):
         if mx <= -np.pi:
             mx = mx % (2. * np.pi)
             if mx < -np.pi:
-                mx = mx + (2. * np.pi)
+                mx += (2. * np.pi)
 
         if ecc < 1e-10:
             eccanom[ii] = mx

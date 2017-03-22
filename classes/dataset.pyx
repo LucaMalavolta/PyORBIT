@@ -8,10 +8,11 @@ class Dataset:
         self.models = models
         self.name_ref = input_file
 
-        self.list_sys = ['jitter', 'offset', 'linear']
+        self.list_pams = {'jitter': 'LU', 'offset': 'U', 'linear': 'U'}
         self.bounds = {}
         self.starts = {}
         self.n_sys = {}
+        self.variables = {}
 
         """There is a mix of arrays and dictonaries here because this was one of the first
             classes I created. I will probably consider switch everything to dictionary
@@ -29,7 +30,7 @@ class Dataset:
         self.n = np.size(self.x)
 
         self.sys = {}
-        for var in self.list_sys:
+        for var in self.list_pams:
             self.sys[var] = np.zeros(self.n, dtype=np.double) - 1
         # it was zero for jitter and offset, and -1 for linear for unknown reasons
 
@@ -50,11 +51,11 @@ class Dataset:
         # for each dataset or exclude some of the datasets
 
         # Model for RV systematics
-        for var in self.list_sys:
+        for var in self.list_pams:
             self.n_sys[var] = np.max(self.sys[var].astype(np.int64)) + 1
 
         print 'N = ', self.n
-        for var in self.list_sys:
+        for var in self.list_pams:
             print 'N '+var+' = ', self.n_sys[var]
         # print 'N activ. = ', self.n_a
         print
@@ -63,17 +64,17 @@ class Dataset:
         self.x0 = self.x - self.Tref
 
         self.mask = {}
-        for var in self.list_sys:
-            self.mask[var] = np.zeros([self.n, self.n_sys[var]], dtype=bool)
-            for ii in xrange(0, self.n_sys[var]):
-                self.mask[var][(abs(self.sys[var] - ii) < 0.1), ii] = True
+        for var in self.list_pams:
+                self.mask[var] = np.zeros([self.n, self.n_sys[var]], dtype=bool)
+                for ii in xrange(0, self.n_sys[var]):
+                    self.mask[var][(abs(self.sys[var] - ii) < 0.1), ii] = True
 
         self.model = np.zeros(self.n, dtype=np.double)
         self.jitter = np.zeros(self.n, dtype=np.double)
 
         """Default boundaries are defined according to the characteristic of the dataset"""
         self.default_bounds = {'offset': [np.min(self.y)-50., np.max(self.y)+50.],
-                               'jitter': [0., 50 * np.max(self.e)],
+                               'jitter': [0.0001, 20 * np.max(self.e)],
                                'linear': [-1., 1.]}
 
     def common_Tref(self, Tref_in):
@@ -97,7 +98,7 @@ class Dataset:
             self.model[self.mask['linear'][:, ii]] += m[ii] * self.x0[self.mask['linear'][:, ii]]
 
     def model_jitter(self, jit_in):
-        jit = np.atleast_1d(jit_in)
+        jit = np.exp2(np.atleast_1d(jit_in))
         for ii in xrange(0, self.n_sys['jitter']):
             self.jitter[self.mask['jitter'][:, ii]] = jit[ii]
 
@@ -107,42 +108,75 @@ class Dataset:
 
     def define_bounds(self, mc):
 
-        for var in self.list_sys:
-            if var in self.bounds:
-                bounds = self.bounds[var]
-            else:
-                bounds = self.default_bounds[var]
-            for jj in xrange(0, self.n_sys[var]):
-                mc.bounds_list.append(bounds)  # bounds for jitter
+        #for var in self.list_sys:
+        #    if var in self.bounds:
+        #        bounds = self.bounds[var]
+        #    else:
+        #        bounds = self.default_bounds[var]
+        #    for jj in xrange(0, self.n_sys[var]):
+        #        mc.bounds_list.append(bounds)  # bounds for jitter
+        #
+        #mc.variable_list[self.kind] = {}
+        #mc.variable_list[self.name_ref] = {}
+        #
+        #"""adding the systematics variables to the list"""
+        #for var in self.list_sys:
+        #    mc.variable_list[self.name_ref][var] = np.arange(mc.ndim, mc.ndim + self.n_sys[var], 1)
+        #    mc.ndim += self.n_sys[var]
 
         mc.variable_list[self.kind] = {}
         mc.variable_list[self.name_ref] = {}
 
-        """adding the systematics variables to the list"""
-        for var in self.list_sys:
+        for var in self.list_pams:
+            if var in self.bounds:
+                bounds_tmp = self.bounds[var]
+            else:
+                bounds_tmp = self.default_bounds[var]
+
+            if self.list_pams[var] == 'U':
+                self.variables[var] = get_var_val
+
+            elif self.list_pams[var] == 'LU':
+                self.variables[var] = get_var_exp
+                bounds_tmp = np.log2(bounds_tmp)
+
             mc.variable_list[self.name_ref][var] = np.arange(mc.ndim, mc.ndim + self.n_sys[var], 1)
+            for jj in xrange(0, self.n_sys[var]):
+                mc.bounds_list.append(bounds_tmp)
             mc.ndim += self.n_sys[var]
 
     def starting_point(self, mc):
         if self.name_ref in self.starts:
             for var in self.starts[self.name_ref]:
-                mc.starting_point[mc.variable_list[self.name_ref][var]] = self.starts[self.name_ref][var]
-        """Better start with a low jitter and let the code increase it"""
-        if 'jitter' in mc.variable_list[self.name_ref]:
-            mc.starting_point[mc.variable_list[self.name_ref]['jitter']] = 0.0001
+                if self.list_pams[var] == 'U':
+                    start_converted = self.starts[self.name_ref][var]
+                elif self.list_pams[var] == 'LU':
+                    start_converted = np.log2(self.starts[self.name_ref][var])
+                mc.starting_point[mc.variable_list[self.name_ref][var]] = start_converted
 
-    def print_vars(self, mc, theta):
-        for param in self.list_sys:
-            id_var = mc.variable_list[self.name_ref][param]
+    def initialize(self, mc):
+        for key in self.list_pams:
+            id_var = mc.variable_list[self.name_ref][key]
             if np.size(id_var) == 0:
                 continue
             if np.size(id_var) == 1:
-                mc.pam_names[id_var[0]] = self.name_ref[:-4] + '_' + param
+                mc.pam_names[id_var[0]] = self.name_ref[:-4] + '_' + key
             else:
                 for ii in id_var:
-                    mc.pam_names[ii] = self.name_ref[:-4] + '_' + param + '_' + repr(ii - id_var[0])
+                    mc.pam_names[ii] = self.name_ref[:-4] + '_' + key + '_' + repr(ii - id_var[0])
 
-            print self.name_ref, param, ' : ', theta[mc.variable_list[self.name_ref][param]]
+    def shutdown_jitter(self):
+        self.n_sys['jitter'] = 0
+
+    def print_vars(self, mc, theta):
+        for key in self.list_pams:
+            if self.n_sys[key] > 0:
+                if self.list_pams[key] == 'U':
+                    print self.name_ref, key, ' vars-pams: ', theta[mc.variable_list[self.name_ref][key]]
+                elif self.list_pams[key] == 'LU':
+                    pams_converted = np.exp2(theta[mc.variable_list[self.name_ref][key]])
+                    print self.name_ref, key, ' vars: ', theta[mc.variable_list[self.name_ref][key]], \
+                        ' pams: ', pams_converted
 
 
 class TransitCentralTimes(Dataset):
@@ -154,7 +188,7 @@ class TransitCentralTimes(Dataset):
         self.name_ref = input_file
         self.planet_name = planet_name
 
-        self.list_sys = ['jitter', 'offset', 'linear']
+        self.list_pams = {'jitter': 'LU', 'offset': 'U', 'linear': 'U'}
         self.n_sys = {}
         self.mask = {}
         self.bounds = {}
@@ -181,7 +215,7 @@ class TransitCentralTimes(Dataset):
         print 'N = ', self.n
         print
 
-        for var in self.list_sys:
+        for var in self.list_pams:
             self.n_sys[var] = 0
             self.mask[var] = np.zeros([self.n, self.n_sys[var]], dtype=bool)
 
@@ -190,7 +224,7 @@ class TransitCentralTimes(Dataset):
 
         """Default boundaries are defined according to the characteristic of the dataset"""
         self.default_bounds = {'offset': [np.min(self.x), np.max(self.x)],
-                               'jitter': [0., 50 * np.max(self.e)],
+                               'jitter': [0.0001, 50 * np.max(self.e)],
                                'linear': [-1., 1.]}
 
     def compute(self, mc, theta):
@@ -214,6 +248,13 @@ class TransitCentralTimes(Dataset):
     def print_vars(self, mc, theta):
         # period, _, f, e, o = mc.pcv.convert(self.planet_name, theta)
         # model = np.rint(self.x0 / period) * period + kp.kepler_Tcent_T0P(period, f, e, o)
+        for key in self.list_pams:
+            if self.list_pams[key] == 'U':
+                print self.name_ref, key, ' vars-pams: ', theta[mc.variable_list[self.name_ref][key]]
+            elif self.list_pams[key] == 'LU':
+                pams_converted = np.exp2(theta[mc.variable_list[self.name_ref][key]])
+                print self.name_ref, key, ' vars: ', theta[mc.variable_list[self.name_ref][key]], \
+                    ' pams: ', pams_converted
 
         if self.planet_name in mc.pcv.dynamical:
             dyn_output = mc.pcv.compute_dynamical(mc, theta)
@@ -221,7 +262,9 @@ class TransitCentralTimes(Dataset):
         else:
             model = self.compute(mc, theta)
 
-        print 'Tc ', self.planet_name
-        for ii in xrange(0, self.n):
-            print 'Input Tc: ', self.x0[ii], '  Model Tc: ', model[ii], \
-                '  Diff: ', model[ii] - self.x0[ii]
+        if verbose:
+            print 'Tc ', self.planet_name
+            for ii in xrange(0, self.n):
+                print 'Input Tc: ', self.x0[ii], '  Model Tc: ', model[ii], \
+                    '  Diff: ', model[ii] - self.x0[ii]
+            print

@@ -3,9 +3,11 @@ from planets import PlanetsCommonVariables
 from gaussian import GaussianProcessCommonVariables
 from curvature import CurvatureCommonVariables
 from sinusoids import SinusoidsCommonVariables
-from compute_RV import ComputeKeplerian, ComputeDynamical
 from dataset import Dataset, TransitCentralTimes
-
+sys.path.append('/home/malavolta/CODE/trades/pytrades')
+#sys.path.append('/Users/malavolta/Astro/CODE/trades/pytrades')
+from pytrades_lib import pytrades
+import constants
 
 class ModelContainer:
     def __init__(self):
@@ -18,26 +20,15 @@ class ModelContainer:
         self.pcv = PlanetsCommonVariables()
         self.gcv = GaussianProcessCommonVariables()
         self.ccv = CurvatureCommonVariables()
-        self.keplerian_model = ComputeKeplerian()
-        self.dynamical_model = ComputeDynamical()
 
         # pyde/emcee variables
-        self.emcee_parameters = {'npop_mult': 2, 'thin': 1}
-        self.pyde_parameters = {'ngen': 1000, 'npop_mult': 2}
-
-        # Default values, taken from the PyPolyChord wrapper in PolyChord official distribution, V1.9
-        self.polychord_parameters = {'nlive_mult': 25,
-                                     'num_repeats_mult': 5,
-                                     'feedback': 1,
-                                     'precision_criterion': 0.001,
-                                     'max_ndead': -1,
-                                     'boost_posterior': 0.0,
-                                     'read_resume': True,
-                                     'base_dir': './',
-                                     'shutdown_jitter': False}
-
-        self.ndata = None
-        self.ndof = None
+        self.ngen = 0
+        self.nsave = 0
+        self.nsteps = 0
+        self.nburn = 0
+        self.npop_multi = 0
+        self.nwalkers = 0
+        self.thin = 1
 
         self.model_list = []
         self.bounds_list = []
@@ -50,8 +41,7 @@ class ModelContainer:
 
         self.variable_list = {'Common': {}}
         self.bound_list = []
-        self.bounds = None
-        self.range = None
+        self.bounds = 0
         self.ndim = 0
         self.pam_names = ''
         self.star_mass = [1.0000,  0.1000]
@@ -82,28 +72,12 @@ class ModelContainer:
         for dataset in self.dataset_list:
 
             if 'sinusoids' in dataset.models:
-                self.scv.model_setup(dataset)
+                self.scv.setup_model_sinusoids(dataset)
 
             dataset.model_reset()
             for data_model in dataset.models:
                 if not (data_model in self.model_list):
                     self.model_list.append(data_model)
-
-    def initialize_model(self):
-
-        # First step: setting up the models
-        # Second step: define the number of variables and setting up the boundaries
-        # Third step: initialize the variables names
-
-        self.model_setup()
-        self.create_bounds()
-
-        self.ndata = 0
-        for dataset in self.dataset_list:
-            self.ndata += dataset.n
-        self.ndof = self.ndata - self.ndim
-
-        self.initialize()
 
     def create_bounds(self):
         # This routine creates the boundary array and at the same time
@@ -129,29 +103,6 @@ class ModelContainer:
             self.gcv.define_bounds(self)
 
         self.bounds = np.asarray(self.bounds_list)
-        self.range = self.bounds[:, 1]-self.bounds[:, 0]
-
-    def initialize(self):
-        # Function with two goals:
-        # * Unfold and print out the output from theta
-        # * give back a parameter name associated to each value in the result array
-
-        self.pam_names = self.ndim * ['']
-
-        for dataset in self.dataset_list:
-            dataset.initialize(self)
-
-        if 'kepler' in self.model_list:
-            self.pcv.initialize(self)
-
-        if 'curvature' in self.model_list:
-            self.ccv.initialize(self)
-
-        if 'sinusoids' in self.model_list:
-            self.scv.initialize(self)
-
-        if 'gaussian' in self.model_list:
-            self.gcv.initialize(self)
 
     def create_starting_point(self):
 
@@ -176,16 +127,8 @@ class ModelContainer:
         for ii in xrange(0, self.ndim):
             if not (self.bounds[ii, 0] < theta[ii] < self.bounds[ii, 1]):
                 return False
-
-        period_inner = 0.
         for pl_name in self.pcv.planet_name:
-            """ Step 1: check that the planet has period longer than the preceding one in the list"""
-            period = self.pcv.variables[pl_name]['P'](theta, self.pcv.fixed, self.pcv.var_list[pl_name]['P'])
-            if period <= period_inner:
-                return False
-            period_inner = period
-
-            """ Step 2: check if the eccentricity is within the given range"""
+            # if not bool(self.pcv.circular[pl_name]):
             e = self.pcv.variables[pl_name]['e'](theta, self.pcv.fixed, self.pcv.var_list[pl_name]['e'])
             if not self.pcv.bounds[pl_name]['e'][0] <= e < self.pcv.bounds[pl_name]['e'][1]:
                 return False
@@ -195,26 +138,26 @@ class ModelContainer:
     def __call__(self, theta):
         if not self.check_bounds(theta):
             return -np.inf
-        logchi2_out = 2.*self.ndof*np.log(2*np.pi)
+        chi2_out = 0.0
 
         if 'kepler' in self.model_list:
             for pl_name in self.pcv.planet_name:
-                logchi2_out += self.pcv.return_priors(pl_name, theta)
+                chi2_out += self.pcv.return_priors(pl_name, theta)
 
         if bool(self.pcv.dynamical):
             """ check if any keyword ahas get the output model from the dynamical tool
             we must do it here because all the planet are involved"""
-            dyn_output = self.dynamical_model.compute(self, self.pcv, theta)
+            dyn_output = self.pcv.compute_dynamical(self, theta)
 
         if 'curvature' in self.model_list:
-            logchi2_out += self.ccv.return_priors(theta)
+            chi2_out += self.ccv.return_priors(theta)
 
         if 'sinusoid' in self.model_list:
-            logchi2_out += giveback_priors(
+            chi2_out += giveback_priors(
                 self.scv.prior_kind['Prot'], self.scv.prior_pams['Prot'], theta[self.variable_list['Common']['Prot']])
 
         if 'gaussian' in self.model_list:
-            logchi2_out += self.gcv.return_priors(theta)
+            chi2_out += self.gcv.return_priors(theta)
 
         for dataset in self.dataset_list:
             dataset.model_reset()
@@ -231,7 +174,7 @@ class ModelContainer:
                     keplerians, and then we compute the expected RVs"""
                     pass
                     if pl_name not in self.pcv.dynamical:
-                        dataset.model += self.keplerian_model.compute(self.pcv, theta, dataset, pl_name)
+                        dataset.model += self.pcv.compute(theta, dataset, pl_name)
 
             if 'sinusoids' in dataset.models:
                 dataset.model += self.scv.compute(self, theta, dataset)
@@ -248,32 +191,39 @@ class ModelContainer:
 
             # Gaussian Process check MUST be the last one or the program will fail
             if 'gaussian' in dataset.models:
-                logchi2_out += self.gcv.return_priors(theta, dataset.name_ref)
-                logchi2_out += self.gcv.lnlk_compute(theta, dataset)
+                chi2_out += self.gcv.return_priors(theta, dataset.name_ref)
+                chi2_out += self.gcv.lnlk_compute(theta, dataset)
             else:
-                logchi2_out += dataset.model_logchi2()
+                chi2_out += dataset.model_logchi2()
 
-        return logchi2_out
+        return chi2_out
 
-    def results_resumen(self, theta, verbose=True):
+    def results_resumen(self, theta):
         # Function with two goals:
         # * Unfold and print out the output from theta
         # * give back a parameter name associated to each value in the result array
 
+        self.pam_names = self.ndim * ['']
+
         for dataset in self.dataset_list:
             dataset.print_vars(self, theta)
+            print
 
         if 'kepler' in self.model_list:
             self.pcv.print_vars(self, theta)
+            print
 
         if 'curvature' in self.model_list:
             self.ccv.print_vars(self, theta)
+            print
 
         if 'sinusoids' in self.model_list:
             self.scv.print_vars(self, theta)
+            print
 
         if 'gaussian' in self.model_list:
             self.gcv.print_vars(self, theta)
+            print
 
     def rv_make_model(self, theta, x_range, x_phase):
         # it return the RV model for a single planet, after removing the activity from the RV curve and removing
@@ -293,8 +243,8 @@ class ModelContainer:
         if bool(self.pcv.dynamical):
             """Check if the dynamical option has been activated: full RV curve will be computed using
             the dynamical integrator"""
-            dyn_output = self.dynamical_model.compute(self, self.pcv, theta)
-            dyn_output_fullorbit = self.dynamical_model.compute(self, self.pcv, theta, full_orbit=(x_range-self.Tref))
+            dyn_output = self.pcv.compute_dynamical(self, theta)
+            dyn_output_fullorbit = self.pcv.compute_dynamical(self, theta, full_orbit=(x_range-self.Tref))
             model_orbs['BJD'] += dyn_output_fullorbit['full_orbit']
             print 'WARNING: phase plot generated using non-interacting model!!!'
             print model_orbs['BJD'][:10]
@@ -307,8 +257,8 @@ class ModelContainer:
             else:
                 dict_pams = self.pcv.convert(pl_name, theta)
 
-            model_plan['BJD'][pl_name] = self.keplerian_model.model(dict_pams, x_range - self.Tref)
-            model_plan['pha'][pl_name] = self.keplerian_model.model(dict_pams, x_phase * dict_pams['P'])
+            model_plan['BJD'][pl_name] = self.pcv.model_kepler(dict_pams, x_range - self.Tref)
+            model_plan['pha'][pl_name] = self.pcv.model_kepler(dict_pams, x_phase * dict_pams['P'])
 
             model_orbs['pha'] += model_plan['pha'][pl_name]
             if not dyn_flag:
@@ -326,48 +276,38 @@ class ModelContainer:
             model_plan[dataset.name_ref] = {}
 
             dataset.model_reset()
-            dataset.model_jitter(theta[self.variable_list[dataset.name_ref]['jitter']])
             dataset.model_offset(theta[self.variable_list[dataset.name_ref]['offset']])
             dataset.model_linear(theta[self.variable_list[dataset.name_ref]['linear']])
 
-            model_dsys[dataset.name_ref] = dataset.model.copy()
+            model_dsys[dataset.name_ref] = dataset.model
 
             if 'curvature' in dataset.models:
                 model_curv[dataset.name_ref] = self.ccv.model_curvature(curv_pams, dataset.x0)
-                """ Saving to dataset model in case it's required by GP computation"""
-                dataset.model += model_curv[dataset.name_ref]
 
             if 'kepler' in dataset.models:
                 if bool(self.pcv.dynamical):
                     """Dynamical models (with all the interacting planets included in the resulting RVs)"""
                     model_orbs[dataset.name_ref] += dyn_output[dataset.name_ref]
-                    dataset.model += model_orbs[dataset.name_ref]
 
                 for pl_name in self.pcv.planet_name:
                     dyn_flag = (pl_name in self.pcv.dynamical)
                     if dyn_flag:
                         dict_pams = self.pcv.kepler_from_dynamical(self, theta, pl_name)
-                        model_plan[dataset.name_ref][pl_name] = self.keplerian_model.model(dict_pams, dataset.x0)
+                        model_plan[dataset.name_ref][pl_name] = self.pcv.model_kepler(dict_pams, dataset.x0)
                     else:
-                        model_plan[dataset.name_ref][pl_name] = \
-                            self.keplerian_model.compute(self.pcv, theta, dataset, pl_name)
+                        model_plan[dataset.name_ref][pl_name] = self.pcv.compute(theta, dataset, pl_name)
                         model_orbs[dataset.name_ref] += model_plan[dataset.name_ref][pl_name]
-                        dataset.model += model_plan[dataset.name_ref][pl_name]
 
             if 'sinusoids' in dataset.models:
                 model_actv[dataset.name_ref] += self.scv.compute(self, theta, dataset)
-                dataset.model += model_actv[dataset.name_ref]
-
-            if 'gaussian' in dataset.models:
-                model_actv[dataset.name_ref] = self.gcv.sample_compute(theta, dataset)
 
         return model_dsys, model_plan, model_orbs, model_actv, model_curv
 
+    # This function recenters the bounds limits for circular variables
+    # Also, it extends the range of a variable if the output of PyDE is a fixed number
     def recenter_bounds(self, pop_mean, population):
-        # This function recenters the bounds limits for circular variables
-        # Also, it extends the range of a variable if the output of PyDE is a fixed number
         ind_list = []
-        n_pop = np.size(population, axis=0)
+
         if 'kepler' in self.model_list:
             for pl_name in self.pcv.planet_name:
 
@@ -377,7 +317,7 @@ class ModelContainer:
                     e_pops = population[:, esino_list] ** 2 + population[:, ecoso_list] ** 2
                     o_pops = np.arctan2(population[:, esino_list], population[:, ecoso_list], dtype=np.double)
                     # e_mean = (self.pcv.bounds[pl_name]['e'][0] + self.pcv.bounds[pl_name]['e'][1]) / 2.
-                    for ii in xrange(0, n_pop):
+                    for ii in xrange(0, self.nwalkers):
                         if not self.pcv.bounds[pl_name]['e'][0] + 0.02 <= e_pops[ii] < \
                                         self.pcv.bounds[pl_name]['e'][1] - 0.02:
                             e_random = np.random.uniform(self.pcv.bounds[pl_name]['e'][0],
@@ -417,19 +357,21 @@ class ModelContainer:
                 range_restricted = (self.bounds[ii, 1] - self.bounds[ii, 0]) / 100.
                 min_bound = np.maximum((pop_mean[ii] - range_restricted / 2.0), self.bounds[ii, 0])
                 max_bound = np.minimum((pop_mean[ii] + range_restricted / 2.0), self.bounds[ii, 1])
-                population[:, ii] = np.random.uniform(min_bound, max_bound, n_pop)
+                population[:, ii] = np.random.uniform(min_bound, max_bound, self.nwalkers)
 
 
 class ModelContainerPolyChord(ModelContainer):
     def polychord_priors(self, cube):
         theta = (self.bounds[:, 1] - self.bounds[:, 0]) * cube + self.bounds[:, 0]
+        #print theta.tolist()
         return theta.tolist()
 
     def polychord_call(self, theta1):
         theta = np.empty(self.ndim)
         for i in xrange(0, self.ndim):
             theta[i] = theta1[i]
-        phi = [0.0] * 0
+        #print theta
+        phi = [0.0] * self.nDerived
         chi_out = self(theta)
         if chi_out < -0.5e10:
             return -0.5e10, phi
@@ -449,34 +391,83 @@ class ModelContainerMultiNest(ModelContainer):
         theta = np.empty(ndim)
         for i in xrange(0, ndim):
             theta[i] = theta1[i]
+
         chi_out = self(theta)
         if chi_out < -0.5e10:
             return -0.5e10
         return chi_out
 
 
-class ModelContainerDnest4(ModelContainer):
-    def from_prior(self):
-        return self.starting_point
+class ModelContainerSPOTPY(ModelContainer):
+    def spotpy_priors(self, theta_med):
+        pams_priors = []
+        for ii in xrange(0, self.ndim):
+            pams_priors.append(
+                spotpy.parameter.Uniform(
+                    'theta' + repr(ii), self.bounds[ii, 0], self.bounds[ii, 1], optguess=theta_med[ii]))
 
-    def perturb(self, params):
-        """
-        Unlike in C++, this takes a numpy array of parameters as input,
-        and modifies it in-place. The return value is still logH.
-        """
-        logH = 0.0
-        which = np.random.randint(np.size(params))
+        if 'kepler' in self.model_list:
+            for pl_name in self.pcv.planet_name:
+                for key in self.pcv.prior_pams[pl_name]:
+                    ind = self.variable_list[pl_name][key]
+                    pams_priors[ind] = self.assign_priors(self.pcv.prior_kind[pl_name][key], 'theta' + repr(ind),
+                                                          self.pcv.prior_pams[pl_name][key], theta_med[ind])
 
-        logH -= -0.5*(params[which]/self.range[which])**2
-        params_mod = params[which] + self.range[which]*dnest4.randh()
-        params[which] = dnest4.wrap(params_mod, self.bounds[which, 0], self.bounds[which, 1])
+        if 'sinusoids' in self.model_list:
+            if 'Prot' in self.scv.prior_pams:
+                ind = self.variable_list['Common']['Prot']
+                pams_priors[ind] = self.assign_priors(self.scv.prior_kind[key], 'theta' + repr(ind),
+                                                      self.scv.prior_pams[key], theta_med[ind])
 
-        logH += -0.5*(params[which]/self.range[which])**2
+        if 'gaussian' in self.model_list:
+            for key in self.gcv.prior_pams['Common']:
+                ind = self.variable_list[key]
+                pams_priors[ind] = self.assign_priors(self.gcv.prior_kind[key], 'theta' + repr(ind),
+                                                      self.gcv.prior_pams['Common'][key], theta_med[ind])
+            for dataset in self.dataset_list:
+                for key in self.gcv.prior_pams[dataset.name_ref]:
+                    ind = self.variable_list[dataset.name_ref][key]
+                    pams_priors[ind] = self.assign_priors(self.pcv.prior_kind[dataset.name_ref][key],
+                                                          'theta' + repr(ind),
+                                                          self.pcv.prior_pams[dataset.name_ref][key], theta_med[ind])
+        return pams_priors
 
-        #if which == 0:
-        #    print which,  params[0], np.exp2(params[0])
+    def assign_priors(self, key_name, prior_name, prior_val, prior_med):
+        if key_name == 'Normal' or key_name == 'Gaussian':
+            return spotpy.parameter.Normal(prior_name, prior_val[0], prior_val[1], optguess=prior_med)
+        if key_name == 'logNormal':
+            return spotpy.parameter.logNormal(prior_name, prior_val[0], prior_val[1], optguess=prior_med)
+        if key_name == 'Exponential':
+            return spotpy.parameter.Exponential(prior_name, prior_val[0], optguess=prior_med)
+        return spotpy.parameter.Uniform(prior_name, prior_val[0], prior_val[1], optguess=prior_med)
 
-        return logH
+    def output_concatenated(self):
+        output_array = []
+        for dataset in self.dataset_list:
+            output_array = np.concatenate((output_array, dataset.y), axis=0)
+        return output_array
 
-    def log_likelihood(self, theta):
-        return self(theta)
+    def __call__(self, theta):
+        output_array = []
+        for dataset in self.dataset_list:
+            dataset.model_reset()
+            dataset.model_offset(theta[self.variable_list[dataset.name_ref]['offset']])
+            dataset.model_jitter(theta[self.variable_list[dataset.name_ref]['jitter']])
+            dataset.model_linear(theta[self.variable_list[dataset.name_ref]['linear']])
+
+            if 'kepler' in dataset.models:
+                for pl_name in self.pcv.planet_name:
+                    dataset.model += self.pcv.compute(theta, dataset, pl_name)
+
+            if 'sinusoids' in dataset.models:
+                dataset.model += self.scv.compute(self, theta, dataset)
+
+            if 'Tcent' in dataset.models:
+                dataset.model += dataset.compute(self, theta)
+
+            # Gaussian Process check MUST be the last one or the program will fail
+            if 'gaussian' in dataset.models:
+                dataset.model += self.gcv.sample_compute(theta, dataset)
+            output_array = np.concatenate((output_array, dataset.model), axis=0)
+
+        return output_array

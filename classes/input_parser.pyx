@@ -1,6 +1,7 @@
 from common import *
 from dataset import *
 
+
 def yaml_parser(file_conf, mc):
     stream = file(file_conf, 'r')
     config_in = yaml.load(stream)
@@ -8,7 +9,13 @@ def yaml_parser(file_conf, mc):
     conf = config_in['Inputs']
     for counter in conf:
         print conf[counter]['Kind'], conf[counter]['File'], conf[counter]['Models']
-        mc.dataset_list.append(Dataset(counter, conf[counter]['Kind'], conf[counter]['File'], conf[counter]['Models']))
+
+        if 'Tcent' in conf[counter]['Kind']:
+            planet_name = 'Planet_' + conf[counter]['Planet']
+            mc.dataset_list.append(TransitCentralTimes(planet_name, conf[counter]['File']))
+            mc.t0_list[planet_name] = mc.dataset_list[counter]
+        else:
+            mc.dataset_list.append(Dataset(counter, conf[counter]['Kind'], conf[counter]['File'], conf[counter]['Models']))
 
         if counter == 0:
             mc.Tref = mc.dataset_list[0].Tref
@@ -66,10 +73,17 @@ def yaml_parser(file_conf, mc):
                 if planet_conf['Orbit'] == 'dynamical':
                     mc.pcv.switch_to_dynamical(planet_name)
 
+            if 'Transit' in planet_conf:
+                if planet_conf['Transit']:
+                    mc.pcv.switch_on_transit(planet_name)
+
+            """
+            # Transit time file is now in the Input section
             if 'Tcent' in planet_conf:
                 mc.dataset_list.append(TransitCentralTimes(planet_name, planet_conf['Tcent']))
                 mc.dataset_list[-1].common_Tref(mc.Tref)
                 mc.t0_list[planet_name] = mc.dataset_list[-1]
+            """
 
             if 'Inclination' in planet_conf:
                 mc.pcv.inclination[planet_name] = planet_conf['Inclination']
@@ -156,32 +170,77 @@ def yaml_parser(file_conf, mc):
         for dataset in mc.dataset_list:
             dataset.common_Tref(mc.Tref)
 
-    if 'MultiRun' in config_in['emcee']:
-        mc.MultiRun = np.asarray(config_in['emcee']['MultiRun'], dtype=np.int64)
+    if 'pyDE' in config_in:
+        conf = config_in['pyDE']
 
-    if 'Ngen' in config_in['emcee']:
-        mc.ngen = np.asarray(config_in['emcee']['Ngen'], dtype=np.double)
+        if 'Ngen' in conf:
+            mc.pyde_parameters['ngen'] = np.asarray(conf['Ngen'], dtype=np.double)
 
-    if 'Nsave' in config_in['emcee']:
-        mc.nsave = np.asarray(config_in['emcee']['Nsave'], dtype=np.double)
+        if 'Npop_mult' in conf:
+            mc.pyde_parameters['npop_mult'] = np.asarray(conf['Npop_mult'], dtype=np.int64)
 
-    if 'Nsteps' in config_in['emcee']:
-        mc.nsteps = np.asarray(config_in['emcee']['Nsteps'], dtype=np.int64)
+    if 'emcee' in config_in:
+        conf = config_in['emcee']
 
-    if 'Nburn' in config_in['emcee']:
-        mc.nburn = np.asarray(config_in['emcee']['Nburn'], dtype=np.int64)
+        if 'MultiRun' in conf:
+            mc.emcee_parameters['MultiRun'] = np.asarray(conf['MultiRun'], dtype=np.int64)
 
-    if 'Npop_mult' in config_in['emcee']:
-        mc.npop_mult = np.asarray(config_in['emcee']['Npop_mult'], dtype=np.int64)
+        if 'Nsave' in conf:
+            mc.emcee_parameters['nsave'] = np.asarray(conf['Nsave'], dtype=np.double)
 
-    if 'Thin' in config_in['emcee']:
-        mc.thin = np.asarray(config_in['emcee']['Thin'], dtype=np.int64)
+        if 'Nsteps' in conf:
+            mc.emcee_parameters['nsteps'] = np.asarray(conf['Nsteps'], dtype=np.int64)
 
-    if 'Recenter_Bounds' in config_in['emcee']:
+        if 'Nburn' in conf:
+            mc.emcee_parameters['nburn'] = np.asarray(conf['Nburn'], dtype=np.int64)
+
+        if 'Npop_mult' in conf:
+            mc.emcee_parameters['npop_mult'] = np.asarray(conf['Npop_mult'], dtype=np.int64)
+
+        if 'Thin' in conf:
+            mc.emcee_parameters['thin'] = np.asarray(conf['Thin'], dtype=np.int64)
+
+    if 'PolyChord' in config_in:
+        conf = config_in['PolyChord']
+
+        if 'nlive' in conf:
+            mc.polychord_parameters['nlive'] = np.asarray(conf['nlive'], dtype=np.int64)
+
+        if 'nlive_mult' in conf:
+            mc.polychord_parameters['nlive_mult'] = np.asarray(conf['nlive_mult'], dtype=np.int64)
+
+        if 'num_repeats_mult' in conf:
+            mc.polychord_parameters['num_repeats_mult'] = np.asarray(conf['num_repeats_mult'], dtype=np.int64)
+
+        if 'feedback' in conf:
+            mc.polychord_parameters['feedback'] = np.asarray(conf['feedback'], dtype=np.int64)
+
+        if 'precision_criterion' in conf:
+            mc.polychord_parameters['precision_criterion'] = np.asarray(conf['precision_criterion'], dtype=np.double)
+
+        if 'max_ndead' in conf:
+            mc.polychord_parameters['max_ndead'] = np.asarray(conf['max_ndead'], dtype=np.int64)
+
+        if 'boost_posterior' in conf:
+            mc.polychord_parameters['boost_posterior'] = np.asarray(conf['boost_posterior'], dtype=np.double)
+
+        if 'read_resume' in conf:
+            mc.polychord_parameters['read_resume'] = np.asarray(conf['read_resume'], dtype=bool)
+
+        if 'base_dir' in conf:
+            mc.polychord_parameters['base_dir'] = np.asarray(conf['base_dir'], dtype=str)
+
+        #if 'file_root' in conf:
+        #    mc.polychord_parameters['file_root'] = np.asarray(conf['file_root'], dtype=str)
+
+        if 'shutdown_jitter' in conf:
+            mc.polychord_parameters['shutdown_jitter'] = np.asarray(conf['shutdown_jitter'], dtype=bool)
+
+    if 'Recenter_Bounds' in config_in:
         # required to avoid a small bug in the code
         # if the dispersion of PyDE walkers around the median value is too broad,
         # then emcee walkers will start outside the bounds, causing an error
-        mc.recenter_bounds_flag = config_in['emcee']['Recenter_Bounds']
+        mc.recenter_bounds_flag = config_in['Recenter_Bounds']
 
     if 'Star_Mass' in config_in:
         mc.star_mass = np.asarray(config_in['Star_Mass'][:], dtype=np.double)
@@ -189,6 +248,5 @@ def yaml_parser(file_conf, mc):
         mc.star_radius = np.asarray(config_in['Star_Radius'][:], dtype=np.double)
 
     if 'Dynamical_Integrator' in config_in:
-        mc.pcv.dynamical_integrator = config_in['Dynamical_Integrator']
+        mc.dynamical_model.dynamical_integrator = config_in['Dynamical_Integrator']
 
-    mc.model_setup()

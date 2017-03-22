@@ -1,2 +1,2 @@
 #this is classes/__init__.py
-__all__ = ['common_v3','gaussian_v3','planets_v3']
+__all__ = ['common','compute_RV','curvature',' dataset',' gaussian','input_parser',' kepler_exo','model_container',' planets',' sinusoids']

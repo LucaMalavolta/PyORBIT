@@ -1,6 +1,5 @@
 from common import *
 
-
 class GaussianProcessCommonVariables:
     def __init__(self):
         self.fix_list = {}
@@ -44,8 +43,7 @@ class GaussianProcessCommonVariables:
         return {
             'ln_P': np.log(input_pam['Prot']),
             'metric': input_pam['Pdec'] ** 2,
-            # 'gamma': 2. / (*input_pam['Oamp'] ** 2),
-            'gamma': 1. / (2.*input_pam['Oamp'] ** 2),
+            'gamma': 2. / (input_pam['Oamp'] ** 2),
             'amp2': np.power(input_pam['Hamp'], 2)}
 
     def convert_gp2val(self, input_pam):
@@ -59,8 +57,7 @@ class GaussianProcessCommonVariables:
         return {
             'Prot': np.exp(input_pam['ln_P']),
             'Pdec': np.sqrt(input_pam['metric']),
-            # 'Oamp': np.sqrt(2. / input_pam['gamma']),
-            'Oamp': np.sqrt(1. / (2.*input_pam['gamma'])),
+            'Oamp': np.sqrt(2. / input_pam['gamma']),
             'Hamp': np.sqrt(input_pam['amp2'])}
 
     def add_dataset(self, name_ref='Common'):
@@ -149,14 +146,14 @@ class GaussianProcessCommonVariables:
 
     def return_priors(self, theta, d_name=None):
         prior_out = 0.00
-        key_pams = self.convert(theta, d_name)
+        kep_pams = self.convert(theta, d_name)
         if d_name is None:
             for key in self.prior_pams['Common']:
                 prior_out += giveback_priors(self.prior_kind['Common'][key], self.prior_pams['Common'][key],
-                                             key_pams[key])
+                                             kep_pams[key])
         else:
             for key in self.prior_pams[d_name]:
-                prior_out += giveback_priors(self.prior_kind[d_name][key], self.prior_pams[d_name][key], key_pams[key])
+                prior_out += giveback_priors(self.prior_kind[d_name][key], self.prior_pams[d_name][key], kep_pams[key])
         return prior_out
 
     def lnlk_compute(self, theta, dataset):
@@ -188,32 +185,22 @@ class GaussianProcessCommonVariables:
         env = np.sqrt(dataset.e ** 2.0 + dataset.jitter ** 2.0)
         gp.compute(dataset.x0, env)
 
-        return gp.sample_conditional(dataset.y - dataset.model, dataset.x0)
-
-    def initialize(self, mc):
-
-        for name in self.list_pams_common:
-            if name in mc.variable_list['Common']:
-                mc.pam_names[mc.variable_list['Common'][name]] = name
-
-        for dataset in mc.dataset_list:
-            for name in self.list_pams_dataset:
-                if name in mc.variable_list[dataset.name_ref]:
-                    mc.pam_names[mc.variable_list[dataset.name_ref][name]] = name
+        return gp.sample_conditional(dataset.y - dataset.model, dataset.x)
 
     def print_vars(self, mc, theta):
 
         for name in self.list_pams_common:
             if name in mc.variable_list['Common']:
+                mc.pam_names[mc.variable_list['Common'][name]] = name
                 var = self.variables['Common'][name](theta, self.fixed, self.var_list['Common'][name])
                 print 'GaussianProcess ', name, var, self.var_list['Common'][name], '(', theta[
-                        self.var_list['Common'][name]], ')'
+                    self.var_list['Common'][name]], ')'
 
         for dataset in mc.dataset_list:
             for name in self.list_pams_dataset:
                 if name in mc.variable_list[dataset.name_ref]:
+                    mc.pam_names[mc.variable_list[dataset.name_ref][name]] = name
                     var = self.variables[dataset.name_ref][name](theta, self.fixed,
-                                                               self.var_list[dataset.name_ref][name])
+                                                                 self.var_list[dataset.name_ref][name])
                     print 'GaussianProcess ', dataset.name_ref, name, var, '(', theta[
-                            self.var_list[dataset.name_ref][name]], ')'
-        print
+                        self.var_list[dataset.name_ref][name]], ')'

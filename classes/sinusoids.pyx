@@ -1,5 +1,6 @@
 from common import *
 
+
 class SinusoidsCommonVariables:
     ''' This is among the first classes I've been writing in Python, and differently from other
     classes in this suite it has not updated (only bug-fixed) while my Python skilled were improving
@@ -77,7 +78,7 @@ class SinusoidsCommonVariables:
     #            add_bound = True
     #    return add_bound
 
-    def setup_model_sinusoids(self, dataset):
+    def model_setup(self, dataset):
         dataset.n_amp = self.phase[:, dataset.ind]
         dataset.p_mask = np.zeros([self.n_seasons, dataset.n], dtype=bool)
         dataset.n_seasons = 0
@@ -127,11 +128,8 @@ class SinusoidsCommonVariables:
                     theta[mc.variable_list[dataset.name_ref][self.season_name[jj] + '_amp']]
         return self.model_sinusoids(dataset, Prot, amp_in, pha_in, off_in)
 
-    def print_vars(self, mc, theta):
-        # Prot and pha_in could be brought out from the llop, but I would not work
-        # for planet-only analysis
+    def initialize(self, mc, theta):
         mc.pam_names[mc.variable_list['Prot']] = 'Prot'
-        print 'Prot ', theta[mc.variable_list['Prot']]
 
         for jj in range(0, self.n_seasons):
             id_var = mc.variable_list[self.season_name[jj] + '_pha']
@@ -142,8 +140,6 @@ class SinusoidsCommonVariables:
             else:
                 for ii in id_var:
                     mc.pam_names[ii] = self.season_name[jj] + '_' + repr(ii - id_var[0]) + '_pha'
-
-            print self.season_name[jj], '_pha', theta[id_var]
 
         for dataset in mc.dataset_list:
             for jj in range(0, self.n_seasons):
@@ -159,9 +155,6 @@ class SinusoidsCommonVariables:
                                 mc.pam_names[ii] = dataset.kind + '_' + self.season_name[jj] + \
                                                    '_' + repr(ii - id_var[0]) + '_off'
 
-                        print dataset.name_ref, dataset.kind, self.season_name[jj], '_off', \
-                            theta[mc.variable_list[dataset.kind][self.season_name[jj] + '_off']]
-
                     id_var = mc.variable_list[dataset.name_ref][self.season_name[jj] + '_amp']
                     if np.size(id_var) == 0:
                         continue
@@ -172,8 +165,26 @@ class SinusoidsCommonVariables:
                             mc.pam_names[ii] = dataset.name_ref[:-4] + '_' + self.season_name[jj] + \
                                                '_' + repr(ii - id_var[0]) + '_amp'
 
+    def print_vars(self, mc, theta):
+        # Prot and pha_in could be brought out from the llop, but I would not work
+        # for planet-only analysis
+
+        print 'Prot ', theta[mc.variable_list['Prot']]
+
+        for jj in range(0, self.n_seasons):
+            id_var = mc.variable_list[self.season_name[jj] + '_pha']
+            print self.season_name[jj], '_pha', theta[id_var]
+
+        for dataset in mc.dataset_list:
+            for jj in range(0, self.n_seasons):
+                if dataset.season_flag[jj]:
+                    if self.use_offset[dataset.kind]:
+                        print dataset.name_ref, dataset.kind, self.season_name[jj], '_off', \
+                                theta[mc.variable_list[dataset.kind][self.season_name[jj] + '_off']]
+
                     print dataset.name_ref, self.season_name[jj], '_amp', \
-                        theta[mc.variable_list[dataset.name_ref][self.season_name[jj] + '_amp']]
+                            theta[mc.variable_list[dataset.name_ref][self.season_name[jj] + '_amp']]
+        print
 
     def define_bounds(self, mc):
         mc.bounds_list.append(self.Prot_bounds[:])

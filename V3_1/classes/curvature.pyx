@@ -106,12 +106,9 @@ class CurvatureCommonVariables:
             coeff[self.order_ind[var]] = dict_pams[var]
         return np.polynomial.polynomial.polyval(x0, coeff)
 
-    def initialize(self, mc):
-        for var in self.list_pams:
-            mc.pam_names[mc.variable_list['Curvature'][var]] = var
-
     def print_vars(self, mc, theta):
         for var in self.list_pams:
+            mc.pam_names[mc.variable_list['Curvature'][var]] = var
             val = self.variables[var](theta, self.fixed, self.var_list[var])
-            print 'Curvature ', var, val, self.var_list[var], '(', theta[self.var_list[var]], ')'
-        print
+            print 'Curvature ', var, val, self.var_list[var], '(', theta[
+                    self.var_list[var]], ')'

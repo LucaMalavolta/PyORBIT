@@ -6,19 +6,11 @@ import spotpy
 import ttvfast
 import os
 import sys
-#import dnest4
-if os.path.isdir('/Users/malavolta/Astro/CODE/'):
-    sys.path.insert(0, '/Users/malavolta/Astro/CODE/others/PolyChord/')
-else:
-    sys.path.insert(0, '/home/malavolta/CODE/others/PolyChord/')
-import PyPolyChord.PyPolyChord as PolyChord
-
 if os.path.isdir('/Users/malavolta/Astro/CODE/'):
     sys.path.insert(0, '/Users/malavolta/Astro/CODE/trades/pytrades/')
 else:
     sys.path.insert(0, '/home/malavolta/CODE/trades/pytrades/')
 from pytrades_lib import pytrades
-#from pytrades_dummy import pytrades
 import constants
 
 
