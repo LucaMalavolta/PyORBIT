@@ -29,12 +29,12 @@ file_conf = args.config_file[0]
 mc = ModelContainerPolyChord()
 
 yaml_parser(file_conf, mc)
-mc.initialize_model()
-
 
 if mc.polychord_parameters['shutdown_jitter']:
     for dataset in mc.dataset_list:
         dataset.shutdown_jitter()
+
+mc.initialize_model()
 
 dir_output = './' + mc.planet_name + '/'
 os.system("mkdir -p " +dir_output+ mc.polychord_parameters['base_dir'] + "/clusters")
