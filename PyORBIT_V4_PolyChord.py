@@ -37,7 +37,8 @@ if mc.polychord_parameters['shutdown_jitter']:
 mc.initialize_model()
 
 dir_output = './' + mc.planet_name + '/'
-os.system("mkdir -p " +dir_output+ mc.polychord_parameters['base_dir'] + "/clusters")
+os.system("mkdir -p " +dir_output + mc.polychord_parameters['base_dir'] + "/clusters")
+#os.system("mkdir -p " +dir_output + "chains/clusters")
 
 if bool(mc.pcv.dynamical):
         mc.dynamical_model.prepare(mc, mc.pcv)
@@ -48,7 +49,8 @@ print 'Variable list:', mc.variable_list
 print
 print 'Variable bounds:', mc.bounds
 print
-
+print 'Working directory:', dir_output
+print
 
 '''
     On Linux system (BASH):
@@ -77,11 +79,12 @@ if 'nlive' in mc.polychord_parameters:
     nlive = mc.polychord_parameters['nlive']
 
 os.chdir(dir_output)
+print nlive
 
 PolyChord.mpi_notification()
 PolyChord.run_nested_sampling(mc.polychord_call, nDims=mc.ndim, nDerived=0,
                               feedback=mc.polychord_parameters['feedback'],
-                              base_dir=mc.polychord_parameters['base_dir'],
+                              base_dir = mc.polychord_parameters['base_dir'],
                               precision_criterion=mc.polychord_parameters['precision_criterion'],
                               max_ndead=mc.polychord_parameters['max_ndead'],
                               boost_posterior=mc.polychord_parameters['boost_posterior'],

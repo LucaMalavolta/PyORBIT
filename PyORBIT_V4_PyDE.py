@@ -23,7 +23,7 @@ mc = ModelContainer()
 yaml_parser(file_conf, mc)
 mc.initialize_model()
 
-dir_output = './' + mc.planet_name + '/'
+dir_output = './' + mc.planet_name + '/pyde/'
 if not os.path.exists(dir_output):
     os.makedirs(dir_output)
 

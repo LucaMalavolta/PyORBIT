@@ -7,15 +7,11 @@ import h5py
 import cPickle as pickle
 import os
 import argparse
-#import json
 
 
 def save_to_hdf5(samples):
-    # json.dump(mc.variable_list, open('output/' + mc.planet_name + '_vlist.json', 'wb'))
-    # pickle.dump(mc.variable_list, open(dir_output + 'vlist.pick', 'wb'))
-    # pickle.dump(mc.scv.use_offset,  open(dir_output + 'scv_offset.pick', 'wb'))
 
-    h5f = h5py.File(dir_output + mc.planet_name + '.hdf5', "w")
+    h5f = h5py.File(emcee_dir_output + mc.planet_name + '.hdf5', "w")
 
     data_grp = h5f.create_group("data")
     data_grp.attrs.create('file_conf', data=file_conf)
@@ -40,7 +36,7 @@ def save_to_hdf5(samples):
 
     h5f.close()
 
-parser = argparse.ArgumentParser(prog='PyORBIT_V3_emcee.py', description='PyDE+emcee runner')
+parser = argparse.ArgumentParser(prog='PyORBIT_V4_emcee.py', description='PyDE+emcee runner')
 # parser.add_argument('-l', type=str, nargs='+', help='line identificator')
 parser.add_argument('config_file', type=str, nargs=1, help='config file')
 
@@ -52,10 +48,11 @@ mc = ModelContainer()
 yaml_parser(file_conf, mc)
 mc.initialize_model()
 
+pyde_dir_output = './' + mc.planet_name + '/pyde/'
+emcee_dir_output = './' + mc.planet_name + '/emcee/'
 
-dir_output = './' + mc.planet_name
-if not os.path.exists(dir_output):
-    os.makedirs(dir_output)
+if not os.path.exists(emcee_dir_output):
+    os.makedirs(emcee_dir_output)
 
 if bool(mc.pcv.dynamical):
         mc.dynamical_model.prepare(mc, mc.pcv)
@@ -82,11 +79,13 @@ if mc.starting_point_flag:
         population[ii, :] = np.random.normal(starting_point, 0.0000001)
 
 else:
-    if os.path.isfile(dir_output + 'pyde_pops.pick'):
-        print os.path.isfile(dir_output + 'pyde_pops.pick')
-        population = pickle.load(open(dir_output + 'pyde_pops.pick', 'rb'))
+    if not os.path.exists(pyde_dir_output):
+        os.makedirs(pyde_dir_output)
+
+    if os.path.isfile(pyde_dir_output + 'pyde_pops.pick'):
+        print os.path.isfile(pyde_dir_output + 'pyde_pops.pick')
+        population = pickle.load(open(pyde_dir_output + 'pyde_pops.pick', 'rb'))
         starting_point = np.median(population, axis=0)
-        #pyde_mean = pickle.load(open(dir_output + 'pyde_mean.pick', 'rb'))
         mc.recenter_bounds(starting_point, population)
 
     else:
@@ -97,33 +96,57 @@ else:
 
         population = de.population
         starting_point = np.median(population, axis=0)
-        pickle.dump(starting_point, open(dir_output + 'pyde_mean.pick', 'wb'))
+        pickle.dump(starting_point, open(pyde_dir_output + 'pyde_mean.pick', 'wb'))
 
-        #np.savetxt(dir_output + 'pyDEout_original_bounds.dat', mc.bounds)
-        #np.savetxt(dir_output + 'pyDEout_original_pops.dat', population)
+        #np.savetxt(pyde_dir_output + 'pyDEout_original_bounds.dat', mc.bounds)
+        #np.savetxt(pyde_dir_output + 'pyDEout_original_pops.dat', population)
 
         # bounds redefinition and fix for PyDE anomalous results
         if mc.recenter_bounds_flag:
-            pickle.dump(mc.bounds, open(dir_output + 'bounds_orig.pick', 'wb'))
-            pickle.dump(population, open(dir_output + 'pyde_pops_orig.pick', 'wb'))
+            pickle.dump(mc.bounds, open(pyde_dir_output + 'bounds_orig.pick', 'wb'))
+            pickle.dump(population, open(pyde_dir_output + 'pyde_pops_orig.pick', 'wb'))
             mc.recenter_bounds(starting_point, population)
-            pickle.dump(mc.bounds, open(dir_output + 'bounds.pick', 'wb'))
-            pickle.dump(population, open(dir_output + 'pyde_pops.pick', 'wb'))
+            pickle.dump(mc.bounds, open(pyde_dir_output + 'bounds.pick', 'wb'))
+            pickle.dump(population, open(pyde_dir_output + 'pyde_pops.pick', 'wb'))
 
-            #np.savetxt(dir_output + 'pyDEout_redefined_bounds.dat', mc.bounds)
-            #np.savetxt(dir_output + 'pyDEout_redefined_pops.dat', de.population)
+            #np.savetxt(pyde_dir_output + 'pyDEout_redefined_bounds.dat', mc.bounds)
+            #np.savetxt(pyde_dir_output + 'pyDEout_redefined_pops.dat', de.population)
             print 'REDEFINED BOUNDS'
 
         else:
-            pickle.dump(mc.bounds, open(dir_output + 'bounds.pick', 'wb'))
-            pickle.dump(population, open(dir_output + 'pyde_pops.pick', 'wb'))
+            pickle.dump(mc.bounds, open(pyde_dir_output + 'bounds.pick', 'wb'))
+            pickle.dump(population, open(pyde_dir_output + 'pyde_pops.pick', 'wb'))
 
 print 'PyDE completed'
 mc.results_resumen(starting_point)
 
     #json.dump(mc.variable_list, open('output/' + mc.planet_name + '_vlist.json', 'wb'))
-pickle.dump(mc.variable_list, open(dir_output + 'vlist.pick', 'wb'))
-pickle.dump(mc.scv.use_offset,  open(dir_output + 'scv_offset.pick', 'wb'))
+pickle.dump(mc.variable_list, open(emcee_dir_output + 'vlist.pick', 'wb'))
+pickle.dump(mc.scv.use_offset,  open(emcee_dir_output + 'scv_offset.pick', 'wb'))
+
+if mc.emcee_parameters['MultiRun'] is not None:
+
+    if os.path.isfile(emcee_dir_output + 'emcee_MR_pops.pick'):
+        print os.path.isfile(emcee_dir_output + 'pyde_pops.pick')
+        meds = pickle.load(open(emcee_dir_output + 'emcee_MR_meds.pick', 'rb'))
+        population = pickle.load(open(emcee_dir_output + 'emcee_MR_pops.pick', 'rb'))
+        print 'output from emcee exploratory runs retrieved'
+    else:
+        for ii in xrange(0, mc.emcee_parameters['MultiRun_iter']):
+            print 'emcee exploratory run #', ii, ' of ', mc.emcee_parameters['MultiRun_iter']
+            sampler = emcee.EnsembleSampler(mc.emcee_parameters['nwalkers'], mc.ndim, mc,
+                                            threads=mc.emcee_parameters['nwalkers'])
+            population, prob, state = sampler.run_mcmc(population, mc.emcee_parameters['MultiRun'])
+            max_ind = np.argmax(prob)
+            meds = population[max_ind, :]
+            population = np.asarray([meds + 1e-4*np.random.randn(mc.ndim) for i in range(mc.emcee_parameters['nwalkers'])])
+            sampler.reset()
+
+        mc.results_resumen(meds)
+        pickle.dump(meds, open(emcee_dir_output + 'emcee_MR_meds.pick', 'wb'))
+        pickle.dump(population, open(emcee_dir_output + 'emcee_MR_pops.pick', 'wb'))
+        print 'emcee exploratory runs completed'
+
 
 print 'emcee'
 state = None

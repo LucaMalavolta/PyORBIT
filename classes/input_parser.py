@@ -185,6 +185,9 @@ def yaml_parser(file_conf, mc):
         if 'MultiRun' in conf:
             mc.emcee_parameters['MultiRun'] = np.asarray(conf['MultiRun'], dtype=np.int64)
 
+        if 'MultiRun_iter' in conf:
+            mc.emcee_parameters['MultiRun_iter'] = np.asarray(conf['MultiRun_iter'], dtype=np.int64)
+
         if 'Nsave' in conf:
             mc.emcee_parameters['nsave'] = np.asarray(conf['Nsave'], dtype=np.double)
 

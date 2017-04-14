@@ -22,7 +22,8 @@ class ModelContainer:
         self.dynamical_model = ComputeDynamical()
 
         # pyde/emcee variables
-        self.emcee_parameters = {'npop_mult': 2, 'thin': 1}
+        self.emcee_parameters = {'npop_mult': 2, 'thin': 1,
+                                 'MultiRun': None, 'MultiRun_iter':20 }
         self.pyde_parameters = {'ngen': 1000, 'npop_mult': 2}
 
         # Default values, taken from the PyPolyChord wrapper in PolyChord official distribution, V1.9
@@ -33,7 +34,7 @@ class ModelContainer:
                                      'max_ndead': -1,
                                      'boost_posterior': 0.0,
                                      'read_resume': True,
-                                     'base_dir': './',
+                                     'base_dir': 'polychord/',
                                      'shutdown_jitter': False}
 
         self.ndata = None
@@ -177,17 +178,21 @@ class ModelContainer:
             if not (self.bounds[ii, 0] < theta[ii] < self.bounds[ii, 1]):
                 return False
 
-        period_inner = 0.
+        period_storage = []
         for pl_name in self.pcv.planet_name:
-            """ Step 1: check that the planet has period longer than the preceding one in the list"""
-            period = self.pcv.variables[pl_name]['P'](theta, self.pcv.fixed, self.pcv.var_list[pl_name]['P'])
-            if period <= period_inner:
-                return False
-            period_inner = period
+            """ Step 1: save the all planet periods into a list"""
+            period_storage.extend(
+                [self.pcv.variables[pl_name]['P'](theta, self.pcv.fixed, self.pcv.var_list[pl_name]['P'])])
 
             """ Step 2: check if the eccentricity is within the given range"""
             e = self.pcv.variables[pl_name]['e'](theta, self.pcv.fixed, self.pcv.var_list[pl_name]['e'])
             if not self.pcv.bounds[pl_name]['e'][0] <= e < self.pcv.bounds[pl_name]['e'][1]:
+                return False
+
+        """ Step 4 check ofr overlapping periods (within 5% arbitrarily chosen)"""
+        for i_n, i_v in enumerate(period_storage):
+            if i_n == len(period_storage)-1: break
+            if np.amin(np.abs(period_storage[i_n+1:] - i_v))/i_v < 0.05 :
                 return False
 
         return True

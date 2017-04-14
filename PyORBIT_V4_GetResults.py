@@ -9,13 +9,18 @@ import csv
 import os
 import argparse
 import matplotlib as mpl
+from matplotlib.ticker import FormatStrFormatter
 import sys
 mpl.use('Agg')
 from matplotlib import pyplot as plt
 import corner
 sys.path.append('/Users/malavolta/Astro/CODE/trades/pytrades')
-#from pytrades_lib import pytrades
 import constants
+
+#Plot improvements
+plt.rc('font',**{'family':'serif','serif':['Computer Modern Roman']})
+plt.rc('text', usetex=True)
+
 
 def GelmanRubin(chains_T):
     # Courtesy of Luca "Sbuffo" Borsato
@@ -79,19 +84,25 @@ parser.add_argument('-v', type=str, nargs='?', default='False', help='Create Veu
 parser.add_argument('-t', type=str, nargs='?', default='False', help='Create GR traces')
 parser.add_argument('-nburn', type=int, nargs='?', default=0, help='emcee burn-ins')
 parser.add_argument('-c', type=str, nargs='?', default='False', help='Create Chains plots')
-parser.add_argument('-cc', type=str, nargs='?', default='False', help='Use ChainConsumer')
+parser.add_argument('-forecast', type=float, nargs='?', default=None, help='Create Chains plots')
 
 args = parser.parse_args()
 
 sampler = args.sample[0]
 file_conf = args.config_file[0]
 
+sample_keyword = {
+    'polychord':['polychord', 'PolyChord', 'polychrod', 'poly'],
+    'emcee': ['emcee', 'MCMC', 'Emcee']
+}
+
 # file_conf = raw_input()
 
 mc = ModelContainer()
 yaml_parser(file_conf, mc)
 
-if mc.polychord_parameters['shutdown_jitter']:
+if sampler in sample_keyword['polychord'] and \
+        mc.polychord_parameters['shutdown_jitter']:
     for dataset in mc.dataset_list:
         dataset.shutdown_jitter()
 
@@ -104,10 +115,10 @@ M_star1 = mc.star_mass[0]
 M_star1_err = mc.star_mass[1]
 
 
-if sampler in ['emcee','MCMC', 'Emcee']:
+if sampler in sample_keyword['emcee']:
 
-    dir_input = './' + mc.planet_name + '/'
-    dir_output = './' + mc.planet_name + '/emcee/'
+    dir_input = './' + mc.planet_name + '/emcee/'
+    dir_output = './' + mc.planet_name + '/emcee_plot/'
     os.system('mkdir -p ' + dir_output)
 
     mc.variable_list = pickle.load(open(dir_input + 'vlist.pick', 'rb'))
@@ -181,6 +192,7 @@ if sampler in ['emcee','MCMC', 'Emcee']:
 
     lnprob_median = np.median(flatlnprob)
     fig = plt.figure(figsize=(12, 12))
+    plt.xlabel('$\ln \mathcal{L}$')
     plt.plot(lnprb_T[:, :], '-', alpha=0.5)
     plt.axhline(lnprob_median)
     plt.axvline(nburnin, c='r')
@@ -217,20 +229,21 @@ if sampler in ['emcee','MCMC', 'Emcee']:
             for ii in xrange(20, nburnin):
                 out_lines[ii] = GelmanRubin(chain_T[:ii, :, nd])
 
+            fig = plt.figure(figsize=(12, 12))
             #plt.ylim(0.95, 2.3)
             plt.plot(out_absc[20:], out_lines[20:], '-', color='k')
             plt.axhline(1.01)
-            plt.savefig(dir_output + 'GRtrace_pam_' + repr(nd) + '.png', bbox_inches='tight')
+            plt.savefig(dir_output + 'GRtrace_pam_' + repr(nd) + '.png', bbox_inches='tight', dpi=300)
             plt.close()
 
         print
         print '*************************************************************'
         print
 
-if sampler in ['polychord', 'PolyChord', 'polychrod', 'poly']:
+if sampler in sample_keyword['polychord']:
 
-    dir_input = './' + mc.planet_name + '/'
-    dir_output = './' + mc.planet_name + '/polychord/'
+    dir_input = './' + mc.planet_name + '/' + mc.polychord_parameters['base_dir']
+    dir_output = './' + mc.planet_name + '/polychord_plot/'
     os.system('mkdir -p ' + dir_output)
 
     data_in = np.genfromtxt(dir_input+mc.planet_name+'_equal_weights.txt')
@@ -245,6 +258,7 @@ if sampler in ['polychord', 'PolyChord', 'polychrod', 'poly']:
     chain_med = np.asarray(map(lambda v: (v[1], v[2] - v[1], v[1] - v[0]),
                                zip(*np.percentile(flatchain[:, :], [15.865, 50, 84.135], axis=0))))
     lnprob_med = np.percentile(flatlnprob, [15.865, 50, 84.135], axis=0)
+    lnprob_med[1:] = np.abs(lnprob_med[1:]-lnprob_med[0])
     mc.results_resumen(chain_med[:, 0])
 
     print
@@ -264,6 +278,7 @@ if args.mp != 'False':
 
     print 'MEGA plot'
     # plotting mega-corner plot
+    plt.rc('text', usetex=False)
 
     megaplot_dat = np.zeros([np.size(flatchain,axis=0), np.size(flatchain, axis=1)+1])
     megaplot_med = np.zeros(np.size(flatchain, axis=1)+1)
@@ -272,10 +287,11 @@ if args.mp != 'False':
     megaplot_med[:-1] = chain_med[:,0]
     megaplot_med[-1] = lnprob_median
     labels = mc.pam_names
-    labels.extend('Lnprob')
+    labels.extend('ln L')
     fig = corner.corner(megaplot_dat[:, :], labels=labels, truths=megaplot_med)
-    fig.savefig(dir_output + "ALL_corners.pdf", bbox_inches='tight')
+    fig.savefig(dir_output + "ALL_corners.pdf", bbox_inches='tight', dpi=300)
     plt.close()
+    plt.rc('text', usetex=True)
 
     print
     print '*************************************************************'
@@ -300,38 +316,40 @@ x0 = 1. / 150
 
 M_star1_rand = np.random.normal(M_star1, M_star1_err, nsample)
 
+""" Creation of the directory for the plots"""
+plot_dir = dir_output + '/files_plot/'
+
+if not os.path.exists(plot_dir):
+    os.makedirs(plot_dir)
+
+boundaries = np.asarray([mc.Tref, mc.Tref])
+plot_dir = dir_output + '/files_plot/'
+
+if not os.path.exists(plot_dir):
+    os.makedirs(plot_dir)
+for dataset in mc.dataset_list:
+    if dataset.kind == 'RV':
+        boundaries[0] = min(boundaries[0], dataset.x[0])
+        boundaries[1] = max(boundaries[1], dataset.x[-1])
+# tenpercent = (boundaries[1] - boundaries[0]) / 10.
+# boundaries = [boundaries[0] - tenpercent, boundaries[1] + tenpercent]
+boundaries += np.asarray([-1.0, 1.0]) * (boundaries[1] - boundaries[0]) / 10.
+
+x_range_step = max(0.01, (boundaries[1] - boundaries[0]) / 100000)
+x_range = np.arange(boundaries[0], boundaries[1], x_range_step)
+x_phase = np.arange(-0.50, 1.50, 0.005, dtype=np.double)
+
+model_dsys, model_plan, model_orbs, model_actv, model_curv = mc.rv_make_model(chain_med[:, 0], x_range, x_phase)
+
 if 'kepler' in mc.model_list:
 
-    if args.p != 'False' or args.v != 'False':
+    if sampler in sample_keyword['polychord']:
+        ''' Special plot for the polychord case:
+            Let's save all the sample together
+        '''
+        sample_total = {}
 
-        plot_dir = dir_output + '/files_plot/'
-
-        if not os.path.exists(plot_dir):
-            os.makedirs(plot_dir)
-
-        boundaries = np.asarray([mc.Tref, mc.Tref])
-        plot_dir = dir_output + '/files_plot/'
-
-        if not os.path.exists(plot_dir):
-            os.makedirs(plot_dir)
-        for dataset in mc.dataset_list:
-            if dataset.kind == 'RV':
-                boundaries[0] = min(boundaries[0], dataset.x[0])
-                boundaries[1] = max(boundaries[1], dataset.x[-1])
-        # tenpercent = (boundaries[1] - boundaries[0]) / 10.
-        # boundaries = [boundaries[0] - tenpercent, boundaries[1] + tenpercent]
-        boundaries += np.asarray([-1.0, 1.0])*(boundaries[1] - boundaries[0]) / 10.
-
-        x_range = np.arange(boundaries[0], boundaries[1], 0.01)
-        x_phase = np.arange(-0.50, 1.50, 0.005, dtype=np.double)
-
-        model_dsys, model_plan, model_orbs, model_actv, model_curv = mc.rv_make_model(chain_med[:, 0], x_range, x_phase)
-
-        fileout = open(plot_dir + 'curvature.dat', 'w')
-        fileout.write('descriptor x_range m_curv \n')
-        for ii in xrange(0, np.size(x_range)):
-            fileout.write('{0:14f} {1:14f} \n'.format(x_range[ii], model_curv['BJD'][ii]))
-        fileout.close()
+    #if args.p != 'False' or args.v != 'False':
 
     for planet_name in mc.pcv.planet_name:
 
@@ -438,6 +456,10 @@ if 'kepler' in mc.model_list:
 
         e_med = np.percentile(sample_plan[:, convert_out['e']], 65.865, axis=0)
 
+        if sampler in sample_keyword['polychord']:
+            ''' Let's save all the samples for this specific planet, to be used later in the special PolyChrod plots'''
+            sample_total[planet_name] = {'sample_plan': sample_plan, 'convert_out': convert_out}
+
         print 'Period = ', sample_med[convert_out['P'], 0], ' +\sigma ', sample_med[convert_out['P'], 1], ' -\sigma ', sample_med[convert_out['P'], 2]
         print 'K      = ', sample_med[convert_out['K'], 0], ' +\sigma ', sample_med[convert_out['K'], 1], ' -\sigma ', sample_med[convert_out['K'], 2]
         print 'phase  = ', sample_med[convert_out['f'], 0], ' +\sigma ', sample_med[convert_out['f'], 1], ' -\sigma ', sample_med[convert_out['f'], 2]
@@ -463,33 +485,33 @@ if 'kepler' in mc.model_list:
 
         if 'P' in mc.variable_list[planet_name]:
             sel_list.append(convert_out['P'])
-            sel_label.append('P')
+            sel_label.append('P [d]')
         if 'K' in mc.variable_list[planet_name]:
             sel_list.append(convert_out['K'])
-            sel_label.append('K')
+            sel_label.append('K [$m s_{-1}$]')
 
         if 'f' in mc.variable_list[planet_name]:
             sel_list.append(convert_out['f'])
-            sel_label.append('phase')
+            sel_label.append('$\phi$ [rad]')
 
         if 'e' in mc.variable_list[planet_name]:
             sel_list.append(convert_out['e'])
             sel_label.append('e')
         if 'o' in mc.variable_list[planet_name]:
             sel_list.append(convert_out['o'])
-            sel_label.append('omega')
+            sel_label.append('$\omega$ [rad]')
         if 'ecoso' in mc.variable_list[planet_name]:
             sel_list.append(convert_out['e'])
             sel_label.append('e')
             sel_list.append(convert_out['o'])
-            sel_label.append('omega')
+            sel_label.append('$\omega$ [rad]')
 
         if 'M' in mc.variable_list[planet_name]:
             sel_list.append(convert_out['M'])
-            sel_label.append('M_e')
+            sel_label.append('M [$M_\oplus $')
         else:
             sel_list.append(convert_out['M_kep'])
-            sel_label.append('M_j')
+            sel_label.append('M [$M_j$]')
 
         if 'curvature' in mc.model_list:
             for var in mc.ccv.list_pams:
@@ -497,15 +519,23 @@ if 'kepler' in mc.model_list:
                 sel_label.append(var)
 
         fig = corner.corner(sample_plan[:, sel_list], labels=sel_label, truths=sample_med[sel_list, 0])
-        fig.savefig(dir_output + planet_name + "_corners.pdf", bbox_inches='tight')
+        fig.savefig(dir_output + planet_name + "_corners.pdf", bbox_inches='tight', dpi=300)
         plt.close()
 
         if args.p != 'False':
             # Write down the residuals
             color_list = ['b', 'g', 'r', 'c', 'm', 'y', 'k']
 
-            f1, (ax1, ax2) = plt.subplots(2, sharex=True, sharey=True)
-            f2, (ax3, ax4) = plt.subplots(2, sharex=True, sharey=True)
+            f1, (ax1, ax2) = plt.subplots(2, sharex=True, sharey=True, figsize=(12, 12))
+            f2, (ax3, ax4) = plt.subplots(2, sharex=True, sharey=True, figsize=(12, 12))
+
+            ax1.set_xlabel('BJD [d]')
+            ax3.set_xlabel('Orbital phase')
+
+            ax1.set_ylabel('RV [$m s_{-1}$]')
+            ax2.set_xlabel('RV residuals [$m s_{-1}$]')
+            ax3.set_ylabel('RV [$m s_{-1}$]')
+            ax4.set_xlabel('RV residuals [$m s_{-1}$]')
 
             ax1.plot(x_range, model_plan['BJD'][planet_name], c='g')
             ax3.plot(x_phase, model_plan['pha'][planet_name], c='g')
@@ -540,9 +570,9 @@ if 'kepler' in mc.model_list:
                     fileout.close()
 
             f1.subplots_adjust(hspace=0)
-            f1.savefig(plot_dir + planet_name + '_kep.pdf', bbox_inches='tight')
+            f1.savefig(plot_dir + planet_name + '_kep.pdf', bbox_inches='tight', dpi=300)
             f2.subplots_adjust(hspace=0)
-            f2.savefig(plot_dir + planet_name + '_pha.pdf', bbox_inches='tight')
+            f2.savefig(plot_dir + planet_name + '_pha.pdf', bbox_inches='tight', dpi=300)
             plt.close()
 
             fileout = open(plot_dir + planet_name + '_kep.dat', 'w')
@@ -629,7 +659,7 @@ if 'kepler' in mc.model_list:
                             data_grp.create_dataset(list_labels[ii]+'_x', data=x_edges_1d, compression="gzip")
                             data_grp.create_dataset(list_labels[ii]+'_y', data=hist1d_norm, compression="gzip")
 
-                #plot lower-upper limits for the mass
+                # plot lower-upper limits for the mass
 
                 pams_limits = np.zeros([n_orbital+6+n_curv, 2])
                 #for ii in xrange(0, n_orbital+6+n_curv):
@@ -641,11 +671,11 @@ if 'kepler' in mc.model_list:
                 y_flg = np.ones(nsample, dtype=bool)
 
                 for var in ['P', 'K', 'e', 'f', 'o']:
-                    y_flg = y_flg & (sample_plan[:, convert_out[var]] >= pams_limits[convert_out[var], 0]) & \
+                    y_flg &= (sample_plan[:, convert_out[var]] >= pams_limits[convert_out[var], 0]) & \
                             (sample_plan[:, convert_out[var]] <= pams_limits[convert_out[var], 1])
                     print ' LIMITS ', var, pams_limits[convert_out[var], :]
-                y_flg = y_flg & (flatlnprob[:] > lnprob_med[0] - lnprob_med[1]) # & (flatlnprob[:] < lnprob_med[0] + lnprob_med[2])
-                print np.sum(y_flg)
+
+                y_flg &= (flatlnprob[:] > lnprob_med[0] - lnprob_med[1]) # & (flatlnprob[:] < lnprob_med[0] + lnprob_med[2])
 
                 random_n = 1000
                 if np.sum(y_flg) <= random_n:
@@ -700,9 +730,8 @@ if 'kepler' in mc.model_list:
                 y_pha[:, 1] = y_pha[:, 2]
 
                 print 'Accepted randomizations: ', np.sum(y_flg)
-                for ii in xrange(0, random_n):
-                    ir = ii_kep[ii]
-                    #print ir
+                print 'Kept randomizations: ', random_n
+
                 for ir in ii_kep:
                     #if y_flg[ii]:
                         #y_kep_tmp = kp.kepler_RV_T0P(x_kep - mc.Tref, sample_plan[ir, 2], sample_plan[ir, 0], sample_plan[ir, 1], sample_plan[ir, 3], sample_plan[ir, 4])
@@ -730,13 +759,13 @@ if 'kepler' in mc.model_list:
                 fig1 = plt.plot(x_kep, y_kep[:, 2], c='g')
                 fig1 = plt.plot(x_kep, y_kep[:, 0], c='r')
                 fig1 = plt.plot(x_kep, y_kep[:, 1], c='b')
-                plt.savefig(veusz_dir + planet_name + '_kep.png', bbox_inches='tight')
+                plt.savefig(veusz_dir + planet_name + '_kep.png', bbox_inches='tight', dpi=300)
                 plt.close()
 
                 fig2 = plt.plot(x_pha, y_pha[:, 2], c='g')
                 fig2 = plt.plot(x_pha, y_pha[:, 0], c='r')
                 fig2 = plt.plot(x_pha, y_pha[:, 1], c='b')
-                plt.savefig(veusz_dir + planet_name + '_pha.png', bbox_inches='tight')
+                plt.savefig(veusz_dir + planet_name + '_pha.png', bbox_inches='tight', dpi=300)
                 plt.close()
 
                 # h5f = h5py.File('output/'+planet_name+"planet"+`pp`+'_kep.hdf5', "w")
@@ -768,6 +797,86 @@ if 'kepler' in mc.model_list:
         print
         print '-----------------------------'
         print
+
+    if sampler in sample_keyword['polychord']:
+        ''' Now we do the Polychord plots were all the points are collected together'''
+        print 'TESTING POLYCHORD PLOTS'
+
+        color_list = ['b', 'c', 'm', 'g', 'r', 'k', 'y']
+
+        i_color = 0
+
+        fig0 = plt.figure(0, figsize=(12, 12))
+        fig1 = plt.figure(1, figsize=(12, 12))
+        fig2 = plt.figure(2, figsize=(12, 12))
+
+        for planet_name in mc.pcv.planet_name:
+
+            dynamical_flag = (planet_name in mc.pcv.dynamical)
+
+            convert_out = sample_total[planet_name]['convert_out']
+            if dynamical_flag:
+                sample_M = sample_total[planet_name]['sample_plan'][:, convert_out['M']]
+            else:
+                sample_M = sample_total[planet_name]['sample_plan'][:, convert_out['M_kep']]*mc.M_JEratio
+
+            sample_P = sample_total[planet_name]['sample_plan'][:, convert_out['P']]
+            sample_e = sample_total[planet_name]['sample_plan'][:, convert_out['e']]
+
+            plt.figure(0)
+            plt.scatter(sample_P, sample_M, color=color_list[i_color], alpha=0.2, s=5, linewidths=None)
+            plt.figure(1)
+            plt.scatter(sample_M, sample_e, color=color_list[i_color], alpha=0.2, s=5, linewidths=None)
+            plt.figure(2)
+            plt.scatter(sample_P, sample_e, color=color_list[i_color], alpha=0.2, s=5, linewidths=None)
+
+            i_color += 1
+            if i_color == np.size(color_list):
+                i_color = 0
+
+        plt.figure(0)
+        plt.xlim(0., 2000.)
+        plt.xlabel('P [d]')
+        plt.ylabel('M [$M_\oplus $]')
+        plt.savefig(dir_output + 'PolyScatter_P_M.pdf', bbox_inches='tight', dpi=300)
+        plt.figure(1)
+        plt.xlabel('M [$M_\oplus $]')
+        plt.ylabel('e')
+        plt.savefig(dir_output + 'PolyScatter_M_e.pdf', bbox_inches='tight', dpi=300)
+        plt.figure(2)
+        plt.xlim(0., 2000.)
+        plt.xlabel('P [d]')
+        plt.ylabel('e')
+        plt.savefig(dir_output + 'PolyScatter_P_e.pdf', bbox_inches='tight', dpi=300)
+
+        plt.close(fig0)
+        plt.close(fig1)
+        plt.close(fig2)
+
+    if args.forecast is not None:
+        y_flg = (flatlnprob[:] > lnprob_med[0] - lnprob_med[1]) # & (flatlnprob[:] < lnprob_med[0] + lnprob_med[2])
+
+        random_n = 1000
+        if np.sum(y_flg) <= random_n:
+            random_n = np.sum(y_flg)
+            ii_kep = np.where(y_flg)
+        else:
+            ii_kep = np.random.permutation(np.where(y_flg)[0][:])[:random_n]
+
+        print 'Accepted randomizations: ', np.sum(y_flg)
+        print 'Kept randomizations: ', random_n
+        print np.size(flatchain[0, :]), np.size(flatchain[:, 0])
+
+        x_kep = np.arange(boundaries[0], args.forecast, 1.)
+        x_pha = np.arange(0.0, 1.0, 0.01)
+        y_kep = np.zeros([np.size(x_kep), 3])
+
+        for ir in ii_kep:
+            random_dsys, random_plan, random_orbs, random_actv, random_curv = mc.rv_make_model(flatchain[ir, :], x_kep, x_pha)
+            model_total = random_dsys['BJD'] + random_actv['BJD'] + random_orbs['BJD'] + random_curv['BJD']
+            plt.plot(x_kep, model_total, c='k', alpha=0.05)
+        plt.savefig(dir_output+'_forecast.pdf', bbox_inches='tight', dpi=300)
+        plt.close()
 
 if 'gaussian' in mc.model_list:
     n_vars = 0
@@ -802,7 +911,7 @@ if 'gaussian' in mc.model_list:
     print
 
     fig = corner.corner(sample_plan[:, :], labels=sel_label, truths=sample_med[:, 0])
-    fig.savefig(dir_output + "GPs_corners.pdf", bbox_inches='tight')
+    fig.savefig(dir_output + "GPs_corners.pdf", bbox_inches='tight', dpi=300)
     plt.close()
 
 
@@ -825,5 +934,11 @@ if 'curvature' in mc.model_list:
     for lab, sam in zip(sel_label, sample_med):
         print lab,' = ', sam[0], ' +\sigma ', sam[1], ' -\sigma ', sam[2]
     print
+
+    fileout = open(plot_dir + 'curvature.dat', 'w')
+    fileout.write('descriptor x_range m_curv \n')
+    for ii in xrange(0, np.size(x_range)):
+        fileout.write('{0:14f} {1:14f} \n'.format(x_range[ii], model_curv['BJD'][ii]))
+    fileout.close()
 
 print
