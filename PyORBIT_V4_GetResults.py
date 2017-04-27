@@ -201,7 +201,7 @@ if sampler in sample_keyword['emcee']:
     print 'LNprob median = ', lnprob_median
 
     print
-    print 'Tref: ', mc.Tref
+    print 'Reference Time Tref: ', mc.Tref
     print
     print '*************************************************************'
     print
@@ -533,9 +533,9 @@ if 'kepler' in mc.model_list:
             ax3.set_xlabel('Orbital phase')
 
             ax1.set_ylabel('RV [$m s_{-1}$]')
-            ax2.set_xlabel('RV residuals [$m s_{-1}$]')
+            ax2.set_ylabel('RV residuals [$m s_{-1}$]')
             ax3.set_ylabel('RV [$m s_{-1}$]')
-            ax4.set_xlabel('RV residuals [$m s_{-1}$]')
+            ax4.set_ylabel('RV residuals [$m s_{-1}$]')
 
             ax1.plot(x_range, model_plan['BJD'][planet_name], c='g')
             ax3.plot(x_phase, model_plan['pha'][planet_name], c='g')

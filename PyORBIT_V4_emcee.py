@@ -57,13 +57,20 @@ if not os.path.exists(emcee_dir_output):
 if bool(mc.pcv.dynamical):
         mc.dynamical_model.prepare(mc, mc.pcv)
 
-
+print
+print 'Reference Time Tref: ', mc.Tref
+print
+print '*************************************************************'
+print
 print 'Dimensions = ', mc.ndim
 print '   '
 print 'Variable list:', mc.variable_list
 print
 print 'Variable bounds:', mc.bounds
 print
+print '*************************************************************'
+print
+
 mc.emcee_parameters['nwalkers'] = mc.ndim * mc.emcee_parameters['npop_mult']
 if mc.emcee_parameters['nwalkers']%2 == 1: mc.emcee_parameters['nwalkers'] += 1
 

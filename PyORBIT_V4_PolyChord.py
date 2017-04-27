@@ -43,6 +43,11 @@ os.system("mkdir -p " +dir_output + mc.polychord_parameters['base_dir'] + "/clus
 if bool(mc.pcv.dynamical):
         mc.dynamical_model.prepare(mc, mc.pcv)
 
+print
+print 'Reference Time Tref: ', mc.Tref
+print
+print '*************************************************************'
+print
 print 'Dimensions = ', mc.ndim
 print '   '
 print 'Variable list:', mc.variable_list
@@ -51,7 +56,8 @@ print 'Variable bounds:', mc.bounds
 print
 print 'Working directory:', dir_output
 print
-
+print '*************************************************************'
+print
 '''
     On Linux system (BASH):
     export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$PWD/lib
