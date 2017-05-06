@@ -234,7 +234,7 @@ if sampler in sample_keyword['emcee']:
             plt.plot(out_absc[20:], out_lines[20:], '-', color='k')
             plt.axhline(1.01)
             plt.savefig(dir_output + 'GRtrace_pam_' + repr(nd) + '.png', bbox_inches='tight', dpi=300)
-            plt.close()
+            plt.close(fig)
 
         print
         print '*************************************************************'
@@ -290,7 +290,7 @@ if args.mp != 'False':
     labels.extend('ln L')
     fig = corner.corner(megaplot_dat[:, :], labels=labels, truths=megaplot_med)
     fig.savefig(dir_output + "ALL_corners.pdf", bbox_inches='tight', dpi=300)
-    plt.close()
+    plt.close(fig)
     plt.rc('text', usetex=True)
 
     print
@@ -520,7 +520,7 @@ if 'kepler' in mc.model_list:
 
         fig = corner.corner(sample_plan[:, sel_list], labels=sel_label, truths=sample_med[sel_list, 0])
         fig.savefig(dir_output + planet_name + "_corners.pdf", bbox_inches='tight', dpi=300)
-        plt.close()
+        plt.close(fig)
 
         if args.p != 'False':
             # Write down the residuals
@@ -573,7 +573,8 @@ if 'kepler' in mc.model_list:
             f1.savefig(plot_dir + planet_name + '_kep.pdf', bbox_inches='tight', dpi=300)
             f2.subplots_adjust(hspace=0)
             f2.savefig(plot_dir + planet_name + '_pha.pdf', bbox_inches='tight', dpi=300)
-            plt.close()
+            plt.close(f1)
+            plt.close(f2)
 
             fileout = open(plot_dir + planet_name + '_kep.dat', 'w')
             fileout.write('descriptor x_range m_kepler \n')
@@ -760,13 +761,13 @@ if 'kepler' in mc.model_list:
                 fig1 = plt.plot(x_kep, y_kep[:, 0], c='r')
                 fig1 = plt.plot(x_kep, y_kep[:, 1], c='b')
                 plt.savefig(veusz_dir + planet_name + '_kep.png', bbox_inches='tight', dpi=300)
-                plt.close()
+                plt.close(fig1)
 
                 fig2 = plt.plot(x_pha, y_pha[:, 2], c='g')
                 fig2 = plt.plot(x_pha, y_pha[:, 0], c='r')
                 fig2 = plt.plot(x_pha, y_pha[:, 1], c='b')
                 plt.savefig(veusz_dir + planet_name + '_pha.png', bbox_inches='tight', dpi=300)
-                plt.close()
+                plt.close(fig2)
 
                 # h5f = h5py.File('output/'+planet_name+"planet"+`pp`+'_kep.hdf5', "w")
                 # data_grp = h5f.create_group("data")
@@ -825,32 +826,36 @@ if 'kepler' in mc.model_list:
 
             plt.figure(0)
             plt.scatter(sample_P, sample_M, color=color_list[i_color], alpha=0.2, s=5, linewidths=None)
+            plt.draw()
             plt.figure(1)
             plt.scatter(sample_M, sample_e, color=color_list[i_color], alpha=0.2, s=5, linewidths=None)
+            plt.draw()
             plt.figure(2)
             plt.scatter(sample_P, sample_e, color=color_list[i_color], alpha=0.2, s=5, linewidths=None)
-
+            plt.draw()
             i_color += 1
             if i_color == np.size(color_list):
                 i_color = 0
 
         plt.figure(0)
-        plt.xlim(0., 2000.)
+        #plt.xlim(0., 2000.)
         plt.xlabel('P [d]')
         plt.ylabel('M [$M_\oplus $]')
+        plt.draw()
         plt.savefig(dir_output + 'PolyScatter_P_M.pdf', bbox_inches='tight', dpi=300)
+        plt.close(fig0)
         plt.figure(1)
         plt.xlabel('M [$M_\oplus $]')
         plt.ylabel('e')
+        plt.draw()
         plt.savefig(dir_output + 'PolyScatter_M_e.pdf', bbox_inches='tight', dpi=300)
+        plt.close(fig1)
         plt.figure(2)
-        plt.xlim(0., 2000.)
+        #plt.xlim(0., 2000.)
         plt.xlabel('P [d]')
         plt.ylabel('e')
+        plt.draw()
         plt.savefig(dir_output + 'PolyScatter_P_e.pdf', bbox_inches='tight', dpi=300)
-
-        plt.close(fig0)
-        plt.close(fig1)
         plt.close(fig2)
 
     if args.forecast is not None:
@@ -912,7 +917,7 @@ if 'gaussian' in mc.model_list:
 
     fig = corner.corner(sample_plan[:, :], labels=sel_label, truths=sample_med[:, 0])
     fig.savefig(dir_output + "GPs_corners.pdf", bbox_inches='tight', dpi=300)
-    plt.close()
+    plt.close(fig)
 
 
 if 'curvature' in mc.model_list:

@@ -30,7 +30,7 @@ def yaml_parser(file_conf, mc):
         if 'Starts' in conf[counter]:
             mc.starting_point_flag = True
             starts_conf = conf[counter]['Starts']
-            for var in bound_conf:
+            for var in starts_conf:
                 mc.dataset_list[counter].starts[var] = np.asarray(starts_conf[var], dtype=np.double)
 
     mc.planet_name = config_in['Output']
