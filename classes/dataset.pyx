@@ -285,6 +285,6 @@ class TransitCentralTimes(Dataset):
 
         print 'Tc ', self.planet_name
         for ii in xrange(0, self.n):
-            print 'Input Tc: ', self.x0[ii], '  Model Tc: ', model[ii], \
-                '  Diff: ', model[ii] - self.x0[ii]
+            print 'Input Tc: ', self.y[ii], '  Model Tc: ', model[ii], \
+                '  Diff: ', model[ii] - self.y[ii]
         print
