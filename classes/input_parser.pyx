@@ -11,8 +11,9 @@ def yaml_parser(file_conf, mc):
         print conf[counter]['Kind'], conf[counter]['File'], conf[counter]['Models']
 
         if 'Tcent' in conf[counter]['Kind']:
-            planet_name = 'Planet_' + conf[counter]['Planet']
-            mc.dataset_list.append(TransitCentralTimes(planet_name, conf[counter]['File']))
+            planet_name = 'Planet_' + repr(conf[counter]['Planet'])
+            mc.dataset_list.append(TransitCentralTimes(counter, conf[counter]['Kind'], conf[counter]['File'], conf[counter]['Models']))
+            mc.dataset_list[counter].set_planet(planet_name)
             mc.t0_list[planet_name] = mc.dataset_list[counter]
         else:
             mc.dataset_list.append(Dataset(counter, conf[counter]['Kind'], conf[counter]['File'], conf[counter]['Models']))

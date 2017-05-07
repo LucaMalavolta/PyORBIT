@@ -7,6 +7,8 @@ class Dataset:
         # 'RV', 'PHOT', 'ACT'...
         self.models = models
         self.name_ref = input_file
+        """ self.planet_name use only for datasets specific to a given planet  """
+        self.planet_name = None
 
         self.list_pams = {'jitter': 'LU', 'offset': 'U', 'linear': 'U'}
         self.bounds = {}
@@ -19,13 +21,25 @@ class Dataset:
             without affecting the functionality in a later time"""
 
         print 'Opening: ', input_file
-        self.data = np.loadtxt(input_file)
+        #self.data = np.loadtxt(input_file)
+        self.data = np.atleast_2d(np.loadtxt(input_file))
 
         n_cols = np.size(self.data, axis=1)
 
-        self.x = np.asarray(self.data[:, 0], dtype=np.double)
-        self.y = np.asarray(self.data[:, 1], dtype=np.double)
-        self.e = np.asarray(self.data[:, 2], dtype=np.double)
+        if self.kind == 'Tcent':
+            """ The only possible model is specified """
+            self.models = ['Tcent']
+            """ Special input reading fro T0 files """
+            self.n_transit = np.asarray(self.data[:, 0], dtype=np.int16)
+            self.x = np.asarray(self.data[:, 1], dtype=np.double)
+            self.e = np.asarray(self.data[:, 2], dtype=np.double)
+            """ copy of self.y added for consistency with the rest of the code
+            """
+            self.y = self.x
+        else:
+            self.x = np.asarray(self.data[:, 0], dtype=np.double)
+            self.y = np.asarray(self.data[:, 1], dtype=np.double)
+            self.e = np.asarray(self.data[:, 2], dtype=np.double)
 
         self.n = np.size(self.x)
 
@@ -62,6 +76,7 @@ class Dataset:
 
         self.Tref = np.mean(self.x, dtype=np.double)
         self.x0 = self.x - self.Tref
+
 
         self.mask = {}
         for var in self.list_pams:
@@ -180,6 +195,7 @@ class Dataset:
 
 
 class TransitCentralTimes(Dataset):
+    """
     def __init__(self, planet_name, input_file):
 
         self.kind = 'Tcent'
@@ -222,28 +238,33 @@ class TransitCentralTimes(Dataset):
         self.model = np.zeros(self.n, dtype=np.double)
         self.jitter = np.zeros(self.n, dtype=np.double)
 
-        """Default boundaries are defined according to the characteristic of the dataset"""
+        # Default boundaries are defined according to the characteristic of the dataset
         self.default_bounds = {'offset': [np.min(self.x), np.max(self.x)],
                                'jitter': [0.0001, 50 * np.max(self.e)],
                                'linear': [-1., 1.]}
+    """
+    def set_planet(self, planet_name):
+        self.planet_name = planet_name
+        return
 
     def compute(self, mc, theta):
         # By default, dataset.planet_name == planet_name
         dict_out = mc.pcv.convert(self.planet_name, theta)
         model = np.rint(self.x0 / dict_out['P'] - 1) * dict_out['P'] + \
-                kp.kepler_Tcent_T0P(dict_out['P'], dict_out['f'], dict_out['e'], dict_out['o'])
+                kp.kepler_Tcent_T0P(dict_out['P'], dict_out['f'], dict_out['e'], dict_out['o']) + \
+                self.Tref
         return model
 
-    def model_logchi2(self):
-        # boundaries in Tcent are specific of the dataset and not of a common
-        # parameter for different dataset. The check can be internal
-        # if np.sum(np.abs(self.x0 - self.model) < self.deltaT) < self.n:
-        #    return -np.inf
-        env = 1.0 / (self.e ** 2.0)
-        time_dif = np.abs(self.x0 - self.model)
-        # time_dif[np.where(time_dif > 6*self.e)] = 6*self.e
-        # time_dif[np.where(time_dif > 8*self.e)] = 8*self.e + np.sqrt(np.abs(time_dif-8*self.e))
-        return -0.5 * (np.sum(time_dif**2 * env - np.log(env)))
+    #def model_logchi2(self):
+    #    # boundaries in Tcent are specific of the dataset and not of a common
+    #    # parameter for different dataset. The check can be internal
+    #    # if np.sum(np.abs(self.x0 - self.model) < self.deltaT) < self.n:
+    #    #    return -np.inf
+    #    env = 1.0 / (self.e ** 2.0)
+    #    time_dif = np.abs(self.x0 - self.model)
+    #    # time_dif[np.where(time_dif > 6*self.e)] = 6*self.e
+    #    # time_dif[np.where(time_dif > 8*self.e)] = 8*self.e + np.sqrt(np.abs(time_dif-8*self.e))
+    #    return -0.5 * (np.sum(time_dif**2 * env - np.log(env)))
 
     def print_vars(self, mc, theta):
         # period, _, f, e, o = mc.pcv.convert(self.planet_name, theta)
@@ -262,9 +283,8 @@ class TransitCentralTimes(Dataset):
         else:
             model = self.compute(mc, theta)
 
-        if verbose:
-            print 'Tc ', self.planet_name
-            for ii in xrange(0, self.n):
-                print 'Input Tc: ', self.x0[ii], '  Model Tc: ', model[ii], \
-                    '  Diff: ', model[ii] - self.x0[ii]
-            print
+        print 'Tc ', self.planet_name
+        for ii in xrange(0, self.n):
+            print 'Input Tc: ', self.x0[ii], '  Model Tc: ', model[ii], \
+                '  Diff: ', model[ii] - self.x0[ii]
+        print
