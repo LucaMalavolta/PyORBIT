@@ -21,12 +21,12 @@ Most of the information can be found in the paper by [Malavolta et al. (2016)][M
 
 ## PyORBIT user guide
 *** FOR 3.1 version! ***
-1. [Introduction](### Introduction)
-2. [Install and Compile](### Install and Compile)
-3. [Configuration file](### Configuration file)
-4. [Data files](### Data files)
-5. [Run the code](### Run the code)
-6. [Analyze the output](### Analyze the output)
+1. [Introduction](#introduction)
+2. [Install and Compile](#install-and-compile)
+3. [Configuration file](#configuration-file)
+4. [Data files](#data-files)
+5. [Run the code](#run-the-code)
+6. [Analyze the output](#analyze-the-output)
 
 ### Introduction
 
