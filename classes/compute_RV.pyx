@@ -177,6 +177,15 @@ class ComputeDynamical:
 
         self.dynamical_set['trades']['n_body'] = n_body
 
+        #print   '0  ---> ', self.dynamical_set['trades']['ti_beg']
+        #print   '1  ---> ', self.dynamical_set['trades']['ti_ref']
+        #print   '2  ---> ', self.dynamical_set['trades']['ti_int']
+        #print   '3  ---> ', self.dynamical_set['trades']['n_body']
+        #print   '4  ---> ', self.dynamical_set['data']['t0_tot']
+        #print   '5  ---> ', self.dynamical_set['data']['t0_num']
+        #print   '6  ---> ', self.dynamical_set['data']['t0_obs']
+        #print   '7  ---> ', self.dynamical_set['data']['t0_err']
+
         pytrades.args_init(self.dynamical_set['trades']['ti_beg'],
                            self.dynamical_set['trades']['ti_ref'],
                            self.dynamical_set['trades']['ti_int'],
@@ -268,7 +277,8 @@ class ComputeDynamical:
                 self.dynamical_set['data']['t0_num'])
 
         output = {}
-        print 'T0_sim: ', t0_sim
+        #print 'T0_sim: ', t0_sim
+        #print 'RV_sim: ', rv_sim
         #t0_sim -= mc.Tref
         for dataset in mc.dataset_list:
             if dataset.kind == 'RV' and full_orbit is None:
@@ -276,7 +286,7 @@ class ComputeDynamical:
                 # print 'RV out', output[dataset.name_ref]
             elif dataset.kind == 'Tcent' and dataset.planet_name in pcv.dynamical:
                 n_plan = self.dynamical_set['data']['plan_ref'][dataset.planet_name]
-                print t0_sim[:self.dynamical_set['data']['t0_tot'][n_plan], n_plan]
+                #print ' T0_sim selected: ', t0_sim[:self.dynamical_set['data']['t0_tot'][n_plan], n_plan]
                 output[dataset.name_ref] = t0_sim[:self.dynamical_set['data']['t0_tot'][n_plan], n_plan]
         if full_orbit is not None:
             output['full_orbit'] = rv_sim

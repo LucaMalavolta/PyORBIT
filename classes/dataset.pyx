@@ -250,9 +250,10 @@ class TransitCentralTimes(Dataset):
     def compute(self, mc, theta):
         # By default, dataset.planet_name == planet_name
         dict_out = mc.pcv.convert(self.planet_name, theta)
-        model = (np.rint(self.x0 / dict_out['P'])) * dict_out['P'] + \
+        model = (np.floor(self.x0 / dict_out['P'])) * dict_out['P'] + \
                 kp.kepler_Tcent_T0P(dict_out['P'], dict_out['f'], dict_out['e'], dict_out['o']) + \
                 self.Tref
+        print 'TMOD ', kp.kepler_Tcent_T0P(dict_out['P'], dict_out['f'], dict_out['e'], dict_out['o'])
         return model
 
     #def model_logchi2(self):
@@ -283,7 +284,8 @@ class TransitCentralTimes(Dataset):
             model = dyn_output[self.name_ref]
         else:
             model = self.compute(mc, theta)
-
+        # temporary bugfix to tRADES not giving back the T0s
+        model = self.compute(mc, theta)
         print 'Tc ', self.planet_name
         for ii in xrange(0, self.n):
             print 'Input Tc: ', self.y[ii], '  Model Tc: ', model[ii], \
