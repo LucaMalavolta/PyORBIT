@@ -268,13 +268,15 @@ class ComputeDynamical:
                 self.dynamical_set['data']['t0_num'])
 
         output = {}
-        t0_sim -= mc.Tref
+        print 'T0_sim: ', t0_sim
+        #t0_sim -= mc.Tref
         for dataset in mc.dataset_list:
             if dataset.kind == 'RV' and full_orbit is None:
                 output[dataset.name_ref] = rv_sim[self.dynamical_set['data']['selection'][dataset.name_ref]]
                 # print 'RV out', output[dataset.name_ref]
-            elif dataset.kind == 'Tcent':
+            elif dataset.kind == 'Tcent' and dataset.planet_name in pcv.dynamical:
                 n_plan = self.dynamical_set['data']['plan_ref'][dataset.planet_name]
+                print t0_sim[:self.dynamical_set['data']['t0_tot'][n_plan], n_plan]
                 output[dataset.name_ref] = t0_sim[:self.dynamical_set['data']['t0_tot'][n_plan], n_plan]
         if full_orbit is not None:
             output['full_orbit'] = rv_sim

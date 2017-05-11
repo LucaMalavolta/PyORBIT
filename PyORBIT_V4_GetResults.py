@@ -511,6 +511,7 @@ if 'kepler' in mc.model_list:
             sel_label.append('M [$M_\oplus $')
         else:
             sel_list.append(convert_out['M_kep'])
+            sample_plan[:,convert_out['M_kep']] *= mc.M_JEratio
             sel_label.append('M [$M_j$]')
 
         if 'curvature' in mc.model_list:

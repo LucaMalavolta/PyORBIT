@@ -250,7 +250,7 @@ class TransitCentralTimes(Dataset):
     def compute(self, mc, theta):
         # By default, dataset.planet_name == planet_name
         dict_out = mc.pcv.convert(self.planet_name, theta)
-        model = np.rint(self.x0 / dict_out['P'] - 1) * dict_out['P'] + \
+        model = (np.rint(self.x0 / dict_out['P'])) * dict_out['P'] + \
                 kp.kepler_Tcent_T0P(dict_out['P'], dict_out['f'], dict_out['e'], dict_out['o']) + \
                 self.Tref
         return model
@@ -277,8 +277,9 @@ class TransitCentralTimes(Dataset):
                 print self.name_ref, key, ' vars: ', theta[mc.variable_list[self.name_ref][key]], \
                     ' pams: ', pams_converted
 
+        print mc.pcv.dynamical
         if self.planet_name in mc.pcv.dynamical:
-            dyn_output = mc.pcv.compute_dynamical(mc, theta)
+            dyn_output = mc.dynamical_model.compute(mc, mc.pcv, theta)
             model = dyn_output[self.name_ref]
         else:
             model = self.compute(mc, theta)
