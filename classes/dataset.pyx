@@ -253,7 +253,6 @@ class TransitCentralTimes(Dataset):
         model = (np.floor(self.x0 / dict_out['P'])) * dict_out['P'] + \
                 kp.kepler_Tcent_T0P(dict_out['P'], dict_out['f'], dict_out['e'], dict_out['o']) + \
                 self.Tref
-        print 'TMOD ', kp.kepler_Tcent_T0P(dict_out['P'], dict_out['f'], dict_out['e'], dict_out['o'])
         return model
 
     #def model_logchi2(self):
@@ -278,7 +277,6 @@ class TransitCentralTimes(Dataset):
                 print self.name_ref, key, ' vars: ', theta[mc.variable_list[self.name_ref][key]], \
                     ' pams: ', pams_converted
 
-        print mc.pcv.dynamical
         if self.planet_name in mc.pcv.dynamical:
             dyn_output = mc.dynamical_model.compute(mc, mc.pcv, theta)
             model = dyn_output[self.name_ref]
