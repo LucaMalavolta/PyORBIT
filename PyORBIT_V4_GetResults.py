@@ -341,6 +341,9 @@ x_phase = np.arange(-0.50, 1.50, 0.005, dtype=np.double)
 
 model_dsys, model_plan, model_orbs, model_actv, model_curv = mc.rv_make_model(chain_med[:, 0], x_range, x_phase)
 
+"""Datasets summary"""
+
+
 if 'kepler' in mc.model_list:
 
     if sampler in sample_keyword['polychord']:
@@ -511,7 +514,7 @@ if 'kepler' in mc.model_list:
             sel_label.append('M [$M_\oplus $')
         else:
             sel_list.append(convert_out['M_kep'])
-            sample_plan[:,convert_out['M_kep']] *= mc.M_JEratio
+            #sample_plan[:,convert_out['M_kep']] *= mc.M_JEratio
             sel_label.append('M [$M_j$]')
 
         if 'curvature' in mc.model_list:
@@ -523,7 +526,7 @@ if 'kepler' in mc.model_list:
         fig.savefig(dir_output + planet_name + "_corners.pdf", bbox_inches='tight', dpi=300)
         plt.close(fig)
 
-        if args.p != 'False':
+        if args.p != 'False' or args.v != 'False':
             # Write down the residuals
             color_list = ['b', 'g', 'r', 'c', 'm', 'y', 'k']
 
@@ -679,10 +682,10 @@ if 'kepler' in mc.model_list:
 
                 y_flg &= (flatlnprob[:] > lnprob_med[0] - lnprob_med[1]) # & (flatlnprob[:] < lnprob_med[0] + lnprob_med[2])
 
-                random_n = 1000
+                random_n = 10000
                 if np.sum(y_flg) <= random_n:
                     random_n = np.sum(y_flg)
-                    ii_kep = np.where(y_flg)
+                    ii_kep = np.where(y_flg)[0][:]
                 else:
                     ii_kep = np.random.permutation(np.where(y_flg)[0][:])[:random_n]
                     #print np.where(y_flg)
@@ -719,8 +722,8 @@ if 'kepler' in mc.model_list:
                 y_kep[:, 0] = y_kep[:, 2]
                 y_kep[:, 1] = y_kep[:, 2]
                 # value initialization
-                y_pha[:, 2] = kp.kepler_RV_T0P(x_pha*sample_med[0, 0], sample_med[2, 0], sample_med[0, 0], sample_med[1, 0],
-                                               sample_med[3, 0], sample_med[4, 0])
+                #y_pha[:, 2] = kp.kepler_RV_T0P(x_pha*sample_med[0, 0], sample_med[2, 0], sample_med[0, 0], sample_med[1, 0],
+                #                               sample_med[3, 0], sample_med[4, 0])
 
                 y_pha[:, 2] = kp.kepler_RV_T0P(x_pha*sample_med[convert_out['P'], 0],
                                                sample_med[convert_out['f'], 0],
@@ -758,17 +761,21 @@ if 'kepler' in mc.model_list:
                         y_pha[:, 0] = np.minimum(y_pha[:, 0], y_pha_tmp)
                         y_pha[:, 1] = np.maximum(y_pha[:, 1], y_pha_tmp)
 
-                fig1 = plt.plot(x_kep, y_kep[:, 2], c='g')
-                fig1 = plt.plot(x_kep, y_kep[:, 0], c='r')
-                fig1 = plt.plot(x_kep, y_kep[:, 1], c='b')
+                fig0 = plt.figure(0, figsize=(12, 12))
+                plt.figure(0)
+                plt.plot(x_kep, y_kep[:, 2], c='g')
+                plt.plot(x_kep, y_kep[:, 0], c='r')
+                plt.plot(x_kep, y_kep[:, 1], c='b')
                 plt.savefig(veusz_dir + planet_name + '_kep.png', bbox_inches='tight', dpi=300)
-                plt.close(fig1)
+                plt.close(fig0)
 
-                fig2 = plt.plot(x_pha, y_pha[:, 2], c='g')
-                fig2 = plt.plot(x_pha, y_pha[:, 0], c='r')
-                fig2 = plt.plot(x_pha, y_pha[:, 1], c='b')
+                fig1 = plt.figure(1, figsize=(12, 12))
+                plt.figure(1)
+                plt.plot(x_pha, y_pha[:, 2], c='g')
+                plt.plot(x_pha, y_pha[:, 0], c='r')
+                plt.plot(x_pha, y_pha[:, 1], c='b')
                 plt.savefig(veusz_dir + planet_name + '_pha.png', bbox_inches='tight', dpi=300)
-                plt.close(fig2)
+                plt.close(fig1)
 
                 # h5f = h5py.File('output/'+planet_name+"planet"+`pp`+'_kep.hdf5', "w")
                 # data_grp = h5f.create_group("data")
@@ -885,6 +892,10 @@ if 'kepler' in mc.model_list:
         plt.close()
 
 if 'gaussian' in mc.model_list:
+
+    print 'Gaussian process summary'
+    print
+
     n_vars = 0
     sample_plan_transpose = []
     sel_label = []
@@ -906,7 +917,7 @@ if 'gaussian' in mc.model_list:
             var = flatchain[:, mc.gcv.var_list[dataset.name_ref][name]]
             var_phys = mc.gcv.variables[dataset.name_ref][name](var, var, xrange(0, nsample))
             sample_plan_transpose.append(var_phys)
-            sel_label.append(dataset.name_ref + '_' + name)
+            sel_label.append('$'+ dataset.name + '$ ' + name)
 
     sample_plan = np.asarray(sample_plan_transpose).T
     sample_med = np.asarray(map(lambda v: (v[1], v[2] - v[1], v[1] - v[0]),
@@ -920,8 +931,16 @@ if 'gaussian' in mc.model_list:
     fig.savefig(dir_output + "GPs_corners.pdf", bbox_inches='tight', dpi=300)
     plt.close(fig)
 
+    print 'Gaussian process summary completed'
+    print
+    print '-----------------------------'
+    print
 
 if 'curvature' in mc.model_list:
+
+    print 'Curvature summary'
+    print
+
     n_vars = 0
     sample_plan_transpose = []
     sel_label = []
@@ -946,5 +965,10 @@ if 'curvature' in mc.model_list:
     for ii in xrange(0, np.size(x_range)):
         fileout.write('{0:14f} {1:14f} \n'.format(x_range[ii], model_curv['BJD'][ii]))
     fileout.close()
+
+    print 'Curvature summary completed'
+    print
+    print '-----------------------------'
+    print
 
 print

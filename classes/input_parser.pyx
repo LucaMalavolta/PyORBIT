@@ -23,6 +23,11 @@ def yaml_parser(file_conf, mc):
         else:
             mc.dataset_list[counter].common_Tref(mc.Tref)
 
+        if 'Name' in conf[counter]:
+            mc.dataset_list[counter].name = conf[counter]['Name']
+        else:
+            mc.dataset_list[counter].name = 'Unspecified'
+
         if 'Boundaries' in conf[counter]:
             bound_conf = conf[counter]['Boundaries']
             for var in bound_conf:

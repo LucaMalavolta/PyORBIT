@@ -7,8 +7,12 @@ class Dataset:
         # 'RV', 'PHOT', 'ACT'...
         self.models = models
         self.name_ref = input_file
+
         """ self.planet_name use only for datasets specific to a given planet  """
         self.planet_name = None
+
+        """self.name only use for plot, it must be a LaTeX string in math mode - but without the $"""
+        self.name = None
 
         self.list_pams = {'jitter': 'LU', 'offset': 'U', 'linear': 'U'}
         self.bounds = {}
