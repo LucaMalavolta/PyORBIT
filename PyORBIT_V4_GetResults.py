@@ -912,6 +912,8 @@ if 'gaussian' in mc.model_list:
             sel_label.append(name)
 
     for dataset in mc.dataset_list:
+        if 'gaussian' not in dataset.models:
+            break
         for name in mc.gcv.list_pams_dataset:
             n_vars += 1
             var = flatchain[:, mc.gcv.var_list[dataset.name_ref][name]]
