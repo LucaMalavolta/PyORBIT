@@ -22,7 +22,7 @@ class ModelContainer:
         self.dynamical_model = ComputeDynamical()
 
         # pyde/emcee variables
-        self.emcee_parameters = {'npop_mult': 2, 'thin': 1,
+        self.emcee_parameters = {'nsave': 0, 'npop_mult': 2, 'thin': 1,
                                  'MultiRun': None, 'MultiRun_iter':20 }
         self.pyde_parameters = {'ngen': 1000, 'npop_mult': 2}
 

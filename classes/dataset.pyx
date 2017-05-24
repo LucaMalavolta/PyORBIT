@@ -81,7 +81,6 @@ class Dataset:
         self.Tref = np.mean(self.x, dtype=np.double)
         self.x0 = self.x - self.Tref
 
-
         self.mask = {}
         for var in self.list_pams:
                 self.mask[var] = np.zeros([self.n, self.n_sys[var]], dtype=bool)
@@ -165,13 +164,12 @@ class Dataset:
             mc.ndim += self.n_sys[var]
 
     def starting_point(self, mc):
-        if self.name_ref in self.starts:
-            for var in self.starts[self.name_ref]:
-                if self.list_pams[var] == 'U':
-                    start_converted = self.starts[self.name_ref][var]
-                elif self.list_pams[var] == 'LU':
-                    start_converted = np.log2(self.starts[self.name_ref][var])
-                mc.starting_point[mc.variable_list[self.name_ref][var]] = start_converted
+        for var in self.starts:
+            if self.list_pams[var] == 'U':
+                start_converted = self.starts[var]
+            elif self.list_pams[var] == 'LU':
+                start_converted = np.log2(self.starts[var])
+            mc.starting_point[mc.variable_list[self.name_ref][var]] = start_converted
 
     def initialize(self, mc):
         for key in self.list_pams:

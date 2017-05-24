@@ -81,6 +81,7 @@ print mc.starting_point
 if mc.starting_point_flag:
     mc.create_starting_point()
     starting_point = mc.starting_point
+    print starting_point
     population = np.zeros([mc.emcee_parameters['nwalkers'], mc.ndim], dtype=np.double)
     for ii in xrange(0, mc.emcee_parameters['nwalkers']):
         population[ii, :] = np.random.normal(starting_point, 0.0000001)
