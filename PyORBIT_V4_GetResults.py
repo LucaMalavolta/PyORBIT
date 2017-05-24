@@ -549,12 +549,13 @@ if 'kepler' in mc.model_list:
                 if dataset.kind == 'RV':
                     col_sel = color_list[color_count % 7]
                     color_count += 1
-                    p_pha = (dataset.x0 / sample_med[0, 0]) % 1
+                    p_pha = (dataset.x0 / sample_med[convert_out['P'], 0]) % 1
                     y_det = dataset.y - model_dsys[dataset.name_ref] - model_curv[dataset.name_ref]
                     y_res = dataset.y - model_dsys[dataset.name_ref] - \
                             model_orbs[dataset.name_ref] - model_curv[dataset.name_ref] -\
                             model_actv[dataset.name_ref]
                     y_1pl = y_res + model_plan[dataset.name_ref][planet_name]
+
                     ax1.errorbar(dataset.x, y_1pl, yerr=dataset.e, fmt=col_sel + '.', zorder=2)
                     ax2.errorbar(dataset.x, y_res, yerr=dataset.e, fmt=col_sel + '.', zorder=2)
 
