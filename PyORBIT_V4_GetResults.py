@@ -423,8 +423,8 @@ if 'kepler' in mc.model_list:
                 for var in mc.ccv.list_pams:
                     sample_plan[ii, convert_out[var]] = convert_tmp[var]
 
-            for var in mc.ccv.list_pams:
-                sample_med[convert_out[var], 0] = np.median(sample_plan[:, convert_out[var]])
+            #for var in mc.ccv.list_pams:
+            #    sample_med[convert_out[var], 0] = np.median(sample_plan[:, convert_out[var]])
 
         for n, (P, K, e, M) in enumerate(zip(sample_plan[:, convert_out['P']],
                                              sample_plan[:, convert_out['K']],
