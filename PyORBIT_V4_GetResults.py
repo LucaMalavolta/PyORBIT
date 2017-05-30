@@ -518,9 +518,9 @@ if 'kepler' in mc.model_list:
             sel_label.append('M [$M_j$]')
 
         if 'curvature' in mc.model_list:
-            for var in mc.ccv.list_pams:
+            for n_var, var in enumerate(mc.ccv.list_pams):
                 sel_list.append(convert_out[var])
-                sel_label.append(var)
+                sel_label.append('C$_'+repr(n_var)+'$')
 
         fig = corner.corner(sample_plan[:, sel_list], labels=sel_label, truths=sample_med[sel_list, 0])
         fig.savefig(dir_output + planet_name + "_corners.pdf", bbox_inches='tight', dpi=300)
