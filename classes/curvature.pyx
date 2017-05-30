@@ -32,7 +32,7 @@ class CurvatureCommonVariables:
     def define_bounds(self, mc):
 
         mc.variable_list['Curvature'] = {}
-        for n_ord in xrange(1,self.order+1):
+        for n_ord in xrange(1, self.order+1):
             var = 'curvature_'+repr(n_ord)
             self.list_pams[var] = 'U'
             self.order_ind[var] = n_ord
