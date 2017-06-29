@@ -7,6 +7,7 @@ class Dataset:
         # 'RV', 'PHOT', 'ACT'...
         self.models = models
         self.name_ref = input_file
+        self.associated = None
 
         """ self.planet_name use only for datasets specific to a given planet  """
         self.planet_name = None
@@ -94,6 +95,52 @@ class Dataset:
         self.default_bounds = {'offset': [np.min(self.y)-50., np.max(self.y)+50.],
                                'jitter': [0.0001, 20 * np.max(self.e)],
                                'linear': [-1., 1.]}
+
+    def associate_to_other_dataset(self, dataset_ref, threshold=0.001):
+        """ The dataset is matched to another dataset. Values, flags and masks are replaced with
+            arrays with the same size of the reference dataset
+
+        """
+        x = np.zeros(dataset_ref.n, dtype=np.double)
+        y = np.zeros(dataset_ref.n, dtype=np.double)
+        e = np.zeros(dataset_ref.n, dtype=np.double)
+
+        sys = {'match': np.zeros(dataset_ref.n, dtype=bool)}
+        for var in self.sys:
+            sys[var] = np.zeros(dataset_ref.n, dtype=np.double)
+
+        for i_date, v_date in enumerate(self.x):
+            match = np.where(np.abs(v_date-dataset_ref.x) < threshold)[0]
+            x[match] = self.x[i_date]
+            y[match] = self.y[i_date]
+            e[match] = self.e[i_date]
+
+            sys['match'][match] = True
+            for var in self.sys:
+                sys[var][match] = self.sys[var][i_date]
+
+        """ Transferring the matched values to the arrays of the Class"""
+        self.n = dataset_ref.n
+        self.x = x
+        self.y = y
+        self.e = e
+
+        self.sys = sys
+        # Model for RV systematics
+        for var in self.list_pams:
+            self.n_sys[var] = np.max(self.sys[var].astype(np.int64)) + 1
+
+        print 'N = ', self.n
+        for var in self.list_pams:
+            print 'N '+var+' = ', self.n_sys[var]
+        # print 'N activ. = ', self.n_a
+        print
+
+        self.x0 = self.x - self.Tref
+        self.model = np.zeros(self.n, dtype=np.double)
+        self.jitter = np.zeros(self.n, dtype=np.double)
+
+        self.associated = dataset_ref.ind
 
     def common_Tref(self, Tref_in):
         self.Tref = Tref_in

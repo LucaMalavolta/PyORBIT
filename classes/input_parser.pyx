@@ -23,6 +23,10 @@ def yaml_parser(file_conf, mc):
         else:
             mc.dataset_list[counter].common_Tref(mc.Tref)
 
+        if 'Association' in conf[counter]:
+            mc.dataset_list[counter].associate_to_other_dataset(mc.dataset_list)
+
+
         if 'Name' in conf[counter]:
             mc.dataset_list[counter].name = conf[counter]['Name']
         else:
