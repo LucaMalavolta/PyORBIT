@@ -131,9 +131,9 @@ class GaussianProcessCommonVariables:
         for dataset in mc.dataset_list:
             if 'gaussian' in dataset.models and dataset.name_ref in self.starts:
                     for var in self.starts[dataset.name_ref]:
-                        if self.list_pams_common[var] == 'U':
+                        if self.list_pams_dataset[var] == 'U':
                             start_converted = self.starts[dataset.name_ref][var]
-                        if self.list_pams_common[var] == 'LU':
+                        if self.list_pams_dataset[var] == 'LU':
                             start_converted = np.log2(self.starts[dataset.name_ref][var])
                         mc.starting_point[mc.variable_list[dataset.name_ref][var]] = start_converted
 
