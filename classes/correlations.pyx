@@ -88,7 +88,7 @@ class CorrelationsCommonVariables:
                 prior_out += giveback_priors(self.prior_kind[d_name][key], self.prior_pams[d_name][key], key_pams[key])
         return prior_out
 
-
+####################
     def compute(self, theta, dataset):
         dict_pams = self.convert(theta)
         coeff = np.zeros(self.order+1)
