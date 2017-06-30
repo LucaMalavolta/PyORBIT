@@ -140,7 +140,7 @@ class Dataset:
         self.model = np.zeros(self.n, dtype=np.double)
         self.jitter = np.zeros(self.n, dtype=np.double)
 
-        self.associated = dataset_ref.ind
+        self.associated = dataset_ref
 
     def common_Tref(self, Tref_in):
         self.Tref = Tref_in
