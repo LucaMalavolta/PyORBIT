@@ -56,6 +56,15 @@ class CorrelationsCommonVariables:
 
         self.order_ind[name_ref][name_asc] = {}
 
+        """ HERE: we must associated the data from name_asc dataset to the one from name_ref
+            remove that part from dataset.pyx
+            Add a None option for the dataset
+            Fix input_parser to accomodate the new changes
+            Jitter must not be included in the analysis, but how about the offset? 
+            Or maybe I should just leave the zero point of the polynomial fit free?
+        """
+
+
     def define_bounds(self, mc):
         """ Bounds are defined in this class, where all the Planet-related variables are stored"""
 
