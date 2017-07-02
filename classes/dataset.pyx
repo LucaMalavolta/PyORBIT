@@ -105,9 +105,11 @@ class Dataset:
         y = np.zeros(dataset_ref.n, dtype=np.double)
         e = np.zeros(dataset_ref.n, dtype=np.double)
 
-        sys = {'match': np.zeros(dataset_ref.n, dtype=bool)}
+        sys = {}
+        mask = {'match': np.zeros(dataset_ref.n, dtype=bool)}
         for var in self.sys:
-            sys[var] = np.zeros(dataset_ref.n, dtype=np.double)
+            sys[var] = np.zeros(dataset_ref.n, dtype=np.double) - 1
+            mask[var] = np.zeros([dataset_ref.n, self.n_sys[var]], dtype=bool)
 
         for i_date, v_date in enumerate(self.x):
             match = np.where(np.abs(v_date-dataset_ref.x) < threshold)[0]
@@ -115,9 +117,10 @@ class Dataset:
             y[match] = self.y[i_date]
             e[match] = self.e[i_date]
 
-            sys['match'][match] = True
+            mask['match'][match] = True
             for var in self.sys:
                 sys[var][match] = self.sys[var][i_date]
+                mask[var][match, :] = self.mask[var][i_date, :]
 
         """ Transferring the matched values to the arrays of the Class"""
         self.n = dataset_ref.n
@@ -126,6 +129,7 @@ class Dataset:
         self.e = e
 
         self.sys = sys
+        self.mask = mask
         # Model for RV systematics
         for var in self.list_pams:
             self.n_sys[var] = np.max(self.sys[var].astype(np.int64)) + 1
@@ -172,22 +176,6 @@ class Dataset:
         return -0.5 * (np.sum((self.y - self.model) ** 2 * env - np.log(env)))
 
     def define_bounds(self, mc):
-
-        #for var in self.list_sys:
-        #    if var in self.bounds:
-        #        bounds = self.bounds[var]
-        #    else:
-        #        bounds = self.default_bounds[var]
-        #    for jj in xrange(0, self.n_sys[var]):
-        #        mc.bounds_list.append(bounds)  # bounds for jitter
-        #
-        #mc.variable_list[self.kind] = {}
-        #mc.variable_list[self.name_ref] = {}
-        #
-        #"""adding the systematics variables to the list"""
-        #for var in self.list_sys:
-        #    mc.variable_list[self.name_ref][var] = np.arange(mc.ndim, mc.ndim + self.n_sys[var], 1)
-        #    mc.ndim += self.n_sys[var]
 
         mc.variable_list[self.kind] = {}
         mc.variable_list[self.name_ref] = {}

@@ -23,10 +23,6 @@ def yaml_parser(file_conf, mc):
         else:
             mc.dataset_list[counter].common_Tref(mc.Tref)
 
-        if 'Association' in conf[counter]:
-            mc.dataset_list[counter].associate_to_other_dataset(mc.dataset_list)
-
-
         if 'Name' in conf[counter]:
             mc.dataset_list[counter].name = conf[counter]['Name']
         else:
@@ -99,6 +95,40 @@ def yaml_parser(file_conf, mc):
                 mc.pcv.inclination[planet_name] = planet_conf['Inclination']
             if 'Radius' in planet_conf:
                 mc.pcv.radius[planet_name] = planet_conf['Radius']
+
+    if 'Correlations' in config_in:
+        conf = config_in['Correlations']
+        for name_ref in conf:
+            dataset_name = mc.dataset_list[name_ref].name_ref
+            mc.cov.add_dataset(dataset_name)
+
+            if 'Association' in conf[name_ref]:
+                mc.dataset_list[name_ref].associate_to_other_dataset(mc.dataset_list[conf[name_ref]['Association']])
+
+            if 'Order' in conf[name_ref]:
+                mc.cov.order[mc.dataset_list[name_ref].name_ref] = np.asarray(conf[name_ref]['Order'], dtype=np.int64)
+
+            if 'Boundaries' in conf[name_ref]:
+                bound_conf = conf[name_ref]['Boundaries']
+                for var in bound_conf:
+                    mc.cov.bounds[name_ref]['correlation_' + var] = np.asarray(bound_conf[var], dtype=np.double)
+
+            if 'Fixed' in conf[name_ref]:
+                fixed_conf = conf[name_ref]['Fixed']
+                for var in fixed_conf:
+                    mc.cov.fix_list[name_ref]['correlation_' + var] = np.asarray(fixed_conf[var], dtype=np.double)
+
+            if 'Priors' in conf[name_ref]:
+                prior_conf = conf[name_ref]['Priors']
+                for var in prior_conf:
+                    mc.cov.prior_kind[name_ref]['correlation_' + var] = prior_conf[var][0]
+                    mc.cov.prior_pams[name_ref]['correlation_' + var] = np.asarray(prior_conf[var][1:], dtype=np.double)
+
+            if 'Starts' in conf[name_ref]:
+                mc.starting_point_flag = True
+                starts_conf = conf[name_ref]['Starts']
+                for var in starts_conf:
+                    mc.cov.starts[name_ref]['correlation_' + var] = np.asarray(starts_conf[var], dtype=np.double)
 
     if 'Sinusoids' in config_in:
         conf = config_in['Sinusoids']

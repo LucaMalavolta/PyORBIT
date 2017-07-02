@@ -2,9 +2,9 @@ from common import *
 from planets import PlanetsCommonVariables
 from gaussian import GaussianProcessCommonVariables
 from curvature import CurvatureCommonVariables
+from correlations import CorrelationsCommonVariables
 from sinusoids import SinusoidsCommonVariables
 from compute_RV import ComputeKeplerian, ComputeDynamical
-from dataset import Dataset, TransitCentralTimes
 
 
 class ModelContainer:
@@ -18,6 +18,7 @@ class ModelContainer:
         self.pcv = PlanetsCommonVariables()
         self.gcv = GaussianProcessCommonVariables()
         self.ccv = CurvatureCommonVariables()
+        self.cov = CorrelationsCommonVariables()
         self.keplerian_model = ComputeKeplerian()
         self.dynamical_model = ComputeDynamical()
 
@@ -123,6 +124,9 @@ class ModelContainer:
         if 'curvature' in self.model_list:
             self.ccv.define_bounds(self)
 
+        if 'correlation' in self.model_list:
+            self.cov.define_bounds(self)
+
         if 'sinusoids' in self.model_list:
             self.scv.define_bounds(self)
 
@@ -148,6 +152,9 @@ class ModelContainer:
         if 'curvature' in self.model_list:
             self.ccv.initialize(self)
 
+        if 'correlation' in self.model_list:
+            self.cov.initialize(self)
+
         if 'sinusoids' in self.model_list:
             self.scv.initialize(self)
 
@@ -166,6 +173,9 @@ class ModelContainer:
 
         if 'curvature' in self.model_list:
             self.ccv.starting_point(self)
+
+        if 'correlation' in self.model_list:
+            self.cov.starting_point(self)
 
         if 'sinusoids' in self.model_list:
             self.scv.starting_point(self)
@@ -214,6 +224,9 @@ class ModelContainer:
         if 'curvature' in self.model_list:
             logchi2_out += self.ccv.return_priors(theta)
 
+        if 'correlation' in self.model_list:
+            logchi2_out += self.cov.return_priors(theta)
+
         if 'sinusoid' in self.model_list:
             logchi2_out += giveback_priors(
                 self.scv.prior_kind['Prot'], self.scv.prior_pams['Prot'], theta[self.variable_list['Common']['Prot']])
@@ -244,6 +257,9 @@ class ModelContainer:
             if 'curvature' in dataset.models:
                 dataset.model += self.ccv.compute(theta, dataset)
 
+            if 'correlation' in dataset.models:
+                dataset.model += self.cov.compute(theta, dataset)
+
             if 'Tcent' in dataset.models:
                 if dataset.planet_name in self.pcv.dynamical:
                     """ we have dynamical computations, so we include them in the model"""
@@ -273,6 +289,9 @@ class ModelContainer:
 
         if 'curvature' in self.model_list:
             self.ccv.print_vars(self, theta)
+
+        if 'correlation' in self.model_list:
+            self.cov.print_vars(self, theta)
 
         if 'sinusoids' in self.model_list:
             self.scv.print_vars(self, theta)
@@ -337,11 +356,6 @@ class ModelContainer:
 
             model_dsys[dataset.name_ref] = dataset.model.copy()
 
-            if 'curvature' in dataset.models:
-                model_curv[dataset.name_ref] = self.ccv.model_curvature(curv_pams, dataset.x0)
-                """ Saving to dataset model in case it's required by GP computation"""
-                dataset.model += model_curv[dataset.name_ref]
-
             if 'kepler' in dataset.models:
                 if bool(self.pcv.dynamical):
                     """Dynamical models (with all the interacting planets included in the resulting RVs)"""
@@ -358,6 +372,15 @@ class ModelContainer:
                             self.keplerian_model.compute(self.pcv, theta, dataset, pl_name)
                         model_orbs[dataset.name_ref] += model_plan[dataset.name_ref][pl_name]
                         dataset.model += model_plan[dataset.name_ref][pl_name]
+
+            if 'curvature' in dataset.models:
+                model_curv[dataset.name_ref] = self.ccv.model_curvature(curv_pams, dataset.x0)
+                """ Saving to dataset model in case it's required by GP computation"""
+                dataset.model += model_curv[dataset.name_ref]
+
+            if 'correlation' in dataset.models:
+                model_actv[dataset.name_ref] += self.cov.compute(self, theta, dataset)
+                dataset.model += model_actv[dataset.name_ref]
 
             if 'sinusoids' in dataset.models:
                 model_actv[dataset.name_ref] += self.scv.compute(self, theta, dataset)

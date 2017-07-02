@@ -1,5 +1,6 @@
 from common import *
 
+
 class CurvatureCommonVariables:
     """Class to define the curvature of the dataset
     The zero-point of the curvature is always zero, since this parameter is already defined
@@ -16,7 +17,6 @@ class CurvatureCommonVariables:
         self.prior_kind = {}
         self.prior_pams = {}
 
-        self.fix_list = {}
         self.fixed = []
         self.nfix = 0
         self.list_pams = {}
