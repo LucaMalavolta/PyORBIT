@@ -103,7 +103,7 @@ yaml_parser(file_conf, mc)
 
 if sampler in sample_keyword['polychord'] and \
         mc.polychord_parameters['shutdown_jitter']:
-    for dataset in mc.dataset_list:
+    for dataset in mc.dataset_dict.itervalues():
         dataset.shutdown_jitter()
 
 mc.initialize_model()
@@ -113,7 +113,6 @@ if bool(mc.pcv.dynamical):
 
 M_star1 = mc.star_mass[0]
 M_star1_err = mc.star_mass[1]
-
 
 if sampler in sample_keyword['emcee']:
 
@@ -327,7 +326,7 @@ plot_dir = dir_output + '/files_plot/'
 
 if not os.path.exists(plot_dir):
     os.makedirs(plot_dir)
-for dataset in mc.dataset_list:
+for dataset in mc.dataset_dict.itervalues():
     if dataset.kind == 'RV':
         boundaries[0] = min(boundaries[0], dataset.x[0])
         boundaries[1] = max(boundaries[1], dataset.x[-1])
@@ -545,16 +544,16 @@ if 'kepler' in mc.model_list:
             ax3.plot(x_phase, model_plan['pha'][planet_name], c='g')
 
             color_count = 0
-            for dataset in mc.dataset_list:
+            for dataset_name, dataset in mc.dataset_dict.items():
                 if dataset.kind == 'RV':
                     col_sel = color_list[color_count % 7]
                     color_count += 1
                     p_pha = (dataset.x0 / sample_med[convert_out['P'], 0]) % 1
-                    y_det = dataset.y - model_dsys[dataset.name_ref] - model_curv[dataset.name_ref]
-                    y_res = dataset.y - model_dsys[dataset.name_ref] - \
-                            model_orbs[dataset.name_ref] - model_curv[dataset.name_ref] -\
-                            model_actv[dataset.name_ref]
-                    y_1pl = y_res + model_plan[dataset.name_ref][planet_name]
+                    y_det = dataset.y - model_dsys[dataset_name] - model_curv[dataset_name]
+                    y_res = dataset.y - model_dsys[dataset_name] - \
+                            model_orbs[dataset_name] - model_curv[dataset_name] -\
+                            model_actv[dataset_name]
+                    y_1pl = y_res + model_plan[dataset_name][planet_name]
 
                     ax1.errorbar(dataset.x, y_1pl, yerr=dataset.e, fmt=col_sel + '.', zorder=2)
                     ax2.errorbar(dataset.x, y_res, yerr=dataset.e, fmt=col_sel + '.', zorder=2)
@@ -562,7 +561,7 @@ if 'kepler' in mc.model_list:
                     ax3.errorbar(p_pha, y_1pl, yerr=dataset.e, fmt=col_sel + '.', zorder=2)
                     ax4.errorbar(p_pha, y_res, yerr=dataset.e, fmt=col_sel + '.', zorder=2)
 
-                    fileout = open(plot_dir + planet_name + '_' + dataset.name_ref + '_kep.dat', 'w')
+                    fileout = open(plot_dir + planet_name + '_' + dataset_name + '_kep.dat', 'w')
                     fileout.write('descriptor BJD pha RV,+- RVdet,+- RVpla,+- RVres,+- RVmod,+- \n')
                     for ii in xrange(0, dataset.n):
                         fileout.write('{0:14f} {1:14f} {2:14f} {3:14f} {4:14f} {5:14f} {6:14f} {7:14f} '
@@ -571,7 +570,7 @@ if 'kepler' in mc.model_list:
                                                   dataset.y[ii], dataset.e[ii],
                                                   y_det[ii], dataset.e[ii], y_1pl[ii], dataset.e[ii],
                                                   y_res[ii], dataset.e[ii],
-                                                  model_orbs[dataset.name_ref][ii], dataset.e[ii]))
+                                                  model_orbs[dataset_name][ii], dataset.e[ii]))
                     fileout.close()
 
             f1.subplots_adjust(hspace=0)
@@ -912,13 +911,13 @@ if 'gaussian' in mc.model_list:
             sample_plan_transpose.append(var_phys)
             sel_label.append(name)
 
-    for dataset in mc.dataset_list:
+    for dataset_name, dataset in mc.dataset_dict.items():
         if 'gaussian' not in dataset.models:
             break
         for name in mc.gcv.list_pams_dataset:
             n_vars += 1
-            var = flatchain[:, mc.gcv.var_list[dataset.name_ref][name]]
-            var_phys = mc.gcv.variables[dataset.name_ref][name](var, var, xrange(0, nsample))
+            var = flatchain[:, mc.gcv.var_list[dataset_name][name]]
+            var_phys = mc.gcv.variables[dataset_name][name](var, var, xrange(0, nsample))
             sample_plan_transpose.append(var_phys)
             sel_label.append('$'+ dataset.name + '$ ' + name)
 

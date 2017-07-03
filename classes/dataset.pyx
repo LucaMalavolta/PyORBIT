@@ -84,9 +84,10 @@ class Dataset:
 
         self.mask = {}
         for var in self.list_pams:
-                self.mask[var] = np.zeros([self.n, self.n_sys[var]], dtype=bool)
-                for ii in xrange(0, self.n_sys[var]):
-                    self.mask[var][(abs(self.sys[var] - ii) < 0.1), ii] = True
+            self.mask[var] = np.zeros([self.n, self.n_sys[var]], dtype=bool)
+            if ('none' in self.model) or ('None' in self.model): continue
+            for ii in xrange(0, self.n_sys[var]):
+                self.mask[var][(abs(self.sys[var] - ii) < 0.1), ii] = True
 
         self.model = np.zeros(self.n, dtype=np.double)
         self.jitter = np.zeros(self.n, dtype=np.double)

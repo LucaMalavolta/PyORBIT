@@ -163,7 +163,7 @@ class GaussianProcessCommonVariables:
         # 2 steps:
         #   1) theta parameters must be converted in physical units (e.g. from logarithmic to linear space)
         #   2) physical values must be converted to {\tt george} input parameters
-        gp_pams = self.convert_val2gp(self.convert(theta, dataset_name))
+        gp_pams = self.convert_val2gp(self.convert(theta, dataset.name_ref))
         # gp_pams['ln_P] = ln_theta = ln_Period -> ExpSine2Kernel(gamma, ln_period)
         # gp_pams['metric'] = metric = r^2 = lambda**2  -> ExpSquaredKernel(metric=r^2)
         # gp_pams['gamma'] = Gamma =  1/ (2 omega**2) -> ExpSine2Kernel(gamma, ln_period)

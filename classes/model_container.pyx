@@ -82,7 +82,7 @@ class ModelContainer:
 
     def model_setup(self):
         self.n_datasets = len(self.dataset_dict)
-        for dataset in self.dataset_dict.itervals():
+        for dataset in self.dataset_dict.itervalues():
 
             if 'sinusoids' in dataset.models:
                 self.scv.model_setup(dataset)
@@ -102,7 +102,7 @@ class ModelContainer:
         self.create_bounds()
 
         self.ndata = 0
-        for dataset in self.dataset_dict.itervals():
+        for dataset in self.dataset_dict.itervalues():
             if 'none' in dataset.model: continue
             self.ndata += dataset.n
         self.ndof = self.ndata - self.ndim
@@ -117,7 +117,7 @@ class ModelContainer:
 
         self.ndim = 0
 
-        for dataset in self.dataset_dict.itervals():
+        for dataset in self.dataset_dict.itervalues():
             dataset.define_bounds(self)
 
         if 'kepler' in self.model_list:
@@ -145,7 +145,7 @@ class ModelContainer:
 
         self.pam_names = self.ndim * ['']
 
-        for dataset in self.dataset_dict.itervals():
+        for dataset in self.dataset_dict.itervalues():
             dataset.initialize(self)
 
         if 'kepler' in self.model_list:
@@ -167,7 +167,7 @@ class ModelContainer:
 
         self.starting_point = np.average(self.bounds, axis=1)
 
-        for dataset in self.dataset_dict.itervals():
+        for dataset in self.dataset_dict.itervalues():
             dataset.starting_point(self)
 
         if 'kepler' in self.model_list:
@@ -283,7 +283,7 @@ class ModelContainer:
         # * Unfold and print out the output from theta
         # * give back a parameter name associated to each value in the result array
 
-        for dataset in self.dataset_dict.itervals():
+        for dataset in self.dataset_dict.itervalues():
             dataset.print_vars(self, theta)
 
         if 'kepler' in self.model_list:
@@ -427,7 +427,7 @@ class ModelContainer:
         if 'sinusoids' in self.model_list:
             for jj in range(0, self.scv.n_seasons):
                 ind_list.extend(self.variable_list[self.scv.season_name[jj] + '_pha'])
-            for dataset in self.dataset_dict.itervals():
+            for dataset in self.dataset_dict.itervalues():
                 for jj in range(0, self.scv.n_seasons):
                     if dataset.season_flag[jj]:
                         # ind_list.extend(self.variable_list[dataset.planet_name][self.scv.season_name[jj] + '_amp'])
