@@ -9,7 +9,8 @@ from compute_RV import ComputeKeplerian, ComputeDynamical
 
 class ModelContainer:
     def __init__(self):
-        self.dataset_list = []
+        self.dataset_dict = {}
+        self.dataset_index = {}
         self.n_datasets = 0
 
         self.t0_list = {}
@@ -80,8 +81,8 @@ class ModelContainer:
         self.AUday2ms = self.AU_km / self.seconds_in_day * 1000.0
 
     def model_setup(self):
-        self.n_datasets = np.size(self.dataset_list)
-        for dataset in self.dataset_list:
+        self.n_datasets = len(self.dataset_dict)
+        for dataset in self.dataset_dict.itervals():
 
             if 'sinusoids' in dataset.models:
                 self.scv.model_setup(dataset)
@@ -101,7 +102,8 @@ class ModelContainer:
         self.create_bounds()
 
         self.ndata = 0
-        for dataset in self.dataset_list:
+        for dataset in self.dataset_dict.itervals():
+            if 'none' in dataset.model: continue
             self.ndata += dataset.n
         self.ndof = self.ndata - self.ndim
 
@@ -115,7 +117,7 @@ class ModelContainer:
 
         self.ndim = 0
 
-        for dataset in self.dataset_list:
+        for dataset in self.dataset_dict.itervals():
             dataset.define_bounds(self)
 
         if 'kepler' in self.model_list:
@@ -143,7 +145,7 @@ class ModelContainer:
 
         self.pam_names = self.ndim * ['']
 
-        for dataset in self.dataset_list:
+        for dataset in self.dataset_dict.itervals():
             dataset.initialize(self)
 
         if 'kepler' in self.model_list:
@@ -165,7 +167,7 @@ class ModelContainer:
 
         self.starting_point = np.average(self.bounds, axis=1)
 
-        for dataset in self.dataset_list:
+        for dataset in self.dataset_dict.itervals():
             dataset.starting_point(self)
 
         if 'kepler' in self.model_list:
@@ -234,16 +236,16 @@ class ModelContainer:
         if 'gaussian' in self.model_list:
             logchi2_out += self.gcv.return_priors(theta)
 
-        for dataset in self.dataset_list:
+        for dataset_name, dataset in self.dataset_dict.items():
             dataset.model_reset()
-            dataset.model_offset(theta[self.variable_list[dataset.name_ref]['offset']])
-            dataset.model_jitter(theta[self.variable_list[dataset.name_ref]['jitter']])
-            dataset.model_linear(theta[self.variable_list[dataset.name_ref]['linear']])
+            dataset.model_offset(theta[self.variable_list[dataset_name]['offset']])
+            dataset.model_jitter(theta[self.variable_list[dataset_name]['jitter']])
+            dataset.model_linear(theta[self.variable_list[dataset_name]['linear']])
 
             if 'kepler' in dataset.models:
                 if bool(self.pcv.dynamical):
                     """ we have dynamical computations, so we include them in the model"""
-                    dataset.model += dyn_output[dataset.name_ref]
+                    dataset.model += dyn_output[dataset_name]
                 for pl_name in self.pcv.planet_name:
                     """ we check if there is any planet which model has been obtained by assuming non-intercating
                     keplerians, and then we compute the expected RVs"""
@@ -263,13 +265,13 @@ class ModelContainer:
             if 'Tcent' in dataset.models:
                 if dataset.planet_name in self.pcv.dynamical:
                     """ we have dynamical computations, so we include them in the model"""
-                    dataset.model += dyn_output[dataset.name_ref]
+                    dataset.model += dyn_output[dataset_name]
                 else:
                     dataset.model += dataset.compute(self, theta)
 
             # Gaussian Process check MUST be the last one or the program will fail
             if 'gaussian' in dataset.models:
-                logchi2_out += self.gcv.return_priors(theta, dataset.name_ref)
+                logchi2_out += self.gcv.return_priors(theta, dataset_name)
                 logchi2_out += self.gcv.lnlk_compute(theta, dataset)
             else:
                 logchi2_out += dataset.model_logchi2()
@@ -281,7 +283,7 @@ class ModelContainer:
         # * Unfold and print out the output from theta
         # * give back a parameter name associated to each value in the result array
 
-        for dataset in self.dataset_list:
+        for dataset in self.dataset_dict.itervals():
             dataset.print_vars(self, theta)
 
         if 'kepler' in self.model_list:
@@ -342,52 +344,52 @@ class ModelContainer:
             curv_pams = self.ccv.convert(theta)
             model_curv['BJD'] = self.ccv.model_curvature(curv_pams, x_range - self.Tref)
 
-        for dataset in self.dataset_list:
+        for dataset_name, dataset in self.dataset_dict.items():
 
-            model_actv[dataset.name_ref] = np.zeros(dataset.n)
-            model_orbs[dataset.name_ref] = np.zeros(dataset.n)
-            model_curv[dataset.name_ref] = np.zeros(dataset.n)
-            model_plan[dataset.name_ref] = {}
+            model_actv[dataset_name] = np.zeros(dataset.n)
+            model_orbs[dataset_name] = np.zeros(dataset.n)
+            model_curv[dataset_name] = np.zeros(dataset.n)
+            model_plan[dataset_name] = {}
 
             dataset.model_reset()
-            dataset.model_jitter(theta[self.variable_list[dataset.name_ref]['jitter']])
-            dataset.model_offset(theta[self.variable_list[dataset.name_ref]['offset']])
-            dataset.model_linear(theta[self.variable_list[dataset.name_ref]['linear']])
+            dataset.model_jitter(theta[self.variable_list[dataset_name]['jitter']])
+            dataset.model_offset(theta[self.variable_list[dataset_name]['offset']])
+            dataset.model_linear(theta[self.variable_list[dataset_name]['linear']])
 
-            model_dsys[dataset.name_ref] = dataset.model.copy()
+            model_dsys[dataset_name] = dataset.model.copy()
 
             if 'kepler' in dataset.models:
                 if bool(self.pcv.dynamical):
                     """Dynamical models (with all the interacting planets included in the resulting RVs)"""
-                    model_orbs[dataset.name_ref] += dyn_output[dataset.name_ref]
-                    dataset.model += model_orbs[dataset.name_ref]
+                    model_orbs[dataset_name] += dyn_output[dataset_name]
+                    dataset.model += model_orbs[dataset_name]
 
                 for pl_name in self.pcv.planet_name:
                     dyn_flag = (pl_name in self.pcv.dynamical)
                     if dyn_flag:
                         dict_pams = self.pcv.kepler_from_dynamical(self, theta, pl_name)
-                        model_plan[dataset.name_ref][pl_name] = self.keplerian_model.model(dict_pams, dataset.x0)
+                        model_plan[dataset_name][pl_name] = self.keplerian_model.model(dict_pams, dataset.x0)
                     else:
-                        model_plan[dataset.name_ref][pl_name] = \
+                        model_plan[dataset_name][pl_name] = \
                             self.keplerian_model.compute(self.pcv, theta, dataset, pl_name)
-                        model_orbs[dataset.name_ref] += model_plan[dataset.name_ref][pl_name]
-                        dataset.model += model_plan[dataset.name_ref][pl_name]
+                        model_orbs[dataset_name] += model_plan[dataset_name][pl_name]
+                        dataset.model += model_plan[dataset_name][pl_name]
 
             if 'curvature' in dataset.models:
-                model_curv[dataset.name_ref] = self.ccv.model_curvature(curv_pams, dataset.x0)
+                model_curv[dataset_name] = self.ccv.model_curvature(curv_pams, dataset.x0)
                 """ Saving to dataset model in case it's required by GP computation"""
-                dataset.model += model_curv[dataset.name_ref]
+                dataset.model += model_curv[dataset_name]
 
             if 'correlation' in dataset.models:
-                model_actv[dataset.name_ref] += self.cov.compute(self, theta, dataset)
-                dataset.model += model_actv[dataset.name_ref]
+                model_actv[dataset_name] += self.cov.compute(self, theta, dataset)
+                dataset.model += model_actv[dataset_name]
 
             if 'sinusoids' in dataset.models:
-                model_actv[dataset.name_ref] += self.scv.compute(self, theta, dataset)
-                dataset.model += model_actv[dataset.name_ref]
+                model_actv[dataset_name] += self.scv.compute(self, theta, dataset)
+                dataset.model += model_actv[dataset_name]
 
             if 'gaussian' in dataset.models:
-                model_actv[dataset.name_ref] = self.gcv.sample_compute(theta, dataset)
+                model_actv[dataset_name] = self.gcv.sample_compute(theta, dataset)
 
         return model_dsys, model_plan, model_orbs, model_actv, model_curv
 
@@ -425,7 +427,7 @@ class ModelContainer:
         if 'sinusoids' in self.model_list:
             for jj in range(0, self.scv.n_seasons):
                 ind_list.extend(self.variable_list[self.scv.season_name[jj] + '_pha'])
-            for dataset in self.dataset_list:
+            for dataset in self.dataset_dict.itervals():
                 for jj in range(0, self.scv.n_seasons):
                     if dataset.season_flag[jj]:
                         # ind_list.extend(self.variable_list[dataset.planet_name][self.scv.season_name[jj] + '_amp'])

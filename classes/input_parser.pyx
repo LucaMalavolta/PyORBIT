@@ -9,35 +9,41 @@ def yaml_parser(file_conf, mc):
     conf = config_in['Inputs']
     for counter in conf:
         print conf[counter]['Kind'], conf[counter]['File'], conf[counter]['Models']
+        dataset_name = conf[counter]['File']
 
+        """ The keywird in dataset_dict and the name assigned internally to the databes must be the same
+            or everything will fall apart """
         if 'Tcent' in conf[counter]['Kind']:
             planet_name = 'Planet_' + repr(conf[counter]['Planet'])
-            mc.dataset_list.append(TransitCentralTimes(counter, conf[counter]['Kind'], conf[counter]['File'], conf[counter]['Models']))
-            mc.dataset_list[counter].set_planet(planet_name)
-            mc.t0_list[planet_name] = mc.dataset_list[counter]
+            mc.dataset_dict[dataset_name] = \
+                TransitCentralTimes(counter, conf[counter]['Kind'], dataset_name, conf[counter]['Models'])
+            mc.dataset_index[counter] = dataset_name
+            mc.dataset_dict[dataset_name].set_planet(planet_name)
+            mc.t0_list[planet_name] = mc.dataset_dict[dataset_name]
         else:
-            mc.dataset_list.append(Dataset(counter, conf[counter]['Kind'], conf[counter]['File'], conf[counter]['Models']))
+            mc.dataset_dict[dataset_name] = \
+                Dataset(counter, conf[counter]['Kind'], dataset_name, conf[counter]['Models'])
 
         if counter == 0:
-            mc.Tref = mc.dataset_list[0].Tref
+            mc.Tref = mc.dataset_dict[dataset_name].Tref
         else:
-            mc.dataset_list[counter].common_Tref(mc.Tref)
+            mc.dataset_dict[dataset_name].common_Tref(mc.Tref)
 
         if 'Name' in conf[counter]:
-            mc.dataset_list[counter].name = conf[counter]['Name']
+            mc.dataset_dict[dataset_name].name = conf[counter]['Name']
         else:
-            mc.dataset_list[counter].name = 'Unspecified'
+            mc.dataset_dict[dataset_name].name = 'Unspecified'
 
         if 'Boundaries' in conf[counter]:
             bound_conf = conf[counter]['Boundaries']
             for var in bound_conf:
-                mc.dataset_list[counter].bounds[var] = np.asarray(bound_conf[var], dtype=np.double)
+                mc.dataset_dict[dataset_name].bounds[var] = np.asarray(bound_conf[var], dtype=np.double)
 
         if 'Starts' in conf[counter]:
             mc.starting_point_flag = True
             starts_conf = conf[counter]['Starts']
             for var in starts_conf:
-                mc.dataset_list[counter].starts[var] = np.asarray(starts_conf[var], dtype=np.double)
+                mc.dataset_dict[dataset_name].starts[var] = np.asarray(starts_conf[var], dtype=np.double)
 
     mc.planet_name = config_in['Output']
 
@@ -83,14 +89,6 @@ def yaml_parser(file_conf, mc):
                 if planet_conf['Transit']:
                     mc.pcv.switch_on_transit(planet_name)
 
-            """
-            # Transit time file is now in the Input section
-            if 'Tcent' in planet_conf:
-                mc.dataset_list.append(TransitCentralTimes(planet_name, planet_conf['Tcent']))
-                mc.dataset_list[-1].common_Tref(mc.Tref)
-                mc.t0_list[planet_name] = mc.dataset_list[-1]
-            """
-
             if 'Inclination' in planet_conf:
                 mc.pcv.inclination[planet_name] = planet_conf['Inclination']
             if 'Radius' in planet_conf:
@@ -98,10 +96,11 @@ def yaml_parser(file_conf, mc):
 
     if 'Correlations' in config_in:
         conf = config_in['Correlations']
-        for name_ref in conf:
-            dataset_name = mc.dataset_list[name_ref].name_ref
+        for counter in conf:
+            dataset_name = mc.dataset_index[counter]
             mc.cov.add_dataset(dataset_name)
 
+            #### AAAAAA Fix this
             if 'Association' in conf[name_ref]:
                 mc.dataset_list[name_ref].associate_to_other_dataset(mc.dataset_list[conf[name_ref]['Association']])
 
@@ -152,7 +151,7 @@ def yaml_parser(file_conf, mc):
             if name_ref == 'Common':
                 dataset_name = 'Common'
             else:
-                dataset_name = mc.dataset_list[name_ref].name_ref
+                dataset_name = mc.dataset_index[name_ref]
             mc.gcv.add_dataset(dataset_name)
 
             if 'Boundaries' in conf[name_ref]:
@@ -207,8 +206,8 @@ def yaml_parser(file_conf, mc):
 
     if 'Tref' in config_in:
         mc.Tref = np.asarray(config_in['Tref'])
-        for dataset in mc.dataset_list:
-            dataset.common_Tref(mc.Tref)
+        for dataset_name in mc.dataset_dict:
+            mc.dataset_dict[dataset_name].common_Tref(mc.Tref)
 
     if 'pyDE' in config_in:
         conf = config_in['pyDE']

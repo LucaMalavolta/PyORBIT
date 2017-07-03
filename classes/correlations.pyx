@@ -26,7 +26,6 @@ class CorrelationsCommonVariables:
         self.default_bounds = np.asarray([-1000.0, 1000.0])
 
     def add_dataset(self, name_ref):
-        # planet_name : name of the dataset, otherwise 'common'
 
         self.bounds[name_ref] = {}
         self.starts[name_ref] = {}
@@ -63,6 +62,7 @@ class CorrelationsCommonVariables:
             Jitter must not be included in the analysis, but how about the offset? 
             Or maybe I should just leave the zero point of the polynomial fit free?
         """
+
 
 
     def define_bounds(self, mc):

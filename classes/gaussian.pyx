@@ -100,23 +100,23 @@ class GaussianProcessCommonVariables:
                 mc.variable_list['Common'][var] = mc.ndim
                 mc.ndim += 1
 
-        for dataset in mc.dataset_list:
+        for dataset_name, dataset in mc.dataset_dict.items():
             if 'gaussian' in dataset.models:
                 for var in self.list_pams_dataset:
-                    if var in self.fix_list[dataset.name_ref]:
-                        self.variables[dataset.name_ref][var] = get_fix_val
-                        self.var_list[dataset.name_ref][var] = self.nfix
-                        self.fixed.append(self.fix_list[dataset.name_ref][var])
+                    if var in self.fix_list[dataset_name]:
+                        self.variables[dataset_name][var] = get_fix_val
+                        self.var_list[dataset_name][var] = self.nfix
+                        self.fixed.append(self.fix_list[dataset_name][var])
                         self.nfix += 1
                     else:
                         if self.list_pams_dataset[var] == 'U':
-                            self.variables[dataset.name_ref][var] = get_var_val
-                            mc.bounds_list.append(self.bounds[dataset.name_ref][var])
+                            self.variables[dataset_name][var] = get_var_val
+                            mc.bounds_list.append(self.bounds[dataset_name][var])
                         if self.list_pams_dataset[var] == 'LU':
-                            self.variables[dataset.name_ref][var] = get_var_exp
-                            mc.bounds_list.append(np.log2(self.bounds[dataset.name_ref][var]))
-                        self.var_list[dataset.name_ref][var] = mc.ndim
-                        mc.variable_list[dataset.name_ref][var] = mc.ndim
+                            self.variables[dataset_name][var] = get_var_exp
+                            mc.bounds_list.append(np.log2(self.bounds[dataset_name][var]))
+                        self.var_list[dataset_name][var] = mc.ndim
+                        mc.variable_list[dataset_name][var] = mc.ndim
                         mc.ndim += 1
 
     def starting_point(self, mc):
@@ -128,14 +128,14 @@ class GaussianProcessCommonVariables:
                     start_converted = np.log2(self.starts['Common'][var])
                 mc.starting_point[mc.variable_list['Common'][var]] = start_converted
 
-        for dataset in mc.dataset_list:
-            if 'gaussian' in dataset.models and dataset.name_ref in self.starts:
-                    for var in self.starts[dataset.name_ref]:
+        for dataset_name, dataset in mc.dataset_dict.items():
+            if 'gaussian' in dataset.models and dataset_name in self.starts:
+                    for var in self.starts[dataset_name]:
                         if self.list_pams_dataset[var] == 'U':
-                            start_converted = self.starts[dataset.name_ref][var]
+                            start_converted = self.starts[dataset_name][var]
                         if self.list_pams_dataset[var] == 'LU':
-                            start_converted = np.log2(self.starts[dataset.name_ref][var])
-                        mc.starting_point[mc.variable_list[dataset.name_ref][var]] = start_converted
+                            start_converted = np.log2(self.starts[dataset_name][var])
+                        mc.starting_point[mc.variable_list[dataset_name][var]] = start_converted
 
     def convert(self, theta, d_name=None):
         dict_out = {}
@@ -163,7 +163,7 @@ class GaussianProcessCommonVariables:
         # 2 steps:
         #   1) theta parameters must be converted in physical units (e.g. from logarithmic to linear space)
         #   2) physical values must be converted to {\tt george} input parameters
-        gp_pams = self.convert_val2gp(self.convert(theta, dataset.name_ref))
+        gp_pams = self.convert_val2gp(self.convert(theta, dataset_name))
         # gp_pams['ln_P] = ln_theta = ln_Period -> ExpSine2Kernel(gamma, ln_period)
         # gp_pams['metric'] = metric = r^2 = lambda**2  -> ExpSquaredKernel(metric=r^2)
         # gp_pams['gamma'] = Gamma =  1/ (2 omega**2) -> ExpSine2Kernel(gamma, ln_period)
@@ -179,7 +179,7 @@ class GaussianProcessCommonVariables:
 
     def sample_compute(self, theta, dataset):
 
-        gp_pams = self.convert_val2gp(self.convert(theta, dataset.name_ref))
+        gp_pams = self.convert_val2gp(self.convert(theta, dataset_name))
 
         kernel = gp_pams['amp2'] * george.kernels.ExpSquaredKernel(metric=gp_pams['metric']) * \
                  george.kernels.ExpSine2Kernel(gamma=gp_pams['gamma'], ln_period=gp_pams['ln_P'])
@@ -196,10 +196,10 @@ class GaussianProcessCommonVariables:
             if name in mc.variable_list['Common']:
                 mc.pam_names[mc.variable_list['Common'][name]] = name
 
-        for dataset in mc.dataset_list:
+        for dataset_name in mc.dataset_dict.iterkeys():
             for name in self.list_pams_dataset:
-                if name in mc.variable_list[dataset.name_ref]:
-                    mc.pam_names[mc.variable_list[dataset.name_ref][name]] = name
+                if name in mc.variable_list[dataset_name]:
+                    mc.pam_names[mc.variable_list[dataset_name][name]] = name
 
     def print_vars(self, mc, theta):
 
@@ -209,11 +209,12 @@ class GaussianProcessCommonVariables:
                 print 'GaussianProcess ', name, var, self.var_list['Common'][name], '(', theta[
                         self.var_list['Common'][name]], ')'
 
-        for dataset in mc.dataset_list:
+        #for dataset in mc.dataset_dict.itervalues():
+        for dataset_name in mc.dataset_dict.iterkeys():
             for name in self.list_pams_dataset:
-                if name in mc.variable_list[dataset.name_ref]:
-                    var = self.variables[dataset.name_ref][name](theta, self.fixed,
-                                                               self.var_list[dataset.name_ref][name])
-                    print 'GaussianProcess ', dataset.name_ref, name, var, '(', theta[
-                            self.var_list[dataset.name_ref][name]], ')'
+                if name in mc.variable_list[dataset_name]:
+                    var = self.variables[dataset_name][name](theta, self.fixed,
+                                                               self.var_list[dataset_name][name])
+                    print 'GaussianProcess ', dataset_name, name, var, '(', theta[
+                            self.var_list[dataset_name][name]], ')'
         print
