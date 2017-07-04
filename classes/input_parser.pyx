@@ -97,38 +97,89 @@ def yaml_parser(file_conf, mc):
 
     if 'Correlations' in config_in:
         conf = config_in['Correlations']
-        for counter in conf:
-            dataset_name = mc.dataset_index[counter]
-            mc.cov.add_dataset(dataset_name)
+        correlation_common = False
 
-            #### AAAAAA Fix this
-            if 'Association' in conf[dataset_name]:
-                mc.dataset_dict[dataset_name].associate_to_other_dataset(mc.dataset_dict[conf[dataset_name]['Association']])
+        """ When including the specific values for each dataset association, the existence of common variables must have
+            been already checked, just to avoid problems to those distracted users that include the Common block after 
+            the dataset-specific ones
+        """
+        for counter_ref in conf:
+            if counter_ref is 'Common':
+                correlation_common = True
 
-            if 'Order' in conf[counter]:
-                mc.cov.order[mc.dataset_dict[dataset_name].name_ref] = np.asarray(conf[counter]['Order'], dtype=np.int64)
+        for counter_ref in conf:
+            if counter_ref is 'Common':
+                continue
 
-            if 'Boundaries' in conf[counter]:
-                bound_conf = conf[counter]['Boundaries']
-                for var in bound_conf:
-                    mc.cov.bounds[dataset_name]['correlation_' + var] = np.asarray(bound_conf[var], dtype=np.double)
+            dataname_ref = mc.dataset_index[counter_ref]
+            mc.cov.add_dataset(dataname_ref)
+            #print ' --> ', conf[counter_ref]
+            for counter_asc in conf[counter_ref]:
+                dataname_asc = mc.dataset_index[counter_asc]
+                mc.cov.add_associated_dataset(mc, dataname_ref, dataname_asc)
 
-            if 'Fixed' in conf[counter]:
-                fixed_conf = conf[counter]['Fixed']
-                for var in fixed_conf:
-                    mc.cov.fix_list[dataset_name]['correlation_' + var] = np.asarray(fixed_conf[var], dtype=np.double)
+                """ Apply common settings (if present) before overriding them with the specific values (if provided)"""
+                if correlation_common:
+                    common_conf = conf[counter_ref]['Common']
+                    if 'Order' in common_conf:
+                        mc.cov.order[dataname_ref][dataname_asc] = \
+                            np.asarray(common_conf['Order'], dtype=np.int64)
 
-            if 'Priors' in conf[counter]:
-                prior_conf = conf[counter]['Priors']
-                for var in prior_conf:
-                    mc.cov.prior_kind[dataset_name]['correlation_' + var] = prior_conf[var][0]
-                    mc.cov.prior_pams[dataset_name]['correlation_' + var] = np.asarray(prior_conf[var][1:], dtype=np.double)
+                    if 'Boundaries' in common_conf:
+                        bound_conf = common_conf['Boundaries']
+                        for var in bound_conf:
+                            mc.cov.bounds[dataname_ref][dataname_asc]['correlation_' + var] = \
+                                np.asarray(bound_conf[var], dtype=np.double)
 
-            if 'Starts' in conf[counter]:
-                mc.starting_point_flag = True
-                starts_conf = conf[counter]['Starts']
-                for var in starts_conf:
-                    mc.cov.starts[dataset_name]['correlation_' + var] = np.asarray(starts_conf[var], dtype=np.double)
+                    if 'Fixed' in common_conf:
+                        fixed_conf = common_conf['Fixed']
+                        for var in fixed_conf:
+                            mc.cov.fix_list[dataname_ref][dataname_asc]['correlation_' + var] = \
+                                np.asarray(fixed_conf[var], dtype=np.double)
+
+                    if 'Priors' in common_conf:
+                        prior_conf = conf[counter]['Priors']
+                        for var in prior_conf:
+                            mc.cov.prior_kind[dataname_ref][dataname_asc]['correlation_' + var] = prior_conf[var][0]
+                            mc.cov.prior_pams[dataname_ref][dataname_asc]['correlation_' + var] = \
+                                np.asarray(prior_conf[var][1:], dtype=np.double)
+
+                    if 'Starts' in conf[counter]:
+                        mc.starting_point_flag = True
+                        starts_conf = common_conf['Starts']
+                        for var in starts_conf:
+                            mc.cov.starts[dataname_ref][dataname_asc]['correlation_' + var] = \
+                                np.asarray(starts_conf[var], dtype=np.double)
+
+                if 'Order' in conf[counter_ref][counter_asc]:
+                    mc.cov.order[dataname_ref][dataname_asc] = \
+                        np.asarray(conf[counter_ref][counter_asc]['Order'], dtype=np.int64)
+
+                if 'Boundaries' in conf[counter_ref][counter_asc]:
+                    bound_conf = conf[counter_ref][counter_asc]['Boundaries']
+                    for var in bound_conf:
+                        mc.cov.bounds[dataname_ref][dataname_asc]['correlation_' + var] = \
+                            np.asarray(bound_conf[var], dtype=np.double)
+
+                if 'Fixed' in conf[counter_ref][counter_asc]:
+                    fixed_conf = conf[counter_ref][counter_asc]['Fixed']
+                    for var in fixed_conf:
+                        mc.cov.fix_list[dataname_ref][dataname_asc]['correlation_' + var] = \
+                            np.asarray(fixed_conf[var], dtype=np.double)
+
+                if 'Priors' in conf[counter_ref][counter_asc]:
+                    prior_conf = conf[counter]['Priors']
+                    for var in prior_conf:
+                        mc.cov.prior_kind[dataname_ref][dataname_asc]['correlation_' + var] = prior_conf[var][0]
+                        mc.cov.prior_pams[dataname_ref][dataname_asc]['correlation_' + var] = \
+                            np.asarray(prior_conf[var][1:], dtype=np.double)
+
+                if 'Starts' in conf[counter_ref]:
+                    mc.starting_point_flag = True
+                    starts_conf = conf[counter_ref][counter_asc]['Starts']
+                    for var in starts_conf:
+                        mc.cov.starts[dataname_ref][dataname_asc]['correlation_' + var] = \
+                            np.asarray(starts_conf[var], dtype=np.double)
 
     if 'Sinusoids' in config_in:
         conf = config_in['Sinusoids']

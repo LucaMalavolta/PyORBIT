@@ -25,7 +25,7 @@ class ModelContainer:
 
         # pyde/emcee variables
         self.emcee_parameters = {'nsave': 0, 'npop_mult': 2, 'thin': 1,
-                                 'MultiRun': None, 'MultiRun_iter':20 }
+                                 'MultiRun': None, 'MultiRun_iter': 20}
         self.pyde_parameters = {'ngen': 1000, 'npop_mult': 2}
 
         # Default values, taken from the PyPolyChord wrapper in PolyChord official distribution, V1.9
@@ -57,15 +57,15 @@ class ModelContainer:
         self.range = None
         self.ndim = 0
         self.pam_names = ''
-        self.star_mass = [1.0000,  0.1000]
-        self.star_radius = [1.0000,  0.1000]
+        self.star_mass = [1.0000, 0.1000]
+        self.star_radius = [1.0000, 0.1000]
 
         """
         Values have been taken from TRADES
         These variables will be renamed in the next release, right now I'm keeping the original names
         to avoid breaking the code
         """
-        self.G_grav = constants.Gsi # Gravitational Constants in SI system [m^3/kg/s^2]
+        self.G_grav = constants.Gsi  # Gravitational Constants in SI system [m^3/kg/s^2]
         self.G_ttvfast = constants.Giau  # G [AU^3/Msun/d^2]
         self.M_SJratio = constants.Msjup
         self.M_SEratio = constants.Msear
@@ -103,7 +103,8 @@ class ModelContainer:
 
         self.ndata = 0
         for dataset in self.dataset_dict.itervalues():
-            if 'none' in dataset.model: continue
+            if 'none' in dataset.models or 'None' in dataset.models:
+                continue
             self.ndata += dataset.n
         self.ndof = self.ndata - self.ndim
 
@@ -136,7 +137,7 @@ class ModelContainer:
             self.gcv.define_bounds(self)
 
         self.bounds = np.asarray(self.bounds_list)
-        self.range = self.bounds[:, 1]-self.bounds[:, 0]
+        self.range = self.bounds[:, 1] - self.bounds[:, 0]
 
     def initialize(self):
         # Function with two goals:
@@ -203,8 +204,8 @@ class ModelContainer:
 
         """ Step 4 check ofr overlapping periods (within 5% arbitrarily chosen)"""
         for i_n, i_v in enumerate(period_storage):
-            if i_n == len(period_storage)-1: break
-            if np.amin(np.abs(period_storage[i_n+1:] - i_v))/i_v < 0.05 :
+            if i_n == len(period_storage) - 1: break
+            if np.amin(np.abs(period_storage[i_n + 1:] - i_v)) / i_v < 0.05:
                 return False
 
         return True
@@ -212,7 +213,7 @@ class ModelContainer:
     def __call__(self, theta):
         if not self.check_bounds(theta):
             return -np.inf
-        logchi2_out = 2.*self.ndof*np.log(2*np.pi)
+        logchi2_out = 2. * self.ndof * np.log(2 * np.pi)
 
         if 'kepler' in self.model_list:
             for pl_name in self.pcv.planet_name:
@@ -310,7 +311,7 @@ class ModelContainer:
         model_dsys = {}
         model_curv = {}
 
-        model_orbs = {'BJD': x_range * 0.0, 'pha':x_phase * 0.0}
+        model_orbs = {'BJD': x_range * 0.0, 'pha': x_phase * 0.0}
         model_curv['BJD'] = x_range * 0.0
         model_curv['pha'] = x_phase * 0.0
         model_plan['BJD'] = {}
@@ -320,7 +321,7 @@ class ModelContainer:
             """Check if the dynamical option has been activated: full RV curve will be computed using
             the dynamical integrator"""
             dyn_output = self.dynamical_model.compute(self, self.pcv, theta)
-            dyn_output_fullorbit = self.dynamical_model.compute(self, self.pcv, theta, full_orbit=(x_range-self.Tref))
+            dyn_output_fullorbit = self.dynamical_model.compute(self, self.pcv, theta, full_orbit=(x_range - self.Tref))
             model_orbs['BJD'] += dyn_output_fullorbit['full_orbit']
             print 'WARNING: phase plot generated using non-interacting model!!!'
             print model_orbs['BJD'][:10]
@@ -381,7 +382,7 @@ class ModelContainer:
                 dataset.model += model_curv[dataset_name]
 
             if 'correlation' in dataset.models:
-                model_actv[dataset_name] += self.cov.compute(self, theta, dataset)
+                model_actv[dataset_name] += self.cov.compute(theta, dataset)
                 dataset.model += model_actv[dataset_name]
 
             if 'sinusoids' in dataset.models:
@@ -468,7 +469,7 @@ class ModelContainerPolyChord(ModelContainer):
 
 class ModelContainerMultiNest(ModelContainer):
     def multinest_priors(self, cube, ndim, nparams):
-        #cube[:] = (self.bounds[:, 1] - self.bounds[:, 0]) * cube[:] + self.bounds[:, 0]
+        # cube[:] = (self.bounds[:, 1] - self.bounds[:, 0]) * cube[:] + self.bounds[:, 0]
         for i in xrange(0, ndim):
             cube[i] = (self.bounds[i, 1] - self.bounds[i, 0]) * cube[i] + self.bounds[i, 0]
 
@@ -497,13 +498,13 @@ class ModelContainerDnest4(ModelContainer):
         logH = 0.0
         which = np.random.randint(np.size(params))
 
-        logH -= -0.5*(params[which]/self.range[which])**2
-        params_mod = params[which] + self.range[which]*dnest4.randh()
+        logH -= -0.5 * (params[which] / self.range[which]) ** 2
+        params_mod = params[which] + self.range[which] * dnest4.randh()
         params[which] = dnest4.wrap(params_mod, self.bounds[which, 0], self.bounds[which, 1])
 
-        logH += -0.5*(params[which]/self.range[which])**2
+        logH += -0.5 * (params[which] / self.range[which]) ** 2
 
-        #if which == 0:
+        # if which == 0:
         #    print which,  params[0], np.exp2(params[0])
 
         return logH

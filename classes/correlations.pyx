@@ -76,7 +76,7 @@ class CorrelationsCommonVariables:
 
         for i_date, v_date in enumerate(mc.dataset_dict[name_asc].x):
             match = np.where(np.abs(v_date-mc.dataset_dict[name_ref].x) < threshold)[0]
-            self.x_vals[name_ref][name_asc][match] = mc.dataset_dict[name_asc].x[i_date]
+            self.x_vals[name_ref][name_asc][match] = mc.dataset_dict[name_asc].y[i_date]
             self.x_mask[name_ref][name_asc][match] = True
 
     def define_bounds(self, mc):
@@ -84,6 +84,8 @@ class CorrelationsCommonVariables:
 
         for name_ref in self.list_pams:
             for name_asc in self.list_pams[name_ref]:
+                mc.variable_list[name_ref][name_asc] = {}
+
                 for n_ord in xrange(0, self.order[name_ref][name_asc] + 1):
                     var = 'correlation_' + repr(n_ord)
                     self.order_ind[name_ref][name_asc][var] = n_ord

@@ -179,7 +179,7 @@ class GaussianProcessCommonVariables:
 
     def sample_compute(self, theta, dataset):
 
-        gp_pams = self.convert_val2gp(self.convert(theta, dataset_name))
+        gp_pams = self.convert_val2gp(self.convert(theta, dataset.name_ref))
 
         kernel = gp_pams['amp2'] * george.kernels.ExpSquaredKernel(metric=gp_pams['metric']) * \
                  george.kernels.ExpSine2Kernel(gamma=gp_pams['gamma'], ln_period=gp_pams['ln_P'])
