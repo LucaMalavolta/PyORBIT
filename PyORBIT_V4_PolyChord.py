@@ -31,7 +31,7 @@ mc = ModelContainerPolyChord()
 yaml_parser(file_conf, mc)
 
 if mc.polychord_parameters['shutdown_jitter']:
-    for dataset_name in mc.dataset_dict.iterkeys():
+    for dataset in mc.dataset_dict.itervalues():
         dataset.shutdown_jitter()
 
 mc.initialize_model()
