@@ -14,6 +14,7 @@ import sys
 mpl.use('Agg')
 from matplotlib import pyplot as plt
 import corner
+import pandas
 sys.path.append('/Users/malavolta/Astro/CODE/trades/pytrades')
 import constants
 
@@ -819,6 +820,11 @@ if 'kepler' in mc.model_list:
         fig1 = plt.figure(1, figsize=(12, 12))
         fig2 = plt.figure(2, figsize=(12, 12))
 
+        """ Vsriable for period-only corner plot """
+        scatter_period = np.zeros([nsample,mc.pcv.n_planets], dtype=np.double)
+        scatter_label = []
+        nplanet_temp = 0
+
         for planet_name in mc.pcv.planet_name:
 
             dynamical_flag = (planet_name in mc.pcv.dynamical)
@@ -845,6 +851,11 @@ if 'kepler' in mc.model_list:
             if i_color == np.size(color_list):
                 i_color = 0
 
+            scatter_period[:, nplanet_temp] = sample_P[:]
+            scatter_label.extend('Period_'+repr(nplanet_temp))
+            nplanet_temp += 1
+
+
         plt.figure(0)
         #plt.xlim(0., 2000.)
         plt.xlabel('P [d]')
@@ -865,6 +876,15 @@ if 'kepler' in mc.model_list:
         plt.draw()
         plt.savefig(dir_output + 'PolyScatter_P_e.pdf', bbox_inches='tight', dpi=300)
         plt.close(fig2)
+
+
+        fig0 = plt.figure(0, figsize=(12, 12))
+        plt.figure(0)
+        df = pandas.DataFrame(scatter_period, scatter_label)
+        pandas.plotting.scatter_matrix(df, alpha=0.5, diagonal=None)
+        plt.savefig(dir_output + 'PolyScatter_P_P.pdf', bbox_inches='tight', dpi=300)
+        plt.close(fig0)
+
 
     if args.forecast is not None:
         y_flg = (flatlnprob[:] > lnprob_med[0] - lnprob_med[1]) # & (flatlnprob[:] < lnprob_med[0] + lnprob_med[2])
