@@ -72,11 +72,11 @@ class ComputeDynamical:
         """ Putting all the RV epochs in the same array, flagging in the temporary buffer
             the stored values according to their dataset of origin
         """
-        for dataset in mc.dataset_list:
+        for dataset_name, dataset in mc.dataset_dict.items():
             if dataset.kind == 'RV':
                 int_buffer['rv_times'].extend(dataset.x.tolist())
                 int_buffer['rv_ref'].extend(dataset.x * 0 + dataset_rv)
-                int_buffer['key_ref'][dataset.name_ref] = dataset_rv
+                int_buffer['key_ref'][dataset_name] = dataset_rv
                 dataset_rv += 1
             elif dataset.kind == 'Tcent':
                 int_buffer['t0_times'].extend(dataset.x.tolist())
@@ -84,10 +84,10 @@ class ComputeDynamical:
         """ Creating the flag array after all the RV epochs have been mixed
         """
         self.dynamical_set['data'] = {'selection': {}}
-        for dataset in mc.dataset_list:
+        for dataset_name, dataset in mc.dataset_dict.items():
             if dataset.kind == 'RV':
-                self.dynamical_set['data']['selection'][dataset.name_ref] = \
-                    (np.asarray(int_buffer['rv_ref']) == int_buffer['key_ref'][dataset.name_ref])
+                self.dynamical_set['data']['selection'][dataset_name] = \
+                    (np.asarray(int_buffer['rv_ref']) == int_buffer['key_ref'][dataset_name])
 
         self.dynamical_set['data']['rv_times'] = np.float64(int_buffer['rv_times'])
 
@@ -280,14 +280,14 @@ class ComputeDynamical:
         #print 'T0_sim: ', t0_sim
         #print 'RV_sim: ', rv_sim
         #t0_sim -= mc.Tref
-        for dataset in mc.dataset_list:
+        for dataset_name, dataset in mc.dataset_dict.items():
             if dataset.kind == 'RV' and full_orbit is None:
-                output[dataset.name_ref] = rv_sim[self.dynamical_set['data']['selection'][dataset.name_ref]]
+                output[dataset_name] = rv_sim[self.dynamical_set['data']['selection'][dataset_name]]
                 # print 'RV out', output[dataset.name_ref]
             elif dataset.kind == 'Tcent' and dataset.planet_name in pcv.dynamical:
                 n_plan = self.dynamical_set['data']['plan_ref'][dataset.planet_name]
                 #print ' T0_sim selected: ', t0_sim[:self.dynamical_set['data']['t0_tot'][n_plan], n_plan]
-                output[dataset.name_ref] = t0_sim[:self.dynamical_set['data']['t0_tot'][n_plan], n_plan]
+                output[dataset_name] = t0_sim[:self.dynamical_set['data']['t0_tot'][n_plan], n_plan]
         if full_orbit is not None:
             output['full_orbit'] = rv_sim
 
@@ -301,11 +301,11 @@ class ComputeDynamical:
         dataset_rv = 0
         int_buffer = dict(rv_times=[], t0_times=[], rv_ref=[], t0_ref=[], key_ref={})
 
-        for dataset in mc.dataset_list:
+        for dataset_name, dataset in mc.dataset_dict.items():
             if dataset.kind == 'RV':
                 int_buffer['rv_times'].extend(dataset.x0.tolist())
                 int_buffer['rv_ref'].extend(dataset.x0 * 0 + dataset_rv)
-                int_buffer['key_ref'][dataset.name_ref] = dataset_rv
+                int_buffer['key_ref'][dataset_name] = dataset_rv
                 dataset_rv += 1
             elif dataset.kind == 'Tcent':
                 int_buffer['t0_times'].extend(dataset.x0.tolist())
@@ -313,10 +313,10 @@ class ComputeDynamical:
         if np.size(int_buffer['t0_times']) == 0:
             int_buffer['t0_times'] = int_buffer['rv_times']
 
-        for dataset in mc.dataset_list:
+        for dataset_name, dataset in mc.dataset_dict.items():
             if dataset.kind == 'RV':
-                self.dynamical_set['data_selection'][dataset.name_ref] = \
-                    (np.asarray(int_buffer['rv_ref']) == int_buffer['key_ref'][dataset.name_ref])
+                self.dynamical_set['data_selection'][dataset_name] = \
+                    (np.asarray(int_buffer['rv_ref']) == int_buffer['key_ref'][dataset_name])
 
         self.dynamical_set['rv_times'] = int_buffer['rv_times']
         self.dynamical_set['len_rv'] = np.size(self.dynamical_set['rv_times'])
@@ -401,9 +401,9 @@ class ComputeDynamical:
         # print 'Full orbit flag: ', full_orbit
         # print positions[:10,:]
 
-        for dataset in mc.dataset_list:
+        for dataset_name, dataset in mc.dataset_dict.items():
             if dataset.kind == 'RV' and full_orbit is None:
-                output[dataset.name_ref] = rv_meas[self.dynamical_set['data_selection'][dataset.name_ref]]
+                output[dataset_name] = rv_meas[self.dynamical_set['data_selection'][dataset_name]]
 
             elif dataset.kind == 'Tcent':
                 t0_sel = (positions[0][:] == plan_ref[dataset.planet_name])
@@ -419,11 +419,11 @@ class ComputeDynamical:
                 # print ref_idf,  np.sum(t0_sel), len(t0_mod), t0_mod
 
                 if np.sum(t0_sel) > np.max(dataset.n_transit) + ref_idf:
-                    output[dataset.name_ref] = t0_mod[dataset.n_transit + ref_idf]
+                    output[dataset_name] = t0_mod[dataset.n_transit + ref_idf]
                     """With this approach, missing T0s in the input dataset are automatically skipped """
                 else:
                     """The output vector contains less T0s than supposed: collision between planets?? """
-                    output[dataset.name_ref] = dataset.n_transit * 0.0000
+                    output[dataset_name] = dataset.n_transit * 0.0000
 
         if full_orbit is not None:
             output['full_orbit'] = rv_meas

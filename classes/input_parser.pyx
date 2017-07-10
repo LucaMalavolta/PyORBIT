@@ -9,39 +9,42 @@ def yaml_parser(file_conf, mc):
     conf = config_in['Inputs']
     for counter in conf:
         print conf[counter]['Kind'], conf[counter]['File'], conf[counter]['Models']
+        dataset_name = conf[counter]['File']
 
+        """ The keywird in dataset_dict and the name assigned internally to the databes must be the same
+            or everything will fall apart """
         if 'Tcent' in conf[counter]['Kind']:
             planet_name = 'Planet_' + repr(conf[counter]['Planet'])
-            mc.dataset_list.append(TransitCentralTimes(counter, conf[counter]['Kind'], conf[counter]['File'], conf[counter]['Models']))
-            mc.dataset_list[counter].set_planet(planet_name)
-            mc.t0_list[planet_name] = mc.dataset_list[counter]
+            mc.dataset_dict[dataset_name] = \
+                TransitCentralTimes(counter, conf[counter]['Kind'], dataset_name, conf[counter]['Models'])
+            mc.dataset_dict[dataset_name].set_planet(planet_name)
+            mc.t0_list[planet_name] = mc.dataset_dict[dataset_name]
         else:
-            mc.dataset_list.append(Dataset(counter, conf[counter]['Kind'], conf[counter]['File'], conf[counter]['Models']))
+            mc.dataset_dict[dataset_name] = \
+                Dataset(counter, conf[counter]['Kind'], dataset_name, conf[counter]['Models'])
+
+        mc.dataset_index[counter] = dataset_name
 
         if counter == 0:
-            mc.Tref = mc.dataset_list[0].Tref
+            mc.Tref = mc.dataset_dict[dataset_name].Tref
         else:
-            mc.dataset_list[counter].common_Tref(mc.Tref)
-
-        if 'Association' in conf[counter]:
-            mc.dataset_list[counter].associate_to_other_dataset(mc.dataset_list)
-
+            mc.dataset_dict[dataset_name].common_Tref(mc.Tref)
 
         if 'Name' in conf[counter]:
-            mc.dataset_list[counter].name = conf[counter]['Name']
+            mc.dataset_dict[dataset_name].name = conf[counter]['Name']
         else:
-            mc.dataset_list[counter].name = 'Unspecified'
+            mc.dataset_dict[dataset_name].name = 'Unspecified'
 
         if 'Boundaries' in conf[counter]:
             bound_conf = conf[counter]['Boundaries']
             for var in bound_conf:
-                mc.dataset_list[counter].bounds[var] = np.asarray(bound_conf[var], dtype=np.double)
+                mc.dataset_dict[dataset_name].bounds[var] = np.asarray(bound_conf[var], dtype=np.double)
 
         if 'Starts' in conf[counter]:
             mc.starting_point_flag = True
             starts_conf = conf[counter]['Starts']
             for var in starts_conf:
-                mc.dataset_list[counter].starts[var] = np.asarray(starts_conf[var], dtype=np.double)
+                mc.dataset_dict[dataset_name].starts[var] = np.asarray(starts_conf[var], dtype=np.double)
 
     mc.planet_name = config_in['Output']
 
@@ -87,18 +90,96 @@ def yaml_parser(file_conf, mc):
                 if planet_conf['Transit']:
                     mc.pcv.switch_on_transit(planet_name)
 
-            """
-            # Transit time file is now in the Input section
-            if 'Tcent' in planet_conf:
-                mc.dataset_list.append(TransitCentralTimes(planet_name, planet_conf['Tcent']))
-                mc.dataset_list[-1].common_Tref(mc.Tref)
-                mc.t0_list[planet_name] = mc.dataset_list[-1]
-            """
-
             if 'Inclination' in planet_conf:
                 mc.pcv.inclination[planet_name] = planet_conf['Inclination']
             if 'Radius' in planet_conf:
                 mc.pcv.radius[planet_name] = planet_conf['Radius']
+
+    if 'Correlations' in config_in:
+        conf = config_in['Correlations']
+        correlation_common = False
+
+        """ When including the specific values for each dataset association, the existence of common variables must have
+            been already checked, just to avoid problems to those distracted users that include the Common block after 
+            the dataset-specific ones
+        """
+        for counter_ref in conf:
+            if counter_ref is 'Common':
+                correlation_common = True
+
+        for counter_ref in conf:
+            if counter_ref is 'Common':
+                continue
+
+            dataname_ref = mc.dataset_index[counter_ref]
+            mc.cov.add_dataset(dataname_ref)
+            #print ' --> ', conf[counter_ref]
+            for counter_asc in conf[counter_ref]:
+                dataname_asc = mc.dataset_index[counter_asc]
+                mc.cov.add_associated_dataset(mc, dataname_ref, dataname_asc)
+
+                """ Apply common settings (if present) before overriding them with the specific values (if provided)"""
+                if correlation_common:
+                    common_conf = conf[counter_ref]['Common']
+                    if 'Order' in common_conf:
+                        mc.cov.order[dataname_ref][dataname_asc] = \
+                            np.asarray(common_conf['Order'], dtype=np.int64)
+
+                    if 'Boundaries' in common_conf:
+                        bound_conf = common_conf['Boundaries']
+                        for var in bound_conf:
+                            mc.cov.bounds[dataname_ref][dataname_asc]['correlation_' + var] = \
+                                np.asarray(bound_conf[var], dtype=np.double)
+
+                    if 'Fixed' in common_conf:
+                        fixed_conf = common_conf['Fixed']
+                        for var in fixed_conf:
+                            mc.cov.fix_list[dataname_ref][dataname_asc]['correlation_' + var] = \
+                                np.asarray(fixed_conf[var], dtype=np.double)
+
+                    if 'Priors' in common_conf:
+                        prior_conf = conf[counter]['Priors']
+                        for var in prior_conf:
+                            mc.cov.prior_kind[dataname_ref][dataname_asc]['correlation_' + var] = prior_conf[var][0]
+                            mc.cov.prior_pams[dataname_ref][dataname_asc]['correlation_' + var] = \
+                                np.asarray(prior_conf[var][1:], dtype=np.double)
+
+                    if 'Starts' in conf[counter]:
+                        mc.starting_point_flag = True
+                        starts_conf = common_conf['Starts']
+                        for var in starts_conf:
+                            mc.cov.starts[dataname_ref][dataname_asc]['correlation_' + var] = \
+                                np.asarray(starts_conf[var], dtype=np.double)
+
+                if 'Order' in conf[counter_ref][counter_asc]:
+                    mc.cov.order[dataname_ref][dataname_asc] = \
+                        np.asarray(conf[counter_ref][counter_asc]['Order'], dtype=np.int64)
+
+                if 'Boundaries' in conf[counter_ref][counter_asc]:
+                    bound_conf = conf[counter_ref][counter_asc]['Boundaries']
+                    for var in bound_conf:
+                        mc.cov.bounds[dataname_ref][dataname_asc]['correlation_' + var] = \
+                            np.asarray(bound_conf[var], dtype=np.double)
+
+                if 'Fixed' in conf[counter_ref][counter_asc]:
+                    fixed_conf = conf[counter_ref][counter_asc]['Fixed']
+                    for var in fixed_conf:
+                        mc.cov.fix_list[dataname_ref][dataname_asc]['correlation_' + var] = \
+                            np.asarray(fixed_conf[var], dtype=np.double)
+
+                if 'Priors' in conf[counter_ref][counter_asc]:
+                    prior_conf = conf[counter]['Priors']
+                    for var in prior_conf:
+                        mc.cov.prior_kind[dataname_ref][dataname_asc]['correlation_' + var] = prior_conf[var][0]
+                        mc.cov.prior_pams[dataname_ref][dataname_asc]['correlation_' + var] = \
+                            np.asarray(prior_conf[var][1:], dtype=np.double)
+
+                if 'Starts' in conf[counter_ref]:
+                    mc.starting_point_flag = True
+                    starts_conf = conf[counter_ref][counter_asc]['Starts']
+                    for var in starts_conf:
+                        mc.cov.starts[dataname_ref][dataname_asc]['correlation_' + var] = \
+                            np.asarray(starts_conf[var], dtype=np.double)
 
     if 'Sinusoids' in config_in:
         conf = config_in['Sinusoids']
@@ -122,7 +203,7 @@ def yaml_parser(file_conf, mc):
             if name_ref == 'Common':
                 dataset_name = 'Common'
             else:
-                dataset_name = mc.dataset_list[name_ref].name_ref
+                dataset_name = mc.dataset_index[name_ref]
             mc.gcv.add_dataset(dataset_name)
 
             if 'Boundaries' in conf[name_ref]:
@@ -177,8 +258,8 @@ def yaml_parser(file_conf, mc):
 
     if 'Tref' in config_in:
         mc.Tref = np.asarray(config_in['Tref'])
-        for dataset in mc.dataset_list:
-            dataset.common_Tref(mc.Tref)
+        for dataset_name in mc.dataset_dict:
+            mc.dataset_dict[dataset_name].common_Tref(mc.Tref)
 
     if 'pyDE' in config_in:
         conf = config_in['pyDE']

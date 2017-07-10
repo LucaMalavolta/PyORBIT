@@ -125,7 +125,7 @@ class SinusoidsCommonVariables:
                 if self.use_offset[dataset.kind]:
                     off_in[:] = theta[mc.variable_list[dataset.kind][self.season_name[jj] + '_off']]
                 amp_in[jj, :dataset.n_amp[jj]] = \
-                    theta[mc.variable_list[dataset.name_ref][self.season_name[jj] + '_amp']]
+                    theta[mc.variable_list[dataset_name][self.season_name[jj] + '_amp']]
         return self.model_sinusoids(dataset, Prot, amp_in, pha_in, off_in)
 
     def initialize(self, mc, theta):
@@ -141,7 +141,7 @@ class SinusoidsCommonVariables:
                 for ii in id_var:
                     mc.pam_names[ii] = self.season_name[jj] + '_' + repr(ii - id_var[0]) + '_pha'
 
-        for dataset in mc.dataset_list:
+        for dataset_name, dataset in mc.dataset_dict.items():
             for jj in range(0, self.n_seasons):
                 if dataset.season_flag[jj]:
                     if self.use_offset[dataset.kind]:
@@ -155,14 +155,14 @@ class SinusoidsCommonVariables:
                                 mc.pam_names[ii] = dataset.kind + '_' + self.season_name[jj] + \
                                                    '_' + repr(ii - id_var[0]) + '_off'
 
-                    id_var = mc.variable_list[dataset.name_ref][self.season_name[jj] + '_amp']
+                    id_var = mc.variable_list[dataset_name][self.season_name[jj] + '_amp']
                     if np.size(id_var) == 0:
                         continue
                     if np.size(id_var) == 1:
-                        mc.pam_names[id_var] = dataset.name_ref[:-4] + '_' + self.season_name[jj] + '_amp'
+                        mc.pam_names[id_var] = dataset_name[:-4] + '_' + self.season_name[jj] + '_amp'
                     else:
                         for ii in id_var:
-                            mc.pam_names[ii] = dataset.name_ref[:-4] + '_' + self.season_name[jj] + \
+                            mc.pam_names[ii] = dataset_name[:-4] + '_' + self.season_name[jj] + \
                                                '_' + repr(ii - id_var[0]) + '_amp'
 
     def print_vars(self, mc, theta):
@@ -175,15 +175,15 @@ class SinusoidsCommonVariables:
             id_var = mc.variable_list[self.season_name[jj] + '_pha']
             print self.season_name[jj], '_pha', theta[id_var]
 
-        for dataset in mc.dataset_list:
+        for dataset_name, dataset in mc.dataset_dict.items():
             for jj in range(0, self.n_seasons):
                 if dataset.season_flag[jj]:
                     if self.use_offset[dataset.kind]:
-                        print dataset.name_ref, dataset.kind, self.season_name[jj], '_off', \
+                        print dataset_name, dataset.kind, self.season_name[jj], '_off', \
                                 theta[mc.variable_list[dataset.kind][self.season_name[jj] + '_off']]
 
-                    print dataset.name_ref, self.season_name[jj], '_amp', \
-                            theta[mc.variable_list[dataset.name_ref][self.season_name[jj] + '_amp']]
+                    print dataset_name, self.season_name[jj], '_amp', \
+                            theta[mc.variable_list[dataset_name][self.season_name[jj] + '_amp']]
         print
 
     def define_bounds(self, mc):
@@ -198,7 +198,7 @@ class SinusoidsCommonVariables:
                                                                         mc.ndim + self.n_pha[jj], 1)
             mc.ndim += self.n_pha[jj]
 
-        for dataset in mc.dataset_list:
+        for dataset_name, dataset in mc.dataset_dict.items():
 
             # two nested case:
             # 1) dataset.kind has an offset or not (if it is the reference offset)
@@ -224,7 +224,7 @@ class SinusoidsCommonVariables:
                     for kk in xrange(0, dataset.n_amp[jj]):
                         mc.bounds_list.append(dataset.sinamp_bounds)
 
-                    mc.variable_list[dataset.name_ref][self.season_name[jj] + '_amp'] = \
+                    mc.variable_list[dataset_name][self.season_name[jj] + '_amp'] = \
                         np.arange(mc.ndim, mc.ndim + dataset.n_amp[jj], 1)
                     mc.ndim += dataset.n_amp[jj]
 
