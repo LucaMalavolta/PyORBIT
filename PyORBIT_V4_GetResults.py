@@ -287,7 +287,7 @@ if args.mp != 'False':
     megaplot_med[:-1] = chain_med[:,0]
     megaplot_med[-1] = lnprob_median
     labels = mc.pam_names
-    labels.extend('ln L')
+    labels.extend(['ln L'])
     fig = corner.corner(megaplot_dat[:, :], labels=labels, truths=megaplot_med)
     fig.savefig(dir_output + "ALL_corners.pdf", bbox_inches='tight', dpi=300)
     plt.close(fig)
@@ -851,14 +851,8 @@ if 'kepler' in mc.model_list:
             if i_color == np.size(color_list):
                 i_color = 0
 
-            print
-            print nplanet_temp
-            print np.size(sample_P[:])
-            print np.size(scatter_period[:, nplanet_temp])
-            print np.size(scatter_label)
-            print
             scatter_period[:, nplanet_temp] = sample_P[:]
-            scatter_label.extend('Period_'+repr(nplanet_temp))
+            scatter_label.extend(['Period_'+repr(nplanet_temp)])
             nplanet_temp += 1
 
 
