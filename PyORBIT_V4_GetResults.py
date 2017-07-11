@@ -881,7 +881,7 @@ if 'kepler' in mc.model_list:
         fig0 = plt.figure(0, figsize=(12, 12))
         plt.figure(0)
         df = pandas.DataFrame(scatter_period, scatter_label)
-        pandas.plotting.scatter_matrix(df, alpha=0.5, diagonal=None)
+        fig1 = pandas.plotting.scatter_matrix(df, alpha=0.5, diagonal=None)
         plt.savefig(dir_output + 'PolyScatter_P_P.pdf', bbox_inches='tight', dpi=300)
         plt.close(fig0)
 
