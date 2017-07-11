@@ -821,7 +821,7 @@ if 'kepler' in mc.model_list:
         fig2 = plt.figure(2, figsize=(12, 12))
 
         """ Vsriable for period-only corner plot """
-        scatter_period = np.zeros([nsample, mc.pcv.n_planets], dtype=np.double)
+        scatter_period = np.zeros([mc.pcv.n_planets, nsample], dtype=np.double)
         scatter_label = []
         nplanet_temp = 0
 
@@ -851,7 +851,7 @@ if 'kepler' in mc.model_list:
             if i_color == np.size(color_list):
                 i_color = 0
 
-            scatter_period[:, nplanet_temp] = sample_P[:]
+            scatter_period[nplanet_temp, :] = sample_P[:]
             scatter_label.extend(['Period_'+repr(nplanet_temp)])
             nplanet_temp += 1
 
