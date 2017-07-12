@@ -14,7 +14,6 @@ import sys
 mpl.use('Agg')
 from matplotlib import pyplot as plt
 import corner
-import pandas
 sys.path.append('/Users/malavolta/Astro/CODE/trades/pytrades')
 import constants
 
@@ -810,7 +809,6 @@ if 'kepler' in mc.model_list:
 
     if sampler in sample_keyword['polychord']:
         ''' Now we do the Polychord plots were all the points are collected together'''
-        print 'TESTING POLYCHORD PLOTS'
 
         color_list = ['b', 'c', 'm', 'g', 'r', 'k', 'y']
 
@@ -819,11 +817,8 @@ if 'kepler' in mc.model_list:
         fig0 = plt.figure(0, figsize=(12, 12))
         fig1 = plt.figure(1, figsize=(12, 12))
         fig2 = plt.figure(2, figsize=(12, 12))
-
-        """ Vsriable for period-only corner plot """
-        scatter_period = np.zeros([mc.pcv.n_planets, nsample], dtype=np.double)
-        scatter_label = []
-        nplanet_temp = 0
+        fig3 = plt.figure(3, figsize=(12, 12))
+        fig4 = plt.figure(4, figsize=(12, 12))
 
         for planet_name in mc.pcv.planet_name:
 
@@ -847,17 +842,21 @@ if 'kepler' in mc.model_list:
             plt.figure(2)
             plt.scatter(sample_P, sample_e, color=color_list[i_color], alpha=0.2, s=5, linewidths=None)
             plt.draw()
+            plt.figure(3)
+            plt.scatter(sample_P, flatlnprob, color=color_list[i_color], alpha=0.2, s=5, linewidths=None)
+            plt.draw()
+            plt.figure(4)
+            for planet_alt in mc.pcv.planet_name:
+                if planet_alt == planet_name: continue
+                sample_P_alt = sample_total[planet_alt]['sample_plan'][:, convert_out['P']]
+                plt.scatter(sample_P, sample_P_alt, color=color_list[i_color], alpha=0.2, s=5, linewidths=None)
+            plt.draw()
+
             i_color += 1
             if i_color == np.size(color_list):
                 i_color = 0
 
-            scatter_period[nplanet_temp, :] = sample_P[:]
-            scatter_label.extend(['Period_'+repr(nplanet_temp)])
-            nplanet_temp += 1
-
-
         plt.figure(0)
-        #plt.xlim(0., 2000.)
         plt.xlabel('P [d]')
         plt.ylabel('M [$M_\oplus $]')
         plt.draw()
@@ -870,20 +869,23 @@ if 'kepler' in mc.model_list:
         plt.savefig(dir_output + 'PolyScatter_M_e.pdf', bbox_inches='tight', dpi=300)
         plt.close(fig1)
         plt.figure(2)
-        #plt.xlim(0., 2000.)
         plt.xlabel('P [d]')
         plt.ylabel('e')
         plt.draw()
         plt.savefig(dir_output + 'PolyScatter_P_e.pdf', bbox_inches='tight', dpi=300)
         plt.close(fig2)
-
-
-        fig0 = plt.figure(0, figsize=(12, 12))
-        plt.figure(0)
-        df = pandas.DataFrame(scatter_period, scatter_label)
-        fig1 = pandas.plotting.scatter_matrix(df, alpha=0.5, diagonal=None)
+        plt.figure(3)
+        plt.xlabel('P [d]')
+        plt.ylabel('lnP')
+        plt.draw()
+        plt.savefig(dir_output + 'PolyScatter_P_lnP.pdf', bbox_inches='tight', dpi=300)
+        plt.close(fig3)
+        plt.figure(4)
+        plt.xlabel('P [d]')
+        plt.ylabel('e')
+        plt.draw()
         plt.savefig(dir_output + 'PolyScatter_P_P.pdf', bbox_inches='tight', dpi=300)
-        plt.close(fig0)
+        plt.close(fig4)
 
 
     if args.forecast is not None:
