@@ -169,7 +169,7 @@ class GaussianProcessCommonVariables:
         # gp_pams['gamma'] = Gamma =  1/ (2 omega**2) -> ExpSine2Kernel(gamma, ln_period)
         # gp_pams['amp2] = h^2 -> h^2 * ExpSquaredKernel * ExpSine2Kernel
         kernel = gp_pams['amp2'] * george.kernels.ExpSquaredKernel(metric=gp_pams['metric']) * \
-                 george.kernels.ExpSine2Kernel(gamma=gp_pams['gamma'], ln_period=gp_pams['ln_P'])
+                 george.kernels.ExpSine2Kernel(gamma=gp_pams['gamma'], log_period=gp_pams['ln_P'])
 
         gp = george.GP(kernel)
         env = np.sqrt(dataset.e ** 2.0 + dataset.jitter ** 2.0)
@@ -182,7 +182,7 @@ class GaussianProcessCommonVariables:
         gp_pams = self.convert_val2gp(self.convert(theta, dataset.name_ref))
 
         kernel = gp_pams['amp2'] * george.kernels.ExpSquaredKernel(metric=gp_pams['metric']) * \
-                 george.kernels.ExpSine2Kernel(gamma=gp_pams['gamma'], ln_period=gp_pams['ln_P'])
+                 george.kernels.ExpSine2Kernel(gamma=gp_pams['gamma'], log_period=gp_pams['ln_P'])
 
         gp = george.GP(kernel)
         env = np.sqrt(dataset.e ** 2.0 + dataset.jitter ** 2.0)
