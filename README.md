@@ -24,6 +24,8 @@ Most of the information can be found in the paper by [Malavolta et al. (2016)][M
 1. [Introduction](#introduction)
 2. [Install and Compile](#install-and-compile)
 3. [Configuration file](#configuration-file)
+  1. [Input files](#input-files)
+  2. [Planets](#planets)
 4. [Data files](#data-files)
 5. [Run the code](#run-the-code)
 6. [Analyze the output](#analyze-the-output)
@@ -34,17 +36,20 @@ I started writing this code because I needed a versatile RV fitting code, with t
 
 ### Install and Compile
 
- `PyORBIT` is avaialble at [https://github.com/LucaMalavolta/PyORBIT](https://github.com/LucaMalavolta/PyORBIT)
+ `PyORBIT` is available at [https://github.com/LucaMalavolta/PyORBIT](https://github.com/LucaMalavolta/PyORBIT)
 
   Download the .zip files or clone the repository.
 
   To take advantage of dynamical integration, you need to install either `TRADES` ([Borsato et al. 2014][Borsato2014], available at [here](https://github.com/lucaborsato/trades)) or `TTVFast` ([Deck et al. 2014][Deck2014]) using the Python wrapper interface available [here](https://github.com/mindriot101/ttvfast-python).
-  After installing `TRADES`, you have to specify its path in `PyORBIT_V3_Classes.pyx` (before importing the `pytrades_lib` library).
-  `PyORBIT` can work without these codes installed, however some editing is required. Furthermore, the file `pytrades/constants.py` from the `TRADES` repository must be copied in the `PyORBIT` main folder
+  After installing `TRADES`, you have to specify its path in `classes/common.pyx` (before importing the `pytrades_lib` library).
+  `PyORBIT` can work without these codes installed by uncommenting the line:
+  ```yaml
+  from pytrades_dummy import pytrades
+  ```
 
-  To compile the program using `Cython`, simply execute `./compile.bash` in a `Bash` terminal. `kepler_exo.py` and `PyORBIT_V3_Classes.py` provide symbolic links to the respective `*.pyx` files, so that the program can be executed without using Cython. Be aware that the `*.so` libraries will be preferred to the `*.py` symbolic links, so remember to recompile or delete the `*.so` files if you are modifying the files.
+  To compile the program using `Cython`, simply execute `./compile.bash` in a `Bash` terminal. Files with extension `.py` provide symbolic links to the respective `*.pyx` files, so that the program can be executed without using Cython. Be aware that the `*.so` libraries will be preferred to the `*.py` symbolic links, so remember to delete the `*.so` files or recompile with Cython if you are modifying the files.
 
-  Older versions of the code can be found in the `V1` and `V2` folders.
+  Older versions of the code can be found in the `V1`, `V2` and `V3` folders. This version are no longer maintained and any bug that has been found after their dismissal has not been corrected.
 
 ### Configuration file
 
@@ -58,7 +63,10 @@ This file contains all the information regarding:
 Name: PyORBIT_test1
 Output: PyORBIT_test1
 ```
-The first two keywords identify the name of the planet and the name of the directory where all the output files are stored.
+
+#### Input files
+
+The first two keywords identify the name of the planet and the name of the directory where all the output files are stored. An example is given below.
 
 ```yaml
 Inputs:
@@ -71,15 +79,31 @@ Inputs:
       Kind: RV
       Models: ['kepler', 'sinusoids']
 ```
+
 The ```Input``` section includes all the data files to be analyzed. The only exceptions are the files containing the central time of transits, which must be included in the ```Planets``` section and not here.  Following the Python standard, file must be listed starting from ```0``` without gaps.
 
 The main goal of ```Kind``` is to distinguish between Radial Velocities (```RV```) and other kinds of data ( ```Phot```, while ```BIS```, ```FWHM``` and ```Act```, although only in the case of the ```sinusoid``` model a real distinction is made).
 
-```Models``` specificies how you want to fit the data. The avaialble models are:
-  * ```kepler```: keplerian curve, avaialble only for RVs.
+The ```Models``` keyword specifies how you want to fit the data. The available models are:
+  * ```kepler```: Keplerian curve, available only for RVs.
   * ```curvature```: polynomial trend of order _n_ . The same trend is applied to each dataset with this keyword listed among the models. Instrumental trend (specific of a given dataset) can be corrected with a keyword inside the dataset file
   * ```sinusoid```: activity modelling with sinusoids at the rotational period of the star and its harmonics, following [Boisse et al. (2011)][Boisse2011]
-  * ```gaussian```: activity modeling with gaussian processes
+  * ```gaussian```: activity modeling with Gaussian processes
+
+##### Adding central time of transit for a planet
+It is possible to include the central time of transit for a given planet. Transit time will be computed either from the orbital parameters of the planet or using the N-body calculator, depending on the ```Orbit``` keyword of that specific planet (see section [Planets](#planets) for details.)
+
+```yaml
+Inputs:
+  1:
+    File: b_Tcent.dat
+    Kind: Tcent
+    Planet: 0
+    Models: ['kepler', 'sinusoids']
+```
+The ```Planet``` keyword must correspond to the one specified in the ```Planet``` section. The code does not make any distinction on the ordering of the planets in the respective section.
+
+#### Planets
 
 ```yaml
 Planets:
@@ -97,7 +121,6 @@ Planets:
     Starts:
       o: 0.345
       f: 2.145
-    Tcent: obsT0.dat
     Radius: [11.200, 0.100]
     Inclination: [90.0, 0.01]
 ```
@@ -111,7 +134,7 @@ In this section the characteristics of the planets can be specified. As before, 
   Note that ```f = o + mA``` where _mA_ is the mean anomaly at the epoch of reference  ```Tref``` (to be introduced later)
 * ```Boundaries```: if not otherwise specified, an uninformative prior within the specified boundaries is chosen. Since _P_ and _K_ are explored in the logarithmic space, their lower limits must be always greater than zero.  _P_ is in days, _K_ in meter/second,  all the angles are in radians except _i_ which is in degrees.
 
-* ```Fixed```: use this keyword to fix a parameter to a given value. This is useful if a parameter cannot be contrained by the data.
+* ```Fixed```: use this keyword to fix a parameter to a given value. This is useful if a parameter cannot be constrained by the data.
 
 * ```Priors```: use this keyword to specify a prior on a variable. The selected function for the  probability distribution must be followed by the appropriate numbers of parameters, which depend in the implementation of such function. Right known only ```Gaussian``` and ```Uniform``` function have been implemented.
 

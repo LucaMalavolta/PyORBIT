@@ -11,7 +11,7 @@ def yaml_parser(file_conf, mc):
         print conf[counter]['Kind'], conf[counter]['File'], conf[counter]['Models']
         dataset_name = conf[counter]['File']
 
-        """ The keywird in dataset_dict and the name assigned internally to the databes must be the same
+        """ The keyword in dataset_dict and the name assigned internally to the databes must be the same
             or everything will fall apart """
         if 'Tcent' in conf[counter]['Kind']:
             planet_name = 'Planet_' + repr(conf[counter]['Planet'])
@@ -100,7 +100,7 @@ def yaml_parser(file_conf, mc):
         correlation_common = False
 
         """ When including the specific values for each dataset association, the existence of common variables must have
-            been already checked, just to avoid problems to those distracted users that include the Common block after 
+            been already checked, just to avoid problems to those distracted users that include the Common block after
             the dataset-specific ones
         """
         for counter_ref in conf:
@@ -343,4 +343,3 @@ def yaml_parser(file_conf, mc):
 
     if 'Dynamical_Integrator' in config_in:
         mc.dynamical_model.dynamical_integrator = config_in['Dynamical_Integrator']
-
