@@ -15,7 +15,7 @@ Most of the information can be found in the paper by [Malavolta et al. (2016)][M
 * Loglikelihood computed as in [Malavolta et al. (2017)][Malavolta2017]
 * Transit Times data moved to Input section
 * Fixed the Theta parameter conversion in Gaussian Processes module
-* Jitter parameters now moves in logarithmic space
+* Jitter parameters now move in logarithmic space
 
 ---
 
@@ -140,8 +140,6 @@ In this section the characteristics of the planets can be specified. As before, 
 
 * ```Starts```: starting points for the MCMC chains (when required). If not defined, the starting points of the emcee chains are determined by running the global optimization code [PyDE](https://github.com/hpparvi/PyDE). ***Warning:*** if this keyword has been used for some of the variables, then all the unspecified variables will use the mid-point of the interval range as starting point
 
-* ```Tcent```: if central time of transits have been measured, the file containing the measurements must be specified here and not in the ```Inputs```. In this way it is easier to associate the dataset to its planet.
-
 *  ```Radius``` and ```Inclination``` are additional information on the planet used by ```TRADES``` (for the radius) and to determine the true mass of the planet (when _circular_ or _keplerian_ model are used.). This value for the inclination included here is not considered when performing the dynamical integration.
 
 ```yaml
@@ -197,6 +195,9 @@ For each row:
 Last flag can be omitted if no linear trend due to the instrument is present. For trends of physical nature (i.e. RV trends due to the presence of a long-period binary star) the ```Curvature``` model should be used instead.
 
 ### Run the code
+There are different main program according to the sampler you want to use:
+1. ```PyORBIT_V4_emcee.py``` to use affine-invariant MCMC sampler ```emcee```
+1. ```PyORBIT_V4_PolyChrod.py``` to use MultiNest sampler ```PolyChord```
 The main program is ```PyORBIT_V3_emcee.py```, you can start it by executing in a terminal:
 ```text
 $ python PyORBIT_V3_emcee.py
