@@ -887,7 +887,6 @@ if 'kepler' in mc.model_list:
         plt.savefig(dir_output + 'PolyScatter_P_P.pdf', bbox_inches='tight', dpi=300)
         plt.close(fig4)
 
-
     if args.forecast is not None:
         y_flg = (flatlnprob[:] > lnprob_med[0] - lnprob_med[1]) # & (flatlnprob[:] < lnprob_med[0] + lnprob_med[2])
 

@@ -243,6 +243,9 @@ class ModelContainer:
             dataset.model_jitter(theta[self.variable_list[dataset_name]['jitter']])
             dataset.model_linear(theta[self.variable_list[dataset_name]['linear']])
 
+            if 'none' in dataset.models:
+                continue
+
             if 'kepler' in dataset.models:
                 if bool(self.pcv.dynamical):
                     """ we have dynamical computations, so we include them in the model"""

@@ -159,8 +159,10 @@ class CorrelationsCommonVariables:
             for var in self.list_pams[name_ref][name_asc]:
                 coeff[self.order_ind[name_ref][name_asc][var]] = dict_pams[var]
 
+            """ In our array, coefficient are sorted from the lowest degree to the highr
+            Numpy Polinomials requires the inverse order (from high to small) as input"""
             output += np.where(self.x_mask[name_ref][name_asc],
-                               np.polynomial.polynomial.polyval(self.x_vals[name_ref][name_asc], coeff),
+                               np.polynomial.polynomial.polyval(self.x_vals[name_ref][name_asc], coeff[::-1]),
                                0.0)
         return output
 

@@ -121,6 +121,16 @@ def yaml_parser(file_conf, mc):
                 """ Apply common settings (if present) before overriding them with the specific values (if provided)"""
                 if correlation_common:
                     common_conf = conf[counter_ref]['Common']
+
+                    """ The xero point of the correlation plot is already included as a free parameter
+                     as the offset of the associated dataset, so it is disabled by default. However there may be 
+                     situations in which it is still needed to have it as a free parameter, so this option is given"""
+                    free_zeropoint = False
+                    if 'Free_ZeroPoint' in common_conf:
+                        free_zeropoint = common_conf['Free_ZeroPoint']
+                    if free_zeropoint is False:
+                         mc.cov.fix_list[dataname_ref][dataname_asc]['correlation_0'] = 0.0000
+
                     if 'Order' in common_conf:
                         mc.cov.order[dataname_ref][dataname_asc] = \
                             np.asarray(common_conf['Order'], dtype=np.int64)
@@ -150,6 +160,12 @@ def yaml_parser(file_conf, mc):
                         for var in starts_conf:
                             mc.cov.starts[dataname_ref][dataname_asc]['correlation_' + var] = \
                                 np.asarray(starts_conf[var], dtype=np.double)
+
+                free_zeropoint = False
+                if 'Free_ZeroPoint' in conf[counter_ref][counter_asc]:
+                    free_zeropoint = conf[counter_ref][counter_asc]['Free_ZeroPoint']
+                if free_zeropoint is False:
+                    mc.cov.fix_list[dataname_ref][dataname_asc]['correlation_0'] = 0.0000
 
                 if 'Order' in conf[counter_ref][counter_asc]:
                     mc.cov.order[dataname_ref][dataname_asc] = \

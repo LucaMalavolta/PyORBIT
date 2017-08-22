@@ -98,13 +98,13 @@ class CurvatureCommonVariables:
         coeff = np.zeros(self.order+1)
         for var in self.list_pams:
             coeff[self.order_ind[var]] = dict_pams[var]
-        return np.polynomial.polynomial.polyval(dataset.x0, coeff)
+        return np.polynomial.polynomial.polyval(dataset.x0, coeff[::-1])
 
     def model_curvature(self, dict_pams, x0):
         coeff = np.zeros(self.order+1)
         for var in self.list_pams:
             coeff[self.order_ind[var]] = dict_pams[var]
-        return np.polynomial.polynomial.polyval(x0, coeff)
+        return np.polynomial.polynomial.polyval(x0, coeff[::-1])
 
     def initialize(self, mc):
         for var in self.list_pams:
