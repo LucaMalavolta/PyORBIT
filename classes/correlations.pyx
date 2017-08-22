@@ -162,7 +162,7 @@ class CorrelationsCommonVariables:
             """ In our array, coefficient are sorted from the lowest degree to the highr
             Numpy Polinomials requires the inverse order (from high to small) as input"""
             output += np.where(self.x_mask[name_ref][name_asc],
-                               np.polynomial.polynomial.polyval(self.x_vals[name_ref][name_asc], coeff[::-1]),
+                               np.polynomial.polynomial.polyval(self.x_vals[name_ref][name_asc], coeff),
                                0.0)
         return output
 
