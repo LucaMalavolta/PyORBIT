@@ -117,6 +117,7 @@ def yaml_parser(file_conf, mc):
             for counter_asc in conf[counter_ref]:
                 dataname_asc = mc.dataset_index[counter_asc]
                 mc.cov.add_associated_dataset(mc, dataname_ref, dataname_asc)
+                free_zeropoint = False
 
                 """ Apply common settings (if present) before overriding them with the specific values (if provided)"""
                 if correlation_common:
@@ -125,11 +126,15 @@ def yaml_parser(file_conf, mc):
                     """ The xero point of the correlation plot is already included as a free parameter
                      as the offset of the associated dataset, so it is disabled by default. However there may be 
                      situations in which it is still needed to have it as a free parameter, so this option is given"""
-                    free_zeropoint = False
-                    if 'Free_ZeroPoint' in common_conf:
-                        free_zeropoint = common_conf['Free_ZeroPoint']
-                    if free_zeropoint is False:
-                         mc.cov.fix_list[dataname_ref][dataname_asc]['correlation_0'] = 0.0000
+
+                    if 'Free_ZeroPoint' not in common_conf or common_conf['Free_ZeroPoint'] is False:
+                        mc.cov.fix_list[dataname_ref][dataname_asc]['correlation_0'] = 0.0000
+                        free_zeropoint = True
+
+                    """ By default the origin of the x axis of the independent parameter (usually an activity indicator)
+                    is set to the median value of the parameter. The user has te option to specify a value"""
+                    if 'Abscissa_zero' in common_conf:
+                        mc.cov.x_zero[dataname_ref][dataname_asc] = common_conf['Abscissa_zero']
 
                     if 'Order' in common_conf:
                         mc.cov.order[dataname_ref][dataname_asc] = \
@@ -161,11 +166,13 @@ def yaml_parser(file_conf, mc):
                             mc.cov.starts[dataname_ref][dataname_asc]['correlation_' + var] = \
                                 np.asarray(starts_conf[var], dtype=np.double)
 
-                free_zeropoint = False
-                if 'Free_ZeroPoint' in conf[counter_ref][counter_asc]:
-                    free_zeropoint = conf[counter_ref][counter_asc]['Free_ZeroPoint']
-                if free_zeropoint is False:
+                if free_zeropoint is False and \
+                    ('Free_ZeroPoint' not in conf[counter_ref][counter_asc] or
+                     conf[counter_ref][counter_asc]['Free_ZeroPoint'] is False):
                     mc.cov.fix_list[dataname_ref][dataname_asc]['correlation_0'] = 0.0000
+
+                if 'Abscissa_zero' in conf[counter_ref][counter_asc]:
+                    mc.cov.x_zero[dataname_ref][dataname_asc] = common_conf['Abscissa_zero']
 
                 if 'Order' in conf[counter_ref][counter_asc]:
                     mc.cov.order[dataname_ref][dataname_asc] = \
