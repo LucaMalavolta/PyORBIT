@@ -994,4 +994,39 @@ if 'curvature' in mc.model_list:
     print '-----------------------------'
     print
 
+if 'correlation' in mc.model_list:
+
+    print 'Correlation summary'
+    print
+
+    n_vars = 0
+    sample_plan_transpose = []
+    sel_label = []
+
+    for name in mc.ccv.list_pams:
+        n_vars += 1
+        var = flatchain[:, mc.ccv.var_list[name]]
+        var_phys = mc.ccv.variables[name](var, var, xrange(0, nsample))
+        sample_plan_transpose.append(var_phys)
+        sel_label.append(name)
+
+    sample_plan = np.asarray(sample_plan_transpose).T
+    sample_med = np.asarray(map(lambda v: (v[1], v[2] - v[1], v[1] - v[0]),
+                                    zip(*np.percentile(sample_plan[:, :], [15.865, 50, 84.135], axis=0))))
+
+    for lab, sam in zip(sel_label, sample_med):
+        print lab,' = ', sam[0], ' +\sigma ', sam[1], ' -\sigma ', sam[2]
+    print
+
+    fileout = open(plot_dir + 'correlation.dat', 'w')
+    fileout.write('descriptor x_range m_curv \n')
+    for ii in xrange(0, np.size(x_range)):
+        fileout.write('{0:14f} {1:14f} \n'.format(x_range[ii], model_curv['BJD'][ii]))
+    fileout.close()
+
+    print 'Curvature summary completed'
+    print
+    print '-----------------------------'
+    print
+
 print
