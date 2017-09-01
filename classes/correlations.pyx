@@ -182,6 +182,7 @@ class CorrelationsCommonVariables:
         for name_ref in self.list_pams:
             for name_asc in self.list_pams[name_ref]:
                 for name_var in self.list_pams[name_ref][name_asc]:
+                    print 'Correlation ', name_ref, name_asc, ' zero_point', self.x_zero[name_ref][name_asc]
                     if name_var in mc.variable_list[name_ref][name_asc]:
                         var = self.variables[name_ref][name_asc][name_var](theta, self.fixed,
                                                                  self.var_list[name_ref][name_asc][name_var])

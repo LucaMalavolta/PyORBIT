@@ -371,30 +371,37 @@ if 'kepler' in mc.model_list:
         n_orbital = len(mc.pcv.var_list[planet_name])
         n_fitted = len(mc.pcv.var_list[planet_name]) - len(mc.pcv.fix_list[planet_name])
 
-        n_curv = mc.ccv.order
-
-        sample_plan = np.zeros([nsample, n_orbital+6+n_curv])
-        median_tmp  = np.zeros([n_orbital+6+n_curv])
-
-
-        """Let's put all the human variables - including those that have been fixed - in sample_plan
-           An index is assigned to each variable to keep track of them in
-           We copy the median and sigma values from the derived distribution"""
+        """ An index is assigned to each variable to keep track of them in
+        """
         convert_out = {}
         for n_var, var in enumerate(convert_med):
             convert_out[var] = n_var
-            median_tmp[n_var] = convert_med[var]
 
+        init_var = max(convert_out.values())
+        convert_out['Tperi'] = init_var + 1
+        convert_out['Tcent'] = init_var + 2
+        convert_out['M_kep'] = init_var + 3
+        convert_out['a_smj'] = init_var + 4
+
+        if 'curvature' in mc.model_list:
+            init_var = max(convert_out.values())
+            for n_var, var in enumerate(mc.ccv.list_pams):
+                convert_out[var] = init_var + n_var + 1
+
+        n_total = max(convert_out.values()) + 1 #
+        sample_plan = np.zeros([nsample, n_total])
+        median_tmp  = np.zeros([n_total])
+
+        """Let's put all the human variables - including those that have been fixed - in sample_plan
+           We copy the median and sigma values from the derived distribution"""
+
+        for n_var, var in enumerate(convert_med):
+            median_tmp[n_var] = convert_med[var]
 
         for ii in xrange(0, nsample):
             convert_tmp = mc.pcv.convert(planet_name, flatchain[ii, :])
-            for var in convert_out:
+            for var in convert_med:
                 sample_plan[ii, convert_out[var]] = convert_tmp[var]
-
-        convert_out['Tperi'] = n_orbital + 1
-        convert_out['Tcent'] = n_orbital + 2
-        convert_out['M_kep'] = n_orbital + 3
-        convert_out['a_smj'] = n_orbital + 4
 
         # Time of Periastron
         sample_plan[:, convert_out['Tperi']] = mc.Tref + (-sample_plan[:, convert_out['f']] + sample_plan[:, convert_out['o']]) / \
@@ -414,8 +421,9 @@ if 'kepler' in mc.model_list:
                                                             sample_plan[:, convert_out['e']])
 
         if 'curvature' in mc.model_list:
+            init_var = max(convert_out.values())
             for n_var, var in enumerate(mc.ccv.list_pams):
-                convert_out[var] = n_orbital + 6 + n_var
+                convert_out[var] = init_var + n_var + 1
 
             for ii in xrange(0, nsample):
                 convert_tmp = mc.ccv.convert(flatchain[ii, :])
@@ -666,9 +674,7 @@ if 'kepler' in mc.model_list:
 
                 # plot lower-upper limits for the mass
 
-                pams_limits = np.zeros([n_orbital+6+n_curv, 2])
-                #for ii in xrange(0, n_orbital+6+n_curv):
-                #    pams_limits[ii, :] = np.percentile(sample_plan[:, ii], [0.135, 99.865])
+                pams_limits = np.zeros([n_total, 2])
                 pams_limits[:, 0] = sample_med[:, 0] - sample_med[:, 1]
                 pams_limits[:, 1] = sample_med[:, 0] + sample_med[:, 2]
 
@@ -1002,27 +1008,42 @@ if 'correlation' in mc.model_list:
     n_vars = 0
     sample_plan_transpose = []
     sel_label = []
+    plt.rc('text', usetex=False)
 
-    for name in mc.ccv.list_pams:
-        n_vars += 1
-        var = flatchain[:, mc.ccv.var_list[name]]
-        var_phys = mc.ccv.variables[name](var, var, xrange(0, nsample))
-        sample_plan_transpose.append(var_phys)
-        sel_label.append(name)
+    for name_ref in mc.cov.list_pams:
+        for name_asc in mc.cov.list_pams[name_ref]:
+            for name_var in mc.cov.list_pams[name_ref][name_asc]:
+                n_vars += 1
+                var = flatchain[:, mc.cov.var_list[name_ref][name_asc][name_var]]
+                var_phys = mc.cov.variables[name_ref][name_asc][name_var](var, var, xrange(0, nsample))
+                sample_plan_transpose.append(var_phys)
+                sel_label.append(name_ref+'_'+name_asc+'_'+name_var)
 
     sample_plan = np.asarray(sample_plan_transpose).T
     sample_med = np.asarray(map(lambda v: (v[1], v[2] - v[1], v[1] - v[0]),
                                     zip(*np.percentile(sample_plan[:, :], [15.865, 50, 84.135], axis=0))))
 
+    for name_ref in mc.cov.list_pams:
+        for name_asc in mc.cov.list_pams[name_ref]:
+            print name_ref, name_asc, 'zero-point', mc.cov.x_zero[name_ref][name_asc]
+
     for lab, sam in zip(sel_label, sample_med):
         print lab,' = ', sam[0], ' +\sigma ', sam[1], ' -\sigma ', sam[2]
     print
 
+
+
     fileout = open(plot_dir + 'correlation.dat', 'w')
-    fileout.write('descriptor x_range m_curv \n')
-    for ii in xrange(0, np.size(x_range)):
-        fileout.write('{0:14f} {1:14f} \n'.format(x_range[ii], model_curv['BJD'][ii]))
-    fileout.close()
+    fileout.write('descriptor x_range m_corr \n')
+    #for ii in xrange(0, np.size(x_range)):
+    #    fileout.write('{0:14f} {1:14f} \n'.format(x_range[ii], model_act['BJD'][ii]))
+    #fileout.close()
+
+    fig = corner.corner(sample_plan[:, :], labels=sel_label, truths=sample_med[:, 0])
+    fig.savefig(dir_output + "Correlation_corners.pdf", bbox_inches='tight', dpi=300)
+    plt.close(fig)
+
+    plt.rc('text', usetex=True)
 
     print 'Curvature summary completed'
     print
