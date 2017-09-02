@@ -27,6 +27,7 @@ class CorrelationsCommonVariables:
 
         self.x_vals = {}
         self.x_mask = {}
+        self.x_zero = {}
 
     def add_dataset(self, name_ref):
 
@@ -47,6 +48,7 @@ class CorrelationsCommonVariables:
 
         self.x_vals[name_ref] = {}
         self.x_mask[name_ref] = {}
+        self.x_zero[name_ref] = {}
 
     def add_associated_dataset(self, mc, name_ref, name_asc, threshold=0.001):
         """To each dataset the correlated dataset is associated"""
@@ -78,6 +80,8 @@ class CorrelationsCommonVariables:
             match = np.where(np.abs(v_date-mc.dataset_dict[name_ref].x) < threshold)[0]
             self.x_vals[name_ref][name_asc][match] = mc.dataset_dict[name_asc].y[i_date]
             self.x_mask[name_ref][name_asc][match] = True
+
+        self.x_zero[name_ref][name_asc] = np.median(self.x_vals[name_ref][name_asc][self.x_mask[name_ref][name_asc]])
 
     def define_bounds(self, mc):
         """ Bounds are defined in this class, where all the Planet-related variables are stored"""
@@ -159,8 +163,11 @@ class CorrelationsCommonVariables:
             for var in self.list_pams[name_ref][name_asc]:
                 coeff[self.order_ind[name_ref][name_asc][var]] = dict_pams[var]
 
+            """ In our array, coefficient are sorted from the lowest degree to the highr
+            Numpy Polinomials requires the inverse order (from high to small) as input"""
             output += np.where(self.x_mask[name_ref][name_asc],
-                               np.polynomial.polynomial.polyval(self.x_vals[name_ref][name_asc], coeff),
+                               np.polynomial.polynomial.polyval(
+                                   self.x_vals[name_ref][name_asc]-self.x_zero[name_ref][name_asc], coeff),
                                0.0)
         return output
 
@@ -175,6 +182,7 @@ class CorrelationsCommonVariables:
         for name_ref in self.list_pams:
             for name_asc in self.list_pams[name_ref]:
                 for name_var in self.list_pams[name_ref][name_asc]:
+                    print 'Correlation ', name_ref, name_asc, ' zero_point', self.x_zero[name_ref][name_asc]
                     if name_var in mc.variable_list[name_ref][name_asc]:
                         var = self.variables[name_ref][name_asc][name_var](theta, self.fixed,
                                                                  self.var_list[name_ref][name_asc][name_var])
