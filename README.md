@@ -90,6 +90,8 @@ The ```Models``` keyword specifies how you want to fit the data. The available m
   * ```sinusoid```: activity modelling with sinusoids at the rotational period of the star and its harmonics, following [Boisse et al. (2011)][Boisse2011]
   * ```gaussian```: activity modeling with Gaussian processes
 
+* Disclaimer on "Sinusoid" model: this is the first module I have implemented in the code, because at the time I wasn't confident enough on my understanding of Gaussian processes to use them in a scientific work. Since the publication of [Malavolta et al. (2016)][Malavolta2016] I haven't added any feature to this module, and more importantly I haven't properly checked its beaviour when other modules with shared variables (e.g. Prot) are employed. Validation with a synthetic dataset is strongly advised. 
+
 ##### Adding central time of transit for a planet
 It is possible to include the central time of transit for a given planet. Transit time will be computed either from the orbital parameters of the planet or using the N-body calculator, depending on the ```Orbit``` keyword of that specific planet (see section [Planets](#planets) for details.)
 

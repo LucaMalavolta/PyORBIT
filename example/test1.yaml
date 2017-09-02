@@ -16,30 +16,18 @@ Planets:
       P: [2.0, 50.0]
       K: [25.0, 60.0]
       e: [0.00, 0.40]
-    #Fixed:
-    #  e: 0.13
 Sinusoids:
   Prot: [5.00, 12.00]
   Seasons:
     0: [5000, 6250, 4, 4]
     1: [6250, 7000, 4, 4]
   Phase_dataset: False
+pyDE:
+  Ngen: 4000
+  Npop_mult: 2
 emcee:
-  Ngen: 5000
   Nsteps: 5000
   Nburn: 4000
-  Npop_mult: 2
   Thin: 100
   Recenter_Bounds: True
-
-#Output    OC102_test_fast
-#Nplanets  1
-#Planet_0   5    20.0     25.0  40.0  50.0    0.00 0.4
-#Prot      4     8.00     10.00
-#Period_0  5000 6250 4 4
-#Period_1  6250 7000 4 4
-#Ngen        500
-#Nsteps     5000
-#Nburn      4000
-#Npop_mult     2
-#Thin        100
+Star_Mass: [1.00, 0.100]

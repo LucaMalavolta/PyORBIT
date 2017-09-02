@@ -125,11 +125,11 @@ class SinusoidsCommonVariables:
                 if self.use_offset[dataset.kind]:
                     off_in[:] = theta[mc.variable_list[dataset.kind][self.season_name[jj] + '_off']]
                 amp_in[jj, :dataset.n_amp[jj]] = \
-                    theta[mc.variable_list[dataset_name][self.season_name[jj] + '_amp']]
+                    theta[mc.variable_list[dataset.name_ref][self.season_name[jj] + '_amp']]
         return self.model_sinusoids(dataset, Prot, amp_in, pha_in, off_in)
 
-    def initialize(self, mc, theta):
-        mc.pam_names[mc.variable_list['Prot']] = 'Prot'
+    def initialize(self, mc):
+        mc.pam_names[mc.variable_list['Common']['Prot']] = 'Prot'
 
         for jj in range(0, self.n_seasons):
             id_var = mc.variable_list[self.season_name[jj] + '_pha']
@@ -169,7 +169,7 @@ class SinusoidsCommonVariables:
         # Prot and pha_in could be brought out from the llop, but I would not work
         # for planet-only analysis
 
-        print 'Prot ', theta[mc.variable_list['Prot']]
+        print 'Prot ', theta[mc.variable_list['Common']['Prot']]
 
         for jj in range(0, self.n_seasons):
             id_var = mc.variable_list[self.season_name[jj] + '_pha']
@@ -188,7 +188,7 @@ class SinusoidsCommonVariables:
 
     def define_bounds(self, mc):
         mc.bounds_list.append(self.Prot_bounds[:])
-        mc.variable_list['Prot'] = mc.ndim
+        mc.variable_list['Common']['Prot'] = mc.ndim
         mc.ndim += 1
 
         for jj in range(0, self.n_seasons):
