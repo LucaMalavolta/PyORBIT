@@ -222,6 +222,8 @@ def yaml_parser(file_conf, mc):
 
     if 'Gaussian' in config_in:
         conf = config_in['Gaussian']
+
+        # test
         for name_ref in conf:
             if name_ref == 'Common':
                 dataset_name = 'Common'
