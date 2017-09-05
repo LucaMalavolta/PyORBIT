@@ -168,6 +168,7 @@ class GaussianProcessCommonVariables:
         # gp_pams['metric'] = metric = r^2 = lambda**2  -> ExpSquaredKernel(metric=r^2)
         # gp_pams['gamma'] = Gamma =  1/ (2 omega**2) -> ExpSine2Kernel(gamma, ln_period)
         # gp_pams['amp2] = h^2 -> h^2 * ExpSquaredKernel * ExpSine2Kernel
+
         kernel = gp_pams['amp2'] * george.kernels.ExpSquaredKernel(metric=gp_pams['metric']) * \
                  george.kernels.ExpSine2Kernel(gamma=gp_pams['gamma'], log_period=gp_pams['ln_P'])
 

@@ -280,6 +280,9 @@ class ModelContainer:
             else:
                 logchi2_out += dataset.model_logchi2()
 
+             # workaround to avoid memory leaks from GP module
+            gc.collect()
+
         return logchi2_out
 
     def results_resumen(self, theta, verbose=True):
