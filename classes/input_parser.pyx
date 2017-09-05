@@ -221,37 +221,56 @@ def yaml_parser(file_conf, mc):
             #    mc.scv.phase = np.asarray(conf['Phase_dataset'], dtype=np.int64)
 
     if 'Gaussian' in config_in:
-        conf = config_in['Gaussian']
 
-        # test
-        for name_ref in conf:
-            if name_ref == 'Common':
-                dataset_name = 'Common'
-            else:
-                dataset_name = mc.dataset_index[name_ref]
-            mc.gcv.add_dataset(dataset_name)
+        ''' Backward compatibility with previous version of the yaml files
+            Having a single kind of kernel for all the dataset is the most common situation, so we try to avoid too
+            much verbosity in the yaml file
+        '''
+        if 'gaussian' not in config_in['Gaussian']:
+            conf_gaussian = {'gaussian': config_in['Gaussian']}
+        else:
+            conf_gaussian = config_in['Gaussian']
+        ''' Better way to accomplish this: 
+        if any(name in config_in['Gaussian'] for name in SOME_MODEL_LIST):
+        '''
 
-            if 'Boundaries' in conf[name_ref]:
-                bound_conf = conf[name_ref]['Boundaries']
-                for var in bound_conf:
-                    mc.gcv.bounds[dataset_name][var] = np.asarray(bound_conf[var], dtype=np.double)
+        for conf_model in conf_gaussian:
+            conf = conf_gaussian[conf_model]
 
-            if 'Fixed' in conf[name_ref]:
-                fixed_conf = conf[name_ref]['Fixed']
-                for var in fixed_conf:
-                    mc.gcv.fix_list[dataset_name][var] = np.asarray(fixed_conf[var], dtype=np.double)
+            for name_ref in conf:
+                ''' User can choose which kernels employ in the GP '''
+                if name_ref == 'Kernels':
+                    mc.gcv.kernel_list == conf['Kernels']
+                    continue
 
-            if 'Priors' in conf[name_ref]:
-                prior_conf = conf[name_ref]['Priors']
-                for var in prior_conf:
-                    mc.gcv.prior_kind[dataset_name][var] = prior_conf[var][0]
-                    mc.gcv.prior_pams[dataset_name][var] = np.asarray(prior_conf[var][1:], dtype=np.double)
+                if name_ref == 'Common':
+                    dataset_name = 'Common'
+                else:
+                    dataset_name = mc.dataset_index[name_ref]
 
-            if 'Starts' in conf[name_ref]:
-                mc.starting_point_flag = True
-                starts_conf = conf[name_ref]['Starts']
-                for var in starts_conf:
-                    mc.gcv.starts[dataset_name][var] = np.asarray(starts_conf[var], dtype=np.double)
+                mc.gcv.add_dataset(dataset_name)
+
+                if 'Boundaries' in conf[name_ref]:
+                    bound_conf = conf[name_ref]['Boundaries']
+                    for var in bound_conf:
+                        mc.gcv.bounds[dataset_name][var] = np.asarray(bound_conf[var], dtype=np.double)
+
+                if 'Fixed' in conf[name_ref]:
+                    fixed_conf = conf[name_ref]['Fixed']
+                    for var in fixed_conf:
+                        mc.gcv.fix_list[dataset_name][var] = np.asarray(fixed_conf[var], dtype=np.double)
+
+                if 'Priors' in conf[name_ref]:
+                    prior_conf = conf[name_ref]['Priors']
+                    for var in prior_conf:
+                        mc.gcv.prior_kind[dataset_name][var] = prior_conf[var][0]
+                        mc.gcv.prior_pams[dataset_name][var] = np.asarray(prior_conf[var][1:], dtype=np.double)
+
+                if 'Starts' in conf[name_ref]:
+                    mc.starting_point_flag = True
+                    starts_conf = conf[name_ref]['Starts']
+                    for var in starts_conf:
+                        mc.gcv.starts[dataset_name][var] = np.asarray(starts_conf[var], dtype=np.double)
 
     if 'Curvature' in config_in:
         conf = config_in['Curvature']
