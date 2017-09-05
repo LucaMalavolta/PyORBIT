@@ -171,5 +171,8 @@ else:
     population, prob, state = sampler.run_mcmc(population, mc.emcee_parameters['nsteps'], thin=mc.emcee_parameters['thin'])
     save_to_hdf5(mc.emcee_parameters['nsteps'])
 
+import cPickle as pikcle
+pickle.dump(mc, open( "mc_saved.p", "wb"))
+
 print 'emcee completed'
 
