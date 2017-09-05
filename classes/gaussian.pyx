@@ -31,6 +31,11 @@ class GaussianProcessCommonVariables:
 
         self.list_pams_dataset = {'Hamp': 'U'}
 
+        #AAAAHHHHHH!!!!!
+        #
+        #self.kernel = gp_pams['amp2'] * george.kernels.ExpSquaredKernel(metric=gp_pams['metric']) * \
+        #         george.kernels.ExpSine2Kernel(gamma=gp_pams['gamma'], log_period=gp_pams['ln_P'])
+
         return
 
     def convert_val2gp(self, input_pam):

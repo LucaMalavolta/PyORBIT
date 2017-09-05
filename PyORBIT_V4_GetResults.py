@@ -421,10 +421,6 @@ if 'kepler' in mc.model_list:
                                                             sample_plan[:, convert_out['e']])
 
         if 'curvature' in mc.model_list:
-            init_var = max(convert_out.values())
-            for n_var, var in enumerate(mc.ccv.list_pams):
-                convert_out[var] = init_var + n_var + 1
-
             for ii in xrange(0, nsample):
                 convert_tmp = mc.ccv.convert(flatchain[ii, :])
                 for var in mc.ccv.list_pams:
@@ -865,6 +861,7 @@ if 'kepler' in mc.model_list:
         plt.figure(0)
         plt.xlabel('P [d]')
         plt.ylabel('M [$M_\oplus $]')
+        plt.xscale("log", nonposx='clip')
         plt.draw()
         plt.savefig(dir_output + 'PolyScatter_P_M.pdf', bbox_inches='tight', dpi=300)
         plt.close(fig0)
@@ -877,18 +874,22 @@ if 'kepler' in mc.model_list:
         plt.figure(2)
         plt.xlabel('P [d]')
         plt.ylabel('e')
+        plt.xscale("log", nonposx='clip')
         plt.draw()
         plt.savefig(dir_output + 'PolyScatter_P_e.pdf', bbox_inches='tight', dpi=300)
         plt.close(fig2)
         plt.figure(3)
         plt.xlabel('P [d]')
         plt.ylabel('lnP')
+        plt.xscale("log", nonposx='clip')
         plt.draw()
         plt.savefig(dir_output + 'PolyScatter_P_lnP.pdf', bbox_inches='tight', dpi=300)
         plt.close(fig3)
         plt.figure(4)
         plt.xlabel('P [d]')
         plt.ylabel('e')
+        plt.xscale("log", nonposx='clip')
+        plt.yscale("log", nonposx='clip')
         plt.draw()
         plt.savefig(dir_output + 'PolyScatter_P_P.pdf', bbox_inches='tight', dpi=300)
         plt.close(fig4)
