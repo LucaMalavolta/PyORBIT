@@ -11,10 +11,6 @@ class ModelContainer:
 
         self.t0_list = {}
 
-        self.scv = SinusoidsCommonVariables()
-        self.gcv = GaussianProcess_QuasiPeriodicActivity()
-        self.ccv = CurvatureCommonVariables()
-        self.cov = CorrelationsCommonVariables()
         self.keplerian_model = ComputeKeplerian()
         self.dynamical_model = ComputeDynamical()
 
