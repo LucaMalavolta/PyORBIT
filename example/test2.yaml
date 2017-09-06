@@ -1,7 +1,7 @@
 Name: PyORBIT_test2
 Output: PyORBIT_test2
 Inputs:
-  1:
+  0:
       File: test1_RV.dat
       Kind: RV
       Models: ['kepler']
