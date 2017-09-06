@@ -191,13 +191,13 @@ def yaml_parser(file_conf, mc):
                             np.asarray(fixed_conf[var], dtype=np.double)
 
                 if 'Priors' in conf[counter_ref][counter_asc]:
-                    prior_conf = conf[counter]['Priors']
+                    prior_conf = conf[counter_ref][counter_asc]['Priors']
                     for var in prior_conf:
                         mc.cov.prior_kind[dataname_ref][dataname_asc]['correlation_' + var] = prior_conf[var][0]
                         mc.cov.prior_pams[dataname_ref][dataname_asc]['correlation_' + var] = \
                             np.asarray(prior_conf[var][1:], dtype=np.double)
 
-                if 'Starts' in conf[counter_ref]:
+                if 'Starts' in conf[counter_ref][counter_asc]:
                     mc.starting_point_flag = True
                     starts_conf = conf[counter_ref][counter_asc]['Starts']
                     for var in starts_conf:
