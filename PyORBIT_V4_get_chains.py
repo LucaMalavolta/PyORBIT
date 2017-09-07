@@ -149,7 +149,7 @@ for ii in xrange(0, mc.ndim):
     chain_T[:, :, ii] = chain[:, :, ii].T
 
 '''chain_T contains the chains coming out from emcee, after being transposed 
-the individual chain for walker m of parameter n is given by  chain_T[:,]
+the individual chain for walker m of parameter n is given by  chain_T[:,m,n]
 
 '''
 
