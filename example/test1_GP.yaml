@@ -1,0 +1,39 @@
+Name: PyORBIT_test1
+Output: PyORBIT_test1_GP
+Inputs:
+  0:
+      File: test1_PH.dat
+      Kind: Phot
+      Models: ['gaussian']
+  1:
+      File: test1_RV.dat
+      Kind: RV
+      Models: ['kepler', 'gaussian']
+Planets:
+  0:
+    Orbit: kepler
+    Boundaries:
+      P: [2.0, 50.0]
+      K: [25.0, 60.0]
+      e: [0.00, 0.40]
+Gaussian:
+  Common:
+    Boundaries:
+      Prot: [5.00, 12.00]
+      Pdec: [5.00, 200.0]
+      Oamp: [0.25, 0.75]
+  0:
+    Boundaries:
+      Hamp: [0.0001, 0.100]
+  1:
+    Boundaries:
+      Hamp: [0.1, 100.0]
+pyDE:
+  Ngen: 2000
+  Npop_mult: 2
+emcee:
+  Nsteps: 5000
+  Nburn: 3000
+  Thin: 100
+  Recenter_Bounds: True
+Star_Mass: [1.00, 0.100]

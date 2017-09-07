@@ -16,14 +16,8 @@ pyDE:
   Ngen: 4000
   Npop_mult: 4
 emcee:
-<<<<<<< HEAD
-  Nsteps: 500
-  Nburn: 300
-  Thin: 5
-=======
   Nsteps: 20000
   Nburn: 5000
   Thin: 100
->>>>>>> master
   Recenter_Bounds: True
 Star_Mass: [1.00, 0.010]
