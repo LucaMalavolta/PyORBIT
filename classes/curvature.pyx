@@ -5,8 +5,10 @@ class CurvatureCommonVariables:
     """Class to define the curvature of the dataset
     The zero-point of the curvature is always zero, since this parameter is already defined
     as the zero-point of each dataset """
-    def __init__(self):
+    def __init__(self, model_name):
 
+        self.model_class = 'curvature'
+        self.model_name = model_name
         self.bounds = {}
         self.starts = {}
 

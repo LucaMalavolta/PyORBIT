@@ -32,7 +32,7 @@ class Dataset:
 
         if self.kind == 'Tcent':
             """ The only possible model is specified """
-            self.models = ['Tcent']
+            self.models = None
             """ Special input reading fro T0 files """
             self.n_transit = np.asarray(self.data[:, 0], dtype=np.int16)
             self.x = np.asarray(self.data[:, 1], dtype=np.double)
@@ -236,7 +236,7 @@ class TransitCentralTimes(Dataset):
 
     def compute(self, mc, theta):
         # By default, dataset.planet_name == planet_name
-        dict_out = mc.pcv.convert(self.planet_name, theta)
+        dict_out = mc.model['planets'].convert(self.planet_name, theta)
         model = (np.floor(self.x0 / dict_out['P'])) * dict_out['P'] + \
                 kp.kepler_Tcent_T0P(dict_out['P'], dict_out['f'], dict_out['e'], dict_out['o']) + \
                 self.Tref

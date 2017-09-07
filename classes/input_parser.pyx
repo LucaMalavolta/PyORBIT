@@ -4,34 +4,40 @@ from planets import PlanetsCommonVariables
 from gaussian import GaussianProcess_QuasiPeriodicActivity
 from curvature import CurvatureCommonVariables
 from correlations import CorrelationsCommonVariables
+#from sinusoids import SinusoidsCommonVariables
 
-define_kind_correspondence = {
+define_type_to_class = {
     'planets': PlanetsCommonVariables,
-    'gaussian': GaussianProcess_QuasiPeriodicActivity,
+    'gp_quasiperiodic': GaussianProcess_QuasiPeriodicActivity,
     'curvature': CurvatureCommonVariables,
     'correlation': CorrelationsCommonVariables
 }
+
 
 def yaml_parser(file_conf, mc):
     stream = file(file_conf, 'r')
     config_in = yaml.load(stream)
 
-    conf = config_in['inputs']
-    for counter in conf:
-        print conf[counter]['kind'], conf[counter]['file'], conf[counter]['models']
-        dataset_name = conf[counter]['file']
+    conf_inputs = config_in['inputs']
+    conf_models = config_in['models']
+    conf_parameters = config_in['parameters']
+    conf_solver = config_in['solver']
+
+    for counter in conf_inputs:
+        print conf_inputs[counter]['kind'], conf_inputs[counter]['file'], conf_inputs[counter]['models']
+        dataset_name = conf_inputs[counter]['file']
 
         """ The keyword in dataset_dict and the name assigned internally to the databes must be the same
             or everything will fall apart """
-        if 'Tcent' in conf[counter]['kind']:
-            planet_name = 'Planet_' + repr(conf[counter]['Planet'])
+        if 'Tcent' in conf_inputs[counter]['kind']:
+            planet_name = 'Planet_' + repr(conf_inputs[counter]['Planet'])
             mc.dataset_dict[dataset_name] = \
-                TransitCentralTimes(counter, conf[counter]['kind'], dataset_name, conf[counter]['models'])
+                TransitCentralTimes(counter, conf_inputs[counter]['kind'], dataset_name, conf_inputs[counter]['models'])
             mc.dataset_dict[dataset_name].set_planet(planet_name)
             mc.t0_list[planet_name] = mc.dataset_dict[dataset_name]
         else:
             mc.dataset_dict[dataset_name] = \
-                Dataset(counter, conf[counter]['kind'], dataset_name, conf[counter]['models'])
+                Dataset(counter, conf_inputs[counter]['kind'], dataset_name, conf_inputs[counter]['models'])
 
         mc.dataset_index[counter] = dataset_name
 
@@ -40,89 +46,62 @@ def yaml_parser(file_conf, mc):
         else:
             mc.dataset_dict[dataset_name].common_Tref(mc.Tref)
 
-        if 'name' in conf[counter]:
-            mc.dataset_dict[dataset_name].name = conf[counter]['name']
+        if 'name' in conf_inputs[counter]:
+            mc.dataset_dict[dataset_name].name = conf_inputs[counter]['name']
         else:
             mc.dataset_dict[dataset_name].name = 'unspecified'
 
-        if 'boundaries' in conf[counter]:
-            bound_conf = conf[counter]['boundaries']
+        if 'boundaries' in conf_inputs[counter]:
+            bound_conf = conf_inputs[counter]['boundaries']
             for var in bound_conf:
                 mc.dataset_dict[dataset_name].bounds[var] = np.asarray(bound_conf[var], dtype=np.double)
 
-        if 'starts' in conf[counter]:
+        if 'starts' in conf_inputs[counter]:
             mc.starting_point_flag = True
-            starts_conf = conf[counter]['starts']
+            starts_conf = conf_inputs[counter]['starts']
             for var in starts_conf:
                 mc.dataset_dict[dataset_name].starts[var] = np.asarray(starts_conf[var], dtype=np.double)
 
     mc.planet_name = config_in['output']
     mc.create_model_list()
 
-    HERE: creare un dizionario che conserva i tipi per ciascun modello all'interno di un dataset'
-    ATTENZIONE A TCENT può fare disastri
-
-
-    conf_models = config_in['models']
-
     for model in conf_models:
-        if model == 'planets':
-            mc.model[model] = define_kind_correspondence['planets']
+        if 'type' in conf_models[model]:
+            mc.models[model] = define_type_to_class[conf_models[model]['type']](model)
         else:
-            mc.model[model] = define_kind_correspondence[conf_models[model]['type']]
+            mc.models[model] = define_type_to_class[model](model)
 
-    if 'planets' in conf_models:
-        conf = conf_models['planets']
-        model = 'planets'
-        for counter in conf:
-            planet_name = 'Planet_' + repr(counter)
-            planet_conf = conf[counter]
-            mc.model['planets'].add_planet(planet_name)
+        if mc.models[model].model_class is 'planets':
+            conf = conf_models[model]
+            for counter in conf:
+                planet_name = 'Planet_' + repr(counter)
+                planet_conf = conf[counter]
 
-            if 'Boundaries' in planet_conf:
-                bound_conf = planet_conf['Boundaries']
-                for var in bound_conf:
-                    mc.model['planets'].bounds[planet_name][var] = np.asarray(bound_conf[var], dtype=np.double)
+                print mc.models[model]
+                mc.models[model].add_planet(planet_name)
 
-            if 'Fixed' in planet_conf:
-                fixed_conf = planet_conf['Fixed']
-                for var in fixed_conf:
-                    mc.model['planets'].fix_list[planet_name][var] = np.asarray(fixed_conf[var], dtype=np.double)
+                if 'orbit' in planet_conf:
+                    # By default orbits are keplerians
+                    if planet_conf['orbit'] == 'circular':
+                        mc.models['planets'].switch_to_circular(planet_name)
+                    if planet_conf['orbit'] == 'dynamical':
+                        mc.models['planets'].switch_to_dynamical(planet_name)
 
-            if 'Priors' in planet_conf:
-                prior_conf = planet_conf['Priors']
-                for var in prior_conf:
-                    mc.model['planets'].prior_kind[planet_name][var] = prior_conf[var][0]
-                    mc.model['planets'].prior_pams[planet_name][var] = np.asarray(prior_conf[var][1:], dtype=np.double)
-                print mc.model['planets'].prior_kind
-                print mc.model['planets'].prior_pams
+                if 'transit' in planet_conf:
+                    if planet_conf['transit']:
+                        mc.models['planets'].switch_on_transit(planet_name)
 
-            if 'Starts' in planet_conf:
-                mc.starting_point_flag = True
-                starts_conf = planet_conf['Starts']
-                for var in starts_conf:
-                    mc.model['planets'].starts[planet_name][var] = np.asarray(starts_conf[var], dtype=np.double)
+                if 'inclination' in planet_conf:
+                    mc.models['planets'].inclination[planet_name] = planet_conf['inclination']
 
-            if 'Orbit' in planet_conf:
-                # By default orbits are keplerians
-                if planet_conf['Orbit'] == 'circular':
-                    mc.model['planets'].switch_to_circular(planet_name)
-                if planet_conf['Orbit'] == 'dynamical':
-                    mc.model['planets'].switch_to_dynamical(planet_name)
+                if 'radius' in planet_conf:
+                    mc.models['planets'].radius[planet_name] = planet_conf['radius']
 
-            if 'Transit' in planet_conf:
-                if planet_conf['Transit']:
-                    mc.model['planets'].switch_on_transit(planet_name)
+                boundaries_fixed_priors_stars(mc, model, planet_conf, planet_name)
 
-            if 'Inclination' in planet_conf:
-                mc.model['planets'].inclination[planet_name] = planet_conf['Inclination']
-            if 'Radius' in planet_conf:
-                mc.model['planets'].radius[planet_name] = planet_conf['Radius']
+        if mc.models[model].model_class is 'correlation':
 
-    for model in conf_models:
-        if model.type is 'correlation':
-
-            conf = config_in['correlation']
+            conf = conf_models[model]
             correlation_common = False
 
             """ When including the specific values for each dataset association, the existence of common variables must have
@@ -138,234 +117,146 @@ def yaml_parser(file_conf, mc):
                     continue
 
                 dataname_ref = mc.dataset_index[counter_ref]
-                mc.model[model].add_dataset(dataname_ref)
-                #print ' --> ', conf[counter_ref]
+                mc.models[model].add_dataset(dataname_ref)
+
                 for counter_asc in conf[counter_ref]:
                     dataname_asc = mc.dataset_index[counter_asc]
-                    mc.model[model].add_associated_dataset(mc, dataname_ref, dataname_asc)
+                    mc.models[model].add_associated_dataset(mc, dataname_ref, dataname_asc)
                     free_zeropoint = False
 
-                    """ Apply common settings (if present) before overriding them with the specific values (if provided)"""
+                    """ Apply common settings (if present) 
+                        before overriding them with the specific values (if provided)
+                    """
                     if correlation_common:
-                        common_conf = conf[counter_ref]['Common']
+                        common_conf = conf[counter_ref]['common']
 
                         """ The xero point of the correlation plot is already included as a free parameter
                          as the offset of the associated dataset, so it is disabled by default. However there may be 
                          situations in which it is still needed to have it as a free parameter, so this option is given"""
 
-                        if 'Free_ZeroPoint' not in common_conf or common_conf['Free_ZeroPoint'] is False:
-                            mc.model[model].fix_list[dataname_ref][dataname_asc]['correlation_0'] = 0.0000
+                        if 'free_zeropoint' not in common_conf or common_conf['Free_ZeroPoint'] is False:
+                            mc.models[model].fix_list[dataname_ref][dataname_asc]['correlation_0'] = 0.0000
                             free_zeropoint = True
 
                         """ By default the origin of the x axis of the independent parameter (usually an activity indicator)
                         is set to the median value of the parameter. The user has te option to specify a value"""
-                        if 'Abscissa_zero' in common_conf:
-                            mc.model[model].x_zero[dataname_ref][dataname_asc] = common_conf['Abscissa_zero']
+                        if 'abscissa_zero' in common_conf:
+                            mc.models[model].x_zero[dataname_ref][dataname_asc] = common_conf['abscissa_zero']
 
-                        if 'Order' in common_conf:
-                            mc.model[model].order[dataname_ref][dataname_asc] = \
-                                np.asarray(common_conf['Order'], dtype=np.int64)
+                        if 'order' in common_conf:
+                            mc.models[model].order[dataname_ref][dataname_asc] = \
+                                np.asarray(common_conf['order'], dtype=np.int64)
 
-                        if 'Boundaries' in common_conf:
-                            bound_conf = common_conf['Boundaries']
-                            for var in bound_conf:
-                                mc.model[model].bounds[dataname_ref][dataname_asc]['correlation_' + var] = \
-                                    np.asarray(bound_conf[var], dtype=np.double)
-
-                        if 'Fixed' in common_conf:
-                            fixed_conf = common_conf['Fixed']
-                            for var in fixed_conf:
-                                mc.model[model].fix_list[dataname_ref][dataname_asc]['correlation_' + var] = \
-                                    np.asarray(fixed_conf[var], dtype=np.double)
-
-                        if 'Priors' in common_conf:
-                            prior_conf = conf[counter]['Priors']
-                            for var in prior_conf:
-                                mc.model[model].prior_kind[dataname_ref][dataname_asc]['correlation_' + var] = prior_conf[var][0]
-                                mc.model[model].prior_pams[dataname_ref][dataname_asc]['correlation_' + var] = \
-                                    np.asarray(prior_conf[var][1:], dtype=np.double)
-
-                        if 'Starts' in conf[counter]:
-                            mc.starting_point_flag = True
-                            starts_conf = common_conf['Starts']
-                            for var in starts_conf:
-                                mc.model[model].starts[dataname_ref][dataname_asc]['correlation_' + var] = \
-                                    np.asarray(starts_conf[var], dtype=np.double)
+                        boundaries_fixed_priors_stars(mc, model, common_conf,
+                                                      dataname_ref, dataname_asc, 'correlation_')
 
                     if free_zeropoint is False and \
-                        ('Free_ZeroPoint' not in conf[counter_ref][counter_asc] or
-                         conf[counter_ref][counter_asc]['Free_ZeroPoint'] is False):
-                        mc.model[model].fix_list[dataname_ref][dataname_asc]['correlation_0'] = 0.0000
+                        ('free_zeropoint' not in conf[counter_ref][counter_asc] or
+                         conf[counter_ref][counter_asc]['free_zeropoint'] is False):
+                        mc.models[model].fix_list[dataname_ref][dataname_asc]['correlation_0'] = 0.0000
 
-                    if 'Abscissa_zero' in conf[counter_ref][counter_asc]:
-                        mc.model[model].x_zero[dataname_ref][dataname_asc] = common_conf['Abscissa_zero']
+                    if 'abscissa_zero' in conf[counter_ref][counter_asc]:
+                        mc.models[model].x_zero[dataname_ref][dataname_asc] = common_conf['abscissa_zero']
 
-                    if 'Order' in conf[counter_ref][counter_asc]:
-                        mc.model[model].order[dataname_ref][dataname_asc] = \
-                            np.asarray(conf[counter_ref][counter_asc]['Order'], dtype=np.int64)
+                    if 'order' in conf[counter_ref][counter_asc]:
+                        mc.models[model].order[dataname_ref][dataname_asc] = \
+                            np.asarray(conf[counter_ref][counter_asc]['order'], dtype=np.int64)
 
-                    if 'Boundaries' in conf[counter_ref][counter_asc]:
-                        bound_conf = conf[counter_ref][counter_asc]['Boundaries']
-                        for var in bound_conf:
-                            mc.model[model].bounds[dataname_ref][dataname_asc]['correlation_' + var] = \
-                                np.asarray(bound_conf[var], dtype=np.double)
+                    boundaries_fixed_priors_stars(mc, model, conf[counter_ref][counter_asc],
+                                                  dataname_ref, dataname_asc, 'correlation_')
 
-                    if 'Fixed' in conf[counter_ref][counter_asc]:
-                        fixed_conf = conf[counter_ref][counter_asc]['Fixed']
-                        for var in fixed_conf:
-                            mc.model[model].fix_list[dataname_ref][dataname_asc]['correlation_' + var] = \
-                                np.asarray(fixed_conf[var], dtype=np.double)
+        if mc.models[model].model_class is 'gaussian_process':
+            conf = conf_models[model]
 
-                    if 'Priors' in conf[counter_ref][counter_asc]:
-                        prior_conf = conf[counter]['Priors']
-                        for var in prior_conf:
-                            mc.model[model].prior_kind[dataname_ref][dataname_asc]['correlation_' + var] = prior_conf[var][0]
-                            mc.model[model].prior_pams[dataname_ref][dataname_asc]['correlation_' + var] = \
-                                np.asarray(prior_conf[var][1:], dtype=np.double)
+            for name_ref in conf:
+                if name_ref == 'type':
+                    continue
 
-                    if 'Starts' in conf[counter_ref]:
-                        mc.starting_point_flag = True
-                        starts_conf = conf[counter_ref][counter_asc]['Starts']
-                        for var in starts_conf:
-                            mc.model[model].starts[dataname_ref][dataname_asc]['correlation_' + var] = \
-                                np.asarray(starts_conf[var], dtype=np.double)
+                print name_ref
+                if name_ref == 'common':
+                    dataset_name = mc.models[model].common_ref
+                else:
+                    dataset_name = mc.dataset_index[name_ref]
 
-    if 'Sinusoids' in config_in:
-        conf = config_in['Sinusoids']
-        mc.scv.Prot_bounds = np.asarray(conf['Prot'], dtype=np.double)
-        if 'Priors' in conf:
-            mc.scv.prior_kind[var] = conf['Priors'][var][0]
-            mc.scv.prior_pams[var] = np.asarray(conf['Priors'][var][1:], dtype=np.double)
+                mc.models[model].add_dataset(dataset_name)
 
-        for counter in conf['Seasons']:
-            mc.scv.add_season_range(np.asarray(conf['Seasons'][counter][:2], dtype=np.double),
-                                    conf['Seasons'][counter][2:])
+                boundaries_fixed_priors_stars(mc, model, conf[name_ref], dataset_name)
+
+        if mc.models[model].model_class is 'curvature':
+
+            conf = conf_models[model]
+
+            if 'order' in conf:
+                mc.models[model].order = np.asarray(conf['order'], dtype=np.int64)
+
+            boundaries_fixed_priors_stars(mc, model, conf)
+
+    if 'Tref' in conf_parameters:
+        mc.Tref = np.asarray(conf_parameters['Tref'])
+        for dataset_name in mc.dataset_dict:
+            mc.dataset_dict[dataset_name].common_Tref(mc.Tref)
+
+    if 'star_mass' in conf_parameters:
+        mc.star_mass = np.asarray(conf_parameters['star_mass'][:], dtype=np.double)
+    if 'star_radius' in config_in:
+        mc.star_radius = np.asarray(conf_parameters['star_radius'][:], dtype=np.double)
+
+    if 'dynamical_integrator' in conf_solver:
+        mc.dynamical_model.dynamical_integrator = conf_parameters['dynamical_integrator']
+
+
+                #if 'Sinusoids' in config_in:
+    #    conf = config_in['Sinusoids']
+    #    mc.scv.Prot_bounds = np.asarray(conf['Prot'], dtype=np.double)
+    #    if 'Priors' in conf:
+    #        mc.scv.prior_kind[var] = conf['Priors'][var][0]
+    #        mc.scv.prior_pams[var] = np.asarray(conf['Priors'][var][1:], dtype=np.double)
+    #
+    #    for counter in conf['Seasons']:
+    #        mc.scv.add_season_range(np.asarray(conf['Seasons'][counter][:2], dtype=np.double),
+    #                                conf['Seasons'][counter][2:])
 
             # if 'Phase_dataset' in conf:
             #    # Additional activity indicators associated to RVs must the same order and number of sinusoids,
             #    #
             #    mc.scv.phase = np.asarray(conf['Phase_dataset'], dtype=np.int64)
 
-    if 'Gaussian' in config_in:
 
-        ''' Backward compatibility with previous version of the yaml files
-            Having a single kind of kernel for all the dataset is the most common situation, so we try to avoid too
-            much verbosity in the yaml file
-        '''
-        if 'gaussian' not in config_in['Gaussian']:
-            conf_gaussian = {'gaussian': config_in['Gaussian']}
-        else:
-            conf_gaussian = config_in['Gaussian']
-        ''' Better way to accomplish this: 
-        if any(name in config_in['Gaussian'] for name in SOME_MODEL_LIST):
-        '''
+    if 'pyde' in config_in:
+        conf = config_in['pyde']
 
-        for conf_model in conf_gaussian:
-            conf = conf_gaussian[conf_model]
+        if 'ngen' in conf:
+            mc.pyde_parameters['ngen'] = np.asarray(conf['ngen'], dtype=np.double)
 
-            for name_ref in conf:
-                ''' User can choose which kernels employ in the GP '''
-                if name_ref == 'Kernels':
-                    mc.gcv.kernel_list == conf['Kernels']
-                    continue
+        if 'npop_mult' in conf:
+            mc.pyde_parameters['npop_mult'] = np.asarray(conf['npop_mult'], dtype=np.int64)
 
-                if name_ref == 'Common':
-                    dataset_name = 'Common'
-                else:
-                    dataset_name = mc.dataset_index[name_ref]
+    if 'emcee' in conf_solver:
+        conf = conf_solver['emcee']
 
-                mc.gcv.add_dataset(dataset_name)
-
-                if 'Boundaries' in conf[name_ref]:
-                    bound_conf = conf[name_ref]['Boundaries']
-                    for var in bound_conf:
-                        mc.gcv.bounds[dataset_name][var] = np.asarray(bound_conf[var], dtype=np.double)
-
-                if 'Fixed' in conf[name_ref]:
-                    fixed_conf = conf[name_ref]['Fixed']
-                    for var in fixed_conf:
-                        mc.gcv.fix_list[dataset_name][var] = np.asarray(fixed_conf[var], dtype=np.double)
-
-                if 'Priors' in conf[name_ref]:
-                    prior_conf = conf[name_ref]['Priors']
-                    for var in prior_conf:
-                        mc.gcv.prior_kind[dataset_name][var] = prior_conf[var][0]
-                        mc.gcv.prior_pams[dataset_name][var] = np.asarray(prior_conf[var][1:], dtype=np.double)
-
-                if 'Starts' in conf[name_ref]:
-                    mc.starting_point_flag = True
-                    starts_conf = conf[name_ref]['Starts']
-                    for var in starts_conf:
-                        mc.gcv.starts[dataset_name][var] = np.asarray(starts_conf[var], dtype=np.double)
-
-    if 'Curvature' in config_in:
-        conf = config_in['Curvature']
-
-        if 'Order' in conf:
-            mc.ccv.order = np.asarray(conf['Order'], dtype=np.int64)
-
-        if 'Boundaries' in conf:
-            bound_conf = conf['Boundaries']
-            for var in bound_conf:
-                mc.ccv.bounds[var] = np.asarray(bound_conf[var], dtype=np.double)
-
-        if 'Fixed' in conf:
-            fixed_conf = conf['Fixed']
-            for var in fixed_conf:
-                mc.ccv.fix_list[var] = np.asarray(fixed_conf[var], dtype=np.double)
-
-        if 'Priors' in conf:
-            prior_conf = conf['Priors']
-            for var in prior_conf:
-                mc.ccv.prior_kind[var] = prior_conf[var][0]
-                mc.ccv.prior_pams[var] = np.asarray(prior_conf[var][1:], dtype=np.double)
-
-        if 'Starts' in conf:
-            mc.starting_point_flag = True
-            starts_conf = conf['Starts']
-            for var in starts_conf:
-                mc.ccv.starts[var] = np.asarray(starts_conf[var], dtype=np.double)
-
-    if 'Tref' in config_in:
-        mc.Tref = np.asarray(config_in['Tref'])
-        for dataset_name in mc.dataset_dict:
-            mc.dataset_dict[dataset_name].common_Tref(mc.Tref)
-
-    if 'pyDE' in config_in:
-        conf = config_in['pyDE']
-
-        if 'Ngen' in conf:
-            mc.pyde_parameters['ngen'] = np.asarray(conf['Ngen'], dtype=np.double)
-
-        if 'Npop_mult' in conf:
-            mc.pyde_parameters['npop_mult'] = np.asarray(conf['Npop_mult'], dtype=np.int64)
-
-    if 'emcee' in config_in:
-        conf = config_in['emcee']
-
-        if 'MultiRun' in conf:
-            mc.emcee_parameters['MultiRun'] = np.asarray(conf['MultiRun'], dtype=np.int64)
+        if 'multirun' in conf:
+            mc.emcee_parameters['multirun'] = np.asarray(conf['multirun'], dtype=np.int64)
 
         if 'MultiRun_iter' in conf:
-            mc.emcee_parameters['MultiRun_iter'] = np.asarray(conf['MultiRun_iter'], dtype=np.int64)
+            mc.emcee_parameters['multirun_iter'] = np.asarray(conf['multirun_iter'], dtype=np.int64)
 
-        if 'Nsave' in conf:
-            mc.emcee_parameters['nsave'] = np.asarray(conf['Nsave'], dtype=np.double)
+        if 'nsave' in conf:
+            mc.emcee_parameters['nsave'] = np.asarray(conf['nsave'], dtype=np.double)
 
-        if 'Nsteps' in conf:
-            mc.emcee_parameters['nsteps'] = np.asarray(conf['Nsteps'], dtype=np.int64)
+        if 'nsteps' in conf:
+            mc.emcee_parameters['nsteps'] = np.asarray(conf['nsteps'], dtype=np.int64)
 
-        if 'Nburn' in conf:
-            mc.emcee_parameters['nburn'] = np.asarray(conf['Nburn'], dtype=np.int64)
+        if 'nburn' in conf:
+            mc.emcee_parameters['nburn'] = np.asarray(conf['nburn'], dtype=np.int64)
 
-        if 'Npop_mult' in conf:
-            mc.emcee_parameters['npop_mult'] = np.asarray(conf['Npop_mult'], dtype=np.int64)
+        if 'npop_mult' in conf:
+            mc.emcee_parameters['npop_mult'] = np.asarray(conf['npop_mult'], dtype=np.int64)
 
-        if 'Thin' in conf:
-            mc.emcee_parameters['thin'] = np.asarray(conf['Thin'], dtype=np.int64)
+        if 'thin' in conf:
+            mc.emcee_parameters['thin'] = np.asarray(conf['thin'], dtype=np.int64)
 
-    if 'PolyChord' in config_in:
-        conf = config_in['PolyChord']
+    if 'polychord' in conf_solver:
+        conf = conf_solver['polychord']
 
         if 'nlive' in conf:
             mc.polychord_parameters['nlive'] = np.asarray(conf['nlive'], dtype=np.int64)
@@ -400,16 +291,90 @@ def yaml_parser(file_conf, mc):
         if 'shutdown_jitter' in conf:
             mc.polychord_parameters['shutdown_jitter'] = np.asarray(conf['shutdown_jitter'], dtype=bool)
 
-    if 'Recenter_Bounds' in config_in:
-        # required to avoid a small bug in the code
-        # if the dispersion of PyDE walkers around the median value is too broad,
-        # then emcee walkers will start outside the bounds, causing an error
-        mc.recenter_bounds_flag = config_in['Recenter_Bounds']
+    if 'recenter_bounds' in conf_solver:
+        """ 
+        required to avoid a small bug in the code
+        if the dispersion of PyDE walkers around the median value is too broad,
+        then emcee walkers will start outside the bounds, causing an error
+        """
+        mc.recenter_bounds_flag = conf_solver['recenter_bounds']
 
-    if 'Star_Mass' in config_in:
-        mc.star_mass = np.asarray(config_in['Star_Mass'][:], dtype=np.double)
-    if 'Star_Radius' in config_in:
-        mc.star_radius = np.asarray(config_in['Star_Radius'][:], dtype=np.double)
 
-    if 'Dynamical_Integrator' in config_in:
-        mc.dynamical_model.dynamical_integrator = config_in['Dynamical_Integrator']
+def boundaries_fixed_priors_stars(mc, model_name, conf, dataset_1=None, dataset_2=None, add_var_name =''):
+    # type: (object, object, object, object, object, object) -> object
+
+    if dataset_1 is None:
+        if 'boundaries' in conf:
+            bound_conf = conf['boundaries']
+            for var in bound_conf:
+                mc.models[model_name].bounds[add_var_name+var] = np.asarray(bound_conf[var], dtype=np.double)
+
+        if 'fixed' in conf:
+            fixed_conf = conf['fixed']
+            for var in fixed_conf:
+                mc.models[model_name].fix_list[add_var_name+var] = np.asarray(fixed_conf[var], dtype=np.double)
+
+        if 'priors' in conf:
+            prior_conf = conf['priors']
+            for var in prior_conf:
+                mc.models[model_name].prior_kind[add_var_name+var] = prior_conf[var][0]
+                mc.models[model_name].prior_pams[add_var_name+var] = np.asarray(prior_conf[var][1:], dtype=np.double)
+
+        if 'starts' in conf:
+            mc.starting_point_flag = True
+            starts_conf = conf['starts']
+            for var in starts_conf:
+                mc.models[model_name].starts[add_var_name+var] = np.asarray(starts_conf[var], dtype=np.double)
+
+    elif dataset_2 is None:
+        if 'boundaries' in conf:
+            bound_conf = conf['boundaries']
+            for var in bound_conf:
+                mc.models[model_name].bounds[dataset_1][add_var_name+var] = np.asarray(bound_conf[var], dtype=np.double)
+
+        if 'fixed' in conf:
+            fixed_conf = conf['fixed']
+            for var in fixed_conf:
+                mc.models[model_name].fix_list[dataset_1][add_var_name+var] = np.asarray(fixed_conf[var], dtype=np.double)
+
+        if 'priors' in conf:
+            prior_conf = conf['priors']
+            for var in prior_conf:
+                mc.models[model_name].prior_kind[dataset_1][add_var_name+var] = prior_conf[var][0]
+                mc.models[model_name].prior_pams[dataset_1][add_var_name+var] = np.asarray(prior_conf[var][1:], dtype=np.double)
+
+        if 'starts' in conf:
+            mc.starting_point_flag = True
+            starts_conf = conf['starts']
+            for var in starts_conf:
+                mc.models[model_name].starts[dataset_1][add_var_name+var] = np.asarray(starts_conf[var], dtype=np.double)
+
+    else:
+
+        if 'boundaries' in conf:
+            bound_conf = conf['boundaries']
+            for var in bound_conf:
+                mc.models[model_name].bounds[dataset_1][dataset_2][add_var_name + var] = \
+                    np.asarray(bound_conf[var], dtype=np.double)
+
+        if 'fixed' in conf:
+            fixed_conf = conf['fixed']
+            for var in fixed_conf:
+                mc.models[model_name].fix_list[dataset_1][dataset_2][add_var_name + var] = \
+                    np.asarray(fixed_conf[var], dtype=np.double)
+
+        if 'priors' in conf:
+            prior_conf = conf['priors']
+            for var in prior_conf:
+                mc.models[model_name].prior_kind[dataset_1][dataset_2][add_var_name + var] = prior_conf[var][0]
+                mc.models[model_name].prior_pams[dataset_1][dataset_2][add_var_name + var] = \
+                    np.asarray(prior_conf[var][1:], dtype=np.double)
+
+        if 'starts' in conf:
+            mc.starting_point_flag = True
+            starts_conf = conf['starts']
+            for var in starts_conf:
+                mc.models[model_name].starts[dataset_1][dataset_2][add_var_name + var] = \
+                    np.asarray(starts_conf[var], dtype=np.double)
+
+    return

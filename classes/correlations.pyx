@@ -3,8 +3,10 @@ from common import *
 
 class CorrelationsCommonVariables:
     """Class to model the correlations between RVs and activity indexes"""
-    def __init__(self):
+    def __init__(self, model_name):
 
+        self.model_class = 'correlation'
+        self.model_name = model_name
         self.bounds = {}
         self.starts = {}
 

@@ -54,8 +54,8 @@ emcee_dir_output = './' + mc.planet_name + '/emcee/'
 if not os.path.exists(emcee_dir_output):
     os.makedirs(emcee_dir_output)
 
-if bool(mc.pcv.dynamical):
-        mc.dynamical_model.prepare(mc, mc.pcv)
+if bool(mc.models['planets'].dynamical):
+        mc.dynamical_model.prepare(mc, mc.models['planets'])
 
 print
 print 'Reference Time Tref: ', mc.Tref
@@ -127,9 +127,9 @@ mc.results_resumen(starting_point)
 
     #json.dump(mc.variable_list, open('output/' + mc.planet_name + '_vlist.json', 'wb'))
 pickle.dump(mc.variable_list, open(emcee_dir_output + 'vlist.pick', 'wb'))
-pickle.dump(mc.scv.use_offset,  open(emcee_dir_output + 'scv_offset.pick', 'wb'))
+#pickle.dump(mc.scv.use_offset,  open(emcee_dir_output + 'scv_offset.pick', 'wb'))
 
-if mc.emcee_parameters['MultiRun'] is not None:
+if mc.emcee_parameters['multirun'] is not None:
 
     if os.path.isfile(emcee_dir_output + 'emcee_MR_pops.pick'):
         print os.path.isfile(emcee_dir_output + 'pyde_pops.pick')
@@ -137,11 +137,11 @@ if mc.emcee_parameters['MultiRun'] is not None:
         population = pickle.load(open(emcee_dir_output + 'emcee_MR_pops.pick', 'rb'))
         print 'output from emcee exploratory runs retrieved'
     else:
-        for ii in xrange(0, mc.emcee_parameters['MultiRun_iter']):
-            print 'emcee exploratory run #', ii, ' of ', mc.emcee_parameters['MultiRun_iter']
+        for ii in xrange(0, mc.emcee_parameters['multirun_iter']):
+            print 'emcee exploratory run #', ii, ' of ', mc.emcee_parameters['multirun_iter']
             sampler = emcee.EnsembleSampler(mc.emcee_parameters['nwalkers'], mc.ndim, mc,
                                             threads=mc.emcee_parameters['nwalkers'])
-            population, prob, state = sampler.run_mcmc(population, mc.emcee_parameters['MultiRun'])
+            population, prob, state = sampler.run_mcmc(population, mc.emcee_parameters['multirun'])
             max_ind = np.argmax(prob)
             meds = population[max_ind, :]
             population = np.asarray([meds + 1e-4*np.random.randn(mc.ndim) for i in range(mc.emcee_parameters['nwalkers'])])

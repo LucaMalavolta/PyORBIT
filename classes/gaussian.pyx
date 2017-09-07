@@ -2,7 +2,11 @@ from common import *
 
 
 class GaussianProcessAbstract:
-    def __init__(self):
+    def __init__(self, model_name):
+
+        self.model_class = 'gaussian_process'
+        self.model_name = model_name
+
         self.fix_list = {}
         self.bounds = {}
         self.starts = {}
@@ -18,7 +22,6 @@ class GaussianProcessAbstract:
 
         self.gp = {}
 
-        self.model_type = 'gaussian'
 
         #self.list_pams_common = {
         #    'Prot': 'U',
@@ -29,7 +32,7 @@ class GaussianProcessAbstract:
 
         return
 
-    def add_dataset(self, name_ref='Common'):
+    def add_dataset(self, name_ref):
         # planet_name : name of the dataset, otherwise 'common'
 
         self.bounds[name_ref] = {}
@@ -40,30 +43,34 @@ class GaussianProcessAbstract:
         self.prior_kind[name_ref] = {}
         self.prior_pams[name_ref] = {}
 
-        if name_ref == 'Common':
+        if name_ref == self.common_ref:
             for name in self.list_pams_common:
-                self.bounds['Common'][name] = [0.01, 100]
+                self.bounds[self.common_ref][name] = [0.01, 100]
         else:
             for name in self.list_pams_dataset:
                 self.bounds[name_ref][name] = [0.00001, 100]
 
     def define_bounds(self, mc):
+
+        if self.common_ref not in mc.variable_list:
+            mc.variable_list[self.common_ref] = {}
+
         for var in self.list_pams_common:
-            if var in self.fix_list['Common']:
-                self.variables['Common'][var] = get_fix_val
-                self.var_list['Common'][var] = self.nfix
-                self.fixed.append(self.fix_list['Common'][var])
+            if var in self.fix_list[self.common_ref]:
+                self.variables[self.common_ref][var] = get_fix_val
+                self.var_list[self.common_ref][var] = self.nfix
+                self.fixed.append(self.fix_list[self.common_ref][var])
                 self.nfix += 1
             else:
                 if self.list_pams_common[var] == 'U':
-                    self.variables['Common'][var] = get_var_val
-                    mc.bounds_list.append(self.bounds['Common'][var])
+                    self.variables[self.common_ref][var] = get_var_val
+                    mc.bounds_list.append(self.bounds[self.common_ref][var])
                 if self.list_pams_common[var] == 'LU':
-                    self.variables['Common'][var] = get_var_exp
-                    mc.bounds_list.append(np.log2(self.bounds['Common'][var]))
+                    self.variables[self.common_ref][var] = get_var_exp
+                    mc.bounds_list.append(np.log2(self.bounds[self.common_ref][var]))
 
-                self.var_list['Common'][var] = mc.ndim
-                mc.variable_list['Common'][var] = mc.ndim
+                self.var_list[self.common_ref][var] = mc.ndim
+                mc.variable_list[self.common_ref][var] = mc.ndim
                 mc.ndim += 1
 
         for dataset_name, dataset in mc.dataset_dict.items():
@@ -86,13 +93,13 @@ class GaussianProcessAbstract:
                         mc.ndim += 1
 
     def starting_point(self, mc):
-        if 'Common' in self.starts:
-            for var in self.starts['Common']:
+        if self.common_ref in self.starts:
+            for var in self.starts[self.common_ref]:
                 if self.list_pams_common[var] == 'U':
-                    start_converted = self.starts['Common'][var]
+                    start_converted = self.starts[self.common_ref][var]
                 if self.list_pams_common[var] == 'LU':
-                    start_converted = np.log2(self.starts['Common'][var])
-                mc.starting_point[mc.variable_list['Common'][var]] = start_converted
+                    start_converted = np.log2(self.starts[self.common_ref][var])
+                mc.starting_point[mc.variable_list[self.common_ref][var]] = start_converted
 
         for dataset_name, dataset in mc.dataset_dict.items():
             if self.model_name in dataset.models and dataset_name in self.starts:
@@ -106,7 +113,7 @@ class GaussianProcessAbstract:
     def convert(self, theta, d_name=None):
         dict_out = {}
         for key in self.list_pams_common:
-            dict_out[key] = self.variables['Common'][key](theta, self.fixed, self.var_list['Common'][key])
+            dict_out[key] = self.variables[self.common_ref][key](theta, self.fixed, self.var_list[self.common_ref][key])
         # If we need the parameters for the prior, we are not providing any name for the dataset
         if d_name is not None:
             for key in self.list_pams_dataset:
@@ -117,8 +124,8 @@ class GaussianProcessAbstract:
         prior_out = 0.00
         key_pams = self.convert(theta, d_name)
         if d_name is None:
-            for key in self.prior_pams['Common']:
-                prior_out += giveback_priors(self.prior_kind['Common'][key], self.prior_pams['Common'][key],
+            for key in self.prior_pams[self.common_ref]:
+                prior_out += giveback_priors(self.prior_kind[self.common_ref][key], self.prior_pams[self.common_ref][key],
                                              key_pams[key])
         else:
             for key in self.prior_pams[d_name]:
@@ -151,8 +158,8 @@ class GaussianProcessAbstract:
     def initialize(self, mc):
 
         for name in self.list_pams_common:
-            if name in mc.variable_list['Common']:
-                mc.pam_names[mc.variable_list['Common'][name]] = name
+            if name in mc.variable_list[self.common_ref]:
+                mc.pam_names[mc.variable_list[self.common_ref][name]] = name
 
         for dataset_name, dataset in mc.dataset_dict.items():
             for name in self.list_pams_dataset:
@@ -162,14 +169,13 @@ class GaussianProcessAbstract:
             if self.model_name in dataset.models:
                 self.define_kernel(dataset)
 
-
     def print_vars(self, mc, theta):
 
         for name in self.list_pams_common:
-            if name in mc.variable_list['Common']:
-                var = self.variables['Common'][name](theta, self.fixed, self.var_list['Common'][name])
-                print 'GaussianProcess ', name, var, self.var_list['Common'][name], '(', theta[
-                        self.var_list['Common'][name]], ')'
+            if name in mc.variable_list[self.common_ref]:
+                var = self.variables[self.common_ref][name](theta, self.fixed, self.var_list[self.common_ref][name])
+                print 'GaussianProcess ', name, var, self.var_list[self.common_ref][name], '(', theta[
+                        self.var_list[self.common_ref][name]], ')'
 
         #for dataset in mc.dataset_dict.itervalues():
         for dataset_name in mc.dataset_dict.iterkeys():
@@ -191,8 +197,7 @@ class GaussianProcess_QuasiPeriodicActivity(GaussianProcessAbstract):
      - omega: is the length scale of the periodic component, and can be linked to the size evolution of the active regions;
      - h: represents the amplitude of the correlations '''
 
-    model_name = 'gaussian'
-    common_ref = 'Common'
+    common_ref = 'common'
 
     list_pams_common = {
         'Prot': 'U',

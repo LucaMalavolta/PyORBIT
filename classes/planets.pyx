@@ -2,10 +2,18 @@
 # Info to unpack the variables inside emcee must be included here
 # Physical effects must be included here
 from common import *
+from compute_RV import ComputeKeplerian, ComputeDynamical
 
 
 class PlanetsCommonVariables:
-    def __init__(self):
+    def __init__(self, model_name):
+
+        self.model_class = 'planets'
+        self.model_name = model_name
+
+        self.keplerian_model = ComputeKeplerian()
+        self.dynamical_model = ComputeDynamical()
+
         self.n_planets = 0
         self.planet_name = []
 
@@ -26,6 +34,8 @@ class PlanetsCommonVariables:
         self.dynamical = {}
         self.transit = {}
         self.dynamical_integrator = 'TRADES'
+
+        self.dynamical_output = None
 
         self.list_pams = {}
 
@@ -286,11 +296,13 @@ class PlanetsCommonVariables:
                     mc.starting_point[mc.variable_list[pl_name]['ecoso']] = self.starts[pl_name]['ecoso']
                     mc.starting_point[mc.variable_list[pl_name]['esino']] = self.starts[pl_name]['esino']
 
-    def return_priors(self, pl_name, theta):
+    def return_priors(self, theta):
         prior_out = 0.00
-        kep_pams = self.convert(pl_name, theta)
-        for key in self.prior_pams[pl_name]:
-            prior_out += giveback_priors(self.prior_kind[pl_name][key], self.prior_pams[pl_name][key], kep_pams[key])
+
+        for pl_name in self.planet_name:
+            kep_pams = self.convert(pl_name, theta)
+            for key in self.prior_pams[pl_name]:
+                prior_out += giveback_priors(self.prior_kind[pl_name][key], self.prior_pams[pl_name][key], kep_pams[key])
         return prior_out
 
     def convert(self, pl_name, theta):
@@ -304,6 +316,32 @@ class PlanetsCommonVariables:
             for key in mc.variable_list[pl_name]:
                 if key != 'kepler_pams':
                     mc.pam_names[mc.variable_list[pl_name][key]] = key
+
+
+    def store_dynamical_model(self, mc, theta):
+        if bool(self.dynamical):
+            """ check if any keyword ahas get the output model from the dynamical tool
+            we must do it here because all the planet are involved"""
+
+            self.dynamical_output = self.dynamical_model.compute(mc, self, theta)
+        return
+
+    def compute(self, theta, dataset):
+
+        dataset_out = np.zeros(dataset.n)
+        if bool(self.dynamical):
+            """ we have dynamical computations, so we include them in the model"""
+            dataset_out += self.dynamical_output[dataset.name_ref]
+
+        for pl_name in self.planet_name:
+            """ we check if there is any planet which model has been obtained by assuming non-intercating
+            keplerians, and then we compute the expected RVs"""
+            if pl_name not in self.dynamical:
+                dataset_out += self.keplerian_model.compute(self, theta, dataset, pl_name)
+
+        return dataset_out
+
+
 
     def print_vars(self, mc, theta):
         for pl_name in self.planet_name:
