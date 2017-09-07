@@ -74,17 +74,17 @@ AU_km = constants.AU
 AUday2ms = AU_km / seconds_in_day * 1000.0
 
 
-parser = argparse.ArgumentParser(prog='PyORBIT_V3_GetResults.py', description='Extract results from output MCMC')
+parser = argparse.ArgumentParser(prog='PyORBIT_V4_GetResults.py', description='Extract results from output MCMC')
 # parser.add_argument('-l', type=str, nargs='+', help='line identificator')
 parser.add_argument('sample', type=str, nargs=1, help='sample (emcee or polychord)')
 parser.add_argument('config_file', type=str, nargs=1, help='config file')
 parser.add_argument('-p', type=str, nargs='?', default='False', help='Create plot files')
-parser.add_argument('-mp', type=str, nargs='?', default='False', help='Create MEGA plot')
+parser.add_argument('-mp', type=str, nargs='?', default='False', help='Create MEGA plot - it may be slow!')
 parser.add_argument('-v', type=str, nargs='?', default='False', help='Create Veusz ancillary files')
-parser.add_argument('-t', type=str, nargs='?', default='False', help='Create GR traces')
-parser.add_argument('-nburn', type=int, nargs='?', default=0, help='emcee burn-ins')
+parser.add_argument('-t', type=str, nargs='?', default='False', help='Create Gelman-Rubin traces')
+parser.add_argument('-nburn', type=int, nargs='?', default=0, help='Change the emcee burn-in value to the input value')
 parser.add_argument('-c', type=str, nargs='?', default='False', help='Create Chains plots')
-parser.add_argument('-forecast', type=float, nargs='?', default=None, help='Create Chains plots')
+parser.add_argument('-forecast', type=float, nargs='?', default=None, help='Project RV curve samples into the phase plot')
 
 args = parser.parse_args()
 
