@@ -202,7 +202,7 @@ class ModelContainer:
             logchi2_gp_model = None
             for model in dataset.models:
 
-                if self.models[model].model_class is 'gaussian_process':
+                if self.models[model].model_class == 'gaussian_process':
                     logchi2_gp_model = model
                     continue
                 else:

@@ -1,6 +1,11 @@
 import numpy as np
-import kepler_exo as kp
+
+import sys
+import os
 import matplotlib.pyplot as plt
+
+sys.path.insert(0, '../classes/')
+import kepler_exo as kp
 
 
 
@@ -106,12 +111,12 @@ def create_test2():
     plt.axvline(Transit_Time)
     plt.show()
 
-    fileout = open('example/test2_RV.dat', 'w')
+    fileout = open('test2_RV.dat', 'w')
     for ii in xrange(0, np.size(x)):
         fileout.write('{0:14f} {1:14f} {2:14f} {3:5d} {4:5d} {5:5d} \n'.format(x[ii], mod_pl[ii], 2., 0, 0, -1))
     fileout.close()
 
-    fileout = open('example/test2_Tcent_0.dat', 'w')
+    fileout = open('test2_Tcent_0.dat', 'w')
     for ii in xrange(0, np.size(Transit_Time)):
         fileout.write('{0:14f} {1:14f} \n'.format(Transit_Time, 0.01))
     fileout.close()
