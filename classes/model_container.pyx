@@ -251,6 +251,9 @@ class ModelContainer:
         model_dsys = {}
         model_curv = {}
 
+        ''' NEW!
+        create fake dataset with dataset.x0 and all the required parameters
+        '''
         model_orbs = {'BJD': x_range * 0.0, 'pha': x_phase * 0.0}
         model_curv['BJD'] = x_range * 0.0
         model_curv['pha'] = x_phase * 0.0
@@ -285,7 +288,7 @@ class ModelContainer:
                 model_orbs['BJD'] += model_plan['BJD'][pl_name]
 
         for model in self.models.itervalues():
-            if model.model_class is 'curvature':
+            if model.model_class == 'curvature':
                 curv_pams = model.convert(theta)
                 model_curv['BJD'] += model.model_curvature(curv_pams, x_range - self.Tref)
 
@@ -306,8 +309,14 @@ class ModelContainer:
             if 'none' in dataset.models or 'None' in dataset.models:
                 continue
 
+            '''
             for model in dataset.models:
-                if model is 'planets':
+
+                    dataset_out[model] = self.models[model].compute(theta, dataset)
+            '''
+
+            for model in dataset.models:
+                if model == 'planets':
                     if bool(self.models['planets'].dynamical):
                         """Dynamical models (with all the interacting planets included in the resulting RVs)"""
                         model_orbs[dataset_name] += dyn_output[dataset_name]
@@ -324,14 +333,14 @@ class ModelContainer:
                             model_orbs[dataset_name] += model_plan[dataset_name][pl_name]
                             dataset.model += model_plan[dataset_name][pl_name]
 
-                elif self.models[model].model_class is 'curvature':
+                elif self.models[model].model_class == 'curvature':
                     model_curv[dataset_name] += self.models[model].model_curvature(curv_pams, dataset.x0)
                     """ Saving to dataset model in case it's required by GP computation"""
                     dataset.model += model_curv[dataset_name]
-                elif self.models[model].model_class is 'correlation':
+                elif self.models[model].model_class == 'correlation':
                     model_actv[dataset_name] += self.models[model].compute(theta, dataset)
                     dataset.model += model_actv[dataset_name]
-                elif self.models[model].model_class is 'gaussian_process':
+                elif self.models[model].model_class == 'gaussian_process':
                     model_actv[dataset_name] += self.models[model].sample_compute(theta, dataset)
 
             #if 'sinusoids' in dataset.models:

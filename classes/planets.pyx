@@ -317,7 +317,6 @@ class PlanetsCommonVariables:
                 if key != 'kepler_pams':
                     mc.pam_names[mc.variable_list[pl_name][key]] = key
 
-
     def store_dynamical_model(self, mc, theta):
         if bool(self.dynamical):
             """ check if any keyword ahas get the output model from the dynamical tool
