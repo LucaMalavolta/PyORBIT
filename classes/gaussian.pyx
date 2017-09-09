@@ -61,6 +61,13 @@ class GaussianProcessAbstract:
                 self.var_list[self.common_ref][var] = self.nfix
                 self.fixed.append(self.fix_list[self.common_ref][var])
                 self.nfix += 1
+            elif var in mc.variable_list[self.common_ref]:
+                if self.list_pams_common[var] == 'U':
+                    self.variables[self.common_ref][var] = get_var_val
+                if self.list_pams_common[var] == 'LU':
+                    self.variables[self.common_ref][var] = get_var_exp
+
+                self.var_list[self.common_ref][var] = mc.variable_list[self.common_ref][var]
             else:
                 if self.list_pams_common[var] == 'U':
                     self.variables[self.common_ref][var] = get_var_val

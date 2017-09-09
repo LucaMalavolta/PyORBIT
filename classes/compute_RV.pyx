@@ -177,14 +177,14 @@ class ComputeDynamical:
 
         self.dynamical_set['trades']['n_body'] = n_body
 
-        #print   '0  ---> ', self.dynamical_set['trades']['ti_beg']
-        #print   '1  ---> ', self.dynamical_set['trades']['ti_ref']
-        #print   '2  ---> ', self.dynamical_set['trades']['ti_int']
-        #print   '3  ---> ', self.dynamical_set['trades']['n_body']
-        #print   '4  ---> ', self.dynamical_set['data']['t0_tot']
-        #print   '5  ---> ', self.dynamical_set['data']['t0_num']
-        #print   '6  ---> ', self.dynamical_set['data']['t0_obs']
-        #print   '7  ---> ', self.dynamical_set['data']['t0_err']
+        # print   '0  ---> ', self.dynamical_set['trades']['ti_beg']
+        # print   '1  ---> ', self.dynamical_set['trades']['ti_ref']
+        # print   '2  ---> ', self.dynamical_set['trades']['ti_int']
+        # print   '3  ---> ', self.dynamical_set['trades']['n_body']
+        # print   '4  ---> ', self.dynamical_set['data']['t0_tot']
+        # print   '5  ---> ', self.dynamical_set['data']['t0_num']
+        # print   '6  ---> ', self.dynamical_set['data']['t0_obs']
+        # print   '7  ---> ', self.dynamical_set['data']['t0_err']
 
         pytrades.args_init(self.dynamical_set['trades']['ti_beg'],
                            self.dynamical_set['trades']['ti_ref'],
