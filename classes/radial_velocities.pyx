@@ -39,28 +39,29 @@ class AbstractOrbit(AbstractModel):
 
         return True
 
-    def define_common_special_starting_point(self, mc, var):
-        '''eccentricity and argument of pericenter require a special treatment
-         since they can be provided as fixed individual values or may need to be combined
-         in ecosw and esinw if are both free variables'''
 
-        if not(var == "e" or var == "o"):
-            return False
 
-        if 'ecoso' in self.common_model.variable_sampler and \
-           'esino' in self.common_model.variable_sampler:
+    def special_recenter_bounds(self, population):
 
-            if 'e' in self.common_model.starts and 'o' in self.common_model.starts:
-                mc.starting_point[self.common_model.variable_sampler['ecoso']] = \
-                    np.sqrt(self.common_model.starts['e']) * np.cos(self.common_model.starts['o'])
-                mc.starting_point[self.common_model.variable_sampler['esino']] = \
-                    np.sqrt(self.common_model.starts['e']) * np.sin(self.common_model.starts['o'])
+        n_pop = np.size(population, axis=0)
+        if 'esino' in self.common_models.variable_sampler and \
+           'ecoso' in self.common_models.variable_sampler:
+                esino_list = self.common_models.variable_sampler['esino']
+                ecoso_list = self.common_models.variable_sampler['ecoso']
+                e_pops = population[:, esino_list] ** 2 + population[:, ecoso_list] ** 2
+                o_pops = np.arctan2(population[:, esino_list], population[:, ecoso_list], dtype=np.double)
+                # e_mean = (self.common_models[planet_name].bounds['e'][0] +
+                # self.common_models[planet_name].bounds['e'][1]) / 2.
+                for ii in xrange(0, n_pop):
+                    if not self.common_models.bounds['e'][0] + 0.02 <= e_pops[ii] < \
+                                    self.common_models.bounds['e'][1] - 0.02:
+                        e_random = np.random.uniform(self.common_models.bounds['e'][0],
+                                                     self.common_models.bounds['e'][1])
+                        population[ii, esino_list] = np.sqrt(e_random) * np.sin(o_pops[ii])
+                        population[ii, ecoso_list] = np.sqrt(e_random) * np.cos(o_pops[ii])
 
-            elif 'ecoso' in self.common_model.starts and 'esino' in self.common_model.starts:
-                mc.starting_point[self.common_model.variable_sampler['ecoso']] = self.common_model.starts['ecoso']
-                mc.starting_point[self.common_model.variable_sampler['ecoso']] = self.common_model.starts['esino']
+        population * 0.0000
 
-        return True
 
 class RVkeplerian(AbstractOrbit):
 
@@ -77,10 +78,6 @@ class RVkeplerian(AbstractOrbit):
             'e': 'U',  # eccentricity, uniform prior - to be fixed
             'o': 'U'}  # argument of pericenter
         self.list_pams_dataset = {}
-
-        """ This is the list of planets that should use that model
-        This list must be filled somehow
-        """
 
     def compute(self, theta, dataset):
         variable_value = self.convert(theta)
@@ -137,15 +134,6 @@ class TransitTimeKeplerian(AbstractOrbit):
         """
 
     def compute(self, theta, dataset):
-        variable_value = self.convert(theta)
-        return kp.kepler_RV_T0P(dataset.x0,
-                                variable_value['f'],
-                                variable_value['P'],
-                                variable_value['K'],
-                                variable_value['e'],
-                                variable_value['o'])
-
-    def compute(self, theta, dataset):
         # By default, dataset.planet_name == planet_name
         variable_value = self.convert(theta)
         return (np.floor(dataset.x0 / variable_value['P'])) * variable_value['P'] + dataset.Tref + \
@@ -175,7 +163,7 @@ class TransitTimeDynamical(AbstractOrbit):
         """
 
     def compute(self, theta, dataset):
-        return  np.zeros(dataset.n, dtype=np.double)
+        return np.zeros(dataset.n, dtype=np.double)
 
 
 class DynamicalIntegrator:
@@ -221,7 +209,7 @@ class DynamicalIntegrator:
         """ Putting all the RV epochs in the same array, flagging in the temporary buffer
             the stored values according to their dataset of origin
         """
-        for dataset_name, dataset in mc.dataset_dict.items():
+        for dataset_name, dataset in mc.dataset_dict.iteritems():
             if dataset.dynamical is False: continue
             if dataset.kind == 'RV':
                 int_buffer['rv_times'].extend(dataset.x.tolist())
@@ -234,7 +222,7 @@ class DynamicalIntegrator:
         """ Creating the flag array after all the RV epochs have been mixed
         """
         self.dynamical_set['data'] = {'selection': {}}
-        for dataset_name, dataset in mc.dataset_dict.items():
+        for dataset_name, dataset in mc.dataset_dict.iteritems():
             if dataset.dynamical is False: continue
             if dataset.kind == 'RV':
                 self.dynamical_set['data']['selection'][dataset_name] = \
@@ -435,7 +423,7 @@ class DynamicalIntegrator:
         #print 'T0_sim: ', t0_sim
         #print 'RV_sim: ', rv_sim
         #t0_sim -= mc.Tref
-        for dataset_name, dataset in mc.dataset_dict.items():
+        for dataset_name, dataset in mc.dataset_dict.iteritems():
             if dataset.dynamical is False: continue
             if dataset.kind == 'RV' and full_orbit is None:
                 output[dataset_name] = rv_sim[self.dynamical_set['data']['selection'][dataset_name]]
@@ -457,7 +445,7 @@ class DynamicalIntegrator:
         dataset_rv = 0
         int_buffer = dict(rv_times=[], t0_times=[], rv_ref=[], t0_ref=[], key_ref={})
 
-        for dataset_name, dataset in mc.dataset_dict.items():
+        for dataset_name, dataset in mc.dataset_dict.iteritems():
             if dataset.dynamical is False: continue
             if dataset.kind == 'RV':
                 int_buffer['rv_times'].extend(dataset.x0.tolist())
@@ -470,7 +458,7 @@ class DynamicalIntegrator:
         if np.size(int_buffer['t0_times']) == 0:
             int_buffer['t0_times'] = int_buffer['rv_times']
 
-        for dataset_name, dataset in mc.dataset_dict.items():
+        for dataset_name, dataset in mc.dataset_dict.iteritems():
             if dataset.dynamical is False: continue
             if dataset.kind == 'RV':
                 self.dynamical_set['data_selection'][dataset_name] = \
@@ -559,7 +547,7 @@ class DynamicalIntegrator:
         # print 'Full orbit flag: ', full_orbit
         # print positions[:10,:]
 
-        for dataset_name, dataset in mc.dataset_dict.items():
+        for dataset_name, dataset in mc.dataset_dict.iteritems():
             if dataset.dynamical is False: continue
             if dataset.kind == 'RV' and full_orbit is None:
                 output[dataset_name] = rv_meas[self.dynamical_set['data_selection'][dataset_name]]

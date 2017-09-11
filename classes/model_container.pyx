@@ -130,10 +130,10 @@ class ModelContainer:
         self.starting_point = np.average(self.bounds, axis=1)
 
         for dataset in self.dataset_dict.itervalues():
-            dataset.starting_point(self)
+            dataset.define_starting_point(self)
 
         for model in self.models.itervalues():
-            model.starting_point(self)
+            model.define_starting_point(self)
 
     def check_bounds(self, theta):
         for ii in xrange(0, self.ndim):
@@ -142,7 +142,6 @@ class ModelContainer:
 
         period_storage = []
         for planet_name in self.planet_dict:
-
 
             """ Step 1: save the all planet periods into a list"""
             period_storage.extend(
@@ -167,22 +166,18 @@ class ModelContainer:
     def __call__(self, theta):
         if not self.check_bounds(theta):
             return -np.inf
-        logchi2_out = 2. * self.ndof * np.log(2 * np.pi)
-
-        for model in self.common_models.itervalues():
-            logchi2_out += model.return_priors(theta)
 
         if self.dynamical_model is not None:
             """ check if any keyword ahas get the output model from the dynamical tool
             we must do it here because all the planet are involved"""
             dynamical_output = self.dynamical_model.compute(self, theta)
 
+        logchi2_out = 2. * self.ndof * np.log(2 * np.pi)
 
-        #if 'sinusoid' in self.model_list:
-        #    logchi2_out += giveback_priors(
-        #        self.scv.prior_kind['Prot'], self.scv.prior_pams['Prot'], theta[self.variable_list['Common']['Prot']])
+        for model in self.common_models.itervalues():
+            logchi2_out += model.return_priors(theta)
 
-        for dataset_name, dataset in self.dataset_dict.items():
+        for dataset_name, dataset in self.dataset_dict.iteritems():
             dataset.model_reset()
             dataset.model_offset(theta)
             dataset.model_jitter(theta)
@@ -191,14 +186,10 @@ class ModelContainer:
             if 'none' in dataset.models or 'None' in dataset.models:
                 continue
 
-            AHI AHI
-            #### logchi2_out += model.return_priors(theta, dataset_name)
-
             logchi2_gp_model = None
             for model in dataset.models:
-                print '1 ', self.models
-                print '2 ', self.models[model]
-                print '3 ', self.models[model].model_class
+
+                logchi2_out += self.models[model].return_priors(theta, dataset_name)
 
                 if self.models[model].model_class == 'gaussian_process':
                     logchi2_gp_model = model
@@ -236,45 +227,16 @@ class ModelContainer:
     def recenter_bounds(self, pop_mean, population):
         # This function recenters the bounds limits for circular variables
         # Also, it extends the range of a variable if the output of PyDE is a fixed number
+
         ind_list = []
-        n_pop = np.size(population, axis=0)
-        for planet_name in self.planet_dict:
+        for model in self.models.itervalues():
+            print model
+            model.special_recenter_bounds(population)
+            ind_list.extend(model.index_recenter_bounds())
 
-            if 'esino' in self.common_models.variable_sampler:
-                esino_list = self.common_models.variable_sampler['esino']
-                ecoso_list = self.common_models.variable_sampler['ecoso']
-                e_pops = population[:, esino_list] ** 2 + population[:, ecoso_list] ** 2
-                o_pops = np.arctan2(population[:, esino_list], population[:, ecoso_list], dtype=np.double)
-                # e_mean = (self.common_models[planet_name].bounds['e'][0] +
-                # self.common_models[planet_name].bounds['e'][1]) / 2.
-                for ii in xrange(0, n_pop):
-                    if not self.common_models[planet_name].bounds['e'][0] + 0.02 <= e_pops[ii] < \
-                                    self.common_models[planet_name].bounds['e'][1] - 0.02:
-                        e_random = np.random.uniform(self.common_models[planet_name].bounds['e'][0],
-                                                     self.common_models[planet_name].bounds['e'][1])
-                        population[ii, esino_list] = np.sqrt(e_random) * np.sin(o_pops[ii])
-                        population[ii, ecoso_list] = np.sqrt(e_random) * np.cos(o_pops[ii])
+        for dataset in self.dataset_dict.itervalues():
 
-            if 'f' in self.common_models.variable_sampler:
-                ind_list.append(self.common_models.variable_sampler['f'])
 
-            if 'o' in self.common_models.variable_sampler:
-                ind_list.append(self.common_models.variable_sampler['o'])
-
-            if 'lN' in self.common_models.variable_sampler:
-                ind_list.append(self.common_models.variable_sampler['lN'])
-
-        """ 
-        if 'sinusoids' in self.model_list:
-            for jj in range(0, self.scv.n_seasons):
-                ind_list.extend(self.variable_list[self.scv.season_name[jj] + '_pha'])
-            for dataset in self.dataset_dict.itervalues():
-                for jj in range(0, self.scv.n_seasons):
-                    if dataset.season_flag[jj]:
-                        # ind_list.extend(self.variable_list[dataset.planet_name][self.scv.season_name[jj] + '_amp'])
-                        if self.scv.use_offset[dataset.kind]:
-                            ind_list.append(self.variable_list[dataset.kind][self.scv.season_name[jj] + '_off'])
-        """
         if np.size(ind_list) > 0:
             tmp_range = (self.bounds[:, 1] - self.bounds[:, 0]) / 2
             for var_ind in ind_list:

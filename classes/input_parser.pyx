@@ -77,12 +77,12 @@ def yaml_parser(file_conf, mc):
 
     mc.planet_name = config_in['output']
 
-    for model_name, conf in conf_common.items():
+    for model_name, conf in conf_common.iteritems():
 
         if model_name == 'planets':
 
             print conf
-            for planet_name, planet_conf in conf.items():
+            for planet_name, planet_conf in conf.iteritems():
 
                 mc.common_models[planet_name] = define_common_type_to_class['planets'](planet_name)
                 boundaries_fixed_priors_stars(mc, mc.common_models[planet_name], planet_conf)
@@ -93,42 +93,58 @@ def yaml_parser(file_conf, mc):
                     mc.planet_dict[planet_name] = 'keplerian'
 
     """ Check if there is any planet that requires dynamical computations"""
-    for planet_name, orbit in mc.planet_dict.items():
+    for planet_name, orbit in mc.planet_dict.iteritems():
         if orbit == 'dynamical':
             mc.dynamical_dict[planet_name] = True
+
         if len(mc.dynamical_dict) > 0:
             mc.dynamical_model = DynamicalIntegrator()
 
-    for model_name, model in conf_models.items():
+    for model_name, model in conf_models.iteritems():
 
         if 'type' in model:
             model_type = model['type']
         else:
             model_type = model_name
 
+
         if model_type == 'radial_velocities':
-            for planet_name in model['planets']:
 
-                mc.models[planet_name] = \
-                    define_type_to_class[model_type][mc.planet_dict[planet_name]](planet_name, planet_name, mc)
+            """ radial_velocities is just a wrapper for the planets to be actually included in the model, so we
+                substitue it with the individual planets in the list"""
 
-                if planet_name in mc.dynamical_dict:
-                    for dataset in mc.dataset_dict.itervalues():
-                        if model_name in dataset.models:
-                            dataset.dynamical = True
+            model_name_expanded = [model_name + '_' + pl_name for pl_name in model['planets']]
+            """ Let's avoid some dumb user using the planet names to name the models"""
+
+            for dataset in mc.dataset_dict.itervalues():
+                if model_name in dataset.models:
+                    dataset.models.remove(model_name)
+                    dataset.models.extend(model_name_expanded)
+
+                    if len(list(set(model['planets']) & set(mc.dynamical_dict))):
+                        dataset.dynamical = True
+
+            for model_name_exp, planet_name in zip(model_name_expanded, model['planets']):
+
+                mc.models[model_name_exp] = \
+                    define_type_to_class[model_type][mc.planet_dict[planet_name]](model_name_exp, planet_name, mc)
 
         if model_type == 'transit_times':
+            """ Only one planet for each file with transit times... mixing them would cause HELL"""
 
-            for planet_name in model['planets']:
-                mc.models[planet_name] = \
-                    define_type_to_class[model_type][mc.planet_dict[planet_name]](planet_name)
+            planet_name = model['planet']
+            mc.models[model_name] = \
+                    define_type_to_class[model_type][mc.planet_dict[planet_name]](model_name, planet_name, mc)
 
-                if planet_name in mc.dynamical_dict:
-                    for dataset_name, dataset in mc.dataset_dict.iter():
-                        if model_name in dataset.models:
-                            dataset.planet_name = planet_name
-                            dataset.dynamical = True
-                            mc.t0_dict[planet_name] = dataset_name
+            for dataset_name, dataset in mc.dataset_dict.iter():
+                if planet_name in mc.dynamical_dict and planet_name in dataset.models:
+                    dataset.planet_name = planet_name
+                    dataset.dynamical = True
+                    mc.t0_dict[planet_name] = dataset_name
+
+
+        for dataset in mc.dataset_dict.itervalues():
+            print '--->', dataset.models
 
     if 'Tref' in conf_parameters:
         mc.Tref = np.asarray(conf_parameters['Tref'])

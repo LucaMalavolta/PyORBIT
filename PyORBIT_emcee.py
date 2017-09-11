@@ -55,7 +55,7 @@ if not os.path.exists(emcee_dir_output):
     os.makedirs(emcee_dir_output)
 
 if mc.dynamical_model is not None:
-        mc.dynamical_model.prepare(mc)
+    mc.dynamical_model.prepare(mc)
 
 print
 print 'Reference Time Tref: ', mc.Tref

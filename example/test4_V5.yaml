@@ -50,7 +50,7 @@ models:
     planets: ['d']
   ttv_b:
     kind: transit_times
-    planet: ['b']
+    planet: b
 old:
   planets:
     0:

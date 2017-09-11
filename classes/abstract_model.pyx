@@ -51,7 +51,7 @@ class AbstractModel():
 
         ''' Repeating the same procedure for dataset-related variables'''
 
-        for dataset_name, dataset in mc.dataset_dict.items():
+        for dataset_name, dataset in mc.dataset_dict.iteritems():
             if self.model_name in dataset.models:
                 for var in self.list_pams_dataset:
 
@@ -81,7 +81,7 @@ class AbstractModel():
             if name in mc.variable_sampler[self.common_ref]:
                 mc.pam_names[mc.variable_sampler[self.common_ref][name]] = name
 
-        for dataset_name, dataset in mc.dataset_dict.items():
+        for dataset_name, dataset in mc.dataset_dict.iteritems():
             for name in self.list_pams_dataset:
                 if name in mc.variable_sampler[dataset_name]:
                     mc.pam_names[mc.variable_sampler[dataset_name][name]] = name
@@ -96,22 +96,11 @@ class AbstractModel():
     def define_dataset_special_starting_point(self, mc, var):
         return False
 
-    def starting_point(self, mc):
+    def define_starting_point(self, mc):
 
-        for var in self.common_model.starts:
-
-            if self.define_common_special_starting_point(mc, var):
-                continue
-
-            if self.common_model.list_pams[var] == 'U':
-                start_converted = self.common_model.starts[var]
-            if self.common_model.list_pams[var] == 'LU':
-                start_converted = np.log2(self.common_model.starts[var])
-            mc.starting_point[self.common_model.variable_sampler[var]] = start_converted
-
-        for dataset_name, dataset in mc.dataset_dict.items():
+        for dataset_name, dataset in mc.dataset_dict.iteritems():
             if self.model_name in dataset.models and dataset_name in self.starts:
-                for var in self.common_model.starts:
+                for var in self.starts[dataset_name]:
 
                     if self.define_dataset_special_starting_point(mc, var):
                         continue
@@ -126,22 +115,31 @@ class AbstractModel():
         variable_value = {}
         for var in self.list_pams_common:
             variable_value[var] = self.common_model.transformation[var](
-                theta, self.fixed, self.common_model.variable_sampler[var])
+                theta, self.common_model.fixed, self.common_model.variable_index[var])
         # If we need the parameters for the prior, we are not providing any name for the dataset
         if dataset_name is not None:
             for var in self.list_pams_dataset:
                 variable_value[var] = self.transformation[dataset_name][var](
-                    theta, self.fixed, self.variable_sampler[dataset_name][var])
+                    theta, self.fixed, self.variable_index[dataset_name][var])
         return variable_value
 
     def return_priors(self, theta, dataset_name):
         prior_out = 0.00
         variable_value = self.convert(theta, dataset_name)
 
-        for var in self.list_pams_dataset:
-            if var in self.prior_pams[dataset_name]:
-                prior_out += giveback_priors(self.prior_kind[dataset_name][var],
-                                             self.prior_pams[dataset_name][var],
-                                             variable_value[var])
+        for var in list(set(self.list_pams_dataset) and set(self.prior_pams[dataset_name])):
+            prior_out += giveback_priors(self.prior_kind[dataset_name][var],
+                                         self.prior_pams[dataset_name][var],
+                                         variable_value[var])
         return prior_out
+
+    def index_recenter_bounds(self, dataset_name):
+        ind_list = []
+        for var in list(set(self.common_model.recenter_pams) & set(self.variable_sampler)):
+                ind_list.append(self.common_model.variable_sampler[var])
+
+        return ind_list
+
+    def special_recenter_bounds(self, population):
+        pass
 

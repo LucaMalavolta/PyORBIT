@@ -15,7 +15,7 @@ class Dataset:
         self.name = None
 
         """ Dataset will be flagged if it contains RV or Tcent data to be modeled with the dynamical integrator"""
-        self.dynamical = True
+        self.dynamical = False
         self.planet_name = None
 
         self.list_pams = {'jitter': 'LU', 'offset': 'U', 'linear': 'U'}
@@ -152,7 +152,7 @@ class Dataset:
                 mc.bounds_list.append(bounds_tmp)
             mc.ndim += self.n_sys[var]
 
-    def starting_point(self, mc):
+    def define_starting_point(self, mc):
         for var in self.starts:
             if self.list_pams[var] == 'U':
                 start_converted = self.starts[var]

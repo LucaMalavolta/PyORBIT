@@ -27,18 +27,43 @@ class AbstractCommon:
     def convert(self, theta):
         variable_value = {}
         for var in self.variable_index:
-            variable_value[var] = self.common_model.transformation[var](
-                theta, self.fixed, self.common_model.variable_sampler[var])
+            variable_value[var] = self.transformation[var](theta, self.fixed, self.variable_index[var])
+        return variable_value
+
+    def define_starting_point(self):
+        starting_point = {}
+        for var in list(set(self.starts) and set(self.variable_sampler)):
+
+            add_special = self.define_special_starting_point(var)
+            if bool(add_special):
+                starting_point.update(add_special)
+                continue
+
+            if self.list_pams[var] == 'U':
+                start_converted = self.starts[var]
+            if self.list_pams[var] == 'LU':
+                start_converted = np.log2(self.starts[var])
+            starting_point[self.variable_sampler[var]] = start_converted
+
+        return starting_point
+
+        AHI AHI check indexes
+
 
     def return_priors(self, theta):
+        """ return prior is defined here because, differently from other functions that can be esecuted more than once
+        on the same variable,  the prior for a given parameter should be computed and added to the log_chi2 only one """
         prior_out = 0.00
         variable_value = self.convert(theta)
-        for var in self.value_model:
-            if var in self.prior_pams:
-                prior_out += giveback_priors(self.prior_kind[var],
-                                             self.prior_pams[var],
-                                             variable_value[var])
+        for var in list(set(self.prior_pams) & set(variable_value)):
+            prior_out += giveback_priors(self.prior_kind[var], self.prior_pams[var], variable_value[var])
         return prior_out
+
+    def index_recenter_bounds(self):
+        ind_list = []
+        for var in list(set(self.recenter_pams) & set(self.variable_sampler)):
+                ind_list.append(self.variable_sampler[var])
+        return ind_list
 
 
 class CommonPlanets(AbstractCommon):
@@ -79,3 +104,29 @@ class CommonPlanets(AbstractCommon):
         'R': [0.00001, 0.5],  # Fix the unit
         'a': [0.00001, 50.]  # Fix the unit
     }
+
+    recenter_pams ={'f', 'o', 'lN'}
+
+    def define_special_starting_point(self, var):
+        '''eccentricity and argument of pericenter require a special treatment
+         since they can be provided as fixed individual values or may need to be combined
+         in ecosw and esinw if are both free variables'''
+
+        starting_point = {}
+        if not (var == "e" or var == "o"):
+            return starting_point
+
+        if 'ecoso' in self.variable_sampler and \
+                        'esino' in self.variable_sampler:
+
+            if 'e' in self.starts and 'o' in self.starts:
+                starting_point[self.variable_sampler['ecoso']] = \
+                    np.sqrt(self.starts['e']) * np.cos(self.starts['o'])
+                starting_point[self.variable_sampler['esino']] = \
+                    np.sqrt(self.starts['e']) * np.sin(self.starts['o'])
+
+            elif 'ecoso' in self.starts and 'esino' in self.starts:
+                starting_point[self.variable_sampler['ecoso']] = self.starts['ecoso']
+                starting_point[self.variable_sampler['ecoso']] = self.starts['esino']
+
+        return starting_point
