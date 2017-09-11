@@ -1,79 +1,66 @@
 from common import *
 
+
 class AbstractModel():
 
-    def define_common_special_bounds(self, mc, var):
-        return False
+    def __init__(self, model_name, common_ref):
+        self.model_name = model_name
+        self.common_ref = common_ref
+        self.variable_sampler = {}
 
-    def define_dataset_special_bounds(self, mc, var):
-        return False
+        self.transformation = {}
+        self.variable_index = {}
+        self.bounds = {}
+        self.variables = {}
 
-    def define_bounds(self, mc):
+        self.starts = {}
+
+        self.fix_list = {}
+        self.fixed = []
+        self.nfix = 0
+
+        self.prior_kind = {}
+        self.prior_pams = {}
+
+    def define_special_variables_bounds(self, ndim, dataset_name, var):
+        return ndim, []
+
+    def define_variables_bounds(self, ndim, dataset_name):
         """ Bounds are defined in this class, where all the Planet-related variables are stored
             Bounds and parameter index CANNOT be defined in the Common class: we don't know a priori which parameters
             will be actually used in the complete model.
         """
+        bounds_list = []
 
-        for var in self.list_pams_common:
-            '''We check for each parameter (except eccentricity and omega) if the variable is a
-                fixed value or a free variable, and move the parameter into the requested space
-                Notice that 'e' and 'w' are not yet included in list_pams[pl_name] at this stage
-            '''
+        self.transformation[dataset_name] = {}
+        self.variable_index[dataset_name] = {}
+        self.variable_sampler[dataset_name] = {}
 
-            if self.define_common_special_bounds(mc, var):
+        for var in self.list_pams_dataset:
+
+            ndim, bounds_special = self.define_dataset_special_bounds(ndim, dataset_name, var)
+            if len(bounds_special) > 0:
+                bounds_list.extend(bounds_special)
                 continue
 
-            if var in self.common_model.fix_list:
-                if var not in self.common_model.transformation[var]:
-                    self.common_model.transformation[var] = get_fix_val
-                    self.common_model.fixed.append(self.common_model.fix_list[var])
-                    self.common_model.variable_index[var] = mc.nfix
-                    self.common_model.variable_sampler[var] = mc.nfix
-                    self.common_model.nfix += 1
-            elif var not in self.common_model.transformation:
-                '''If no bounds have been specified in the input file, we use the default ones
-                    Bounds must be provided in any case to avoid a failure of PyDE '''
-                if var in self.common_model.bounds:
-                    bounds_tmp = self.common_model.bounds[var]
-                else:
-                    bounds_tmp = self.common_model.default_bounds[var]
+            if var in self.fix_list[dataset_name]:
+                self.transformation[dataset_name][var] = get_fix_val
+                self.variable_index[dataset_name][var] = self.nfix
+                self.variable_sampler[dataset_name][var] = self.nfix
+                self.fixed.append(self.fix_list[dataset_name][var])
+                self.nfix += 1
+            else:
+                if self.list_pams_dataset[var] == 'U':
+                    self.transformation[dataset_name][var] = get_var_val
+                    mc.bounds_list.append(self.bounds[dataset_name][var])
+                if self.list_pams_dataset[var] == 'LU':
+                    self.transformation[dataset_name][var] = get_var_exp
+                    mc.bounds_list.append(np.log2(self.bounds[dataset_name][var]))
+                self.variable_index[dataset_name][var] = ndim
+                self.variable_sampler[dataset_name][var] = ndim
+                ndim += 1
+        return ndim, bounds_list
 
-                if self.common_model.list_pams[var] == 'U':
-                    self.common_model.transformation[var] = get_var_val
-                    mc.bounds_list.append(bounds_tmp)
-                elif self.common_model.list_pams[var] == 'LU':
-                    self.common_model.transformation[var] = get_var_exp
-                    mc.bounds_list.append(np.log2(bounds_tmp))
-
-                self.common_model.variable_index[var] = mc.ndim
-                self.common_model.variable_sampler[var] = mc.ndim
-                mc.ndim += 1
-
-        ''' Repeating the same procedure for dataset-related variables'''
-
-        for dataset_name, dataset in mc.dataset_dict.iteritems():
-            if self.model_name in dataset.models:
-                for var in self.list_pams_dataset:
-
-                    if self.define_dataset_special_bounds(mc, var):
-                        continue
-
-                    if var in self.fix_list[dataset_name]:
-                        self.transformation[dataset_name][var] = get_fix_val
-                        self.variable_index[dataset_name][var] = self.nfix
-                        self.variable_sampler[dataset_name][var] = self.nfix
-                        self.fixed.append(self.fix_list[dataset_name][var])
-                        self.nfix += 1
-                    else:
-                        if self.list_pams_dataset[var] == 'U':
-                            self.transformation[dataset_name][var] = get_var_val
-                            mc.bounds_list.append(self.bounds[dataset_name][var])
-                        if self.list_pams_dataset[var] == 'LU':
-                            self.transformation[dataset_name][var] = get_var_exp
-                            mc.bounds_list.append(np.log2(self.bounds[dataset_name][var]))
-                        self.variable_index[dataset_name][var] = mc.ndim
-                        self.variable_sampler[dataset_name][var] = mc.ndim
-                        mc.ndim += 1
     """ 
     def initialize(self, mc):
 
@@ -90,37 +77,28 @@ class AbstractModel():
                 self.define_kernel(dataset)
 
     """
-    def define_common_special_starting_point(self, mc, var):
+
+    def define_special_starting_point(self, starting_point, dataset_name, var):
         return False
 
-    def define_dataset_special_starting_point(self, mc, var):
-        return False
+    def define_starting_point(self, starting_point, dataset_name):
 
-    def define_starting_point(self, mc):
+        for var in self.starts[dataset_name]:
 
-        for dataset_name, dataset in mc.dataset_dict.iteritems():
-            if self.model_name in dataset.models and dataset_name in self.starts:
-                for var in self.starts[dataset_name]:
+            if self.define_special_starting_point(starting_point, dataset_name, var): continue
 
-                    if self.define_dataset_special_starting_point(mc, var):
-                        continue
+            if self.list_pams_dataset[var] == 'U':
+                start_converted = self.starts[dataset_name][var]
+            if self.list_pams_dataset[var] == 'LU':
+                start_converted = np.log2(self.starts[dataset_name][var])
+            starting_point[self.variable_sampler[dataset_name][var]] = start_converted
 
-                    if self.list_pams_dataset[var] == 'U':
-                        start_converted = self.starts[dataset_name][var]
-                    if self.list_pams_dataset[var] == 'LU':
-                        start_converted = np.log2(self.starts[dataset_name][var])
-                    mc.starting_point[self.variable_sampler[dataset_name][var]] = start_converted
-
-    def convert(self, theta, dataset_name=None):
+    def convert(self, theta, dataset_name):
         variable_value = {}
-        for var in self.list_pams_common:
-            variable_value[var] = self.common_model.transformation[var](
-                theta, self.common_model.fixed, self.common_model.variable_index[var])
         # If we need the parameters for the prior, we are not providing any name for the dataset
-        if dataset_name is not None:
-            for var in self.list_pams_dataset:
-                variable_value[var] = self.transformation[dataset_name][var](
-                    theta, self.fixed, self.variable_index[dataset_name][var])
+        for var in self.list_pams_dataset:
+            variable_value[var] = self.transformation[dataset_name][var](
+                theta, self.fixed, self.variable_index[dataset_name][var])
         return variable_value
 
     def return_priors(self, theta, dataset_name):
@@ -135,11 +113,18 @@ class AbstractModel():
 
     def index_recenter_bounds(self, dataset_name):
         ind_list = []
-        for var in list(set(self.common_model.recenter_pams) & set(self.variable_sampler)):
-                ind_list.append(self.common_model.variable_sampler[var])
+        for var in list(set(self.recenter_pams_dataset) & set(self.variable_sampler[dataset_name])):
+                ind_list.append(self.variable_sampler[dataset_name][var])
 
         return ind_list
 
-    def special_recenter_bounds(self, population):
+    def special_recenter_bounds(self, population, dataset_name):
         pass
+
+    def compute(self, variable_value, dataset):
+        return np.zeros(dataset.n, dtype=np.double)
+
+    #def initialize(self):
+    #    for var in self.list_pams_dataset:
+    #        pam_names[self.variable_index[dataset_name][var]] =
 

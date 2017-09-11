@@ -22,7 +22,7 @@ parameters:
   star_mass: [1.00, 0.01]
 solver:
   pyde:
-    ngen: 500
+    ngen: 4000
     npop_mult: 2
   emcee:
     npop_mult: 2

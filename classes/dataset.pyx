@@ -130,10 +130,9 @@ class Dataset:
         env = 1.0 / (self.e ** 2.0 + self.jitter ** 2.0)
         return -0.5 * (np.sum((self.y - self.model) ** 2 * env - np.log(env)))
 
-    def define_bounds(self, mc):
+    def define_variables_bounds(self, ndim):
 
-        mc.variable_list = {}
-
+        bounds_list = []
         for var in self.list_pams:
             if var in self.bounds:
                 bounds_tmp = self.bounds[var]
@@ -147,10 +146,11 @@ class Dataset:
                 self.transformation[var] = get_var_exp
                 bounds_tmp = np.log2(bounds_tmp)
 
-            self.variable_sampler[var] = np.arange(mc.ndim, mc.ndim + self.n_sys[var], 1)
+            self.variable_sampler[var] = np.arange(ndim, ndim + self.n_sys[var], 1)
             for jj in xrange(0, self.n_sys[var]):
-                mc.bounds_list.append(bounds_tmp)
-            mc.ndim += self.n_sys[var]
+                bounds_list.append(bounds_tmp)
+            ndim += self.n_sys[var]
+        return ndim, bounds_list
 
     def define_starting_point(self, mc):
         for var in self.starts:

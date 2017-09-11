@@ -38,7 +38,6 @@ class ModelContainer:
         self.starting_point_flag = False
         self.recenter_bounds_flag = True
 
-        self.bounds_list = []
         self.bounds = None
         self.range = None
         self.ndim = 0
@@ -82,7 +81,7 @@ class ModelContainer:
         # Third step: initialize the variables names
 
         self.model_setup()
-        self.create_bounds()
+        self.create_variables_bounds()
 
         self.ndata = 0
         for dataset in self.dataset_dict.itervalues():
@@ -93,21 +92,28 @@ class ModelContainer:
 
         #self.initialize()
 
-    def create_bounds(self):
+    def create_variables_bounds(self):
         # This routine creates the boundary array and at the same time
         # creates a dictionary with the name of the arrays and their
         # positions in bounds/theta array so that they can be accessed
         # without using nested counters
 
         self.ndim = 0
+        bounds_list = []
+        for model in self.models.itervalues():
+            self.ndim, bounds_ext = self.common_models[model.common_ref].define_variables_bounds(
+                    self.ndim, model.list_pams_common)
+            bounds_list.extend(bounds_ext)
 
         for dataset in self.dataset_dict.itervalues():
-            dataset.define_bounds(self)
+            self.ndim, bounds_ext = dataset.define_variables_bounds(self.ndim)
+            bounds_list.extend(bounds_ext)
 
-        for model in self.models.itervalues():
-            model.define_bounds(self)
+            for model_name in dataset.models:
+                self.ndim, bounds_ext = self.models[model_name].define_variables_bounds(self.ndim, dataset.name_ref)
+            bounds_list.extend(bounds_ext)
 
-        self.bounds = np.asarray(self.bounds_list)
+        self.bounds = np.asarray(bounds_list)
         self.range = self.bounds[:, 1] - self.bounds[:, 0]
 
     """ 
@@ -126,14 +132,18 @@ class ModelContainer:
 
     """
     def create_starting_point(self):
-
+        print 'IN:', self.starting_point
         self.starting_point = np.average(self.bounds, axis=1)
 
-        for dataset in self.dataset_dict.itervalues():
-            dataset.define_starting_point(self)
+        for model in self.common_models.itervalues():
+            model.define_starting_point(self.starting_point)
 
-        for model in self.models.itervalues():
-            model.define_starting_point(self)
+        for dataset in self.dataset_dict.itervalues():
+            dataset.define_starting_point(self.starting_point)
+
+            for model in dataset.models:
+                self.models[model].define_starting_point(self.starting_point)
+        print 'OUT:', self.starting_point
 
     def check_bounds(self, theta):
         for ii in xrange(0, self.ndim):
@@ -199,7 +209,10 @@ class ModelContainer:
                     dataset.model += dynamical_output[dataset_name]
                     continue
 
-                dataset.model += self.models[model].compute(theta, dataset)
+                common_ref = self.models[model].common_ref
+                variable_values = self.common_models[common_ref].convert(theta)
+                variable_values.update(self.models[model].convert(theta, dataset))
+                dataset.model += self.models[model].compute(variable_values, dataset)
 
             # Gaussian Process check MUST be the last one or the program will fail
             if logchi2_gp_model is not None:
@@ -229,13 +242,19 @@ class ModelContainer:
         # Also, it extends the range of a variable if the output of PyDE is a fixed number
 
         ind_list = []
-        for model in self.models.itervalues():
+
+        n_pop = np.size(population, axis=0)
+
+        for model in self.common_models.itervalues():
             print model
             model.special_recenter_bounds(population)
             ind_list.extend(model.index_recenter_bounds())
 
         for dataset in self.dataset_dict.itervalues():
+            for model in dataset.models:
+                self.models[model].special_recenter_bounds(population, dataset.name_ref)
 
+                ind_list.extend(self.models[model].index_recenter_bounds(dataset.name_ref))
 
         if np.size(ind_list) > 0:
             tmp_range = (self.bounds[:, 1] - self.bounds[:, 0]) / 2

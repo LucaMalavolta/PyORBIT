@@ -39,10 +39,6 @@ def yaml_parser(file_conf, mc):
         print conf_inputs[counter]['kind'], conf_inputs[counter]['file'], conf_inputs[counter]['models']
         dataset_name = conf_inputs[counter]['file']
 
-
-
-        print ' o-> ', conf_inputs[counter]['models']
-
         """ The keyword in dataset_dict and the name assigned internally to the databes must be the same
             or everything will fall apart """
         if 'Tcent' in conf_inputs[counter]['kind']:
@@ -107,7 +103,6 @@ def yaml_parser(file_conf, mc):
         else:
             model_type = model_name
 
-
         if model_type == 'radial_velocities':
 
             """ radial_velocities is just a wrapper for the planets to be actually included in the model, so we
@@ -127,21 +122,20 @@ def yaml_parser(file_conf, mc):
             for model_name_exp, planet_name in zip(model_name_expanded, model['planets']):
 
                 mc.models[model_name_exp] = \
-                    define_type_to_class[model_type][mc.planet_dict[planet_name]](model_name_exp, planet_name, mc)
+                    define_type_to_class[model_type][mc.planet_dict[planet_name]](model_name_exp, planet_name)
 
         if model_type == 'transit_times':
             """ Only one planet for each file with transit times... mixing them would cause HELL"""
 
             planet_name = model['planet']
             mc.models[model_name] = \
-                    define_type_to_class[model_type][mc.planet_dict[planet_name]](model_name, planet_name, mc)
+                    define_type_to_class[model_type][mc.planet_dict[planet_name]](model_name, planet_name)
 
             for dataset_name, dataset in mc.dataset_dict.iter():
                 if planet_name in mc.dynamical_dict and planet_name in dataset.models:
                     dataset.planet_name = planet_name
                     dataset.dynamical = True
                     mc.t0_dict[planet_name] = dataset_name
-
 
         for dataset in mc.dataset_dict.itervalues():
             print '--->', dataset.models

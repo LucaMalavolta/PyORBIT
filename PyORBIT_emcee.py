@@ -64,7 +64,6 @@ print '*************************************************************'
 print
 print 'Dimensions = ', mc.ndim
 print '   '
-print 'Variable list:', mc.variable_list
 print
 print 'Variable bounds:', mc.bounds
 print
@@ -108,6 +107,11 @@ else:
 
         # bounds redefinition and fix for PyDE anomalous results
         if mc.recenter_bounds_flag:
+            #Temporary fix
+            pickle.dump(mc.bounds, open(pyde_dir_output + 'bounds.pick', 'wb'))
+            pickle.dump(population, open(pyde_dir_output + 'pyde_pops.pick', 'wb'))
+
+
             pickle.dump(mc.bounds, open(pyde_dir_output + 'bounds_orig.pick', 'wb'))
             pickle.dump(population, open(pyde_dir_output + 'pyde_pops_orig.pick', 'wb'))
             mc.recenter_bounds(starting_point, population)

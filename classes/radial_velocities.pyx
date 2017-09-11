@@ -12,75 +12,24 @@ New changes:
     variable_sampler associate the value in theta to their label in the sampler space
 """
 
-class AbstractOrbit(AbstractModel):
 
-    def define_common_special_bounds(self, mc, var):
-        if not(var == "e" or var == "o"):
-            return False
+class RVkeplerian(AbstractModel):
 
-        if 'e' in self.common_model.fix_list or \
-           'o' in self.common_model.fix_list:
-            return False
+    model_class = 'rv_keplerian'
 
-        if 'coso' in self.common_model.variable_sampler or \
-            'esino' in self.common_model.variable_sampler:
-            return False
+    list_pams_common = {
+        'P': 'LU',  # Period, log-uniform prior
+        'K': 'LU',  # RV semi-amplitude, log-uniform prior
+        'f': 'U',  # RV vurve phase, log-uniform prior
+        'e': 'U',  # eccentricity, uniform prior - to be fixed
+        'o': 'U'}  # argument of pericenter
 
-        self.common_model.transformation['e'] = get_2var_e
-        self.common_model.variable_index['e'] = [mc.ndim, mc.ndim + 1]
-        self.common_model.transformation['o'] = get_2var_o
-        self.common_model.variable_index['o'] = [mc.ndim, mc.ndim + 1]
+    list_pams_dataset = {}
 
-        self.common_model.variable_sampler['ecoso'] = mc.ndim
-        self.common_model.variable_sampler['esino'] = mc.ndim + 1
-        mc.bounds_list.append(self.common_model.default_bounds['ecoso'])
-        mc.bounds_list.append(self.common_model.default_bounds['esino'])
-        mc.ndim += 2
+    recenter_pams_dataset = {}
 
-        return True
-
-
-
-    def special_recenter_bounds(self, population):
-
-        n_pop = np.size(population, axis=0)
-        if 'esino' in self.common_models.variable_sampler and \
-           'ecoso' in self.common_models.variable_sampler:
-                esino_list = self.common_models.variable_sampler['esino']
-                ecoso_list = self.common_models.variable_sampler['ecoso']
-                e_pops = population[:, esino_list] ** 2 + population[:, ecoso_list] ** 2
-                o_pops = np.arctan2(population[:, esino_list], population[:, ecoso_list], dtype=np.double)
-                # e_mean = (self.common_models[planet_name].bounds['e'][0] +
-                # self.common_models[planet_name].bounds['e'][1]) / 2.
-                for ii in xrange(0, n_pop):
-                    if not self.common_models.bounds['e'][0] + 0.02 <= e_pops[ii] < \
-                                    self.common_models.bounds['e'][1] - 0.02:
-                        e_random = np.random.uniform(self.common_models.bounds['e'][0],
-                                                     self.common_models.bounds['e'][1])
-                        population[ii, esino_list] = np.sqrt(e_random) * np.sin(o_pops[ii])
-                        population[ii, ecoso_list] = np.sqrt(e_random) * np.cos(o_pops[ii])
-
-        population * 0.0000
-
-
-class RVkeplerian(AbstractOrbit):
-
-    def __init__(self, model_name, common_ref, mc):
-        self.model_class = 'rv_keplerian'
-        self.model_name = model_name
-        self.common_ref = common_ref
-        self.common_model = mc.common_models[self.common_ref]
-
-        self.list_pams_common = {
-            'P': 'LU',  # Period, log-uniform prior
-            'K': 'LU',  # RV semi-amplitude, log-uniform prior
-            'f': 'U',  # RV vurve phase, log-uniform prior
-            'e': 'U',  # eccentricity, uniform prior - to be fixed
-            'o': 'U'}  # argument of pericenter
-        self.list_pams_dataset = {}
-
-    def compute(self, theta, dataset):
-        variable_value = self.convert(theta)
+    def compute(self, variable_value, dataset):
+        #variable_value = self.convert(theta)
         return kp.kepler_RV_T0P(dataset.x0,
                                 variable_value['f'],
                                 variable_value['P'],
@@ -89,15 +38,12 @@ class RVkeplerian(AbstractOrbit):
                                 variable_value['o'])
 
 
-class RVdynamical(AbstractOrbit):
-    def __init__(self, model_name, common_ref, mc):
-        self.model_class = 'rv_dynamical'
-        self.model_name = model_name
-        self.common_ref = common_ref
-        self.common_model = mc.common_models[self.common_ref]
+class RVdynamical(AbstractModel):
 
-        ''' Orbital parameters to be used in the dynamical fit '''
-        self.list_pams_common = {
+    model_class = 'rv_dynamical'
+
+    ''' Orbital parameters to be used in the dynamical fit '''
+    list_pams_common = {
             'P': 'LU',  # Period in days
             'M': 'LU',  # Mass in Earth masses
             'i': 'U',  # inclination in degrees
@@ -105,50 +51,39 @@ class RVdynamical(AbstractOrbit):
             'lN': 'U',  # longitude of ascending node
             'e': 'U',  # eccentricity, uniform prior - to be fixed
             'o': 'U'}  # argument of pericenter
-        self.list_pams_dataset = {}
 
-        """ This is the list of planets that should use that model
-        This list must be filled somehow
-        """
+    list_pams_dataset = {}
 
-    def compute(self, theta, dataset):
-        return  np.zeros(dataset.n, dtype=np.double)
+    recenter_pams_dataset = {}
 
-class TransitTimeKeplerian(AbstractOrbit):
 
-    def __init__(self, model_name, common_ref, mc):
-        self.model_class = 'transit_time_keplerian'
-        self.model_name = model_name
-        self.common_ref = common_ref
-        self.common_model = mc.common_models[self.common_ref]
+class TransitTimeKeplerian(AbstractModel):
 
-        self.list_pams_common = {
+    model_class = 'transit_time_keplerian'
+
+    list_pams_common = {
             'P': 'LU',  # Period, log-uniform prior
             'f': 'U',  # RV vurve phase, log-uniform prior
             'e': 'U',  # eccentricity, uniform prior - to be fixed
             'o': 'U'}  # argument of pericenter
-        self.list_pams_dataset = {}
 
-        """ This is the list of planets that should use that model
-        This list must be filled somehow
-        """
+    list_pams_dataset = {}
 
-    def compute(self, theta, dataset):
+    recenter_pams_dataset = {}
+
+    def compute(self, variable_value, dataset):
         # By default, dataset.planet_name == planet_name
-        variable_value = self.convert(theta)
+        #variable_value = self.convert(theta)
         return (np.floor(dataset.x0 / variable_value['P'])) * variable_value['P'] + dataset.Tref + \
                 kp.kepler_Tcent_T0P(variable_value['P'], variable_value['f'], variable_value['e'], variable_value['o'])
 
 
-class TransitTimeDynamical(AbstractOrbit):
-    def __init__(self, model_name, common_ref, mc):
-        self.model_class = 'transit_time_dynamical'
-        self.model_name = model_name
-        self.common_ref = common_ref
-        self.common_model = mc.common_models[self.common_ref]
+class TransitTimeDynamical(AbstractModel):
 
-        ''' Orbital parameters to be used in the dynamical fit '''
-        self.list_pams_common = {
+    model_class = 'transit_time_dynamical'
+
+    ''' Orbital parameters to be used in the dynamical fit '''
+    list_pams_common = {
             'P': 'LU',  # Period in days
             'M': 'LU',  # Mass in Earth masses
             'i': 'U',  # inclination in degrees
@@ -156,14 +91,10 @@ class TransitTimeDynamical(AbstractOrbit):
             'lN': 'U',  # longitude of ascending node
             'e': 'U',  # eccentricity, uniform prior - to be fixed
             'o': 'U'}  # argument of pericenter
-        self.list_pams_dataset = {}
 
-        """ This is the list of planets that should use that model
-        This list must be filled somehow
-        """
+    list_pams_dataset = {}
 
-    def compute(self, theta, dataset):
-        return np.zeros(dataset.n, dtype=np.double)
+    recenter_pams_dataset = {}
 
 
 class DynamicalIntegrator:
