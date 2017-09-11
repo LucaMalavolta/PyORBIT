@@ -3,8 +3,13 @@ from abstract_model import *
 
 """
 New changes: 
-    mc.variables  is now called  mc.converter
+    mc.variables  is now called  mc.transformation
     mv.var_list  is now called  mc.variable_index
+    
+    variable_index is the third argument of transformation
+    it identifies which values from theta must be taken to convert the variable_sampler values to the physical parameter
+    
+    variable_sampler associate the value in theta to their label in the sampler space
 """
 
 class AbstractOrbit(AbstractModel):
@@ -17,8 +22,8 @@ class AbstractOrbit(AbstractModel):
            'o' in self.common_model.fix_list:
             return False
 
-        if 'coso' in mc.variable_sampler[self.common_ref] or \
-            'esino' in mc.variable_sampler[self.common_ref]:
+        if 'coso' in self.common_model.variable_sampler or \
+            'esino' in self.common_model.variable_sampler:
             return False
 
         self.common_model.transformation['e'] = get_2var_e

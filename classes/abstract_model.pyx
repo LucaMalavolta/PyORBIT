@@ -23,7 +23,6 @@ class AbstractModel():
             if self.define_common_special_bounds(mc, var):
                 continue
 
-            '''converters for common variables are internally copied'''
             if var in self.common_model.fix_list:
                 if var not in self.common_model.transformation[var]:
                     self.common_model.transformation[var] = get_fix_val
@@ -31,7 +30,7 @@ class AbstractModel():
                     self.common_model.variable_index[var] = mc.nfix
                     self.common_model.variable_sampler[var] = mc.nfix
                     self.common_model.nfix += 1
-            elif var not in self.common_model.variable_list:
+            elif var not in self.common_model.transformation:
                 '''If no bounds have been specified in the input file, we use the default ones
                     Bounds must be provided in any case to avoid a failure of PyDE '''
                 if var in self.common_model.bounds:
@@ -60,17 +59,17 @@ class AbstractModel():
                         continue
 
                     if var in self.fix_list[dataset_name]:
-                        self.converter[dataset_name][var] = get_fix_val
+                        self.transformation[dataset_name][var] = get_fix_val
                         self.variable_index[dataset_name][var] = self.nfix
                         self.variable_sampler[dataset_name][var] = self.nfix
                         self.fixed.append(self.fix_list[dataset_name][var])
                         self.nfix += 1
                     else:
                         if self.list_pams_dataset[var] == 'U':
-                            self.converter[dataset_name][var] = get_var_val
+                            self.transformation[dataset_name][var] = get_var_val
                             mc.bounds_list.append(self.bounds[dataset_name][var])
                         if self.list_pams_dataset[var] == 'LU':
-                            self.converter[dataset_name][var] = get_var_exp
+                            self.transformation[dataset_name][var] = get_var_exp
                             mc.bounds_list.append(np.log2(self.bounds[dataset_name][var]))
                         self.variable_index[dataset_name][var] = mc.ndim
                         self.variable_sampler[dataset_name][var] = mc.ndim
@@ -138,11 +137,7 @@ class AbstractModel():
     def return_priors(self, theta, dataset_name):
         prior_out = 0.00
         variable_value = self.convert(theta, dataset_name)
-        #if dataset_name is None:
-        #    for key in self.prior_pams[self.common_ref]:
-        #        prior_out += giveback_priors(self.prior_kind[self.common_ref][key], self.prior_pams[self.common_ref][key],
-        #                                     key_pams[key])
-        #else:
+
         for var in self.list_pams_dataset:
             if var in self.prior_pams[dataset_name]:
                 prior_out += giveback_priors(self.prior_kind[dataset_name][var],

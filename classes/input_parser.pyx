@@ -39,6 +39,10 @@ def yaml_parser(file_conf, mc):
         print conf_inputs[counter]['kind'], conf_inputs[counter]['file'], conf_inputs[counter]['models']
         dataset_name = conf_inputs[counter]['file']
 
+
+
+        print ' o-> ', conf_inputs[counter]['models']
+
         """ The keyword in dataset_dict and the name assigned internally to the databes must be the same
             or everything will fall apart """
         if 'Tcent' in conf_inputs[counter]['kind']:
@@ -73,11 +77,12 @@ def yaml_parser(file_conf, mc):
 
     mc.planet_name = config_in['output']
 
-    for model in conf_common:
-        if model is 'planets':
-            conf = conf_models[model]
-            for planet_name in conf:
-                planet_conf = conf[planet_name]
+    for model_name, conf in conf_common.items():
+
+        if model_name == 'planets':
+
+            print conf
+            for planet_name, planet_conf in conf.items():
 
                 mc.common_models[planet_name] = define_common_type_to_class['planets'](planet_name)
                 boundaries_fixed_priors_stars(mc, mc.common_models[planet_name], planet_conf)
@@ -88,7 +93,7 @@ def yaml_parser(file_conf, mc):
                     mc.planet_dict[planet_name] = 'keplerian'
 
     """ Check if there is any planet that requires dynamical computations"""
-    for planet_name, orbit in mc.planet_dict.iter():
+    for planet_name, orbit in mc.planet_dict.items():
         if orbit == 'dynamical':
             mc.dynamical_dict[planet_name] = True
         if len(mc.dynamical_dict) > 0:
@@ -101,11 +106,11 @@ def yaml_parser(file_conf, mc):
         else:
             model_type = model_name
 
-        if model_type == 'radial_velocites':
-
+        if model_type == 'radial_velocities':
             for planet_name in model['planets']:
+
                 mc.models[planet_name] = \
-                    define_type_to_class[model_type][mc.planet_dict[planet_name]](planet_name)
+                    define_type_to_class[model_type][mc.planet_dict[planet_name]](planet_name, planet_name, mc)
 
                 if planet_name in mc.dynamical_dict:
                     for dataset in mc.dataset_dict.itervalues():

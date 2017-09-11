@@ -4,7 +4,7 @@ from common import *
 class ModelContainer:
     def __init__(self):
         self.planet_dict = {}
-        self.dinamical_dict = {}
+        self.dynamical_dict = {}
         self.dynamical_t0_dict = {}
         self.dynamical_model = None
 
@@ -38,7 +38,7 @@ class ModelContainer:
         self.starting_point_flag = False
         self.recenter_bounds_flag = True
 
-        self.bound_list = []
+        self.bounds_list = []
         self.bounds = None
         self.range = None
         self.ndim = 0
@@ -91,7 +91,7 @@ class ModelContainer:
             self.ndata += dataset.n
         self.ndof = self.ndata - self.ndim
 
-        self.initialize()
+        #self.initialize()
 
     def create_bounds(self):
         # This routine creates the boundary array and at the same time
@@ -110,6 +110,7 @@ class ModelContainer:
         self.bounds = np.asarray(self.bounds_list)
         self.range = self.bounds[:, 1] - self.bounds[:, 0]
 
+    """ 
     def initialize(self):
         # Function with two goals:
         # * Unfold and print out the output from theta
@@ -123,6 +124,7 @@ class ModelContainer:
         for model in self.models.itervalues():
             model.initialize(self)
 
+    """
     def create_starting_point(self):
 
         self.starting_point = np.average(self.bounds, axis=1)
@@ -144,13 +146,13 @@ class ModelContainer:
 
             """ Step 1: save the all planet periods into a list"""
             period_storage.extend(
-                [self.common_models[planet_name].variables['P'](theta, self.common_models[planet_name].fixed,
-                                                               self.common_models[planet_name].var_list['P'])])
+                [self.common_models[planet_name].transformation['P'](theta, self.common_models[planet_name].fixed,
+                                                               self.common_models[planet_name].variable_index['P'])])
 
             """ Step 2: check if the eccentricity is within the given range"""
-            e = self.common_models[planet_name].variables['e'](theta,
+            e = self.common_models[planet_name].transformation['e'](theta,
                                                               self.common_models[planet_name].fixed,
-                                                              self.common_models[planet_name].var_list['e'])
+                                                              self.common_models[planet_name].variable_index['e'])
             if not self.common_models[planet_name].bounds['e'][0] <= e < self.common_models[planet_name].bounds['e'][1]:
                 return False
 
@@ -167,10 +169,10 @@ class ModelContainer:
             return -np.inf
         logchi2_out = 2. * self.ndof * np.log(2 * np.pi)
 
-        for model in self.models.itervalues():
+        for model in self.common_models.itervalues():
             logchi2_out += model.return_priors(theta)
 
-        if bool(self.dynamical):
+        if self.dynamical_model is not None:
             """ check if any keyword ahas get the output model from the dynamical tool
             we must do it here because all the planet are involved"""
             dynamical_output = self.dynamical_model.compute(self, theta)
@@ -189,8 +191,14 @@ class ModelContainer:
             if 'none' in dataset.models or 'None' in dataset.models:
                 continue
 
+            AHI AHI
+            #### logchi2_out += model.return_priors(theta, dataset_name)
+
             logchi2_gp_model = None
             for model in dataset.models:
+                print '1 ', self.models
+                print '2 ', self.models[model]
+                print '3 ', self.models[model].model_class
 
                 if self.models[model].model_class == 'gaussian_process':
                     logchi2_gp_model = model
@@ -204,7 +212,7 @@ class ModelContainer:
 
             # Gaussian Process check MUST be the last one or the program will fail
             if logchi2_gp_model is not None:
-                logchi2_out += self.models[logchi2_gp_model].return_priors(theta, dataset_name)
+                #logchi2_out += self.models[logchi2_gp_model].return_priors(theta, dataset_name)
                 logchi2_out += self.models[logchi2_gp_model].lnlk_compute(theta, dataset)
             else:
                 logchi2_out += dataset.model_logchi2()

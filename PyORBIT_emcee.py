@@ -54,8 +54,8 @@ emcee_dir_output = './' + mc.planet_name + '/emcee/'
 if not os.path.exists(emcee_dir_output):
     os.makedirs(emcee_dir_output)
 
-if bool(mc.models['planets'].dynamical):
-        mc.dynamical_model.prepare(mc, mc.models['planets'])
+if mc.dynamical_model is not None:
+        mc.dynamical_model.prepare(mc)
 
 print
 print 'Reference Time Tref: ', mc.Tref

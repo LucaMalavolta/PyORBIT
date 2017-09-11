@@ -2,25 +2,26 @@ name: test1
 output: test1_V5
 inputs:
   0:
-      File: test1_RV.dat
-      Kind: RV
-      Models: ['radial_velocities']
-planets:
-  b:
-    orbit: keplerian
-    boundaries:
-      P: [2.0, 100.0]
-      K: [0.01, 100.0]
-      e: [0.00, 1.00]
-    fixed:
-      i: [90.000, 0.001]
+      file: test1_RV.dat
+      kind: RV
+      models: ['radial_velocities']
+common:
+  planets:
+    b:
+      orbit: keplerian
+      boundaries:
+        P: [2.0, 100.0]
+        K: [0.01, 100.0]
+        e: [0.00, 1.00]
+      fixed:
+        i: [90.000, 0.001]
 models:
   radial_velocities:
     planets: ['b']
 parameters:
   star_mass: [1.00, 0.01]
 solver:
-  pyDE:
+  pyde:
     ngen: 2000
     npop_mult: 2
   emcee:
