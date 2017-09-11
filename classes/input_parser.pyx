@@ -1,16 +1,27 @@
 from common import *
 from dataset import *
-from planets import PlanetsCommonVariables
-from gaussian import GaussianProcess_QuasiPeriodicActivity
-from curvature import CurvatureCommonVariables
-from correlations import CorrelationsCommonVariables
-#from sinusoids import SinusoidsCommonVariables
+from radial_velocities import RVkeplerian, RVdynamical, TransitTimeKeplerian, TransitTimeDynamical, DynamicalIntegrator
+from abstract_common import CommonPlanets
+#TD from gaussian import GaussianProcess_QuasiPeriodicActivity
+#TD from curvature import CurvatureCommonVariables
+#TD from correlations import CorrelationsCommonVariables
+#TD from sinusoids import SinusoidsCommonVariables
+
+define_common_type_to_class = {
+    'planets': CommonPlanets,
+    #TD 'gp_quasiperiodic': GaussianProcess_QuasiPeriodicActivity,
+    #TD 'curvature': CurvatureCommonVariables,
+    #TD 'correlation': CorrelationsCommonVariables
+}
 
 define_type_to_class = {
-    'planets': PlanetsCommonVariables,
-    'gp_quasiperiodic': GaussianProcess_QuasiPeriodicActivity,
-    'curvature': CurvatureCommonVariables,
-    'correlation': CorrelationsCommonVariables
+    'radial_velocities': {'keplerian': RVkeplerian,
+                          'dynamical': RVdynamical},
+    'transit_time': {'keplerian': TransitTimeKeplerian,
+                     'dynamical': TransitTimeDynamical},
+    #TD 'gp_quasiperiodic': GaussianProcess_QuasiPeriodicActivity,
+    #TD 'curvature': CurvatureCommonVariables,
+    #TD 'correlation': CorrelationsCommonVariables
 }
 
 
@@ -20,6 +31,7 @@ def yaml_parser(file_conf, mc):
 
     conf_inputs = config_in['inputs']
     conf_models = config_in['models']
+    conf_common = config_in['common']
     conf_parameters = config_in['parameters']
     conf_solver = config_in['solver']
 
@@ -30,11 +42,8 @@ def yaml_parser(file_conf, mc):
         """ The keyword in dataset_dict and the name assigned internally to the databes must be the same
             or everything will fall apart """
         if 'Tcent' in conf_inputs[counter]['kind']:
-            planet_name = 'Planet_' + repr(conf_inputs[counter]['Planet'])
             mc.dataset_dict[dataset_name] = \
                 TransitCentralTimes(counter, conf_inputs[counter]['kind'], dataset_name, conf_inputs[counter]['models'])
-            mc.dataset_dict[dataset_name].set_planet(planet_name)
-            mc.t0_list[planet_name] = mc.dataset_dict[dataset_name]
         else:
             mc.dataset_dict[dataset_name] = \
                 Dataset(counter, conf_inputs[counter]['kind'], dataset_name, conf_inputs[counter]['models'])
@@ -63,7 +72,154 @@ def yaml_parser(file_conf, mc):
                 mc.dataset_dict[dataset_name].starts[var] = np.asarray(starts_conf[var], dtype=np.double)
 
     mc.planet_name = config_in['output']
-    mc.create_model_list()
+
+    for model in conf_common:
+        if model is 'planets':
+            conf = conf_models[model]
+            for planet_name in conf:
+                planet_conf = conf[planet_name]
+
+                mc.common_models[planet_name] = define_common_type_to_class['planets'](planet_name)
+                boundaries_fixed_priors_stars(mc, mc.common_models[planet_name], planet_conf)
+
+                if 'orbit' in planet_conf:
+                    mc.planet_dict[planet_name] = planet_conf['orbit']
+                else:
+                    mc.planet_dict[planet_name] = 'keplerian'
+
+    """ Check if there is any planet that requires dynamical computations"""
+    for planet_name, orbit in mc.planet_dict.iter():
+        if orbit == 'dynamical':
+            mc.dynamical_dict[planet_name] = True
+        if len(mc.dynamical_dict) > 0:
+            mc.dynamical_model = DynamicalIntegrator()
+
+    for model_name, model in conf_models.items():
+
+        if 'type' in model:
+            model_type = model['type']
+        else:
+            model_type = model_name
+
+        if model_type == 'radial_velocites':
+
+            for planet_name in model['planets']:
+                mc.models[planet_name] = \
+                    define_type_to_class[model_type][mc.planet_dict[planet_name]](planet_name)
+
+                if planet_name in mc.dynamical_dict:
+                    for dataset in mc.dataset_dict.itervalues():
+                        if model_name in dataset.models:
+                            dataset.dynamical = True
+
+        if model_type == 'transit_times':
+
+            for planet_name in model['planets']:
+                mc.models[planet_name] = \
+                    define_type_to_class[model_type][mc.planet_dict[planet_name]](planet_name)
+
+                if planet_name in mc.dynamical_dict:
+                    for dataset_name, dataset in mc.dataset_dict.iter():
+                        if model_name in dataset.models:
+                            dataset.planet_name = planet_name
+                            dataset.dynamical = True
+                            mc.t0_dict[planet_name] = dataset_name
+
+    if 'Tref' in conf_parameters:
+        mc.Tref = np.asarray(conf_parameters['Tref'])
+        for dataset_name in mc.dataset_dict:
+            mc.dataset_dict[dataset_name].common_Tref(mc.Tref)
+
+    if 'star_mass' in conf_parameters:
+        mc.star_mass = np.asarray(conf_parameters['star_mass'][:], dtype=np.double)
+    if 'star_radius' in config_in:
+        mc.star_radius = np.asarray(conf_parameters['star_radius'][:], dtype=np.double)
+
+    if 'dynamical_integrator' in conf_solver:
+        mc.dynamical_model.dynamical_integrator = conf_parameters['dynamical_integrator']
+
+    if 'pyde' in conf_solver:
+        conf = conf_solver['pyde']
+
+        if 'ngen' in conf:
+            mc.pyde_parameters['ngen'] = np.asarray(conf['ngen'], dtype=np.double)
+
+        if 'npop_mult' in conf:
+            mc.pyde_parameters['npop_mult'] = np.asarray(conf['npop_mult'], dtype=np.int64)
+
+    if 'emcee' in conf_solver:
+        conf = conf_solver['emcee']
+
+        if 'multirun' in conf:
+            mc.emcee_parameters['multirun'] = np.asarray(conf['multirun'], dtype=np.int64)
+
+        if 'MultiRun_iter' in conf:
+            mc.emcee_parameters['multirun_iter'] = np.asarray(conf['multirun_iter'], dtype=np.int64)
+
+        if 'nsave' in conf:
+            mc.emcee_parameters['nsave'] = np.asarray(conf['nsave'], dtype=np.double)
+
+        if 'nsteps' in conf:
+            mc.emcee_parameters['nsteps'] = np.asarray(conf['nsteps'], dtype=np.int64)
+
+        if 'nburn' in conf:
+            mc.emcee_parameters['nburn'] = np.asarray(conf['nburn'], dtype=np.int64)
+
+        if 'npop_mult' in conf:
+            mc.emcee_parameters['npop_mult'] = np.asarray(conf['npop_mult'], dtype=np.int64)
+
+        if 'thin' in conf:
+            mc.emcee_parameters['thin'] = np.asarray(conf['thin'], dtype=np.int64)
+
+    if 'polychord' in conf_solver:
+        conf = conf_solver['polychord']
+
+        if 'nlive' in conf:
+            mc.polychord_parameters['nlive'] = np.asarray(conf['nlive'], dtype=np.int64)
+
+        if 'nlive_mult' in conf:
+            mc.polychord_parameters['nlive_mult'] = np.asarray(conf['nlive_mult'], dtype=np.int64)
+
+        if 'num_repeats_mult' in conf:
+            mc.polychord_parameters['num_repeats_mult'] = np.asarray(conf['num_repeats_mult'], dtype=np.int64)
+
+        if 'feedback' in conf:
+            mc.polychord_parameters['feedback'] = np.asarray(conf['feedback'], dtype=np.int64)
+
+        if 'precision_criterion' in conf:
+            mc.polychord_parameters['precision_criterion'] = np.asarray(conf['precision_criterion'], dtype=np.double)
+
+        if 'max_ndead' in conf:
+            mc.polychord_parameters['max_ndead'] = np.asarray(conf['max_ndead'], dtype=np.int64)
+
+        if 'boost_posterior' in conf:
+            mc.polychord_parameters['boost_posterior'] = np.asarray(conf['boost_posterior'], dtype=np.double)
+
+        if 'read_resume' in conf:
+            mc.polychord_parameters['read_resume'] = np.asarray(conf['read_resume'], dtype=bool)
+
+        if 'base_dir' in conf:
+            mc.polychord_parameters['base_dir'] = np.asarray(conf['base_dir'], dtype=str)
+
+        #if 'file_root' in conf:
+        #    mc.polychord_parameters['file_root'] = np.asarray(conf['file_root'], dtype=str)
+
+        if 'shutdown_jitter' in conf:
+            mc.polychord_parameters['shutdown_jitter'] = np.asarray(conf['shutdown_jitter'], dtype=bool)
+
+    if 'recenter_bounds' in conf_solver:
+        """ 
+        required to avoid a small bug in the code
+        if the dispersion of PyDE walkers around the median value is too broad,
+        then emcee walkers will start outside the bounds, causing an error
+        """
+        mc.recenter_bounds_flag = conf_solver['recenter_bounds']
+
+
+
+
+
+def dump():
 
     for model in conf_models:
         if 'type' in conf_models[model]:
@@ -298,81 +454,81 @@ def yaml_parser(file_conf, mc):
         mc.recenter_bounds_flag = conf_solver['recenter_bounds']
 
 
-def boundaries_fixed_priors_stars(mc, model_name, conf, dataset_1=None, dataset_2=None, add_var_name =''):
+def boundaries_fixed_priors_stars(mc, model_obj, conf, dataset_1=None, dataset_2=None, add_var_name =''):
     # type: (object, object, object, object, object, object) -> object
 
     if dataset_1 is None:
         if 'boundaries' in conf:
             bound_conf = conf['boundaries']
             for var in bound_conf:
-                mc.models[model_name].bounds[add_var_name+var] = np.asarray(bound_conf[var], dtype=np.double)
+                model_obj.bounds[add_var_name+var] = np.asarray(bound_conf[var], dtype=np.double)
 
         if 'fixed' in conf:
             fixed_conf = conf['fixed']
             for var in fixed_conf:
-                mc.models[model_name].fix_list[add_var_name+var] = np.asarray(fixed_conf[var], dtype=np.double)
+                model_obj.fix_list[add_var_name+var] = np.asarray(fixed_conf[var], dtype=np.double)
 
         if 'priors' in conf:
             prior_conf = conf['priors']
             for var in prior_conf:
-                mc.models[model_name].prior_kind[add_var_name+var] = prior_conf[var][0]
-                mc.models[model_name].prior_pams[add_var_name+var] = np.asarray(prior_conf[var][1:], dtype=np.double)
+                model_obj.prior_kind[add_var_name+var] = prior_conf[var][0]
+                model_obj.prior_pams[add_var_name+var] = np.asarray(prior_conf[var][1:], dtype=np.double)
 
         if 'starts' in conf:
             mc.starting_point_flag = True
             starts_conf = conf['starts']
             for var in starts_conf:
-                mc.models[model_name].starts[add_var_name+var] = np.asarray(starts_conf[var], dtype=np.double)
+                model_obj.starts[add_var_name+var] = np.asarray(starts_conf[var], dtype=np.double)
 
     elif dataset_2 is None:
         if 'boundaries' in conf:
             bound_conf = conf['boundaries']
             for var in bound_conf:
-                mc.models[model_name].bounds[dataset_1][add_var_name+var] = np.asarray(bound_conf[var], dtype=np.double)
+                model_obj.bounds[dataset_1][add_var_name+var] = np.asarray(bound_conf[var], dtype=np.double)
 
         if 'fixed' in conf:
             fixed_conf = conf['fixed']
             for var in fixed_conf:
-                mc.models[model_name].fix_list[dataset_1][add_var_name+var] = np.asarray(fixed_conf[var], dtype=np.double)
+                model_obj.fix_list[dataset_1][add_var_name+var] = np.asarray(fixed_conf[var], dtype=np.double)
 
         if 'priors' in conf:
             prior_conf = conf['priors']
             for var in prior_conf:
-                mc.models[model_name].prior_kind[dataset_1][add_var_name+var] = prior_conf[var][0]
-                mc.models[model_name].prior_pams[dataset_1][add_var_name+var] = np.asarray(prior_conf[var][1:], dtype=np.double)
+                model_obj.prior_kind[dataset_1][add_var_name+var] = prior_conf[var][0]
+                model_obj.prior_pams[dataset_1][add_var_name+var] = np.asarray(prior_conf[var][1:], dtype=np.double)
 
         if 'starts' in conf:
             mc.starting_point_flag = True
             starts_conf = conf['starts']
             for var in starts_conf:
-                mc.models[model_name].starts[dataset_1][add_var_name+var] = np.asarray(starts_conf[var], dtype=np.double)
+                model_obj.starts[dataset_1][add_var_name+var] = np.asarray(starts_conf[var], dtype=np.double)
 
     else:
 
         if 'boundaries' in conf:
             bound_conf = conf['boundaries']
             for var in bound_conf:
-                mc.models[model_name].bounds[dataset_1][dataset_2][add_var_name + var] = \
+                model_obj.bounds[dataset_1][dataset_2][add_var_name + var] = \
                     np.asarray(bound_conf[var], dtype=np.double)
 
         if 'fixed' in conf:
             fixed_conf = conf['fixed']
             for var in fixed_conf:
-                mc.models[model_name].fix_list[dataset_1][dataset_2][add_var_name + var] = \
+                model_obj.fix_list[dataset_1][dataset_2][add_var_name + var] = \
                     np.asarray(fixed_conf[var], dtype=np.double)
 
         if 'priors' in conf:
             prior_conf = conf['priors']
             for var in prior_conf:
-                mc.models[model_name].prior_kind[dataset_1][dataset_2][add_var_name + var] = prior_conf[var][0]
-                mc.models[model_name].prior_pams[dataset_1][dataset_2][add_var_name + var] = \
+                model_obj.prior_kind[dataset_1][dataset_2][add_var_name + var] = prior_conf[var][0]
+                model_obj.prior_pams[dataset_1][dataset_2][add_var_name + var] = \
                     np.asarray(prior_conf[var][1:], dtype=np.double)
 
         if 'starts' in conf:
             mc.starting_point_flag = True
             starts_conf = conf['starts']
             for var in starts_conf:
-                mc.models[model_name].starts[dataset_1][dataset_2][add_var_name + var] = \
+                model_obj.starts[dataset_1][dataset_2][add_var_name + var] = \
                     np.asarray(starts_conf[var], dtype=np.double)
 
     return

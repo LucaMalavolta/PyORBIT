@@ -11,15 +11,20 @@ class Dataset:
         """ self.planet_name use only for datasets specific to a given planet  """
         self.planet_name = None
 
-        """self.name only use for plot, it must be a LaTeX string in math mode - but without the $"""
+        """ self.name only use for plot, it must be a LaTeX string in math mode - but without the $"""
         self.name = None
+
+        """ Dataset will be flagged if it contains RV or Tcent data to be modeled with the dynamical integrator"""
+        self.dynamical = True
+        self.planet_name = None
 
         self.list_pams = {'jitter': 'LU', 'offset': 'U', 'linear': 'U'}
         self.bounds = {}
         self.starts = {}
         self.n_sys = {}
-        self.variables = {}
+        self.transformation = {}
 
+        self.variable_sampler = {}
         """There is a mix of arrays and dictonaries here because this was one of the first
             classes I created. I will probably consider switch everything to dictionary
             without affecting the functionality in a later time"""
@@ -106,18 +111,18 @@ class Dataset:
         self.jitter[:] = 0.0
         return
 
-    def model_offset(self, off_in):
-        off = np.atleast_1d(off_in)
+    def model_offset(self, theta):
+        off = np.atleast_1d(theta[self.variable_sampler['offset']])
         for ii in xrange(0, self.n_sys['offset']):
             self.model[self.mask['offset'][:, ii]] += off[ii]
 
-    def model_linear(self, m_in):
-        m = np.atleast_1d(m_in)
+    def model_linear(self, theta):
+        m = np.atleast_1d(theta[self.variable_sampler['linear']])
         for ii in xrange(0, self.n_sys['linear']):
             self.model[self.mask['linear'][:, ii]] += m[ii] * self.x0[self.mask['linear'][:, ii]]
 
-    def model_jitter(self, jit_in):
-        jit = np.exp2(np.atleast_1d(jit_in))
+    def model_jitter(self, theta):
+        jit = np.exp2(np.atleast_1d(theta[self.variable_sampler['jitter']]))
         for ii in xrange(0, self.n_sys['jitter']):
             self.jitter[self.mask['jitter'][:, ii]] = jit[ii]
 
@@ -127,8 +132,7 @@ class Dataset:
 
     def define_bounds(self, mc):
 
-        mc.variable_list[self.kind] = {}
-        mc.variable_list[self.name_ref] = {}
+        mc.variable_list = {}
 
         for var in self.list_pams:
             if var in self.bounds:
@@ -137,13 +141,13 @@ class Dataset:
                 bounds_tmp = self.default_bounds[var]
 
             if self.list_pams[var] == 'U':
-                self.variables[var] = get_var_val
+                self.transformation[var] = get_var_val
 
             elif self.list_pams[var] == 'LU':
-                self.variables[var] = get_var_exp
+                self.transformation[var] = get_var_exp
                 bounds_tmp = np.log2(bounds_tmp)
 
-            mc.variable_list[self.name_ref][var] = np.arange(mc.ndim, mc.ndim + self.n_sys[var], 1)
+            self.variable_sampler[var] = np.arange(mc.ndim, mc.ndim + self.n_sys[var], 1)
             for jj in xrange(0, self.n_sys[var]):
                 mc.bounds_list.append(bounds_tmp)
             mc.ndim += self.n_sys[var]
@@ -154,11 +158,11 @@ class Dataset:
                 start_converted = self.starts[var]
             elif self.list_pams[var] == 'LU':
                 start_converted = np.log2(self.starts[var])
-            mc.starting_point[mc.variable_list[self.name_ref][var]] = start_converted
+            mc.starting_point[self.variable_sampler[var]] = start_converted
 
     def initialize(self, mc):
         for key in self.list_pams:
-            id_var = mc.variable_list[self.name_ref][key]
+            id_var = self.variable_sampler[key]
             if np.size(id_var) == 0:
                 continue
             if np.size(id_var) == 1:
@@ -174,10 +178,10 @@ class Dataset:
         for key in self.list_pams:
             if self.n_sys[key] > 0:
                 if self.list_pams[key] == 'U':
-                    print self.name_ref, key, ' vars-pams: ', theta[mc.variable_list[self.name_ref][key]]
+                    print self.name_ref, key, ' vars-pams: ', theta[self.variable_sampler[key]]
                 elif self.list_pams[key] == 'LU':
-                    pams_converted = np.exp2(theta[mc.variable_list[self.name_ref][key]])
-                    print self.name_ref, key, ' vars: ', theta[mc.variable_list[self.name_ref][key]], \
+                    pams_converted = np.exp2(theta[self.variable_sampler[key]])
+                    print self.name_ref, key, ' vars: ', theta[self.variable_sampler[key]], \
                         ' pams: ', pams_converted
 
 
@@ -234,34 +238,17 @@ class TransitCentralTimes(Dataset):
         self.planet_name = planet_name
         return
 
-    def compute(self, mc, theta):
-        # By default, dataset.planet_name == planet_name
-        dict_out = mc.model['planets'].convert(self.planet_name, theta)
-        model = (np.floor(self.x0 / dict_out['P'])) * dict_out['P'] + \
-                kp.kepler_Tcent_T0P(dict_out['P'], dict_out['f'], dict_out['e'], dict_out['o']) + \
-                self.Tref
-        return model
 
-    #def model_logchi2(self):
-    #    # boundaries in Tcent are specific of the dataset and not of a common
-    #    # parameter for different dataset. The check can be internal
-    #    # if np.sum(np.abs(self.x0 - self.model) < self.deltaT) < self.n:
-    #    #    return -np.inf
-    #    env = 1.0 / (self.e ** 2.0)
-    #    time_dif = np.abs(self.x0 - self.model)
-    #    # time_dif[np.where(time_dif > 6*self.e)] = 6*self.e
-    #    # time_dif[np.where(time_dif > 8*self.e)] = 8*self.e + np.sqrt(np.abs(time_dif-8*self.e))
-    #    return -0.5 * (np.sum(time_dif**2 * env - np.log(env)))
 
     def print_vars(self, mc, theta):
         # period, _, f, e, o = mc.pcv.convert(self.planet_name, theta)
         # model = np.rint(self.x0 / period) * period + kp.kepler_Tcent_T0P(period, f, e, o)
         for key in self.list_pams:
             if self.list_pams[key] == 'U':
-                print self.name_ref, key, ' vars-pams: ', theta[mc.variable_list[self.name_ref][key]]
+                print self.name_ref, key, ' vars-pams: ', theta[self.variable_sampler[key]]
             elif self.list_pams[key] == 'LU':
-                pams_converted = np.exp2(theta[mc.variable_list[self.name_ref][key]])
-                print self.name_ref, key, ' vars: ', theta[mc.variable_list[self.name_ref][key]], \
+                pams_converted = np.exp2(theta[self.variable_sampler[key]])
+                print self.name_ref, key, ' vars: ', theta[self.variable_sampler[key]], \
                     ' pams: ', pams_converted
 
         if self.planet_name in mc.pcv.dynamical:
@@ -269,7 +256,7 @@ class TransitCentralTimes(Dataset):
             model = dyn_output[self.name_ref]
         else:
             model = self.compute(mc, theta)
-        # temporary bugfix to tRADES not giving back the T0s
+        # temporary bugfix to TRADES not giving back the T0s
         model = self.compute(mc, theta)
         print 'Tc ', self.planet_name
         for ii in xrange(0, self.n):

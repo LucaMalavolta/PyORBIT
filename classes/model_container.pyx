@@ -4,14 +4,17 @@ from compute_RV import ComputeKeplerian, ComputeDynamical
 
 class ModelContainer:
     def __init__(self):
+        self.planet_dict = {}
+        self.dinamical_dict = {}
+        self.dynamical_t0_dict = {}
+        self.dynamical_model = None
+
         self.dataset_dict = {}
         self.dataset_index = {}
         self.n_datasets = 0
 
-        self.t0_list = {}
-
-        self.keplerian_model = ComputeKeplerian()
-        self.dynamical_model = ComputeDynamical()
+        self.models = {}
+        self.common_models = {}
 
         # pyde/emcee variables
         self.emcee_parameters = {'nsave': 0, 'npop_mult': 2, 'thin': 1,
@@ -32,18 +35,10 @@ class ModelContainer:
         self.ndata = None
         self.ndof = None
 
-        self.models = {}
-
-        self.model_list = []
-        self.bounds_list = []
-
         self.starting_point = None
         self.starting_point_flag = False
         self.recenter_bounds_flag = True
 
-        self.planet_name = ''
-
-        self.variable_list = {'common': {}}
         self.bound_list = []
         self.bounds = None
         self.range = None
@@ -71,14 +66,6 @@ class ModelContainer:
         self.seconds_in_day = constants.d2s
         self.AU_km = constants.AU
         self.AUday2ms = self.AU_km / self.seconds_in_day * 1000.0
-
-    def create_model_list(self):
-
-        for dataset in self.dataset_dict.itervalues():
-            for data_model in dataset.models:
-                if not (data_model in self.model_list):
-                    self.model_list.append(data_model)
-
 
     def model_setup(self):
         self.n_datasets = len(self.dataset_dict)
@@ -153,17 +140,19 @@ class ModelContainer:
                 return False
 
         period_storage = []
-        for pl_name in self.models['planets'].planet_name:
+        for planet_name in self.planet_dict:
+
+
             """ Step 1: save the all planet periods into a list"""
             period_storage.extend(
-                [self.models['planets'].variables[pl_name]['P'](theta, self.models['planets'].fixed,
-                                                               self.models['planets'].var_list[pl_name]['P'])])
+                [self.common_models[planet_name].variables['P'](theta, self.common_models[planet_name].fixed,
+                                                               self.common_models[planet_name].var_list['P'])])
 
             """ Step 2: check if the eccentricity is within the given range"""
-            e = self.models['planets'].variables[pl_name]['e'](theta,
-                                                              self.models['planets'].fixed,
-                                                              self.models['planets'].var_list[pl_name]['e'])
-            if not self.models['planets'].bounds[pl_name]['e'][0] <= e < self.models['planets'].bounds[pl_name]['e'][1]:
+            e = self.common_models[planet_name].variables['e'](theta,
+                                                              self.common_models[planet_name].fixed,
+                                                              self.common_models[planet_name].var_list['e'])
+            if not self.common_models[planet_name].bounds['e'][0] <= e < self.common_models[planet_name].bounds['e'][1]:
                 return False
 
         """ Step 4 check ofr overlapping periods (within 5% arbitrarily chosen)"""
@@ -182,9 +171,11 @@ class ModelContainer:
         for model in self.models.itervalues():
             logchi2_out += model.return_priors(theta)
 
-            "dynamical computations are performed and stored inside the planets classes"
-            if model.model_class == 'planets':
-                model.store_dynamical_model(self, theta)
+        if bool(self.dynamical):
+            """ check if any keyword ahas get the output model from the dynamical tool
+            we must do it here because all the planet are involved"""
+            dynamical_output = self.dynamical_model.compute(self, theta)
+
 
         #if 'sinusoid' in self.model_list:
         #    logchi2_out += giveback_priors(
@@ -192,9 +183,9 @@ class ModelContainer:
 
         for dataset_name, dataset in self.dataset_dict.items():
             dataset.model_reset()
-            dataset.model_offset(theta[self.variable_list[dataset_name]['offset']])
-            dataset.model_jitter(theta[self.variable_list[dataset_name]['jitter']])
-            dataset.model_linear(theta[self.variable_list[dataset_name]['linear']])
+            dataset.model_offset(theta)
+            dataset.model_jitter(theta)
+            dataset.model_linear(theta)
 
             if 'none' in dataset.models or 'None' in dataset.models:
                 continue
@@ -205,21 +196,14 @@ class ModelContainer:
                 if self.models[model].model_class == 'gaussian_process':
                     logchi2_gp_model = model
                     continue
-                else:
-                    dataset.model += self.models[model].compute(theta, dataset)
 
-                #if 'sinusoids' in dataset.models:
-                #    dataset.model += self.scv.compute(self, theta, dataset)
+                if dataset.dynamical:
+                    dataset.model += dynamical_output[dataset_name]
+                    continue
 
-            if 'Tcent' in dataset.kind:
-                if dataset.planet_name in self.models['planets'].dynamical:
-                    """ we have dynamical computations, so we include them in the model"""
-                    dataset.model += self.models['planets'].dynamical_output[dataset_name]
-                else:
-                    dataset.model += dataset.compute(self, theta)
+                dataset.model += self.models[model].compute(theta, dataset)
 
             # Gaussian Process check MUST be the last one or the program will fail
-            # if 'gaussian_process' in dataset.models:
             if logchi2_gp_model is not None:
                 logchi2_out += self.models[logchi2_gp_model].return_priors(theta, dataset_name)
                 logchi2_out += self.models[logchi2_gp_model].lnlk_compute(theta, dataset)
@@ -242,145 +226,38 @@ class ModelContainer:
         for model in self.models.itervalues():
             model.print_vars(self, theta)
 
-    def rv_make_model(self, theta, x_range, x_phase):
-        # it return the RV model for a single planet, after removing the activity from the RV curve and removing
-        # the offsets between the datasets
-
-        model_actv = {}
-        model_plan = {}
-        model_dsys = {}
-        model_curv = {}
-
-        ''' NEW!
-        create fake dataset with dataset.x0 and all the required parameters
-        '''
-        model_orbs = {'BJD': x_range * 0.0, 'pha': x_phase * 0.0}
-        model_curv['BJD'] = x_range * 0.0
-        model_curv['pha'] = x_phase * 0.0
-        model_plan['BJD'] = {}
-        model_plan['pha'] = {}
-
-        if bool(self.models['planets'].dynamical):
-            """Check if the dynamical option has been activated: full RV curve will be computed using
-            the dynamical integrator"""
-            dyn_output = self.dynamical_model.compute(self, self.models['planets'], theta)
-            dyn_output_fullorbit = self.dynamical_model.compute(self, self.models['planets'],
-                                                                theta,
-                                                                full_orbit=(x_range - self.Tref))
-            model_orbs['BJD'] += dyn_output_fullorbit['full_orbit']
-            print 'WARNING: phase plot generated using non-interacting model!!!'
-            print model_orbs['BJD'][:10]
-        # computing the orbit for the full dataset
-
-        for pl_name in self.models['planets'].planet_name:
-
-            dyn_flag = (pl_name in self.models['planets'].dynamical)
-            if dyn_flag:
-                dict_pams = self.models['planets'].kepler_from_dynamical(self, theta, pl_name)
-            else:
-                dict_pams = self.models['planets'].convert(pl_name, theta)
-
-            model_plan['BJD'][pl_name] = self.keplerian_model.model(dict_pams, x_range - self.Tref)
-            model_plan['pha'][pl_name] = self.keplerian_model.model(dict_pams, x_phase * dict_pams['P'])
-
-            model_orbs['pha'] += model_plan['pha'][pl_name]
-            if not dyn_flag:
-                model_orbs['BJD'] += model_plan['BJD'][pl_name]
-
-        for model in self.models.itervalues():
-            if model.model_class == 'curvature':
-                curv_pams = model.convert(theta)
-                model_curv['BJD'] += model.model_curvature(curv_pams, x_range - self.Tref)
-
-        for dataset_name, dataset in self.dataset_dict.items():
-
-            model_actv[dataset_name] = np.zeros(dataset.n)
-            model_orbs[dataset_name] = np.zeros(dataset.n)
-            model_curv[dataset_name] = np.zeros(dataset.n)
-            model_plan[dataset_name] = {}
-
-            dataset.model_reset()
-            dataset.model_jitter(theta[self.variable_list[dataset_name]['jitter']])
-            dataset.model_offset(theta[self.variable_list[dataset_name]['offset']])
-            dataset.model_linear(theta[self.variable_list[dataset_name]['linear']])
-
-            model_dsys[dataset_name] = dataset.model.copy()
-
-            if 'none' in dataset.models or 'None' in dataset.models:
-                continue
-
-            '''
-            for model in dataset.models:
-
-                    dataset_out[model] = self.models[model].compute(theta, dataset)
-            '''
-
-            for model in dataset.models:
-                if model == 'planets':
-                    if bool(self.models['planets'].dynamical):
-                        """Dynamical models (with all the interacting planets included in the resulting RVs)"""
-                        model_orbs[dataset_name] += dyn_output[dataset_name]
-                        dataset.model += model_orbs[dataset_name]
-
-                    for pl_name in self.models['planets'].planet_name:
-                        dyn_flag = (pl_name in self.models['planets'].dynamical)
-                        if dyn_flag:
-                            dict_pams = self.models['planets'].kepler_from_dynamical(self, theta, pl_name)
-                            model_plan[dataset_name][pl_name] = self.keplerian_model.model(dict_pams, dataset.x0)
-                        else:
-                            model_plan[dataset_name][pl_name] = \
-                                self.keplerian_model.compute(self.models['planets'], theta, dataset, pl_name)
-                            model_orbs[dataset_name] += model_plan[dataset_name][pl_name]
-                            dataset.model += model_plan[dataset_name][pl_name]
-
-                elif self.models[model].model_class == 'curvature':
-                    model_curv[dataset_name] += self.models[model].model_curvature(curv_pams, dataset.x0)
-                    """ Saving to dataset model in case it's required by GP computation"""
-                    dataset.model += model_curv[dataset_name]
-                elif self.models[model].model_class == 'correlation':
-                    model_actv[dataset_name] += self.models[model].compute(theta, dataset)
-                    dataset.model += model_actv[dataset_name]
-                elif self.models[model].model_class == 'gaussian_process':
-                    model_actv[dataset_name] += self.models[model].sample_compute(theta, dataset)
-
-            #if 'sinusoids' in dataset.models:
-            #    model_actv[dataset_name] += self.scv.compute(self, theta, dataset)
-            #    dataset.model += model_actv[dataset_name]
-
-        return model_dsys, model_plan, model_orbs, model_actv, model_curv
-
     def recenter_bounds(self, pop_mean, population):
         # This function recenters the bounds limits for circular variables
         # Also, it extends the range of a variable if the output of PyDE is a fixed number
         ind_list = []
         n_pop = np.size(population, axis=0)
-        if 'planets' in self.model_list:
-            for pl_name in self.models['planets'].planet_name:
+        for planet_name in self.planet_dict:
 
-                if 'esino' in self.variable_list[pl_name]:
-                    esino_list = self.variable_list[pl_name]['esino']
-                    ecoso_list = self.variable_list[pl_name]['ecoso']
-                    e_pops = population[:, esino_list] ** 2 + population[:, ecoso_list] ** 2
-                    o_pops = np.arctan2(population[:, esino_list], population[:, ecoso_list], dtype=np.double)
-                    # e_mean = (self.models['planets'].bounds[pl_name]['e'][0] +
-                    # self.models['planets'].bounds[pl_name]['e'][1]) / 2.
-                    for ii in xrange(0, n_pop):
-                        if not self.models['planets'].bounds[pl_name]['e'][0] + 0.02 <= e_pops[ii] < \
-                                        self.models['planets'].bounds[pl_name]['e'][1] - 0.02:
-                            e_random = np.random.uniform(self.models['planets'].bounds[pl_name]['e'][0],
-                                                         self.models['planets'].bounds[pl_name]['e'][1])
-                            population[ii, esino_list] = np.sqrt(e_random) * np.sin(o_pops[ii])
-                            population[ii, ecoso_list] = np.sqrt(e_random) * np.cos(o_pops[ii])
+            if 'esino' in self.common_models.variable_sampler:
+                esino_list = self.common_models.variable_sampler['esino']
+                ecoso_list = self.common_models.variable_sampler['ecoso']
+                e_pops = population[:, esino_list] ** 2 + population[:, ecoso_list] ** 2
+                o_pops = np.arctan2(population[:, esino_list], population[:, ecoso_list], dtype=np.double)
+                # e_mean = (self.common_models[planet_name].bounds['e'][0] +
+                # self.common_models[planet_name].bounds['e'][1]) / 2.
+                for ii in xrange(0, n_pop):
+                    if not self.common_models[planet_name].bounds['e'][0] + 0.02 <= e_pops[ii] < \
+                                    self.common_models[planet_name].bounds['e'][1] - 0.02:
+                        e_random = np.random.uniform(self.common_models[planet_name].bounds['e'][0],
+                                                     self.common_models[planet_name].bounds['e'][1])
+                        population[ii, esino_list] = np.sqrt(e_random) * np.sin(o_pops[ii])
+                        population[ii, ecoso_list] = np.sqrt(e_random) * np.cos(o_pops[ii])
 
-                if 'f' in self.variable_list[pl_name]:
-                    ind_list.append(self.variable_list[pl_name]['f'])
+            if 'f' in self.common_models.variable_sampler:
+                ind_list.append(self.common_models.variable_sampler['f'])
 
-                if 'o' in self.variable_list[pl_name]:
-                    ind_list.append(self.variable_list[pl_name]['o'])
+            if 'o' in self.common_models.variable_sampler:
+                ind_list.append(self.common_models.variable_sampler['o'])
 
-                if 'lN' in self.variable_list[pl_name]:
-                    ind_list.append(self.variable_list[pl_name]['lN'])
+            if 'lN' in self.common_models.variable_sampler:
+                ind_list.append(self.common_models.variable_sampler['lN'])
 
+        """ 
         if 'sinusoids' in self.model_list:
             for jj in range(0, self.scv.n_seasons):
                 ind_list.extend(self.variable_list[self.scv.season_name[jj] + '_pha'])
@@ -390,7 +267,7 @@ class ModelContainer:
                         # ind_list.extend(self.variable_list[dataset.planet_name][self.scv.season_name[jj] + '_amp'])
                         if self.scv.use_offset[dataset.kind]:
                             ind_list.append(self.variable_list[dataset.kind][self.scv.season_name[jj] + '_off'])
-
+        """
         if np.size(ind_list) > 0:
             tmp_range = (self.bounds[:, 1] - self.bounds[:, 0]) / 2
             for var_ind in ind_list:
