@@ -1,4 +1,3 @@
 #this is classes/__init__.py
-__all__ = ['common', 'compute_RV', 'curvature', 'correlation',
-           'dataset', ' gaussian', 'input_parser', ' kepler_exo',
-           'model_container', ' planets', ' sinusoids']
+__all__ = ['abstract_common', 'abstract_model', 'common', 'dataset', 'dummy', 'input_parser', 'kepler_exo' 
+           'model_container', 'radial_velocities']

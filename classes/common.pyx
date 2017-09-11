@@ -19,7 +19,8 @@ if os.path.isdir('/Users/malavolta/Astro/CODE/'):
 else:
     sys.path.insert(0, '/home/malavolta/CODE/trades/pytrades/')
 #from pytrades_lib import pytrades
-from pytrades_dummy import pytrades
+from dummy import pytrades
+from dummy import PolyChord
 import constants
 
 
