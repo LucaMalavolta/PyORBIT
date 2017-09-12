@@ -107,11 +107,6 @@ else:
 
         # bounds redefinition and fix for PyDE anomalous results
         if mc.recenter_bounds_flag:
-            #Temporary fix
-            pickle.dump(mc.bounds, open(pyde_dir_output + 'bounds.pick', 'wb'))
-            pickle.dump(population, open(pyde_dir_output + 'pyde_pops.pick', 'wb'))
-
-
             pickle.dump(mc.bounds, open(pyde_dir_output + 'bounds_orig.pick', 'wb'))
             pickle.dump(population, open(pyde_dir_output + 'pyde_pops_orig.pick', 'wb'))
             mc.recenter_bounds(starting_point, population)
@@ -130,7 +125,7 @@ print 'PyDE completed'
 mc.results_resumen(starting_point)
 
     #json.dump(mc.variable_list, open('output/' + mc.planet_name + '_vlist.json', 'wb'))
-pickle.dump(mc.variable_list, open(emcee_dir_output + 'vlist.pick', 'wb'))
+pickle.dump(mc, open(emcee_dir_output + 'vlist.pick', 'wb'))
 #pickle.dump(mc.scv.use_offset,  open(emcee_dir_output + 'scv_offset.pick', 'wb'))
 
 if mc.emcee_parameters['multirun'] is not None:

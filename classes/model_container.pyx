@@ -231,11 +231,30 @@ class ModelContainer:
         # * Unfold and print out the output from theta
         # * give back a parameter name associated to each value in the result array
 
-        for dataset in self.dataset_dict.itervalues():
-            dataset.print_vars(self, theta)
+        print
+        print '================================================================================'
+        print
+        for dataset_name, dataset in self.dataset_dict.iteritems():
+            print '---------- ', dataset_name, '---------- '
+            for var in dataset.variable_sampler:
+                print var, dataset.variable_sampler[var], theta[dataset.variable_sampler[var]]
+            print
+            for model_name in dataset.models:
+                print '---------- ', dataset_name,model_name,'---------- '
 
-        for model in self.models.itervalues():
-            model.print_vars(self, theta)
+                for var in self.models[model_name].variable_sampler[dataset_name]:
+                    print "%10s  %4d  %15f " %(var, self.models[model_name].variable_sampler[dataset_name][var],
+                        theta[self.models[model_name].variable_sampler[dataset_name][var]])
+                print
+
+        for model in self.common_models.itervalues():
+            print '---------- ', model.common_ref, '---------- '
+            for var in model.variable_sampler:
+                print "%10s  %4d  %15f " %(var, model.variable_sampler[var], theta[model.variable_sampler[var]])
+            print
+
+        print '================================================================================'
+        print
 
     def recenter_bounds(self, pop_mean, population):
         # This function recenters the bounds limits for circular variables

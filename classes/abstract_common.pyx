@@ -91,7 +91,7 @@ class AbstractCommon:
                 start_converted = self.starts[var]
             if self.list_pams[var] == 'LU':
                 start_converted = np.log2(self.starts[var])
-            starting_point[self.variable_sampler[var]] = start_converted + 10.0
+            starting_point[self.variable_sampler[var]] = start_converted
 
     def return_priors(self, theta):
         """ return prior is defined here because, differently from other functions that can be esecuted more than once
@@ -158,6 +158,7 @@ class CommonPlanets(AbstractCommon):
         bounds_list = []
         if not(var == "e" or var == "o"):
             return ndim, bounds_list
+            return ndim, bounds_list
 
         if 'e' in self.fix_list or \
            'o' in self.fix_list:
@@ -222,4 +223,3 @@ class CommonPlanets(AbstractCommon):
                         population[ii, esino_list] = np.sqrt(e_random) * np.sin(o_pops[ii])
                         population[ii, ecoso_list] = np.sqrt(e_random) * np.cos(o_pops[ii])
 
-        population * 0.0000

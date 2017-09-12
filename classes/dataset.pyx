@@ -239,7 +239,6 @@ class TransitCentralTimes(Dataset):
         return
 
 
-
     def print_vars(self, mc, theta):
         # period, _, f, e, o = mc.pcv.convert(self.planet_name, theta)
         # model = np.rint(self.x0 / period) * period + kp.kepler_Tcent_T0P(period, f, e, o)
