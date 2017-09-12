@@ -52,10 +52,10 @@ class AbstractModel():
             else:
                 if self.list_pams_dataset[var] == 'U':
                     self.transformation[dataset_name][var] = get_var_val
-                    mc.bounds_list.append(self.bounds[dataset_name][var])
+                    bounds_list.append(self.bounds[dataset_name][var])
                 if self.list_pams_dataset[var] == 'LU':
                     self.transformation[dataset_name][var] = get_var_exp
-                    mc.bounds_list.append(np.log2(self.bounds[dataset_name][var]))
+                    bounds_list.append(np.log2(self.bounds[dataset_name][var]))
                 self.variable_index[dataset_name][var] = ndim
                 self.variable_sampler[dataset_name][var] = ndim
                 ndim += 1

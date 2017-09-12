@@ -85,7 +85,7 @@ class ModelContainer:
 
         self.ndata = 0
         for dataset in self.dataset_dict.itervalues():
-            if 'none' in dataset.models or 'None' in dataset.models:
+            if not dataset.models:
                 continue
             self.ndata += dataset.n
         self.ndof = self.ndata - self.ndim
@@ -106,7 +106,7 @@ class ModelContainer:
             bounds_list.extend(bounds_ext)
 
         for dataset in self.dataset_dict.itervalues():
-            self.ndim, bounds_ext = dataset.define_variables_bounds(self.ndim)
+            self.ndim, bounds_ext = dataset.define_variables_bounds(self.ndim, dataset.list_pams)
             bounds_list.extend(bounds_ext)
 
             for model_name in dataset.models:
@@ -189,9 +189,8 @@ class ModelContainer:
 
         for dataset_name, dataset in self.dataset_dict.iteritems():
             dataset.model_reset()
-            dataset.model_offset(theta)
-            dataset.model_jitter(theta)
-            dataset.model_linear(theta)
+            variable_values = dataset.convert(theta)
+            dataset.compute(variable_values)
 
             if 'none' in dataset.models or 'None' in dataset.models:
                 continue
@@ -226,36 +225,6 @@ class ModelContainer:
 
         return logchi2_out
 
-    def results_resumen(self, theta, verbose=True):
-        # Function with two goals:
-        # * Unfold and print out the output from theta
-        # * give back a parameter name associated to each value in the result array
-
-        print
-        print '================================================================================'
-        print
-        for dataset_name, dataset in self.dataset_dict.iteritems():
-            print '---------- ', dataset_name, '---------- '
-            for var in dataset.variable_sampler:
-                print var, dataset.variable_sampler[var], theta[dataset.variable_sampler[var]]
-            print
-            for model_name in dataset.models:
-                print '---------- ', dataset_name,model_name,'---------- '
-
-                for var in self.models[model_name].variable_sampler[dataset_name]:
-                    print "%10s  %4d  %15f " %(var, self.models[model_name].variable_sampler[dataset_name][var],
-                        theta[self.models[model_name].variable_sampler[dataset_name][var]])
-                print
-
-        for model in self.common_models.itervalues():
-            print '---------- ', model.common_ref, '---------- '
-            for var in model.variable_sampler:
-                print "%10s  %4d  %15f " %(var, model.variable_sampler[var], theta[model.variable_sampler[var]])
-            print
-
-        print '================================================================================'
-        print
-
     def recenter_bounds(self, pop_mean, population):
         # This function recenters the bounds limits for circular variables
         # Also, it extends the range of a variable if the output of PyDE is a fixed number
@@ -279,6 +248,64 @@ class ModelContainer:
             tmp_range = (self.bounds[:, 1] - self.bounds[:, 0]) / 2
             for var_ind in ind_list:
                 self.bounds[var_ind, :] = pop_mean[var_ind] + [-tmp_range[var_ind], tmp_range[var_ind]]
+
+
+        return var_ind
+
+    def results_resumen(self, theta):
+        # Function with two goals:
+        # * Unfold and print out the output from theta
+        # * give back a parameter name associated to each value in the result array
+
+
+        print
+        print '================================================================================'
+        print
+        for dataset_name, dataset in self.dataset_dict.iteritems():
+            print '---------- ', dataset_name, '---------- '
+            print_theta(dataset.variable_sampler, theta)
+
+            for model_name in dataset.models:
+                print '---------- ', dataset_name,model_name,'---------- '
+                print_theta(self.models[model_name].variable_sampler[dataset_name], theta)
+
+        for model in self.common_models.itervalues():
+            print '---------- ', model.common_ref, '---------- '
+            print_theta(model.variable_sampler, theta)
+
+
+        print '================================================================================'
+        print
+        print '--------------------------------------------------------------------------------'
+        print
+        print '================================================================================'
+        print
+
+        for dataset_name, dataset in self.dataset_dict.iteritems():
+            print '---------- ', dataset_name, '---------- '
+            variable_values = dataset.convert(theta)
+            print_dictionary(variable_values)
+
+            print
+            for model_name in dataset.models:
+                print '---------- ', dataset_name, model_name, '---------- '
+                variable_values = self.models[model_name].convert(theta, dataset)
+                print_dictionary(variable_values)
+
+        for model in self.common_models.itervalues():
+            print '---------- ', model.common_ref, '---------- '
+            variable_values = model.convert(theta)
+            print_dictionary(variable_values)
+
+        print '================================================================================'
+        print
+
+
+def fix_population()
+        if np.size(ind_list) > 0:
+            tmp_range = (self.bounds[:, 1] - self.bounds[:, 0]) / 2
+            for var_ind in ind_list:
+                self.bounds[var_ind, :] = pop_mean[var_ind] + [-tmp_range[var_ind], tmp_range[var_ind]]
                 fix_sel = (population[:, var_ind] <= self.bounds[var_ind, 0]) | (
                     population[:, var_ind] >= self.bounds[var_ind, 1])
                 population[fix_sel, var_ind] = pop_mean[var_ind]
@@ -289,6 +316,32 @@ class ModelContainer:
                 min_bound = np.maximum((pop_mean[ii] - range_restricted / 2.0), self.bounds[ii, 0])
                 max_bound = np.minimum((pop_mean[ii] + range_restricted / 2.0), self.bounds[ii, 1])
                 population[:, ii] = np.random.uniform(min_bound, max_bound, n_pop)
+
+
+
+def print_theta(i_dict, theta):
+    format_string = "%10s  %4d  %15f "
+    format_string_long = "%10s  %4d  %15f   %15f (-1sig)   %15f (+1sig)"
+
+    for var, i in i_dict.iteritems():
+        if len(np.shape(theta)) == 2:
+            perc0, perc1, perc2 = np.percentile(theta[i, :], [15.865, 50, 84.135], axis=0)
+            print format_string_long %(var, i, perc1, perc1-perc2, perc2-perc1)
+        else:
+            print format_string % (var, i, theta[i])
+    print
+
+
+def print_dictionary(variable_values):
+    format_string_long = "%10s   %15f   %15f (-1sig)   %15f (+1sig)"
+    format_string = "%10s   %15f "
+    for var_names, var_vals in variable_values.iteritems():
+        if len(np.shape(var_vals)) > 1:
+            perc0, perc1, perc2 = np.percentile(var_vals, [15.865, 50, 84.135], axis=0)
+            print format_string_long %(var_names,  perc1, perc1-perc2, perc2-perc1)
+        else:
+            print format_string % (var_names, var_vals)
+    print
 
 
 class ModelContainerPolyChord(ModelContainer):

@@ -156,6 +156,8 @@ print 'emcee'
 state = None
 sampler = emcee.EnsembleSampler(mc.emcee_parameters['nwalkers'], mc.ndim, mc, threads=mc.emcee_parameters['nwalkers'])
 
+
+
 if mc.emcee_parameters['nsave'] > 0:
     print ' Saving temporary steps'
     niter = int(mc.emcee_parameters['nsteps']/mc.emcee_parameters['nsave'])
@@ -174,4 +176,9 @@ import cPickle as pikcle
 pickle.dump(mc, open( "mc_saved.p", "wb"))
 
 print 'emcee completed'
+print
+
+
+mc.results_resumen(population)
+
 

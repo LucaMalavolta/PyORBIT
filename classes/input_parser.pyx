@@ -36,17 +36,11 @@ def yaml_parser(file_conf, mc):
     conf_solver = config_in['solver']
 
     for counter in conf_inputs:
-        print conf_inputs[counter]['kind'], conf_inputs[counter]['file'], conf_inputs[counter]['models']
         dataset_name = conf_inputs[counter]['file']
 
         """ The keyword in dataset_dict and the name assigned internally to the databes must be the same
             or everything will fall apart """
-        if 'Tcent' in conf_inputs[counter]['kind']:
-            mc.dataset_dict[dataset_name] = \
-                TransitCentralTimes(counter, conf_inputs[counter]['kind'], dataset_name, conf_inputs[counter]['models'])
-        else:
-            mc.dataset_dict[dataset_name] = \
-                Dataset(counter, conf_inputs[counter]['kind'], dataset_name, conf_inputs[counter]['models'])
+        mc.dataset_dict[dataset_name] = Dataset(conf_inputs[counter]['kind'], dataset_name, conf_inputs[counter]['models'])
 
         mc.dataset_index[counter] = dataset_name
 
@@ -58,7 +52,7 @@ def yaml_parser(file_conf, mc):
         if 'name' in conf_inputs[counter]:
             mc.dataset_dict[dataset_name].name = conf_inputs[counter]['name']
         else:
-            mc.dataset_dict[dataset_name].name = 'unspecified'
+            mc.dataset_dict[dataset_name].name = repr(counter)
 
         if 'boundaries' in conf_inputs[counter]:
             bound_conf = conf_inputs[counter]['boundaries']
@@ -70,6 +64,8 @@ def yaml_parser(file_conf, mc):
             starts_conf = conf_inputs[counter]['starts']
             for var in starts_conf:
                 mc.dataset_dict[dataset_name].starts[var] = np.asarray(starts_conf[var], dtype=np.double)
+
+        mc.dataset_dict[dataset_name].update_priors_starts_bounds()
 
     mc.planet_name = config_in['output']
 
@@ -93,13 +89,16 @@ def yaml_parser(file_conf, mc):
         if orbit == 'dynamical':
             mc.dynamical_dict[planet_name] = True
 
-        if len(mc.dynamical_dict) > 0:
+        if mc.dynamical_dict:
             mc.dynamical_model = DynamicalIntegrator()
 
     for model_name, model in conf_models.iteritems():
 
+        print model_name, model
         if 'type' in model:
             model_type = model['type']
+        elif 'kind' in model:
+            model_type = model['kind']
         else:
             model_type = model_name
 
@@ -124,21 +123,23 @@ def yaml_parser(file_conf, mc):
                 mc.models[model_name_exp] = \
                     define_type_to_class[model_type][mc.planet_dict[planet_name]](model_name_exp, planet_name)
 
-        if model_type == 'transit_times':
+        if model_type == 'transit_time':
             """ Only one planet for each file with transit times... mixing them would cause HELL"""
 
             planet_name = model['planet']
+            print planet_name, mc.planet_dict
             mc.models[model_name] = \
                     define_type_to_class[model_type][mc.planet_dict[planet_name]](model_name, planet_name)
 
-            for dataset_name, dataset in mc.dataset_dict.iter():
+            for dataset_name, dataset in mc.dataset_dict.iteritems():
                 if planet_name in mc.dynamical_dict and planet_name in dataset.models:
                     dataset.planet_name = planet_name
                     dataset.dynamical = True
                     mc.t0_dict[planet_name] = dataset_name
 
-        for dataset in mc.dataset_dict.itervalues():
-            print '--->', dataset.models
+    print
+    for dataset in mc.dataset_dict.itervalues():
+        print '------>', dataset.name_ref, dataset.models
 
     if 'Tref' in conf_parameters:
         mc.Tref = np.asarray(conf_parameters['Tref'])

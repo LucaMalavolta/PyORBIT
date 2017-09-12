@@ -1,7 +1,7 @@
 from common import *
 
 
-class AbstractCommon:
+class AbstractCommon(object):
     ''' This class must be created for each planet in the system
         model_name is the way the planet is identified
 
@@ -157,7 +157,6 @@ class CommonPlanets(AbstractCommon):
 
         bounds_list = []
         if not(var == "e" or var == "o"):
-            return ndim, bounds_list
             return ndim, bounds_list
 
         if 'e' in self.fix_list or \
