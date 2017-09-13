@@ -1,8 +1,6 @@
-name: test1
-output: test1_V5
 inputs:
   0:
-      file: test1_RV.dat
+      file: test_1planet_RV.dat
       kind: RV
       models: ['radial_velocities']
 common:
@@ -20,9 +18,10 @@ models:
     planets: ['b']
 parameters:
   star_mass: [1.00, 0.01]
+  star_radius: [1.00, 0.01]
 solver:
   pyde:
-    ngen: 2000
+    ngen: 10
     npop_mult: 2
   emcee:
     npop_mult: 2

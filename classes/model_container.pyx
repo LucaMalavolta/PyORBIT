@@ -15,7 +15,13 @@ class ModelContainer:
         self.models = {}
         self.common_models = {}
 
-        # pyde/emcee variables
+        """ pyde/emcee variables
+        wondering if I should move these somewhere else, for now they are staying here because they are 
+        essentially harmless """
+        self.pyde_dir_output = None
+        self.emcee_dir_output = None
+        self.polychord_dir_output = None
+
         self.emcee_parameters = {'nsave': 0, 'npop_mult': 2, 'thin': 1,
                                  'multirun': None, 'multirun_iter': 20}
         self.pyde_parameters = {'ngen': 1000, 'npop_mult': 2}
@@ -132,7 +138,7 @@ class ModelContainer:
 
     """
     def create_starting_point(self):
-        print 'IN:', self.starting_point
+
         self.starting_point = np.average(self.bounds, axis=1)
 
         for model in self.common_models.itervalues():
@@ -143,7 +149,6 @@ class ModelContainer:
 
             for model in dataset.models:
                 self.models[model].define_starting_point(self.starting_point)
-        print 'OUT:', self.starting_point
 
     def check_bounds(self, theta):
         for ii in xrange(0, self.ndim):
@@ -225,32 +230,50 @@ class ModelContainer:
 
         return logchi2_out
 
-    def recenter_bounds(self, pop_mean, population):
+    def recenter_bounds(self, pop_mean, recenter=True):
         # This function recenters the bounds limits for circular variables
         # Also, it extends the range of a variable if the output of PyDE is a fixed number
 
         ind_list = []
 
-        n_pop = np.size(population, axis=0)
-
         for model in self.common_models.itervalues():
-            print model
-            model.special_recenter_bounds(population)
+            ind_list.extend(model.special_index_recenter_bounds())
             ind_list.extend(model.index_recenter_bounds())
 
         for dataset in self.dataset_dict.itervalues():
             for model in dataset.models:
-                self.models[model].special_recenter_bounds(population, dataset.name_ref)
-
+                ind_list.extend(self.models[model].special_index_recenter_bounds(dataset.name_ref))
                 ind_list.extend(self.models[model].index_recenter_bounds(dataset.name_ref))
 
-        if np.size(ind_list) > 0:
+        if not recenter:
+            return ind_list
+
+        if ind_list:
             tmp_range = (self.bounds[:, 1] - self.bounds[:, 0]) / 2
+            replace_bounds = np.zeros([self.ndim, 2])
+            replace_bounds[:, 0] = pop_mean - tmp_range
+            replace_bounds[:, 1] = pop_mean + tmp_range
+            self.bounds[ind_list, :] =  replace_bounds[ind_list, :]
+
+    def fix_population(self, pop_mean, population):
+
+        ind_list = self.recenter_bounds(pop_mean, recenter=False)
+        n_pop = np.size(population, axis=0)
+
+        if ind_list:
             for var_ind in ind_list:
-                self.bounds[var_ind, :] = pop_mean[var_ind] + [-tmp_range[var_ind], tmp_range[var_ind]]
+                fix_sel = (population[:, var_ind] <= self.bounds[var_ind, 0]) | (
+                    population[:, var_ind] >= self.bounds[var_ind, 1])
+                population[fix_sel, var_ind] = pop_mean[var_ind]
 
+        for ii in xrange(0, self.ndim):
+            if np.amax(population[:, ii]) - np.amin(population[:, ii]) < 10e-7:
+                range_restricted = (self.bounds[ii, 1] - self.bounds[ii, 0]) / 100.
+                min_bound = np.maximum((pop_mean[ii] - range_restricted / 2.0), self.bounds[ii, 0])
+                max_bound = np.minimum((pop_mean[ii] + range_restricted / 2.0), self.bounds[ii, 1])
+                population[:, ii] = np.random.uniform(min_bound, max_bound, n_pop)
 
-        return var_ind
+        return population
 
     def results_resumen(self, theta):
         # Function with two goals:
@@ -259,26 +282,25 @@ class ModelContainer:
 
 
         print
-        print '================================================================================'
+        print '=========================================================================================='
+        print '------------------------------------------------------------------------------------------'
+        print '=========================================================================================='
         print
         for dataset_name, dataset in self.dataset_dict.iteritems():
             print '---------- ', dataset_name, '---------- '
-            print_theta(dataset.variable_sampler, theta)
+            print_theta_bounds(dataset.variable_sampler, theta, self.bounds)
 
             for model_name in dataset.models:
                 print '---------- ', dataset_name,model_name,'---------- '
-                print_theta(self.models[model_name].variable_sampler[dataset_name], theta)
+                print_theta_bounds(self.models[model_name].variable_sampler[dataset_name], theta, self.bounds)
 
         for model in self.common_models.itervalues():
             print '---------- ', model.common_ref, '---------- '
-            print_theta(model.variable_sampler, theta)
+            print_theta_bounds(model.variable_sampler, theta, self.bounds)
 
 
-        print '================================================================================'
-        print
-        print '--------------------------------------------------------------------------------'
-        print
-        print '================================================================================'
+        print '=========================================================================================='
+        print '=========================================================================================='
         print
 
         for dataset_name, dataset in self.dataset_dict.iteritems():
@@ -297,30 +319,14 @@ class ModelContainer:
             variable_values = model.convert(theta)
             print_dictionary(variable_values)
 
-        print '================================================================================'
+        print '=========================================================================================='
+        print '------------------------------------------------------------------------------------------'
+        print '=========================================================================================='
         print
 
 
-def fix_population()
-        if np.size(ind_list) > 0:
-            tmp_range = (self.bounds[:, 1] - self.bounds[:, 0]) / 2
-            for var_ind in ind_list:
-                self.bounds[var_ind, :] = pop_mean[var_ind] + [-tmp_range[var_ind], tmp_range[var_ind]]
-                fix_sel = (population[:, var_ind] <= self.bounds[var_ind, 0]) | (
-                    population[:, var_ind] >= self.bounds[var_ind, 1])
-                population[fix_sel, var_ind] = pop_mean[var_ind]
-
-        for ii in xrange(0, self.ndim):
-            if np.amax(population[:, ii]) - np.amin(population[:, ii]) < 10e-7:
-                range_restricted = (self.bounds[ii, 1] - self.bounds[ii, 0]) / 100.
-                min_bound = np.maximum((pop_mean[ii] - range_restricted / 2.0), self.bounds[ii, 0])
-                max_bound = np.minimum((pop_mean[ii] + range_restricted / 2.0), self.bounds[ii, 1])
-                population[:, ii] = np.random.uniform(min_bound, max_bound, n_pop)
-
-
-
-def print_theta(i_dict, theta):
-    format_string = "%10s  %4d  %15f "
+def print_theta_bounds(i_dict, theta, bounds):
+    format_string = "%10s  %4d  %15f ([%10f, %10f])"
     format_string_long = "%10s  %4d  %15f   %15f (-1sig)   %15f (+1sig)"
 
     for var, i in i_dict.iteritems():
@@ -328,7 +334,7 @@ def print_theta(i_dict, theta):
             perc0, perc1, perc2 = np.percentile(theta[i, :], [15.865, 50, 84.135], axis=0)
             print format_string_long %(var, i, perc1, perc1-perc2, perc2-perc1)
         else:
-            print format_string % (var, i, theta[i])
+            print format_string % (var, i, theta[i], bounds[i, 0], bounds[i, 1])
     print
 
 

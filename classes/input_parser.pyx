@@ -24,10 +24,28 @@ define_type_to_class = {
     #TD 'correlation': CorrelationsCommonVariables
 }
 
+accepted_extensions = ['.yaml', '.yml', '.conf', '.config', '.input', ]
 
-def yaml_parser(file_conf, mc):
+
+def yaml_parser(file_conf):
     stream = file(file_conf, 'r')
     config_in = yaml.load(stream)
+
+    if 'output' not in config_in:
+
+        for extension in accepted_extensions:
+            if file_conf.find(extension) > 0:
+                output_name = file_conf.replace(extension, "")
+                continue
+
+        config_in['output'] = output_name
+
+    return config_in
+
+
+def pars_input(config_in, mc):
+
+    mc.output_name = config_in['output']
 
     conf_inputs = config_in['inputs']
     conf_models = config_in['models']
@@ -67,13 +85,10 @@ def yaml_parser(file_conf, mc):
 
         mc.dataset_dict[dataset_name].update_priors_starts_bounds()
 
-    mc.planet_name = config_in['output']
-
     for model_name, conf in conf_common.iteritems():
 
         if model_name == 'planets':
 
-            print conf
             for planet_name, planet_conf in conf.iteritems():
 
                 mc.common_models[planet_name] = define_common_type_to_class['planets'](planet_name)
@@ -94,7 +109,6 @@ def yaml_parser(file_conf, mc):
 
     for model_name, model in conf_models.iteritems():
 
-        print model_name, model
         if 'type' in model:
             model_type = model['type']
         elif 'kind' in model:
@@ -127,7 +141,6 @@ def yaml_parser(file_conf, mc):
             """ Only one planet for each file with transit times... mixing them would cause HELL"""
 
             planet_name = model['planet']
-            print planet_name, mc.planet_dict
             mc.models[model_name] = \
                     define_type_to_class[model_type][mc.planet_dict[planet_name]](model_name, planet_name)
 
@@ -136,10 +149,6 @@ def yaml_parser(file_conf, mc):
                     dataset.planet_name = planet_name
                     dataset.dynamical = True
                     mc.t0_dict[planet_name] = dataset_name
-
-    print
-    for dataset in mc.dataset_dict.itervalues():
-        print '------>', dataset.name_ref, dataset.models
 
     if 'Tref' in conf_parameters:
         mc.Tref = np.asarray(conf_parameters['Tref'])

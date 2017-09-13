@@ -118,8 +118,11 @@ class AbstractModel():
 
         return ind_list
 
-    def special_recenter_bounds(self, population, dataset_name):
-        pass
+    def special_index_recenter_bounds(self, dataset_name):
+        return []
+
+    def special_fix_population(self, pop_mean, population, dataset_name):
+        return population
 
     def compute(self, variable_value, dataset):
         return np.zeros(dataset.n, dtype=np.double)

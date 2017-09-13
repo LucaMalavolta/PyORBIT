@@ -1,5 +1,5 @@
 from classes.model_container import ModelContainer
-from classes.input_parser import yaml_parser
+from classes.input_parser import yaml_parser, pars_input
 import numpy as np
 import emcee
 from pyde.de import DiffEvol
@@ -9,90 +9,121 @@ import os
 import argparse
 
 
-def save_to_hdf5(samples):
+def pyde_save_to_pickle(mc, population, starting_point, prefix=''):
 
-    h5f = h5py.File(emcee_dir_output + mc.planet_name + '.hdf5', "w")
+    add_prefix = (prefix + '_' if prefix else '')
+    pickle.dump(mc, open(mc.pyde_dir_output + add_prefix + "model_container.p", "wb"))
+    pickle.dump(population, open(mc.pyde_dir_output + add_prefix + "population.p", "wb"))
+    pickle.dump(starting_point, open(mc.emcee_dir_output + add_prefix + "starting_point.p", "wb"))
 
-    data_grp = h5f.create_group("data")
-    data_grp.attrs.create('file_conf', data=file_conf)
+def pyde_load_from_cpickle(pyde_dir_output, prefix=''):
 
-    data_grp.create_dataset("starting_point", data=starting_point, compression="gzip")
-    data_grp.create_dataset("starting_population", data=population, compression="gzip")
+    add_prefix = (prefix + '_' if prefix else '')
 
-    emcee_grp = h5f.create_group("emcee")
-    emcee_grp.attrs.create("nwalkers", data=mc.emcee_parameters['nwalkers'])
-    emcee_grp.attrs.create("ndim", data=mc.ndim)
-    emcee_grp.attrs.create("ndof", data=mc.ndof)
+    mc = pickle.load(open(pyde_dir_output + add_prefix + "model_container.p", "rb"))
+    population = pickle.load(open(pyde_dir_output + add_prefix + "population.p", "rb"))
+    starting_point = pickle.load(open(pyde_dir_output + add_prefix + "starting_point.p", "rb"))
 
-    emcee_grp.attrs.create("nsave", data=mc.emcee_parameters['nsave'])
-    emcee_grp.attrs.create("nsample", data=samples)
+    return mc, population, starting_point
 
-    emcee_grp.create_dataset("bound", data=mc.bounds, compression="gzip")
-    emcee_grp.create_dataset("chain", data=sampler.chain, compression="gzip")
+def emcee_save_to_cpickle(mc, starting_point, population, prob, state, sampler, samples=None, prefix=None):
 
-    emcee_grp.create_dataset("lnprobability", data=sampler.lnprobability, compression="gzip")
-    emcee_grp.create_dataset("acceptance_fraction", data=sampler.acceptance_fraction, compression="gzip")
-    # emcee_grp.create_dataset("acor", data=sampler.acor, compression="gzip")
+    if samples:
+        mc.emcee_parameters['nsteps'] = samples
+    add_prefix = (prefix + '_' if prefix else '')
 
-    h5f.close()
+    pickle.dump(mc, open(mc.emcee_dir_output + add_prefix + "model_container.p", "wb"))
+    pickle.dump(starting_point, open(mc.emcee_dir_output + add_prefix + "starting_point.p", "wb"))
+    pickle.dump(population, open(mc.emcee_dir_output + add_prefix + "starting_population.p", "wb"))
+    pickle.dump(prob, open(mc.emcee_dir_output + add_prefix + "prob.p", "wb"))
+    pickle.dump(state, open(mc.emcee_dir_output + add_prefix + "state.p", "wb"))
+    pickle.dump(sampler, open(mc.emcee_dir_output + add_prefix + "sampler.p", "wb"))
 
-parser = argparse.ArgumentParser(prog='PyORBIT_V4_emcee.py', description='PyDE+emcee runner')
-# parser.add_argument('-l', type=str, nargs='+', help='line identificator')
-parser.add_argument('config_file', type=str, nargs=1, help='config file')
+def emcee_load_from_cpickle(emcee_dir_output, prefix=''):
 
-args = parser.parse_args()
-file_conf = args.config_file[0]
+    add_prefix = (prefix + '_' if prefix else '')
 
-mc = ModelContainer()
+    mc = pickle.load(open(emcee_dir_output + add_prefix + "model_container.p", "rb"))
+    starting_point = pickle.load(open(emcee_dir_output + add_prefix + "starting_point.p", "rb"))
+    population = pickle.load(open(emcee_dir_output + add_prefix + "starting_population.p", "rb"))
+    prob = pickle.dump(open(mc.emcee_dir_output + add_prefix + "prob.p", "rb"))
+    state = pickle.dump(open(mc.emcee_dir_output + add_prefix + "state.p", "rb"))
+    sampler = pickle.load(open(emcee_dir_output + add_prefix + "sampler.p", "rb"))
 
-yaml_parser(file_conf, mc)
-mc.initialize_model()
+    return mc, starting_point, population, prob, state, sampler
 
-pyde_dir_output = './' + mc.planet_name + '/pyde/'
-emcee_dir_output = './' + mc.planet_name + '/emcee/'
+def pyorbit_emcee(config_in):
 
-if not os.path.exists(emcee_dir_output):
-    os.makedirs(emcee_dir_output)
+    pyde_dir_output = './' + config_in['output'] + '/pyde/'
+    emcee_dir_output = './' + config_in['output'] + '/emcee/'
 
-if mc.dynamical_model is not None:
-    mc.dynamical_model.prepare(mc)
+    reloaded_pyde = False
+    reloaded_emcee_multirun = False
+    reloaded_emcee = False
 
-print
-print 'Reference Time Tref: ', mc.Tref
-print
-print '*************************************************************'
-print
-print 'Dimensions = ', mc.ndim
-print '   '
-print
-print 'Variable bounds:', mc.bounds
-print
-print '*************************************************************'
-print
+    try:
+        mc, population, starting_point = pyde_load_from_cpickle(pyde_dir_output, prefix='')
+        reloaded_pyde = True
+    except:
+        pass
 
-mc.emcee_parameters['nwalkers'] = mc.ndim * mc.emcee_parameters['npop_mult']
-if mc.emcee_parameters['nwalkers']%2 == 1: mc.emcee_parameters['nwalkers'] += 1
+    try:
+        mc, starting_point, population, sampler = emcee_load_from_cpickle(emcee_dir_output, prefix='MR')
+        reloaded_emcee_multirun = True
+    except:
+        pass
 
-print 'Nwalkers = ', mc.emcee_parameters['nwalkers']
+    try:
+        mc, starting_point, population, sampler = emcee_load_from_cpickle(emcee_dir_output, prefix='')
+        reloaded_emcee = True
+    except:
+        pass
 
-if mc.starting_point_flag:
-    mc.create_starting_point()
-    starting_point = mc.starting_point
-    population = np.zeros([mc.emcee_parameters['nwalkers'], mc.ndim], dtype=np.double)
-    for ii in xrange(0, mc.emcee_parameters['nwalkers']):
-        population[ii, :] = np.random.normal(starting_point, 0.0000001)
+    if reloaded_emcee:
+        """ There's no need to do anything"""
+        mc.results_resumen(population)
+        return
 
-else:
-    if not os.path.exists(pyde_dir_output):
-        os.makedirs(pyde_dir_output)
+    reloaded_mc = reloaded_pyde or reloaded_emcee_multirun or reloaded_emcee_multirun
 
-    if os.path.isfile(pyde_dir_output + 'pyde_pops.pick'):
-        print os.path.isfile(pyde_dir_output + 'pyde_pops.pick')
-        population = pickle.load(open(pyde_dir_output + 'pyde_pops.pick', 'rb'))
-        starting_point = np.median(population, axis=0)
-        mc.recenter_bounds(starting_point, population)
+    if not reloaded_mc:
+        mc = ModelContainer()
+        pars_input(config_in, mc)
+        mc.initialize_model()
 
-    else:
+        mc.pyde_dir_output = pyde_dir_output
+        mc.emcee_dir_output = emcee_dir_output
+
+        mc.emcee_parameters['nwalkers'] = mc.ndim * mc.emcee_parameters['npop_mult']
+        if mc.emcee_parameters['nwalkers']%2 == 1: mc.emcee_parameters['nwalkers'] += 1
+
+        if mc.dynamical_model is not None:
+            mc.dynamical_model.prepare(mc)
+
+    if not os.path.exists(mc.emcee_dir_output):
+        os.makedirs(mc.emcee_dir_output)
+
+    print
+    print 'Reference Time Tref: ', mc.Tref
+    print
+    print 'Dimensions = ', mc.ndim
+    print 'Nwalkers = ', mc.emcee_parameters['nwalkers']
+    print
+    print '*************************************************************'
+    print
+
+    if mc.starting_point_flag:
+        mc.create_starting_point()
+        starting_point = mc.starting_point
+        population = np.zeros([mc.emcee_parameters['nwalkers'], mc.ndim], dtype=np.double)
+        for ii in xrange(0, mc.emcee_parameters['nwalkers']):
+            population[ii, :] = np.random.normal(starting_point, 0.0000001)
+        reloaded_pyde = True
+
+    if not reloaded_pyde:
+        if not os.path.exists(mc.pyde_dir_output):
+            os.makedirs(mc.pyde_dir_output)
+
         print 'PyDE'
         de = DiffEvol(mc, mc.bounds, mc.emcee_parameters['nwalkers'], maximize=True)
         de.optimize(mc.pyde_parameters['ngen'])
@@ -100,85 +131,82 @@ else:
 
         population = de.population
         starting_point = np.median(population, axis=0)
-        pickle.dump(starting_point, open(pyde_dir_output + 'pyde_mean.pick', 'wb'))
 
-        #np.savetxt(pyde_dir_output + 'pyDEout_original_bounds.dat', mc.bounds)
-        #np.savetxt(pyde_dir_output + 'pyDEout_original_pops.dat', population)
+        #np.savetxt(mc.pyde_dir_output + 'pyDEout_original_bounds.dat', mc.bounds)
+        #np.savetxt(mc.pyde_dir_output + 'pyDEout_original_pops.dat', population)
 
-        # bounds redefinition and fix for PyDE anomalous results
+        """ bounds redefinition and fix for PyDE anomalous results """
         if mc.recenter_bounds_flag:
-            pickle.dump(mc.bounds, open(pyde_dir_output + 'bounds_orig.pick', 'wb'))
-            pickle.dump(population, open(pyde_dir_output + 'pyde_pops_orig.pick', 'wb'))
-            mc.recenter_bounds(starting_point, population)
-            pickle.dump(mc.bounds, open(pyde_dir_output + 'bounds.pick', 'wb'))
-            pickle.dump(population, open(pyde_dir_output + 'pyde_pops.pick', 'wb'))
+            pyde_save_to_pickle(mc, population, starting_point, prefix='orig')
 
-            #np.savetxt(pyde_dir_output + 'pyDEout_redefined_bounds.dat', mc.bounds)
-            #np.savetxt(pyde_dir_output + 'pyDEout_redefined_pops.dat', de.population)
+            mc.recenter_bounds(starting_point)
+            population = mc.fix_population(starting_point, population)
+            starting_point = np.median(population, axis=0)
+
             print 'REDEFINED BOUNDS'
 
-        else:
-            pickle.dump(mc.bounds, open(pyde_dir_output + 'bounds.pick', 'wb'))
-            pickle.dump(population, open(pyde_dir_output + 'pyde_pops.pick', 'wb'))
+        pyde_save_to_pickle(mc, population, starting_point)
 
-print 'PyDE completed'
-mc.results_resumen(starting_point)
+        print 'PyDE completed'
 
-    #json.dump(mc.variable_list, open('output/' + mc.planet_name + '_vlist.json', 'wb'))
-pickle.dump(mc, open(emcee_dir_output + 'vlist.pick', 'wb'))
-#pickle.dump(mc.scv.use_offset,  open(emcee_dir_output + 'scv_offset.pick', 'wb'))
+    mc.results_resumen(starting_point)
 
-if mc.emcee_parameters['multirun'] is not None:
+    if mc.emcee_parameters['multirun'] and not reloaded_emcee_multirun:
 
-    if os.path.isfile(emcee_dir_output + 'emcee_MR_pops.pick'):
-        print os.path.isfile(emcee_dir_output + 'pyde_pops.pick')
-        meds = pickle.load(open(emcee_dir_output + 'emcee_MR_meds.pick', 'rb'))
-        population = pickle.load(open(emcee_dir_output + 'emcee_MR_pops.pick', 'rb'))
-        print 'output from emcee exploratory runs retrieved'
-    else:
         for ii in xrange(0, mc.emcee_parameters['multirun_iter']):
             print 'emcee exploratory run #', ii, ' of ', mc.emcee_parameters['multirun_iter']
             sampler = emcee.EnsembleSampler(mc.emcee_parameters['nwalkers'], mc.ndim, mc,
                                             threads=mc.emcee_parameters['nwalkers'])
             population, prob, state = sampler.run_mcmc(population, mc.emcee_parameters['multirun'])
+            mc.results_resumen(population)
+
             max_ind = np.argmax(prob)
-            meds = population[max_ind, :]
-            population = np.asarray([meds + 1e-4*np.random.randn(mc.ndim) for i in range(mc.emcee_parameters['nwalkers'])])
+            starting_point = population[max_ind, :]
+            population = np.asarray([starting_point + 1e-4*np.random.randn(mc.ndim) for i in range(mc.emcee_parameters['nwalkers'])])
             sampler.reset()
 
-        mc.results_resumen(meds)
-        pickle.dump(meds, open(emcee_dir_output + 'emcee_MR_meds.pick', 'wb'))
-        pickle.dump(population, open(emcee_dir_output + 'emcee_MR_pops.pick', 'wb'))
+        emcee_save_to_cpickle(mc, meds, population, prob, state, sampler, prefix='MR')
         print 'emcee exploratory runs completed'
 
 
-print 'emcee'
-state = None
-sampler = emcee.EnsembleSampler(mc.emcee_parameters['nwalkers'], mc.ndim, mc, threads=mc.emcee_parameters['nwalkers'])
+    print 'emcee'
+    state = None
+    sampler = emcee.EnsembleSampler(mc.emcee_parameters['nwalkers'], mc.ndim, mc, threads=mc.emcee_parameters['nwalkers'])
+
+    if mc.emcee_parameters['nsave'] > 0:
+        print ' Saving temporary steps'
+        niter = int(mc.emcee_parameters['nsteps']/mc.emcee_parameters['nsave'])
+        sampled = 0
+        for i in xrange(0, niter):
+            population, prob, state = sampler.run_mcmc(population, mc.emcee_parameters['nsave'], thin=mc.emcee_parameters['thin'], rstate0=state)
+            sampled += mc.emcee_parameters['nsave']
+            emcee_save_to_cpickle(mc, meds, population, prob, state, sampler, samples=sampled)
+
+            print sampled, '  steps completed, average lnprob:, ', np.median(prob)
+            mc.results_resumen(population)
+
+    else:
+        population, prob, state = sampler.run_mcmc(population, mc.emcee_parameters['nsteps'], thin=mc.emcee_parameters['thin'])
+        emcee_save_to_cpickle(mc, meds, population, prob, state, sampler)
+        mc.results_resumen(population)
 
 
+    print 'emcee completed'
+    print
 
-if mc.emcee_parameters['nsave'] > 0:
-    print ' Saving temporary steps'
-    niter = int(mc.emcee_parameters['nsteps']/mc.emcee_parameters['nsave'])
-    sampled = 0
-    for i in xrange(0, niter):
-        population, prob, state = sampler.run_mcmc(population, mc.emcee_parameters['nsave'], thin=mc.emcee_parameters['thin'], rstate0=state)
-        sampled += mc.emcee_parameters['nsave']
-        save_to_hdf5(sampled)
-        print sampled, '  steps completed, average lnprob:, ', np.median(prob)
+
+if __name__ == '__main__':
+    print 'This program is being run by itself'
+
+    parser = argparse.ArgumentParser(prog='PyORBIT_emcee.py', description='PyDE+emcee runner')
+    # parser.add_argument('-l', type=str, nargs='+', help='line identificator')
+    parser.add_argument('config_file', type=str, nargs=1, help='config file')
+
+    args = parser.parse_args()
+    file_conf = args.config_file[0]
+    config_in = yaml_parser(file_conf)
+
+    pyorbit_emcee(config_in)
 
 else:
-    population, prob, state = sampler.run_mcmc(population, mc.emcee_parameters['nsteps'], thin=mc.emcee_parameters['thin'])
-    save_to_hdf5(mc.emcee_parameters['nsteps'])
-
-import cPickle as pikcle
-pickle.dump(mc, open( "mc_saved.p", "wb"))
-
-print 'emcee completed'
-print
-
-
-mc.results_resumen(population)
-
-
+    print 'I am being imported from another module'

@@ -108,8 +108,11 @@ class AbstractCommon(object):
                 ind_list.append(self.variable_sampler[var])
         return ind_list
 
-    def special_recenter_bounds(self, population):
-        pass
+    def special_index_recenter_bounds(self):
+        return []
+
+    def special_fix_population(self, pop_mean, population):
+        return population
 
 
 class CommonPlanets(AbstractCommon):
@@ -203,7 +206,7 @@ class CommonPlanets(AbstractCommon):
 
         return True
 
-    def special_recenter_bounds(self, population):
+    def special_fix_population(self, population):
 
         n_pop = np.size(population, axis=0)
         if 'esino' in self.variable_sampler and \
