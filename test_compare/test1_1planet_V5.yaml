@@ -21,7 +21,7 @@ parameters:
   star_radius: [1.00, 0.01]
 solver:
   pyde:
-    ngen: 10
+    ngen: 8000
     npop_mult: 2
   emcee:
     npop_mult: 2
