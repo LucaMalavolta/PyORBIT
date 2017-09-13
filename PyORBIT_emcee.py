@@ -165,7 +165,11 @@ def pyorbit_emcee(config_in):
             population = np.asarray([starting_point + 1e-4*np.random.randn(mc.ndim) for i in range(mc.emcee_parameters['nwalkers'])])
             sampler.reset()
 
-        emcee_save_to_cpickle(mc, meds, population, prob, state, sampler, prefix='MR')
+            emcee_save_to_cpickle(mc, starting_point, population, prob, state, sampler, prefix='MR_'+repr(ii))
+
+        emcee_save_to_cpickle(mc, starting_point, population, prob, state, sampler, prefix='MR')
+        mc.results_resumen(population)
+
         print 'emcee exploratory runs completed'
 
 

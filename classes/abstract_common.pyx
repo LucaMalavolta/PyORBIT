@@ -45,9 +45,9 @@ class AbstractCommon(object):
                 continue
 
             if var in self.fix_list:
-                if var not in self.transformation[var]:
+                if var not in self.transformation:
                     self.transformation[var] = get_fix_val
-                    self.fixed.append(self.fix_list[var])
+                    self.fixed.append(self.fix_list[var][0])
                     self.variable_index[var] = self.nfix
                     self.variable_sampler[var] = self.nfix
                     self.nfix += 1
@@ -156,9 +156,24 @@ class CommonPlanets(AbstractCommon):
 
     recenter_pams = {'f', 'o', 'lN'}
 
+    """ Variable used by trades"""
+    period_average = None
+
     def define_special_variables_bounds(self, ndim, var):
 
         bounds_list = []
+
+        if var == 'P':
+            if var in self.fix_list:
+                self.period_average = self.fix_list['P'][0]
+            else:
+                if var in self.bounds:
+                    bounds_tmp = self.bounds[var]
+                else:
+                    bounds_tmp = self.default_bounds[var]
+                self.period_average = np.average(bounds_tmp)
+            return ndim, bounds_list
+
         if not(var == "e" or var == "o"):
             return ndim, bounds_list
 

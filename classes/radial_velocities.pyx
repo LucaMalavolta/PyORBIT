@@ -50,6 +50,7 @@ class RVdynamical(AbstractModel):
             'f': 'U',  # phase - as defined by Malavolta+2016
             'lN': 'U',  # longitude of ascending node
             'e': 'U',  # eccentricity, uniform prior - to be fixed
+            'R': 'U',  # planet radius (in units of stellar radii)
             'o': 'U'}  # argument of pericenter
 
     list_pams_dataset = {}
@@ -90,6 +91,7 @@ class TransitTimeDynamical(AbstractModel):
             'f': 'U',  # phase - as defined by Malavolta+2016
             'lN': 'U',  # longitude of ascending node
             'e': 'U',  # eccentricity, uniform prior - to be fixed
+            'R': 'U',  # planet radius (in units of stellar radii)
             'o': 'U'}  # argument of pericenter
 
     list_pams_dataset = {}
@@ -196,9 +198,7 @@ class DynamicalIntegrator:
         planet_list = []
 
         for planet_name in mc.dynamical_dict:
-            period_list.extend(
-                [(mc.planet_commons[planet_name].bounds['P'][1] +
-                  mc.planet_commons[planet_name].bounds['P'][0]) / 2.])
+            period_list.extend([mc.common_models[planet_name].period_average])
             planet_list.extend([planet_name])
         sort_planets = np.argsort(period_list)
 

@@ -18,6 +18,9 @@ common:
 models:
   radial_velocities:
     planets: ['b']
+  transit_b:
+    kind: transit_time
+    planet: 'b'
 parameters:
   star_mass: [1.00, 0.01]
   star_radius: [1.00, 0.01]
