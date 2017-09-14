@@ -218,15 +218,19 @@ class ModelContainer:
                 variable_values.update(self.models[model].convert(theta, dataset))
                 dataset.model += self.models[model].compute(variable_values, dataset)
 
-            # Gaussian Process check MUST be the last one or the program will fail
-            if logchi2_gp_model is not None:
-                #logchi2_out += self.models[logchi2_gp_model].return_priors(theta, dataset_name)
+            """ Gaussian Process check MUST be the last one or the program will fail
+             that's because for the GP to work we need to know the _deterministic_ part of the model 
+             (i.e. the theoretical values you get when you feed your model with the parameter values) """
+            if logchi2_gp_model:
+                common_ref = self.models[logchi2_gp_model].common_ref
+                variable_values = self.common_models[common_ref].convert(theta)
+                variable_values.update(self.models[logchi2_gp_model].convert(theta, dataset))
                 logchi2_out += self.models[logchi2_gp_model].lnlk_compute(theta, dataset)
             else:
                 logchi2_out += dataset.model_logchi2()
 
              # workaround to avoid memory leaks from GP module
-        gc.collect()
+        #gc.collect()
 
         return logchi2_out
 

@@ -16,6 +16,7 @@ def pyde_save_to_pickle(mc, population, starting_point, prefix=''):
     pickle.dump(population, open(mc.pyde_dir_output + add_prefix + "population.p", "wb"))
     pickle.dump(starting_point, open(mc.emcee_dir_output + add_prefix + "starting_point.p", "wb"))
 
+
 def pyde_load_from_cpickle(pyde_dir_output, prefix=''):
 
     add_prefix = (prefix + '_' if prefix else '')
@@ -25,6 +26,7 @@ def pyde_load_from_cpickle(pyde_dir_output, prefix=''):
     starting_point = pickle.load(open(pyde_dir_output + add_prefix + "starting_point.p", "rb"))
 
     return mc, population, starting_point
+
 
 def emcee_save_to_cpickle(mc, starting_point, population, prob, state, sampler, samples=None, prefix=None):
 
@@ -39,6 +41,7 @@ def emcee_save_to_cpickle(mc, starting_point, population, prob, state, sampler, 
     pickle.dump(state, open(mc.emcee_dir_output + add_prefix + "state.p", "wb"))
     pickle.dump(sampler, open(mc.emcee_dir_output + add_prefix + "sampler.p", "wb"))
 
+
 def emcee_load_from_cpickle(emcee_dir_output, prefix=''):
 
     add_prefix = (prefix + '_' if prefix else '')
@@ -51,6 +54,7 @@ def emcee_load_from_cpickle(emcee_dir_output, prefix=''):
     sampler = pickle.load(open(emcee_dir_output + add_prefix + "sampler.p", "rb"))
 
     return mc, starting_point, population, prob, state, sampler
+
 
 def pyorbit_emcee(config_in):
 
@@ -78,6 +82,12 @@ def pyorbit_emcee(config_in):
         reloaded_emcee = True
     except:
         pass
+
+    print
+    print 'reloaded_pyde: ', reloaded_pyde
+    print 'reloaded_emcee_multirun: ', reloaded_emcee_multirun
+    print 'reloaded_emcee: ', reloaded_emcee
+    print
 
     if reloaded_emcee:
         """ There's no need to do anything"""
@@ -172,7 +182,6 @@ def pyorbit_emcee(config_in):
 
         print 'emcee exploratory runs completed'
 
-
     print 'emcee'
     state = None
     sampler = emcee.EnsembleSampler(mc.emcee_parameters['nwalkers'], mc.ndim, mc, threads=mc.emcee_parameters['nwalkers'])
@@ -184,16 +193,15 @@ def pyorbit_emcee(config_in):
         for i in xrange(0, niter):
             population, prob, state = sampler.run_mcmc(population, mc.emcee_parameters['nsave'], thin=mc.emcee_parameters['thin'], rstate0=state)
             sampled += mc.emcee_parameters['nsave']
-            emcee_save_to_cpickle(mc, meds, population, prob, state, sampler, samples=sampled)
+            emcee_save_to_cpickle(mc, starting_point, population, prob, state, sampler, samples=sampled)
 
             print sampled, '  steps completed, average lnprob:, ', np.median(prob)
             mc.results_resumen(population)
 
     else:
         population, prob, state = sampler.run_mcmc(population, mc.emcee_parameters['nsteps'], thin=mc.emcee_parameters['thin'])
-        emcee_save_to_cpickle(mc, meds, population, prob, state, sampler)
+        emcee_save_to_cpickle(mc, starting_point, population, prob, state, sampler)
         mc.results_resumen(population)
-
 
     print 'emcee completed'
     print
