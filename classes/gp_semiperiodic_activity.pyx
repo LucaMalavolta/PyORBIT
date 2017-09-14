@@ -12,6 +12,20 @@ class GaussianProcess_QuasiPeriodicActivity(AbstractModel):
      - omega: is the length scale of the periodic component, and can be linked to the size evolution of the active regions;
      - h: represents the amplitude of the correlations '''
 
+    model_class = 'gp_quasiperiodic'
+
+    list_pams_common = {
+        'Prot': 'U', # Rotational period of the star
+        'Pdec': 'U', # Decay timescale of activity
+        'Oamp': 'LU' # Granulation of activity
+    }
+
+    list_pams_dataset = {
+        'Hamp': 'U'  # Amplitude of the signal in the covariance matrix
+    }
+
+    recenter_pams_dataset = {}
+
     n_pams = 4
 
     """ Indexing is determined by the way the kernel is constructed, so it is specific of the Model and not of the 
@@ -99,8 +113,8 @@ class GaussianProcess_QuasiPeriodicActivity(AbstractModel):
 
         env = np.sqrt(dataset.e ** 2.0 + dataset.jitter ** 2.0)
         self.gp[dataset.name_ref].set_parameter_vector(gp_pams)
-        self.gp[dataset.name_ref].compute(dataset.x0, env)
-
+        #self.gp[dataset.name_ref].compute(dataset.x0, env)
+        self.gp[dataset.name_ref].recompute()
         return self.gp[dataset.name_ref].log_likelihood(dataset.y - dataset.model, quiet=True)
 
     def sample_compute(self, variable_value, dataset):
@@ -111,4 +125,4 @@ class GaussianProcess_QuasiPeriodicActivity(AbstractModel):
         self.gp[dataset.name_ref].set_parameter_vector(gp_pams)
         self.gp[dataset.name_ref].compute(dataset.x0, env)
 
-        return self.gp[dataset.name_ref].sample_conditional(dataset.y - dataset.model, dataset.x0)
+        return self.gp[dataset.name_ref].predict(dataset.y - dataset.model, dataset.x0)

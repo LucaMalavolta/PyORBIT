@@ -53,7 +53,7 @@ def get_fix_val(var, fix, i):
 
 
 def get_2var_e(var, fix, i):
-    if len(np.shape(fix)) == 1:
+    if len(np.shape(var)) == 1:
         ecoso = var[i[0]]
         esino = var[i[1]]
     else:
@@ -63,7 +63,7 @@ def get_2var_e(var, fix, i):
 
 
 def get_2var_o(var, fix, i):
-    if len(np.shape(fix)) == 1:
+    if len(np.shape(var)) == 1:
         ecoso = var[i[0]]
         esino = var[i[1]]
     else:

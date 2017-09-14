@@ -38,7 +38,7 @@ class AbstractModel():
 
         for var in self.list_pams_dataset:
 
-            ndim, bounds_special = self.define_dataset_special_bounds(ndim, dataset_name, var)
+            ndim, bounds_special = self.define_special_variables_bounds(ndim, dataset_name, var)
             if len(bounds_special) > 0:
                 bounds_list.extend(bounds_special)
                 continue

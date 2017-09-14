@@ -102,7 +102,6 @@ def create_test_1planet():
     mod_pl = np.random.normal(y_pla, 2)
 
     trip = np.arange(10, 3, -1)
-    Transit_Time = kp.kepler_Tcent_T0P(P, phase, e, omega) + Tref - trip*P
     Transit_Time = kp.kepler_Tcent_T0P(P, phase, e, omega) + Tref
     print 'Transit Time:', Transit_Time
     print 'transit Time - Tref', Transit_Time - Tref
@@ -118,7 +117,76 @@ def create_test_1planet():
 
     fileout = open('test_1planet_Tcent_0.dat', 'w')
     for ii in xrange(0, np.size(Transit_Time)):
-        fileout.write('{0:14f} {1:14f} \n'.format(Transit_Time, 0.01))
+        fileout.write('{0:6d} {1:14f} {2:14f} \n'.format(ii, Transit_Time, 0.01))
     fileout.close()
 
-create_test_1planet()
+#create_test_1planet()
+
+def create_test_1planet_GP():
+
+    import george
+    x = np.arange(6000, 6200, 1., dtype=np.double)
+    x = np.random.normal(x, 0.4)
+    Tref = np.mean(x, dtype=np.double)
+    x0 = x - Tref
+
+    err = x*0.0 + 2.0
+
+
+
+    print Tref
+    P = 23.4237346
+    K = 43.47672
+    phase = 0.34658203
+    e = 0.13
+    omega = 0.673434
+    offset = 0 #45605
+
+    trip = np.arange(-5, 6, 1)
+    Transit_Time = kp.kepler_Tcent_T0P(P, phase, e, omega) + Tref + P*trip
+    print Transit_Time
+
+    y_pla = kp.kepler_RV_T0P(x0, phase, P, K, e, omega) + offset
+
+    input_pams = {'Prot': 17.37462, 'Pdec': 50.93840, 'Oamp': 0.40, 'Hamp': 50.03 }
+
+    gp_pams = np.zeros(4)
+    gp_pams[0] = np.log(input_pams['Hamp'])*2
+    gp_pams[1] = np.log(input_pams['Pdec'])*2
+    gp_pams[2] = 1. / (2*input_pams['Oamp'] ** 2)
+    gp_pams[3] = np.log(input_pams['Prot'])
+
+
+    kernel = np.exp(gp_pams[0]) * \
+                      george.kernels.ExpSquaredKernel(metric=np.exp(gp_pams[1])) * \
+                      george.kernels.ExpSine2Kernel(gamma=gp_pams[1], log_period=gp_pams[2])
+    gp = george.GP(kernel, solver=george.HODLRSolver, seed=42)
+    #gp = george.GP(kernel)
+    gp.compute(x0, err)
+    pred = gp.sample(x)
+
+    mod_pl = np.random.normal(y_pla+pred, 2)
+
+    plt.plot(x, y_pla, c='r')
+    plt.plot(x, pred, c='b')
+    plt.scatter(x, mod_pl, c='y')
+
+    vert_lines = np.arange(-50.0, 50.0, input_pams['Prot'])+Tref
+    for v in vert_lines:
+        plt.axvline(v, c='b')
+
+    for v in Transit_Time:
+        plt.axvline(v, c='r')
+    plt.show()
+
+    fileout = open('test_1planet_GP_RV.dat', 'w')
+    for ii in xrange(0, np.size(x)):
+        fileout.write('{0:14f} {1:14f} {2:14f} {3:5d} {4:5d} {5:5d} \n'.format(x[ii], mod_pl[ii], 2., 0, 0, -1))
+    fileout.close()
+
+    fileout = open('test_1planet_GP_Tcent_0.dat', 'w')
+    for ii in xrange(0, np.size(Transit_Time)):
+        fileout.write('{0:6d} {1:14f} {2:14f} \n'.format(ii, Transit_Time[ii], 0.01))
+    fileout.close()
+
+create_test_1planet_GP()

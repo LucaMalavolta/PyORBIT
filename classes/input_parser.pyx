@@ -144,14 +144,16 @@ def pars_input(config_in, mc):
                     dataset.models.remove(model_name)
                     dataset.models.extend(model_name_expanded)
 
-                    if len(list(set(model['planets']) & set(mc.dynamical_dict))):
+                    if len(list(set(model_conf['planets']) & set(mc.dynamical_dict))):
                         dataset.dynamical = True
 
             for model_name_exp, planet_name in zip(model_name_expanded, model_conf['planets']):
-
                 mc.models[model_name_exp] = \
                     define_type_to_class[model_type][mc.planet_dict[planet_name]](model_name_exp, planet_name)
-                boundaries_fixed_priors_stars(mc, mc.models[model_name_exp], model_conf[planet_name])
+                """  CHECK THIS!!!!
+                boundaries_fixed_priors_stars(mc, mc.models[model_name_exp], model_conf)
+                WHERE ARE THE KEYWORDS TAKEN??????
+                """
 
         elif model_type == 'transit_time':
             """ Only one planet for each file with transit times... mixing them would cause HELL"""
@@ -159,8 +161,11 @@ def pars_input(config_in, mc):
             planet_name = model_conf['planet']
             mc.models[model_name] = \
                     define_type_to_class[model_type][mc.planet_dict[planet_name]](model_name, planet_name)
-            boundaries_fixed_priors_stars(mc, mc.models[model_name], model_conf)
 
+
+            """  CHECK THIS!!!!
+            boundaries_fixed_priors_stars(mc, mc.models[model_name], model_conf)
+            """
             for dataset_name, dataset in mc.dataset_dict.iteritems():
                 if planet_name in mc.dynamical_dict and planet_name in dataset.models:
                     dataset.planet_name = planet_name
@@ -168,10 +173,11 @@ def pars_input(config_in, mc):
                     mc.t0_dict[planet_name] = dataset_name
 
         else:
-
             mc.models[model_name] = \
                     define_type_to_class[model_type](model_name, model_conf['common'])
-            boundaries_fixed_priors_stars(mc, mc.models[model_name], model_conf)
+
+            for dataset_name in list(set(model_conf) & set(mc.dynamical_dict)):
+                    boundaries_fixed_priors_stars(mc, mc.models[model_name], model_conf[dataset_name], dataset_1=dataset_name)
 
     if 'Tref' in conf_parameters:
         mc.Tref = np.asarray(conf_parameters['Tref'])
@@ -201,7 +207,7 @@ def pars_input(config_in, mc):
         if 'multirun' in conf:
             mc.emcee_parameters['multirun'] = np.asarray(conf['multirun'], dtype=np.int64)
 
-        if 'MultiRun_iter' in conf:
+        if 'multirun_iter' in conf:
             mc.emcee_parameters['multirun_iter'] = np.asarray(conf['multirun_iter'], dtype=np.int64)
 
         if 'nsave' in conf:
@@ -529,6 +535,11 @@ def boundaries_fixed_priors_stars(mc, model_obj, conf, dataset_1=None, dataset_2
                 model_obj.starts[add_var_name+var] = np.asarray(starts_conf[var], dtype=np.double)
 
     elif dataset_2 is None:
+        model_obj.bounds[dataset_1] = {}
+        model_obj.fix_list[dataset_1] = {}
+        model_obj.prior_kind[dataset_1] = {}
+        model_obj.prior_pams[dataset_1] = {}
+
         if 'boundaries' in conf:
             bound_conf = conf['boundaries']
             for var in bound_conf:

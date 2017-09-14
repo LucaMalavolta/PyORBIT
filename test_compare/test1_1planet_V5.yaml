@@ -25,7 +25,7 @@ solver:
     npop_mult: 2
   emcee:
     npop_mult: 2
-    nsteps: 5000
-    nburn: 2000
-    thin: 1
+    nsteps: 20000
+    nburn: 5000
+    thin: 100
   recenter_bounds: True

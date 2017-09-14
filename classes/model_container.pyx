@@ -22,7 +22,7 @@ class ModelContainer:
         self.emcee_dir_output = None
         self.polychord_dir_output = None
 
-        self.emcee_parameters = {'nsave': 0, 'npop_mult': 2, 'thin': 1,
+        self.emcee_parameters = {'nsave': 0, 'npop_mult': 2, 'thin': 1, 'nburn':0,
                                  'multirun': None, 'multirun_iter': 20}
         self.pyde_parameters = {'ngen': 1000, 'npop_mult': 2}
 
@@ -331,24 +331,24 @@ class ModelContainer:
 
 def print_theta_bounds(i_dict, theta, bounds):
     format_string = "%10s  %4d  %15f ([%10f, %10f])"
-    format_string_long = "%10s  %4d  %15f   %15f (-1sig)   %15f (+1sig)"
+    format_string_long = "%10s  %4d  %15f   %15f %15f (15-84 percentiles)"
 
     for var, i in i_dict.iteritems():
         if len(np.shape(theta)) == 2:
-            perc0, perc1, perc2 = np.percentile(theta[i, :], [15.865, 50, 84.135], axis=0)
-            print format_string_long %(var, i, perc1, perc1-perc2, perc2-perc1)
+            perc0, perc1, perc2 = np.percentile(theta[:, i], [15.865, 50, 84.135], axis=0)
+            print format_string_long %(var, i, perc1, perc0-perc1, perc2-perc1)
         else:
             print format_string % (var, i, theta[i], bounds[i, 0], bounds[i, 1])
     print
 
 
 def print_dictionary(variable_values):
-    format_string_long = "%10s   %15f   %15f (-1sig)   %15f (+1sig)"
+    format_string_long = "%10s   %15f   %15f %15f (15-84 percentiles)"
     format_string = "%10s   %15f "
     for var_names, var_vals in variable_values.iteritems():
-        if len(np.shape(var_vals)) > 1:
+        if np.size(var_vals) > 1:
             perc0, perc1, perc2 = np.percentile(var_vals, [15.865, 50, 84.135], axis=0)
-            print format_string_long %(var_names,  perc1, perc1-perc2, perc2-perc1)
+            print format_string_long %(var_names,  perc1, perc0-perc1, perc2-perc1)
         else:
             print format_string % (var_names, var_vals)
     print
