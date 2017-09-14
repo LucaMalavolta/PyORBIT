@@ -51,6 +51,8 @@ class ModelContainer:
         self.star_mass = [1.0000, 0.1000]
         self.star_radius = [1.0000, 0.1000]
 
+        self.Tref = None
+
         """
         Values have been taken from TRADES
         These variables will be renamed in the next release, right now I'm keeping the original names
@@ -110,15 +112,18 @@ class ModelContainer:
             self.ndim, bounds_ext = self.common_models[model.common_ref].define_variables_bounds(
                     self.ndim, model.list_pams_common)
             bounds_list.extend(bounds_ext)
+            print self.ndim, bounds_ext, bounds_list
 
         for dataset in self.dataset_dict.itervalues():
             self.ndim, bounds_ext = dataset.define_variables_bounds(self.ndim, dataset.list_pams)
             bounds_list.extend(bounds_ext)
+            print self.ndim, bounds_ext, bounds_list
 
             for model_name in dataset.models:
                 self.ndim, bounds_ext = self.models[model_name].define_variables_bounds(self.ndim, dataset.name_ref)
-            bounds_list.extend(bounds_ext)
+                bounds_list.extend(bounds_ext)
 
+                print self.ndim, bounds_ext, bounds_list
         self.bounds = np.asarray(bounds_list)
         self.range = self.bounds[:, 1] - self.bounds[:, 0]
 
@@ -201,11 +206,11 @@ class ModelContainer:
                 continue
 
             logchi2_gp_model = None
-            for model in dataset.models:
+            for model_name in dataset.models:
 
-                logchi2_out += self.models[model].return_priors(theta, dataset_name)
+                logchi2_out += self.models[model_name].return_priors(theta, dataset_name)
 
-                if self.models[model].model_class == 'gaussian_process':
+                if self.models[model_name].model_class == 'gaussian_process':
                     logchi2_gp_model = model
                     continue
 
@@ -213,10 +218,10 @@ class ModelContainer:
                     dataset.model += dynamical_output[dataset_name]
                     continue
 
-                common_ref = self.models[model].common_ref
+                common_ref = self.models[model_name].common_ref
                 variable_values = self.common_models[common_ref].convert(theta)
-                variable_values.update(self.models[model].convert(theta, dataset))
-                dataset.model += self.models[model].compute(variable_values, dataset)
+                variable_values.update(self.models[model_name].convert(theta, dataset_name))
+                dataset.model += self.models[model_name].compute(variable_values, dataset)
 
             """ Gaussian Process check MUST be the last one or the program will fail
              that's because for the GP to work we need to know the _deterministic_ part of the model 
@@ -303,25 +308,26 @@ class ModelContainer:
             print_theta_bounds(model.variable_sampler, theta, self.bounds)
 
 
-        print '=========================================================================================='
-        print '=========================================================================================='
-        print
-
-        for dataset_name, dataset in self.dataset_dict.iteritems():
-            print '---------- ', dataset_name, '---------- '
-            variable_values = dataset.convert(theta)
-            print_dictionary(variable_values)
-
+        if (theta):
+            print '=========================================================================================='
+            print '=========================================================================================='
             print
-            for model_name in dataset.models:
-                print '---------- ', dataset_name, model_name, '---------- '
-                variable_values = self.models[model_name].convert(theta, dataset)
+
+            for dataset_name, dataset in self.dataset_dict.iteritems():
+                print '---------- ', dataset_name, '---------- '
+                variable_values = dataset.convert(theta)
                 print_dictionary(variable_values)
 
-        for model in self.common_models.itervalues():
-            print '---------- ', model.common_ref, '---------- '
-            variable_values = model.convert(theta)
-            print_dictionary(variable_values)
+                print
+                for model_name in dataset.models:
+                    print '---------- ', dataset_name, model_name, '---------- '
+                    variable_values = self.models[model_name].convert(theta, dataset)
+                    print_dictionary(variable_values)
+
+            for model in self.common_models.itervalues():
+                print '---------- ', model.common_ref, '---------- '
+                variable_values = model.convert(theta)
+                print_dictionary(variable_values)
 
         print '=========================================================================================='
         print '------------------------------------------------------------------------------------------'
@@ -331,10 +337,13 @@ class ModelContainer:
 
 def print_theta_bounds(i_dict, theta, bounds):
     format_string = "%10s  %4d  %15f ([%10f, %10f])"
+    format_string_notheta = "%10s  %4d  ([%10f, %10f])"
     format_string_long = "%10s  %4d  %15f   %15f %15f (15-84 percentiles)"
 
     for var, i in i_dict.iteritems():
-        if len(np.shape(theta)) == 2:
+        if not theta:
+            print format_string_notheta % (var, i, bounds[i, 0], bounds[i, 1])
+        elif len(np.shape(theta)) == 2:
             perc0, perc1, perc2 = np.percentile(theta[:, i], [15.865, 50, 84.135], axis=0)
             print format_string_long %(var, i, perc1, perc0-perc1, perc2-perc1)
         else:

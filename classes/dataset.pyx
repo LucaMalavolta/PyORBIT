@@ -4,17 +4,17 @@ from abstract_common import AbstractCommon
 
 class Dataset(AbstractCommon):
 
-    def __init__(self, kind, input_file, models):
+    def __init__(self, model_name, kind, input_file, models):
 
         super(self.__class__, self).__init__(None)
 
         self.kind = kind
         # model kind:  'RV', 'PHOT', 'ACT'...
         self.models = models
-        self.name_ref = input_file
+        self.name_ref = model_name
 
         self.dynamical = False
-        self.planet_name = 'aaaaaaa'
+        self.planet_name = None
 
         self.generic_list_pams = {'jitter': 'LU', 'offset': 'U', 'linear': 'U'}
 

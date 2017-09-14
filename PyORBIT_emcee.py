@@ -120,6 +120,8 @@ def pyorbit_emcee(config_in):
         pars_input(config_in, mc)
         mc.initialize_model()
 
+        mc.results_resumen(None)
+
         mc.pyde_dir_output = pyde_dir_output
         mc.emcee_dir_output = emcee_dir_output
 

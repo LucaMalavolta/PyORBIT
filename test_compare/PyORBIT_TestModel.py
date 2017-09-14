@@ -148,7 +148,7 @@ def create_test_1planet_GP():
 
     y_pla = kp.kepler_RV_T0P(x0, phase, P, K, e, omega) + offset
 
-    input_pams = {'Prot': 17.37462, 'Pdec': 50.93840, 'Oamp': 0.40, 'Hamp': 50.03 }
+    input_pams = {'Prot': 17.37462, 'Pdec': 50.93840, 'Oamp': 0.35, 'Hamp': 50.03 }
 
     gp_pams = np.zeros(4)
     gp_pams[0] = np.log(input_pams['Hamp'])*2
