@@ -46,7 +46,7 @@ def yaml_parser(file_conf):
     return config_in
 
 
-def pars_input(config_in, mc):
+def pars_input(config_in, mc, input_dataset=None):
 
     mc.output_name = config_in['output']
 
@@ -62,13 +62,22 @@ def pars_input(config_in, mc):
             or everything will fall apart """
         mc.dataset_dict[dataset_name] = Dataset(dataset_name,
                                                 dataset_conf['kind'],
-                                                dataset_conf['file'],
                                                 dataset_conf['models'])
 
         if mc.Tref:
             mc.dataset_dict[dataset_name].common_Tref(mc.Tref)
         else:
             mc.Tref = mc.dataset_dict[dataset_name].Tref
+
+        if input_dataset:
+            data_input = input_dataset[dataset_name]
+        elif 'file' in dataset_conf:
+            data_input = mc.dataset_dict[dataset_name].convert_dataset_from_file(dataset_conf['file'])
+        else:
+            print 'Either a file or an input dataset must be provided'
+            quit()
+
+        mc.define_dataset_base(data_input)
 
         if 'boundaries' in dataset_conf:
             bound_conf = dataset_conf['boundaries']
