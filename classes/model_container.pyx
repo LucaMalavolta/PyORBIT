@@ -112,18 +112,15 @@ class ModelContainer:
             self.ndim, bounds_ext = self.common_models[model.common_ref].define_variables_bounds(
                     self.ndim, model.list_pams_common)
             bounds_list.extend(bounds_ext)
-            print self.ndim, bounds_ext, bounds_list
 
         for dataset in self.dataset_dict.itervalues():
             self.ndim, bounds_ext = dataset.define_variables_bounds(self.ndim, dataset.list_pams)
             bounds_list.extend(bounds_ext)
-            print self.ndim, bounds_ext, bounds_list
 
             for model_name in dataset.models:
                 self.ndim, bounds_ext = self.models[model_name].define_variables_bounds(self.ndim, dataset.name_ref)
                 bounds_list.extend(bounds_ext)
 
-                print self.ndim, bounds_ext, bounds_list
         self.bounds = np.asarray(bounds_list)
         self.range = self.bounds[:, 1] - self.bounds[:, 0]
 
@@ -284,11 +281,10 @@ class ModelContainer:
 
         return population
 
-    def results_resumen(self, theta):
+    def results_resumen(self, theta, skip_theta=False):
         # Function with two goals:
         # * Unfold and print out the output from theta
         # * give back a parameter name associated to each value in the result array
-
 
         print
         print '=========================================================================================='
@@ -296,38 +292,39 @@ class ModelContainer:
         print '=========================================================================================='
         print
         for dataset_name, dataset in self.dataset_dict.iteritems():
-            print '---------- ', dataset_name, '---------- '
-            print_theta_bounds(dataset.variable_sampler, theta, self.bounds)
+            print '----- dataset: ', dataset_name
+            print_theta_bounds(dataset.variable_sampler, theta, self.bounds, skip_theta)
 
             for model_name in dataset.models:
-                print '---------- ', dataset_name,model_name,'---------- '
-                print_theta_bounds(self.models[model_name].variable_sampler[dataset_name], theta, self.bounds)
+                print '---------- ', dataset_name, '     ----- model: ', model_name
+                print_theta_bounds(self.models[model_name].variable_sampler[dataset_name], theta, self.bounds, skip_theta)
 
         for model in self.common_models.itervalues():
-            print '---------- ', model.common_ref, '---------- '
-            print_theta_bounds(model.variable_sampler, theta, self.bounds)
+            print '----- common model: ', model.common_ref
+            print_theta_bounds(model.variable_sampler, theta, self.bounds, skip_theta)
 
+        if skip_theta:
+            return
 
-        if (theta):
-            print '=========================================================================================='
-            print '=========================================================================================='
+        print '=========================================================================================='
+        print '=========================================================================================='
+        print
+
+        for dataset_name, dataset in self.dataset_dict.iteritems():
+            print '----- dataset: ', dataset_name
+            variable_values = dataset.convert(theta)
+            print_dictionary(variable_values)
+
             print
-
-            for dataset_name, dataset in self.dataset_dict.iteritems():
-                print '---------- ', dataset_name, '---------- '
-                variable_values = dataset.convert(theta)
+            for model_name in dataset.models:
+                print '---------- ', dataset_name, '     ----- model: ', model_name
+                variable_values = self.models[model_name].convert(theta, dataset_name)
                 print_dictionary(variable_values)
 
-                print
-                for model_name in dataset.models:
-                    print '---------- ', dataset_name, model_name, '---------- '
-                    variable_values = self.models[model_name].convert(theta, dataset)
-                    print_dictionary(variable_values)
-
-            for model in self.common_models.itervalues():
-                print '---------- ', model.common_ref, '---------- '
-                variable_values = model.convert(theta)
-                print_dictionary(variable_values)
+        for model in self.common_models.itervalues():
+            print '----- common model: ', model.common_ref
+            variable_values = model.convert(theta)
+            print_dictionary(variable_values)
 
         print '=========================================================================================='
         print '------------------------------------------------------------------------------------------'
@@ -335,13 +332,13 @@ class ModelContainer:
         print
 
 
-def print_theta_bounds(i_dict, theta, bounds):
+def print_theta_bounds(i_dict, theta, bounds, skip_theta=False):
     format_string = "%10s  %4d  %15f ([%10f, %10f])"
     format_string_notheta = "%10s  %4d  ([%10f, %10f])"
     format_string_long = "%10s  %4d  %15f   %15f %15f (15-84 percentiles)"
 
     for var, i in i_dict.iteritems():
-        if not theta:
+        if skip_theta:
             print format_string_notheta % (var, i, bounds[i, 0], bounds[i, 1])
         elif len(np.shape(theta)) == 2:
             perc0, perc1, perc2 = np.percentile(theta[:, i], [15.865, 50, 84.135], axis=0)
