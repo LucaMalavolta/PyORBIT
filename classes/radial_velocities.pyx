@@ -73,10 +73,9 @@ class TransitTimeKeplerian(AbstractModel):
     recenter_pams_dataset = {}
 
     def compute(self, variable_value, dataset):
-        # By default, dataset.planet_name == planet_name
-        #variable_value = self.convert(theta)
-        return (np.floor(dataset.x0 / variable_value['P'])) * variable_value['P'] + dataset.Tref + \
-                kp.kepler_Tcent_T0P(variable_value['P'], variable_value['f'], variable_value['e'], variable_value['o'])
+
+        return np.floor(dataset.x0 / variable_value['P']) * variable_value['P'] + dataset.Tref + \
+            kp.kepler_Tcent_T0P(variable_value['P'], variable_value['f'], variable_value['e'], variable_value['o'])
 
 
 class TransitTimeDynamical(AbstractModel):

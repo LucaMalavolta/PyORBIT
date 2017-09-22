@@ -64,11 +64,6 @@ def pars_input(config_in, mc, input_dataset=None):
                                                 dataset_conf['kind'],
                                                 dataset_conf['models'])
 
-        if mc.Tref:
-            mc.dataset_dict[dataset_name].common_Tref(mc.Tref)
-        else:
-            mc.Tref = mc.dataset_dict[dataset_name].Tref
-
         if input_dataset:
             data_input = input_dataset[dataset_name]
         elif 'file' in dataset_conf:
@@ -77,7 +72,12 @@ def pars_input(config_in, mc, input_dataset=None):
             print 'Either a file or an input dataset must be provided'
             quit()
 
-        mc.define_dataset_base(data_input)
+        mc.dataset_dict[dataset_name].define_dataset_base(data_input)
+
+        if mc.Tref:
+            mc.dataset_dict[dataset_name].common_Tref(mc.Tref)
+        else:
+            mc.Tref = mc.dataset_dict[dataset_name].Tref
 
         if 'boundaries' in dataset_conf:
             bound_conf = dataset_conf['boundaries']

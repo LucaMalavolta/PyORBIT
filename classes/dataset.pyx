@@ -37,7 +37,7 @@ class Dataset(AbstractCommon):
         data = np.atleast_2d(np.loadtxt(input_file))
 
         data_input = np.zeros([np.size(data, axis=0), 6], dtype=np.double) - 1.
-        data_input[:, np.size(data, axis=1)] = data[:, :]
+        data_input[:, :np.size(data, axis=1)] = data[:, :]
         return data_input
 
     def define_dataset_base(self, data_input, update=False):

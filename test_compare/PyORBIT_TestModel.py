@@ -132,8 +132,6 @@ def create_test_1planet_GP():
 
     err = x*0.0 + 2.0
 
-
-
     print Tref
     P = 23.4237346
     K = 43.47672

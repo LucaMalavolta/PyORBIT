@@ -201,6 +201,8 @@ class ModelContainer:
 
             if 'none' in dataset.models or 'None' in dataset.models:
                 continue
+            if not dataset.models:
+                continue
 
             logchi2_gp_model = None
             for model_name in dataset.models:
@@ -208,7 +210,7 @@ class ModelContainer:
                 logchi2_out += self.models[model_name].return_priors(theta, dataset_name)
 
                 if self.models[model_name].model_class == 'gaussian_process':
-                    logchi2_gp_model = model
+                    logchi2_gp_model = model_name
                     continue
 
                 if dataset.dynamical:
@@ -227,13 +229,12 @@ class ModelContainer:
                 common_ref = self.models[logchi2_gp_model].common_ref
                 variable_values = self.common_models[common_ref].convert(theta)
                 variable_values.update(self.models[logchi2_gp_model].convert(theta, dataset))
-                logchi2_out += self.models[logchi2_gp_model].lnlk_compute(theta, dataset)
+                logchi2_out += self.models[logchi2_gp_model].lnlk_compute(variable_values, dataset)
             else:
                 logchi2_out += dataset.model_logchi2()
 
              # workaround to avoid memory leaks from GP module
         #gc.collect()
-
         return logchi2_out
 
     def recenter_bounds(self, pop_mean, recenter=True):
@@ -330,6 +331,79 @@ class ModelContainer:
         print '------------------------------------------------------------------------------------------'
         print '=========================================================================================='
         print
+
+    def get_model(self, theta):
+        model_out = {}
+        if self.dynamical_model is not None:
+            """ check if any keyword ahas get the output model from the dynamical tool
+            we must do it here because all the planet are involved"""
+            dynamical_output = self.dynamical_model.compute(self, theta)
+
+        logchi2_out = 2. * self.ndof * np.log(2 * np.pi)
+
+        for model in self.common_models.itervalues():
+            logchi2_out += model.return_priors(theta)
+
+        for dataset_name, dataset in self.dataset_dict.iteritems():
+            model_out[dataset_name] = {}
+
+            dataset.model_reset()
+            variable_values = dataset.convert(theta)
+            dataset.compute(variable_values)
+
+            model_out[dataset_name]['systematics'] = dataset.model
+            model_out[dataset_name]['jitter'] = dataset.jitter
+            model_out[dataset_name]['complete'] = dataset.model
+
+            if 'none' in dataset.models or 'None' in dataset.models:
+                continue
+            if not dataset.models:
+                continue
+
+            logchi2_gp_model = None
+            for model_name in dataset.models:
+
+                logchi2_out += self.models[model_name].return_priors(theta, dataset_name)
+
+                if self.models[model_name].model_class == 'gaussian_process':
+                    logchi2_gp_model = model_name
+                    continue
+
+                if dataset.dynamical:
+                    dataset.model += dynamical_output[dataset_name]
+
+                    model_out[dataset_name]['complete'] += dataset.model
+                    model_out[dataset_name][model_name] = dynamical_output[dataset_name]
+                    continue
+
+                common_ref = self.models[model_name].common_ref
+                variable_values = self.common_models[common_ref].convert(theta)
+                variable_values.update(self.models[model_name].convert(theta, dataset_name))
+
+                model_out[dataset_name][model_name] = self.models[model_name].compute(variable_values, dataset)
+
+                dataset.model += model_out[dataset_name][model_name]
+                model_out[dataset_name]['complete'] += model_out[dataset_name][model_name]
+
+            """ Gaussian Process check MUST be the last one or the program will fail
+             that's because for the GP to work we need to know the _deterministic_ part of the model 
+             (i.e. the theoretical values you get when you feed your model with the parameter values) """
+            if logchi2_gp_model:
+                common_ref = self.models[logchi2_gp_model].common_ref
+                variable_values = self.common_models[common_ref].convert(theta)
+                variable_values.update(self.models[logchi2_gp_model].convert(theta, dataset))
+                logchi2_out += self.models[logchi2_gp_model].lnlk_compute(variable_values, dataset)
+
+                model_out[dataset_name][model_name] = self.models[logchi2_gp_model].sample_conditional(variable_values, dataset)
+                model_out[dataset_name]['complete'] += model_out[dataset_name][model_name]
+
+            else:
+                logchi2_out += dataset.model_logchi2()
+
+             # workaround to avoid memory leaks from GP module
+        #gc.collect()
+
+        return model_out, logchi2_out
 
 
 def print_theta_bounds(i_dict, theta, bounds, skip_theta=False):
