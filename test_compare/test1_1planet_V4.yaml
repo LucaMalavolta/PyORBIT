@@ -1,5 +1,5 @@
-Name: test2_1planet_Tcent_V4
-Output: test2_1planet_Tcent_V4
+Name: test1_1planet_V4
+Output: test1_1planet_V4
 Inputs:
   0:
       File: test_1planet_RV.dat
