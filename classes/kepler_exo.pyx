@@ -1,5 +1,5 @@
 import numpy as np
-
+from scipy.optimize import fsolve
 # +
 # NAME:
 #    exofast_keplereq
@@ -196,3 +196,20 @@ def kepler_Tcent_T0P(Period, phase, e0, omega0):
     EccAn = 2. * np.arctan(np.sqrt((1.0 - e0) / (1.0 + e0)) * np.tan(TrAn / 2.0))
     MeAn = EccAn - e0 * np.sin(EccAn)
     return (MeAn - phase + omega0) / (2 * np.pi) * Period % Period
+
+
+def f_get_mass(M_star2, M_star1, Period, K1, e0):
+    # M_star1, M_star2 in solar masses
+    # P in days -> Period is converted in seconds in the routine
+    # inclination assumed to be 90 degrees
+    # Gravitational constant is given in m^3 kg^-1 s^-2
+    # output in m/s
+    output = K1 - (2. * np.pi * G_grav * M_sun / 86400.0) ** (1.0 / 3.0) * (1.000 / np.sqrt(1.0 - e0 ** 2.0)) * (
+                                                                                                                    Period) ** (
+                                                                                                                    -1.0 / 3.0) * (
+                      M_star2 * (M_star1 + M_star2) ** (-2.0 / 3.0))
+    return output
+
+def get_planet_mass(P, K, e, Mstar, Minit=0.0065):
+    # Return planet mass in solar units
+    return fsolve(f_get_mass, Minit, args=(Mstar, P, K, e))

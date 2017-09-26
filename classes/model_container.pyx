@@ -332,6 +332,30 @@ class ModelContainer:
         print '=========================================================================================='
         print
 
+    def get_theta_dictionary(self):
+        # * give back a parameter name associated to each value in the result array
+
+        theta_dictionary = {}
+        for dataset_name, dataset in self.dataset_dict.iteritems():
+            for var, i in dataset.variable_sampler.iteritems():
+                try:
+                    theta_dictionary[dataset_name + '_' + var] = i
+                except:
+                    theta_dictionary[repr(dataset_name) + '_' + var] = i
+
+            for model_name in dataset.models:
+                for var, i in self.models[model_name].variable_sampler[dataset_name].iteritems():
+                    try:
+                        theta_dictionary[dataset_name + '_' + model_name +  '_' + var] = i
+                    except:
+                        theta_dictionary[repr(dataset_name) + '_' + model_name + '_' + var] = i
+
+        for model in self.common_models.itervalues():
+            for var, i in model.variable_sampler.iteritems():
+                theta_dictionary[model.common_ref + '_' + var] = i
+
+        return theta_dictionary
+
     def get_model(self, theta):
         model_out = {}
         if self.dynamical_model is not None:

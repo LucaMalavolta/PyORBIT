@@ -1,0 +1,40 @@
+inputs:
+  0:
+      file: test_1planet_RV.dat
+      kind: RV
+      models: ['radial_velocities']
+  1:
+    file: test_1planet_Tcent_0.dat
+    kind: Tcent
+    models: ['transit_b']
+common:
+  planets:
+    b:
+      orbit: dynamical
+      boundaries:
+        P: [2.0, 100.0]
+        M: [0.01, 1000.0]
+        e: [0.00, 1.00]
+      fixed:
+        i: [90.000, 0.001]
+        lN: [180.0, 0.001]
+        R: [0.001, 0.001]
+models:
+  radial_velocities:
+    planets: ['b']
+  transit_b:
+    kind: transit_time
+    planet: 'b'
+parameters:
+  star_mass: [1.00, 0.01]
+  star_radius: [1.00, 0.01]
+solver:
+  pyde:
+    ngen: 8000
+    npop_mult: 2
+  emcee:
+    npop_mult: 2
+    nsteps: 5000
+    nburn: 2000
+    thin: 1
+  recenter_bounds: True

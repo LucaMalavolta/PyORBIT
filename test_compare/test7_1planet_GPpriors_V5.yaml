@@ -20,6 +20,9 @@ common:
       Prot: [5.00, 50.00]
       Pdec: [10.0, 200.00]
       Oamp: [0.01, 1.00]
+    priors:
+      Prot: ['Gaussian', 17.3, 2.00]
+      Oamp: ['Gaussian', 0.35, 0.01]
 models:
   radial_velocities:
     planets: ['b']
