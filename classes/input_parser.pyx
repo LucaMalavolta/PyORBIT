@@ -3,6 +3,7 @@ from dataset import *
 from abstract_common import CommonPlanets, CommonActivity
 from radial_velocities import RVkeplerian, RVdynamical, TransitTimeKeplerian, TransitTimeDynamical, DynamicalIntegrator
 from gp_semiperiodic_activity import GaussianProcess_QuasiPeriodicActivity
+from celerite_semiperiodic_activity import Celerite_QuasiPeriodicActivity
 #TD from gaussian import GaussianProcess_QuasiPeriodicActivity
 #TD from curvature import CurvatureCommonVariables
 #TD from correlations import CorrelationsCommonVariables
@@ -21,7 +22,8 @@ define_type_to_class = {
                           'dynamical': RVdynamical},
     'transit_time': {'keplerian': TransitTimeKeplerian,
                      'dynamical': TransitTimeDynamical},
-    'gp_quasiperiodic': GaussianProcess_QuasiPeriodicActivity
+    'gp_quasiperiodic': GaussianProcess_QuasiPeriodicActivity,
+    'celerite_quasiperiodic': Celerite_QuasiPeriodicActivity
     #TD 'gp_quasiperiodic': GaussianProcess_QuasiPeriodicActivity,
     #TD 'curvature': CurvatureCommonVariables,
     #TD 'correlation': CorrelationsCommonVariables
