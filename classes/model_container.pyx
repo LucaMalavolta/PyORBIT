@@ -1,6 +1,5 @@
 from common import *
 
-
 class ModelContainer:
     def __init__(self):
         self.planet_dict = {}
@@ -210,7 +209,7 @@ class ModelContainer:
                 logchi2_out += self.models[model_name].return_priors(theta, dataset_name)
 
                 if hasattr(self.models[model_name], 'internal_likelihood'):
-                    logchi2_gp_model = model_name
+                    logchi2_gp_model = model_name.copy()
                     continue
                 #if self.models[model_name].model_class == 'gaussian_process':
 
@@ -287,9 +286,9 @@ class ModelContainer:
         # * give back a parameter name associated to each value in the result array
 
         print
-        print '=========================================================================================='
-        print '------------------------------------------------------------------------------------------'
-        print '=========================================================================================='
+        print '===================================================================================================='
+        print '     ------------------------------------------------------------------------------------------     '
+        print '===================================================================================================='
         print
         for dataset_name, dataset in self.dataset_dict.iteritems():
             print '----- dataset: ', dataset_name
@@ -306,8 +305,8 @@ class ModelContainer:
         if skip_theta:
             return
 
-        print '=========================================================================================='
-        print '=========================================================================================='
+        print '===================================================================================================='
+        print '===================================================================================================='
         print
 
         for dataset_name, dataset in self.dataset_dict.iteritems():
@@ -326,9 +325,9 @@ class ModelContainer:
             variable_values = model.convert(theta)
             print_dictionary(variable_values)
 
-        print '=========================================================================================='
-        print '------------------------------------------------------------------------------------------'
-        print '=========================================================================================='
+        print '===================================================================================================='
+        print '     ------------------------------------------------------------------------------------------     '
+        print '===================================================================================================='
         print
 
     def get_theta_dictionary(self):
@@ -369,14 +368,19 @@ class ModelContainer:
 
         for dataset_name, dataset in self.dataset_dict.iteritems():
             model_out[dataset_name] = {}
-
             dataset.model_reset()
-            variable_values = dataset.convert(theta)
-            dataset.compute(variable_values)
 
-            model_out[dataset_name]['systematics'] = dataset.model
-            model_out[dataset_name]['jitter'] = dataset.jitter
-            model_out[dataset_name]['complete'] = dataset.model
+            if hasattr(self, 'deepcopy_for_plot'):
+                model_out[dataset_name]['systematics'] = np.zeros(dataset.n, dtype=np.double)
+                model_out[dataset_name]['jitter'] = np.zeros(dataset.n, dtype=np.double)
+                model_out[dataset_name]['complete'] = np.zeros(dataset.n, dtype=np.double)
+            else:
+                variable_values = dataset.convert(theta)
+                dataset.compute(variable_values)
+                model_out[dataset_name]['systematics'] = dataset.model.copy()
+                model_out[dataset_name]['jitter'] = dataset.jitter.copy()
+                model_out[dataset_name]['complete'] = dataset.model.copy()
+
 
             if 'none' in dataset.models or 'None' in dataset.models:
                 continue
@@ -384,19 +388,20 @@ class ModelContainer:
                 continue
 
             logchi2_gp_model = None
+
             for model_name in dataset.models:
 
                 logchi2_out += self.models[model_name].return_priors(theta, dataset_name)
 
-                if self.models[model_name].model_class == 'gaussian_process':
-                    logchi2_gp_model = model_name
+                if hasattr(self.models[model_name], 'internal_likelihood'):
+                    logchi2_gp_model = model_name.copy()
                     continue
 
                 if dataset.dynamical:
                     dataset.model += dynamical_output[dataset_name]
 
                     model_out[dataset_name]['complete'] += dataset.model
-                    model_out[dataset_name][model_name] = dynamical_output[dataset_name]
+                    model_out[dataset_name][model_name] = dynamical_output[dataset_name].copy()
                     continue
 
                 common_ref = self.models[model_name].common_ref
@@ -417,36 +422,37 @@ class ModelContainer:
                 variable_values.update(self.models[logchi2_gp_model].convert(theta, dataset))
                 logchi2_out += self.models[logchi2_gp_model].lnlk_compute(variable_values, dataset)
 
-                model_out[dataset_name][model_name] = self.models[logchi2_gp_model].sample_conditional(variable_values, dataset)
+                model_out[dataset_name][model_name] = \
+                    self.models[logchi2_gp_model].sample_conditional(variable_values, dataset)
                 model_out[dataset_name]['complete'] += model_out[dataset_name][model_name]
-
             else:
                 logchi2_out += dataset.model_logchi2()
 
-             # workaround to avoid memory leaks from GP module
+        # workaround to avoid memory leaks from GP module
         #gc.collect()
+
 
         return model_out, logchi2_out
 
 
 def print_theta_bounds(i_dict, theta, bounds, skip_theta=False):
-    format_string = "%10s  %4d  %15f ([%10f, %10f])"
+    format_string = "%10s  %4d  %12f ([%10f, %10f])"
     format_string_notheta = "%10s  %4d  ([%10f, %10f])"
-    format_string_long = "%10s  %4d  %15f   %15f %15f (15-84 percentiles)"
+    format_string_long = "%10s  %4d  %12f   %12f %12f (15-84 p) ([%9f, %9f])"
 
     for var, i in i_dict.iteritems():
         if skip_theta:
             print format_string_notheta % (var, i, bounds[i, 0], bounds[i, 1])
         elif len(np.shape(theta)) == 2:
             perc0, perc1, perc2 = np.percentile(theta[:, i], [15.865, 50, 84.135], axis=0)
-            print format_string_long %(var, i, perc1, perc0-perc1, perc2-perc1)
+            print format_string_long %(var, i, perc1, perc0-perc1, perc2-perc1, bounds[i, 0], bounds[i, 1])
         else:
             print format_string % (var, i, theta[i], bounds[i, 0], bounds[i, 1])
     print
 
 
 def print_dictionary(variable_values):
-    format_string_long = "%10s   %15f   %15f %15f (15-84 percentiles)"
+    format_string_long = "%10s   %15f   %15f %15f (15-84 p)"
     format_string = "%10s   %15f "
     for var_names, var_vals in variable_values.iteritems():
         if np.size(var_vals) > 1:

@@ -2,7 +2,7 @@ from classes.model_container import ModelContainer
 from classes.input_parser import yaml_parser, pars_input
 from classes.io_subroutines import pyde_save_to_pickle, pyde_load_from_cpickle, \
     emcee_save_to_cpickle, emcee_load_from_cpickle, emcee_flatchain, emcee_flatlnprob, \
-    GelmanRubin
+    GelmanRubin, model_container_plot
 import numpy as np
 import emcee
 from pyde.de import DiffEvol
@@ -71,9 +71,6 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
         lnprob_med = np.percentile(flat_lnprob, [15.865, 50, 84.135], axis=0)
         lnprob_med[1:] = np.abs(lnprob_med[1:] - lnprob_med[0])
 
-        print chain_med
-        print lnprob_med
-        print
         print
         print 'Reference Time Tref: ', mc.Tref
         print
@@ -86,7 +83,7 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
         lnprob_median = np.median(flat_lnprob)
 
         print 'median log-likelihood: ', lnprob_median
-        mc.results_resumen(flat_chain)
+        #mc.results_resumen(flat_chain)
 
         fig = plt.figure(figsize=(12, 12))
         plt.xlabel('$\ln \mathcal{L}$')
@@ -159,6 +156,33 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
             print '*************************************************************'
             print
 
+
+        print
+        theta = np.zeros(7)
+
+        theta[5] = 5.29662023455
+        theta[6] = -3.4196791162
+        theta[0] = 4.54218110203
+        theta[1] = 5.64481500777
+        theta[2] = 0.456527386248
+        theta[3] = 0.284352580364
+        theta[4] = 6.52660511507 - 2*np.pi
+
+        model_out, logchi2_out = mc.get_model(theta)
+
+        mc_deepcopy = model_container_plot(mc)
+        model_plot, _ = mc_deepcopy.get_model(theta)
+
+        fig = plt.figure(figsize=(12, 12))
+        for dataset_name, dataset in mc.dataset_dict.iteritems():
+            plt.scatter(dataset.x0, dataset.y - model_plot[dataset_name]['systematics'])
+
+        for dataset_name, dataset in mc_deepcopy.dataset_dict.iteritems():
+            plt.plot(dataset.x0, model_plot[dataset_name]['complete'], c='r')
+
+        plt.savefig(dir_output + '_test.png', bbox_inches='tight', dpi=300)
+        plt.close(fig)
+        print
 
 if __name__ == '__main__':
     print 'This program is being run by itself'

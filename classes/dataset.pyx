@@ -65,7 +65,6 @@ class Dataset(AbstractCommon):
         if not update:
             if self.Tref is None:
                 self.Tref = np.mean(self.x, dtype=np.double)
-            self.x0 = self.x - self.Tref
 
             """Default boundaries are defined according to the characteristic of the dataset"""
             self.generic_default_bounds = {'offset': [np.min(self.y) - 100., np.max(self.y) + 100.],
@@ -76,6 +75,7 @@ class Dataset(AbstractCommon):
             self.create_systematic_dictionaries('offset', data_input[:, 4])
             self.create_systematic_dictionaries('linear', data_input[:, 5])
 
+        self.x0 = self.x - self.Tref
         self.create_systematic_mask('jitter', data_input[:, 3])
         self.create_systematic_mask('offset', data_input[:, 4])
         self.create_systematic_mask('linear', data_input[:, 5])
@@ -106,13 +106,13 @@ class Dataset(AbstractCommon):
         return
 
     def model_reset(self):
-        self.model[:] = 0.0
-        self.jitter[:] = 0.0
+        self.model = np.zeros(self.n, dtype=np.double)
+        self.jitter = np.zeros(self.n, dtype=np.double)
         return
 
     def compute(self, variable_value):
         for var in self.list_pams:
-            if self.variable_expanded[var] is 'jitter':
+            if self.variable_expanded[var] == 'jitter':
                 self.jitter[self.mask[var]] += variable_value[var]
             else:
                 self.model[self.mask[var]] += variable_value[var]

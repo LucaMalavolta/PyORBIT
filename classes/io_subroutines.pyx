@@ -1,6 +1,6 @@
 import cPickle as pickle
 import numpy as np
-
+import copy
 
 def pyde_save_to_pickle(mc, population, starting_point, prefix=''):
 
@@ -95,3 +95,32 @@ def GelmanRubin(chains_T):
 
     Rc = np.sqrt(Var / W)
     return Rc
+
+
+def model_container_plot(mc):
+    """
+    This subroutine makes a deepcopy of the model_container object. Then it substitutes the original datasets with
+    densely sampled datasets for plotting purpose
+
+    :param mc:
+    :return mc_deepcopy:
+    """
+    mc_deepcopy = copy.deepcopy(mc)
+    mc_deepcopy.deepcopy_for_plot = True
+    for dataset_name, dataset in mc_deepcopy.dataset_dict.iteritems():
+        if dataset.kind == 'Tcent':
+            continue
+
+        x_start = np.min(dataset.x)
+        x_end = np.max(dataset.x)
+        x_range = x_end-x_start
+        x_start -= x_range/20.
+        x_end += x_range/20.
+
+        bjd_plot = np.arange(x_start, x_end, 0.1)
+        data_input = np.zeros([np.size(bjd_plot, axis=0), 6], dtype=np.double) - 1.
+        data_input[:, 0] = bjd_plot[:]
+
+        dataset.define_dataset_base(data_input, update=True)
+
+    return mc_deepcopy
