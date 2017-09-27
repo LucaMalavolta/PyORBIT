@@ -209,9 +209,10 @@ class ModelContainer:
 
                 logchi2_out += self.models[model_name].return_priors(theta, dataset_name)
 
-                if self.models[model_name].model_class == 'gaussian_process':
+                if hasattr(self.models[model_name], 'internal_likelihood'):
                     logchi2_gp_model = model_name
                     continue
+                #if self.models[model_name].model_class == 'gaussian_process':
 
                 if dataset.dynamical:
                     dataset.model += dynamical_output[dataset_name]
@@ -228,13 +229,11 @@ class ModelContainer:
             if logchi2_gp_model:
                 common_ref = self.models[logchi2_gp_model].common_ref
                 variable_values = self.common_models[common_ref].convert(theta)
-                variable_values.update(self.models[logchi2_gp_model].convert(theta, dataset))
+                variable_values.update(self.models[logchi2_gp_model].convert(theta, dataset_name))
                 logchi2_out += self.models[logchi2_gp_model].lnlk_compute(variable_values, dataset)
             else:
                 logchi2_out += dataset.model_logchi2()
 
-             # workaround to avoid memory leaks from GP module
-        #gc.collect()
         return logchi2_out
 
     def recenter_bounds(self, pop_mean, recenter=True):

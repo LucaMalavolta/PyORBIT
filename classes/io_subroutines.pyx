@@ -1,6 +1,7 @@
 import cPickle as pickle
 import numpy as np
 
+
 def pyde_save_to_pickle(mc, population, starting_point, prefix=''):
 
     add_prefix = (prefix + '_' if prefix else '')
@@ -72,5 +73,25 @@ def emcee_flatlnprob(lnprob, nburnin, nthin):
         nburn = d/4
 
     s = lnprob[:, nburn:].shape
-    return lnprob[:, nburn:].reshape(s[0], s[1])
+    return lnprob[:, nburn:].reshape(s[0] * s[1])
 
+
+def GelmanRubin(chains_T):
+    # Courtesy of Luca "Sbuffo" Borsato
+    n, M = np.shape(chains_T)
+
+    theta_m = [np.mean(chains_T[:,i_m]) for i_m in range(0, M)]
+    theta = np.mean(theta_m)
+
+    d_theta2 = (theta_m - theta)**2
+    B_n = np.sum(d_theta2) / (M-1)
+
+    arg_W = [np.sum((chains_T[:,i_m] - theta_m[i_m])**2) / (n-1) for i_m in range(0, M)]
+    W = np.mean(arg_W)
+
+    n_frac = (n-1)/n
+    var_plus = n_frac*W + B_n
+    Var = var_plus + (B_n/M)
+
+    Rc = np.sqrt(Var / W)
+    return Rc

@@ -68,8 +68,8 @@ class Dataset(AbstractCommon):
             self.x0 = self.x - self.Tref
 
             """Default boundaries are defined according to the characteristic of the dataset"""
-            self.generic_default_bounds = {'offset': [np.min(self.y) - 50., np.max(self.y) + 50.],
-                                   'jitter': [0.0001, 20 * np.max(self.e)],
+            self.generic_default_bounds = {'offset': [np.min(self.y) - 100., np.max(self.y) + 100.],
+                                   'jitter': [np.min(self.e)/50., 50 * np.max(self.e)],
                                    'linear': [-1., 1.]}
 
             self.create_systematic_dictionaries('jitter', data_input[:, 3])

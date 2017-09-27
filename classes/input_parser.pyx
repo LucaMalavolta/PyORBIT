@@ -183,6 +183,7 @@ def pars_input(config_in, mc, input_dataset=None):
 
             for dataset_name in list(set(model_conf) & set(mc.dataset_dict)):
                 boundaries_fixed_priors_starts(mc, mc.models[model_name], model_conf[dataset_name], dataset_1=dataset_name)
+                mc.models[model_name].setup_dataset(mc.dataset_dict[dataset_name])
 
     if 'Tref' in conf_parameters:
         mc.Tref = np.asarray(conf_parameters['Tref'])

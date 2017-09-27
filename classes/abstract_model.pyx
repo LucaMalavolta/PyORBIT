@@ -22,6 +22,9 @@ class AbstractModel():
         self.prior_kind = {}
         self.prior_pams = {}
 
+    def setup_dataset(self, dataset):
+        pass
+
     def define_special_variables_bounds(self, ndim, dataset_name, var):
         return ndim, []
 

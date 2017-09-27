@@ -21,11 +21,11 @@ parameters:
   star_radius: [1.00, 0.01]
 solver:
   pyde:
-    ngen: 8000
-    npop_mult: 2
+    ngen: 16000
+    npop_mult: 4
   emcee:
-    npop_mult: 2
-    nsteps: 20000
-    nburn: 5000
+    npop_mult: 4
+    nsteps: 50000
+    nburn: 20000
     thin: 100
   recenter_bounds: True

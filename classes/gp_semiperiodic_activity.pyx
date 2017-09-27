@@ -12,6 +12,9 @@ class GaussianProcess_QuasiPeriodicActivity(AbstractModel):
      - omega: is the length scale of the periodic component, and can be linked to the size evolution of the active regions;
      - h: represents the amplitude of the correlations '''
 
+    internal_likelihood = True
+
+
     model_class = 'gp_quasiperiodic'
 
     list_pams_common = {
@@ -36,6 +39,8 @@ class GaussianProcess_QuasiPeriodicActivity(AbstractModel):
         'Oamp': 2, # gamma
         'Prot': 3 # ln_P
     }
+
+    gp = {}
 
     def convert_val2gp(self, input_pams):
         """
@@ -73,13 +78,17 @@ class GaussianProcess_QuasiPeriodicActivity(AbstractModel):
             'Prot': np.exp(input_pams[self.gp_pams_index['Prot']])
         }
 
+    def setup_dataset(self, dataset):
+        self.define_kernel(dataset)
+        return
+
     def define_kernel(self, dataset):
 
         gp_pams = np.ones(self.n_pams)
         """ Kernel initialized with fake values... don't worry, they'll be overwritten soon"""
-        self.kernel = np.exp(gp_pams[0]) * \
+        kernel = np.exp(gp_pams[0]) * \
                       george.kernels.ExpSquaredKernel(metric=np.exp(gp_pams[1])) * \
-                      george.kernels.ExpSine2Kernel(gamma=gp_pams[1], log_period=gp_pams[2])
+                      george.kernels.ExpSine2Kernel(gamma=gp_pams[2], log_period=gp_pams[3])
 
 
 
@@ -93,7 +102,7 @@ class GaussianProcess_QuasiPeriodicActivity(AbstractModel):
          
         """
 
-        self.gp[dataset.name_ref] = george.GP(self.kernel, solver=george.HODLRSolver, seed=42)
+        self.gp[dataset.name_ref] = george.GP(kernel, solver=george.HODLRSolver, seed=42)
 
         """ I've decided to add the jitter in quadrature instead of using a constant kernel to allow the use of 
         different / selective jitter within the dataset
@@ -101,7 +110,6 @@ class GaussianProcess_QuasiPeriodicActivity(AbstractModel):
         env = np.sqrt(dataset.e ** 2.0 + dataset.jitter ** 2.0)
 
         self.gp[dataset.name_ref].compute(dataset.x0, env)
-
         return
 
     def lnlk_compute(self, variable_value, dataset):
@@ -110,10 +118,9 @@ class GaussianProcess_QuasiPeriodicActivity(AbstractModel):
            2) physical values must be converted to {\tt george} input parameters
         """
         gp_pams = self.convert_val2gp(variable_value)
-
         env = np.sqrt(dataset.e ** 2.0 + dataset.jitter ** 2.0)
         self.gp[dataset.name_ref].set_parameter_vector(gp_pams)
-        #self.gp[dataset.name_ref].compute(dataset.x0, env)
+        self.gp[dataset.name_ref].compute(dataset.x0, env)
         self.gp[dataset.name_ref].recompute()
         return self.gp[dataset.name_ref].log_likelihood(dataset.y - dataset.model, quiet=True)
 
