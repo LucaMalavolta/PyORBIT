@@ -29,7 +29,6 @@ class RVkeplerian(AbstractModel):
     recenter_pams_dataset = {}
 
     def compute(self, variable_value, dataset):
-        #variable_value = self.convert(theta)
         return kp.kepler_RV_T0P(dataset.x0,
                                 variable_value['f'],
                                 variable_value['P'],
