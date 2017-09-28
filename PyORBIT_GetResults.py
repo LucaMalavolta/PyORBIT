@@ -175,7 +175,7 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
 
         fig = plt.figure(figsize=(12, 12))
         for dataset_name, dataset in mc.dataset_dict.iteritems():
-            plt.scatter(dataset.x0, dataset.y - model_plot[dataset_name]['systematics'])
+            plt.scatter(dataset.x0, dataset.y - model_out[dataset_name]['systematics'])
 
         for dataset_name, dataset in mc_deepcopy.dataset_dict.iteritems():
             plt.plot(dataset.x0, model_plot[dataset_name]['complete'], c='r')
