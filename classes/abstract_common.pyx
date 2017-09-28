@@ -44,6 +44,9 @@ class AbstractCommon(object):
                 bounds_list.extend(bounds_special)
                 continue
 
+            if var not in self.bounds:
+                self.bounds[var] = self.default_bounds[var]
+
             if var in self.fix_list:
                 if var not in self.transformation:
                     self.transformation[var] = get_fix_val
@@ -54,17 +57,24 @@ class AbstractCommon(object):
             elif var not in self.transformation:
                 '''If no bounds have been specified in the input file, we use the default ones
                     Bounds must be provided in any case to avoid a failure of PyDE '''
-                if var in self.bounds:
-                    bounds_tmp = self.bounds[var]
-                else:
-                    bounds_tmp = self.default_bounds[var]
+                #if var in self.bounds:
+                #    bounds_tmp = self.bounds[var]
+                #else:
+                #    bounds_tmp = self.default_bounds[var]
+                #
+                #if self.list_pams[var] == 'U':
+                #    self.transformation[var] = get_var_val
+                #    bounds_list.append(bounds_tmp)
+                #elif self.list_pams[var] == 'LU':
+                #    self.transformation[var] = get_var_exp
+                #    bounds_list.append(np.log2(bounds_tmp))
 
                 if self.list_pams[var] == 'U':
                     self.transformation[var] = get_var_val
-                    bounds_list.append(bounds_tmp)
+                    bounds_list.append(self.bounds[var])
                 elif self.list_pams[var] == 'LU':
                     self.transformation[var] = get_var_exp
-                    bounds_list.append(np.log2(bounds_tmp))
+                    bounds_list.append(np.log2(self.bounds[var]))
 
                 self.variable_index[var] = ndim
                 self.variable_sampler[var] = ndim
@@ -179,7 +189,7 @@ class CommonPlanets(AbstractCommon):
 
         if 'e' in self.fix_list or \
            'o' in self.fix_list:
-            return bounds_list
+            return ndim, bounds_list
 
         if 'coso' in self.variable_sampler or \
             'esino' in self.variable_sampler:

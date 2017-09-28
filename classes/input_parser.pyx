@@ -18,9 +18,11 @@ define_common_type_to_class = {
 }
 
 define_type_to_class = {
-    'radial_velocities': {'keplerian': RVkeplerian,
+    'radial_velocities': {'circular': RVkeplerian,
+                          'keplerian': RVkeplerian,
                           'dynamical': RVdynamical},
-    'transit_time': {'keplerian': TransitTimeKeplerian,
+    'transit_time': {'circular': TransitTimeKeplerian,
+                     'keplerian': TransitTimeKeplerian,
                      'dynamical': TransitTimeDynamical},
     'gp_quasiperiodic': GaussianProcess_QuasiPeriodicActivity,
     'celerite_quasiperiodic': Celerite_QuasiPeriodicActivity
@@ -101,10 +103,17 @@ def pars_input(config_in, mc, input_dataset=None):
             for planet_name, planet_conf in model_conf.iteritems():
 
                 mc.common_models[planet_name] = define_common_type_to_class['planets'](planet_name)
+
                 boundaries_fixed_priors_starts(mc, mc.common_models[planet_name], planet_conf)
 
                 if 'orbit' in planet_conf:
                     mc.planet_dict[planet_name] = planet_conf['orbit']
+
+                    if planet_conf['orbit'] == 'circular':
+                        mc.common_models[planet_name].fix_list['e'] = np.asarray([0.000, 0.0000], dtype=np.double)
+                        mc.common_models[planet_name].fix_list['o'] = np.asarray([np.pi/2., 0.0000], dtype=np.double)
+                    if planet_conf['orbit'] == 'dynamical':
+                        mc.dynamical_dict[planet_name] = True
                 else:
                     mc.planet_dict[planet_name] = 'keplerian'
 
@@ -119,14 +128,9 @@ def pars_input(config_in, mc, input_dataset=None):
             mc.common_models[model_name] = define_common_type_to_class[model_type](model_name)
             boundaries_fixed_priors_starts(mc, mc.common_models[model_name], model_conf)
 
-
     """ Check if there is any planet that requires dynamical computations"""
-    for planet_name, orbit in mc.planet_dict.iteritems():
-        if orbit == 'dynamical':
-            mc.dynamical_dict[planet_name] = True
-
-        if mc.dynamical_dict:
-            mc.dynamical_model = DynamicalIntegrator()
+    if mc.dynamical_dict:
+        mc.dynamical_model = DynamicalIntegrator()
 
     for model_name, model_conf in conf_models.iteritems():
 
@@ -161,14 +165,12 @@ def pars_input(config_in, mc, input_dataset=None):
                     boundaries_fixed_priors_starts(mc, mc.models[model_name_exp], model_conf[dataset_name],
                                                    dataset_1=dataset_name)
 
-
         elif model_type == 'transit_time':
             """ Only one planet for each file with transit times... mixing them would cause HELL"""
 
             planet_name = model_conf['planet']
             mc.models[model_name] = \
                     define_type_to_class[model_type][mc.planet_dict[planet_name]](model_name, planet_name)
-
 
             """  CHECK THIS!!!!
             boundaries_fixed_priors_starts(mc, mc.models[model_name], model_conf)

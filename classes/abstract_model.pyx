@@ -39,12 +39,18 @@ class AbstractModel():
         self.variable_index[dataset_name] = {}
         self.variable_sampler[dataset_name] = {}
 
+        if dataset_name not in self.bounds.keys():
+            self.bounds[dataset_name] = {}
+
         for var in self.list_pams_dataset:
 
             ndim, bounds_special = self.define_special_variables_bounds(ndim, dataset_name, var)
             if len(bounds_special) > 0:
                 bounds_list.extend(bounds_special)
                 continue
+
+            if var not in self.bounds[dataset_name]:
+                self.bounds[dataset_name][var] = self.default_bounds[var]
 
             if var in self.fix_list[dataset_name]:
                 self.transformation[dataset_name][var] = get_fix_val
@@ -63,23 +69,6 @@ class AbstractModel():
                 self.variable_sampler[dataset_name][var] = ndim
                 ndim += 1
         return ndim, bounds_list
-
-    """ 
-    def initialize(self, mc):
-
-        for name in self.list_pams_common:
-            if name in mc.variable_sampler[self.common_ref]:
-                mc.pam_names[mc.variable_sampler[self.common_ref][name]] = name
-
-        for dataset_name, dataset in mc.dataset_dict.iteritems():
-            for name in self.list_pams_dataset:
-                if name in mc.variable_sampler[dataset_name]:
-                    mc.pam_names[mc.variable_sampler[dataset_name][name]] = name
-
-            if self.model_name in dataset.models:
-                self.define_kernel(dataset)
-
-    """
 
     def define_special_starting_point(self, starting_point, dataset_name, var):
         return False

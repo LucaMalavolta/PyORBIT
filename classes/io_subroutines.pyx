@@ -2,6 +2,7 @@ import cPickle as pickle
 import numpy as np
 import copy
 
+
 def pyde_save_to_pickle(mc, population, starting_point, prefix=''):
 
     add_prefix = (prefix + '_' if prefix else '')
@@ -58,7 +59,7 @@ def emcee_flatchain(chain, nburnin, nthin):
     """flattening of the emcee chains with removal of burn-in"""
     _, d, _ = np.shape(chain)
     nburn = nburnin / nthin
-    if nburn > d:
+    if nburn >= d*0.9:
         nburn = d/4
 
     s = chain[:, nburn:, :].shape
