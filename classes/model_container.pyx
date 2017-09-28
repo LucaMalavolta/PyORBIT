@@ -209,7 +209,7 @@ class ModelContainer:
                 logchi2_out += self.models[model_name].return_priors(theta, dataset_name)
 
                 if hasattr(self.models[model_name], 'internal_likelihood'):
-                    logchi2_gp_model = model_name.copy()
+                    logchi2_gp_model = model_name
                     continue
                 #if self.models[model_name].model_class == 'gaussian_process':
 
@@ -394,7 +394,7 @@ class ModelContainer:
                 logchi2_out += self.models[model_name].return_priors(theta, dataset_name)
 
                 if hasattr(self.models[model_name], 'internal_likelihood'):
-                    logchi2_gp_model = model_name.copy()
+                    logchi2_gp_model = model_name
                     continue
 
                 if dataset.dynamical:
