@@ -55,6 +55,29 @@ def emcee_load_from_cpickle(emcee_dir_output, prefix=''):
             sampler_chain, sampler_lnprobability, sampler_acceptance_fraction
 
 
+def test_model_container_load(emcee_dir_output, prefix=None):
+    add_prefix = (prefix + '_' if prefix else '')
+
+    mc = pickle.load(open(emcee_dir_output + add_prefix + "model_container.p", "rb"))
+    for model_name in mc.models.iterkeys():
+        mc.models[model_name] = pickle.load(open(emcee_dir_output + add_prefix + "model_container_" + model_name + ".p", "rb"))
+        if model_name == 'gp_quasiperiodic':
+            print mc.models[model_name].gp
+    return mc
+
+def test_model_container_save(mc, prefix=None):
+    add_prefix = (prefix + '_' if prefix else '')
+
+    pickle.dump(mc, open(mc.emcee_dir_output + add_prefix + "model_container.p", "wb"))
+    for model_name, model in mc.models.iteritems():
+        print model_name, model, mc.models[model_name]
+        if model_name == 'gp_quasiperiodic':
+            print mc.models[model_name].gp
+
+        pickle.dump(model, open(mc.emcee_dir_output + add_prefix + "model_container_" + model_name + ".p", "wb"))
+
+
+
 def emcee_flatchain(chain, nburnin, nthin):
     """flattening of the emcee chains with removal of burn-in"""
     _, d, _ = np.shape(chain)

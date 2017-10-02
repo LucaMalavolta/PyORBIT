@@ -57,7 +57,6 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
         sampler_chain, sampler_lnprobability, sampler_acceptance_fraction = \
             emcee_load_from_cpickle(dir_input)
 
-
         theta_dictionary = mc.get_theta_dictionary()
 
         nburnin = mc.emcee_parameters['nburn']
@@ -158,20 +157,11 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
 
 
         print
-        theta = np.zeros(7)
 
-        theta[5] = 5.29662023455
-        theta[6] = -3.4196791162
-        theta[0] = 4.54218110203
-        theta[1] = 5.64481500777
-        theta[2] = 0.456527386248
-        theta[3] = 0.284352580364
-        theta[4] = 6.52660511507 - 2*np.pi
-
-        model_out, logchi2_out = mc.get_model(theta)
+        model_out, logchi2_out = mc.get_model(chain_med[:, 0])
 
         mc_deepcopy = model_container_plot(mc)
-        model_plot, _ = mc_deepcopy.get_model(theta)
+        model_plot, _ = mc_deepcopy.get_model(chain_med[:, 0])
 
         fig = plt.figure(figsize=(12, 12))
         for dataset_name, dataset in mc.dataset_dict.iteritems():

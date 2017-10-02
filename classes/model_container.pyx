@@ -381,7 +381,6 @@ class ModelContainer:
                 model_out[dataset_name]['jitter'] = dataset.jitter.copy()
                 model_out[dataset_name]['complete'] = dataset.model.copy()
 
-
             if 'none' in dataset.models or 'None' in dataset.models:
                 continue
             if not dataset.models:
@@ -419,7 +418,8 @@ class ModelContainer:
             if logchi2_gp_model:
                 common_ref = self.models[logchi2_gp_model].common_ref
                 variable_values = self.common_models[common_ref].convert(theta)
-                variable_values.update(self.models[logchi2_gp_model].convert(theta, dataset))
+                variable_values.update(self.models[logchi2_gp_model].convert(theta, dataset.name_ref))
+                print variable_values
                 logchi2_out += self.models[logchi2_gp_model].lnlk_compute(variable_values, dataset)
 
                 model_out[dataset_name][model_name] = \
