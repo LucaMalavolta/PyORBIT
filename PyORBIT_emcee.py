@@ -47,23 +47,13 @@ def pyorbit_emcee(config_in):
         """ There's no need to do anything"""
         flatchain = emcee_flatchain(sampler_chain, mc.emcee_parameters['nburn'], mc.emcee_parameters['thin'])
         mc.results_resumen(flatchain)
-        print mc.models['radial_velocities_b'].prior_pams
-        print mc.models['radial_velocities_b'].variable_index
-        print mc.models['gp_quasiperiodic'].gp
-
-        from classes.io_subroutines import test_model_container_load
-
-        mc = test_model_container_load(emcee_dir_output)
-
-        print mc.models['radial_velocities_b'].prior_pams
-        print mc.models['radial_velocities_b'].variable_index
-        print mc.models['gp_quasiperiodic'].gp
         return
 
     reloaded_mc = reloaded_pyde or reloaded_emcee_multirun or reloaded_emcee_multirun
     if not reloaded_mc:
         mc = ModelContainer()
         pars_input(config_in, mc)
+        mc.model_setup()
         mc.initialize_model()
 
         mc.results_resumen(None, skip_theta=True)
@@ -79,11 +69,6 @@ def pyorbit_emcee(config_in):
 
     if not os.path.exists(mc.emcee_dir_output):
         os.makedirs(mc.emcee_dir_output)
-
-
-    print mc.models['radial_velocities_b'].prior_pams
-    print mc.models['radial_velocities_b'].variable_index
-    print mc.models['gp_quasiperiodic'].gp
 
     print
     print 'Reference Time Tref: ', mc.Tref
@@ -184,9 +169,6 @@ def pyorbit_emcee(config_in):
         mc.results_resumen(flatchain)
 
     print 'emcee completed'
-
-    from classes.io_subroutines import test_model_container_save
-    test_model_container_save(mc)
 
 if __name__ == '__main__':
     print 'This program is being run by itself'

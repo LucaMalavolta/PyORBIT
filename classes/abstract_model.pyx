@@ -22,6 +22,8 @@ class AbstractModel():
         self.prior_kind = {}
         self.prior_pams = {}
 
+        self.model_conf = None
+
     def setup_dataset(self, dataset):
         pass
 

@@ -57,6 +57,8 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
         sampler_chain, sampler_lnprobability, sampler_acceptance_fraction = \
             emcee_load_from_cpickle(dir_input)
 
+        mc.model_setup()
+        """ Required to create the right objects inside each class - if defined inside """
         theta_dictionary = mc.get_theta_dictionary()
 
         nburnin = mc.emcee_parameters['nburn']

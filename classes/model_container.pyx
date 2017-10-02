@@ -73,21 +73,18 @@ class ModelContainer:
         self.AUday2ms = self.AU_km / self.seconds_in_day * 1000.0
 
     def model_setup(self):
-        self.n_datasets = len(self.dataset_dict)
-        for dataset in self.dataset_dict.itervalues():
+        # First step: setting up the correct associations between models and dataset
 
-            if 'sinusoids' in dataset.models:
-                self.scv.model_setup(dataset)
-
-            dataset.model_reset()
+        for model_name, model in self.models.iteritems():
+            if not model.model_conf:
+                continue
+            for dataset_name in list(set(model.model_conf) & set(self.dataset_dict)):
+                model.setup_dataset(self.dataset_dict[dataset_name])
 
     def initialize_model(self):
 
-        # First step: setting up the models
         # Second step: define the number of variables and setting up the boundaries
-        # Third step: initialize the variables names
-
-        self.model_setup()
+        # To be done only the first time ever
         self.create_variables_bounds()
 
         self.ndata = 0
@@ -96,8 +93,6 @@ class ModelContainer:
                 continue
             self.ndata += dataset.n
         self.ndof = self.ndata - self.ndim
-
-        #self.initialize()
 
     def create_variables_bounds(self):
         # This routine creates the boundary array and at the same time
@@ -419,7 +414,6 @@ class ModelContainer:
                 common_ref = self.models[logchi2_gp_model].common_ref
                 variable_values = self.common_models[common_ref].convert(theta)
                 variable_values.update(self.models[logchi2_gp_model].convert(theta, dataset.name_ref))
-                print variable_values
                 logchi2_out += self.models[logchi2_gp_model].lnlk_compute(variable_values, dataset)
 
                 model_out[dataset_name][model_name] = \

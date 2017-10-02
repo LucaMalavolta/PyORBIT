@@ -116,8 +116,6 @@ class GaussianProcess_QuasiPeriodicActivity(AbstractModel):
            2) physical values must be converted to {\tt george} input parameters
         """
         gp_pams = self.convert_val2gp(variable_value)
-        print gp_pams
-        print self.gp
         env = np.sqrt(dataset.e ** 2.0 + dataset.jitter ** 2.0)
         self.gp[dataset.name_ref].set_parameter_vector(gp_pams)
         self.gp[dataset.name_ref].compute(dataset.x0, env)
