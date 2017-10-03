@@ -53,8 +53,10 @@ def pyorbit_emcee(config_in):
     if not reloaded_mc:
         mc = ModelContainer()
         pars_input(config_in, mc)
+
         mc.model_setup()
-        mc.initialize_model()
+        mc.create_variables_bounds()
+        mc.initialize_logchi2()
 
         mc.results_resumen(None, skip_theta=True)
 
@@ -64,8 +66,8 @@ def pyorbit_emcee(config_in):
         mc.emcee_parameters['nwalkers'] = mc.ndim * mc.emcee_parameters['npop_mult']
         if mc.emcee_parameters['nwalkers']%2 == 1: mc.emcee_parameters['nwalkers'] += 1
 
-        if mc.dynamical_model is not None:
-            mc.dynamical_model.prepare(mc)
+        #if mc.dynamical_model is not None:
+        #    mc.dynamical_model.prepare(mc)
 
     if not os.path.exists(mc.emcee_dir_output):
         os.makedirs(mc.emcee_dir_output)

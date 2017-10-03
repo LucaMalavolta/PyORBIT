@@ -8,11 +8,10 @@ class ModelContainer:
         self.dynamical_model = None
 
         self.dataset_dict = {}
-        self.dataset_index = {}
-        self.n_datasets = 0
 
         self.models = {}
         self.common_models = {}
+
 
         """ pyde/emcee variables
         wondering if I should move these somewhere else, for now they are staying here because they are 
@@ -81,18 +80,8 @@ class ModelContainer:
             for dataset_name in list(set(model.model_conf) & set(self.dataset_dict)):
                 model.setup_dataset(self.dataset_dict[dataset_name])
 
-    def initialize_model(self):
-
-        # Second step: define the number of variables and setting up the boundaries
-        # To be done only the first time ever
-        self.create_variables_bounds()
-
-        self.ndata = 0
-        for dataset in self.dataset_dict.itervalues():
-            if not dataset.models:
-                continue
-            self.ndata += dataset.n
-        self.ndof = self.ndata - self.ndim
+        if self.dynamical_model:
+            self.dynamical_model.prepare(self)
 
     def create_variables_bounds(self):
         # This routine creates the boundary array and at the same time
@@ -118,21 +107,17 @@ class ModelContainer:
         self.bounds = np.asarray(bounds_list)
         self.range = self.bounds[:, 1] - self.bounds[:, 0]
 
-    """ 
-    def initialize(self):
-        # Function with two goals:
-        # * Unfold and print out the output from theta
-        # * give back a parameter name associated to each value in the result array
+    def initialize_logchi2(self):
 
-        self.pam_names = self.ndim * ['']
-
+        # Second step: define the number of variables and setting up the boundaries
+        # To be done only the first time ever
+        self.ndata = 0
         for dataset in self.dataset_dict.itervalues():
-            dataset.initialize(self)
+            if not dataset.models:
+                continue
+            self.ndata += dataset.n
+        self.ndof = self.ndata - self.ndim
 
-        for model in self.models.itervalues():
-            model.initialize(self)
-
-    """
     def create_starting_point(self):
 
         self.starting_point = np.average(self.bounds, axis=1)
@@ -416,7 +401,7 @@ class ModelContainer:
                 variable_values.update(self.models[logchi2_gp_model].convert(theta, dataset.name_ref))
                 logchi2_out += self.models[logchi2_gp_model].lnlk_compute(variable_values, dataset)
 
-                model_out[dataset_name][model_name] = \
+                model_out[dataset_name][logchi2_gp_model] = \
                     self.models[logchi2_gp_model].sample_conditional(variable_values, dataset)
                 model_out[dataset_name]['complete'] += model_out[dataset_name][model_name]
             else:
@@ -424,7 +409,6 @@ class ModelContainer:
 
         # workaround to avoid memory leaks from GP module
         #gc.collect()
-
 
         return model_out, logchi2_out
 

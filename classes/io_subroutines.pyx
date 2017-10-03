@@ -124,4 +124,5 @@ def model_container_plot(mc):
 
         dataset.define_dataset_base(data_input, update=True)
 
+    mc_deepcopy.model_setup()
     return mc_deepcopy

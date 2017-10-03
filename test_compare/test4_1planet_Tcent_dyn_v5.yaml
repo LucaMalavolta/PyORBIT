@@ -31,10 +31,10 @@ parameters:
 solver:
   pyde:
     ngen: 8000
-    npop_mult: 2
+    npop_mult: 4
   emcee:
-    npop_mult: 2
-    nsteps: 5000
-    nburn: 2000
-    thin: 1
+    npop_mult: 4
+    nsteps: 50000
+    nburn: 10000
+    thin: 100
   recenter_bounds: True

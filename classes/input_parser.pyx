@@ -176,10 +176,10 @@ def pars_input(config_in, mc, input_dataset=None):
             boundaries_fixed_priors_starts(mc, mc.models[model_name], model_conf)
             """
             for dataset_name, dataset in mc.dataset_dict.iteritems():
-                if planet_name in mc.dynamical_dict and planet_name in dataset.models:
+                if planet_name in mc.dynamical_dict and model_name in dataset.models:
                     dataset.planet_name = planet_name
                     dataset.dynamical = True
-                    mc.t0_dict[planet_name] = dataset_name
+                    mc.dynamical_t0_dict[planet_name] = dataset_name
 
         else:
             mc.models[model_name] = \
@@ -189,7 +189,6 @@ def pars_input(config_in, mc, input_dataset=None):
             for dataset_name in list(set(model_conf) & set(mc.dataset_dict)):
                 boundaries_fixed_priors_starts(mc, mc.models[model_name], model_conf[dataset_name], dataset_1=dataset_name)
                 #mc.models[model_name].setup_dataset(mc.dataset_dict[dataset_name])
-
 
     if 'Tref' in conf_parameters:
         mc.Tref = np.asarray(conf_parameters['Tref'])

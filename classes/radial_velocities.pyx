@@ -267,6 +267,9 @@ class DynamicalIntegrator:
                            self.dynamical_set['data']['t0_obs'],
                            self.dynamical_set['data']['t0_err'])
 
+        """ When the object is copied, data on RV and other properties are somehow lost
+            but the object is still initialized - somehow """
+
         print 'TRADES parameters', self.dynamical_set['trades']
         print
 
@@ -330,7 +333,7 @@ class DynamicalIntegrator:
                 self.dynamical_set['data']['t0_tot'],
                 self.dynamical_set['data']['t0_num'])
         else:
-            rv_sim, t0_sim = pytrades.kelements_to_data(
+            rv_sim, t0_sim = pytrades_lib.pytrades.kelements_to_data(
                 self.dynamical_set['trades']['ti_beg'],
                 self.dynamical_set['trades']['ti_ref'],
                 self.dynamical_set['trades']['i_step'],

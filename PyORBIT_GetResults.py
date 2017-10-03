@@ -157,7 +157,6 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
             print '*************************************************************'
             print
 
-
         print
 
         model_out, logchi2_out = mc.get_model(chain_med[:, 0])
@@ -165,16 +164,23 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
         mc_deepcopy = model_container_plot(mc)
         model_plot, _ = mc_deepcopy.get_model(chain_med[:, 0])
 
-        fig = plt.figure(figsize=(12, 12))
+        kinds = {}
         for dataset_name, dataset in mc.dataset_dict.iteritems():
-            plt.scatter(dataset.x0, dataset.y - model_out[dataset_name]['systematics'])
+            if dataset.kind in kinds.keys():
+                kinds[dataset.kind].extend([dataset_name])
+            else:
+                kinds[dataset.kind] = [dataset_name]
 
-        for dataset_name, dataset in mc_deepcopy.dataset_dict.iteritems():
-            plt.plot(dataset.x0, model_plot[dataset_name]['complete'], c='r')
+        for kind_name, kind in kinds.iteritems():
+            fig = plt.figure(figsize=(12, 12))
+            for dataset_name in kind:
+                plt.scatter(mc.dataset_dict[dataset_name].x0, mc.dataset_dict[dataset_name].y - model_out[dataset_name]['systematics'])
+                plt.plot(mc_deepcopy.dataset_dict[dataset_name].x0, model_plot[dataset_name]['complete'], c='r')
 
-        plt.savefig(dir_output + '_test.png', bbox_inches='tight', dpi=300)
-        plt.close(fig)
+            plt.savefig(dir_output + '_' + kind_name + '.png', bbox_inches='tight', dpi=300)
+            plt.close(fig)
         print
+
 
 if __name__ == '__main__':
     print 'This program is being run by itself'
