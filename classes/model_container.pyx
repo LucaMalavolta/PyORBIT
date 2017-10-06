@@ -169,9 +169,11 @@ class ModelContainer:
             dynamical_output = self.dynamical_model.compute(self, theta)
 
         logchi2_out = 2. * self.ndof * np.log(2 * np.pi)
+        #print ' ---- ', logchi2_out
 
         for model in self.common_models.itervalues():
             logchi2_out += model.return_priors(theta)
+            #print ' -------- ', logchi2_out, model.common_ref
 
         for dataset_name, dataset in self.dataset_dict.iteritems():
             dataset.model_reset()
@@ -191,7 +193,6 @@ class ModelContainer:
                 if hasattr(self.models[model_name], 'internal_likelihood'):
                     logchi2_gp_model = model_name
                     continue
-                #if self.models[model_name].model_class == 'gaussian_process':
 
                 if dataset.dynamical:
                     dataset.model += dynamical_output[dataset_name]
@@ -210,9 +211,14 @@ class ModelContainer:
                 variable_values = self.common_models[common_ref].convert(theta)
                 variable_values.update(self.models[logchi2_gp_model].convert(theta, dataset_name))
                 logchi2_out += self.models[logchi2_gp_model].lnlk_compute(variable_values, dataset)
+                #print ' --------++++ ', logchi2_out, logchi2_gp_model, common_ref, dataset_name
+
             else:
                 logchi2_out += dataset.model_logchi2()
+                #print ' --------oooo ', dataset.model_logchi2(), dataset_name, dataset.y, dataset.model
+                #print ' ------------ ', logchi2_out, logchi2_gp_model
 
+        #print logchi2_out
         return logchi2_out
 
     def recenter_bounds(self, pop_mean, recenter=True):
@@ -304,10 +310,26 @@ class ModelContainer:
             print '----- common model: ', model.common_ref
             variable_values = model.convert(theta)
             print_dictionary(variable_values)
+        print
+        print '===================================================================================================='
+        print '===================================================================================================='
+        print
 
+        if len(np.shape(theta)) == 2:
+            n_samples, n_values = np.shape(theta)
+            logchi2_collection = np.zeros(n_samples)
+            for i in xrange(0,n_samples):
+                logchi2_collection[i] = self(theta[i, :])
+            perc0, perc1, perc2 = np.percentile(logchi2_collection, [15.865, 50, 84.135], axis=0)
+            print ' LN probability: %12f   %12f %12f (15-84 p) ' % (perc1, perc0-perc1, perc2-perc1)
+        else:
+            print ' LN probability: %12f ' % (self(theta))
+
+        print
         print '===================================================================================================='
         print '     ------------------------------------------------------------------------------------------     '
         print '===================================================================================================='
+        print
         print
 
     def get_theta_dictionary(self):
