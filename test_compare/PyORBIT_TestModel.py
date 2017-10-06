@@ -120,6 +120,51 @@ def create_test_1planet():
         fileout.write('{0:6d} {1:14f} {2:14f} \n'.format(ii, Transit_Time, 0.01))
     fileout.close()
 
+
+
+
+def create_test_1planet_circular():
+    x = np.arange(6000, 6100, 1, dtype=np.double)
+    x = np.random.normal(x, 0.4)
+    Tref = np.mean(x, dtype=np.double)
+    x0 = x - Tref
+
+    print Tref
+    P = 23.4237346
+    K = 43.47672
+    phase = 0.34658203
+    e = 0.000
+    omega = np.pi/2.
+    offset = 45605
+
+    y_pla = kp.kepler_RV_T0P(x0, phase, P, K, e, omega) + offset
+
+    mod_pl = np.random.normal(y_pla, 2)
+
+    trip = np.arange(10, 3, -1)
+    Transit_Time = kp.kepler_Tcent_T0P(P, phase, e, omega) + Tref
+    print 'Transit Time:', Transit_Time
+    print 'transit Time - Tref', Transit_Time - Tref
+
+    print Transit_Time, np.floor((Transit_Time-Tref+0.01) / P) * P + Tref + \
+            kp.kepler_Tcent_T0P(P, phase, e, omega)
+    quit()
+
+    plt.scatter(x, mod_pl)
+    plt.axvline(Transit_Time)
+    plt.show()
+
+    fileout = open('test_1planet_circular_RV.dat', 'w')
+    for ii in xrange(0, np.size(x)):
+        fileout.write('{0:14f} {1:14f} {2:14f} {3:5d} {4:5d} {5:5d} \n'.format(x[ii], mod_pl[ii], 2., 0, 0, -1))
+    fileout.close()
+
+    fileout = open('test_1planet_circular_Tcent_0.dat', 'w')
+    for ii in xrange(0, np.size(Transit_Time)):
+        fileout.write('{0:6d} {1:14f} {2:14f} \n'.format(ii, Transit_Time, 0.01))
+    fileout.close()
+
+
 #create_test_1planet()
 
 def create_test_1planet_GP():
@@ -187,4 +232,5 @@ def create_test_1planet_GP():
         fileout.write('{0:6d} {1:14f} {2:14f} \n'.format(ii, Transit_Time[ii], 0.01))
     fileout.close()
 
-create_test_1planet_GP()
+#create_test_1planet_GP()
+create_test_1planet_circular()

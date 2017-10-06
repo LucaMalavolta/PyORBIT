@@ -215,8 +215,11 @@ class ModelContainer:
 
             else:
                 logchi2_out += dataset.model_logchi2()
-                #print ' --------oooo ', dataset.model_logchi2(), dataset_name, dataset.y, dataset.model
-                #print ' ------------ ', logchi2_out, logchi2_gp_model
+                #if model_name == 'transit_b':
+                #    print ' --------oooo ', dataset.model_logchi2(), dataset_name, dataset.y, dataset.model
+                #print ' ------------ ', variable_values, dataset.model_logchi2()
+                print ' ---- ', model_name, dataset.model_logchi2()
+                #print logchi2_out
 
         #print logchi2_out
         return logchi2_out
@@ -441,6 +444,7 @@ def print_theta_bounds(i_dict, theta, bounds, skip_theta=False):
     format_string_long = "%10s  %4d  %12f   %12f %12f (15-84 p) ([%9f, %9f])"
 
     for var, i in i_dict.iteritems():
+        i_dict
         if skip_theta:
             print format_string_notheta % (var, i, bounds[i, 0], bounds[i, 1])
         elif len(np.shape(theta)) == 2:

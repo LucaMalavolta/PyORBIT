@@ -57,7 +57,7 @@ class AbstractModel():
             if var in self.fix_list[dataset_name]:
                 self.transformation[dataset_name][var] = get_fix_val
                 self.variable_index[dataset_name][var] = self.nfix
-                self.variable_sampler[dataset_name][var] = self.nfix
+                # self.variable_sampler[dataset_name][var] = self.nfix
                 self.fixed.append(self.fix_list[dataset_name][var][0])
                 self.nfix += 1
             else:

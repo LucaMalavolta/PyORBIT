@@ -52,7 +52,7 @@ class AbstractCommon(object):
                     self.transformation[var] = get_fix_val
                     self.fixed.append(self.fix_list[var][0])
                     self.variable_index[var] = self.nfix
-                    self.variable_sampler[var] = self.nfix
+                    #self.variable_sampler[var] = self.nfix
                     self.nfix += 1
             elif var not in self.transformation:
                 '''If no bounds have been specified in the input file, we use the default ones
