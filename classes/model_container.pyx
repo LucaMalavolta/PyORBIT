@@ -218,7 +218,7 @@ class ModelContainer:
                 #if model_name == 'transit_b':
                 #    print ' --------oooo ', dataset.model_logchi2(), dataset_name, dataset.y, dataset.model
                 #print ' ------------ ', variable_values, dataset.model_logchi2()
-                print ' ---- ', model_name, dataset.model_logchi2()
+                #print ' ---- ', model_name, dataset.model_logchi2()
                 #print logchi2_out
 
         #print logchi2_out
