@@ -100,7 +100,8 @@ class GaussianProcess_QuasiPeriodicActivity(AbstractModel):
          
         """
 
-        self.gp[dataset.name_ref] = george.GP(kernel, solver=george.HODLRSolver, seed=42)
+        self.gp[dataset.name_ref] = george.GP(kernel)
+        #self.gp[dataset.name_ref] = george.GP(kernel, solver=george.HODLRSolver, mean=0.00)
 
         """ I've decided to add the jitter in quadrature instead of using a constant kernel to allow the use of 
         different / selective jitter within the dataset
@@ -120,7 +121,9 @@ class GaussianProcess_QuasiPeriodicActivity(AbstractModel):
         self.gp[dataset.name_ref].set_parameter_vector(gp_pams)
         self.gp[dataset.name_ref].compute(dataset.x0, env)
         #self.gp[dataset.name_ref].recompute()
-        return self.gp[dataset.name_ref].log_likelihood(dataset.y - dataset.model, quiet=True)
+        #print dataset.model[0]
+        #print self.gp[dataset.name_ref].log_likelihood(dataset.y - dataset.model, quiet=True)
+        return self.gp[dataset.name_ref].lnlikelihood(dataset.y - dataset.model, quiet=True)
 
     def sample_predict(self, variable_value, dataset):
 

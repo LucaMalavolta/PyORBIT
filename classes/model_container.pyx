@@ -77,6 +77,7 @@ class ModelContainer:
         for model_name, model in self.models.iteritems():
             if not model.model_conf:
                 continue
+
             for dataset_name in list(set(model.model_conf) & set(self.dataset_dict)):
                 model.setup_dataset(self.dataset_dict[dataset_name])
 
@@ -180,6 +181,8 @@ class ModelContainer:
             variable_values = dataset.convert(theta)
             dataset.compute(variable_values)
 
+            temp_var = variable_values.copy()
+
             if 'none' in dataset.models or 'None' in dataset.models:
                 continue
             if not dataset.models:
@@ -210,16 +213,20 @@ class ModelContainer:
                 common_ref = self.models[logchi2_gp_model].common_ref
                 variable_values = self.common_models[common_ref].convert(theta)
                 variable_values.update(self.models[logchi2_gp_model].convert(theta, dataset_name))
-                logchi2_out += self.models[logchi2_gp_model].lnlk_compute(variable_values, dataset)
-                #print ' --------++++ ', logchi2_out, logchi2_gp_model, common_ref, dataset_name
+                temp_logchi2 = self.models[logchi2_gp_model].lnlk_compute(variable_values, dataset)
+                #logchi2_out += self.models[logchi2_gp_model].lnlk_compute(variable_values, dataset)
+                #print ' --------++++ ', dataset_name, logchi2_gp_model, temp_logchi2, logchi2_out, variable_values, temp_var
+
+                #print ' --------++++ ', temp_logchi2, logchi2_out, theta[3], theta[4], dataset.model[0]
+                logchi2_out += temp_logchi2
 
             else:
-                logchi2_out += dataset.model_logchi2()
                 #if model_name == 'transit_b':
                 #    print ' --------oooo ', dataset.model_logchi2(), dataset_name, dataset.y, dataset.model
-                #print ' ------------ ', variable_values, dataset.model_logchi2()
+                #print ' ---------oooo', dataset_name, model_name, dataset.model_logchi2(), logchi2_out
                 #print ' ---- ', model_name, dataset.model_logchi2()
                 #print logchi2_out
+                logchi2_out += dataset.model_logchi2()
 
         #print logchi2_out
         return logchi2_out

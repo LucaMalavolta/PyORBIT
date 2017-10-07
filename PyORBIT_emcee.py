@@ -46,6 +46,8 @@ def pyorbit_emcee(config_in):
     if reloaded_emcee:
         """ There's no need to do anything"""
         flatchain = emcee_flatchain(sampler_chain, mc.emcee_parameters['nburn'], mc.emcee_parameters['thin'])
+        mc.model_setup()
+        mc.initialize_logchi2()
         mc.results_resumen(flatchain)
         return
 
@@ -68,6 +70,10 @@ def pyorbit_emcee(config_in):
 
         #if mc.dynamical_model is not None:
         #    mc.dynamical_model.prepare(mc)
+    else:
+        mc.model_setup()
+        mc.initialize_logchi2()
+
 
     if not os.path.exists(mc.emcee_dir_output):
         os.makedirs(mc.emcee_dir_output)
