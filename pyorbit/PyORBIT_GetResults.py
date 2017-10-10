@@ -78,8 +78,10 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
         print 'Dimensions = ', mc.ndim
         print 'Nwalkers = ', mc.emcee_parameters['nwalkers']
         print
-        print '*************************************************************'
-        print
+
+        print mc.results_resumen(flat_chain)
+
+
 
         lnprob_median = np.median(flat_lnprob)
 
