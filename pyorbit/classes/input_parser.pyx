@@ -9,7 +9,7 @@ from ..models.celerite_semiperiodic_activity import Celerite_QuasiPeriodicActivi
 #TD from correlations import CorrelationsCommonVariables
 #TD from sinusoids import SinusoidsCommonVariables
 
-__all__ = ["pars_input"]
+__all__ = ["pars_input", "yaml_parser"]
 
 define_common_type_to_class = {
     'planets': CommonPlanets,

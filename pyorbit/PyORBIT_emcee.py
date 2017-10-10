@@ -8,7 +8,7 @@ from pyde.de import DiffEvol
 import os
 import argparse
 
-__all__ = ["pyorbit_emcee"]
+__all__ = ["pyorbit_emcee", "yaml_parser"]
 
 def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
 
@@ -182,20 +182,3 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
     if return_output:
         return mc, population
 
-
-if __name__ == '__main__':
-    print 'This program is being run by itself'
-
-    parser = argparse.ArgumentParser(prog='PyORBIT_emcee.py', description='PyDE+emcee runner')
-    # parser.add_argument('-l', type=str, nargs='+', help='line identificator')
-    parser.add_argument('config_file', type=str, nargs=1, help='config file')
-
-    args = parser.parse_args()
-    file_conf = args.config_file[0]
-    config_in = yaml_parser(file_conf)
-
-    pyorbit_emcee(config_in)
-
-# This line was used to check if imprtation was working
-# else:
-#     print 'I am being imported from another module'
