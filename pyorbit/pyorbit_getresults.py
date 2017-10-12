@@ -157,8 +157,11 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
 
         print
 
-        bjd_plot = {'start':None, 'end': None, 'range': None}
-
+        bjd_plot = {
+            'full': {
+                'start':None, 'end': None, 'range': None
+            }
+        }
 
         kinds = {}
         for dataset_name, dataset in mc.dataset_dict.iteritems():
@@ -167,29 +170,49 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
             else:
                 kinds[dataset.kind] = [dataset_name]
 
-            if bjd_plot['range']:
-                bjd_plot['start'] = min(bjd_plot['start'], np.amin(dataset.x0))
-                bjd_plot['end'] = min(bjd_plot['start'], np.amax(dataset.x0))
-                bjd_plot['range'] = bjd_plot['end']-bjd_plot['start']
-            else:
-                bjd_plot['start'] = np.amin(dataset.x0)
-                bjd_plot['end'] = np.amax(dataset.x0)
-                bjd_plot['range'] = bjd_plot['end']-bjd_plot['start']
+            bjd_plot[dataset_name] = {
+                'start': np.amin(dataset.x0),
+                'end': np.amax(dataset.x0),
+                'range': np.amax(dataset.x0)-np.amin(dataset.x0),
+            }
 
-        bjd_plot['start'] -= bjd_plot['range']*0.05
-        bjd_plot['end'] += bjd_plot['range']*0.05
-        bjd_plot['x0_plot'] = np.arange(bjd_plot['start'],bjd_plot['end'],0.1)
-        bjd_plot['model_out'], bjd_plot['model_x0'] = mc.get_model(chain_med[:, 0], bjd_plot['x0_plot'])
+            if bjd_plot[dataset_name]['range'] < 0.1 : bjd_plot[dataset_name]['range'] = 0.1
+
+            bjd_plot[dataset_name]['start'] -= bjd_plot[dataset_name]['range'] * 0.05
+            bjd_plot[dataset_name]['end'] += bjd_plot[dataset_name]['range'] * 0.05
+            bjd_plot[dataset_name]['x0_plot'] = \
+                np.arange(bjd_plot[dataset_name]['start'], bjd_plot[dataset_name]['end'], 0.1)
+
+            if bjd_plot['full']['range']:
+                bjd_plot['full']['start'] = min(bjd_plot['full']['start'], np.amin(dataset.x0))
+                bjd_plot['full']['end'] = min(bjd_plot['full']['start'], np.amax(dataset.x0))
+                bjd_plot['full']['range'] = bjd_plot['full']['end']-bjd_plot['full']['start']
+            else:
+                bjd_plot['full']['start'] = np.amin(dataset.x0)
+                bjd_plot['full']['end'] = np.amax(dataset.x0)
+                bjd_plot['full']['range'] = bjd_plot['full']['end']-bjd_plot['full']['start']
+
+        bjd_plot['full']['start'] -= bjd_plot['full']['range']*0.05
+        bjd_plot['full']['end'] += bjd_plot['full']['range']*0.05
+        bjd_plot['full']['x0_plot'] = np.arange(bjd_plot['full']['start'],bjd_plot['full']['end'],0.1)
+
+        for dataset_name, dataset in mc.dataset_dict.iteritems():
+            if dataset.dynamical:
+                bjd_plot[dataset_name] = bjd_plot['full']
+
+        bjd_plot['model_out'], bjd_plot['model_x0'] = mc.get_model(chain_med[:, 0], bjd_plot)
 
         for kind_name, kind in kinds.iteritems():
-            fig = plt.figure(figsize=(12, 12))
             for dataset_name in kind:
-                plt.scatter(mc.dataset_dict[dataset_name].x0,
-                            mc.dataset_dict[dataset_name].y - bjd_plot['model_out'][dataset_name]['systematics'])
-                plt.plot(bjd_plot['x0_plot'], bjd_plot['model_out'][dataset_name]['complete'], c='r')
+                fig = plt.figure(figsize=(12, 12))
+                plt.errorbar(mc.dataset_dict[dataset_name].x0,
+                             mc.dataset_dict[dataset_name].y - bjd_plot['model_out'][dataset_name]['systematics'],
+                             yerr=mc.dataset_dict[dataset_name].e,
+                             fmt='o', zorder=2)
+                plt.plot(bjd_plot[dataset_name]['x0_plot'], bjd_plot['model_x0'][dataset_name]['complete'], zorder=1)
 
-            plt.savefig(dir_output + '_' + kind_name + '.png', bbox_inches='tight', dpi=300)
-            plt.close(fig)
+                plt.savefig(dir_output + 'model_' + kind_name + '_' + repr(dataset_name) + '.png', bbox_inches='tight', dpi=300)
+                plt.close(fig)
         print
 
         for common_name, common_model in mc.common_models.iteritems():

@@ -354,19 +354,20 @@ class ModelContainer:
 
         return theta_dictionary
 
-    def get_model(self, theta, x0_input):
+    def get_model(self, theta, bjd_dict):
         model_out = {}
         model_x0 = {}
 
         if self.dynamical_model is not None:
             """ check if any keyword ahas get the output model from the dynamical tool
             we must do it here because all the planet are involved"""
-            dynamical_output_x0 = self.dynamical_model.compute(self, theta, x0_input)
+            dynamical_output_x0 = self.dynamical_model.compute(self, theta, bjd_dict['full']['x0_plot'])
             dynamical_output = self.dynamical_model.compute(self, theta)
 
-        n_input = np.size(x0_input)
 
         for dataset_name, dataset in self.dataset_dict.iteritems():
+            x0_plot = bjd_dict[dataset_name]['x0_plot']
+            n_input = np.size(x0_plot)
             model_out[dataset_name] = {}
             model_x0[dataset_name] = {}
             dataset.model_reset()
@@ -411,7 +412,8 @@ class ModelContainer:
                 model_out[dataset_name][model_name] = self.models[model_name].compute(variable_values, dataset)
                 model_out[dataset_name]['complete'] += model_out[dataset_name][model_name]
 
-                model_x0[dataset_name][model_name] = self.models[model_name].compute(variable_values, dataset, x0_input)
+                model_x0[dataset_name][model_name] = \
+                    self.models[model_name].compute(variable_values, dataset, x0_plot)
                 model_x0[dataset_name]['complete'] += model_x0[dataset_name][model_name]
 
             """ Gaussian Process check MUST be the last one or the program will fail
@@ -427,7 +429,7 @@ class ModelContainer:
                 model_out[dataset_name]['complete'] += model_out[dataset_name][logchi2_gp_model]
 
                 model_x0[dataset_name][logchi2_gp_model] = \
-                    self.models[logchi2_gp_model].sample_conditional(variable_values, dataset, x0_input)
+                    self.models[logchi2_gp_model].sample_conditional(variable_values, dataset, x0_plot)
                 model_x0[dataset_name]['complete'] += model_x0[dataset_name][logchi2_gp_model]
 
 
