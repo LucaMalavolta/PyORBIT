@@ -2,6 +2,7 @@ from common import *
 
 __all__ = ["ModelContainer"]
 
+
 class ModelContainer:
     def __init__(self):
         self.planet_dict = {}
@@ -262,7 +263,7 @@ class ModelContainer:
 
         return population
 
-    def results_resumen(self, theta, skip_theta=False):
+    def results_resumen(self, theta, skip_theta=False, compute_lnprob=False):
         # Function with two goals:
         # * Unfold and print out the output from theta
         # * give back a parameter name associated to each value in the result array
@@ -306,20 +307,22 @@ class ModelContainer:
             print '----- common model: ', model.common_ref
             variable_values = model.convert(theta)
             print_dictionary(variable_values)
-        print
-        print '===================================================================================================='
-        print '===================================================================================================='
-        print
 
-        if len(np.shape(theta)) == 2:
-            n_samples, n_values = np.shape(theta)
-            logchi2_collection = np.zeros(n_samples)
-            for i in xrange(0,n_samples):
-                logchi2_collection[i] = self(theta[i, :])
-            perc0, perc1, perc2 = np.percentile(logchi2_collection, [15.865, 50, 84.135], axis=0)
-            print ' LN probability: %12f   %12f %12f (15-84 p) ' % (perc1, perc0-perc1, perc2-perc1)
-        else:
-            print ' LN probability: %12f ' % (self(theta))
+        if compute_lnprob:
+            print
+            print '===================================================================================================='
+            print '===================================================================================================='
+            print
+
+            if len(np.shape(theta)) == 2:
+                n_samples, n_values = np.shape(theta)
+                logchi2_collection = np.zeros(n_samples)
+                for i in xrange(0,n_samples):
+                    logchi2_collection[i] = self(theta[i, :])
+                perc0, perc1, perc2 = np.percentile(logchi2_collection, [15.865, 50, 84.135], axis=0)
+                print ' LN probability: %12f   %12f %12f (15-84 p) ' % (perc1, perc0-perc1, perc2-perc1)
+            else:
+                print ' LN probability: %12f ' % (self(theta))
 
         print
         print '===================================================================================================='
