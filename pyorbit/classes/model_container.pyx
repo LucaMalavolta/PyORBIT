@@ -15,7 +15,6 @@ class ModelContainer:
         self.models = {}
         self.common_models = {}
 
-
         """ pyde/emcee variables
         wondering if I should move these somewhere else, for now they are staying here because they are 
         essentially harmless """
@@ -424,7 +423,7 @@ class ModelContainer:
 
                 model_out[dataset_name][logchi2_gp_model] = \
                     self.models[logchi2_gp_model].sample_conditional(variable_values, dataset)
-                model_out[dataset_name]['complete'] += model_out[dataset_name][model_name]
+                model_out[dataset_name]['complete'] += model_out[dataset_name][logchi2_gp_model]
             else:
                 logchi2_out += dataset.model_logchi2()
 
@@ -444,8 +443,11 @@ def print_theta_bounds(i_dict, theta, bounds, skip_theta=False):
         if skip_theta:
             print format_string_notheta % (var, i, bounds[i, 0], bounds[i, 1])
         elif len(np.shape(theta)) == 2:
+
+            theta_med = compute_value_sigma(theta[:, i])
+
             perc0, perc1, perc2 = np.percentile(theta[:, i], [15.865, 50, 84.135], axis=0)
-            print format_string_long %(var, i, perc1, perc0-perc1, perc2-perc1, bounds[i, 0], bounds[i, 1])
+            print format_string_long %(var, i, theta_med[0], theta_med[2], theta_med[1], bounds[i, 0], bounds[i, 1])
         else:
             print format_string % (var, i, theta[i], bounds[i, 0], bounds[i, 1])
     print

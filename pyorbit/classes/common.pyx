@@ -78,3 +78,21 @@ def giveback_priors(kind, pams, val):
         return -(val - pams[0]) ** 2 / (2 * pams[1] ** 2)
     if kind == 'Uniform':
         return 0.0
+
+
+def compute_value_sigma(samples):
+    if np.size(np.shape(samples)) == 1:
+        sample_med = np.zeros(3)
+        sample_tmp = np.percentile(samples, [15.865, 50, 84.135], axis=0)
+        sample_med[0] = sample_tmp[1]
+        sample_med[1] = sample_tmp[0] - sample_tmp[1]
+        sample_med[2] = sample_tmp[2] - sample_tmp[1]
+
+    elif np.size(np.shape(samples)) == 2:
+        sample_med = np.asarray(map(lambda v: (v[1], v[2] - v[1], v[1] - v[0]),
+                                   zip(*np.percentile(samples, [15.865, 50, 84.135], axis=0))))
+
+    else:
+        print 'ERROR!!! '
+        return None
+    return sample_med

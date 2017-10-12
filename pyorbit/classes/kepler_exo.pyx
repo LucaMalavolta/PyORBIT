@@ -211,6 +211,7 @@ def f_get_mass(M_star2, M_star1, Period, K1, e0):
                       M_star2 * (M_star1 + M_star2) ** (-2.0 / 3.0))
     return output
 
+
 def get_planet_mass(P, K, e, Mstar, Minit=0.0065):
     # Return planet mass in solar units
     return fsolve(f_get_mass, Minit, args=(Mstar, P, K, e))
