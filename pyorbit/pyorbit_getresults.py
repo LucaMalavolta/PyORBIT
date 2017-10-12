@@ -2,7 +2,7 @@ from classes.model_container import ModelContainer
 from classes.input_parser import yaml_parser, pars_input
 from classes.io_subroutines import pyde_save_to_pickle, pyde_load_from_cpickle, \
     emcee_save_to_cpickle, emcee_load_from_cpickle, emcee_flatchain, emcee_flatlnprob, \
-    GelmanRubin, model_container_plot
+    GelmanRubin
 import numpy as np
 import os
 import matplotlib as mpl
@@ -157,10 +157,8 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
 
         print
 
-        model_out, logchi2_out = mc.get_model(chain_med[:, 0])
+        bjd_plot = {'start':None, 'end': None, 'range': None}
 
-        mc_deepcopy = model_container_plot(mc)
-        model_plot, _ = mc_deepcopy.get_model(chain_med[:, 0])
 
         kinds = {}
         for dataset_name, dataset in mc.dataset_dict.iteritems():
@@ -169,11 +167,26 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
             else:
                 kinds[dataset.kind] = [dataset_name]
 
+            if bjd_plot['range']:
+                bjd_plot['start'] = min(bjd_plot['start'], np.amin(dataset.x0))
+                bjd_plot['end'] = min(bjd_plot['start'], np.amax(dataset.x0))
+                bjd_plot['range'] = bjd_plot['end']-bjd_plot['start']
+            else:
+                bjd_plot['start'] = np.amin(dataset.x0)
+                bjd_plot['end'] = np.amax(dataset.x0)
+                bjd_plot['range'] = bjd_plot['end']-bjd_plot['start']
+
+        bjd_plot['start'] -= bjd_plot['range']*0.05
+        bjd_plot['end'] += bjd_plot['range']*0.05
+        bjd_plot['x0_plot'] = np.arange(bjd_plot['start'],bjd_plot['end'],0.1)
+        bjd_plot['model_out'], bjd_plot['model_x0'] = mc.get_model(chain_med[:, 0], bjd_plot['x0_plot'])
+
         for kind_name, kind in kinds.iteritems():
             fig = plt.figure(figsize=(12, 12))
             for dataset_name in kind:
-                plt.scatter(mc.dataset_dict[dataset_name].x0, mc.dataset_dict[dataset_name].y - model_out[dataset_name]['systematics'])
-                plt.plot(mc_deepcopy.dataset_dict[dataset_name].x0, model_plot[dataset_name]['complete'], c='r')
+                plt.scatter(mc.dataset_dict[dataset_name].x0,
+                            mc.dataset_dict[dataset_name].y - bjd_plot['model_out'][dataset_name]['systematics'])
+                plt.plot(bjd_plot['x0_plot'], bjd_plot['model_out'][dataset_name]['complete'], c='r')
 
             plt.savefig(dir_output + '_' + kind_name + '.png', bbox_inches='tight', dpi=300)
             plt.close(fig)

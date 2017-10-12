@@ -2,8 +2,7 @@ import numpy as np
 import kepler_exo
 import yaml
 import george
-import spotpy
-import ttvfast
+#import ttvfast
 import os
 import sys
 import gc

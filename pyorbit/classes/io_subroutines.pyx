@@ -97,15 +97,15 @@ def GelmanRubin(chains_T):
     Rc = np.sqrt(Var / W)
     return Rc
 
-
+""" 
 def model_container_plot(mc):
-    """
+    
     This subroutine makes a deepcopy of the model_container object. Then it substitutes the original datasets with
     densely sampled datasets for plotting purpose
 
     :param mc:
     :return mc_deepcopy:
-    """
+    
     mc_deepcopy = copy.deepcopy(mc)
     mc_deepcopy.deepcopy_for_plot = True
     for dataset_name, dataset in mc_deepcopy.dataset_dict.iteritems():
@@ -127,5 +127,5 @@ def model_container_plot(mc):
     mc_deepcopy.model_setup()
     return mc_deepcopy
 
-
+"""
 

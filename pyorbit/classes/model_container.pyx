@@ -354,32 +354,31 @@ class ModelContainer:
 
         return theta_dictionary
 
-    def get_model(self, theta):
+    def get_model(self, theta, x0_input):
         model_out = {}
+        model_x0 = {}
+
         if self.dynamical_model is not None:
             """ check if any keyword ahas get the output model from the dynamical tool
             we must do it here because all the planet are involved"""
+            dynamical_output_x0 = self.dynamical_model.compute(self, theta, x0_input)
             dynamical_output = self.dynamical_model.compute(self, theta)
 
-        logchi2_out = 2. * self.ndof * np.log(2 * np.pi)
-
-        for model in self.common_models.itervalues():
-            logchi2_out += model.return_priors(theta)
+        n_input = np.size(x0_input)
 
         for dataset_name, dataset in self.dataset_dict.iteritems():
             model_out[dataset_name] = {}
+            model_x0[dataset_name] = {}
             dataset.model_reset()
 
-            if hasattr(self, 'deepcopy_for_plot'):
-                model_out[dataset_name]['systematics'] = np.zeros(dataset.n, dtype=np.double)
-                model_out[dataset_name]['jitter'] = np.zeros(dataset.n, dtype=np.double)
-                model_out[dataset_name]['complete'] = np.zeros(dataset.n, dtype=np.double)
-            else:
-                variable_values = dataset.convert(theta)
-                dataset.compute(variable_values)
-                model_out[dataset_name]['systematics'] = dataset.model.copy()
-                model_out[dataset_name]['jitter'] = dataset.jitter.copy()
-                model_out[dataset_name]['complete'] = dataset.model.copy()
+            variable_values = dataset.convert(theta)
+            dataset.compute(variable_values)
+
+            model_out[dataset_name]['systematics'] = dataset.model.copy()
+            model_out[dataset_name]['jitter'] = dataset.jitter.copy()
+            model_out[dataset_name]['complete'] = dataset.model.copy()
+
+            model_x0[dataset_name]['complete'] = np.zeros(n_input, dtype=np.double)
 
             if 'none' in dataset.models or 'None' in dataset.models:
                 continue
@@ -390,27 +389,30 @@ class ModelContainer:
 
             for model_name in dataset.models:
 
-                logchi2_out += self.models[model_name].return_priors(theta, dataset_name)
-
                 if hasattr(self.models[model_name], 'internal_likelihood'):
                     logchi2_gp_model = model_name
                     continue
 
                 if dataset.dynamical:
                     dataset.model += dynamical_output[dataset_name]
-
-                    model_out[dataset_name]['complete'] += dataset.model
                     model_out[dataset_name][model_name] = dynamical_output[dataset_name].copy()
+                    model_out[dataset_name]['complete'] += dynamical_output[dataset_name]
+
+                    model_x0[dataset_name][model_name] = dynamical_output_x0[dataset_name].copy()
+                    model_x0[dataset_name]['complete'] += dynamical_output_x0[dataset_name]
                     continue
 
                 common_ref = self.models[model_name].common_ref
                 variable_values = self.common_models[common_ref].convert(theta)
                 variable_values.update(self.models[model_name].convert(theta, dataset_name))
 
-                model_out[dataset_name][model_name] = self.models[model_name].compute(variable_values, dataset)
+                dataset.model += self.models[model_name].compute(variable_values, dataset)
 
-                dataset.model += model_out[dataset_name][model_name]
+                model_out[dataset_name][model_name] = self.models[model_name].compute(variable_values, dataset)
                 model_out[dataset_name]['complete'] += model_out[dataset_name][model_name]
+
+                model_x0[dataset_name][model_name] = self.models[model_name].compute(variable_values, dataset, x0_input)
+                model_x0[dataset_name]['complete'] += model_x0[dataset_name][model_name]
 
             """ Gaussian Process check MUST be the last one or the program will fail
              that's because for the GP to work we need to know the _deterministic_ part of the model 
@@ -419,18 +421,20 @@ class ModelContainer:
                 common_ref = self.models[logchi2_gp_model].common_ref
                 variable_values = self.common_models[common_ref].convert(theta)
                 variable_values.update(self.models[logchi2_gp_model].convert(theta, dataset.name_ref))
-                logchi2_out += self.models[logchi2_gp_model].lnlk_compute(variable_values, dataset)
 
                 model_out[dataset_name][logchi2_gp_model] = \
                     self.models[logchi2_gp_model].sample_conditional(variable_values, dataset)
                 model_out[dataset_name]['complete'] += model_out[dataset_name][logchi2_gp_model]
-            else:
-                logchi2_out += dataset.model_logchi2()
+
+                model_x0[dataset_name][logchi2_gp_model] = \
+                    self.models[logchi2_gp_model].sample_conditional(variable_values, dataset, x0_input)
+                model_x0[dataset_name]['complete'] += model_x0[dataset_name][logchi2_gp_model]
+
 
         # workaround to avoid memory leaks from GP module
         #gc.collect()
 
-        return model_out, logchi2_out
+        return model_out, model_x0
 
 
 def print_theta_bounds(i_dict, theta, bounds, skip_theta=False):

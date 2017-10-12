@@ -118,7 +118,7 @@ class AbstractModel():
     def special_fix_population(self, pop_mean, population, dataset_name):
         return population
 
-    def compute(self, variable_value, dataset):
+    def compute(self, variable_value, dataset, x0_input=None):
         return np.zeros(dataset.n, dtype=np.double)
 
     #def initialize(self):

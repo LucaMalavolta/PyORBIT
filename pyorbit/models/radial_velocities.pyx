@@ -28,13 +28,22 @@ class RVkeplerian(AbstractModel):
 
     recenter_pams_dataset = {}
 
-    def compute(self, variable_value, dataset):
-        return kepler_exo.kepler_RV_T0P(dataset.x0,
-                                variable_value['f'],
-                                variable_value['P'],
-                                variable_value['K'],
-                                variable_value['e'],
-                                variable_value['o'])
+    def compute(self, variable_value, dataset, x0_input=None):
+        if x0_input is None:
+            return kepler_exo.kepler_RV_T0P(dataset.x0,
+                                            variable_value['f'],
+                                            variable_value['P'],
+                                            variable_value['K'],
+                                            variable_value['e'],
+                                            variable_value['o'])
+        else:
+            return kepler_exo.kepler_RV_T0P(x0_input,
+                                            variable_value['f'],
+                                            variable_value['P'],
+                                            variable_value['K'],
+                                            variable_value['e'],
+                                            variable_value['o'])
+
 
 
 class RVdynamical(AbstractModel):
@@ -71,10 +80,19 @@ class TransitTimeKeplerian(AbstractModel):
 
     recenter_pams_dataset = {}
 
-    def compute(self, variable_value, dataset):
-
-        return np.floor(dataset.x0 / variable_value['P']) * variable_value['P'] + dataset.Tref + \
-            kepler_exo.kepler_Tcent_T0P(variable_value['P'], variable_value['f'], variable_value['e'], variable_value['o'])
+    def compute(self, variable_value, dataset, x0_input=None):
+        if x0_input is None:
+            return np.floor(dataset.x0 / variable_value['P']) * variable_value['P'] + dataset.Tref + \
+                   kepler_exo.kepler_Tcent_T0P(variable_value['P'],
+                                               variable_value['f'],
+                                               variable_value['e'],
+                                               variable_value['o'])
+        else:
+            return np.floor(x0_input/ variable_value['P']) * variable_value['P'] + dataset.Tref + \
+                   kepler_exo.kepler_Tcent_T0P(variable_value['P'],
+                                               variable_value['f'],
+                                               variable_value['e'],
+                                               variable_value['o'])
 
 
 class TransitTimeDynamical(AbstractModel):
@@ -275,7 +293,7 @@ class DynamicalIntegrator:
 
         return
 
-    def compute_trades(self, mc, theta, full_orbit=None):
+    def compute_trades(self, mc, theta, x0_input=None):
         """ This function compute the expected TTV and RVs for dynamically interacting planets.
             The user can specify which planets are subject to interactions, e.g. long-period planets can be approximated
             with a Keplerian function"""
@@ -314,7 +332,7 @@ class DynamicalIntegrator:
         #    sample_plan[:, convert_out['P']], sample_plan[:, convert_out['f']],
         #    sample_plan[:, convert_out['e']], sample_plan[:, convert_out['o']])
 
-        if full_orbit is None:
+        if x0_input is None:
             rv_sim, t0_sim = pytrades.kelements_to_data(
                 self.dynamical_set['trades']['ti_beg'],
                 self.dynamical_set['trades']['ti_ref'],
@@ -346,10 +364,12 @@ class DynamicalIntegrator:
                 self.dynamical_set['pams']['mA'],
                 self.dynamical_set['pams']['i'],
                 self.dynamical_set['pams']['lN'],
-                full_orbit,
+                x0_input,
                 self.dynamical_set['data']['t0_flg'],
                 self.dynamical_set['data']['t0_tot'],
                 self.dynamical_set['data']['t0_num'])
+
+
 
         output = {}
         #print 'T0_sim: ', t0_sim
@@ -357,15 +377,16 @@ class DynamicalIntegrator:
         #t0_sim -= mc.Tref
         for dataset_name, dataset in mc.dataset_dict.iteritems():
             if dataset.dynamical is False: continue
-            if dataset.kind == 'RV' and full_orbit is None:
-                output[dataset_name] = rv_sim[self.dynamical_set['data']['selection'][dataset_name]]
-                # print 'RV out', output[dataset.name_ref]
+            if dataset.kind == 'RV':
+                if x0_input is None:
+                    output[dataset_name] = rv_sim[self.dynamical_set['data']['selection'][dataset_name]]
+                else:
+                    output[dataset_name] = rv_sim
+            # print 'RV out', output[dataset.name_ref]
             elif dataset.kind == 'Tcent' and dataset.planet_name in mc.dynamical_dict:
                 n_plan = self.dynamical_set['data']['plan_ref'][dataset.planet_name]
                 #print ' T0_sim selected: ', t0_sim[:self.dynamical_set['data']['t0_tot'][n_plan], n_plan]
                 output[dataset_name] = t0_sim[:self.dynamical_set['data']['t0_tot'][n_plan], n_plan]
-        if full_orbit is not None:
-            output['full_orbit'] = rv_sim
 
         return output
 
@@ -416,7 +437,7 @@ class DynamicalIntegrator:
 
             ####printself.dynamical_set['ttvfast']['t_beg']
 
-    def compute_ttvfast(self, mc, theta, full_orbit=None):
+    def compute_ttvfast(self, mc, theta, x0_input=None):
         """ This function compute the expected TTV and RVs for dynamically interacting planets.
             The user can specify which planets are subject to interactions, e.g. long-period planets can be approximated
             with a Keplerian function"""
@@ -453,7 +474,7 @@ class DynamicalIntegrator:
                 P_min = np.min(np.asarray([P_min, dict_pams['P']]))
 
         t_step = P_min / 20.
-        if full_orbit is None:
+        if x0_input is None:
             pos, rv = ttvfast._ttvfast._ttvfast(params,
                                                 t_step,
                                                 self.dynamical_set['ttvfast']['t_beg'],
@@ -467,7 +488,8 @@ class DynamicalIntegrator:
                                                 self.dynamical_set['ttvfast']['t_beg'],
                                                 self.dynamical_set['ttvfast']['t_end'],
                                                 n_plan, input_flag,
-                                                len(full_orbit), full_orbit.tolist())
+                                                len(x0_input), x0_input.tolist())
+
         positions = np.asarray(pos)
         rv_meas = np.asarray(rv) * mc.AUday2ms
         output = {}
@@ -475,14 +497,17 @@ class DynamicalIntegrator:
         # print self.dynamical_set['len_rv'], rv_meas[:10]
         # print 't_beg', self.dynamical_set['ttvfast']['t_beg']
         # print 't_end', self.dynamical_set['ttvfast']['t_end']
-        # print 'Full orbit flag: ', full_orbit
-        # print 'Full orbit flag: ', full_orbit
+        # print 'Full orbit flag: ', x0_input
+        # print 'Full orbit flag: ', x0_input
         # print positions[:10,:]
 
         for dataset_name, dataset in mc.dataset_dict.iteritems():
             if dataset.dynamical is False: continue
-            if dataset.kind == 'RV' and full_orbit is None:
-                output[dataset_name] = rv_meas[self.dynamical_set['data_selection'][dataset_name]]
+            if dataset.kind == 'RV':
+                if x0_input is None:
+                    output[dataset_name] = rv_meas[self.dynamical_set['data_selection'][dataset_name]]
+                else:
+                    output[dataset_name] = rv_meas
 
             elif dataset.kind == 'Tcent':
                 t0_sel = (positions[0][:] == plan_ref[dataset.planet_name])
@@ -504,7 +529,5 @@ class DynamicalIntegrator:
                     """The output vector contains less T0s than supposed: collision between planets?? """
                     output[dataset_name] = dataset.n_transit * 0.0000
 
-        if full_orbit is not None:
-            output['full_orbit'] = rv_meas
         # print rv_meas[:3], self.dynamical_set['rv_times'][:3]
         return output
