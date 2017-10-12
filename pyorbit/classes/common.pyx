@@ -12,7 +12,7 @@ if os.path.isdir('/Users/malavolta/Astro/CODE/'):
     sys.path.insert(0, '/Users/malavolta/Astro/CODE/others/PolyChord/')
 else:
     sys.path.insert(0, '/home/malavolta/CODE/others/PolyChord/')
-import PyPolyChord.PyPolyChord as PolyChord
+#import PyPolyChord.PyPolyChord as PolyChord
 
 if os.path.isdir('/Users/malavolta/Astro/CODE/'):
     sys.path.insert(0, '/Users/malavolta/Astro/CODE/trades/pytrades/')
