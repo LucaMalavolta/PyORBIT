@@ -11,12 +11,14 @@ if __name__ == '__main__':
     parser.add_argument('-c', type=str, nargs='?', default=False, help='Create chains plots')
     parser.add_argument('-t', type=str, nargs='?', default=False, help='Create Gelman-Rubin traces')
     parser.add_argument('-m', type=str, nargs='?', default=False, help='Create full corellation plot - it may be slow!')
+    parser.add_argument('-f', type=str, nargs='?', default=False, help='Create full corellation plot - it may be slow!')
 
     plot_dictionary = {
         'chains': False,
         'plot': False,
         'traces': False,
-        'full_correlation': False
+        'full_correlation': False,
+        'model_files': False
     }
 
     args = parser.parse_args()
@@ -31,6 +33,8 @@ if __name__ == '__main__':
         plot_dictionary['traces'] = True
     if args.m is not False:
         plot_dictionary['full_correlation'] = True
+    if args.m is not False:
+        plot_dictionary['model_files'] = True
 
     print plot_dictionary
     config_in = pyorbit.yaml_parser(file_conf)

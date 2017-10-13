@@ -350,3 +350,63 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
                 plt.savefig(dir_output + 'model_' + kind_name + '_' + dataset_name + '.png', bbox_inches='tight', dpi=300)
                 plt.close(fig)
         print
+
+        if plot_dictionary['model_files']:
+            os.system('mkdir -p ' + dir_output + 'model_files')
+
+            for dataset_name, dataset in mc.dataset_dict.items():
+                for model_name in bjd_plot[dataset_name]:
+                    fileout = open(dir_output + 'model_files/' + dataset_name + '_' + model_name + '.dat', 'w')
+
+                    common_ref = dataset.models[model_name].common_ref
+                    if common_ref in planet_variables:
+                        phase = (dataset.x0 / planet_variables[common_ref]['P']) % 1
+                    else:
+                        phase = dataset.x0 * 0.00
+
+                    fileout.write('descriptor BJD BJD0 pha val,+- sys, mod, full, val_compare,+- res,+- \n')
+                    for x, x0, pha, y, e, sys, mod, com, res in zip(
+                        dataset.x, dataset.x0, phase, dataset.y, dataset.e,
+                            bjd_plot['model_out'][dataset_name]['systematics'],
+                            bjd_plot['model_out'][dataset_name][model_name],
+                            bjd_plot['model_out'][dataset_name]['complete'],
+                            dataset.y - bjd_plot['model_out'][dataset_name]['complete'] +
+                                    bjd_plot['model_out'][dataset_name][model_name],
+                            dataset.y - bjd_plot['model_out'][dataset_name]['complete']):
+
+                        fileout.write('{0:f} {1:f} {2:f} {3:f} {4:f} {5:f} {6:1f} {7:f} {8:f} {9:f} {10:f}'
+                                      '\n'.format(x, x0, pha, y, e, sys, mod, com, e, res, e))
+                    fileout.close()
+
+                    fileout = open(dir_output + 'model_files/' + dataset_name + '_' + model_name + '_full.dat', 'w')
+                    fileout.write('descriptor BJD BJD0 mod \n')
+                    for x0, mod in zip(bjd_plot[dataset_name]['x0_plot'],
+                                       bjd_plot['model_x0'][dataset_name]['complete']):
+                        fileout.write('{0:f} {1:f} {2:f} \n'.format(x0+mc.Tref, x0, mod))
+                    fileout.close()
+
+            for model in planet_variables:
+                RV_out =  kepler_exo.kepler_RV_T0P(bjd_plot['full']['x0_plot'],
+                                                   planet_variables[model]['f'],
+                                                   planet_variables[model]['P'],
+                                                   planet_variables[model]['K'],
+                                                   planet_variables[model]['e'],
+                                                   planet_variables[model]['o'])
+                fileout = open(dir_output + 'model_files/' + 'RV_' + model_name + '_kep.dat', 'w')
+                fileout.write('descriptor x_range m_kepler \n')
+                for x, y in zip(bjd_plot['full']['x0_plot'], RV_out):
+                    fileout.write('{0:f} {1:f} \n'.format(x, y))
+                fileout.close()
+
+                x_range = np.arange(-0.50, 1.50, 0.001)
+                RV_out =  kepler_exo.kepler_RV_T0P(x_range*planet_variables[model]['P'],
+                                                   planet_variables[model]['f'],
+                                                   planet_variables[model]['P'],
+                                                   planet_variables[model]['K'],
+                                                   planet_variables[model]['e'],
+                                                   planet_variables[model]['o'])
+                fileout = open(dir_output + 'model_files/' + 'RV_' + model_name + '_pha.dat', 'w')
+                fileout.write('descriptor x_phase m_phase \n')
+                for x, y in zip(x_range, RV_out):
+                    fileout.write('{0:f} {1:f} \n'.format(x, y))
+                fileout.close()
