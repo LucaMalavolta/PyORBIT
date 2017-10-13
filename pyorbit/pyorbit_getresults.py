@@ -358,6 +358,7 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
                 for model_name in bjd_plot[dataset_name]:
                     fileout = open(dir_output + 'model_files/' + dataset_name + '_' + model_name + '.dat', 'w')
 
+                    print dataset.models
                     common_ref = dataset.models[model_name].common_ref
                     if common_ref in planet_variables:
                         phase = (dataset.x0 / planet_variables[common_ref]['P']) % 1

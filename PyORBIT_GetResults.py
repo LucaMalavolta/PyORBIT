@@ -33,7 +33,7 @@ if __name__ == '__main__':
         plot_dictionary['traces'] = True
     if args.m is not False:
         plot_dictionary['full_correlation'] = True
-    if args.m is not False:
+    if args.f is not False:
         plot_dictionary['model_files'] = True
 
     print plot_dictionary
