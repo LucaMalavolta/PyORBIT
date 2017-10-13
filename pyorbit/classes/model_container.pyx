@@ -364,7 +364,6 @@ class ModelContainer:
             dynamical_output_x0 = self.dynamical_model.compute(self, theta, bjd_dict['full']['x0_plot'])
             dynamical_output = self.dynamical_model.compute(self, theta)
 
-
         for dataset_name, dataset in self.dataset_dict.iteritems():
             x0_plot = bjd_dict[dataset_name]['x0_plot']
             n_input = np.size(x0_plot)

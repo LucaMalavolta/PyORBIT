@@ -93,7 +93,7 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
         plt.close(fig)
 
         print
-        print '*************************************************************'
+        print '****************************************************************************************************'
         print
 
         if plot_dictionary['full_correlation']:
@@ -102,31 +102,36 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
             # plotting mega-corner plot
             plt.rc('text', usetex=False)
 
-            full_corner_dat = np.zeros([np.size(flat_chain, axis=0), np.size(flat_chain, axis=1) + 1])
-            full_corner_med = np.zeros(np.size(flat_chain, axis=1) + 1)
-            full_corner_dat[:, :-1] = flat_chain[:, :]
-            full_corner_dat[:, -1] = flat_lnprob[:]
-            full_corner_med[:-1] = chain_med[:, 0]
-            full_corner_med[-1] = lnprob_med[1]
+            corner_plot = {
+                'samples': [],
+                'labels': [],
+                'truths': []
+            }
+            for var, var_dict in theta_dictionary.iteritems():
+                corner_plot['samples'].extend([flat_chain[:, var_dict]])
+                corner_plot['labels'].append(var)
+                corner_plot['truths'].append(chain_med[var_dict,0])
 
-            full_corner_labels = [repr(ii) for ii in xrange(0, np.size(flat_chain, axis=0))]
+            corner_plot['samples'].extend([flat_lnprob])
+            corner_plot['labels'].append('ln prob')
+            corner_plot['truths'].append(lnprob_med[0])
 
-            for theta_name, ii in theta_dictionary.iteritems():
-                full_corner_labels[ii] = theta_name
-            full_corner_labels.extend(['ln L'])
-            fig = corner.corner(full_corner_dat[:, :], labels=full_corner_labels, truths=full_corner_med)
-            fig.savefig(dir_output + "full_corners.pdf", bbox_inches='tight', dpi=300)
+            fig = corner.corner(np.asarray(corner_plot['samples']).T,
+                                labels=corner_plot['labels'], truths=corner_plot['truths'])
+            fig.savefig(dir_output + "all_internal_variables_corner.pdf", bbox_inches='tight', dpi=300)
             plt.close(fig)
             plt.rc('text', usetex=True)
 
             print
-            print '*************************************************************'
+            print '****************************************************************************************************'
             print
 
         if plot_dictionary['chains']:
             print 'plotting the chains... '
+
+            os.system('mkdir -p ' + dir_output + 'chains')
             for theta_name, ii in theta_dictionary.iteritems():
-                file_name = dir_output + 'chain_' + repr(ii) + '_' + theta_name + '.png'
+                file_name = dir_output + 'chains/' + repr(ii) + '_' + theta_name + '.png'
                 fig = plt.figure(figsize=(12, 12))
                 plt.plot(sampler_chain[:, :, ii].T, '-', alpha=0.5)
                 plt.axvline(nburnin/nthin, c='r')
@@ -134,13 +139,14 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
                 plt.close(fig)
 
             print
-            print '*************************************************************'
+            print '****************************************************************************************************'
             print
 
         if plot_dictionary['traces']:
             print 'plotting the traces... '
+            os.system('mkdir -p ' + dir_output + 'gr_traces')
             for theta_name, th in theta_dictionary.iteritems():
-                file_name = dir_output + 'GRtrace_' + repr(th) + '_' + theta_name + '.png'
+                file_name = dir_output + 'gr_traces/' + repr(th) + '_' + theta_name + '.png'
                 out_absc = np.arange(0, nburnin/nthin, 1)
                 out_lines = np.zeros(nburnin/nthin)
                 for ii in xrange(20, nburnin/nthin):
@@ -152,10 +158,140 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
                 plt.close(fig)
 
             print
-            print '*************************************************************'
+            print '****************************************************************************************************'
             print
 
         print
+
+        print
+        print '****************************************************************************************************'
+        print
+        print ' Common models corner plots '
+        print
+
+        plt.rc('text', usetex=False)
+
+        """ in this variable we store the physical variables of """
+        planet_variables = {}
+
+        for common_name, common_model in mc.common_models.iteritems():
+
+            corner_plot = {
+                'var_list': [],
+                'samples': [],
+                'labels': [],
+                'truths': []
+            }
+            variable_values = common_model.convert(flat_chain)
+            variable_median = common_model.convert(chain_med[:,0])
+
+            n_samplings, n_pams = np.shape(flat_chain)
+
+            """ Sometimes the user forget to include the value for the inclination among the parameters
+            We do our check and then we fix it
+            """
+            i_is_missing = True
+
+            """ 
+            Check if the eccentricity and argument of pericenter were set as free parameters or fixed by simply 
+            checking the size of their distribution
+            """
+            for var in variable_values.iterkeys():
+                if np.size(variable_values[var]) == 1:
+                    variable_values[var] = variable_values[var] * np.ones(n_samplings)
+                else:
+                    corner_plot['var_list'].append(var)
+
+                if var == 'i':
+                    i_is_missing = False
+
+            corner_plot['samples'] = []
+            corner_plot['labels'] = []
+            corner_plot['truths'] = []
+            for var_i, var in enumerate(corner_plot['var_list']):
+                corner_plot['samples'].extend([variable_values[var]])
+                corner_plot['labels'].append(var)
+                corner_plot['truths'].append(variable_median[var])
+
+            if common_model.model_class == 'planet':
+                if i_is_missing:
+                    variable_values['i'] = 90.00 * np.ones(n_samplings)
+                    variable_median['i'] = 90.00
+
+                Mass_E = np.empty(n_samplings)
+                var_index = np.arange(0, n_samplings, dtype=int)
+                star_mass_randomized = np.random.normal(mc.star_mass[0], mc.star_mass[1], size=n_samplings)
+                for P, K, e, i, star, ii in zip(
+                        variable_values['P'],
+                        variable_values['K'],
+                        variable_values['e'],
+                        variable_values['i'],
+                        star_mass_randomized,
+                        var_index):
+                    Mass_E[ii] = M_SEratio * np.sin(np.radians(i)) * \
+                                 kepler_exo.get_planet_mass(P, K, e, star, Minit=0.0065)
+
+                Mass_E_med = common.compute_value_sigma(Mass_E)
+                variable_median['Me'] = Mass_E_med[0]
+
+                planet_variables[common_name] = variable_median
+
+                fig = plt.figure(figsize=(12, 12))
+                plt.hist(Mass_E, bins=50)
+                plt.savefig(dir_output + 'planet_mass_' + common_name + '.png', bbox_inches='tight', dpi=300)
+                plt.close(fig)
+
+                print ' Mass (Earths): %12f   %12f %12f (15-84 p) ' % (Mass_E_med[0], Mass_E_med[2], Mass_E_med[1])
+                print
+
+                corner_plot['samples'].extend([Mass_E])
+                corner_plot['labels'].append('M [M$_\oplus$]')
+                corner_plot['truths'].append(Mass_E_med[0])
+
+            fig = corner.corner(np.asarray(corner_plot['samples']).T, labels=corner_plot['labels'], truths=corner_plot['truths'])
+            fig.savefig(dir_output + common_name + "_corners.pdf", bbox_inches='tight', dpi=300)
+            plt.close(fig)
+
+            print 'Common model: ', common_name , '  corner plot done.'
+
+        print
+        print '****************************************************************************************************'
+        print
+        print ' Dataset + models corner plots '
+        print
+        for dataset_name, dataset in mc.dataset_dict.iteritems():
+
+            for model_name in dataset.models:
+
+                common_ref = mc.models[model_name].common_ref
+                variable_values = dataset.convert(flat_chain)
+                variable_values.update(mc.common_models[common_ref].convert(flat_chain))
+                variable_values.update(mc.models[model_name].convert(flat_chain, dataset_name))
+
+                variable_median = dataset.convert(chain_med[:, 0])
+                variable_median.update(mc.common_models[common_ref].convert(chain_med[:, 0]))
+                variable_median.update(mc.models[model_name].convert(chain_med[:, 0], dataset_name))
+
+                corner_plot['samples'] = []
+                corner_plot['labels'] = []
+                corner_plot['truths'] = []
+                for var_i, var in enumerate(variable_values):
+                    if np.size(variable_values[var]) <= 1: continue
+                    corner_plot['samples'].extend([variable_values[var]])
+                    corner_plot['labels'].append(var)
+                    corner_plot['truths'].append(variable_median[var])
+
+                fig = corner.corner(np.asarray(corner_plot['samples']).T,
+                                    labels=corner_plot['labels'], truths=corner_plot['truths'])
+                fig.savefig(dir_output + dataset_name + '_' + model_name + "_corners.pdf", bbox_inches='tight', dpi=300)
+                plt.close(fig)
+
+                print 'Dataset: ', dataset_name , '    model: ', model_name, ' corner plot  done '
+
+        print
+        print '****************************************************************************************************'
+        print
+        print ' Dataset + models corner plots '
 
         bjd_plot = {
             'full': {
@@ -211,80 +347,6 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
                              fmt='o', zorder=2)
                 plt.plot(bjd_plot[dataset_name]['x0_plot'], bjd_plot['model_x0'][dataset_name]['complete'], zorder=1)
 
-                plt.savefig(dir_output + 'model_' + kind_name + '_' + repr(dataset_name) + '.png', bbox_inches='tight', dpi=300)
+                plt.savefig(dir_output + 'model_' + kind_name + '_' + dataset_name + '.png', bbox_inches='tight', dpi=300)
                 plt.close(fig)
         print
-
-
-        for common_name, common_model in mc.common_models.iteritems():
-
-            if common_model.model_class == 'planet':
-                corner_plot = {'var_list':[]}
-
-                variable_values = common_model.convert(flat_chain)
-                variable_median = common_model.convert(chain_med[:,0])
-
-                n_samplings, n_pams = np.shape(flat_chain)
-
-                """ Sometimes the user forget to include the value for the inclination among the parameters
-                We do our check and then we fix it
-                """
-                i_is_missing = True
-
-                """ 
-                Check if the eccentricity and argument of pericenter were set as free parameters or fixed by simply 
-                checking the size of their distribution
-                """
-                for var in variable_values.iterkeys():
-                    if np.size(variable_values[var]) == 1:
-                        variable_values[var] = variable_values[var] * np.ones(n_samplings)
-                    else:
-                        corner_plot['var_list'].append(var)
-
-                    if var == 'i':
-                        i_is_missing = False
-
-                if i_is_missing:
-                    variable_values['i'] = 90.00 * np.ones(n_samplings)
-
-                Mass_E = np.empty(n_samplings)
-                var_index = np.arange(0, n_samplings, dtype=int)
-                star_mass_randomized = np.random.normal(mc.star_mass[0], mc.star_mass[1], size=n_samplings)
-                for P, K, e, i, star, ii in zip(
-                        variable_values['P'],
-                        variable_values['K'],
-                        variable_values['e'],
-                        variable_values['i'],
-                        star_mass_randomized,
-                        var_index):
-                    Mass_E[ii] = M_SEratio * np.sin(np.radians(i)) * \
-                                 kepler_exo.get_planet_mass(P, K, e, star, Minit=0.0065)
-
-                fig = plt.figure(figsize=(12, 12))
-                plt.hist(Mass_E, bins=50)
-                plt.savefig(dir_output + 'planet_mass_' + common_name + '.png', bbox_inches='tight', dpi=300)
-                plt.close(fig)
-
-                Mass_E_med = common.compute_value_sigma(Mass_E)
-                print ' Mass (Earths): %12f   %12f %12f (15-84 p) ' % (Mass_E_med[0], Mass_E_med[2], Mass_E_med[1])
-
-
-                corner_plot['samples'] = np.empty([n_samplings, len(corner_plot['var_list'])+1])
-                corner_plot['labels'] = []
-                corner_plot['truths'] = []
-                for var_i, var_name in enumerate(corner_plot['var_list']):
-                    corner_plot['samples'][:, var_i] = variable_values[var]
-                    corner_plot['labels'].append(var)
-                    corner_plot['truths'].append(variable_median[var])
-                corner_plot['samples'][:, -1] = Mass_E
-                corner_plot['labels'].append('M [M$_\oplus$]')
-                corner_plot['truths'].append(Mass_E_med[0])
-
-                print corner_plot['truths']
-
-                fig = corner.corner(corner_plot['samples'], labels=corner_plot['labels'], truths=corner_plot['truths'])
-                fig.savefig(dir_output + model_name + "_corners.pdf", bbox_inches='tight', dpi=300)
-                plt.close(fig)
-
-                for dataset_name, dataset in dataset.iteritems():
-                    print dataset_name, dataset.common_model, model.common_ref

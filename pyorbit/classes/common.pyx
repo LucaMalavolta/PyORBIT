@@ -84,8 +84,8 @@ def compute_value_sigma(samples):
         sample_med = np.zeros(3)
         sample_tmp = np.percentile(samples, [15.865, 50, 84.135], axis=0)
         sample_med[0] = sample_tmp[1]
-        sample_med[1] = sample_tmp[0] - sample_tmp[1]
-        sample_med[2] = sample_tmp[2] - sample_tmp[1]
+        sample_med[1] = sample_tmp[2] - sample_tmp[1]
+        sample_med[2] = sample_tmp[0] - sample_tmp[1]
 
     elif np.size(np.shape(samples)) == 2:
         sample_med = np.asarray(map(lambda v: (v[1], v[2] - v[1], v[1] - v[0]),

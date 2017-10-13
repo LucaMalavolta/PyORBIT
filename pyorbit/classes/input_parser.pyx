@@ -64,6 +64,9 @@ def pars_input(config_in, mc, input_datasets=None):
 
     for dataset_name, dataset_conf in conf_inputs.iteritems():
 
+        if not isinstance(dataset_name, str):
+            dataset_name = repr(dataset_name)
+
         """ The keyword in dataset_dict and the name assigned internally to the databes must be the same
             or everything will fall apart """
         mc.dataset_dict[dataset_name] = Dataset(dataset_name,
@@ -100,9 +103,15 @@ def pars_input(config_in, mc, input_datasets=None):
 
     for model_name, model_conf in conf_common.iteritems():
 
+        if not isinstance(model_name, str):
+            model_name = repr(model_name)
+
         if model_name == 'planets':
 
             for planet_name, planet_conf in model_conf.iteritems():
+
+                if not isinstance(planet_name, str):
+                    planet_name = repr(planet_name)
 
                 mc.common_models[planet_name] = define_common_type_to_class['planets'](planet_name)
 
@@ -135,6 +144,9 @@ def pars_input(config_in, mc, input_datasets=None):
         mc.dynamical_model = DynamicalIntegrator()
 
     for model_name, model_conf in conf_models.iteritems():
+
+        if not isinstance(model_name, str):
+            model_name = repr(model_name)
 
         if 'type' in model_conf:
             model_type = model_conf['type']
