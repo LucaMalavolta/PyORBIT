@@ -207,7 +207,7 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
                 fig = plt.figure(figsize=(12, 12))
                 plt.errorbar(mc.dataset_dict[dataset_name].x0,
                              mc.dataset_dict[dataset_name].y - bjd_plot['model_out'][dataset_name]['systematics'],
-                             yerr=mc.dataset_dict[dataset_name].e,
+                             yerr=mc.dataset_dict[dataset_name]. e,
                              fmt='o', zorder=2)
                 plt.plot(bjd_plot[dataset_name]['x0_plot'], bjd_plot['model_x0'][dataset_name]['complete'], zorder=1)
 
@@ -215,10 +215,15 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
                 plt.close(fig)
         print
 
+
         for common_name, common_model in mc.common_models.iteritems():
 
             if common_model.model_class == 'planet':
+                corner_plot = {'var_list':[]}
+
                 variable_values = common_model.convert(flat_chain)
+                variable_median = common_model.convert(chain_med[:,0])
+
                 n_samplings, n_pams = np.shape(flat_chain)
 
                 """ Sometimes the user forget to include the value for the inclination among the parameters
@@ -233,6 +238,8 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
                 for var in variable_values.iterkeys():
                     if np.size(variable_values[var]) == 1:
                         variable_values[var] = variable_values[var] * np.ones(n_samplings)
+                    else:
+                        corner_plot['var_list'].append(var)
 
                     if var == 'i':
                         i_is_missing = False
@@ -260,3 +267,24 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
 
                 Mass_E_med = common.compute_value_sigma(Mass_E)
                 print ' Mass (Earths): %12f   %12f %12f (15-84 p) ' % (Mass_E_med[0], Mass_E_med[2], Mass_E_med[1])
+
+
+                corner_plot['samples'] = np.empty([n_samplings, len(corner_plot['var_list'])+1])
+                corner_plot['labels'] = []
+                corner_plot['truths'] = []
+                for var_i, var_name in enumerate(corner_plot['var_list']):
+                    corner_plot['samples'][:, var_i] = variable_values[var]
+                    corner_plot['labels'].append(var)
+                    corner_plot['truths'].append(variable_median[var])
+                corner_plot['samples'][:, -1] = Mass_E
+                corner_plot['labels'].append('M [M$_\oplus$]')
+                corner_plot['truths'].append(Mass_E_med[0])
+
+                print corner_plot['truths']
+
+                fig = corner.corner(corner_plot['samples'], labels=corner_plot['labels'], truths=corner_plot['truths'])
+                fig.savefig(dir_output + model_name + "_corners.pdf", bbox_inches='tight', dpi=300)
+                plt.close(fig)
+
+                for dataset_name, dataset in dataset.iteritems():
+                    print dataset_name, dataset.common_model, model.common_ref
