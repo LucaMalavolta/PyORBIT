@@ -73,7 +73,7 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
         #    mc.dynamical_model.prepare(mc)
     else:
         """ reload nsteps, burnin and other parameters for emcee"""
-        yaml_parser(config_in, mc, input_datasets, reload_emcee=True)
+        pars_input(config_in, mc, input_datasets, reload_emcee=True)
 
         mc.model_setup()
         mc.initialize_logchi2()
