@@ -52,7 +52,7 @@ def yaml_parser(file_conf):
     return config_in
 
 
-def pars_input(config_in, mc, input_datasets=None):
+def pars_input(config_in, mc, input_datasets=None, reload_emcee=True):
 
     mc.output_name = config_in['output']
 
@@ -61,6 +61,35 @@ def pars_input(config_in, mc, input_datasets=None):
     conf_common = config_in['common']
     conf_parameters = config_in['parameters']
     conf_solver = config_in['solver']
+
+    if reload_emcee:
+        if 'star_mass' in conf_parameters:
+            mc.star_mass = np.asarray(conf_parameters['star_mass'][:], dtype=np.double)
+        if 'star_radius' in config_in:
+            mc.star_radius = np.asarray(conf_parameters['star_radius'][:], dtype=np.double)
+
+        if 'emcee' in conf_solver:
+            conf = conf_solver['emcee']
+
+            if 'multirun' in conf:
+                mc.emcee_parameters['multirun'] = np.asarray(conf['multirun'], dtype=np.int64)
+
+            if 'multirun_iter' in conf:
+                mc.emcee_parameters['multirun_iter'] = np.asarray(conf['multirun_iter'], dtype=np.int64)
+
+            if 'nsave' in conf:
+                mc.emcee_parameters['nsave'] = np.asarray(conf['nsave'], dtype=np.double)
+
+            if 'nsteps' in conf:
+                mc.emcee_parameters['nsteps'] = np.asarray(conf['nsteps'], dtype=np.int64)
+
+            if 'nburn' in conf:
+                mc.emcee_parameters['nburn'] = np.asarray(conf['nburn'], dtype=np.int64)
+
+            if 'thin' in conf:
+                mc.emcee_parameters['thin'] = np.asarray(conf['thin'], dtype=np.int64)
+
+        return
 
     for dataset_name, dataset_conf in conf_inputs.iteritems():
 

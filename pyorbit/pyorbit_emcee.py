@@ -72,9 +72,11 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
         #if mc.dynamical_model is not None:
         #    mc.dynamical_model.prepare(mc)
     else:
+        """ reload nsteps, burnin and other parameters for emcee"""
+        yaml_parser(config_in, mc, input_datasets, reload_emcee=True)
+
         mc.model_setup()
         mc.initialize_logchi2()
-
 
     if not os.path.exists(mc.emcee_dir_output):
         os.makedirs(mc.emcee_dir_output)
@@ -125,7 +127,7 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
 
         print 'PyDE completed'
 
-    mc.results_resumen(starting_point)
+    mc.results_resumen(starting_point, compute_lnprob=True)
 
     if mc.emcee_parameters['multirun'] and not reloaded_emcee_multirun:
 
