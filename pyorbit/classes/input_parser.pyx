@@ -52,7 +52,7 @@ def yaml_parser(file_conf):
     return config_in
 
 
-def pars_input(config_in, mc, input_datasets=None, reload_emcee=True):
+def pars_input(config_in, mc, input_datasets=None, reload_emcee=False):
 
     mc.output_name = config_in['output']
 
