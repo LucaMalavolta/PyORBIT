@@ -128,11 +128,11 @@ class ModelContainer:
         for model in self.common_models.itervalues():
             model.define_starting_point(self.starting_point)
 
-        for dataset in self.dataset_dict.itervalues():
+        for dataset_name, dataset in self.dataset_dict.iteritems():
             dataset.define_starting_point(self.starting_point)
 
             for model in dataset.models:
-                self.models[model].define_starting_point(self.starting_point)
+                self.models[model].define_starting_point(self.starting_point, dataset_name)
 
     def check_bounds(self, theta):
         for ii in xrange(0, self.ndim):

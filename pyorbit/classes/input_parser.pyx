@@ -323,6 +323,7 @@ def boundaries_fixed_priors_starts(mc, model_obj, conf, dataset_1=None, dataset_
 
     elif dataset_2 is None:
         model_obj.bounds[dataset_1] = {}
+        model_obj.starts[dataset_1] = {}
         model_obj.fix_list[dataset_1] = {}
         model_obj.prior_kind[dataset_1] = {}
         model_obj.prior_pams[dataset_1] = {}
@@ -347,6 +348,7 @@ def boundaries_fixed_priors_starts(mc, model_obj, conf, dataset_1=None, dataset_
             mc.starting_point_flag = True
             starts_conf = conf['starts']
             for var in starts_conf:
+                print dataset_1, add_var_name+var, starts_conf[var]
                 model_obj.starts[dataset_1][add_var_name+var] = np.asarray(starts_conf[var], dtype=np.double)
 
     else:

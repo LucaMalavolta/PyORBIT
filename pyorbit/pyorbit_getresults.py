@@ -365,8 +365,8 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
                     else:
                         phase = dataset.x0 * 0.00
 
-                    fileout.write('descriptor BJD BJD0 pha val,+- sys, mod, full, val_compare,+- res,+- \n')
-                    for x, x0, pha, y, e, sys, mod, com, res in zip(
+                    fileout.write('descriptor BJD BJD0 pha val,+- sys mod full val_compare,+- res,+- \n')
+                    for x, x0, pha, y, e, sys, mod, com, obs_mod, res in zip(
                         dataset.x, dataset.x0, phase, dataset.y, dataset.e,
                             bjd_plot['model_out'][dataset_name]['systematics'],
                             bjd_plot['model_out'][dataset_name][model_name],
@@ -375,8 +375,8 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
                                     bjd_plot['model_out'][dataset_name][model_name],
                             dataset.y - bjd_plot['model_out'][dataset_name]['complete']):
 
-                        fileout.write('{0:f} {1:f} {2:f} {3:f} {4:f} {5:f} {6:1f} {7:f} {8:f} {9:f} {10:f}'
-                                      '\n'.format(x, x0, pha, y, e, sys, mod, com, e, res, e))
+                        fileout.write('{0:f} {1:f} {2:f} {3:f} {4:f} {5:f} {6:1f} {7:f} {8:f} {9:f} {10:f} {11:f}'
+                                      '\n'.format(x, x0, pha, y, e, sys, mod, com, obs_mod, e, res, e))
                     fileout.close()
 
                     fileout = open(dir_output + 'model_files/' + dataset_name + '_' + model_name + '_full.dat', 'w')
@@ -394,9 +394,9 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
                                                    planet_variables[model]['e'],
                                                    planet_variables[model]['o'])
                 fileout = open(dir_output + 'model_files/' + 'RV_' + model_name + '_kep.dat', 'w')
-                fileout.write('descriptor x_range m_kepler \n')
+                fileout.write('descriptor x_range x_range0 m_kepler \n')
                 for x, y in zip(bjd_plot['full']['x0_plot'], RV_out):
-                    fileout.write('{0:f} {1:f} \n'.format(x, y))
+                    fileout.write('{0:f} {1:f} {2:f} \n'.format(x+mc.Tref, x, y))
                 fileout.close()
 
                 x_range = np.arange(-0.50, 1.50, 0.001)
@@ -407,7 +407,7 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
                                                    planet_variables[model]['e'],
                                                    planet_variables[model]['o'])
                 fileout = open(dir_output + 'model_files/' + 'RV_' + model_name + '_pha.dat', 'w')
-                fileout.write('descriptor x_phase m_phase \n')
+                fileout.write('descriptor x_phase0 m_phase \n')
                 for x, y in zip(x_range, RV_out):
                     fileout.write('{0:f} {1:f} \n'.format(x, y))
                 fileout.close()
