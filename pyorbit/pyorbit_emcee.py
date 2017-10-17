@@ -188,5 +188,5 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
     print 'emcee completed'
 
     if return_output:
-        return mc, population,  prob
+        return mc, sampler.chain,  sampler.lnprobability
 
