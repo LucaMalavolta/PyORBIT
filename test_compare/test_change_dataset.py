@@ -18,7 +18,7 @@ x = np.random.normal(np.arange(6000, 6100, 1, dtype=np.double), 0.2)
 "Let's avoid 1-day alias"
 n_x = np.size(x)
 
-Tref = np.mean(x, dtype=np.double)
+Tref = 6049.48253491
 x0 = x - Tref
 
 P = 13.4237346
