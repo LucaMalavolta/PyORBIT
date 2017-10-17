@@ -76,7 +76,7 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
         print 'Dimensions = ', mc.ndim
         print 'Nwalkers = ', mc.emcee_parameters['nwalkers']
         print
-        print 'Steps: ', nburnin
+        print 'Steps: ', sampler_chain.shape[1] * nthin
 
         chain_med = common.compute_value_sigma(flat_chain)
         mc.results_resumen(flat_chain)
