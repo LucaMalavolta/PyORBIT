@@ -8,7 +8,6 @@ sys.path.insert(0, '../classes/')
 import kepler_exo as kp
 
 
-
 def create_test_sinusoids():
 
     x = np.arange(6000, 6500, 1, dtype=np.double)

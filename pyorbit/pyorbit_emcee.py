@@ -10,6 +10,7 @@ import argparse
 
 __all__ = ["pyorbit_emcee", "yaml_parser"]
 
+
 def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
 
     pyde_dir_output = './' + config_in['output'] + '/pyde/'
@@ -33,7 +34,8 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
         pass
 
     try:
-        mc, starting_point, population, _, _, sampler_chain, _, _ = emcee_load_from_cpickle(emcee_dir_output)
+        mc, starting_point, population, _, _, sampler_chain, sampler_lnprobability, _ = \
+            emcee_load_from_cpickle(emcee_dir_output)
         reloaded_emcee = True
     except:
         pass
@@ -50,7 +52,11 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
         mc.model_setup()
         mc.initialize_logchi2()
         mc.results_resumen(flatchain)
-        return
+
+        if return_output:
+            return mc, sampler_chain, sampler_lnprobability
+        else:
+            return
 
     reloaded_mc = reloaded_pyde or reloaded_emcee_multirun or reloaded_emcee_multirun
     if not reloaded_mc:
@@ -182,5 +188,5 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
     print 'emcee completed'
 
     if return_output:
-        return mc, population
+        return mc, population,  prob
 

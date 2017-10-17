@@ -102,13 +102,14 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False):
                                                 dataset_conf['kind'],
                                                 dataset_conf['models'])
 
-        if input_datasets:
+        try:
             data_input = input_datasets[dataset_name]
-        elif 'file' in dataset_conf:
-            data_input = mc.dataset_dict[dataset_name].convert_dataset_from_file(dataset_conf['file'])
-        else:
-            print 'Either a file or an input dataset must be provided'
-            quit()
+        except:
+            try:
+                data_input = mc.dataset_dict[dataset_name].convert_dataset_from_file(dataset_conf['file'])
+            except:
+                print 'Either a file or an input dataset must be provided'
+                quit()
 
         mc.dataset_dict[dataset_name].define_dataset_base(data_input)
 
