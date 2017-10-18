@@ -155,8 +155,7 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
 
             for theta_name, th in theta_dictionary.iteritems():
                 rhat = np.array([GelmanRubin_v2(sampler_chain[:, :steps, th]) for steps in step_sampling])
-                print ' LN probability: %s  %5i %12f ' % (theta_name, th, rhat[-1])
-                print theta_name, th,
+                print ' Gelman-Rubin: %5i %12f %s ' % (th, rhat[-1], theta_name)
                 file_name = dir_output + 'gr_traces/v2_' + repr(th) + '_' + theta_name + '.png'
                 fig = plt.figure(figsize=(12, 12))
                 plt.plot(step_sampling, rhat[:], '-', color='k')
