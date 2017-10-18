@@ -144,7 +144,7 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
             print
 
 
-        print sampler.acor.max()
+        #print sampler.acor.max()
         if plot_dictionary['traces']:
             print 'plotting the Gelman-Rubin traces... '
             print
