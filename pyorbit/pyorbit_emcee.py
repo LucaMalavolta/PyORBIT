@@ -172,10 +172,10 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
             sampled += mc.emcee_parameters['nsave']
             emcee_save_to_cpickle(mc, starting_point, population, prob, state, sampler, samples=sampled)
 
-            print sampled, '  steps completed, average lnprob:, ', np.median(prob)
-
             flatchain = emcee_flatchain(sampler.chain, mc.emcee_parameters['nburn'], mc.emcee_parameters['thin'])
             mc.results_resumen(flatchain)
+
+            print sampled, '  steps completed, average lnprob:, ', np.median(prob)
 
     else:
         population, prob, state = sampler.run_mcmc(population, mc.emcee_parameters['nsteps'], thin=mc.emcee_parameters['thin'])

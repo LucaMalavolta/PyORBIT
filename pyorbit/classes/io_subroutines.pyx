@@ -97,7 +97,27 @@ def GelmanRubin(chains_T):
     Rc = np.sqrt(Var / W)
     return Rc
 
-""" 
+def GelmanRubin_v2(sampler_chain):
+    """
+    :param chain_T:
+    :return:
+    """
+
+    """
+    from http://joergdietrich.github.io/emcee-convergence.html
+    """
+    ssq = np.var(sampler_chain, axis=1, ddof=1)
+    W = np.mean(ssq, axis=0)
+    theta_b = np.mean(sampler_chain, axis=1)
+    theta_bb = np.mean(theta_b, axis=0)
+    m = sampler_chain.shape[0]
+    n = sampler_chain.shape[1]
+    B = n / (m - 1) * np.sum((theta_bb - theta_b)**2, axis=0)
+    var_theta = (n - 1) / n * W + 1 / n * B
+    Rhat = np.sqrt(var_theta / W)
+    return Rhat
+
+"""
 def model_container_plot(mc):
     
     This subroutine makes a deepcopy of the model_container object. Then it substitutes the original datasets with

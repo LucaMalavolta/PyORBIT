@@ -2,7 +2,7 @@ from classes.model_container import ModelContainer
 from classes.input_parser import yaml_parser, pars_input
 from classes.io_subroutines import pyde_save_to_pickle, pyde_load_from_cpickle, \
     emcee_save_to_cpickle, emcee_load_from_cpickle, emcee_flatchain, emcee_flatlnprob, \
-    GelmanRubin
+    GelmanRubin, GelmanRubin_v2
 import numpy as np
 import os
 import matplotlib as mpl
@@ -65,10 +65,10 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
 
         nburnin = mc.emcee_parameters['nburn']
         nthin = mc.emcee_parameters['thin']
+        nsteps = sampler_chain.shape[1] * nthin
 
         flat_chain = emcee_flatchain(sampler_chain, nburnin, nthin)
         flat_lnprob = emcee_flatlnprob(sampler_lnprobability, nburnin, nthin)
-
 
         print
         print 'Reference Time Tref: ', mc.Tref
@@ -76,7 +76,7 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
         print 'Dimensions = ', mc.ndim
         print 'Nwalkers = ', mc.emcee_parameters['nwalkers']
         print
-        print 'Steps: ', sampler_chain.shape[1] * nthin
+        print 'Steps: ', nsteps
 
         chain_med = common.compute_value_sigma(flat_chain)
         mc.results_resumen(flat_chain)
@@ -143,13 +143,32 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
             print '****************************************************************************************************'
             print
 
+
+        print sampler.acor.max()
         if plot_dictionary['traces']:
-            print 'plotting the traces... '
+            print 'plotting the Gelman-Rubin traces... '
+            print
             os.system('mkdir -p ' + dir_output + 'gr_traces')
+            #for theta_name, th in theta_dictionary.iteritems():
+
+            step_sampling = np.arange(nburnin/nthin, nsteps/nthin, 1)
+
+            for theta_name, th in theta_dictionary.iteritems():
+                rhat = np.array([GelmanRubin_v2(sampler_chain[:, :steps, th]) for steps in step_sampling])
+                print ' LN probability: %s  %5i %12f ' % (theta_name, th, rhat[-1])
+                print theta_name, th,
+                file_name = dir_output + 'gr_traces/v2_' + repr(th) + '_' + theta_name + '.png'
+                fig = plt.figure(figsize=(12, 12))
+                plt.plot(step_sampling, rhat[:], '-', color='k')
+                plt.axhline(1.01)
+                plt.savefig(file_name, bbox_inches='tight', dpi=300)
+                plt.close(fig)
+
             for theta_name, th in theta_dictionary.iteritems():
                 file_name = dir_output + 'gr_traces/' + repr(th) + '_' + theta_name + '.png'
                 out_absc = np.arange(0, nburnin/nthin, 1)
                 out_lines = np.zeros(nburnin/nthin)
+
                 for ii in xrange(20, nburnin/nthin):
                     out_lines[ii] = GelmanRubin(sampler_chain[:, :ii, th].T)
                 fig = plt.figure(figsize=(12, 12))
