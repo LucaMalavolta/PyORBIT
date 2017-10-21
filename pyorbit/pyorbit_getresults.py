@@ -260,7 +260,7 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
                 plt.savefig(dir_output + 'planet_mass_' + common_name + '.png', bbox_inches='tight', dpi=300)
                 plt.close(fig)
 
-                print ' Mass (Earths): %12f   %12f %12f (15-84 p) ' % (Mass_E_med[0], Mass_E_med[2], Mass_E_med[1])
+                print 'Planet', common_name, '   Mass (Earths): %12f   %12f %12f (15-84 p) ' % (Mass_E_med[0], Mass_E_med[2], Mass_E_med[1])
                 print
 
                 corner_plot['samples'].extend([Mass_E])
@@ -272,8 +272,8 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
             plt.close(fig)
 
             print 'Common model: ', common_name , '  corner plot done.'
+            print
 
-        print
         print '****************************************************************************************************'
         print
         print ' Dataset + models corner plots '
@@ -412,7 +412,7 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
                                                    planet_variables[model]['K'],
                                                    planet_variables[model]['e'],
                                                    planet_variables[model]['o'])
-                fileout = open(dir_output + 'model_files/' + 'RV_' + model_name + '_kep.dat', 'w')
+                fileout = open(dir_output + 'model_files/' + 'RV_planet_' + model + '_kep.dat', 'w')
                 fileout.write('descriptor x_range x_range0 m_kepler \n')
                 for x, y in zip(bjd_plot['full']['x0_plot'], RV_out):
                     fileout.write('{0:f} {1:f} {2:f} \n'.format(x+mc.Tref, x, y))
@@ -425,7 +425,7 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
                                                    planet_variables[model]['K'],
                                                    planet_variables[model]['e'],
                                                    planet_variables[model]['o'])
-                fileout = open(dir_output + 'model_files/' + 'RV_' + model_name + '_pha.dat', 'w')
+                fileout = open(dir_output + 'model_files/' + 'RV_planet_' + model + '_pha.dat', 'w')
                 fileout.write('descriptor x_phase0 m_phase \n')
                 for x, y in zip(x_range, RV_out):
                     fileout.write('{0:f} {1:f} \n'.format(x, y))
