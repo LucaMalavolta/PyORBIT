@@ -314,7 +314,7 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
 
         bjd_plot = {
             'full': {
-                'start':None, 'end': None, 'range': None
+                'start': None, 'end': None, 'range': None
             }
         }
 
@@ -340,7 +340,7 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
 
             if bjd_plot['full']['range']:
                 bjd_plot['full']['start'] = min(bjd_plot['full']['start'], np.amin(dataset.x0))
-                bjd_plot['full']['end'] = min(bjd_plot['full']['start'], np.amax(dataset.x0))
+                bjd_plot['full']['end'] = max(bjd_plot['full']['end'], np.amax(dataset.x0))
                 bjd_plot['full']['range'] = bjd_plot['full']['end']-bjd_plot['full']['start']
             else:
                 bjd_plot['full']['start'] = np.amin(dataset.x0)
@@ -349,7 +349,7 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
 
         bjd_plot['full']['start'] -= bjd_plot['full']['range']*0.05
         bjd_plot['full']['end'] += bjd_plot['full']['range']*0.05
-        bjd_plot['full']['x0_plot'] = np.arange(bjd_plot['full']['start'],bjd_plot['full']['end'],0.1)
+        bjd_plot['full']['x0_plot'] = np.arange(bjd_plot['full']['start'], bjd_plot['full']['end'],0.1)
 
         for dataset_name, dataset in mc.dataset_dict.iteritems():
             if dataset.dynamical:
@@ -406,6 +406,7 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
                     fileout.close()
 
             for model in planet_variables:
+
                 RV_out =  kepler_exo.kepler_RV_T0P(bjd_plot['full']['x0_plot'],
                                                    planet_variables[model]['f'],
                                                    planet_variables[model]['P'],
@@ -426,7 +427,7 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
                                                    planet_variables[model]['e'],
                                                    planet_variables[model]['o'])
                 fileout = open(dir_output + 'model_files/' + 'RV_planet_' + model + '_pha.dat', 'w')
-                fileout.write('descriptor x_phase0 m_phase \n')
+                fileout.write('descriptor x_phase m_phase \n')
                 for x, y in zip(x_range, RV_out):
                     fileout.write('{0:f} {1:f} \n'.format(x, y))
                 fileout.close()

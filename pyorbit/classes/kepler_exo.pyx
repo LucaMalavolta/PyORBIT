@@ -164,12 +164,8 @@ def kepler_RV_T0P(BJD0, phase, Period, K, e0, omega0):
     # Tperi_ is substituted by _phase_, which is the phase of the orbit where
     #        BJD0+T0+phase*Period = Tperi
     # omega = argument of pericenter
-    # Mean Anomaly
     #
-    # MeAn = 2.*np.pi*(1. + (BJD - TPeri)/Period % 1.)
-    # MeAn = 2.*np.pi*(1. + (BJD0 - phase*Period)/Period % 1.)
 
-    # MeAn = 2.*np.pi*(1. + ((BJD0/Period)-phase) % 1.)
     omega = np.asarray(omega0, dtype=np.double)
     e = np.asarray(e0, dtype=np.double)
     MeAn = 2. * np.pi * (1. + ((BJD0 / Period) + (phase - omega0) / (2 * np.pi)) % 1.)
