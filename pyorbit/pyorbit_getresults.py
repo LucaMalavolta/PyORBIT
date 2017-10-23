@@ -245,6 +245,9 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
                 Mass_E = np.empty(n_samplings)
                 var_index = np.arange(0, n_samplings, dtype=int)
                 star_mass_randomized = np.random.normal(mc.star_mass[0], mc.star_mass[1], size=n_samplings)
+
+                fileout = open(dir_output + common_name + '_orbital_pams.dat', 'w')
+
                 for P, K, e, i, star, ii in zip(
                         variable_values['P'],
                         variable_values['K'],
@@ -255,6 +258,9 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
                     Mass_E[ii] = M_SEratio / np.sin(np.radians(i)) * \
                                  kepler_exo.get_planet_mass(P, K, e, star, Minit=0.0065)
 
+                    fileout.write('{0:f} {1:f} {2:f} {3:f} {4:f} {5:f}  \n'.format(P, K, e, i, star, Mass_E[ii]))
+                fileout.close()
+
                 Mass_E_med = common.compute_value_sigma(Mass_E)
                 variable_median['Me'] = Mass_E_med[0]
 
@@ -264,11 +270,6 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
                 plt.hist(Mass_E, bins=50)
                 plt.savefig(dir_output + 'planet_mass_' + common_name + '.png', bbox_inches='tight', dpi=300)
                 plt.close(fig)
-
-                fileout = open(dir_output + common_name + '_massE.dat', 'w')
-                for mE in Mass_E:
-                    fileout.write('{0:f} \n'.format(mE))
-                fileout.close()
 
                 print 'Planet', common_name, '   Mass (Earths): %12f   %12f %12f (15-84 p) ' % (Mass_E_med[0], Mass_E_med[2], Mass_E_med[1])
                 print
