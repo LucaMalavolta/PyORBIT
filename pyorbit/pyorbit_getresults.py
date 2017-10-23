@@ -59,6 +59,7 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
         sampler_chain, sampler_lnprobability, sampler_acceptance_fraction = \
             emcee_load_from_cpickle(dir_input)
 
+        pars_input(config_in, mc, reload_emcee=True)
         mc.model_setup()
         """ Required to create the right objects inside each class - if defined inside """
         theta_dictionary = mc.get_theta_dictionary()
@@ -152,7 +153,7 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
             #for theta_name, th in theta_dictionary.iteritems():
 
             step_sampling = np.arange(nburnin/nthin, nsteps/nthin, 1)
-
+            """ 
             for theta_name, th in theta_dictionary.iteritems():
                 rhat = np.array([GelmanRubin_v2(sampler_chain[:, :steps, th]) for steps in step_sampling])
                 print ' Gelman-Rubin: %5i %12f %s ' % (th, rhat[-1], theta_name)
@@ -162,7 +163,7 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
                 plt.axhline(1.01)
                 plt.savefig(file_name, bbox_inches='tight', dpi=300)
                 plt.close(fig)
-
+            """
             for theta_name, th in theta_dictionary.iteritems():
                 file_name = dir_output + 'gr_traces/' + repr(th) + '_' + theta_name + '.png'
                 out_absc = np.arange(0, nburnin/nthin, 1)
@@ -217,7 +218,7 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
             """
             for var in variable_values.iterkeys():
                 if np.size(variable_values[var]) == 1:
-                    variable_values[var] = variable_values[var] * np.ones(n_samplings)
+                        variable_values[var] = variable_values[var] * np.ones(n_samplings)
                 else:
                     corner_plot['var_list'].append(var)
 
@@ -234,8 +235,12 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
 
             if common_model.model_class == 'planet':
                 if i_is_missing:
-                    variable_values['i'] = 90.00 * np.ones(n_samplings)
-                    variable_median['i'] = 90.00
+                    print common_model.fix_list
+                    if 'i' in common_model.fix_list:
+                        variable_values['i'] = np.random.normal(common_model.fix_list['i'][0], common_model.fix_list['i'][1], size=n_samplings)
+                    else:
+                        variable_values['i'] = 90.00 * np.ones(n_samplings)
+                        variable_median['i'] = 90.00
 
                 Mass_E = np.empty(n_samplings)
                 var_index = np.arange(0, n_samplings, dtype=int)
@@ -247,7 +252,7 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
                         variable_values['i'],
                         star_mass_randomized,
                         var_index):
-                    Mass_E[ii] = M_SEratio * np.sin(np.radians(i)) * \
+                    Mass_E[ii] = M_SEratio / np.sin(np.radians(i)) * \
                                  kepler_exo.get_planet_mass(P, K, e, star, Minit=0.0065)
 
                 Mass_E_med = common.compute_value_sigma(Mass_E)
@@ -260,9 +265,13 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
                 plt.savefig(dir_output + 'planet_mass_' + common_name + '.png', bbox_inches='tight', dpi=300)
                 plt.close(fig)
 
+                fileout = open(dir_output + common_name + '_massE.dat', 'w')
+                for mE in Mass_E:
+                    fileout.write('{0:f} \n'.format(mE))
+                fileout.close()
+
                 print 'Planet', common_name, '   Mass (Earths): %12f   %12f %12f (15-84 p) ' % (Mass_E_med[0], Mass_E_med[2], Mass_E_med[1])
                 print
-
                 corner_plot['samples'].extend([Mass_E])
                 corner_plot['labels'].append('M [M$_\oplus$]')
                 corner_plot['truths'].append(Mass_E_med[0])
@@ -399,11 +408,26 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
                     fileout.close()
 
                     fileout = open(dir_output + 'model_files/' + dataset_name + '_' + model_name + '_full.dat', 'w')
-                    fileout.write('descriptor BJD BJD0 mod \n')
-                    for x0, mod in zip(bjd_plot[dataset_name]['x0_plot'],
-                                       bjd_plot['model_x0'][dataset_name]['complete']):
-                        fileout.write('{0:f} {1:f} {2:f} \n'.format(x0+mc.Tref, x0, mod))
-                    fileout.close()
+                    if model_name+'_std' in bjd_plot['model_x0'][dataset_name]:
+                        fileout.write('descriptor BJD BJD0 mod,+- \n')
+                        for x0, mod, std in zip(bjd_plot[dataset_name]['x0_plot'],
+                                           bjd_plot['model_x0'][dataset_name][model_name],
+                                           bjd_plot['model_x0'][dataset_name][model_name+'_std']):
+                            fileout.write('{0:f} {1:f} {2:f} {3:f} \n'.format(x0+mc.Tref, x0, mod, std))
+                        fileout.close()
+                    else:
+                        fileout.write('descriptor BJD BJD0 mod \n')
+                        for x0, mod in zip(bjd_plot[dataset_name]['x0_plot'],
+                                           bjd_plot['model_x0'][dataset_name][model_name]):
+                            fileout.write('{0:f} {1:f} {2:f} \n'.format(x0+mc.Tref, x0, mod))
+                        fileout.close()
+
+                fileout = open(dir_output + 'model_files/' + dataset_name + '_full.dat', 'w')
+                fileout.write('descriptor BJD BJD0 mod \n')
+                for x0, mod in zip(bjd_plot[dataset_name]['x0_plot'],
+                                   bjd_plot['model_x0'][dataset_name]['complete']):
+                    fileout.write('{0:f} {1:f} {2:f} \n'.format(x0+mc.Tref, x0, mod))
+                fileout.close()
 
             for model in planet_variables:
 

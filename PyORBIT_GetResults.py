@@ -7,6 +7,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(prog='PyORBIT_GetResults.py', description='PyDE+emcee runner')
     parser.add_argument('sample', type=str, nargs=1, help='sample (emcee or polychord)')
     parser.add_argument('config_file', type=str, nargs=1, help='config file')
+    parser.add_argument('-all', type=str, nargs='?', default=False, help='Active all flags')
     parser.add_argument('-p', type=str, nargs='?', default=False, help='Create plot files')
     parser.add_argument('-c', type=str, nargs='?', default=False, help='Create chains plots')
     parser.add_argument('-t', type=str, nargs='?', default=False, help='Create Gelman-Rubin traces')
@@ -34,6 +35,12 @@ if __name__ == '__main__':
     if args.m is not False:
         plot_dictionary['full_correlation'] = True
     if args.f is not False:
+        plot_dictionary['model_files'] = True
+    if args.all is not False:
+        plot_dictionary['plot'] = True
+        plot_dictionary['chains'] = True
+        plot_dictionary['traces'] = True
+        plot_dictionary['full_correlation'] = True
         plot_dictionary['model_files'] = True
 
     print plot_dictionary

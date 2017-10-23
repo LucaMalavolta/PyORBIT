@@ -427,8 +427,10 @@ class ModelContainer:
                     self.models[logchi2_gp_model].sample_conditional(variable_values, dataset)
                 model_out[dataset_name]['complete'] += model_out[dataset_name][logchi2_gp_model]
 
-                model_x0[dataset_name][logchi2_gp_model] = \
-                    self.models[logchi2_gp_model].sample_conditional(variable_values, dataset, x0_plot)
+                model_x0[dataset_name][logchi2_gp_model], var  = \
+                    self.models[logchi2_gp_model].sample_predict(variable_values, dataset, x0_plot)
+                print 'VAR', var[40:80]
+                model_x0[dataset_name][logchi2_gp_model + '_std'] = np.sqrt(var)
                 model_x0[dataset_name]['complete'] += model_x0[dataset_name][logchi2_gp_model]
 
 

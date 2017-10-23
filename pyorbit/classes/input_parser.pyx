@@ -89,6 +89,22 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False):
             if 'thin' in conf:
                 mc.emcee_parameters['thin'] = np.asarray(conf['thin'], dtype=np.int64)
 
+        # Check if inclination has been updated
+        for model_name, model_conf in conf_common.iteritems():
+            if not isinstance(model_name, str):
+                model_name = repr(model_name)
+
+            if model_name == 'planets':
+
+                for planet_name, planet_conf in model_conf.iteritems():
+
+                    if 'fixed' in planet_conf:
+                        fixed_conf = planet_conf['fixed']
+                        for var in fixed_conf:
+
+                            mc.common_models[planet_name].fix_list[var] = np.asarray(fixed_conf[var], dtype=np.double)
+
+
         return
 
     for dataset_name, dataset_conf in conf_inputs.iteritems():
