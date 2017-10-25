@@ -133,6 +133,8 @@ Note the two optional keywords:
 
 mc, population, prob = pyorbit.pyorbit_emcee(config_in, input_datasets=input_dataset, return_output=True)
 
+
+
 """ Retrieving the emcee parameters used to perform the calculation """
 nburnin = mc.emcee_parameters['nburn']
 nthin = mc.emcee_parameters['thin']
@@ -158,110 +160,64 @@ print ' LN probability: %12f   %12f %12f (15-84 p) ' % (lnprob_med[0], lnprob_me
 """ Picking the moidel with the maximum loglikelihood"""
 theta_maxln = flat_chain[np.argmax(flat_lnprob), :]
 
-"""Let's compute more points from the model"""
-x_additional = np.random.normal(np.arange(6120, 6131, 1, dtype=np.double), 0.2)
-n_x_additional = np.size(x_additional)
-y_pla_additional = kp.kepler_RV_T0P(x_additional-mc.Tref, phase, P, K, e, omega) + offset
-rv_err_additional = np.ones(n_x_additional) * 2.0
-mod_pl_additional = np.random.normal(y_pla_additional, rv_err_additional)
 
-input_dataset_additional = {'RV': np.zeros([n_x+n_x_additional, 6])}
+""" 
+All the changes with respect to test_change_dataset.py start here
+"""
 
-input_dataset_additional['RV'][:n_x, :] = input_dataset['RV'][:,:]
-input_dataset_additional['RV'][n_x:, 0] = x_additional
-input_dataset_additional['RV'][n_x:, 1] = mod_pl_additional
-input_dataset_additional['RV'][n_x:, 2] = rv_err_additional
-input_dataset_additional['RV'][n_x:, 5] = -1
+
+epoch = 6127.000
+rv_range = np.arange(-60.0, 60.0, 5.0) + offset
+rv_error = 2.0 #must be base on previous observations
+
+rv_predicted = kp.kepler_RV_T0P(epoch-mc.Tref, phase, P, K, e, omega) + offset
+
+""" We must used the original dtaaset, stored inside mc"""
+input_dataset_additional = {'RV': np.zeros([n_x+1, 6])}
+input_dataset_additional['RV'][:-1, 0] = mc.dataset_dict['RV'].x
+input_dataset_additional['RV'][:-1, 1] = mc.dataset_dict['RV'].y
+input_dataset_additional['RV'][:-1, 2] = mc.dataset_dict['RV'].e
+input_dataset_additional['RV'][:-1, 3:] = input_dataset['RV'][:,3:]
+
+""" Add new epoch and estimated error"""
+input_dataset_additional['RV'][-1:, 0] = epoch
+input_dataset_additional['RV'][-1:, 2] = rv_error
+input_dataset_additional['RV'][-1:, 5] = -1
+
+n_samples = np.size(flat_lnprob)
+lnprob_modified = np.empty([np.size(rv_range), n_samples])
 
 """ Load the new dataset inside the Model Container object
 INTERFACE MUST (and it will) IMPROVED!
 """
-print 'Outcome BEFORE dataset change '
-print 'LN_likelihood of the solution with the median of the posteriors', mc(chain_med[:, 0])
-print 'LN_likelihood of the solution with the maximum ln_likelihood', mc(theta_maxln)
-print
-
 for key in input_dataset_additional.iterkeys():
     mc.dataset_dict[key].define_dataset_base(input_dataset_additional[key], update=True)
 
+""" Setting up the new degree of freedom"""
 mc.initialize_logchi2()
-"""print new ln-likelihood"""
-print 'Outcome AFTER dataset change '
-print 'LN_likelihood of the solution with the median of the posteriors', mc(chain_med[:, 0])
-print 'LN_likelihood of the solution with the maximum ln_likelihood', mc(theta_maxln)
-print
 
-""" Plot stuff, to be moved inside a subroutine """
+""" 
+the ln-likelihood for each set of parameters in the sample is save. THe computation is repeated for
+each value of the RV in the rv_range array
+The expected RV is shown to check if we are actually getting the highest likelihood near the predicted RV
+"""
 
-bjd_plot = {
-    'full': {
-        'start':None, 'end': None, 'range': None
-    }
-}
+for rv_n, rv_i in enumerate(rv_range):
 
-kinds = {}
-for dataset_name, dataset in mc.dataset_dict.iteritems():
-    if dataset.kind in kinds.keys():
-        kinds[dataset.kind].extend([dataset_name])
-    else:
-        kinds[dataset.kind] = [dataset_name]
+    """ Maybe skower but more reliable? 
+    input_dataset_additional['RV'][-1:, 1] = rv_i
 
-    bjd_plot[dataset_name] = {
-        'start': np.amin(dataset.x0),
-        'end': np.amax(dataset.x0),
-        'range': np.amax(dataset.x0)-np.amin(dataset.x0),
-    }
+    for key in input_dataset_additional.iterkeys():
+        mc.dataset_dict[key].define_dataset_base(input_dataset_additional[key], update=True)
 
-    if bjd_plot[dataset_name]['range'] < 0.1 : bjd_plot[dataset_name]['range'] = 0.1
+    mc.initialize_logchi2()
+    """
 
-    bjd_plot[dataset_name]['start'] -= bjd_plot[dataset_name]['range'] * 0.05
-    bjd_plot[dataset_name]['end'] += bjd_plot[dataset_name]['range'] * 0.05
-    bjd_plot[dataset_name]['x0_plot'] = \
-        np.arange(bjd_plot[dataset_name]['start'], bjd_plot[dataset_name]['end'], 0.1)
+    mc.dataset_dict['RV'].y[-1] = rv_i
 
-    if bjd_plot['full']['range']:
-        bjd_plot['full']['start'] = min(bjd_plot['full']['start'], np.amin(dataset.x0))
-        bjd_plot['full']['end'] = min(bjd_plot['full']['start'], np.amax(dataset.x0))
-        bjd_plot['full']['range'] = bjd_plot['full']['end']-bjd_plot['full']['start']
-    else:
-        bjd_plot['full']['start'] = np.amin(dataset.x0)
-        bjd_plot['full']['end'] = np.amax(dataset.x0)
-        bjd_plot['full']['range'] = bjd_plot['full']['end']-bjd_plot['full']['start']
+    for index in xrange(0, n_samples):
+        lnprob_modified[rv_n, index] = mc(flat_chain[index, :])
 
-bjd_plot['full']['start'] -= bjd_plot['full']['range']*0.05
-bjd_plot['full']['end'] += bjd_plot['full']['range']*0.05
-bjd_plot['full']['x0_plot'] = np.arange(bjd_plot['full']['start'],bjd_plot['full']['end'],0.1)
+    print(rv_n, rv_i, rv_predicted[0], np.median(lnprob_modified[rv_n, index]))
 
-for dataset_name, dataset in mc.dataset_dict.iteritems():
-    if dataset.dynamical:
-        bjd_plot[dataset_name] = bjd_plot['full']
 
-print 'Plot of the solution using the median of each posterior'
-bjd_plot['model_out'], bjd_plot['model_x0'] = mc.get_model(chain_med[:, 0], bjd_plot)
-
-dataset_name = 'RV'
-plt.errorbar(mc.dataset_dict[dataset_name].x0,
-             mc.dataset_dict[dataset_name].y - bjd_plot['model_out'][dataset_name]['systematics'],
-             yerr=mc.dataset_dict[dataset_name]. e,
-             fmt='o', zorder=2)
-plt.plot(bjd_plot[dataset_name]['x0_plot'], bjd_plot['model_x0'][dataset_name]['complete'], zorder=1)
-
-plt.show()
-
-print 'Plot of the solution with the maximum ln_likelihoodr'
-bjd_plot['model_out'], bjd_plot['model_x0'] = mc.get_model(theta_maxln, bjd_plot)
-
-dataset_name = 'RV'
-plt.errorbar(mc.dataset_dict[dataset_name].x0,
-             mc.dataset_dict[dataset_name].y - bjd_plot['model_out'][dataset_name]['systematics'],
-             yerr=mc.dataset_dict[dataset_name].e,
-             fmt='o', zorder=2)
-plt.plot(bjd_plot[dataset_name]['x0_plot'], bjd_plot['model_x0'][dataset_name]['complete'], zorder=1)
-
-plt.show()
-
-print mc.dataset_dict[dataset_name].x[-2:]
-print mc.dataset_dict[dataset_name].x0[-2:]
-print mc.dataset_dict[dataset_name].y[-2:]
-print bjd_plot['model_out'][dataset_name]['systematics'][-2:]
-print mc.dataset_dict[dataset_name].e[-2:]
