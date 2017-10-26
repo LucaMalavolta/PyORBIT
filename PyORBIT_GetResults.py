@@ -5,8 +5,8 @@ if __name__ == '__main__':
     print 'This program is being run by itself'
 
     parser = argparse.ArgumentParser(prog='PyORBIT_GetResults.py', description='PyDE+emcee runner')
-    parser.add_argument('sample', type=str, nargs=1, help='sample (emcee or polychord)')
     parser.add_argument('config_file', type=str, nargs=1, help='config file')
+    parser.add_argument('sampler', type=str, nargs=1, help='sample (emcee or polychord)')
     parser.add_argument('-all', type=str, nargs='?', default=False, help='Active all flags')
     parser.add_argument('-p', type=str, nargs='?', default=False, help='Create plot files')
     parser.add_argument('-c', type=str, nargs='?', default=False, help='Create chains plots')
@@ -23,7 +23,7 @@ if __name__ == '__main__':
     }
 
     args = parser.parse_args()
-    sampler = args.sample[0]
+    sampler = args.sampler[0]
     file_conf = args.config_file[0]
 
     if args.p is not False :

@@ -1,6 +1,6 @@
 inputs:
-  0:
-      file: test_1planet_GP_RV.dat
+  RV:
+      file: test_1planet_RV_multijit_multioff.dat
       kind: RV
       models: ['radial_velocities']
 common:
@@ -21,11 +21,15 @@ parameters:
   star_radius: [1.00, 0.01]
 solver:
   pyde:
-    ngen: 16000
+    ngen: 4000
     npop_mult: 4
   emcee:
     npop_mult: 4
     nsteps: 50000
     nburn: 20000
     thin: 100
+  polychord:
+    nlive_mult: 50
+    num_repeats_mult: 5
+    shutdown_jitter: True
   recenter_bounds: True

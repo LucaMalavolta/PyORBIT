@@ -1,12 +1,11 @@
+from classes.common import *
 from classes.model_container import ModelContainer
 from classes.input_parser import yaml_parser, pars_input
 from classes.io_subroutines import pyde_save_to_pickle, pyde_load_from_cpickle, \
     emcee_save_to_cpickle, emcee_load_from_cpickle, emcee_flatchain
-import numpy as np
 import emcee
 from pyde.de import DiffEvol
 import os
-import argparse
 
 __all__ = ["pyorbit_emcee", "yaml_parser"]
 

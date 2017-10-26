@@ -4,7 +4,7 @@ import sys
 import os
 import matplotlib.pyplot as plt
 
-sys.path.insert(0, '../classes/')
+sys.path.insert(0, '../pyorbit/classes/')
 import kepler_exo as kp
 
 
@@ -231,5 +231,53 @@ def create_test_1planet_GP():
         fileout.write('{0:6d} {1:14f} {2:14f} \n'.format(ii, Transit_Time[ii], 0.01))
     fileout.close()
 
+
+def create_test_1planet_multijit_multioff():
+    x = np.arange(6000, 6100, 1, dtype=np.double)
+    x = np.random.normal(x, 0.4)
+    Tref = np.mean(x, dtype=np.double)
+    x0 = x - Tref
+
+    print Tref
+    P = 23.4237346
+    K = 43.47672
+    phase = 0.34658203
+    e = 0.13
+    omega = 0.673434
+    offset = 45605
+
+    y_pla = kp.kepler_RV_T0P(x0, phase, P, K, e, omega) + offset
+
+    mod_pl = np.random.normal(y_pla, 2)
+
+    trip = np.arange(10, 3, -1)
+    Transit_Time = kp.kepler_Tcent_T0P(P, phase, e, omega) + Tref
+    print 'Transit Time:', Transit_Time
+    print 'transit Time - Tref', Transit_Time - Tref
+
+    jit = np.zeros(np.size(x))
+    jit[x>6030.0]+=1
+    jit[x>6070.0]+=1
+
+    off = np.zeros(np.size(x))
+    off[x>6030.0]+=1
+    off[x>6070.0]+=1
+
+    plt.scatter(x, mod_pl)
+    plt.axvline(Transit_Time)
+    plt.show()
+
+    fileout = open('test_1planet_RV_multijit_multioff.dat', 'w')
+    for ii in xrange(0, np.size(x)):
+        fileout.write('{0:f} {1:f} {2:f} {3:f} {4:f} {5:f} \n'.format(x[ii], mod_pl[ii], 2., jit[ii], off[ii], -1))
+    fileout.close()
+
+    fileout = open('test_1planet_Tcent_multijit_multioff.dat', 'w')
+    for ii in xrange(0, np.size(Transit_Time)):
+        fileout.write('{0:6d} {1:14f} {2:14f} {3:d} \n'.format(ii, Transit_Time, 0.01, 0))
+    fileout.close()
+
+
 #create_test_1planet_GP()
-create_test_1planet_circular()
+#create_test_1planet_circular()
+create_test_1planet_multijit_multioff()

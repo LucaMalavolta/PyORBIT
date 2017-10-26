@@ -52,7 +52,7 @@ def yaml_parser(file_conf):
     return config_in
 
 
-def pars_input(config_in, mc, input_datasets=None, reload_emcee=False):
+def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, shutdown_jitter=False):
 
     mc.output_name = config_in['output']
 
@@ -127,7 +127,7 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False):
                 print 'Either a file or an input dataset must be provided'
                 quit()
 
-        mc.dataset_dict[dataset_name].define_dataset_base(data_input)
+        mc.dataset_dict[dataset_name].define_dataset_base(data_input, False, shutdown_jitter)
 
         if mc.Tref:
             mc.dataset_dict[dataset_name].common_Tref(mc.Tref)

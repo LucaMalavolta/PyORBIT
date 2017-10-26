@@ -1,28 +1,50 @@
-import numpy as np
-import kepler_exo
-import yaml
-import george
-#import ttvfast
 import os
 import sys
-import gc
 
-if os.path.isdir('/Users/malavolta/Astro/CODE/'):
-    sys.path.insert(0, '/Users/malavolta/Astro/CODE/others/PolyChord/')
-else:
-    sys.path.insert(0, '/home/malavolta/CODE/others/PolyChord/')
-#import PyPolyChord.PyPolyChord as PolyChord
 
-if os.path.isdir('/Users/malavolta/Astro/CODE/'):
-    sys.path.insert(0, '/Users/malavolta/Astro/CODE/trades/pytrades/')
-else:
-    sys.path.insert(0, '/home/malavolta/CODE/trades/pytrades/')
-#from pytrades_lib import pytrades
+if 'celerite' not in sys.modules:
 
-from dummy import pytrades
-from dummy import PolyChord
+    try:
+        import celerite
+        import autograd.numpy as np
+    except:
+        from dummy import celerite
+        import numpy as np
+        print('WARNING! Imported dummy celerite, models relying on this package will not work')
+
+    try:
+        import PyPolyChord
+        from PyPolyChord.settings import PolyChordSettings
+    except:
+        from dummy import PyPolyChord
+        print('WARNING! Imported dummy PyPolyChord, models relying on this package will not work')
+
+    try:
+        if os.path.isdir('/Users/malavolta/Astro/CODE/'):
+            sys.path.insert(0, '/Users/malavolta/Astro/CODE/trades/pytrades/')
+        else:
+            sys.path.insert(0, '/home/malavolta/CODE/trades/pytrades/')
+        from pytrades_lib import pytrades
+    except:
+        from dummy import pytrades
+        print('WARNING! Imported dummy TRADES, models relying on this package will not work')
+
+    try:
+        import ttvfast
+    except:
+        from dummy import ttvfast
+        print('WARNING! Imported dummy TTVFAST, models relying on this package will not work')
+
+    try:
+        import george
+    except:
+        from dummy import ttvfast
+        print('WARNING! Imported dummy george, models relying on this package will not work')
+
+import kepler_exo
+import yaml
 import constants
-
+import gc
 
 def get_var_log(var, fix, i):
     if len(np.shape(var)) == 1:

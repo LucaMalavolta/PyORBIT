@@ -20,22 +20,21 @@ class ModelContainer:
         essentially harmless """
         self.pyde_dir_output = None
         self.emcee_dir_output = None
-        self.polychord_dir_output = None
 
         self.emcee_parameters = {'nsave': 0, 'npop_mult': 2, 'thin': 1, 'nburn':0,
                                  'multirun': None, 'multirun_iter': 20}
         self.pyde_parameters = {'ngen': 1000, 'npop_mult': 2}
 
-        # Default values, taken from the PyPolyChord wrapper in PolyChord official distribution, V1.9
         self.polychord_parameters = {'nlive_mult': 25,
-                                     'num_repeats_mult': 5,
-                                     'feedback': 1,
-                                     'precision_criterion': 0.001,
-                                     'max_ndead': -1,
-                                     'boost_posterior': 0.0,
-                                     'read_resume': True,
-                                     'base_dir': 'polychord/',
-                                     'shutdown_jitter': False}
+                                'num_repeats_mult': 5,
+                                'feedback': 1,
+                                'precision_criterion': 0.001,
+                                'max_ndead': -1,
+                                'boost_posterior': 0.0,
+                                'read_resume': True,
+                                'base_dir': './',
+                                'shutdown_jitter': False}
+        self.polychord_dir_output = None
 
         self.ndata = None
         self.ndof = None
@@ -172,6 +171,7 @@ class ModelContainer:
             dynamical_output = self.dynamical_model.compute(self, theta)
 
         logchi2_out = 2. * self.ndof * np.log(2 * np.pi)
+        logchi2_out_copy = logchi2_out*1.
 
         for model in self.common_models.itervalues():
             logchi2_out += model.return_priors(theta)
@@ -215,6 +215,7 @@ class ModelContainer:
             else:
                 logchi2_out += dataset.model_logchi2()
 
+        #print logchi2_out_copy, theta, logchi2_out
         return logchi2_out
 
     def recenter_bounds(self, pop_mean, recenter=True):
@@ -473,6 +474,18 @@ def print_dictionary(variable_values):
 
 
 class ModelContainerPolyChord(ModelContainer):
+    # Default values, taken from the PyPolyChord wrapper in PolyChord official distribution, V1.9
+    polychord_parameters = {'nlive_mult': 25,
+                                 'num_repeats_mult': 5,
+                                 'feedback': 1,
+                                 'precision_criterion': 0.001,
+                                 'max_ndead': -1,
+                                 'boost_posterior': 0.0,
+                                 'read_resume': True,
+                                 'base_dir': 'polychord/',
+                                 'shutdown_jitter': False}
+    polychord_dir_output = None
+
     def polychord_priors(self, cube):
         theta = (self.bounds[:, 1] - self.bounds[:, 0]) * cube + self.bounds[:, 0]
         return theta.tolist()
@@ -487,6 +500,8 @@ class ModelContainerPolyChord(ModelContainer):
             return -0.5e10, phi
         return chi_out, phi
 
+
+"""
 
 class ModelContainerMultiNest(ModelContainer):
     def multinest_priors(self, cube, ndim, nparams):
@@ -512,10 +527,10 @@ class ModelContainerDnest4(ModelContainer):
         return self.starting_point
 
     def perturb(self, params):
-        """
-        Unlike in C++, this takes a numpy array of parameters as input,
-        and modifies it in-place. The return value is still logH.
-        """
+        
+        #Unlike in C++, this takes a numpy array of parameters as input,
+        #and modifies it in-place. The return value is still logH.
+        
         logH = 0.0
         which = np.random.randint(np.size(params))
 
@@ -532,3 +547,5 @@ class ModelContainerDnest4(ModelContainer):
 
     def log_likelihood(self, theta):
         return self(theta)
+
+"""

@@ -30,7 +30,6 @@ class Dataset(AbstractCommon):
         self.model= None
         self.jitter = None
         self.mask = {}
-        self.shutdown_jitter = False
 
     def convert_dataset_from_file(self, input_file):
         print 'Opening: ', input_file
@@ -40,9 +39,9 @@ class Dataset(AbstractCommon):
         data_input[:, :np.size(data, axis=1)] = data[:, :]
         return data_input
 
-    def define_dataset_base(self, data_input, update=False):
+    def define_dataset_base(self, data_input, update=False, flag_shutdown_jitter=False):
 
-        if self.shutdown_jitter:
+        if flag_shutdown_jitter:
             data_input[:, 4] = -1
         if not self.models:
             data_input[:, 3:] = -1
@@ -90,7 +89,7 @@ class Dataset(AbstractCommon):
             var = var_generic + '_' + repr(ii)
             self.list_pams[var] = self.generic_list_pams[var_generic]
             self.default_bounds[var] = self.generic_default_bounds[var_generic]
-            self.variable_compressed[var_generic] = var
+            self.variable_compressed[var_generic][var] = None
             self.variable_expanded[var] = var_generic
 
     def create_systematic_mask(self, var_generic, dataset_vals):
@@ -99,6 +98,23 @@ class Dataset(AbstractCommon):
             var = var_generic + '_' + repr(ii)
             self.mask[var] = np.zeros(self.n, dtype=bool)
             self.mask[var][(abs(dataset_vals - ii) < 0.1)] = True
+
+    def delete_systematic_dictionaries_maks(self, var_generic):
+        for var in  self.variable_compressed[var_generic]:
+            self.list_pams.pop(var, None)
+            self.default_bounds.pop(var, None)
+            self.variable_expanded.pop(var, None)
+            self.mask.pop(var)
+        self.variable_compressed.pop(var_generic, None)
+
+    def shutdown_jitter(self):
+        self.delete_systematic_dictionaries_maks('jitter')
+
+    def shutdown_offset(self):
+        self.delete_systematic_dictionaries_maks('offset')
+
+    def shutdown_linear(self):
+        self.delete_systematic_dictionaries_maks('linear')
 
     def common_Tref(self, Tref_in):
         self.Tref = Tref_in
@@ -136,6 +152,4 @@ class Dataset(AbstractCommon):
             for var in self.variable_compressed[var_generic]:
                 self.bounds[var] =  self.bounds[var_generic]
 
-    #def shutdown_jitter(self):
-    #    self.n_sys['jitter'] = 0
 

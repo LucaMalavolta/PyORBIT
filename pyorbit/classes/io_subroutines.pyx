@@ -55,6 +55,19 @@ def emcee_load_from_cpickle(emcee_dir_output, prefix=''):
             sampler_chain, sampler_lnprobability, sampler_acceptance_fraction
 
 
+def polychord_save_to_cpickle(mc, prefix=None):
+
+    add_prefix = (prefix + '_' if prefix else '')
+    pickle.dump(mc, open(mc.polychord_dir_output + add_prefix + "model_container.p", "wb"))
+
+
+def polychord_load_from_cpickle(polychord_dir_output, prefix=''):
+
+    add_prefix = (prefix + '_' if prefix else '')
+    mc = pickle.load(open(polychord_dir_output + add_prefix + "model_container.p", "rb"))
+    return mc
+
+
 def emcee_flatchain(chain, nburnin, nthin):
     """flattening of the emcee chains with removal of burn-in"""
     _, d, _ = np.shape(chain)

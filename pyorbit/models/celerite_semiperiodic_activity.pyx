@@ -2,12 +2,8 @@ from ..classes.common import *
 from abstract_common import *
 from abstract_model import *
 
-import celerite
-from celerite import terms
-import autograd.numpy as np
-
 """ Straight copy from Celerite exmple"""
-class Celerite_SemiPeriodic_Term(terms.Term):
+class Celerite_SemiPeriodic_Term(celerite.terms.Term):
     parameter_names = ("cel_a", "cel_b", "cel_c", "Prot")
 
     def get_real_coefficients(self, params):

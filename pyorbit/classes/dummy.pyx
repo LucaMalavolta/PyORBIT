@@ -6,3 +6,12 @@ def PyPolyChord():
 
 def PolyChord():
     pass
+
+def celerite():
+    pass
+
+def ttvfast():
+    pass
+
+def george():
+    pass
