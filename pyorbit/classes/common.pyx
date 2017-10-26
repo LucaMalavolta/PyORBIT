@@ -13,11 +13,22 @@ if 'celerite' not in sys.modules:
         print('WARNING! Imported dummy celerite, models relying on this package will not work')
 
     try:
+        if os.path.isdir('/Users/malavolta/Astro/CODE/'):
+            sys.path.insert(0, '/Users/malavolta/Astro/CODE/others/PolyChord_1.9/')
+        else:
+            sys.path.insert(0, '/home/malavolta/CODE/others/PolyChord_1.9/')
+        import PyPolyChord.PyPolyChord as PyPolyChord_1_9
+    except:
+        from dummy import PyPolyChord as PyPolyChord_1_9
+        print('WARNING! Imported dummy PyPolyChord v1.9, models relying on this package will not work')
+
+    try:
         import PyPolyChord
         from PyPolyChord.settings import PolyChordSettings
     except:
         from dummy import PyPolyChord
         print('WARNING! Imported dummy PyPolyChord, models relying on this package will not work')
+
 
     try:
         if os.path.isdir('/Users/malavolta/Astro/CODE/'):

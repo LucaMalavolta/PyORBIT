@@ -15,9 +15,12 @@ def show(filepath):
     elif os.name == 'nt': os.startfile(filepath)
 """
 
-def pyorbit_polychord(config_in, input_datasets=None):
 
-    polychord_dir_output = './' + config_in['output'] + '/polychord/'
+def pyorbit_polychord(config_in, input_datasets=None, pl_version=''):
+
+
+    polychord_dir_output = './' + config_in['output'] + '/polychord' + pl_version + '/'
+
     reloaded_mc = False
 
     try:
@@ -81,41 +84,45 @@ def pyorbit_polychord(config_in, input_datasets=None):
 
     os.chdir(polychord_dir_output)
 
-    """
-    PolyChord.mpi_notification()
-    PolyChord.run_nested_sampling(mc.polychord_call, nDims=mc.ndim, nDerived=0,
-                                  feedback=mc.polychord_parameters['feedback'],
-                                  base_dir = mc.polychord_parameters['base_dir'],
-                                  precision_criterion=mc.polychord_parameters['precision_criterion'],
-                                  max_ndead=mc.polychord_parameters['max_ndead'],
-                                  boost_posterior=mc.polychord_parameters['boost_posterior'],
-                                  read_resume=mc.polychord_parameters['read_resume'],
-                                  file_root=mc.polychord_dir_output,
-                                  prior=mc.polychord_priors, nlive=nlive, num_repeats=num_repeats)
-    """
+    if pl_version == '':
+        settings = PolyChordSettings(nDims=mc.ndim, nDerived=0)
+        # settings.feedback=mc.polychord_parameters['feedback']
+        settings.base_dir = mc.polychord_parameters['base_dir']
+        # settings.precision_criterion=mc.polychord_parameters['precision_criterion']
+        # settings.max_ndead=mc.polychord_parameters['max_ndead']
+        # settings.boost_posterior=mc.polychord_parameters['boost_posterior']
+        # settings.read_resume=mc.polychord_parameters['read_resume']
+        settings.file_root = './'
 
-    settings = PolyChordSettings(nDims=mc.ndim, nDerived=0)
-    #settings.feedback=mc.polychord_parameters['feedback']
-    settings.base_dir=mc.polychord_parameters['base_dir']
-    #settings.precision_criterion=mc.polychord_parameters['precision_criterion']
-    #settings.max_ndead=mc.polychord_parameters['max_ndead']
-    #settings.boost_posterior=mc.polychord_parameters['boost_posterior']
-    #settings.read_resume=mc.polychord_parameters['read_resume']
-    settings.file_root='./'
+        # settings.nlive=nlive
+        # settings.num_repeats=num_repeats
+        settings.do_clustering = True
 
-    #settings.nlive=nlive
-    #settings.num_repeats=num_repeats
-    settings.do_clustering = True
+        output = PyPolyChord.run_polychord(mc.polychord_call, nDims=mc.ndim, nDerived=0, settings=settings,
+                                           prior=mc.polychord_priors)
 
-    output = PyPolyChord.run_polychord(mc.polychord_call, nDims=mc.ndim, nDerived=0, settings=settings, prior=mc.polychord_priors)
+        paramnames = [('p%i' % i, r'\theta_%i' % i) for i in range(mc.ndim)]
+        paramnames += [('r*', 'r')]
+        output.make_paramnames_files(paramnames)
 
-    paramnames = [('p%i' % i, r'\theta_%i' % i) for i in range(mc.ndim)]
-    paramnames += [('r*', 'r')]
-    output.make_paramnames_files(paramnames)
+        print output
 
-    print output
+    elif pl_version=='v1.9':
+        PyPolyChord_1_9.mpi_notification()
+        PyPolyChord_1_9.run_nested_sampling(mc.polychord_call, nDims=mc.ndim, nDerived=0,
+                                      feedback=mc.polychord_parameters['feedback'],
+                                      base_dir = mc.polychord_parameters['base_dir'],
+                                      precision_criterion=mc.polychord_parameters['precision_criterion'],
+                                      max_ndead=mc.polychord_parameters['max_ndead'],
+                                      boost_posterior=mc.polychord_parameters['boost_posterior'],
+                                      read_resume=mc.polychord_parameters['read_resume'],
+                                      file_root=mc.polychord_dir_output,
+                                      prior=mc.polychord_priors, nlive=nlive, num_repeats=num_repeats)
+
     polychord_save_to_cpickle(mc)
 
     print
     print 'PolyChord COMPLETED'
     print
+
+
