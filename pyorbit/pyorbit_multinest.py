@@ -38,9 +38,9 @@ def pyorbit_multinest(config_in, input_datasets=None):
         mc = ModelContainerMultiNest()
         pars_input(config_in, mc, input_datasets)
 
-        #if mc.polychord_parameters['shutdown_jitter']:
-        #    for dataset in mc.dataset_dict.itervalues():
-        #        dataset.shutdown_jitter()
+        if mc.polychord_parameters['shutdown_jitter']:
+            for dataset in mc.dataset_dict.itervalues():
+                dataset.shutdown_jitter()
 
         mc.model_setup()
         mc.create_variables_bounds()
