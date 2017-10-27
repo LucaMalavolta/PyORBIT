@@ -23,6 +23,8 @@ def pyorbit_polychord(config_in, input_datasets=None, pl_version=''):
 
     reloaded_mc = False
 
+
+
     try:
         mc = polychord_load_from_cpickle(polychord_dir_output, prefix='')
         reloaded_mc = True
@@ -85,6 +87,11 @@ def pyorbit_polychord(config_in, input_datasets=None, pl_version=''):
     os.chdir(polychord_dir_output)
 
     if pl_version == '':
+
+        import PyPolyChord
+        from PyPolyChord.settings import PolyChordSettings
+
+
         settings = PolyChordSettings(nDims=mc.ndim, nDerived=0)
         # settings.feedback=mc.polychord_parameters['feedback']
         settings.base_dir = mc.polychord_parameters['base_dir']
@@ -108,6 +115,13 @@ def pyorbit_polychord(config_in, input_datasets=None, pl_version=''):
         print output
 
     elif pl_version=='v1.9':
+        if os.path.isdir('/Users/malavolta/Astro/CODE/pyorbit/'):
+            sys.path.insert(0, '/Users/malavolta/Astro/CODE/others/PolyChord_1.9/')
+        else:
+            sys.path.insert(0, '/home/malavolta/CODE/others/PolyChord_1.9/')
+        import PyPolyChord.PyPolyChord as PyPolyChord_1_9
+
+
         PyPolyChord_1_9.mpi_notification()
         PyPolyChord_1_9.run_nested_sampling(mc.polychord_call, nDims=mc.ndim, nDerived=0,
                                       feedback=mc.polychord_parameters['feedback'],
