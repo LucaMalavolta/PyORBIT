@@ -16,13 +16,12 @@ def show(filepath):
 """
 
 
-def pyorbit_polychord(config_in, input_datasets=None, pl_version=''):
+def pyorbit_polychord(config_in, input_datasets=None):
 
 
-    polychord_dir_output = './' + config_in['output'] + '/polychord' + pl_version + '/'
+    polychord_dir_output = './' + config_in['output'] + '/polychord/'
 
     reloaded_mc = False
-
 
 
     try:
@@ -55,7 +54,7 @@ def pyorbit_polychord(config_in, input_datasets=None, pl_version=''):
 
 
 
-    os.system("mkdir -p " + polychord_dir_output + mc.polychord_parameters['base_dir'] + "/clusters")
+    os.system("mkdir -p " + polychord_dir_output + "/clusters")
     #os.system("mkdir -p " +polychord_dir_output + "chains/clusters")
 
     print
@@ -65,6 +64,8 @@ def pyorbit_polychord(config_in, input_datasets=None, pl_version=''):
     print
 
     '''
+        Is this still required in version 1.12? 
+        
         On Linux system (BASH):
         export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$PWD/lib
         export LD_PRELOAD=/usr/lib/openmpi/lib/libmpi.so:$LD_PRELOAD
@@ -89,52 +90,25 @@ def pyorbit_polychord(config_in, input_datasets=None, pl_version=''):
 
     #os.chdir(polychord_dir_output)
 
-    if pl_version == '':
+    settings = PolyChordSettings(nDims=mc.ndim, nDerived=0)
+    settings.feedback=mc.polychord_parameters['feedback']
+    settings.base_dir = polychord_dir_output
+    settings.precision_criterion=mc.polychord_parameters['precision_criterion']
+    settings.max_ndead=mc.polychord_parameters['max_ndead']
+    settings.boost_posterior=mc.polychord_parameters['boost_posterior']
+    settings.read_resume=mc.polychord_parameters['read_resume']
+    settings.file_root = 'pyorbit'
 
-        import PyPolyChord
-        from PyPolyChord.settings import PolyChordSettings
+    settings.nlive=nlive
+    settings.num_repeats=num_repeats
+    settings.do_clustering = True
 
-        settings = PolyChordSettings(nDims=mc.ndim, nDerived=0)
-        settings.feedback=mc.polychord_parameters['feedback']
-        settings.base_dir = polychord_dir_output
-        settings.precision_criterion=mc.polychord_parameters['precision_criterion']
-        settings.max_ndead=mc.polychord_parameters['max_ndead']
-        settings.boost_posterior=mc.polychord_parameters['boost_posterior']
-        settings.read_resume=mc.polychord_parameters['read_resume']
-        settings.file_root = 'pyorbit'
+    output = PyPolyChord.run_polychord(mc.polychord_call, nDims=mc.ndim, nDerived=0, settings=settings,
+                                       prior=mc.polychord_priors)
 
-        settings.nlive=nlive
-        settings.num_repeats=num_repeats
-        settings.do_clustering = True
-
-        output = PyPolyChord.run_polychord(mc.polychord_call, nDims=mc.ndim, nDerived=0, settings=settings,
-                                           prior=mc.polychord_priors)
-
-        paramnames = [('p%i' % i, r'\theta_%i' % i) for i in range(mc.ndim)]
-        paramnames += [('r*', 'r')]
-        output.make_paramnames_files(paramnames)
-        quit()
-
-        print output
-
-    elif pl_version=='v1.9':
-        if os.path.isdir('/Users/malavolta/Astro/CODE/pyorbit/'):
-            sys.path.insert(0, '/Users/malavolta/Astro/CODE/others/PolyChord_1.9/')
-        else:
-            sys.path.insert(0, '/home/malavolta/CODE/others/PolyChord_1.9/')
-        import PyPolyChord.PyPolyChord as PyPolyChord_1_9
-
-
-        PyPolyChord_1_9.mpi_notification()
-        PyPolyChord_1_9.run_nested_sampling(mc.polychord_call, nDims=mc.ndim, nDerived=0,
-                                      feedback=mc.polychord_parameters['feedback'],
-                                      base_dir = polychord_dir_output,
-                                      precision_criterion=mc.polychord_parameters['precision_criterion'],
-                                      max_ndead=mc.polychord_parameters['max_ndead'],
-                                      boost_posterior=mc.polychord_parameters['boost_posterior'],
-                                      read_resume=mc.polychord_parameters['read_resume'],
-                                      file_root='pyorbit',
-                                      prior=mc.polychord_priors, nlive=nlive, num_repeats=num_repeats)
+    paramnames = [('p%i' % i, r'\theta_%i' % i) for i in range(mc.ndim)]
+    paramnames += [('r*', 'r')]
+    output.make_paramnames_files(paramnames)
 
     polychord_save_to_cpickle(mc)
 

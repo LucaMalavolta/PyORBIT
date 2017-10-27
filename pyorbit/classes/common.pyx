@@ -12,15 +12,22 @@ if 'celerite' not in sys.modules:
         import numpy as np
         print('WARNING! Imported dummy celerite, models relying on this package will not work')
 
-    #try:
-    #    if os.path.isdir('/Users/malavolta/Astro/CODE/'):
-    #        sys.path.insert(0, '/Users/malavolta/Astro/CODE/trades/pytrades/')
-    #    else:
-    #        sys.path.insert(0, '/home/malavolta/CODE/trades/pytrades/')
-    #    from pytrades_lib import pytrades
-    #except:
-    #    from dummy import pytrades
-    #    print('WARNING! Imported dummy TRADES, models relying on this package will not work')
+    try:
+        import PyPolyChord as PyPolyChord
+        from PyPolyChord.settings import PolyChordSettings
+    except:
+        import PyPolyChord
+        print('WARNING! Imported dummy PyPolyChord, models relying on this package will not work')
+
+    try:
+        if os.path.isdir('/Users/malavolta/Astro/CODE/'):
+            sys.path.insert(0, '/Users/malavolta/Astro/CODE/trades/pytrades/')
+        else:
+            sys.path.insert(0, '/home/malavolta/CODE/trades/pytrades/')
+        from pytrades_lib import pytrades
+    except:
+        from dummy import pytrades
+        print('WARNING! Imported dummy TRADES, models relying on this package will not work')
 
     try:
         import ttvfast

@@ -103,8 +103,7 @@ if __name__ == '__main__':
 
     if pl_version == '':
 
-        import PyPolyChord
-        from PyPolyChord.settings import PolyChordSettings
+
 
         settings = PolyChordSettings(nDims=mc.ndim, nDerived=0)
         settings.feedback = mc.polychord_parameters['feedback']
