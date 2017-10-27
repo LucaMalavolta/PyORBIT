@@ -17,6 +17,7 @@ if __name__ == '__main__':
     config_in = pyorbit.yaml_parser(file_conf)
 
     sampler_keyword = {
+        'multinest':['multinest', 'MultiNest', 'multi'],
         'polychord':['polychord', 'PolyChord', 'polychrod', 'poly'],
         'polychord_v1.9': ['polychord_1.9', 'PolyChord_1.9', 'polychrod_1.9', 'poly_1.9',
                            'polychord_1_9', 'PolyChord_1_9', 'polychrod_1_9', 'poly_1.9',
@@ -28,6 +29,9 @@ if __name__ == '__main__':
 
     if sampler in sampler_keyword['emcee']:
         pyorbit.pyorbit_emcee(config_in)
+
+    if sampler in sampler_keyword['multinest']:
+        pyorbit.pyorbit_multinest(config_in)
 
     if sampler in sampler_keyword['polychord']:
         pyorbit.pyorbit_polychord(config_in)

@@ -501,8 +501,6 @@ class ModelContainerPolyChord(ModelContainer):
         return chi_out, phi
 
 
-"""
-
 class ModelContainerMultiNest(ModelContainer):
     def multinest_priors(self, cube, ndim, nparams):
         # cube[:] = (self.bounds[:, 1] - self.bounds[:, 0]) * cube[:] + self.bounds[:, 0]
@@ -520,6 +518,11 @@ class ModelContainerMultiNest(ModelContainer):
         if chi_out < -0.5e10:
             return -0.5e10
         return chi_out
+
+
+"""
+
+
 
 
 class ModelContainerDnest4(ModelContainer):

@@ -87,25 +87,24 @@ def pyorbit_polychord(config_in, input_datasets=None, pl_version=''):
     if 'nlive' in mc.polychord_parameters:
         nlive = mc.polychord_parameters['nlive']
 
-    os.chdir(polychord_dir_output)
+    #os.chdir(polychord_dir_output)
 
-    print '-->', pl_version
     if pl_version == '':
 
         import PyPolyChord
         from PyPolyChord.settings import PolyChordSettings
 
         settings = PolyChordSettings(nDims=mc.ndim, nDerived=0)
-        # settings.feedback=mc.polychord_parameters['feedback']
-        settings.base_dir = mc.polychord_parameters['base_dir']
-        # settings.precision_criterion=mc.polychord_parameters['precision_criterion']
-        # settings.max_ndead=mc.polychord_parameters['max_ndead']
-        # settings.boost_posterior=mc.polychord_parameters['boost_posterior']
-        # settings.read_resume=mc.polychord_parameters['read_resume']
-        settings.file_root = './'
+        settings.feedback=mc.polychord_parameters['feedback']
+        settings.base_dir = polychord_dir_output
+        settings.precision_criterion=mc.polychord_parameters['precision_criterion']
+        settings.max_ndead=mc.polychord_parameters['max_ndead']
+        settings.boost_posterior=mc.polychord_parameters['boost_posterior']
+        settings.read_resume=mc.polychord_parameters['read_resume']
+        settings.file_root = 'pyorbit'
 
-        # settings.nlive=nlive
-        # settings.num_repeats=num_repeats
+        settings.nlive=nlive
+        settings.num_repeats=num_repeats
         settings.do_clustering = True
 
         output = PyPolyChord.run_polychord(mc.polychord_call, nDims=mc.ndim, nDerived=0, settings=settings,
@@ -129,12 +128,12 @@ def pyorbit_polychord(config_in, input_datasets=None, pl_version=''):
         PyPolyChord_1_9.mpi_notification()
         PyPolyChord_1_9.run_nested_sampling(mc.polychord_call, nDims=mc.ndim, nDerived=0,
                                       feedback=mc.polychord_parameters['feedback'],
-                                      base_dir = mc.polychord_parameters['base_dir'],
+                                      base_dir = polychord_dir_output,
                                       precision_criterion=mc.polychord_parameters['precision_criterion'],
                                       max_ndead=mc.polychord_parameters['max_ndead'],
                                       boost_posterior=mc.polychord_parameters['boost_posterior'],
                                       read_resume=mc.polychord_parameters['read_resume'],
-                                      file_root=mc.polychord_dir_output,
+                                      file_root='pyorbit',
                                       prior=mc.polychord_priors, nlive=nlive, num_repeats=num_repeats)
 
     polychord_save_to_cpickle(mc)
