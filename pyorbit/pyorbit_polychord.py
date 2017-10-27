@@ -37,7 +37,7 @@ def pyorbit_polychord(config_in, input_datasets=None, pl_version=''):
         #mc.results_resumen(flatchain)
     else:
         mc = ModelContainerPolyChord()
-        pars_input(config_in, mc, input_datasets, shutdown_jitter=mc.polychord_parameters['shutdown_jitter'])
+        pars_input(config_in, mc, input_datasets)
 
         #if mc.polychord_parameters['shutdown_jitter']:
         #    for dataset in mc.dataset_dict.itervalues():
@@ -46,6 +46,9 @@ def pyorbit_polychord(config_in, input_datasets=None, pl_version=''):
         mc.model_setup()
         mc.create_variables_bounds()
         mc.initialize_logchi2()
+
+        mc.create_starting_point()
+
         mc.results_resumen(None, skip_theta=True)
 
         mc.polychord_dir_output = polychord_dir_output
@@ -86,11 +89,11 @@ def pyorbit_polychord(config_in, input_datasets=None, pl_version=''):
 
     os.chdir(polychord_dir_output)
 
+    print '-->', pl_version
     if pl_version == '':
 
         import PyPolyChord
         from PyPolyChord.settings import PolyChordSettings
-
 
         settings = PolyChordSettings(nDims=mc.ndim, nDerived=0)
         # settings.feedback=mc.polychord_parameters['feedback']
@@ -111,6 +114,7 @@ def pyorbit_polychord(config_in, input_datasets=None, pl_version=''):
         paramnames = [('p%i' % i, r'\theta_%i' % i) for i in range(mc.ndim)]
         paramnames += [('r*', 'r')]
         output.make_paramnames_files(paramnames)
+        quit()
 
         print output
 

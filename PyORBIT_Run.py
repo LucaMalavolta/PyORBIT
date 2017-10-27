@@ -19,9 +19,9 @@ if __name__ == '__main__':
     sampler_keyword = {
         'polychord':['polychord', 'PolyChord', 'polychrod', 'poly'],
         'polychord_v1.9': ['polychord_1.9', 'PolyChord_1.9', 'polychrod_1.9', 'poly_1.9',
-                           'polychord_1_9', 'PolyChord_1_9', 'polychrod_1_9', 'poly_1:9',
+                           'polychord_1_9', 'PolyChord_1_9', 'polychrod_1_9', 'poly_1.9',
                            'polychord_v1.9', 'PolyChord_v1.9', 'polychrod_v1.9', 'poly_v1.9',
-                           'polychord_v1_9', 'PolyChord_v1_9', 'polychrod_v1_9', 'poly_v1:9',
+                           'polychord_v1_9', 'PolyChord_v1_9', 'polychrod_v1_9', 'poly_v1.9',
                            ],
         'emcee': ['emcee', 'MCMC', 'Emcee']
     }
