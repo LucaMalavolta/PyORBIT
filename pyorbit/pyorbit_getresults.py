@@ -208,7 +208,7 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
         print
         print '****************************************************************************************************'
         print
-        print ' Common models corner plots '
+        print ' Common models analysis '
         print
 
         plt.rc('text', usetex=False)
@@ -287,7 +287,7 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
 
                 Mass_E_med = common.compute_value_sigma(Mass_E)
                 variable_median['Me'] = Mass_E_med[0]
-                variable_MAP['Me'], _ = common.pick_MAP_parameters(Mass_E, lnprob_flat)
+                variable_MAP['Me'], _ = common.pick_MAP_parameters(Mass_E, flat_lnprob)
 
                 planet_variables[common_name] = variable_median
                 planet_variables_MAP[common_name] = variable_MAP
@@ -303,50 +303,54 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
                 corner_plot['labels'].append('M [M$_\oplus$]')
                 corner_plot['truths'].append(Mass_E_med[0])
 
-            fig = corner.corner(np.asarray(corner_plot['samples']).T, labels=corner_plot['labels'], truths=corner_plot['truths'])
-            fig.savefig(dir_output + common_name + "_corners.pdf", bbox_inches='tight', dpi=300)
-            plt.close(fig)
+            if plot_dictionary['common_corner']:
 
-            print 'Common model: ', common_name , '  corner plot done.'
-            print
-
-        print '****************************************************************************************************'
-        print
-        print ' Dataset + models corner plots '
-        print
-        for dataset_name, dataset in mc.dataset_dict.iteritems():
-
-            for model_name in dataset.models:
-
-                common_ref = mc.models[model_name].common_ref
-                variable_values = dataset.convert(flat_chain)
-                variable_values.update(mc.common_models[common_ref].convert(flat_chain))
-                variable_values.update(mc.models[model_name].convert(flat_chain, dataset_name))
-
-                variable_median = dataset.convert(chain_med[:, 0])
-                variable_median.update(mc.common_models[common_ref].convert(chain_med[:, 0]))
-                variable_median.update(mc.models[model_name].convert(chain_med[:, 0], dataset_name))
-
-                corner_plot['samples'] = []
-                corner_plot['labels'] = []
-                corner_plot['truths'] = []
-                for var_i, var in enumerate(variable_values):
-                    if np.size(variable_values[var]) <= 1: continue
-                    corner_plot['samples'].extend([variable_values[var]])
-                    corner_plot['labels'].append(var)
-                    corner_plot['truths'].append(variable_median[var])
-
-                fig = corner.corner(np.asarray(corner_plot['samples']).T,
-                                    labels=corner_plot['labels'], truths=corner_plot['truths'])
-                fig.savefig(dir_output + dataset_name + '_' + model_name + "_corners.pdf", bbox_inches='tight', dpi=300)
+                fig = corner.corner(np.asarray(corner_plot['samples']).T, labels=corner_plot['labels'], truths=corner_plot['truths'])
+                fig.savefig(dir_output + common_name + "_corners.pdf", bbox_inches='tight', dpi=300)
                 plt.close(fig)
 
-                print 'Dataset: ', dataset_name , '    model: ', model_name, ' corner plot  done '
+                print 'Common model: ', common_name , '  corner plot done.'
+                print
+
+        if plot_dictionary['dataset_corner']:
+
+            print '****************************************************************************************************'
+            print
+            print ' Dataset + models corner plots '
+            print
+            for dataset_name, dataset in mc.dataset_dict.iteritems():
+
+                for model_name in dataset.models:
+
+                    common_ref = mc.models[model_name].common_ref
+                    variable_values = dataset.convert(flat_chain)
+                    variable_values.update(mc.common_models[common_ref].convert(flat_chain))
+                    variable_values.update(mc.models[model_name].convert(flat_chain, dataset_name))
+
+                    variable_median = dataset.convert(chain_med[:, 0])
+                    variable_median.update(mc.common_models[common_ref].convert(chain_med[:, 0]))
+                    variable_median.update(mc.models[model_name].convert(chain_med[:, 0], dataset_name))
+
+                    corner_plot['samples'] = []
+                    corner_plot['labels'] = []
+                    corner_plot['truths'] = []
+                    for var_i, var in enumerate(variable_values):
+                        if np.size(variable_values[var]) <= 1: continue
+                        corner_plot['samples'].extend([variable_values[var]])
+                        corner_plot['labels'].append(var)
+                        corner_plot['truths'].append(variable_median[var])
+
+                    fig = corner.corner(np.asarray(corner_plot['samples']).T,
+                                        labels=corner_plot['labels'], truths=corner_plot['truths'])
+                    fig.savefig(dir_output + dataset_name + '_' + model_name + "_corners.pdf", bbox_inches='tight', dpi=300)
+                    plt.close(fig)
+
+                    print 'Dataset: ', dataset_name , '    model: ', model_name, ' corner plot  done '
 
         print
         print '****************************************************************************************************'
         print
-        print ' Dataset + models corner plots '
+        print ' Writing all the files '
 
         bjd_plot = {
             'full': {
@@ -407,10 +411,9 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
                 plt.close(fig)
         print
 
-
         for prepend_keyword in ['', 'MAP_']:
             plot_out_keyword = prepend_keyword + 'model_out'
-            plot_x0_keyword = prepend_keyword + 'model_out'
+            plot_x0_keyword = prepend_keyword + 'model_x0'
             file_keyword = prepend_keyword + 'model_files'
 
             if prepend_keyword == '':
@@ -419,13 +422,12 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
                 planet_vars = planet_variables_MAP
 
             if plot_dictionary[file_keyword]:
-                dir_models = dir_output + file_keyword
-                os.system('mkdir -p ' + dir_models + '/')
+                dir_models = dir_output + file_keyword + '/'
+                os.system('mkdir -p ' + dir_models)
 
                 for dataset_name, dataset in mc.dataset_dict.items():
                     for model_name in dataset.models:
                         fileout = open(dir_models + dataset_name + '_' + model_name + '.dat', 'w')
-
                         common_ref = mc.models[model_name].common_ref
 
                         if common_ref in planet_vars:
@@ -448,6 +450,7 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
                         fileout.close()
 
                         fileout = open(dir_models + dataset_name + '_' + model_name + '_full.dat', 'w')
+
                         if model_name+'_std' in bjd_plot[plot_x0_keyword][dataset_name]:
                             fileout.write('descriptor BJD BJD0 mod,+- \n')
                             for x0, mod, std in zip(bjd_plot[dataset_name]['x0_plot'],
@@ -484,7 +487,7 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
                     fileout.close()
 
                     x_range = np.arange(-0.50, 1.50, 0.001)
-                    RV_out =  kepler_exo.kepler_RV_T0P(x_range*planet_vars[model]['P'],
+                    RV_out = kepler_exo.kepler_RV_T0P(x_range*planet_vars[model]['P'],
                                                        planet_vars[model]['f'],
                                                        planet_vars[model]['P'],
                                                        planet_vars[model]['K'],

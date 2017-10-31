@@ -29,7 +29,7 @@ solver:
     nburn: 20000
     thin: 100
   polychord:
-    nlive_mult: 5
+    nlive_mult: 25
     num_repeats_mult: 5
     shutdown_jitter: True
   recenter_bounds: True
