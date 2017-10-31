@@ -117,3 +117,17 @@ def compute_value_sigma(samples):
         print 'ERROR!!! '
         return None
     return sample_med
+
+
+def pick_MAP_parameters(samples, lnprob):
+
+    indmax = np.argmax(lnprob)
+
+    if np.size(np.shape(samples)) == 1:
+        return samples[indmax], lnprob[indmax]
+    elif np.size(np.shape(samples)) == 2:
+        return samples[indmax, :], lnprob[indmax]
+    else:
+        print 'ERROR!!! '
+        return None
+
