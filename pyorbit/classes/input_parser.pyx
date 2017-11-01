@@ -311,6 +311,9 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, shutdown_
         if 'feedback' in conf:
             mc.polychord_parameters['feedback'] = np.asarray(conf['feedback'], dtype=np.int64)
 
+        if 'sample_efficiency' in conf:
+            mc.polychord_parameters['sampling_efficiency'] = np.asarray(conf['sample_efficiency'], dtype=np.double)
+
         if 'precision_criterion' in conf:
             mc.polychord_parameters['precision_criterion'] = np.asarray(conf['precision_criterion'], dtype=np.double)
 

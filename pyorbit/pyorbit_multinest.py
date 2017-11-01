@@ -90,6 +90,7 @@ def pyorbit_multinest(config_in, input_datasets=None):
 
     import pymultinest
     mnest_kwargs = dict(n_live_points=nlive, outputfiles_basename=multinest_dir_output + './',
+                        sampling_efficiency=mc.polychord_parameters['sampling_efficiency'],
                         verbose=True)
 
     pymultinest.run(LogLikelihood= mc.multinest_call, Prior=mc.multinest_priors, n_dims=mc.ndim, **mnest_kwargs)
