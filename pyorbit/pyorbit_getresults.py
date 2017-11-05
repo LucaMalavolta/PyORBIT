@@ -43,7 +43,6 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
     AU_km = constants.AU
     AUday2ms = AU_km / seconds_in_day * 1000.0
 
-
     sample_keyword = {
         'polychord':['polychord', 'PolyChord', 'polychrod', 'poly'],
         'emcee': ['emcee', 'MCMC', 'Emcee']

@@ -277,7 +277,66 @@ def create_test_1planet_multijit_multioff():
         fileout.write('{0:6d} {1:14f} {2:14f} {3:d} \n'.format(ii, Transit_Time, 0.01, 0))
     fileout.close()
 
+def create_test_2planets_multijit_multioff():
+    x = np.arange(6000, 6100, 1, dtype=np.double)
+    x = np.random.normal(x, 0.4)
+    Tref = np.mean(x, dtype=np.double)
+    x0 = x - Tref
+    offset = 45605
+
+    print Tref
+    P = 23.4237346
+    K = 43.47672
+    phase = 0.34658203
+    e = 0.13
+    omega = 0.673434
+
+    y_pla = kp.kepler_RV_T0P(x0, phase, P, K, e, omega)
+    Transit_Time1 = kp.kepler_Tcent_T0P(P, phase, e, omega) + Tref
+    print 'Transit Time:', Transit_Time1
+    print 'transit Time - Tref', Transit_Time1 - Tref
+
+    P = 3.4237346
+    K = 1.47672
+    phase = 2.0658203
+    e = 0.01
+    omega = 5.573434
+
+    y_pla += kp.kepler_RV_T0P(x0, phase, P, K, e, omega)
+    Transit_Time2 = kp.kepler_Tcent_T0P(P, phase, e, omega) + Tref
+    print 'Transit Time:', Transit_Time2
+    print 'transit Time - Tref', Transit_Time2 - Tref
+
+    y_pla += offset
+
+    mod_pl = np.random.normal(y_pla, 2)
+
+
+    jit = np.zeros(np.size(x))
+    jit[x>6030.0]+=1
+    jit[x>6070.0]+=1
+
+    off = np.zeros(np.size(x))
+    off[x>6030.0]+=1
+    off[x>6070.0]+=1
+
+    fileout = open('test_2planets_RV_multijit_multioff.dat', 'w')
+    for ii in xrange(0, np.size(x)):
+        fileout.write('{0:f} {1:f} {2:f} {3:f} {4:f} {5:f} \n'.format(x[ii], mod_pl[ii], 2., jit[ii], off[ii], -1))
+    fileout.close()
+
+    fileout = open('test_2planets_Tcent_b_multijit_multioff.dat', 'w')
+    for ii in xrange(0, np.size(Transit_Time1)):
+        fileout.write('{0:6d} {1:14f} {2:14f} {3:d} \n'.format(ii, Transit_Time1, 0.01, 0))
+    fileout.close()
+
+    fileout = open('test_2planets_Tcent_c_multijit_multioff.dat', 'w')
+    for ii in xrange(0, np.size(Transit_Time2)):
+        fileout.write('{0:6d} {1:14f} {2:14f} {3:d} \n'.format(ii, Transit_Time2, 0.01, 0))
+    fileout.close()
+
 
 #create_test_1planet_GP()
 #create_test_1planet_circular()
-create_test_1planet_multijit_multioff()
+#create_test_1planet_multijit_multioff()
+create_test_2planets_multijit_multioff()
