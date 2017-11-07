@@ -1,0 +1,46 @@
+inputs:
+  0:
+      file: test_1planet_GP_RV.dat
+      kind: RV
+      models: ['radial_velocities', 'gp_quasiperiodic']
+common:
+  planets:
+    b:
+      orbit: keplerian
+      boundaries:
+        P: [2.0, 100.0]
+        K: [0.01, 100.0]
+        e: [0.00, 1.00]
+      priors:
+        P: ['Gaussian', 23.00, 1.00]
+      fixed:
+        i: [90.000, 0.001]
+  activity:
+    boundaries:
+      Prot: [5.00, 50.00]
+      Pdec: [10.0, 200.00]
+      Oamp: [0.01, 1.00]
+    priors:
+      Prot: ['Gaussian', 17.3, 2.00]
+      Oamp: ['Gaussian', 0.35, 0.01]
+models:
+  radial_velocities:
+    planets: ['b']
+  gp_quasiperiodic:
+    common: activity
+    0:
+      boundaries:
+        Hamp: [10.00, 100.00]
+parameters:
+  star_mass: [1.00, 0.01]
+  star_radius: [1.00, 0.01]
+solver:
+  pyde:
+    ngen: 16000
+    npop_mult: 4
+  emcee:
+    npop_mult: 4
+    nsteps: 50000
+    nburn: 20000
+    thin: 100
+  recenter_bounds: True

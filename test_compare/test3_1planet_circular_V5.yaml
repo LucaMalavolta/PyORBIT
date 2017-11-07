@@ -1,0 +1,31 @@
+inputs:
+  0:
+    file: test_1planet_circular_RV.dat
+    kind: RV
+    models: ['radial_velocities']
+common:
+  planets:
+    b:
+      orbit: circular
+      boundaries:
+        P: [2.0, 100.0]
+        K: [0.01, 100.0]
+        e: [0.00, 1.00]
+      fixed:
+        i: [90.000, 0.001]
+models:
+  radial_velocities:
+    planets: ['b']
+parameters:
+  star_mass: [1.00, 0.01]
+  star_radius: [1.00, 0.01]
+solver:
+  pyde:
+    ngen: 4000
+    npop_mult: 4
+  emcee:
+    npop_mult: 4
+    nsteps: 4000
+    nburn: 1000
+    thin: 1
+  recenter_bounds: True
