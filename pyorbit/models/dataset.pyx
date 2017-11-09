@@ -40,6 +40,7 @@ class Dataset(AbstractCommon):
         return data_input
 
     def define_dataset_base(self, data_input, update=False, flag_shutdown_jitter=False):
+        # Add a flag to save internally the input dataset
 
         if flag_shutdown_jitter:
             data_input[:, 4] = -1
