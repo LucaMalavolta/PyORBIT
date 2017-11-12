@@ -16,7 +16,7 @@ if 'celerite' not in sys.modules:
         import PyPolyChord as PyPolyChord
         from PyPolyChord.settings import PolyChordSettings
     except:
-        import PyPolyChord
+        from dummy import PyPolyChord
         print('WARNING! Imported dummy PyPolyChord, models relying on this package will not work')
 
     try:
@@ -38,7 +38,7 @@ if 'celerite' not in sys.modules:
     try:
         import george
     except:
-        from dummy import ttvfast
+        from dummy import george
         print('WARNING! Imported dummy george, models relying on this package will not work')
 
 import kepler_exo

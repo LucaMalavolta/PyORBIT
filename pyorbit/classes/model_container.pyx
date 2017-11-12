@@ -171,7 +171,7 @@ class ModelContainer:
             we must do it here because all the planet are involved"""
             dynamical_output = self.dynamical_model.compute(self, theta)
 
-        logchi2_out = 2. * self.ndof * np.log(2 * np.pi)
+        logchi2_out = (-0.5) * self.ndof * np.log(2 * np.pi)
         logchi2_out_copy = logchi2_out*1.
 
         for model in self.common_models.itervalues():
