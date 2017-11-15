@@ -8,7 +8,8 @@ if 'celerite' not in sys.modules:
         import celerite
         import autograd.numpy as np
     except:
-        from dummy import celerite
+        from dummy import dummy_one
+        celerite = dummy_one()
         import numpy as np
         print('WARNING! Imported dummy celerite, models relying on this package will not work')
 
