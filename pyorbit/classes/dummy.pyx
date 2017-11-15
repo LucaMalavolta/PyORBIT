@@ -16,7 +16,7 @@ def ttvfast():
 def george():
     pass
 
-## absurd workaround to
+## absurd workaround to fix the lack of celerite in the system
 
 class dummy_one:
     def __init__(self):
