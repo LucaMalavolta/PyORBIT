@@ -24,7 +24,7 @@ class AbstractModel():
 
         self.model_conf = None
 
-    def setup_dataset(self, dataset):
+    def setup_dataset(self, dataset, **kwargs):
         pass
 
     def define_special_variables_bounds(self, ndim, dataset_name, var):

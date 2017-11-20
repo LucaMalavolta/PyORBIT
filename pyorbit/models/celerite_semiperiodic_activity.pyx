@@ -94,7 +94,7 @@ class Celerite_QuasiPeriodicActivity(AbstractModel):
             'Prot': input_pams[self.gp_pams_index['Prot']]
         }
 
-    def setup_dataset(self, dataset):
+    def setup_dataset(self, dataset, **kwargs):
         self.define_kernel(dataset)
         return
 

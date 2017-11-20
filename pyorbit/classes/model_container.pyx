@@ -81,7 +81,7 @@ class ModelContainer:
                 continue
 
             for dataset_name in list(set(model.model_conf) & set(self.dataset_dict)):
-                model.setup_dataset(self.dataset_dict[dataset_name])
+                model.setup_dataset(self.dataset_dict[dataset_name], **model.model_conf)
 
         if self.dynamical_model:
             self.dynamical_model.prepare(self)
