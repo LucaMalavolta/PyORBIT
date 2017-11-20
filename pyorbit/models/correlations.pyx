@@ -53,3 +53,31 @@ class Correlations(AbstractModel):
             self.x_mask[name_ref][name_asc][match] = True
 
         self.x_zero[name_ref][name_asc] = np.median(self.x_vals[name_ref][name_asc][self.x_mask[name_ref][name_asc]])
+
+
+    def convert(self, theta, name_ref, name_asc):
+        dict_out = {}
+        # If we need the parameters for the prior, we are not providing any name for the dataset
+        for key in self.list_pams[name_ref][name_asc]:
+                dict_out[key] = self.variables[name_ref][name_asc][key](
+                    theta, self.fixed, self.var_list[name_ref][name_asc][key])
+        return dict_out
+
+
+    def compute(self, theta, dataset):
+
+        name_ref = dataset.name_ref
+        output = np.zeros(dataset.n)
+        for name_asc in self.order[name_ref]:
+            dict_pams = self.convert(theta, name_ref, name_asc)
+            coeff = np.zeros(self.order[name_ref][name_asc]+1)
+            for var in self.list_pams[name_ref][name_asc]:
+                coeff[self.order_ind[name_ref][name_asc][var]] = dict_pams[var]
+
+            """ In our array, coefficient are sorted from the lowest degree to the highr
+            Numpy Polinomials requires the inverse order (from high to small) as input"""
+            output += np.where(self.x_mask[name_ref][name_asc],
+                               np.polynomial.polynomial.polyval(
+                                   self.x_vals[name_ref][name_asc]-self.x_zero[name_ref][name_asc], coeff),
+                               0.0)
+        return output
