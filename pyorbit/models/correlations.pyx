@@ -1,6 +1,6 @@
 from abstract_model import *
 
-class Correlations(AbstractModel):
+class Correlation_SingleDataset(AbstractModel):
 
     model_class = 'correlations'
     list_pams_common = {}
@@ -16,68 +16,66 @@ class Correlations(AbstractModel):
         'c9': 'U'
     }
 
-    def model_setup(self, dataset, **kwargs):
+    default_bounds = {
+        'c1': [-10**9,10**9],
+        'c2': [-10**9,10**9],
+        'c3': [-10**9,10**9],
+        'c4': [-10**9,10**9],
+        'c5': [-10**9,10**9],
+        'c6': [-10**9,10**9],
+        'c7': [-10**9,10**9],
+        'c8': [-10**9,10**9],
+        'c9': [-10**9,10**9]
+    }
 
-        for ii in xrange(kwargs['order']+1, 10):
-            self.fix_list[dataset.name_ref]['c'+repr(ii)] = 0.0000
+    order = 1
+    x_vals = None
+    x_mask = None
+    x_zero = 0.000
+    threshold = 0.001
 
+    def initialize_model(self, dataset_ref, dataset_asc, **kwargs):
+        """ A special kind of initialization is required for this module, since it has to take a second dataset
+        and check the corrispondence with the points
 
-        """To each dataset the correlated dataset is associated"""
-        self.bounds[name_ref][name_asc] = {}
-        self.variables[name_ref][name_asc] = {}
-        self.fix_list[name_ref][name_asc] = {}
-        self.var_list[name_ref][name_asc] = {}
+        """
+        if 'threshold' in kwargs:
+            self.threshold = kwargs['threshold']
+        if 'order' in kwargs:
+            self.order = kwargs['order']
 
-        self.prior_kind[name_ref][name_asc] = {}
-        self.prior_pams[name_ref][name_asc] = {}
+        self.fix_list[dataset_ref.name_ref] = {}
+        for ii in xrange(self.order+1, 10):
+            self.fix_list[dataset_ref.name_ref]['c'+repr(ii)] = 0.0000
 
-        self.list_pams[name_ref][name_asc] = {}
-
-        self.order[name_ref][name_asc] = 1
-        self.order_ind[name_ref][name_asc] = {}
-
-        self.x_vals[name_ref][name_asc] = np.zeros(mc.dataset_dict[name_ref].n, dtype=np.double)
-        self.x_mask[name_ref][name_asc] = np.zeros(mc.dataset_dict[name_ref].n, dtype=bool)
+        self.x_vals = np.zeros(dataset_ref.n, dtype=np.double)
+        self.x_mask = np.zeros(dataset_ref.n, dtype=bool)
 
         """ HERE: we must associated the data from name_asc dataset to the one from name_ref
-            remove that part from dataset.pyx
-            Add a None option for the dataset
-            Fix input_parser to accomodate the new changes
-            Jitter must not be included in the analysis, but how about the offset? 
-            Or maybe I should just leave the zero point of the polynomial fit free?
+                remove that part from dataset.pyx
+                Add a None option for the dataset
+                Fix input_parser to accomodate the new changes
+                Jitter must not be included in the analysis, but how about the offset? 
+                Or maybe I should just leave the zero point of the polynomial fit free?
         """
 
-        for i_date, v_date in enumerate(mc.dataset_dict[name_asc].x):
-            match = np.where(np.abs(v_date-mc.dataset_dict[name_ref].x) < threshold)[0]
-            self.x_vals[name_ref][name_asc][match] = mc.dataset_dict[name_asc].y[i_date]
-            self.x_mask[name_ref][name_asc][match] = True
+        for i_date, v_date in enumerate(dataset_asc.x):
+            match = np.where(np.abs(v_date-dataset_ref.x) < self.threshold)[0]
+            self.x_vals[match] = dataset_asc.y[i_date]
+            self.x_mask[match] = True
 
-        self.x_zero[name_ref][name_asc] = np.median(self.x_vals[name_ref][name_asc][self.x_mask[name_ref][name_asc]])
+        if 'x_zero' in kwargs:
+            self.x_zero = kwargs['x_zero']
+        else:
+            self.x_zero = np.median(self.x_vals[self.x_mask])
 
+    def compute(self, variable_value, dataset, x0_input=None):
 
-    def convert(self, theta, name_ref, name_asc):
-        dict_out = {}
-        # If we need the parameters for the prior, we are not providing any name for the dataset
-        for key in self.list_pams[name_ref][name_asc]:
-                dict_out[key] = self.variables[name_ref][name_asc][key](
-                    theta, self.fixed, self.var_list[name_ref][name_asc][key])
-        return dict_out
+        coeff = np.zeros(self.order+1)
+        for ii in xrange(1,10):
+            var = 'c'+repr(ii)
+            coeff[ii] = variable_value[var]
 
-
-    def compute(self, theta, dataset):
-
-        name_ref = dataset.name_ref
-        output = np.zeros(dataset.n)
-        for name_asc in self.order[name_ref]:
-            dict_pams = self.convert(theta, name_ref, name_asc)
-            coeff = np.zeros(self.order[name_ref][name_asc]+1)
-            for var in self.list_pams[name_ref][name_asc]:
-                coeff[self.order_ind[name_ref][name_asc][var]] = dict_pams[var]
-
-            """ In our array, coefficient are sorted from the lowest degree to the highr
-            Numpy Polinomials requires the inverse order (from high to small) as input"""
-            output += np.where(self.x_mask[name_ref][name_asc],
-                               np.polynomial.polynomial.polyval(
-                                   self.x_vals[name_ref][name_asc]-self.x_zero[name_ref][name_asc], coeff),
-                               0.0)
-        return output
+        """ In our array, coefficient are sorted from the lowest degree to the highr
+        Numpy Polinomials requires the inverse order (from high to small) as input"""
+        return np.where(self.x_mask, np.polynomial.polynomial.polyval(self.x_vals-self.x_zero, coeff), 0.0)

@@ -4,9 +4,9 @@ from ..models.abstract_common import CommonPlanets, CommonActivity
 from ..models.radial_velocities import RVkeplerian, RVdynamical, TransitTimeKeplerian, TransitTimeDynamical, DynamicalIntegrator
 from ..models.gp_semiperiodic_activity import GaussianProcess_QuasiPeriodicActivity
 from ..models.celerite_semiperiodic_activity import Celerite_QuasiPeriodicActivity
+from ..models.correlations import Correlation_SingleDataset
 #TD from gaussian import GaussianProcess_QuasiPeriodicActivity
 #TD from curvature import CurvatureCommonVariables
-#TD from correlations import CorrelationsCommonVariables
 #TD from sinusoids import SinusoidsCommonVariables
 
 __all__ = ["pars_input", "yaml_parser"]
@@ -27,10 +27,10 @@ define_type_to_class = {
                      'keplerian': TransitTimeKeplerian,
                      'dynamical': TransitTimeDynamical},
     'gp_quasiperiodic': GaussianProcess_QuasiPeriodicActivity,
-    'celerite_quasiperiodic': Celerite_QuasiPeriodicActivity
+    'celerite_quasiperiodic': Celerite_QuasiPeriodicActivity,
     #TD 'gp_quasiperiodic': GaussianProcess_QuasiPeriodicActivity,
     #TD 'curvature': CurvatureCommonVariables,
-    #TD 'correlation': CorrelationsCommonVariables
+    'correlation_singledataset': Correlation_SingleDataset
 }
 
 accepted_extensions = ['.yaml', '.yml', '.conf', '.config', '.input', ]
@@ -240,6 +240,14 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, shutdown_
                     dataset.planet_name = planet_name
                     dataset.dynamical = True
                     mc.dynamical_t0_dict[planet_name] = dataset_name
+
+        elif model_type == 'correlation_singledataset':
+            mc.models[model_name] = \
+                    define_type_to_class[model_type](model_name, None)
+            mc.models[model_name].initialize_model(
+                mc.dataset_dict[model_conf['reference']],
+                mc.dataset_dict[model_conf['associated']], **model_conf)
+            boundaries_fixed_priors_starts(mc, mc.models[model_name], model_conf)
 
         else:
             mc.models[model_name] = \
