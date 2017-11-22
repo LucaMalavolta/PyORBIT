@@ -258,7 +258,6 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
 
             if common_model.model_class == 'planet':
                 if i_is_missing:
-                    print common_model.fix_list
                     if 'i' in common_model.fix_list:
                         variable_values['i'] = np.random.normal(common_model.fix_list['i'][0], common_model.fix_list['i'][1], size=n_samplings)
                     else:
@@ -321,13 +320,15 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
 
                 for model_name in dataset.models:
 
-                    common_ref = mc.models[model_name].common_ref
                     variable_values = dataset.convert(flat_chain)
-                    variable_values.update(mc.common_models[common_ref].convert(flat_chain))
-                    variable_values.update(mc.models[model_name].convert(flat_chain, dataset_name))
-
                     variable_median = dataset.convert(chain_med[:, 0])
-                    variable_median.update(mc.common_models[common_ref].convert(chain_med[:, 0]))
+
+                    if mc.models[model_name].common_ref:
+                        common_ref = mc.models[model_name].common_ref
+                        variable_values.update(mc.common_models[common_ref].convert(flat_chain))
+                        variable_median.update(mc.common_models[common_ref].convert(chain_med[:, 0]))
+
+                    variable_values.update(mc.models[model_name].convert(flat_chain, dataset_name))
                     variable_median.update(mc.models[model_name].convert(chain_med[:, 0], dataset_name))
 
                     corner_plot['samples'] = []

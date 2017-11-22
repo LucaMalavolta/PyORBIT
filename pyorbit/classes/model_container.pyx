@@ -95,9 +95,10 @@ class ModelContainer:
         self.ndim = 0
         bounds_list = []
         for model in self.models.itervalues():
-            self.ndim, bounds_ext = self.common_models[model.common_ref].define_variables_bounds(
-                    self.ndim, model.list_pams_common)
-            bounds_list.extend(bounds_ext)
+            if model.common_ref:
+                self.ndim, bounds_ext = self.common_models[model.common_ref].define_variables_bounds(
+                        self.ndim, model.list_pams_common)
+                bounds_list.extend(bounds_ext)
 
         for dataset in self.dataset_dict.itervalues():
             self.ndim, bounds_ext = dataset.define_variables_bounds(self.ndim, dataset.list_pams)
@@ -200,8 +201,14 @@ class ModelContainer:
                     dataset.model += dynamical_output[dataset_name]
                     continue
 
-                common_ref = self.models[model_name].common_ref
-                variable_values = self.common_models[common_ref].convert(theta)
+                if self.models[model_name].common_ref:
+                    """ Taking the parameter values from the common model"""
+                    common_ref = self.models[model_name].common_ref
+                    variable_values = self.common_models[common_ref].convert(theta)
+                else:
+                    """ This model has no common model reference, i.e., it is strictly connected to the dataset"""
+                    variable_values = {}
+
                 variable_values.update(self.models[model_name].convert(theta, dataset_name))
                 dataset.model += self.models[model_name].compute(variable_values, dataset)
 
@@ -404,8 +411,13 @@ class ModelContainer:
                     model_x0[dataset_name]['complete'] += dynamical_output_x0[dataset_name]
                     continue
 
-                common_ref = self.models[model_name].common_ref
-                variable_values = self.common_models[common_ref].convert(theta)
+                if self.models[model_name].common_ref:
+                    """ Taking the parameter values from the common model"""
+                    common_ref = self.models[model_name].common_ref
+                    variable_values = self.common_models[common_ref].convert(theta)
+                else:
+                    """ This model has no common model reference, i.e., it is strictly connected to the dataset"""
+                    variable_values = {}
                 variable_values.update(self.models[model_name].convert(theta, dataset_name))
 
                 dataset.model += self.models[model_name].compute(variable_values, dataset)

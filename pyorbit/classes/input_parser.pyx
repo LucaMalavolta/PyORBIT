@@ -247,7 +247,7 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, shutdown_
             mc.models[model_name].initialize_model(
                 mc.dataset_dict[model_conf['reference']],
                 mc.dataset_dict[model_conf['associated']], **model_conf)
-            boundaries_fixed_priors_starts(mc, mc.models[model_name], model_conf)
+            boundaries_fixed_priors_starts(mc, mc.models[model_name], model_conf, dataset_1=model_conf['reference'])
 
         else:
             mc.models[model_name] = \

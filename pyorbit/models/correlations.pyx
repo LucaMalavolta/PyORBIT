@@ -1,32 +1,14 @@
 from abstract_model import *
+import numpy.polynomial.polynomial
 
 class Correlation_SingleDataset(AbstractModel):
 
     model_class = 'correlations'
     list_pams_common = {}
-    list_pams_dataset = {
-        'c1': 'U',
-        'c2': 'U',
-        'c3': 'U',
-        'c4': 'U',
-        'c5': 'U',
-        'c6': 'U',
-        'c7': 'U',
-        'c8': 'U',
-        'c9': 'U'
-    }
+    list_pams_dataset = {}
+    default_bounds = {}
 
-    default_bounds = {
-        'c1': [-10**9,10**9],
-        'c2': [-10**9,10**9],
-        'c3': [-10**9,10**9],
-        'c4': [-10**9,10**9],
-        'c5': [-10**9,10**9],
-        'c6': [-10**9,10**9],
-        'c7': [-10**9,10**9],
-        'c8': [-10**9,10**9],
-        'c9': [-10**9,10**9]
-    }
+    recenter_pams_dataset = {}
 
     order = 1
     x_vals = None
@@ -44,9 +26,10 @@ class Correlation_SingleDataset(AbstractModel):
         if 'order' in kwargs:
             self.order = kwargs['order']
 
-        self.fix_list[dataset_ref.name_ref] = {}
-        for ii in xrange(self.order+1, 10):
-            self.fix_list[dataset_ref.name_ref]['c'+repr(ii)] = 0.0000
+        for i_order in xrange(1, self.order+1):
+            var = 'c'+repr(i_order)
+            self.list_pams_dataset.update({var: 'U'})
+            self.default_bounds.update({var: [-10**9,10**9]})
 
         self.x_vals = np.zeros(dataset_ref.n, dtype=np.double)
         self.x_mask = np.zeros(dataset_ref.n, dtype=bool)
@@ -72,10 +55,9 @@ class Correlation_SingleDataset(AbstractModel):
     def compute(self, variable_value, dataset, x0_input=None):
 
         coeff = np.zeros(self.order+1)
-        for ii in xrange(1,10):
-            var = 'c'+repr(ii)
-            coeff[ii] = variable_value[var]
-
+        for i_order in xrange(1, self.order+1):
+            var = 'c'+repr(i_order)
+            coeff[i_order] = variable_value[var]
         """ In our array, coefficient are sorted from the lowest degree to the highr
         Numpy Polinomials requires the inverse order (from high to small) as input"""
-        return np.where(self.x_mask, np.polynomial.polynomial.polyval(self.x_vals-self.x_zero, coeff), 0.0)
+        return np.where(self.x_mask, numpy.polynomial.polynomial.polyval(self.x_vals-self.x_zero, coeff), 0.0)

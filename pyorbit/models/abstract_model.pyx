@@ -92,6 +92,7 @@ class AbstractModel():
     def convert(self, theta, dataset_name):
         variable_value = {}
         # If we need the parameters for the prior, we are not providing any name for the dataset
+
         for var in self.list_pams_dataset:
             variable_value[var] = self.transformation[dataset_name][var](
                 theta, self.fixed, self.variable_index[dataset_name][var])
@@ -100,7 +101,6 @@ class AbstractModel():
     def return_priors(self, theta, dataset_name):
         prior_out = 0.00
         variable_value = self.convert(theta, dataset_name)
-
         for var in list(set(self.list_pams_dataset) and set(self.prior_pams[dataset_name])):
             prior_out += giveback_priors(self.prior_kind[dataset_name][var],
                                          self.prior_pams[dataset_name][var],
