@@ -244,9 +244,7 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, shutdown_
         elif model_type == 'correlation_singledataset':
             mc.models[model_name] = \
                     define_type_to_class[model_type](model_name, None)
-            mc.models[model_name].initialize_model(
-                mc.dataset_dict[model_conf['reference']],
-                mc.dataset_dict[model_conf['associated']], **model_conf)
+            mc.models[model_name].model_conf = model_conf.copy()
             boundaries_fixed_priors_starts(mc, mc.models[model_name], model_conf, dataset_1=model_conf['reference'])
 
         else:

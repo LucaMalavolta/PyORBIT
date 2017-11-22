@@ -10,17 +10,22 @@ class Correlation_SingleDataset(AbstractModel):
 
     recenter_pams_dataset = {}
 
+    not_time_dependant = True
+
     order = 1
     x_vals = None
     x_mask = None
     x_zero = 0.000
     threshold = 0.001
 
-    def initialize_model(self, dataset_ref, dataset_asc, **kwargs):
+    def initialize_model(self, mc, **kwargs):
         """ A special kind of initialization is required for this module, since it has to take a second dataset
         and check the corrispondence with the points
 
         """
+        dataset_ref = mc.dataset_dict[kwargs['reference']]
+        dataset_asc = mc.dataset_dict[kwargs['associated']]
+
         if 'threshold' in kwargs:
             self.threshold = kwargs['threshold']
         if 'order' in kwargs:
@@ -60,4 +65,7 @@ class Correlation_SingleDataset(AbstractModel):
             coeff[i_order] = variable_value[var]
         """ In our array, coefficient are sorted from the lowest degree to the highr
         Numpy Polinomials requires the inverse order (from high to small) as input"""
-        return np.where(self.x_mask, numpy.polynomial.polynomial.polyval(self.x_vals-self.x_zero, coeff), 0.0)
+        if x0_input is None:
+            return np.where(self.x_mask, numpy.polynomial.polynomial.polyval(self.x_vals-self.x_zero, coeff), 0.0)
+        else:
+            return numpy.polynomial.polynomial.polyval(x0_input-self.x_zero, coeff)
