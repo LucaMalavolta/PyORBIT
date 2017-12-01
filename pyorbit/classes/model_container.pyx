@@ -80,8 +80,10 @@ class ModelContainer:
             if not model.model_conf:
                 continue
 
+            model.initialize_model(self, **model.model_conf)
+
             for dataset_name in list(set(model.model_conf) & set(self.dataset_dict)):
-                model.setup_dataset(self.dataset_dict[dataset_name])
+                model.setup_dataset(self.dataset_dict[dataset_name], **model.model_conf)
 
         if self.dynamical_model:
             self.dynamical_model.prepare(self)
@@ -95,9 +97,10 @@ class ModelContainer:
         self.ndim = 0
         bounds_list = []
         for model in self.models.itervalues():
-            self.ndim, bounds_ext = self.common_models[model.common_ref].define_variables_bounds(
-                    self.ndim, model.list_pams_common)
-            bounds_list.extend(bounds_ext)
+            if model.common_ref:
+                self.ndim, bounds_ext = self.common_models[model.common_ref].define_variables_bounds(
+                        self.ndim, model.list_pams_common)
+                bounds_list.extend(bounds_ext)
 
         for dataset in self.dataset_dict.itervalues():
             self.ndim, bounds_ext = dataset.define_variables_bounds(self.ndim, dataset.list_pams)
@@ -200,8 +203,14 @@ class ModelContainer:
                     dataset.model += dynamical_output[dataset_name]
                     continue
 
-                common_ref = self.models[model_name].common_ref
-                variable_values = self.common_models[common_ref].convert(theta)
+                if self.models[model_name].common_ref:
+                    """ Taking the parameter values from the common model"""
+                    common_ref = self.models[model_name].common_ref
+                    variable_values = self.common_models[common_ref].convert(theta)
+                else:
+                    """ This model has no common model reference, i.e., it is strictly connected to the dataset"""
+                    variable_values = {}
+
                 variable_values.update(self.models[model_name].convert(theta, dataset_name))
                 dataset.model += self.models[model_name].compute(variable_values, dataset)
 
@@ -404,8 +413,13 @@ class ModelContainer:
                     model_x0[dataset_name]['complete'] += dynamical_output_x0[dataset_name]
                     continue
 
-                common_ref = self.models[model_name].common_ref
-                variable_values = self.common_models[common_ref].convert(theta)
+                if self.models[model_name].common_ref:
+                    """ Taking the parameter values from the common model"""
+                    common_ref = self.models[model_name].common_ref
+                    variable_values = self.common_models[common_ref].convert(theta)
+                else:
+                    """ This model has no common model reference, i.e., it is strictly connected to the dataset"""
+                    variable_values = {}
                 variable_values.update(self.models[model_name].convert(theta, dataset_name))
 
                 dataset.model += self.models[model_name].compute(variable_values, dataset)
@@ -413,9 +427,12 @@ class ModelContainer:
                 model_out[dataset_name][model_name] = self.models[model_name].compute(variable_values, dataset)
                 model_out[dataset_name]['complete'] += model_out[dataset_name][model_name]
 
-                model_x0[dataset_name][model_name] = \
-                    self.models[model_name].compute(variable_values, dataset, x0_plot)
-                model_x0[dataset_name]['complete'] += model_x0[dataset_name][model_name]
+                if hasattr(self.models[model_name], 'not_time_dependant'):
+                    model_x0[dataset_name][model_name] = np.zeros(np.size(x0_plot), dtype=np.double)
+                else:
+                    model_x0[dataset_name][model_name] = \
+                        self.models[model_name].compute(variable_values, dataset, x0_plot)
+                    model_x0[dataset_name]['complete'] += model_x0[dataset_name][model_name]
 
             """ Gaussian Process check MUST be the last one or the program will fail
              that's because for the GP to work we need to know the _deterministic_ part of the model 
