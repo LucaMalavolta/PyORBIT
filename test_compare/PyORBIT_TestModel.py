@@ -354,7 +354,7 @@ def create_test_1planet_polynomial_trend():
     coeff[1] = 0.256
     coeff[2] = 0.0120
 
-    rv_trend = numpy.polynomial.polynomial.polyval(x-Tref-22.5, coeff)
+    rv_trend = numpy.polynomial.polynomial.polyval(x0, coeff)
 
     y_pla = kp.kepler_RV_T0P(x0, phase, P, K, e, omega) + offset + rv_trend
 

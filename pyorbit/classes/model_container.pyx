@@ -22,7 +22,8 @@ class ModelContainer:
         self.emcee_dir_output = None
 
         self.emcee_parameters = {'nsave': 0, 'npop_mult': 2, 'thin': 1, 'nburn':0,
-                                 'multirun': None, 'multirun_iter': 20}
+                                 'multirun': None, 'multirun_iter': 20, 'version': '2.2.1'}
+
         self.pyde_parameters = {'ngen': 1000, 'npop_mult': 2}
 
         self.polychord_parameters = {'nlive_mult': 25,

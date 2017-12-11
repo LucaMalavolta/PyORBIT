@@ -44,6 +44,7 @@ class Dataset(AbstractCommon):
 
         if flag_shutdown_jitter:
             data_input[:, 4] = -1
+
         if not self.models:
             data_input[:, 3:] = -1
 

@@ -15,7 +15,6 @@ import classes.constants as constants
 import classes.kepler_exo as kepler_exo
 import classes.common as common
 
-
 __all__ = ["pyorbit_getresults"]
 
 
@@ -59,6 +58,13 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
             emcee_load_from_cpickle(dir_input)
 
         pars_input(config_in, mc, reload_emcee=True)
+
+        # for retrocompatibility with V5.0 of PyORBIT, the default emcee is set to 2.2.1
+        if hasattr(mc.emcee_parameters, 'version'):
+            emcee_version = mc.emcee_parameters['version'][0]
+        else:
+            emcee_version = '2'
+
         mc.model_setup()
         """ Required to create the right objects inside each class - if defined inside """
         theta_dictionary = mc.get_theta_dictionary()
@@ -68,7 +74,7 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
         nsteps = sampler_chain.shape[1] * nthin
 
         flat_chain = emcee_flatchain(sampler_chain, nburnin, nthin)
-        flat_lnprob = emcee_flatlnprob(sampler_lnprobability, nburnin, nthin)
+        flat_lnprob = emcee_flatlnprob(sampler_lnprobability, nburnin, nthin, emcee_version)
 
         lnprob_med = common.compute_value_sigma(flat_lnprob)
         chain_med = common.compute_value_sigma(flat_chain)
@@ -94,7 +100,7 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
         print
         print '****************************************************************************************************'
         print
-        print ' Print MAP result (',lnprob_MAP,')'
+        print ' Print MAP result (', lnprob_MAP, ')'
         print
 
         mc.results_resumen(chain_MAP)
@@ -107,13 +113,22 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
 
         #mc.results_resumen(flat_chain)
 
-        fig = plt.figure(figsize=(12, 12))
-        plt.xlabel('$\ln \mathcal{L}$')
-        plt.plot(sampler_lnprobability.T, '-', alpha=0.5)
-        plt.axhline(lnprob_med[0])
-        plt.axvline(nburnin/nthin, c='r')
-        plt.savefig(dir_output + 'LNprob_chain.png', bbox_inches='tight', dpi=300)
-        plt.close(fig)
+        if emcee_version == '2':
+            fig = plt.figure(figsize=(12, 12))
+            plt.xlabel('$\ln \mathcal{L}$')
+            plt.plot(sampler_lnprobability.T, '-', alpha=0.5)
+            plt.axhline(lnprob_med[0])
+            plt.axvline(nburnin/nthin, c='r')
+            plt.savefig(dir_output + 'LNprob_chain.png', bbox_inches='tight', dpi=300)
+            plt.close(fig)
+        else:
+            fig = plt.figure(figsize=(12, 12))
+            plt.xlabel('$\ln \mathcal{L}$')
+            plt.plot(sampler_lnprobability, '-', alpha=0.5)
+            plt.axhline(lnprob_med[0])
+            plt.axvline(nburnin/nthin, c='r')
+            plt.savefig(dir_output + 'LNprob_chain.png', bbox_inches='tight', dpi=300)
+            plt.close(fig)
 
         print
         print '****************************************************************************************************'
@@ -133,7 +148,7 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
             for var, var_dict in theta_dictionary.iteritems():
                 corner_plot['samples'].extend([flat_chain[:, var_dict]])
                 corner_plot['labels'].append(var)
-                corner_plot['truths'].append(chain_med[var_dict,0])
+                corner_plot['truths'].append(chain_med[var_dict, 0])
 
             corner_plot['samples'].extend([flat_lnprob])
             corner_plot['labels'].append('ln prob')

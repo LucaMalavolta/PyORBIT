@@ -60,7 +60,11 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
     reloaded_mc = reloaded_pyde or reloaded_emcee_multirun or reloaded_emcee_multirun
     if not reloaded_mc:
         mc = ModelContainer()
+
         pars_input(config_in, mc, input_datasets)
+
+        # keep track of which version has been used to perform emcee computations
+        mc.emcee_parameters['version'] = emcee.__version__[0]
 
         mc.model_setup()
         mc.create_variables_bounds()
@@ -85,6 +89,8 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
 
     if not os.path.exists(mc.emcee_dir_output):
         os.makedirs(mc.emcee_dir_output)
+
+    emcee_version = mc.emcee_parameters['version'][0]
 
     print
     print 'Reference Time Tref: ', mc.Tref
@@ -134,12 +140,19 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
 
     mc.results_resumen(starting_point, compute_lnprob=True)
 
+    if emcee_version =='2':
+        threads_pool = emcee.interruptible_pool.InterruptiblePool(mc.emcee_parameters['nwalkers'])
+    else:
+        from multiprocessing.pool import Pool as InterruptiblePool
+        threads_pool = InterruptiblePool(mc.emcee_parameters['nwalkers'])
+
     if mc.emcee_parameters['multirun'] and not reloaded_emcee_multirun:
 
         for ii in xrange(0, mc.emcee_parameters['multirun_iter']):
             print 'emcee exploratory run #', ii, ' of ', mc.emcee_parameters['multirun_iter']
-            sampler = emcee.EnsembleSampler(mc.emcee_parameters['nwalkers'], mc.ndim, mc,
-                                            threads=mc.emcee_parameters['nwalkers'])
+            # sampler = emcee.EnsembleSampler(mc.emcee_parameters['nwalkers'], mc.ndim, mc,
+            #                                 threads=mc.emcee_parameters['nwalkers'])
+            sampler = emcee.EnsembleSampler(mc.emcee_parameters['nwalkers'], mc.ndim, mc, pool=threads_pool)
             population, prob, state = sampler.run_mcmc(population, mc.emcee_parameters['multirun'])
             flatchain = emcee_flatchain(sampler.chain, mc.emcee_parameters['nburn'], mc.emcee_parameters['thin'])
             mc.results_resumen(flatchain)
@@ -160,7 +173,8 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
 
     print 'emcee'
     state = None
-    sampler = emcee.EnsembleSampler(mc.emcee_parameters['nwalkers'], mc.ndim, mc, threads=mc.emcee_parameters['nwalkers'])
+    # sampler = emcee.EnsembleSampler(mc.emcee_parameters['nwalkers'], mc.ndim, mc, threads=mc.emcee_parameters['nwalkers'])
+    sampler = emcee.EnsembleSampler(mc.emcee_parameters['nwalkers'], mc.ndim, mc, pool=threads_pool)
 
     if mc.emcee_parameters['nsave'] > 0:
         print ' Saving temporary steps'
@@ -185,6 +199,11 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
         mc.results_resumen(flatchain)
 
     print 'emcee completed'
+
+    # close the pool of threads
+    threads_pool.close()
+    threads_pool.terminate()
+    threads_pool.join()
 
     if return_output:
         return mc, sampler.chain,  sampler.lnprobability

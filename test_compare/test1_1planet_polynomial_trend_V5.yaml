@@ -1,14 +1,20 @@
 inputs:
   RV:
-      file: test_1planet_RV.dat
+      file: test_1planet_polynomial_trend_RV.dat
       kind: RV
-      models: ['radial_velocities', 'poly_trend']
+      models:
+        - radial_velocities
+        - poly_trend
+  Tcent:
+      file: test_1planet_polynomial_trend_Tcent_0.dat
+      kind: Tcent
+      models: transit_b
 common:
   planets:
     b:
       orbit: keplerian
       boundaries:
-        P: [2.0, 100.0]
+        P: [10.0, 100.0]
         K: [0.01, 100.0]
         e: [0.00, 1.00]
       fixed:
@@ -17,7 +23,10 @@ common:
       type: polynomial_trend
 models:
   radial_velocities:
-    planets: ['b']
+    planets: b
+  transit_b:
+    kind: transit_time
+    planet: b
   poly_trend:
     type: polynomial_trend
     common: poly_trend
@@ -28,13 +37,13 @@ parameters:
   Tref: 6049.40467703
 solver:
   pyde:
-    ngen: 800
+    ngen: 8000
     npop_mult: 4
   emcee:
     npop_mult: 4
-    nsteps: 5000
-    nburn: 2000
-    thin: 10
+    nsteps: 50000
+    nburn: 20000
+    thin: 100
   polychord:
     nlive_mult: 50
     num_repeats_mult: 5

@@ -112,7 +112,7 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, shutdown_
             or everything will fall apart """
         mc.dataset_dict[dataset_name] = Dataset(dataset_name,
                                                 dataset_conf['kind'],
-                                                dataset_conf['models'])
+                                                np.atleast_1d(dataset_conf['models']).tolist())
 
         try:
             data_input = input_datasets[dataset_name]
@@ -202,7 +202,9 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, shutdown_
             """ radial_velocities is just a wrapper for the planets to be actually included in the model, so we
                 substitue it with the individual planets in the list"""
 
-            model_name_expanded = [model_name + '_' + pl_name for pl_name in model_conf['planets']]
+            planet_list = np.atleast_1d(model_conf['planets']).tolist()
+
+            model_name_expanded = [model_name + '_' + pl_name for pl_name in planet_list]
             """ Let's avoid some dumb user using the planet names to name the models"""
 
             for dataset in mc.dataset_dict.itervalues():
@@ -210,10 +212,10 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, shutdown_
                     dataset.models.remove(model_name)
                     dataset.models.extend(model_name_expanded)
 
-                    if len(list(set(model_conf['planets']) & set(mc.dynamical_dict))):
+                    if len(list(set(planet_list) & set(mc.dynamical_dict))):
                         dataset.dynamical = True
 
-            for model_name_exp, planet_name in zip(model_name_expanded, model_conf['planets']):
+            for model_name_exp, planet_name in zip(model_name_expanded, planet_list):
                 mc.models[model_name_exp] = \
                     define_type_to_class[model_type][mc.planet_dict[planet_name]](model_name_exp, planet_name)
 
@@ -224,7 +226,7 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, shutdown_
         elif model_type == 'transit_time':
             """ Only one planet for each file with transit times... mixing them would cause HELL"""
 
-            planet_name = model_conf['planet']
+            planet_name = np.atleast_1d(model_conf['planet']).tolist()[0]
             mc.models[model_name] = \
                     define_type_to_class[model_type][mc.planet_dict[planet_name]](model_name, planet_name)
 

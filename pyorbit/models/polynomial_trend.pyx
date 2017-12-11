@@ -25,15 +25,15 @@ class CommonPolynomialTrend(AbstractCommon):
 
     """These default boundaries are used when the user does not define them in the yaml file"""
     default_bounds = {
-        'c1': [-10**9, 10**9],
-        'c2': [-10**9, 10**9],
-        'c3': [-10**9, 10**9],
-        'c4': [-10**9, 10**9],
-        'c5': [-10**9, 10**9],
-        'c6': [-10**9, 10**9],
-        'c7': [-10**9, 10**9],
-        'c8': [-10**9, 10**9],
-        'c9': [-10**9, 10**9]
+        'c1': [-10.0, 10.0], # 10 m/s/day would be already an unbelievable value
+        'c2': [-1.0, 1.0],
+        'c3': [-1.0, 1.0],
+        'c4': [-1.0, 1.0],
+        'c5': [-1.0, 1.0],
+        'c6': [-1.0, 1.0],
+        'c7': [-1.0, 1.0],
+        'c8': [-1.0, 1.0],
+        'c9': [-1.0, 1.0]
     }
 
     recenter_pams = {}
@@ -70,6 +70,9 @@ class PolynomialTrend(AbstractModel):
 
         """ In our array, coefficient are sorted from the lowest degree to the highr
         Numpy Polinomials requires the inverse order (from high to small) as input"""
+        # print variable_value
+        # print coeff
+        # print numpy.polynomial.polynomial.polyval(dataset.x0, coeff)
 
         if x0_input is None:
             return numpy.polynomial.polynomial.polyval(dataset.x0, coeff)

@@ -79,15 +79,25 @@ def emcee_flatchain(chain, nburnin, nthin):
     return chain[:, nburn:, :].reshape(s[0] * s[1], s[2])
 
 
-def emcee_flatlnprob(lnprob, nburnin, nthin):
-    """flattening of the emcee chains with removal of burn-in"""
-    _, d = np.shape(lnprob)
-    nburn = nburnin / nthin
-    if nburn > d:
-        nburn = d/4
+def emcee_flatlnprob(lnprob, nburnin, nthin, emcee_version):
+    if emcee_version == '3':
+        """flattening of the emcee chains with removal of burn-in"""
+        d, _ = np.shape(lnprob)
+        nburn = nburnin / nthin
+        if nburn >= d * 0.9:
+            nburn = d / 4
 
-    s = lnprob[:, nburn:].shape
-    return lnprob[:, nburn:].reshape(s[0] * s[1])
+        s = lnprob[nburn:, :].shape
+        return lnprob[nburn:, :].reshape(s[0] * s[1])
+    else:
+        """flattening of the emcee chains with removal of burn-in"""
+        _, d = np.shape(lnprob)
+        nburn = nburnin / nthin
+        if nburn >= d * 0.9:
+            nburn = d / 4
+
+        s = lnprob[:, nburn:].shape
+        return lnprob[:, nburn:].reshape(s[0] * s[1])
 
 
 def GelmanRubin(chains_T):
