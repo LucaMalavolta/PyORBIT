@@ -120,8 +120,6 @@ def create_test_1planet():
     fileout.close()
 
 
-
-
 def create_test_1planet_circular():
     x = np.arange(6000, 6100, 1, dtype=np.double)
     x = np.random.normal(x, 0.4)
@@ -163,8 +161,6 @@ def create_test_1planet_circular():
         fileout.write('{0:6d} {1:14f} {2:14f} \n'.format(ii, Transit_Time, 0.01))
     fileout.close()
 
-
-#create_test_1planet()
 
 def create_test_1planet_GP():
 
@@ -277,6 +273,7 @@ def create_test_1planet_multijit_multioff():
         fileout.write('{0:6d} {1:14f} {2:14f} {3:d} \n'.format(ii, Transit_Time, 0.01, 0))
     fileout.close()
 
+
 def create_test_2planets_multijit_multioff():
     x = np.arange(6000, 6100, 1, dtype=np.double)
     x = np.random.normal(x, 0.4)
@@ -336,7 +333,55 @@ def create_test_2planets_multijit_multioff():
     fileout.close()
 
 
+def create_test_1planet_polynomial_trend():
+    x = np.arange(6000, 6100, 1, dtype=np.double)
+    x = np.random.normal(x, 0.4)
+    Tref = np.mean(x, dtype=np.double)
+    x0 = x - Tref
+
+    print Tref
+    P = 23.4237346
+    K = 43.47672
+    phase = 0.34658203
+    e = 0.13
+    omega = 0.673434
+    offset = 45605
+
+    order = 2
+    import numpy.polynomial.polynomial
+
+    coeff = np.zeros(order+1)
+    coeff[1] = 0.256
+    coeff[2] = 0.0120
+
+    rv_trend = numpy.polynomial.polynomial.polyval(x-Tref-22.5, coeff)
+
+    y_pla = kp.kepler_RV_T0P(x0, phase, P, K, e, omega) + offset + rv_trend
+
+    mod_pl = np.random.normal(y_pla, 2)
+
+    Transit_Time = kp.kepler_Tcent_T0P(P, phase, e, omega) + Tref
+    print 'Transit Time:', Transit_Time
+    print 'transit Time - Tref', Transit_Time - Tref
+
+    plt.scatter(x, mod_pl)
+    plt.axvline(Transit_Time)
+    plt.show()
+
+    fileout = open('test_1planet_polynomial_trend_RV.dat', 'w')
+    for ii in xrange(0, np.size(x)):
+        fileout.write('{0:14f} {1:14f} {2:14f} {3:5d} {4:5d} {5:5d} \n'.format(x[ii], mod_pl[ii], 2., 0, 0, -1))
+    fileout.close()
+
+    fileout = open('test_1planet_polynomial_trend_Tcent_0.dat', 'w')
+    for ii in xrange(0, np.size(Transit_Time)):
+        fileout.write('{0:6d} {1:14f} {2:14f} \n'.format(ii, Transit_Time, 0.01))
+    fileout.close()
+
+
+create_test_1planet_polynomial_trend()
+
 #create_test_1planet_GP()
 #create_test_1planet_circular()
 #create_test_1planet_multijit_multioff()
-create_test_2planets_multijit_multioff()
+#create_test_2planets_multijit_multioff()

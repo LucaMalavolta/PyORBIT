@@ -6,4 +6,4 @@ from pyorbit_polychord import *
 from pyorbit_multinest import *
 from pyorbit_getresults import *
 
-__version__ = "5.0beta"
+__version__ = "5.1"

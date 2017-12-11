@@ -1,22 +1,19 @@
 from common import *
 from ..models.dataset import *
-from ..models.abstract_common import CommonPlanets, CommonActivity
+from ..models.planets import CommonPlanets
+from ..models.activity import CommonActivity
 from ..models.radial_velocities import RVkeplerian, RVdynamical, TransitTimeKeplerian, TransitTimeDynamical, DynamicalIntegrator
 from ..models.gp_semiperiodic_activity import GaussianProcess_QuasiPeriodicActivity
 from ..models.celerite_semiperiodic_activity import Celerite_QuasiPeriodicActivity
 from ..models.correlations import Correlation_SingleDataset
-#TD from gaussian import GaussianProcess_QuasiPeriodicActivity
-#TD from curvature import CurvatureCommonVariables
-#TD from sinusoids import SinusoidsCommonVariables
+from ..models.polynomial_trend import CommonPolynomialTrend, PolynomialTrend
 
 __all__ = ["pars_input", "yaml_parser"]
 
 define_common_type_to_class = {
     'planets': CommonPlanets,
-    'activity': CommonActivity
-    #TD 'gp_quasiperiodic': GaussianProcess_QuasiPeriodicActivity,
-    #TD 'curvature': CurvatureCommonVariables,
-    #TD 'correlation': CorrelationsCommonVariables
+    'activity': CommonActivity,
+    'polynomial_trend': CommonPolynomialTrend
 }
 
 define_type_to_class = {
@@ -28,9 +25,8 @@ define_type_to_class = {
                      'dynamical': TransitTimeDynamical},
     'gp_quasiperiodic': GaussianProcess_QuasiPeriodicActivity,
     'celerite_quasiperiodic': Celerite_QuasiPeriodicActivity,
-    #TD 'gp_quasiperiodic': GaussianProcess_QuasiPeriodicActivity,
-    #TD 'curvature': CurvatureCommonVariables,
-    'correlation_singledataset': Correlation_SingleDataset
+    'correlation_singledataset': Correlation_SingleDataset,
+    'polynomial_trend': PolynomialTrend
 }
 
 accepted_extensions = ['.yaml', '.yml', '.conf', '.config', '.input', ]
@@ -248,6 +244,7 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, shutdown_
             boundaries_fixed_priors_starts(mc, mc.models[model_name], model_conf, dataset_1=model_conf['reference'])
 
         else:
+
             mc.models[model_name] = \
                     define_type_to_class[model_type](model_name, model_conf['common'])
 

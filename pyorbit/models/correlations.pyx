@@ -20,7 +20,7 @@ class Correlation_SingleDataset(AbstractModel):
 
     def initialize_model(self, mc, **kwargs):
         """ A special kind of initialization is required for this module, since it has to take a second dataset
-        and check the corrispondence with the points
+        and check the correspondence with the points
 
         """
         dataset_ref = mc.dataset_dict[kwargs['reference']]
