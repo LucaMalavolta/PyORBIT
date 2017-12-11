@@ -63,7 +63,10 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
         if hasattr(mc.emcee_parameters, 'version'):
             emcee_version = mc.emcee_parameters['version'][0]
         else:
-            emcee_version = '2'
+            if sampler_lnprobability.shape[0] > sampler_lnprobability.shape[1]:
+                emcee_version = '3'
+            else:
+                emcee_version = '2'
 
         mc.model_setup()
         """ Required to create the right objects inside each class - if defined inside """
