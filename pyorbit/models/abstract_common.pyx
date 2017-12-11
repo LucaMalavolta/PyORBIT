@@ -125,4 +125,6 @@ class AbstractCommon(object):
         return population
 
 
-
+# Temporary fix to avoid running the GAPS activity analysis again
+from .planets import CommonPlanets
+from .activity import CommonActivity

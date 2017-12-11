@@ -1,6 +1,5 @@
 from ..classes.common import *
 
-
 class AbstractModel():
 
     def __init__(self, model_name, common_ref):
