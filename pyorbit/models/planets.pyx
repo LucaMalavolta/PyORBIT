@@ -5,8 +5,8 @@ class CommonPlanets(AbstractCommon):
     """
     Inherited class from AbstractCommon
 
-    For computational reason it is better to fit sqrt(e)*sin(o) and sqrt(e)*cos(o)
-    :func:define_special_variables_bounds and :func:define_special_starting_point must be redefined
+    For computational reason it is better to fit sqrt(e)*sin(o) and sqrt(e)*cos(o).
+    :func:`define_special_variables_bounds` and :func:`define_special_starting_point` must be redefined
 
     Attributes:
         :model_class: identify the kind of class
