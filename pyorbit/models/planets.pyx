@@ -12,9 +12,9 @@ class CommonPlanets(AbstractCommon):
         :model_class: identify the kind of class
         :list_pams: all the possible parameters that can be assigned to a planet are listed here
         :default_bounds: these default boundaries are used when the user does not define them in the yaml file
-        recenter_pams: circular parameters that may need a recentering around the most likely value after the global
+        :recenter_pams: circular parameters that may need a recentering around the most likely value after the global
             optimization run
-        period_average: variable used only by TRADES
+        :period_average: variable used only by TRADES
     """
 
     model_class = 'planet'
