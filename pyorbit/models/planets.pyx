@@ -5,15 +5,16 @@ class CommonPlanets(AbstractCommon):
     """
     Inherited class from AbstractCommon
 
-    For computational reason it is better to fit :math:`\sqrt{e}\sin{o}` and :math:`\sqrt{e}\cos{o}`.
+    For computational reason it is better to fit :math:`\sqrt{e}\sin{\omega}` and :math:`\sqrt{e}\cos{\omega}`.
     :func:`define_special_variables_bounds` and :func:`define_special_starting_point` must be redefined
 
     Attributes:
         :model_class: identify the kind of class
         :list_pams: all the possible parameters that can be assigned to a planet are listed here
         :default_bounds: these default boundaries are used when the user does not define them in the yaml file
-        :recenter_pams:
-        :period_average: variable used only by TRADES
+        recenter_pams: circular parameters that may need a recentering around the most likely value after the global
+            optimization run
+        period_average: variable used only by TRADES
     """
 
     model_class = 'planet'
@@ -50,13 +51,13 @@ class CommonPlanets(AbstractCommon):
 
     recenter_pams = {'f', 'o', 'lN'}
 
-    # Variable used by TRADES
+    # Variable used only by TRADES
     period_average = None
 
     def define_special_variables_bounds(self, ndim, var):
         """ Boundaries definition for eccentricity and argument of pericenter
 
-        The internal variable to be fitted are :math:`\sqrt{e}\sin{o}` and :math:`\sqrt{e}\cos{o}`.
+        The internal variable to be fitted are :math:`\sqrt{e}\sin{\omega}` and :math:`\sqrt{e}\cos{\omega}`.
         With this parametrization it is not
         possible to naturally put a boundary to eccentricity without affecting the argument of pericenter
 
@@ -106,9 +107,19 @@ class CommonPlanets(AbstractCommon):
         return ndim, bounds_list
 
     def define_special_starting_point(self, starting_point, var):
-        '''eccentricity and argument of pericenter require a special treatment
-         since they can be provided as fixed individual values or may need to be combined
-         in ecosw and esinw if are both free variables'''
+        """
+        Eccentricity and argument of pericenter require a special treatment
+
+        since they can be provided as fixed individual values or may need to be combined
+        in :math:`\sqrt{e}\sin{\omega}` and :math:`\sqrt{e}\cos{\omega}` if are both free variables
+
+        Args:
+            :starting_point:
+            :var:
+        Returns:
+            :bool:
+
+        """
 
         if not (var == "e" or var == "o"):
             return False
