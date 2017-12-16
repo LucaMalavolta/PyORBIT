@@ -4,4 +4,3 @@ matplotlib
 corner
 cython
 emcee
-pyde

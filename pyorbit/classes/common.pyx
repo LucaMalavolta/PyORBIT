@@ -5,6 +5,13 @@ import sys
 if 'celerite' not in sys.modules:
 
     try:
+        import pyde
+    except:
+        from dummy import pyde
+        print('WARNING! Imported dummy pyde, nothing will work')
+
+
+    try:
         import celerite
         import autograd.numpy as np
     except:
@@ -14,7 +21,7 @@ if 'celerite' not in sys.modules:
         print('WARNING! Imported dummy celerite, models relying on this package will not work')
 
     try:
-        import PyPolyChord as PyPolyChord
+        import PyPolyChord
         from PyPolyChord.settings import PolyChordSettings
     except:
         from dummy import PyPolyChord
@@ -131,4 +138,3 @@ def pick_MAP_parameters(samples, lnprob):
     else:
         print 'ERROR!!! '
         return None
-

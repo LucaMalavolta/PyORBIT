@@ -4,7 +4,7 @@ from classes.input_parser import yaml_parser, pars_input
 from classes.io_subroutines import pyde_save_to_pickle, pyde_load_from_cpickle, \
     emcee_save_to_cpickle, emcee_load_from_cpickle, emcee_flatchain
 import emcee
-from pyde.de import DiffEvol
+import pyde
 import os
 
 __all__ = ["pyorbit_emcee", "yaml_parser"]
@@ -114,7 +114,7 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
             os.makedirs(mc.pyde_dir_output)
 
         print 'PyDE'
-        de = DiffEvol(mc, mc.bounds, mc.emcee_parameters['nwalkers'], maximize=True)
+        de = pyde.de.DiffEvol(mc, mc.bounds, mc.emcee_parameters['nwalkers'], maximize=True)
         de.optimize(mc.pyde_parameters['ngen'])
         print 'PyDE completed'
 
@@ -207,4 +207,3 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
 
     if return_output:
         return mc, sampler.chain,  sampler.lnprobability
-
