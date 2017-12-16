@@ -4,7 +4,6 @@ from classes.input_parser import yaml_parser, pars_input
 from classes.io_subroutines import pyde_save_to_pickle, pyde_load_from_cpickle, \
     emcee_save_to_cpickle, emcee_load_from_cpickle, emcee_flatchain
 import emcee
-import pyde
 import os
 
 __all__ = ["pyorbit_emcee", "yaml_parser"]

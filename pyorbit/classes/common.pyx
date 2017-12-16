@@ -1,7 +1,6 @@
 import os
 import sys
 
-
 if 'celerite' not in sys.modules:
 
     try:
@@ -9,7 +8,6 @@ if 'celerite' not in sys.modules:
     except:
         from dummy import pyde
         print('WARNING! Imported dummy pyde, nothing will work')
-
 
     try:
         import celerite
