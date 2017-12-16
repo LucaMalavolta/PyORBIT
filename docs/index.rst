@@ -6,6 +6,8 @@
 Welcome to PyORBIT's documentation!
 ===================================
 
+PyORBIT is a code to fit your radial velocities and find new planets!
+
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
