@@ -5,7 +5,7 @@ class CommonPlanets(AbstractCommon):
     """
     Inherited class from AbstractCommon
 
-    For computational reason it is better to fit sqrt(e)*sin(o) and sqrt(e)*cos(o).
+    For computational reason it is better to fit :math:`\sqrt{e}\sin{o}` and :math:`\sqrt{e}\cos{o}`.
     :func:`define_special_variables_bounds` and :func:`define_special_starting_point` must be redefined
 
     Attributes:
@@ -56,7 +56,8 @@ class CommonPlanets(AbstractCommon):
     def define_special_variables_bounds(self, ndim, var):
         """ Boundaries definition for eccentricity and argument of pericenter
 
-        The internal variable to be fitted are sqrt(e)*sin(o) and sqrt(e)*cos(o). With this parametrization it is not
+        The internal variable to be fitted are :math:`\sqrt{e}\sin{o}` and :math:`\sqrt{e}\cos{o}`.
+        With this parametrization it is not
         possible to naturally put a boundary to eccentricity without affecting the argument of pericenter
 
         Args:
