@@ -16,7 +16,8 @@ Welcome to PyORBIT's documentation!
    api
 
 
-`Link text <http://google.github.io/styleguide/pyguide.html>`_
+Following `PEP 8 Style Guide for Python Code <https://www.python.org/dev/peps/pep-0008/>`_  ,
+`PEP 257 Docstring Conventions <https://www.python.org/dev/peps/pep-0257/>`_ and `Google Python Style Guide <http://google.github.io/styleguide/pyguide.html>`_
 
 
 Indices and tables
