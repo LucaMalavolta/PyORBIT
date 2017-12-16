@@ -4,3 +4,4 @@ matplotlib
 corner
 cython
 emcee
+pyyaml
