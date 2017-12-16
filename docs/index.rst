@@ -11,10 +11,12 @@ Welcome to PyORBIT's documentation!
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
-   
+
    installation
+   api
 
 
+`Link text <http://google.github.io/styleguide/pyguide.html>`_
 
 
 Indices and tables

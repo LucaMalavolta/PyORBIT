@@ -2,10 +2,12 @@ from ..classes.common import *
 
 
 class AbstractCommon(object):
-    ''' This class must be created for each planet in the system
-        model_name is the way the planet is identified
+    """
 
-    '''
+        Comments to be updated
+
+    """
+
     def __init__(self, common_ref):
         self.common_ref = common_ref
         self.variable_sampler = {}
@@ -104,8 +106,18 @@ class AbstractCommon(object):
             starting_point[self.variable_sampler[var]] = start_converted
 
     def return_priors(self, theta):
-        """ return prior is defined here because, differently from other functions that can be esecuted more than once
-        on the same variable,  the prior for a given parameter should be computed and added to the log_chi2 only one """
+        """Compute the prior probability for a given set of input parameters
+
+        return_priors is defined in the common models because, differently from other functions that can be executed
+        more than once on the same variable, the prior for a given parameter should be computed and added to the
+        log_chi2 only once
+
+        Args:
+            theta: the set of parameters created by the solver
+        Returns:
+            prior_out: prior probability, to be added to the posterior probability
+        """
+
         prior_out = 0.00
         variable_value = self.convert(theta)
         for var in list(set(self.prior_pams) & set(variable_value)):

@@ -1,7 +1,12 @@
 from ..classes.common import *
 
-class AbstractModel():
 
+class AbstractModel():
+    """
+
+        Comments to be updated
+
+    """
     def __init__(self, model_name, common_ref):
         self.model_name = model_name
         self.common_ref = common_ref

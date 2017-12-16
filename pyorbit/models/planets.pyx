@@ -1,13 +1,23 @@
 from abstract_common import *
 
+
 class CommonPlanets(AbstractCommon):
-    ''' This class must be created for each planet in the system
-            model_name is the way the planet is identified
-    '''
+    """
+    Inherited class from AbstractCommon
+
+    For computational reason it is better to fit sqrt(e)*sin(o) and sqrt(e)*cos(o)
+    :func:define_special_variables_bounds and :func:define_special_starting_point must be redefined
+
+    Attributes:
+        :model_class: identify the kind of class
+        :list_pams: all the possible parameters that can be assigned to a planet are listed here
+        :default_bounds: these default boundaries are used when the user does not define them in the yaml file
+        :recenter_pams:
+        :period_average: variable used only by TRADES
+    """
 
     model_class = 'planet'
 
-    ''' all the possible parameters that can be assigned to a planet are listed here'''
     list_pams = {
         'P': 'LU',  # Period, log-uniform prior
         'K': 'LU',  # RV semi-amplitude, log-uniform prior
@@ -21,7 +31,6 @@ class CommonPlanets(AbstractCommon):
         'a': 'U'  # semi-major axis (in units of stellar radii)
     }
 
-    """These default boundaries are used when the user does not define them in the yaml file"""
     default_bounds = {
         'P': [0.4, 100000.0],
         'K': [0.5, 2000.0],
@@ -41,10 +50,22 @@ class CommonPlanets(AbstractCommon):
 
     recenter_pams = {'f', 'o', 'lN'}
 
-    """ Variable used by trades"""
+    # Variable used by TRADES
     period_average = None
 
     def define_special_variables_bounds(self, ndim, var):
+        """ Boundaries definition for eccentricity and argument of pericenter
+
+        The internal variable to be fitted are sqrt(e)*sin(o) and sqrt(e)*cos(o). With this parametrization it is not
+        possible to naturally put a boundary to eccentricity without affecting the argument of pericenter
+
+        Args:
+            :ndim:
+            :var:
+        Returns:
+            :ndim:
+            :bounds_list:
+        """
 
         bounds_list = []
 
