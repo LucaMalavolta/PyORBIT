@@ -4,6 +4,9 @@ def pytrades():
 def pyde():
     pass
 
+def PyPolyChord():
+    pass
+
 def PolyChord():
     pass
 
