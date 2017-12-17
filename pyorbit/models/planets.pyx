@@ -9,7 +9,7 @@ class CommonPlanets(AbstractCommon):
     :func:`define_special_variables_bounds` and :func:`define_special_starting_point` must be redefined
 
     Attributes:
-        :model_class: identify the kind of class
+        :model_class (string): identify the kind of class
         :list_pams: all the possible parameters that can be assigned to a planet are listed here
         :default_bounds: these default boundaries are used when the user does not define them in the yaml file
         :recenter_pams: circular parameters that may need a recentering around the most likely value after the global
@@ -55,18 +55,21 @@ class CommonPlanets(AbstractCommon):
     period_average = None
 
     def define_special_variables_bounds(self, ndim, var):
-        """ Boundaries definition for eccentricity and argument of pericenter
+        """ Boundaries definition for eccentricity :math:`e` and argument of pericenter :math:`\omega`
 
         The internal variable to be fitted are :math:`\sqrt{e}\sin{\omega}` and :math:`\sqrt{e}\cos{\omega}`.
-        With this parametrization it is not
-        possible to naturally put a boundary to eccentricity without affecting the argument of pericenter
+        With this parametrization it is not possible to naturally put a boundary to :math:`e` without affecting the
+        :math:`\omega`.
+        Additionally the subroutine will check if either :math:`e` or :math:`\omega` have been provided as fixed values.
+        If true, the parametrization will consist of :math:`e` or :math:`\omega`  instead of
+        :math:`\sqrt{e}\sin{\omega}` and :math:`\sqrt{e}\cos{\omega}`
 
         Args:
-            :ndim:
-            :var:
+            :ndim: number of parameters already processed by other models
+            :var: input variable, either :math:`e` or :math:`\omega`
         Returns:
-            :ndim:
-            :bounds_list:
+            :ndim: updated dimensionality of the problem
+            :bounds_list: additional boundaries to be added to the original list
         """
 
         bounds_list = []
