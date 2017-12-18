@@ -1,7 +1,7 @@
 def pytrades():
     pass
 
-def pyde():
+def DiffEvol():
     pass
 
 def PyPolyChord():

@@ -4,9 +4,9 @@ import sys
 if 'celerite' not in sys.modules:
 
     try:
-        import pyde
+        from pyde.de import DiffEvol
     except:
-        from dummy import pyde
+        from dummy import DiffEvol
         print('WARNING! Imported dummy pyde, nothing will work')
 
     try:

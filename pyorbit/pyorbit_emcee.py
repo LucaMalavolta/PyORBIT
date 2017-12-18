@@ -113,7 +113,7 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
             os.makedirs(mc.pyde_dir_output)
 
         print 'PyDE'
-        de = pyde.de.DiffEvol(mc, mc.bounds, mc.emcee_parameters['nwalkers'], maximize=True)
+        de = DiffEvol(mc, mc.bounds, mc.emcee_parameters['nwalkers'], maximize=True)
         de.optimize(mc.pyde_parameters['ngen'])
         print 'PyDE completed'
 
