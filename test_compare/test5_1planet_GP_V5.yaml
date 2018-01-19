@@ -1,5 +1,5 @@
 inputs:
-  0:
+  RV:
       file: test_1planet_GP_RV.dat
       kind: RV
       models: ['radial_velocities', 'gp_quasiperiodic']
@@ -25,7 +25,7 @@ models:
     planets: ['b']
   gp_quasiperiodic:
     common: activity
-    0:
+    RV:
       boundaries:
         Hamp: [10.00, 100.00]
 parameters:
