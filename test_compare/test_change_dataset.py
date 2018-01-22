@@ -39,7 +39,7 @@ rv_err = np.ones(n_x) * 2.0
 mod_pl = np.random.normal(y_pla, rv_err)
 
 """When provided to the pyorbit_emcee() subroutine instead of being read from a file, the input_dataset must be a 
-dictionary where the keyword corresponding to the name of the dataset. for each keyword, a n*6 numpy array must be 
+dictionary where the keyword corresponds to the label of the dataset. for each keyword, a n*6 numpy array must be 
 included, where n is the number of observations. 
 If the keyword for a dataset is present, it will have priority on the dataset file unless the keyword is empty
 
