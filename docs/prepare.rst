@@ -35,7 +35,6 @@ This is an example of a K2 lightcurve, with epochs expressed as BJD_{UTC}-245000
   7139.6107   -13.6377   0.0031   0   0   -1
   7139.6311   -13.6375   0.0031   0   0   -1
   7139.6515   -13.6375   0.0031   0   0   -1
-  7139.6720   -13.6372   0.0031   0   0   -1
   .........   ........   ......   .   .   ..
 
 When provided to the pyorbit_emcee() subroutine instead of being read from a file, the input_dataset must be a dictionary where each keyword corresponds to the label of the dataset. For each keyword, a n*6 numpy array must be
@@ -49,9 +48,9 @@ For example:
   input_dataset{'RV'}[:,0] = epoch of observation
   input_dataset{'RV'}[:,1] = value of observation
   input_dataset{'RV'}[:,2] = associated error
-  input_dataset{'RV'}[:,4] = jitter flag
-  input_dataset{'RV'}[:,5] = offset flag
-  input_dataset{'RV'}[:,6] = linear trend flag
+  input_dataset{'RV'}[:,3] = jitter flag
+  input_dataset{'RV'}[:,4] = offset flag
+  input_dataset{'RV'}[:,5] = linear trend flag
 
 For `Tcent` kind of data, the structure is slightly different, since the first columns denote the
 
@@ -60,7 +59,7 @@ For `Tcent` kind of data, the structure is slightly different, since the first c
   0   4959.70736   0.00145   0   -1   -1
   1   4968.99347   0.00225   0   -1   -1
   2   4978.28014   0.00202   0   -1   -1
-  3   4987.56502   0.00305   0   -1   -1
+  .   ..........   .......   .   ..   ..
 
 and
 
@@ -70,9 +69,9 @@ and
   input_dataset{'Tcent_b'}[:,0] = number of transit (e.g. if some transit is missing)
   input_dataset{'Tcent_b'}[:,1] = transit time
   input_dataset{'Tcent_b'}[:,2] = associated error
-  input_dataset{'Tcent_b'}[:,4] = jitter flag
+  input_dataset{'Tcent_b'}[:,3] = jitter flag
+  input_dataset{'Tcent_b'}[:,4] = should be set to -1 to avoid unphysical solution
   input_dataset{'Tcent_b'}[:,5] = should be set to -1 to avoid unphysical solution
-  input_dataset{'Tcent_b'}[:,6] = should be set to -1 to avoid unphysical solution
 
 
 What's the point of using the flags instead of creating different datasets? Here a few examples:
@@ -94,7 +93,7 @@ Datasets are grouped under the input category:
        file: K2_lighcurve.dat
        kind: Phot
        models: ['gp_quasiperiodic']
-
+       
 - ``K2``: the label to identify the dataset. The same label must be used later in the file if we need to specify a property of the dataset (e.g. a prior on the offset).
 - ``file``: the file including the dataset.
 - ``kind``: the kind of dataset provided. This label is used only by specific models that requires a special treatment with respect to standard datasets, i.e. central times of transit must be tagged with the ``Tcent`` data type.
