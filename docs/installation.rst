@@ -4,7 +4,7 @@ Installation
 ============
 
 Requirements
-+++++++
+++++++++++++
 
 This is the list of packages required by PyORBIT to work out-of-the-box:
 
@@ -40,10 +40,10 @@ Additional packages may be required to perform certain types of analysis:
 .. _corner.py home page: https://github.com/dfm/corner.py
 
 Instructions
-+++++++
+++++++++++++
 
 ``pyDE``
--------
+--------
 
 Installing from pip results in an error, so you have to install from source using the following commands:
 
@@ -177,7 +177,8 @@ If you get the following error when executing ``mpirun -np 20 python run_PyPolyC
   -----------------------------------------------------------------------------
 
 Then check if the mpirun executable belongs to the same installation of the library that have been used to compile PolyChord.
-For example, in my case I re-installed OpenMPI in the directory ``/home/malavolta/CODE/others/openmpi_dir`` . This is how ```LD_PRELOAD`` is configured in my``~\.bashrc`` file:
+For example, in my case I re-installed OpenMPI in the directory ``/home/malavolta/CODE/others/openmpi_dir`` . This is how ```LD_PRELOAD`` is configured in my ``~\.bashrc`` file:
+
 .. code:: bash
 
   export LD_PRELOAD=/home/malavolta/CODE/others/openmpi_dir/lib/libmpi.so:$LD_PRELOAD
@@ -191,8 +192,12 @@ The correct ``mpirun`` is:
   $ which mpirun
   /home/malavolta/CODE/others/openmpi_dir/bin/mpirun
 
-If your ``mpirun`` is not coming from the same installation directory of your MPI libraries, add
+If your ``mpirun`` is not coming from the same installation directory of your MPI libraries, add to the ``PATH`` environment variable the ``bin`` directory of the MPI distribution you are crrently using, at the end of your ``~\.bashrc`` file:
+
+.. code:: bash
+
+  export PATH=/home/malavolta/CODE/others/openmpi_dir/bin:$PATH
 
 
 .. _OpenMPI: https://www.open-mpi.org/
-*.. _PolyChord home page: https://ccpforge.cse.rl.ac.uk/gf/project/polychord/
+.. _PolyChord home page: https://ccpforge.cse.rl.ac.uk/gf/project/polychord/
