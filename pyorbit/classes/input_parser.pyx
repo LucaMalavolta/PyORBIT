@@ -266,7 +266,7 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, shutdown_
         mc.star_radius = np.asarray(conf_parameters['star_radius'][:], dtype=np.double)
 
     if 'dynamical_integrator' in conf_solver:
-        mc.dynamical_model.dynamical_integrator = conf_parameters['dynamical_integrator']
+        mc.dynamical_model.dynamical_integrator = conf_solver['dynamical_integrator']
 
     if 'pyde' in conf_solver:
         conf = conf_solver['pyde']

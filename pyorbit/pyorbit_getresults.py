@@ -192,27 +192,34 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
             #for theta_name, th in theta_dictionary.iteritems():
 
             step_sampling = np.arange(nburnin/nthin, nsteps/nthin, 1)
-            """ 
+
             for theta_name, th in theta_dictionary.iteritems():
                 rhat = np.array([GelmanRubin_v2(sampler_chain[:, :steps, th]) for steps in step_sampling])
                 print ' Gelman-Rubin: %5i %12f %s ' % (th, rhat[-1], theta_name)
                 file_name = dir_output + 'gr_traces/v2_' + repr(th) + '_' + theta_name + '.png'
                 fig = plt.figure(figsize=(12, 12))
                 plt.plot(step_sampling, rhat[:], '-', color='k')
-                plt.axhline(1.01)
+                #plt.axhline(1.01)
                 plt.savefig(file_name, bbox_inches='tight', dpi=300)
                 plt.close(fig)
-            """
+
             for theta_name, th in theta_dictionary.iteritems():
                 file_name = dir_output + 'gr_traces/' + repr(th) + '_' + theta_name + '.png'
                 out_absc = np.arange(0, nburnin/nthin, 1)
                 out_lines = np.zeros(nburnin/nthin)
 
-                for ii in xrange(20, nburnin/nthin):
-                    out_lines[ii] = GelmanRubin(sampler_chain[:, :ii, th].T)
+                #for ii in xrange(20, nburnin/nthin):
+                #    out_lines[ii] = GelmanRubin(sampler_chain[:, :ii, th].T)
+                #fig = plt.figure(figsize=(12, 12))
+                #plt.plot(out_absc[20:], out_lines[20:], '-', color='k')
+                #plt.axhline(1.01)
+
+                rhat = np.array([GelmanRubin(sampler_chain[:, :steps, th].T) for steps in step_sampling])
+                print ' Gelman-Rubin: %5i %12f %s ' % (th, rhat[-1], theta_name)
                 fig = plt.figure(figsize=(12, 12))
-                plt.plot(out_absc[20:], out_lines[20:], '-', color='k')
-                plt.axhline(1.01)
+                plt.plot(step_sampling, rhat[:], '-', color='k')
+
+
                 plt.savefig(file_name, bbox_inches='tight', dpi=300)
                 plt.close(fig)
 

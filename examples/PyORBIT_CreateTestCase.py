@@ -31,16 +31,12 @@ planet_c = {
 instrument = {
     'RV_precision': 1.000,
     'RV_offset1': np.random.uniform(4000.0,5000.0),
-    'RV_offset2': np.random.uniform(4000.0,5000.0)
+    'RV_offset2': np.random.uniform(4000.0,5000.0),
+    'T0_precision': 0.001
 }
 
-bjd_obs = np.random.normal(np.arange(6000, 6050, 1, dtype=np.double), 0.2
-Tref = 6025
-
-print planet_b
-print planet_c
-print instrument
-
+bjd_obs = np.random.normal(np.arange(6000, 6050, 1, dtype=np.double), 0.2)
+Tref = 6025.0000
 
 """
 
@@ -67,10 +63,15 @@ print instrument
 
 """
 
+""" 
+TestCase01: single planet, no external contraints
+TestCase02: single planet, transit times
+TestCase03: two planets, transit times of the first one
 
+"""
 
-def create_testcase1():
-    Tref = np.mean(x, dtype=np.double)
+def create_testcase01():
+
     bjd0 = bjd_obs - Tref
 
     y_pla = kp.kepler_RV_T0P(bjd0,
@@ -82,20 +83,118 @@ def create_testcase1():
 
     mod_pl = np.random.normal(y_pla, instrument['RV_precision'])
 
-    Transit_Time = kp.kepler_Tcent_T0P(planet_b['P'], planet_b['f'], planet_b['e'], planet_b['o']) + Tref
-    print 'Transit Time:', Transit_Time
-    print 'transit Time - Tref', Transit_Time - Tref
-
-    fileout = open('TestCase1_RV.dat', 'w')
-    for ii in xrange(0, np.size(x)):
-        fileout.write('{0:f} {1:f} {2:f} {3:d} {4:d} {5:d} \n'.format(
-            bjd_obs[ii], mod_pl[ii], instrument['RV_precision'], 0, 0, -1))
+    fileout = open('TestCase01_RV.dat', 'w')
+    for b, r in zip(bjd_obs, mod_pl):
+        fileout.write('{0:f}  {1:.2f}  {2:.2f}  {3:d}  {4:d}  {5:d}\n'.format(b, r, instrument['RV_precision'], 0, 0, -1))
     fileout.close()
 
-    fileout = open('TestCase1_Tcent_b.dat', 'w')
-    for ii in xrange(0, np.size(Transit_Time)):
-        fileout.write('{0:d} {1:f} {2:f} {3:d} \n'.format(ii, Transit_Time, 0.01, 0))
+
+def create_testcase02():
+
+    bjd0 = bjd_obs - Tref
+
+    y_pla = kp.kepler_RV_T0P(bjd0,
+                             planet_b['f'],
+                             planet_b['P'],
+                             planet_b['K'],
+                             planet_b['e'],
+                             planet_b['o']) + instrument['RV_offset1']
+
+    mod_pl = np.random.normal(y_pla, instrument['RV_precision'])
+
+    #Tcent_b = kp.kepler_Tcent_T0P(planet_b['P'], planet_b['f'], planet_b['e'], planet_b['o']) + Tref
+    Tcent_b =  np.random.normal(
+        np.arange(0,5)*kp.kepler_Tcent_T0P(planet_b['P'], planet_b['f'], planet_b['e'], planet_b['o']) + Tref,
+        instrument['T0_precision'])
+
+    fileout = open('TestCase02_RV.dat', 'w')
+    for b, r in zip(bjd_obs, mod_pl):
+        fileout.write('{0:f}  {1:.2f}  {2:.2f}  {3:d}  {4:d}  {5:d}\n'.format(b, r, instrument['RV_precision'], 0, 0, -1))
     fileout.close()
+
+    #fileout = open('TestCase01_Tcent_b.dat', 'w')
+    #for ii in xrange(0, np.size(Transit_Time)):
+    #    fileout.write('{0:d} {1:f} {2:f} {3:d} \n'.format(ii, Tcent_b, 0.01, 0))
+    #fileout.close()
+
+    fileout = open('TestCase02_Tcent_b.dat', 'w')
+    for i_Tc, v_Tc in enumerate(Tcent_b):
+        fileout.write('{0:d}  {1:.4f}  {2:.4f}  {3:d}\n'.format(i_Tc, v_Tc, instrument['T0_precision'], 0))
+    fileout.close()
+
+
+def create_testcase03():
+
+    bjd0 = bjd_obs - Tref
+
+    y_pla = instrument['RV_offset1'] + \
+            kp.kepler_RV_T0P(bjd0,
+                             planet_b['f'],
+                             planet_b['P'],
+                             planet_b['K'],
+                             planet_b['e'],
+                             planet_b['o']) + \
+            kp.kepler_RV_T0P(bjd0,
+                             planet_c['f'],
+                             planet_c['P'],
+                             planet_c['K'],
+                             planet_c['e'],
+                             planet_c['o'])
+
+    mod_pl = np.random.normal(y_pla, instrument['RV_precision'])
+
+    #Tcent_b = kp.kepler_Tcent_T0P(planet_b['P'], planet_b['f'], planet_b['e'], planet_b['o']) + Tref
+    Tcent_b =  np.random.normal(
+        np.arange(0,5)*kp.kepler_Tcent_T0P(planet_b['P'], planet_b['f'], planet_b['e'], planet_b['o']) + Tref,
+        instrument['T0_precision'])
+
+    fileout = open('TestCase03_RV.dat', 'w')
+    for b, r in zip(bjd_obs, mod_pl):
+        fileout.write('{0:f}  {1:.2f}  {2:.2f}  {3:d}  {4:d}  {5:d}\n'.format(b, r, instrument['RV_precision'], 0, 0, -1))
+    fileout.close()
+
+    #fileout = open('TestCase01_Tcent_b.dat', 'w')
+    #for ii in xrange(0, np.size(Transit_Time)):
+    #    fileout.write('{0:d} {1:f} {2:f} {3:d} \n'.format(ii, Tcent_b, 0.01, 0))
+    #fileout.close()
+
+    fileout = open('TestCase03_Tcent_b.dat', 'w')
+    for i_Tc, v_Tc in enumerate(Tcent_b):
+        fileout.write('{0:d}  {1:.4f}  {2:.4f}  {3:d}\n'.format(i_Tc, v_Tc, instrument['T0_precision'], 0))
+    fileout.close()
+
+
+
+
+create_testcase01()
+create_testcase02()
+create_testcase03()
+
+###################################################################
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 def create_test_1planet_circular():
@@ -354,9 +453,4 @@ def create_test_1planet_polynomial_trend():
     fileout.close()
 
 
-#create_test_1planet_polynomial_trend()
 
-#create_test_1planet_GP()
-#create_test_1planet_circular()
-#create_test_1planet_multijit_multioff()
-#create_test_2planets_multijit_multioff()
