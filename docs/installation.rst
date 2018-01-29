@@ -75,6 +75,18 @@ I’m currently using the latest version of emcee (Version 3.0 at the moment of 
 Additional codes
 ++++++++++++++++
 
+When running PyORBIT you may get one of the following warnings:
+
+.. code:: bash
+
+  WARNING! Imported dummy celerite, models relying on this package will not work
+  WARNING! Imported dummy PyPolyChord, models relying on this package will not work
+  WARNING! Imported dummy TRADES, models relying on this package will not work
+  WARNING! Imported dummy TTVFAST, models relying on this package will not work
+  WARNING! Imported dummy george, models relying on this package will not work
+
+*Simple* RV fit and analysis will still work, but if you want to use one of these packages and you are getting one of these error, the code will fail miserabily. You will still have some of these warnings because the relative module is loaded anyway even if you are not actually using it.
+  
 The following codes may be required to do some specific kind of analysis.
 
 ``george``

@@ -13,7 +13,8 @@ Welcome to PyORBIT's documentation!
    :caption: Contents:
 
    installation
-   prepare
+   prepare_datasets
+   prepare_yaml
    api
 
 
