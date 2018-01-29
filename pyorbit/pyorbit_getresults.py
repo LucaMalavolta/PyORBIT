@@ -523,3 +523,11 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
                     for x, y in zip(x_range, RV_out):
                         fileout.write('{0:f} {1:f} \n'.format(x, y))
                     fileout.close()
+
+    if sampler in sample_keyword['polychord']:
+
+        dir_input = './' + config_in['output'] + '/polychord/'
+        dir_output = './' + config_in['output'] + '/polychord_plot/'
+        os.system('mkdir -p ' + dir_output)
+
+
