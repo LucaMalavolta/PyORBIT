@@ -67,7 +67,8 @@ Tref = 6025.0000
 TestCase01: single planet, no external contraints
 TestCase02: single planet, transit times
 TestCase03: two planets, transit times of the first one
-
+TestCase04: two planets, transit times of the first one, dynamical integration
+TestCase05: photometric curve analyzed with Gaussian Process
 """
 
 def create_testcase01():
