@@ -86,7 +86,7 @@ When running PyORBIT you may get one of the following warnings:
   WARNING! Imported dummy george, models relying on this package will not work
 
 *Simple* RV fit and analysis will still work, but if you want to use one of these packages and you are getting one of these error, the code will fail miserabily. You will still have some of these warnings because the relative module is loaded anyway even if you are not actually using it.
-  
+
 The following codes may be required to do some specific kind of analysis.
 
 ``george``
@@ -147,7 +147,13 @@ Finally, to use the MPI functionalities, prepend the MPI command before the pyth
 
 If you already ran the command without the MPI instruction or with a different number of CPU, remember to delete the ``chains`` directory or the execution will fail.
 
-*Troubleshooting*
+PoliChord+MPI troubleshooting
++++++++++++++++++++++++++++++
+
+Here I report the three errors I encountered so far when I try to install or run PolyChord in MPI mode. For other errors, please refer to the README that comes with the source code.
+
+
+*Broken  MPI*
 
 If you get the following errors when executing ``run_PyPolyChord.py`` , your MPI/OpenMPI installation is likely broken and you have to re-install it. You need to have a working MPI installation even when you are using PolyChord in single-CPU mode!
 
@@ -172,6 +178,7 @@ then run:
   make veryclean
   make
 
+*MPI non starting*
 
 If you get the following error when executing ``mpirun -np 20 python run_PyPolyChord.py`` :
 
@@ -209,6 +216,29 @@ If your ``mpirun`` is not coming from the same installation directory of your MP
 .. code:: bash
 
   export PATH=/home/malavolta/CODE/others/openmpi_dir/bin:$PATH
+
+*Crash after a few iterations*
+
+If you have an error similar to this one:
+
+.. code:: bash
+
+  -------------------------------------------------------
+  Primary job  terminated normally, but 1 process returned
+  a non-zero exit code. Per user-direction, the job has been aborted.
+  -------------------------------------------------------
+
+  --------------------------------------------------------------------------
+  mpirun noticed that process rank 0 with PID 0 on node ghoul exited on signal 11 (Segmentation fault).
+  --------------------------------------------------------------------------
+
+You are experiencing a problem already reported in the README file of th ePolyChord source:
+
+Try increasing the stack size:
+Linux:    ulimit -s unlimited
+OSX:      ulimit -s hard
+and resume your job.
+The slice sampling & clustering steps use a recursive procedure. The default memory allocated to recursive procedures is embarassingly small (to guard against memory leaks).
 
 
 .. _OpenMPI: https://www.open-mpi.org/
