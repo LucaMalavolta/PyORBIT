@@ -105,8 +105,11 @@ What's the point of using the flags instead of creating different datasets? Here
 
 - Suppose your instrument undergoes some slight modifications, and the zero point of the RV is shifted but the overall instrument is the same: you can account for this zero-point difference without using a different jitter parameter.
 - Again your instrument undergoes major changes and both the zero-point and jitter are affected. However, observational parameters that depend on the characteristics of the instrument will be the same (e.g. the amplitude of stellar activity signals observed at optical wavelength), so you want to use only one parameter for this dataset and a different one for another dataset (e.g. observations gathered in the infrared).
+
 Shortly, the flags represent a way to separate instrumental issues from the physical problems.
 
 
 References
 ----------
+
+Later
