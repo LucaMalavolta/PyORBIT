@@ -20,6 +20,9 @@ define_type_to_class = {
     'radial_velocities': {'circular': RVkeplerian,
                           'keplerian': RVkeplerian,
                           'dynamical': RVdynamical},
+    'rv_planets': {'circular': RVkeplerian,
+                   'keplerian': RVkeplerian,
+                   'dynamical': RVdynamical},
     'transit_time': {'circular': TransitTimeKeplerian,
                      'keplerian': TransitTimeKeplerian,
                      'dynamical': TransitTimeDynamical},
@@ -197,12 +200,15 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, shutdown_
         else:
             model_type = model_name
 
-        if model_type == 'radial_velocities':
+        if model_type == 'radial_velocities' or model_type == 'rv_planets':
 
             """ radial_velocities is just a wrapper for the planets to be actually included in the model, so we
                 substitue it with the individual planets in the list"""
 
-            planet_list = np.atleast_1d(model_conf['planets']).tolist()
+            try:
+                planet_list = np.atleast_1d(model_conf['planets']).tolist()
+            except:
+                planet_list = np.atleast_1d(model_conf['common']).tolist()
 
             model_name_expanded = [model_name + '_' + pl_name for pl_name in planet_list]
             """ Let's avoid some dumb user using the planet names to name the models"""
@@ -226,7 +232,11 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, shutdown_
         elif model_type == 'transit_time':
             """ Only one planet for each file with transit times... mixing them would cause HELL"""
 
-            planet_name = np.atleast_1d(model_conf['planet']).tolist()[0]
+            try:
+                planet_name = np.atleast_1d(model_conf['planet']).tolist()[0]
+            except:
+                planet_name = np.atleast_1d(model_conf['common']).tolist()[0]
+
             mc.models[model_name] = \
                     define_type_to_class[model_type][mc.planet_dict[planet_name]](model_name, planet_name)
 
