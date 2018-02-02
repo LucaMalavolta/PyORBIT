@@ -1,26 +1,25 @@
 inputs:
-  0:
-      file: test_1planet_RV.dat
+  RVdata1:
+      file: TestCase02_RV.dat
       kind: RV
-      models: ['radial_velocities']
-  1:
-    file: test_1planet_Tcent_0.dat
+      models: ['RVmodel']
+  Tcent_b:
+    file: TestCase02_Tcent_b.dat
     kind: Tcent
     models: ['transit_b']
 common:
   planets:
     b:
-      orbit: dynamical
+      orbit: keplerian
       boundaries:
-        P: [2.0, 100.0]
-        M: [0.01, 1000.0]
+        P: [1.0, 100.0]
+        K: [0.01, 1000.0]
         e: [0.00, 1.00]
       fixed:
         i: [90.000, 0.001]
-        lN: [180.0, 0.001]
-        R: [0.001, 0.001]
 models:
-  radial_velocities:
+  RVmodel:
+    kind: 'radial_velocities'
     planets: ['b']
   transit_b:
     kind: transit_time
@@ -28,13 +27,18 @@ models:
 parameters:
   star_mass: [1.00, 0.01]
   star_radius: [1.00, 0.01]
+  Tref: 6025.00
 solver:
   pyde:
-    ngen: 8000
+    ngen: 4000
     npop_mult: 4
   emcee:
     npop_mult: 4
     nsteps: 50000
-    nburn: 10000
+    nburn: 20000
     thin: 100
+  polychord:
+    nlive: 1000
+    num_repeats_mult: 5
+    shutdown_jitter: True
   recenter_bounds: True

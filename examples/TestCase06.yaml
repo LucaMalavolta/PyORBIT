@@ -1,0 +1,64 @@
+inputs:
+  RVdata1:
+    file: TestCase06_RV.dat
+    kind: RV
+    models: ['RVmodel','gp_model']
+  Tcent_b:
+    file: TestCase06_Tcent_b.dat
+    kind: Tcent
+    models: transit_b
+  K2data:
+    file: TestCase06_photometry.dat
+    kind: Phot
+    models: gp_model
+common:
+  planets:
+    b:
+      orbit: keplerian
+      boundaries:
+        P: [1.0, 100.0]
+        K: [0.01, 1000.0]
+        e: [0.00, 1.00]
+      priors:
+        P: ['Gaussian', 6.73, 0.10]
+      fixed:
+        i: [90.000, 0.001]
+  activity:
+    boundaries:
+      Prot: [5.00, 50.00]
+      Pdec: [5.0, 200.00]
+      Oamp: [0.01, 2.00]
+models:
+  RVmodel:
+    kind: rv_planets
+    common: b
+  transit_b:
+    kind: transit_time
+    common: b
+  gp_model:
+    kind: gp_quasiperiodic
+    common: activity
+    K2data:
+      boundaries:
+        Hamp: [0.0001, 0.1000]
+    RVdata1:
+      boundaries:
+        Hamp: [0.1, 100.0]
+parameters:
+  star_mass: [1.00, 0.01]
+  star_radius: [1.00, 0.01]
+  Tref: 6025.00
+solver:
+  pyde:
+    ngen: 4000
+    npop_mult: 4
+  emcee:
+    npop_mult: 4
+    nsteps: 50000
+    nburn: 20000
+    thin: 100
+  polychord:
+    nlive: 1000
+    num_repeats_mult: 5
+    shutdown_jitter: True
+  recenter_bounds: True
