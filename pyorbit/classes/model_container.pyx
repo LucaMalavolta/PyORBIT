@@ -510,9 +510,10 @@ class ModelContainerPolyChord(ModelContainer):
         return theta.tolist()
 
     def polychord_call(self, theta1):
-        theta = np.empty(self.ndim)
-        for i in xrange(0, self.ndim):
-            theta[i] = theta1[i]
+        #theta = np.empty(self.ndim)
+        #for i in xrange(0, self.ndim):
+        #    theta[i] = theta1[i]
+        theta = [theta1[i] for i in xrange(0, self.ndim)]
         phi = [0.0] * 0
         chi_out = self(theta)
         if chi_out < -0.5e10:

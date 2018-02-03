@@ -147,21 +147,83 @@ Finally, to use the MPI functionalities, prepend the MPI command before the pyth
 
 If you already ran the command without the MPI instruction or with a different number of CPU, remember to delete the ``chains`` directory or the execution will fail.
 
-PoliChord+MPI troubleshooting
-+++++++++++++++++++++++++++++
+PolyChord on Mac troubleshooting
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+I run my code a Linux Box, but if I need to do a quick test or debug and I'm not in the office I do it on my Mac.
+
+ldd: command not found
+""""""""""""""""""""""
+
+You will probably get this error:
+
+.. code:: bash
+
+  /bin/sh: ldd: command not found
+
+Open the ``Makefile`` in the main directory and substitute ``ldd`` with ``otool -L``. In version 1.12 this is the only line you have to change, from this:
+
+.. code:: bash
+
+  $(shell touch PyPolyChord/.ld_preload.sh; ldd $(LIB_DIR)/libchord.so | grep -o '/.*libmpi.so[^/]* ' | awk '{print "export LD_PRELOAD="$$1":$$LD_PRELOAD"}' > PyPolyChord/.ld_preload.sh)
+
+to this:
+
+.. code:: bash
+
+    $(shell touch PyPolyChord/.ld_preload.sh; otool -L $(LIB_DIR)/libchord.so | grep -o '/.*libmpi.so[^/]* ' | awk '{print "export LD_PRELOAD="$$1":$$LD_PRELOAD"}' > PyPolyChord/.ld_preload.sh)
+
+Executing ``make clean`` will not delete the library files created in the ``lib`` folder, so you have to delete them manually:
+
+.. code:: bash
+
+  make clean
+  rm lib/polychord*.*
+  make
+
+
+Segmentation fault
+""""""""""""""""""
+
+If you are using Conda/Anaconda and running ``python run_PyPolyChord.py``:
+
+.. code:: bash
+
+  *** Process received signal ***
+  Signal: Segmentation fault: 11 (11)
+  Signal code: Address not mapped (1)
+  Failing at address: 0x2000000020
+  [ 0] 0   libsystem_platform.dylib            0x00007fff7991cf5a _sigtramp + 26
+  [ 1] 0   ???                                 0x000000005a21bf38 0x0 + 1512161080
+  [ 2] 0   libsystem_c.dylib                   0x00007fff7972fc3d __vfprintf + 4711
+  [ 3] 0   libsystem_c.dylib                   0x00007fff79757091 __v2printf + 473
+  [ 4] 0   libsystem_c.dylib                   0x00007fff7973c4af _vsnprintf + 415
+  [ 5] 0   libsystem_c.dylib                   0x00007fff7973c562 vsnprintf + 80
+  [ 6] 0   libgfortran.3.dylib                 0x000000010e8b5d9b _gfortran_convert_char4_to_char1 + 3963
+  *** End of error message ***
+
+My guess is that ``lib/libchord.so`` has been compiled with different system libraries than those called by Conda. I don't have a solution for this problem, but using the system python seems the easiest workaround:
+
+.. code:: bash
+
+  /usr/bin/python run_PyPolyChord.py
+
+
+PolyChord+MPI troubleshooting
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Here I report the three errors I encountered so far when I try to install or run PolyChord in MPI mode. For other errors, please refer to the README that comes with the source code.
 
-
-*Broken  MPI*
+Broken  MPI
+"""""""""""
 
 If you get the following errors when executing ``run_PyPolyChord.py`` , your MPI/OpenMPI installation is likely broken and you have to re-install it. You need to have a working MPI installation even when you are using PolyChord in single-CPU mode!
 
 .. code:: bash
 
-  [ghoul:30446] [[INVALID],INVALID] ORTE_ERROR_LOG: A system-required executable either could not be found or was not executable by this user in file ess_singleton_module.c at line 231
-  [ghoul:30446] [[INVALID],INVALID] ORTE_ERROR_LOG: A system-required executable either could not be found or was not executable by this user in file ess_singleton_module.c at line 140
-  [ghoul:30446] [[INVALID],INVALID] ORTE_ERROR_LOG: A system-required executable either could not be found or was not executable by this user in file runtime/orte_init.c at line 128
+  [[INVALID],INVALID] ORTE_ERROR_LOG: A system-required executable either could not be found or was not executable by this user in file ess_singleton_module.c at line 231
+  [[INVALID],INVALID] ORTE_ERROR_LOG: A system-required executable either could not be found or was not executable by this user in file ess_singleton_module.c at line 140
+  [[INVALID],INVALID] ORTE_ERROR_LOG: A system-required executable either could not be found or was not executable by this user in file runtime/orte_init.c at line 128
 
 In my case, I decided to re-build `OpenMPI`_ by following these `instructions <https://www.open-mpi.org/faq/?category=building>`_. Be sure to modify the ``LD_PRELOAD`` in your ``~\.bashrc`` accordingly.
 If you are not able to fix the problem, you can still run PolyChord without using the MPI/OpenMPI support (but be ready to wait a lot of time when executing a program...). Open the ``Makefile`` file end switch the MPI flag to zero:
@@ -240,6 +302,26 @@ OSX:      ulimit -s hard
 and resume your job.
 The slice sampling & clustering steps use a recursive procedure. The default memory allocated to recursive procedures is embarassingly small (to guard against memory leaks).
 
+*No available slot*
+
+The solution to this error:
+
+.. code:: bash
+
+  mpirun -np 8 python run_PyPolyChord.py
+
+  --------------------------------------------------------------------------
+  There are not enough slots available in the system to satisfy the 8 slots
+  that were requested by the application:
+    /usr/bin/python
+
+  Either request fewer slots for your application, or make more slots available
+  for use.
+  --------------------------------------------------------------------------
+
+Is quite simple: use a lower number after ``-np``. If `HyperThreading`_ is activated, the number of cores you see in your favorite task manger (or just ``htop``) is the number of _logical_ processor, while MPI cannot go further than the real number of cores in your machine.
+
 
 .. _OpenMPI: https://www.open-mpi.org/
 .. _PolyChord home page: https://ccpforge.cse.rl.ac.uk/gf/project/polychord/
+.. _Hyperthreading: https://superuser.com/questions/96001/why-does-my-intel-i7-920-display-8-cores-instead-of-4-cores

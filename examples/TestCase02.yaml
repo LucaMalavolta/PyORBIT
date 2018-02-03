@@ -6,7 +6,7 @@ inputs:
   Tcent_b:
     file: TestCase02_Tcent_b.dat
     kind: Tcent
-    models: ['transit_b']
+    models: transit_b
 common:
   planets:
     b:
@@ -21,7 +21,7 @@ models:
   RVmodel:
     kind: 'radial_velocities'
     planets: ['b']
-  transit_b:
+  Tcent_b:
     kind: transit_time
     planet: 'b'
 parameters:
@@ -30,7 +30,7 @@ parameters:
   Tref: 6025.00
 solver:
   pyde:
-    ngen: 4000
+    ngen: 16000
     npop_mult: 4
   emcee:
     npop_mult: 4

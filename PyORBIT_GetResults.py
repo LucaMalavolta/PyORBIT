@@ -9,6 +9,7 @@ if __name__ == '__main__':
     parser.add_argument('config_file', type=str, nargs=1, help='config file')
     parser.add_argument('-p', type=str, nargs='?', default=False, help='Create plot files')
     parser.add_argument('-c', type=str, nargs='?', default=False, help='Create chains plots')
+    parser.add_argument('-ln', type=str, nargs='?', default=False, help='Create ln_prob chain plot')
     parser.add_argument('-t', type=str, nargs='?', default=False, help='Create Gelman-Rubin traces')
     parser.add_argument('-f', type=str, nargs='?', default=False, help='Create model files using median parameters')
     parser.add_argument('-fc', type=str, nargs='?', default=False, help='Create full corellation plot - it may be slow!')
@@ -40,6 +41,8 @@ if __name__ == '__main__':
     if args.t is not False:
         plot_dictionary['traces'] = True
     if args.fc is not False:
+        plot_dictionary['lnprob_chain'] = True
+    if args.fc is not False:
         plot_dictionary['full_correlation'] = True
     if args.dc is not False:
         plot_dictionary['dataset_corner'] = True
@@ -51,6 +54,7 @@ if __name__ == '__main__':
         plot_dictionary['MAP_model_files'] = True
     if args.all is not False:
         plot_dictionary['plot'] = True
+        plot_dictionary['lnprob_chain'] = True
         plot_dictionary['chains'] = True
         plot_dictionary['traces'] = True
         plot_dictionary['common_corner'] = True
