@@ -122,7 +122,7 @@ def create_testcase02():
     mod_pl = np.random.normal(y_pla, instrument['RV_precision'])
 
     Tcent_b =  np.random.normal(
-        np.arange(0,5)*kp.kepler_Tcent_T0P(planet_b['P'], planet_b['f'], planet_b['e'], planet_b['o']) + Tref,
+        np.arange(0, 5)*planet_b['P'] + kp.kepler_Tcent_T0P(planet_b['P'], planet_b['f'], planet_b['e'], planet_b['o']) + Tref,
         instrument['T0_precision'])
 
     fileout = open('TestCase02_RV.dat', 'w')
@@ -158,7 +158,7 @@ def create_testcase03():
 
     #Tcent_b = kp.kepler_Tcent_T0P(planet_b['P'], planet_b['f'], planet_b['e'], planet_b['o']) + Tref
     Tcent_b =  np.random.normal(
-        np.arange(0,5)*kp.kepler_Tcent_T0P(planet_b['P'], planet_b['f'], planet_b['e'], planet_b['o']) + Tref,
+        np.arange(0,5)*planet_b['P'] + kp.kepler_Tcent_T0P(planet_b['P'], planet_b['f'], planet_b['e'], planet_b['o']) + Tref,
         instrument['T0_precision'])
 
     fileout = open('TestCase03_RV.dat', 'w')
@@ -199,11 +199,11 @@ def create_testcase04():
 
     #Tcent_b = kp.kepler_Tcent_T0P(planet_b['P'], planet_b['f'], planet_b['e'], planet_b['o']) + Tref
     Tcent_b =  np.random.normal(
-        np.arange(0,10)*kp.kepler_Tcent_T0P(planet_b['P'], planet_b['f'], planet_b['e'], planet_b['o']) + Tref,
+        np.arange(0,10)*planet_b['P'] + kp.kepler_Tcent_T0P(planet_b['P'], planet_b['f'], planet_b['e'], planet_b['o']) + Tref,
         instrument['T0_precision'])
 
     Tcent_c =  np.random.normal(
-        np.arange(0,10)*kp.kepler_Tcent_T0P(planet_c['P'], planet_c['f'], planet_c['e'], planet_c['o']) + Tref,
+        np.arange(0,10)*planet_c['P'] + kp.kepler_Tcent_T0P(planet_c['P'], planet_c['f'], planet_c['e'], planet_c['o']) + Tref,
         instrument['T0_precision'])
 
     fileout = open('TestCase04_RV.dat', 'w')
@@ -310,7 +310,7 @@ def create_testcase06():
     mod_pl = np.random.normal(y_pla + prediction, instrument['RV_precision'])
 
     Tcent_b =  np.random.normal(
-        np.arange(0,1)*kp.kepler_Tcent_T0P(planet_b['P'], planet_b['f'], planet_b['e'], planet_b['o']) + Tref,
+        np.arange(0,1)*planet_b['P'] + kp.kepler_Tcent_T0P(planet_b['P'], planet_b['f'], planet_b['e'], planet_b['o']) + Tref,
         instrument['T0_precision'])
 
     fileout = open('TestCase06_RV.dat', 'w')
@@ -363,7 +363,7 @@ def create_testcase07():
     mod_pl2 = np.random.normal(y_pla + prediction2 + instrument['RV_offset2'], instrument['RV_precision'])
 
     Tcent_b =  np.random.normal(
-        np.arange(0,1)*kp.kepler_Tcent_T0P(planet_b['P'], planet_b['f'], planet_b['e'], planet_b['o']) + Tref,
+        np.arange(0,1)*planet_b['P'] + kp.kepler_Tcent_T0P(planet_b['P'], planet_b['f'], planet_b['e'], planet_b['o']) + Tref,
         instrument['T0_precision'])
 
     fileout = open('TestCase07_RV_dataset1.dat', 'w')

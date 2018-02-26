@@ -526,7 +526,7 @@ class ModelContainerMultiNest(ModelContainer):
         # cube[:] = (self.bounds[:, 1] - self.bounds[:, 0]) * cube[:] + self.bounds[:, 0]
         for i in xrange(0, ndim):
             cube[i] = (self.bounds[i, 1] - self.bounds[i, 0]) * cube[i] + self.bounds[i, 0]
-        print cube
+        
 
     def multinest_call(self, theta1, ndim, nparams):
         # Workaround for variable selection: if a variable as null index
