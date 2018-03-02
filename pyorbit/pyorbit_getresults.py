@@ -41,6 +41,7 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
     AUday2ms = AU_km / seconds_in_day * 1000.0
 
     sample_keyword = {
+        'multinest': ['multinest', 'MultiNest', 'multi'],
         'polychord':['polychord', 'PolyChord', 'polychrod', 'poly'],
         'emcee': ['emcee', 'MCMC', 'Emcee']
     }
@@ -88,6 +89,53 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
         print 'Nwalkers = ', mc.emcee_parameters['nwalkers']
         print
         print 'Steps: ', nsteps
+        print
+
+    if sampler in sample_keyword['multinest']:
+
+        plot_dictionary['lnprob_chain'] = False
+        plot_dictionary['chains'] = False
+        plot_dictionary['traces'] = False
+
+        dir_input = './' + config_in['output'] + '/multinest/'
+        dir_output = './' + config_in['output'] + '/multinest_plot/'
+        os.system('mkdir -p ' + dir_output)
+
+        mc = polychord_load_from_cpickle(dir_input)
+
+        print mc.bounds
+        #pars_input(config_in, mc)
+
+        mc.model_setup()
+        mc.initialize_logchi2()
+        mc.results_resumen(None, skip_theta=True)
+
+        """ Required to create the right objects inside each class - if defined inside """
+        theta_dictionary = mc.get_theta_dictionary()
+        print theta_dictionary
+
+        print
+        print 'Reference Time Tref: ', mc.Tref
+        print
+        print 'Dimensions = ', mc.ndim
+        print
+
+        data_in = np.genfromtxt(dir_input + 'post_equal_weights.dat')
+        flat_lnprob = data_in[:, -1]
+        flat_chain = data_in[:, :-1]
+        nsample = np.size(flat_lnprob)
+
+
+        lnprob_med = common.compute_value_sigma(flat_lnprob)
+        chain_med = common.compute_value_sigma(flat_chain)
+        chain_MAP, lnprob_MAP = common.pick_MAP_parameters(flat_chain, flat_lnprob)
+
+        print
+        print 'Reference Time Tref: ', mc.Tref
+        print
+        print 'Dimensions = ', mc.ndim
+        print
+        print 'Samples: ', nsample
         print
 
     if sampler in sample_keyword['polychord']:
