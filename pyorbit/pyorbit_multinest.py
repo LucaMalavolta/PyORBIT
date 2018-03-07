@@ -88,6 +88,8 @@ def pyorbit_multinest(config_in, input_datasets=None):
 
     #os.chdir(multinest_dir_output)
 
+    print ' Sampling efficiency: ', mc.polychord_parameters['sampling_efficiency']
+
     import pymultinest
     mnest_kwargs = dict(n_live_points=nlive, outputfiles_basename=multinest_dir_output + './',
                         sampling_efficiency=mc.polychord_parameters['sampling_efficiency'],
