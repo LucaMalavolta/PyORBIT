@@ -45,7 +45,6 @@ class RVkeplerian(AbstractModel):
                                             variable_value['o'])
 
 
-
 class RVdynamical(AbstractModel):
 
     model_class = 'rv_dynamical'

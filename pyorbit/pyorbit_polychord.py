@@ -26,7 +26,7 @@ def pyorbit_polychord(config_in, input_datasets=None):
 
     try:
         mc = polychord_load_from_cpickle(polychord_dir_output, prefix='')
-        reloaded_mc = True
+    #    reloaded_mc = True
     except:
         pass
 
@@ -38,9 +38,9 @@ def pyorbit_polychord(config_in, input_datasets=None):
         mc = ModelContainerPolyChord()
         pars_input(config_in, mc, input_datasets)
 
-        #if mc.polychord_parameters['shutdown_jitter']:
-        #    for dataset in mc.dataset_dict.itervalues():
-        #        dataset.shutdown_jitter()
+        if mc.polychord_parameters['shutdown_jitter']:
+            for dataset in mc.dataset_dict.itervalues():
+                dataset.shutdown_jitter()
 
         mc.model_setup()
         mc.create_variables_bounds()
@@ -63,24 +63,6 @@ def pyorbit_polychord(config_in, input_datasets=None):
     print '*************************************************************'
     print
 
-    '''
-        Is this still required in version 1.12? 
-        
-        On Linux system (BASH):
-        export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$PWD/lib
-        export LD_PRELOAD=/usr/lib/openmpi/lib/libmpi.so:$LD_PRELOAD
-        export LD_PRELOAD=/usr/lib/x86_64-linux-gnu/libgfortran.so.3
-        mpirun -np 4 python run_PyPolyChord.py
-    
-        on Mac:
-        export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$PWD/lib
-        export LD_PRELOAD=/usr/lib/x86_64-linux-gnu/libgfortran.so.3
-        export LD_PRELOAD=/opt/local/lib/openmpi//lib/libmpi.so:$LD_PRELOAD
-        mpirun -np 4 python run_PyPolyChord.py
-    
-    '''
-
-    parameters = mc.get_theta_dictionary()
 
     num_repeats = mc.polychord_parameters['num_repeats_mult'] * mc.ndim
 

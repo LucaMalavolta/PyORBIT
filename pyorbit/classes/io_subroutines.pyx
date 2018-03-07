@@ -79,15 +79,25 @@ def emcee_flatchain(chain, nburnin, nthin):
     return chain[:, nburn:, :].reshape(s[0] * s[1], s[2])
 
 
-def emcee_flatlnprob(lnprob, nburnin, nthin):
-    """flattening of the emcee chains with removal of burn-in"""
-    _, d = np.shape(lnprob)
-    nburn = nburnin / nthin
-    if nburn > d:
-        nburn = d/4
+def emcee_flatlnprob(lnprob, nburnin, nthin, emcee_version):
+    if emcee_version == '3':
+        """flattening of the emcee chains with removal of burn-in"""
+        d, _ = np.shape(lnprob)
+        nburn = nburnin / nthin
+        if nburn >= d * 0.9:
+            nburn = d / 4
 
-    s = lnprob[:, nburn:].shape
-    return lnprob[:, nburn:].reshape(s[0] * s[1])
+        s = lnprob[nburn:, :].shape
+        return lnprob[nburn:, :].reshape(s[0] * s[1])
+    else:
+        """flattening of the emcee chains with removal of burn-in"""
+        _, d = np.shape(lnprob)
+        nburn = nburnin / nthin
+        if nburn >= d * 0.9:
+            nburn = d / 4
+
+        s = lnprob[:, nburn:].shape
+        return lnprob[:, nburn:].reshape(s[0] * s[1])
 
 
 def GelmanRubin(chains_T):
@@ -123,8 +133,8 @@ def GelmanRubin_v2(sampler_chain):
     W = np.mean(ssq, axis=0)
     theta_b = np.mean(sampler_chain, axis=1)
     theta_bb = np.mean(theta_b, axis=0)
-    m = sampler_chain.shape[0]
-    n = sampler_chain.shape[1]
+    m = sampler_chain.shape[0] * 1.0
+    n = sampler_chain.shape[1] * 1.0
     B = n / (m - 1) * np.sum((theta_bb - theta_b)**2, axis=0)
     var_theta = (n - 1) / n * W + 1 / n * B
     Rhat = np.sqrt(var_theta / W)
@@ -132,13 +142,13 @@ def GelmanRubin_v2(sampler_chain):
 
 """
 def model_container_plot(mc):
-    
+
     This subroutine makes a deepcopy of the model_container object. Then it substitutes the original datasets with
     densely sampled datasets for plotting purpose
 
     :param mc:
     :return mc_deepcopy:
-    
+
     mc_deepcopy = copy.deepcopy(mc)
     mc_deepcopy.deepcopy_for_plot = True
     for dataset_name, dataset in mc_deepcopy.dataset_dict.iteritems():
@@ -161,4 +171,3 @@ def model_container_plot(mc):
     return mc_deepcopy
 
 """
-

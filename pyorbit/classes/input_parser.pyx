@@ -1,36 +1,35 @@
 from common import *
 from ..models.dataset import *
-from ..models.abstract_common import CommonPlanets, CommonActivity
+from ..models.planets import CommonPlanets
+from ..models.activity import CommonActivity
 from ..models.radial_velocities import RVkeplerian, RVdynamical, TransitTimeKeplerian, TransitTimeDynamical, DynamicalIntegrator
 from ..models.gp_semiperiodic_activity import GaussianProcess_QuasiPeriodicActivity
 from ..models.celerite_semiperiodic_activity import Celerite_QuasiPeriodicActivity
-#TD from gaussian import GaussianProcess_QuasiPeriodicActivity
-#TD from curvature import CurvatureCommonVariables
-#TD from correlations import CorrelationsCommonVariables
-#TD from sinusoids import SinusoidsCommonVariables
+from ..models.correlations import Correlation_SingleDataset
+from ..models.polynomial_trend import CommonPolynomialTrend, PolynomialTrend
 
 __all__ = ["pars_input", "yaml_parser"]
 
 define_common_type_to_class = {
     'planets': CommonPlanets,
-    'activity': CommonActivity
-    #TD 'gp_quasiperiodic': GaussianProcess_QuasiPeriodicActivity,
-    #TD 'curvature': CurvatureCommonVariables,
-    #TD 'correlation': CorrelationsCommonVariables
+    'activity': CommonActivity,
+    'polynomial_trend': CommonPolynomialTrend
 }
 
 define_type_to_class = {
     'radial_velocities': {'circular': RVkeplerian,
                           'keplerian': RVkeplerian,
                           'dynamical': RVdynamical},
+    'rv_planets': {'circular': RVkeplerian,
+                   'keplerian': RVkeplerian,
+                   'dynamical': RVdynamical},
     'transit_time': {'circular': TransitTimeKeplerian,
                      'keplerian': TransitTimeKeplerian,
                      'dynamical': TransitTimeDynamical},
     'gp_quasiperiodic': GaussianProcess_QuasiPeriodicActivity,
-    'celerite_quasiperiodic': Celerite_QuasiPeriodicActivity
-    #TD 'gp_quasiperiodic': GaussianProcess_QuasiPeriodicActivity,
-    #TD 'curvature': CurvatureCommonVariables,
-    #TD 'correlation': CorrelationsCommonVariables
+    'celerite_quasiperiodic': Celerite_QuasiPeriodicActivity,
+    'correlation_singledataset': Correlation_SingleDataset,
+    'polynomial_trend': PolynomialTrend
 }
 
 accepted_extensions = ['.yaml', '.yml', '.conf', '.config', '.input', ]
@@ -116,7 +115,7 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, shutdown_
             or everything will fall apart """
         mc.dataset_dict[dataset_name] = Dataset(dataset_name,
                                                 dataset_conf['kind'],
-                                                dataset_conf['models'])
+                                                np.atleast_1d(dataset_conf['models']).tolist())
 
         try:
             data_input = input_datasets[dataset_name]
@@ -201,12 +200,17 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, shutdown_
         else:
             model_type = model_name
 
-        if model_type == 'radial_velocities':
+        if model_type == 'radial_velocities' or model_type == 'rv_planets':
 
             """ radial_velocities is just a wrapper for the planets to be actually included in the model, so we
                 substitue it with the individual planets in the list"""
 
-            model_name_expanded = [model_name + '_' + pl_name for pl_name in model_conf['planets']]
+            try:
+                planet_list = np.atleast_1d(model_conf['planets']).tolist()
+            except:
+                planet_list = np.atleast_1d(model_conf['common']).tolist()
+
+            model_name_expanded = [model_name + '_' + pl_name for pl_name in planet_list]
             """ Let's avoid some dumb user using the planet names to name the models"""
 
             for dataset in mc.dataset_dict.itervalues():
@@ -214,10 +218,10 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, shutdown_
                     dataset.models.remove(model_name)
                     dataset.models.extend(model_name_expanded)
 
-                    if len(list(set(model_conf['planets']) & set(mc.dynamical_dict))):
+                    if len(list(set(planet_list) & set(mc.dynamical_dict))):
                         dataset.dynamical = True
 
-            for model_name_exp, planet_name in zip(model_name_expanded, model_conf['planets']):
+            for model_name_exp, planet_name in zip(model_name_expanded, planet_list):
                 mc.models[model_name_exp] = \
                     define_type_to_class[model_type][mc.planet_dict[planet_name]](model_name_exp, planet_name)
 
@@ -228,7 +232,11 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, shutdown_
         elif model_type == 'transit_time':
             """ Only one planet for each file with transit times... mixing them would cause HELL"""
 
-            planet_name = model_conf['planet']
+            try:
+                planet_name = np.atleast_1d(model_conf['planet']).tolist()[0]
+            except:
+                planet_name = np.atleast_1d(model_conf['common']).tolist()[0]
+
             mc.models[model_name] = \
                     define_type_to_class[model_type][mc.planet_dict[planet_name]](model_name, planet_name)
 
@@ -241,7 +249,14 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, shutdown_
                     dataset.dynamical = True
                     mc.dynamical_t0_dict[planet_name] = dataset_name
 
+        elif model_type == 'correlation_singledataset':
+            mc.models[model_name] = \
+                    define_type_to_class[model_type](model_name, None)
+            mc.models[model_name].model_conf = model_conf.copy()
+            boundaries_fixed_priors_starts(mc, mc.models[model_name], model_conf, dataset_1=model_conf['reference'])
+
         else:
+
             mc.models[model_name] = \
                     define_type_to_class[model_type](model_name, model_conf['common'])
 
@@ -261,7 +276,7 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, shutdown_
         mc.star_radius = np.asarray(conf_parameters['star_radius'][:], dtype=np.double)
 
     if 'dynamical_integrator' in conf_solver:
-        mc.dynamical_model.dynamical_integrator = conf_parameters['dynamical_integrator']
+        mc.dynamical_model.dynamical_integrator = conf_solver['dynamical_integrator']
 
     if 'pyde' in conf_solver:
         conf = conf_solver['pyde']
