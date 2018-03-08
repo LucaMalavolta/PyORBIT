@@ -4,16 +4,21 @@ from ..models.planets import CommonPlanets
 from ..models.activity import CommonActivity
 from ..models.radial_velocities import RVkeplerian, RVdynamical, TransitTimeKeplerian, TransitTimeDynamical, DynamicalIntegrator
 from ..models.gp_semiperiodic_activity import GaussianProcess_QuasiPeriodicActivity
+from ..models.gp_semiperiodic_activity_common import GaussianProcess_QuasiPeriodicActivity_Common
 from ..models.celerite_semiperiodic_activity import Celerite_QuasiPeriodicActivity
 from ..models.correlations import Correlation_SingleDataset
 from ..models.polynomial_trend import CommonPolynomialTrend, PolynomialTrend
+from ..models.common_offset import CommonOffset, Offset
+from ..models.common_jitter import CommonJitter, Jitter
 
 __all__ = ["pars_input", "yaml_parser"]
 
 define_common_type_to_class = {
     'planets': CommonPlanets,
     'activity': CommonActivity,
-    'polynomial_trend': CommonPolynomialTrend
+    'polynomial_trend': CommonPolynomialTrend,
+    'common_offset': CommonOffset,
+    'common_jitter': CommonJitter
 }
 
 define_type_to_class = {
@@ -27,9 +32,12 @@ define_type_to_class = {
                      'keplerian': TransitTimeKeplerian,
                      'dynamical': TransitTimeDynamical},
     'gp_quasiperiodic': GaussianProcess_QuasiPeriodicActivity,
+    'gp_quasiperiodic_common': GaussianProcess_QuasiPeriodicActivity_Common,
     'celerite_quasiperiodic': Celerite_QuasiPeriodicActivity,
     'correlation_singledataset': Correlation_SingleDataset,
-    'polynomial_trend': PolynomialTrend
+    'polynomial_trend': PolynomialTrend,
+    'common_offset': Offset,
+    'common_jitter': Jitter
 }
 
 accepted_extensions = ['.yaml', '.yml', '.conf', '.config', '.input', ]
