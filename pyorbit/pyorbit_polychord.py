@@ -16,7 +16,7 @@ def show(filepath):
 """
 
 
-def pyorbit_polychord(config_in, input_datasets=None):
+def pyorbit_polychord(config_in, input_datasets=None, return_output=None):
 
 
     polychord_dir_output = './' + config_in['output'] + '/polychord/'
@@ -98,4 +98,7 @@ def pyorbit_polychord(config_in, input_datasets=None):
     print 'PolyChord COMPLETED'
     print
 
-
+    if return_output:
+        return mc
+    else:
+        return
