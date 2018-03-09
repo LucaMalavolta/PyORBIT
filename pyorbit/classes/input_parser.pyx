@@ -10,7 +10,7 @@ from ..models.correlations import Correlation_SingleDataset
 from ..models.polynomial_trend import CommonPolynomialTrend, PolynomialTrend
 from ..models.common_offset import CommonOffset, Offset
 from ..models.common_jitter import CommonJitter, Jitter
-
+from ..models.sinusoid_common_period import SinusoidCommonPeriod
 __all__ = ["pars_input", "yaml_parser"]
 
 define_common_type_to_class = {
@@ -37,7 +37,8 @@ define_type_to_class = {
     'correlation_singledataset': Correlation_SingleDataset,
     'polynomial_trend': PolynomialTrend,
     'common_offset': Offset,
-    'common_jitter': Jitter
+    'common_jitter': Jitter,
+    'sinusoid_common_period': SinusoidCommonPeriod
 }
 
 accepted_extensions = ['.yaml', '.yml', '.conf', '.config', '.input', ]
@@ -192,6 +193,12 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, shutdown_
             mc.common_models[model_name] = define_common_type_to_class[model_type](model_name)
             boundaries_fixed_priors_starts(mc, mc.common_models[model_name], model_conf)
 
+            """ Automatic detection of common models without dataset-specific parameters"""
+            for dataset in mc.dataset_dict.itervalues():
+                if model_name in dataset.models and not (model_name in conf_models):
+                    conf_models[model_name] = {'common': model_name}
+
+
     """ Check if there is any planet that requires dynamical computations"""
     if mc.dynamical_dict:
         mc.dynamical_model = DynamicalIntegrator()
@@ -269,8 +276,27 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, shutdown_
                     define_type_to_class[model_type](model_name, model_conf['common'])
 
             mc.models[model_name].model_conf = model_conf.copy()
-            for dataset_name in list(set(model_conf) & set(mc.dataset_dict)):
-                boundaries_fixed_priors_starts(mc, mc.models[model_name], model_conf[dataset_name], dataset_1=dataset_name)
+
+            #for dataset_name in list(set(model_conf) & set(mc.dataset_dict)):
+            #    boundaries_fixed_priors_starts(mc, mc.models[model_name], model_conf[dataset_name], dataset_1=dataset_name)
+
+            """ Using default noundaries if one dataset is missing"""
+            if not mc.models[model_name].list_pams_dataset:
+                continue
+            for dataset_name, dataset in mc.dataset_dict.iteritems():
+                if model_name in dataset.models:
+
+                    if dataset_name not in model_conf:
+                        model_conf[dataset_name] = {}
+                        print
+                        print '*********************************** WARNING *********************************** '
+                        print 'Using default boundaries for dataset-specific parameters '
+                        print 'for model: ', model_name, ' dataset: ', dataset_name
+                        print
+
+                    boundaries_fixed_priors_starts(mc, mc.models[model_name], model_conf[dataset_name],
+                                                   dataset_1=dataset_name)
+
                 #mc.models[model_name].setup_dataset(mc.dataset_dict[dataset_name])
 
     if 'Tref' in conf_parameters:

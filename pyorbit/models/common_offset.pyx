@@ -21,8 +21,8 @@ class CommonOffset(AbstractCommon):
             min_offset = np.min(dataset.y) - 100
             max_offset = np.max(dataset.y) + 100.
         else:
-            min_offset = min(self.default_bounds['offset'][0], np.min(dataset.e) - 100.)
-            max_offset = max(self.default_bounds['offset'][1], np.max(dataset.e) + 100.)
+            min_offset = min(self.default_bounds['offset'][0], np.min(dataset.y) - 100.)
+            max_offset = max(self.default_bounds['offset'][1], np.max(dataset.y) + 100.)
         self.default_bounds['offset'] = [min_offset, max_offset]
         dataset.shutdown_offset()
         return
