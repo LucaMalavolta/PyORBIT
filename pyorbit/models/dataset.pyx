@@ -101,22 +101,25 @@ class Dataset(AbstractCommon):
             self.mask[var] = np.zeros(self.n, dtype=bool)
             self.mask[var][(abs(dataset_vals - ii) < 0.1)] = True
 
-    def delete_systematic_dictionaries_maks(self, var_generic):
-        for var in  self.variable_compressed[var_generic]:
+    def delete_systematic_dictionaries_mask(self, var_generic):
+        if var_generic not in self.variable_compressed: return
+        for var in self.variable_compressed[var_generic]:
             self.list_pams.pop(var, None)
             self.default_bounds.pop(var, None)
             self.variable_expanded.pop(var, None)
             self.mask.pop(var)
-        self.variable_compressed.pop(var_generic, None)
+        #self.variable_compressed.pop(var_generic, None)
+        self.variable_compressed[var_generic] = {}
+
 
     def shutdown_jitter(self):
-        self.delete_systematic_dictionaries_maks('jitter')
+        self.delete_systematic_dictionaries_mask('jitter')
 
     def shutdown_offset(self):
-        self.delete_systematic_dictionaries_maks('offset')
+        self.delete_systematic_dictionaries_mask('offset')
 
     def shutdown_linear(self):
-        self.delete_systematic_dictionaries_maks('linear')
+        self.delete_systematic_dictionaries_mask('linear')
 
     def common_Tref(self, Tref_in):
         self.Tref = Tref_in
