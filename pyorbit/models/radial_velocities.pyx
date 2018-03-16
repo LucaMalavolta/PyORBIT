@@ -20,7 +20,7 @@ class RVkeplerian(AbstractModel):
     list_pams_common = {
         'P': 'LU',  # Period, log-uniform prior
         'K': 'LU',  # RV semi-amplitude, log-uniform prior
-        'f': 'U',  # RV vurve phase, log-uniform prior
+        'f': 'U',  # RV curve phase, log-uniform prior
         'e': 'U',  # eccentricity, uniform prior - to be fixed
         'o': 'U'}  # argument of pericenter
 
@@ -71,7 +71,7 @@ class TransitTimeKeplerian(AbstractModel):
 
     list_pams_common = {
             'P': 'LU',  # Period, log-uniform prior
-            'f': 'U',  # RV vurve phase, log-uniform prior
+            'f': 'U',  # RV curve phase, log-uniform prior
             'e': 'U',  # eccentricity, uniform prior - to be fixed
             'o': 'U'}  # argument of pericenter
 

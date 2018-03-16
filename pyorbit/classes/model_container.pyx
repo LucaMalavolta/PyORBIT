@@ -86,6 +86,20 @@ class ModelContainer:
             for dataset_name in list(set(model.model_conf) & set(self.dataset_dict)):
                 model.setup_dataset(self.dataset_dict[dataset_name], **model.model_conf)
 
+        for dataset_name, dataset in self.dataset_dict.iteritems():
+            for model_name in dataset.models:
+
+                self.models[model_name].common_initialization_with_dataset(dataset)
+
+                common_model = self.models[model_name].common_ref
+                self.common_models[common_model].common_initialization_with_dataset(dataset)
+
+                #print self.models[model_name].model_conf['common']
+                #for common_model in self.models[model_name].model_conf['common']:
+                #    if hasattr(self.common_models[common_model], 'common_initialization_with_dataset'):
+                #        self.common_models[common_model].setup_dataset(self.dataset_dict[dataset_name])
+
+
         if self.dynamical_model:
             self.dynamical_model.prepare(self)
 
@@ -99,6 +113,7 @@ class ModelContainer:
         bounds_list = []
         for model in self.models.itervalues():
             if model.common_ref:
+                model.default_bounds = self.common_models[model.common_ref].default_bounds
                 self.ndim, bounds_ext = self.common_models[model.common_ref].define_variables_bounds(
                         self.ndim, model.list_pams_common)
                 bounds_list.extend(bounds_ext)
@@ -181,7 +196,12 @@ class ModelContainer:
         for model in self.common_models.itervalues():
             logchi2_out += model.return_priors(theta)
 
+        delayed_lnlk_computation = []
+
         for dataset_name, dataset in self.dataset_dict.iteritems():
+
+            logchi2_gp_model = None
+
             dataset.model_reset()
             variable_values = dataset.convert(theta)
             dataset.compute(variable_values)
@@ -191,7 +211,12 @@ class ModelContainer:
             if not dataset.models:
                 continue
 
-            logchi2_gp_model = None
+            for model_name in dataset.models:
+                if hasattr(self.models[model_name], 'common_jitter'):
+                    common_ref = self.models[model_name].common_ref
+                    variable_values = self.common_models[common_ref].convert(theta)
+                    self.models[model_name].compute(variable_values, dataset)
+
             for model_name in dataset.models:
 
                 logchi2_out += self.models[model_name].return_priors(theta, dataset_name)
@@ -222,11 +247,22 @@ class ModelContainer:
                 common_ref = self.models[logchi2_gp_model].common_ref
                 variable_values = self.common_models[common_ref].convert(theta)
                 variable_values.update(self.models[logchi2_gp_model].convert(theta, dataset_name))
-                logchi2_out += self.models[logchi2_gp_model].lnlk_compute(variable_values, dataset)
+
+                """ GP Log-likelihood is not computed now because a single matrix must be created with 
+                the joined dataset"""
+                if hasattr(self.models[logchi2_gp_model], 'delayed_lnlk_computation'):
+                    self.models[logchi2_gp_model].add_internal_dataset(variable_values, dataset,
+                                                                   reset_status=delayed_lnlk_computation)
+                    delayed_lnlk_computation.append(logchi2_gp_model)
+                else:
+                    logchi2_out += self.models[logchi2_gp_model].lnlk_compute(variable_values, dataset)
             else:
                 logchi2_out += dataset.model_logchi2()
 
-        #print logchi2_out_copy, theta, logchi2_out
+        """ In case there is more than one GP model"""
+        for logchi2_gp_model in delayed_lnlk_computation:
+            logchi2_out += self.models[logchi2_gp_model].lnlk_compute()
+
         return logchi2_out
 
     def recenter_bounds(self, pop_mean, recenter=True):
@@ -370,6 +406,8 @@ class ModelContainer:
         model_out = {}
         model_x0 = {}
 
+        delayed_lnlk_computation = {}
+
         if self.dynamical_model is not None:
             """ check if any keyword ahas get the output model from the dynamical tool
             we must do it here because all the planet are involved"""
@@ -385,6 +423,14 @@ class ModelContainer:
 
             variable_values = dataset.convert(theta)
             dataset.compute(variable_values)
+
+            for model_name in dataset.models:
+                common_ref = self.models[model_name].common_ref
+                variable_values = self.common_models[common_ref].convert(theta)
+                if hasattr(self.models[model_name], 'common_jitter'):
+                    self.models[model_name].compute(variable_values, dataset)
+                if hasattr(self.models[model_name], 'common_offset'):
+                    dataset.model += self.models[model_name].compute(variable_values, dataset)
 
             model_out[dataset_name]['systematics'] = dataset.model.copy()
             model_out[dataset_name]['jitter'] = dataset.jitter.copy()
@@ -443,16 +489,32 @@ class ModelContainer:
                 variable_values = self.common_models[common_ref].convert(theta)
                 variable_values.update(self.models[logchi2_gp_model].convert(theta, dataset.name_ref))
 
-                model_out[dataset_name][logchi2_gp_model] = \
-                    self.models[logchi2_gp_model].sample_conditional(variable_values, dataset)
-                model_out[dataset_name]['complete'] += model_out[dataset_name][logchi2_gp_model]
+                if hasattr(self.models[logchi2_gp_model], 'delayed_lnlk_computation'):
+                    self.models[logchi2_gp_model].add_internal_dataset(variable_values, dataset,
+                                                                   reset_status=delayed_lnlk_computation)
+                    delayed_lnlk_computation[dataset.name_ref] = logchi2_gp_model
 
-                model_x0[dataset_name][logchi2_gp_model], var  = \
-                    self.models[logchi2_gp_model].sample_predict(variable_values, dataset, x0_plot)
+                else:
+                    model_out[dataset_name][logchi2_gp_model] = \
+                        self.models[logchi2_gp_model].sample_conditional(variable_values, dataset)
+                    model_out[dataset_name]['complete'] += model_out[dataset_name][logchi2_gp_model]
 
-                model_x0[dataset_name][logchi2_gp_model + '_std'] = np.sqrt(var)
-                model_x0[dataset_name]['complete'] += model_x0[dataset_name][logchi2_gp_model]
+                    model_x0[dataset_name][logchi2_gp_model], var  = \
+                        self.models[logchi2_gp_model].sample_predict(variable_values, dataset, x0_plot)
 
+                    model_x0[dataset_name][logchi2_gp_model + '_std'] = np.sqrt(var)
+                    model_x0[dataset_name]['complete'] += model_x0[dataset_name][logchi2_gp_model]
+
+        for dataset_name, logchi2_gp_model in delayed_lnlk_computation.iteritems():
+            model_out[dataset_name][logchi2_gp_model] = \
+                self.models[logchi2_gp_model].sample_conditional(dataset)
+            model_out[dataset_name]['complete'] += model_out[dataset_name][logchi2_gp_model]
+
+            model_x0[dataset_name][logchi2_gp_model], var = \
+                self.models[logchi2_gp_model].sample_predict(dataset, x0_plot)
+
+            model_x0[dataset_name][logchi2_gp_model + '_std'] = np.sqrt(var)
+            model_x0[dataset_name]['complete'] += model_x0[dataset_name][logchi2_gp_model]
 
         # workaround to avoid memory leaks from GP module
         #gc.collect()

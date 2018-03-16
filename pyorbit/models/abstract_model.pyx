@@ -34,6 +34,10 @@ class AbstractModel():
     def setup_dataset(self, dataset, **kwargs):
         pass
 
+    def common_initialization_with_dataset(self, dataset):
+        """ Initialization with dataset even if no dataset-specific parameter is present"""
+        pass
+
     def define_special_variables_bounds(self, ndim, dataset_name, var):
         return ndim, []
 

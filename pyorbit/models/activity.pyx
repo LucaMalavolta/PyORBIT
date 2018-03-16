@@ -11,6 +11,9 @@ class CommonActivity(AbstractCommon):
         'Pdec': 'U',  # Decay timescale of activity
         'Oamp': 'LU',  # Granulation of activity
         'Hamp': 'U',  # Amplitude of the signal in the covariance matrix
+        'P': 'LU',  # Period, log-uniform prior
+        'K': 'LU',  # RV semi-amplitude, log-uniform prior
+        'f': 'U',  # RV curve phase, log-uniform
         'cel_a': 'LU',  # celerite term A
         'cel_b': 'LU',  # celerite term B
         'cel_c': 'LU',  # celerite term C
@@ -22,9 +25,12 @@ class CommonActivity(AbstractCommon):
         'Pdec': [1.0, 10000.0],
         'Oamp': [0.0001, 2.0],
         'Hamp': [0.00000001, 1000000.0],
+        'P': [0.4, 100000.0],
+        'K': [0.5, 2000.0],
+        'f': [0.0, 2 * np.pi],
         'cel_a': [0.00000001, 1000000.0],
         'cel_b': [0.00000001, 1000000.0],
         'cel_c': [0.00000001, 1000000.0]
     }
 
-    recenter_pams = {}
+    recenter_pams = {'f'}

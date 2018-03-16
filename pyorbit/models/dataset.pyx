@@ -154,4 +154,8 @@ class Dataset(AbstractCommon):
             for var in self.variable_compressed[var_generic]:
                 self.bounds[var] =  self.bounds[var_generic]
 
-
+    def has_jitter(self):
+        for var in self.list_pams:
+            if self.variable_expanded[var] == 'jitter':
+                return True
+        return False
