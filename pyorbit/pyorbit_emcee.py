@@ -5,6 +5,7 @@ from classes.io_subroutines import pyde_save_to_pickle, pyde_load_from_cpickle, 
     emcee_save_to_cpickle, emcee_load_from_cpickle, emcee_flatchain
 import emcee
 import os
+import sys
 
 __all__ = ["pyorbit_emcee", "yaml_parser"]
 
@@ -108,14 +109,18 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
             population[ii, :] = np.random.normal(starting_point, 0.0000001)
         reloaded_pyde = True
 
+        print 'PyDE reloaded'
+        sys.stdout.flush()
+
     if not reloaded_pyde:
         if not os.path.exists(mc.pyde_dir_output):
             os.makedirs(mc.pyde_dir_output)
 
-        print 'PyDE'
+        print 'PyDE running'
+        sys.stdout.flush()
+
         de = DiffEvol(mc, mc.bounds, mc.emcee_parameters['nwalkers'], maximize=True)
         de.optimize(mc.pyde_parameters['ngen'])
-        print 'PyDE completed'
 
         population = de.population
         starting_point = np.median(population, axis=0)
@@ -131,11 +136,12 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
             population = mc.fix_population(starting_point, population)
             starting_point = np.median(population, axis=0)
 
-            print 'REDEFINED BOUNDS'
+            print 'Boundaries redefined after PyDE output'
 
         pyde_save_to_pickle(mc, population, starting_point)
 
         print 'PyDE completed'
+        sys.stdout.flush()
 
     mc.results_resumen(starting_point, compute_lnprob=True)
 
@@ -169,6 +175,7 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
         mc.results_resumen(flatchain)
 
         print 'emcee exploratory runs completed'
+        sys.stdout.flush()
 
     print 'emcee'
     state = None
@@ -188,6 +195,7 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
             mc.results_resumen(flatchain)
 
             print sampled, '  steps completed, average lnprob:, ', np.median(prob)
+            sys.stdout.flush()
 
     else:
         population, prob, state = sampler.run_mcmc(population, mc.emcee_parameters['nsteps'], thin=mc.emcee_parameters['thin'])

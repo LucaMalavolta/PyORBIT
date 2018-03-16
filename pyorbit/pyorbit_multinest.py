@@ -16,7 +16,7 @@ def show(filepath):
 """
 
 
-def pyorbit_multinest(config_in, input_datasets=None):
+def pyorbit_multinest(config_in, input_datasets=None, return_output=None):
 
 
     multinest_dir_output = './' + config_in['output'] + '/multinest/'
@@ -88,6 +88,8 @@ def pyorbit_multinest(config_in, input_datasets=None):
 
     #os.chdir(multinest_dir_output)
 
+    print ' Sampling efficiency: ', mc.polychord_parameters['sampling_efficiency']
+
     import pymultinest
     mnest_kwargs = dict(n_live_points=nlive, outputfiles_basename=multinest_dir_output + './',
                         sampling_efficiency=mc.polychord_parameters['sampling_efficiency'],
@@ -101,4 +103,7 @@ def pyorbit_multinest(config_in, input_datasets=None):
     print 'MultiNest COMPLETED'
     print
 
-
+    if return_output:
+        return mc
+    else:
+        return
