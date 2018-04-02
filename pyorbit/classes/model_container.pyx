@@ -88,11 +88,11 @@ class ModelContainer:
 
         for dataset_name, dataset in self.dataset_dict.iteritems():
             for model_name in dataset.models:
-
                 self.models[model_name].common_initialization_with_dataset(dataset)
 
                 common_model = self.models[model_name].common_ref
-                self.common_models[common_model].common_initialization_with_dataset(dataset)
+                if common_model:
+                    self.common_models[common_model].common_initialization_with_dataset(dataset)
 
                 #print self.models[model_name].model_conf['common']
                 #for common_model in self.models[model_name].model_conf['common']:
