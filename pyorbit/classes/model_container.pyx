@@ -426,6 +426,10 @@ class ModelContainer:
 
             for model_name in dataset.models:
                 common_ref = self.models[model_name].common_ref
+
+                if common_ref is None:
+                    continue
+
                 variable_values = self.common_models[common_ref].convert(theta)
                 if hasattr(self.models[model_name], 'common_jitter'):
                     self.models[model_name].compute(variable_values, dataset)

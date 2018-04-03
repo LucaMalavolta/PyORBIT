@@ -341,6 +341,8 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
 
     for common_name, common_model in mc.common_models.iteritems():
 
+        print '     Common model: ', common_name
+
         corner_plot = {
             'var_list': [],
             'samples': [],
@@ -348,10 +350,18 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
             'truths': []
         }
         variable_values = common_model.convert(flat_chain)
-        variable_median = common_model.convert(chain_med[:,0])
+        variable_median = common_model.convert(chain_med[:, 0])
         variable_MAP = common_model.convert(chain_MAP)
 
+        if len(variable_median) < 1.:
+            print
+            continue
+
         n_samplings, n_pams = np.shape(flat_chain)
+
+        print '     variable_median: ', variable_median
+        print '     n_samplings, n_pams: ',  n_samplings, n_pams
+        print
 
         """ Sometimes the user forget to include the value for the inclination among the parameters
         We do our check and then we fix it
