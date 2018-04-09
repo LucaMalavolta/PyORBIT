@@ -88,11 +88,11 @@ class ModelContainer:
 
         for dataset_name, dataset in self.dataset_dict.iteritems():
             for model_name in dataset.models:
-
                 self.models[model_name].common_initialization_with_dataset(dataset)
 
                 common_model = self.models[model_name].common_ref
-                self.common_models[common_model].common_initialization_with_dataset(dataset)
+                if common_model:
+                    self.common_models[common_model].common_initialization_with_dataset(dataset)
 
                 #print self.models[model_name].model_conf['common']
                 #for common_model in self.models[model_name].model_conf['common']:
@@ -426,6 +426,10 @@ class ModelContainer:
 
             for model_name in dataset.models:
                 common_ref = self.models[model_name].common_ref
+
+                if common_ref is None:
+                    continue
+
                 variable_values = self.common_models[common_ref].convert(theta)
                 if hasattr(self.models[model_name], 'common_jitter'):
                     self.models[model_name].compute(variable_values, dataset)

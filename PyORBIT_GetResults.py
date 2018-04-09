@@ -20,12 +20,13 @@ if __name__ == '__main__':
     parser.add_argument('-all', type=str, nargs='?', default=False, help='Active all flags')
 
     plot_dictionary = {
-        'chains': False,
         'plot': False,
+        'chains': False,
         'traces': False,
+        'lnprob_chain': False,
         'full_correlation': False,
-        'common_corner': False,
         'dataset_corner': False,
+        'common_corner': False,
         'model_files': False,
         'MAP_model_files': False
     }
