@@ -105,6 +105,17 @@ class CommonPlanets(AbstractCommon):
         self.variable_sampler['esino'] = ndim + 1
         bounds_list.append(self.default_bounds['ecoso'])
         bounds_list.append(self.default_bounds['esino'])
+
+        for var in ['e', 'o']:
+            if var not in self.prior_pams:
+
+                if var in self.bounds:
+                    self.prior_pams[var] = self.bounds[var]
+                else:
+                    self.prior_pams[var] = self.default_bounds[var]
+
+                self.prior_kind[var] = 'Uniform'
+
         ndim += 2
 
         return ndim, bounds_list

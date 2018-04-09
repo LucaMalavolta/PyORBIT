@@ -75,12 +75,23 @@ class AbstractModel():
                 if self.list_pams_dataset[var] == 'U':
                     self.transformation[dataset_name][var] = get_var_val
                     bounds_list.append(self.bounds[dataset_name][var])
+
+                    if var not in self.prior_pams:
+                        self.prior_pams[dataset_name][var] = self.bounds[dataset_name][var]
+                        self.prior_kind[dataset_name][var] = 'Uniform'
+
                 if self.list_pams_dataset[var] == 'LU':
                     self.transformation[dataset_name][var] = get_var_exp
                     bounds_list.append(np.log2(self.bounds[dataset_name][var]))
+
+                    if var not in self.prior_pams:
+                        self.prior_pams[dataset_name][var] = self.bounds[dataset_name][var]
+                        self.prior_kind[dataset_name][var] = 'Jeffreys'
+
                 self.variable_index[dataset_name][var] = ndim
                 self.variable_sampler[dataset_name][var] = ndim
                 ndim += 1
+
         return ndim, bounds_list
 
     def define_special_starting_point(self, starting_point, dataset_name, var):
@@ -116,6 +127,7 @@ class AbstractModel():
             prior_out += giveback_priors(self.prior_kind[dataset_name][var],
                                          self.prior_pams[dataset_name][var],
                                          variable_value[var])
+
         return prior_out
 
     def index_recenter_bounds(self, dataset_name):

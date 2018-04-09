@@ -104,8 +104,10 @@ def giveback_priors(kind, pams, val):
     if kind == 'Gaussian':
         return -(val - pams[0]) ** 2 / (2 * pams[1] ** 2)
     if kind == 'Uniform':
-        return 0.0
-
+        return 1./(pams[1]-pams[0])
+    if kind == 'Jeffreys':
+        return 1./(val*np.log(2)*np.log(pams[1]-pams[0]))
+    ## CONVERT log2 to log
 
 def compute_value_sigma(samples):
     if np.size(np.shape(samples)) == 1:
