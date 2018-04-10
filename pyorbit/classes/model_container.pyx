@@ -206,6 +206,8 @@ class ModelContainer:
             variable_values = dataset.convert(theta)
             dataset.compute(variable_values)
 
+            logchi2_out += dataset.return_priors(theta)
+
             if 'none' in dataset.models or 'None' in dataset.models:
                 continue
             if not dataset.models:

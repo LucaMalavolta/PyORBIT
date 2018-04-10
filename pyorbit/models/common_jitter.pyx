@@ -14,6 +14,10 @@ class CommonJitter(AbstractCommon):
 
     default_bounds = {}
 
+    default_priors = {
+            'jitter': ['Jeffreys', []]
+    }
+
     recenter_pams = {}
 
     def common_initialization_with_dataset(self, dataset):

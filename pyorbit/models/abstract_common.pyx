@@ -68,17 +68,13 @@ class AbstractCommon(object):
                     self.transformation[var] = get_var_val
                     bounds_list.append(self.bounds[var])
 
-                    if var not in self.prior_pams:
-                        self.prior_pams[var] = self.bounds[var]
-                        self.prior_kind[var] = 'Uniform'
-
                 elif self.list_pams[var] == 'LU':
                     self.transformation[var] = get_var_exp
                     bounds_list.append(np.log2(self.bounds[var]))
 
-                    if var not in self.prior_pams:
-                        self.prior_pams[var] = self.bounds[var]
-                        self.prior_kind[var] = 'Jeffreys'
+                if var not in self.prior_pams:
+                    self.prior_kind[var] = self.default_priors[var][0]
+                    self.prior_pams[var] = self.default_priors[var][1]
 
                 self.variable_index[var] = ndim
                 self.variable_sampler[var] = ndim
@@ -122,9 +118,19 @@ class AbstractCommon(object):
 
         prior_out = 0.00
         variable_value = self.convert(theta)
-        for var in list(set(self.prior_pams) & set(variable_value)):
-            prior_out += giveback_priors(self.prior_kind[var], self.prior_pams[var], variable_value[var])
 
+        for var in variable_value:
+            prior_out += giveback_priors(self.prior_kind[var],
+                                         self.bounds[var],
+                                         self.prior_pams[var],
+                                         variable_value[var])
+        """
+        for var in list(set(self.prior_pams) & set(variable_value)):
+            prior_out += giveback_priors(self.prior_kind[var],
+                                         self.bounds[var],
+                                         self.prior_pams[var],
+                                         variable_value[var])
+        """
         return prior_out
 
     def index_recenter_bounds(self):

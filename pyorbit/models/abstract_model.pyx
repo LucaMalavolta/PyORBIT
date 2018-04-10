@@ -76,17 +76,13 @@ class AbstractModel():
                     self.transformation[dataset_name][var] = get_var_val
                     bounds_list.append(self.bounds[dataset_name][var])
 
-                    if var not in self.prior_pams:
-                        self.prior_pams[dataset_name][var] = self.bounds[dataset_name][var]
-                        self.prior_kind[dataset_name][var] = 'Uniform'
-
                 if self.list_pams_dataset[var] == 'LU':
                     self.transformation[dataset_name][var] = get_var_exp
                     bounds_list.append(np.log2(self.bounds[dataset_name][var]))
 
-                    if var not in self.prior_pams:
-                        self.prior_pams[dataset_name][var] = self.bounds[dataset_name][var]
-                        self.prior_kind[dataset_name][var] = 'Jeffreys'
+                if var not in self.prior_pams:
+                    self.prior_kind[dataset_name][var] = self.default_priors[var][0]
+                    self.prior_pams[dataset_name][var] = self.default_priors[var][1]
 
                 self.variable_index[dataset_name][var] = ndim
                 self.variable_sampler[dataset_name][var] = ndim
@@ -123,11 +119,20 @@ class AbstractModel():
     def return_priors(self, theta, dataset_name):
         prior_out = 0.00
         variable_value = self.convert(theta, dataset_name)
-        for var in list(set(self.list_pams_dataset) and set(self.prior_pams[dataset_name])):
+
+        for var in self.list_pams_dataset:
             prior_out += giveback_priors(self.prior_kind[dataset_name][var],
+                                         self.bounds[dataset_name][var],
                                          self.prior_pams[dataset_name][var],
                                          variable_value[var])
+        """
+        for var in list(set(self.list_pams_dataset) and set(self.prior_pams[dataset_name])):
 
+            prior_out += giveback_priors(self.prior_kind[dataset_name][var],
+                                         self.bounds[dataset_name][var],
+                                         self.prior_pams[dataset_name][var],
+                                         variable_value[var])
+        """
         return prior_out
 
     def index_recenter_bounds(self, dataset_name):

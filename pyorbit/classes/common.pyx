@@ -100,13 +100,34 @@ def get_2var_o(var, fix, i):
     return np.arctan2(esino, ecoso, dtype=np.double)
 
 
-def giveback_priors(kind, pams, val):
+def giveback_priors(kind, bounds, pams, val):
+
+    """ The code is supposed to give -np.inf log-likelihood when the parameters are outside the boundaries,
+    so this case is not emcopassed in the definition of the priors """
+
     if kind == 'Gaussian':
         return -(val - pams[0]) ** 2 / (2 * pams[1] ** 2)
     if kind == 'Uniform':
-        return 1./(pams[1]-pams[0])
+        return np.log(1./(bounds[1]-bounds[0]))
     if kind == 'Jeffreys':
-        return 1./(val*np.log(2)*np.log(pams[1]-pams[0]))
+        return np.log(1./(val*np.log(bounds[1]/bounds[0])))
+    if kind == 'ModifiedJeffreys':
+        """ Used for the semi-amplitude of the RV curve
+            bounds[1] = Kmax (suggested 999 m/s)
+            pams[0] = K_0 (suggested 1 m/s)
+        """
+        return np.log(1./(pams[0]*(1. + val/bounds[1])) * 1./np.log(1.+bounds[1]/pams[0]))
+    if kind == "TruncatedRayleigh":
+        """ bounds[1] = e_max 
+            pams[0] = sigma_2 (suggested 0.2)
+        """
+        return np.log((val/pams[0]**2 * np.exp(-0.5 *(val/pams[0])**2))/(1. - np.exp(-0.5*(bounds[1]/pams[0])**2)))
+    if kind == "WhiteNoisePrior":
+        """ bounds[1] = noise_max (99 m/s)
+            pams[0] = noise_0 (suggested 1 m/s) 
+        """
+        return np.log(1./(pams[1]*(1.0 + val/pams[1])) * 1.0/np.log(1.0+bounds[1]/pams[1]))
+
     ## CONVERT log2 to log
 
 def compute_value_sigma(samples):

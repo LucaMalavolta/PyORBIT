@@ -18,12 +18,18 @@ class Dataset(AbstractCommon):
 
         self.generic_list_pams = {'jitter': 'LU', 'offset': 'U', 'linear': 'U'}
 
+        self.generic_default_priors = {
+            'jitter': ['Jeffreys', []],
+            'offset': ['Uniform', []],
+            'linear': ['Uniform', []]}
+
         self.variable_compressed = {}
         self.variable_expanded = {}
 
         self.model_class = 'dataset'
         self.list_pams = {}
         self.default_bounds = {}
+        self.default_priors = {}
         self.recenter_pams = {}
 
         self.Tref = None
@@ -69,8 +75,8 @@ class Dataset(AbstractCommon):
 
             """Default boundaries are defined according to the characteristic of the dataset"""
             self.generic_default_bounds = {'offset': [np.min(self.y) - 100., np.max(self.y) + 100.],
-                                   'jitter': [np.min(self.e)/100., 100 * np.max(self.e)],
-                                   'linear': [-1., 1.]}
+                                           'jitter': [np.min(self.e)/100., 100 * np.max(self.e)],
+                                           'linear': [-1., 1.]}
 
             self.create_systematic_dictionaries('jitter', data_input[:, 3])
             self.create_systematic_dictionaries('offset', data_input[:, 4])
@@ -91,6 +97,7 @@ class Dataset(AbstractCommon):
             var = var_generic + '_' + repr(ii)
             self.list_pams[var] = self.generic_list_pams[var_generic]
             self.default_bounds[var] = self.generic_default_bounds[var_generic]
+            self.default_priors[var] = self.generic_default_priors[var_generic]
             self.variable_compressed[var_generic][var] = None
             self.variable_expanded[var] = var_generic
 
@@ -106,11 +113,10 @@ class Dataset(AbstractCommon):
         for var in self.variable_compressed[var_generic]:
             self.list_pams.pop(var, None)
             self.default_bounds.pop(var, None)
+            self.default_priors.pop(var, None)
             self.variable_expanded.pop(var, None)
             self.mask.pop(var)
-        #self.variable_compressed.pop(var_generic, None)
         self.variable_compressed[var_generic] = {}
-
 
     def shutdown_jitter(self):
         self.delete_systematic_dictionaries_mask('jitter')
@@ -146,16 +152,16 @@ class Dataset(AbstractCommon):
 
         for var_generic in list(set(self.prior_pams) & set(self.variable_compressed)):
             for var in self.variable_compressed[var_generic]:
-                self.prior_pams[var] =  self.prior_pams[var_generic]
-                self.prior_kind[var] =  self.prior_kind[var_generic]
+                self.prior_pams[var] = self.prior_pams[var_generic]
+                self.prior_kind[var] = self.prior_kind[var_generic]
 
         for var_generic in list(set(self.starts) & set(self.variable_compressed)):
             for var in self.variable_compressed[var_generic]:
-                self.starts[var] =  self.starts[var_generic]
+                self.starts[var] = self.starts[var_generic]
 
         for var_generic in list(set(self.bounds) & set(self.variable_compressed)):
             for var in self.variable_compressed[var_generic]:
-                self.bounds[var] =  self.bounds[var_generic]
+                self.bounds[var] = self.bounds[var_generic]
 
     def has_jitter(self):
         for var in self.list_pams:

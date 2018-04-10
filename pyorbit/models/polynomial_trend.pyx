@@ -61,6 +61,9 @@ class PolynomialTrend(AbstractModel):
             var = 'c'+repr(i_order)
             self.list_pams_common.update({var: 'U'})
 
+            # ???????????????
+            self.default_priors.update({var: ['Uniform', []]})
+
     def compute(self, variable_value, dataset, x0_input=None):
 
         coeff = np.zeros(self.order+1)
