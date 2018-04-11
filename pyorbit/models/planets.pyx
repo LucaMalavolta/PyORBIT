@@ -51,7 +51,7 @@ class CommonPlanets(AbstractCommon):
 
     """ Must be the same parameters as in list_pams, because priors are applied only to _physical_ parameters """
     default_priors = {
-        'P': ['Jeffreys', []],
+        'P': ['ModifiedJeffreys', [1.00]],
         'K': ['ModifiedJeffreys', [1.00]],
         'f': ['Uniform', []],
         'e': ['Uniform', []],

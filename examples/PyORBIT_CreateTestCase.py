@@ -53,6 +53,7 @@ activity = {
     'Hamp_PH': 0.023,
 }
 
+polynomial_trend = {'c1': 0.5454, 'c2': 0.08934}
 
 """
 
@@ -382,12 +383,44 @@ def create_testcase07():
     fileout.close()
 
 
-create_testcase01()
-create_testcase02()
-create_testcase03()
-create_testcase04()
-create_testcase05()
-create_testcase06()
-create_testcase07()
+def create_testcase08():
+
+    bjd0 = bjd_obs - Tref
+
+    y_pla = kp.kepler_RV_T0P(bjd0,
+                             planet_b['f'],
+                             planet_b['P'],
+                             planet_b['K'],
+                             planet_b['e'],
+                             planet_b['o']) \
+            + instrument['RV_offset1'] \
+            + polynomial_trend['c1']*bjd0 + polynomial_trend['c2']*bjd0*bjd0
+
+    mod_pl = np.random.normal(y_pla, instrument['RV_precision'])
+
+    Tcent_b =  np.random.normal(
+        np.arange(0, 5)*planet_b['P'] + kp.kepler_Tcent_T0P(planet_b['P'], planet_b['f'], planet_b['e'], planet_b['o']) + Tref,
+        instrument['T0_precision'])
+
+    fileout = open('TestCase08_RV.dat', 'w')
+    for b, r in zip(bjd_obs, mod_pl):
+        fileout.write('{0:f}  {1:.2f}  {2:.2f}  {3:d}  {4:d}  {5:d}\n'.format(b, r, instrument['RV_precision'], 0, 0, -1))
+    fileout.close()
+
+    fileout = open('TestCase08_Tcent_b.dat', 'w')
+    for i_Tc, v_Tc in enumerate(Tcent_b):
+        fileout.write('{0:d}  {1:.4f}  {2:.4f}  {3:d}\n'.format(i_Tc, v_Tc, instrument['T0_precision'], 0))
+    fileout.close()
+
+
+
+# create_testcase01()
+# create_testcase02()
+# create_testcase03()
+# create_testcase04()
+# create_testcase05()
+# create_testcase06()
+# create_testcase07()
+create_testcase08()
 
 ###################################################################

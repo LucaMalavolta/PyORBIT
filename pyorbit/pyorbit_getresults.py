@@ -1,4 +1,7 @@
-from classes.model_container import ModelContainer
+from classes.model_container_multinest import ModelContainerMultiNest
+from classes.model_container_polychord import ModelContainerPolyChord
+from classes.model_container_emcee import ModelContainerEmcee
+
 from classes.input_parser import yaml_parser, pars_input
 from classes.io_subroutines import *
 import numpy as np

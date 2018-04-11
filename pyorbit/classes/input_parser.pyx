@@ -312,7 +312,7 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, shutdown_
     if 'dynamical_integrator' in conf_solver:
         mc.dynamical_model.dynamical_integrator = conf_solver['dynamical_integrator']
 
-    if 'pyde' in conf_solver:
+    if 'pyde' in conf_solver and hasattr(mc, 'pyde_parameters'):
         conf = conf_solver['pyde']
 
         if 'ngen' in conf:
@@ -321,7 +321,7 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, shutdown_
         if 'npop_mult' in conf:
             mc.pyde_parameters['npop_mult'] = np.asarray(conf['npop_mult'], dtype=np.int64)
 
-    if 'emcee' in conf_solver:
+    if 'emcee' in conf_solver and hasattr(mc, 'emcee_parameters'):
         conf = conf_solver['emcee']
 
         if 'multirun' in conf:
@@ -345,7 +345,7 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, shutdown_
         if 'thin' in conf:
             mc.emcee_parameters['thin'] = np.asarray(conf['thin'], dtype=np.int64)
 
-    if 'polychord' in conf_solver:
+    if 'polychord' in conf_solver  and hasattr(mc, 'polychord'):
         conf = conf_solver['polychord']
 
         if 'nlive' in conf:
@@ -413,8 +413,10 @@ def boundaries_fixed_priors_starts(mc, model_obj, conf, dataset_1=None, dataset_
         if 'priors' in conf:
             prior_conf = conf['priors']
             for var in prior_conf:
-                model_obj.prior_kind[add_var_name+var] = prior_conf[var][0]
-                model_obj.prior_pams[add_var_name+var] = np.asarray(prior_conf[var][1:], dtype=np.double)
+                prior_pams = np.atleast_1d(prior_conf[var])
+                model_obj.prior_kind[add_var_name+var] = prior_pams[0]
+                if np.size(prior_pams) > 1:
+                    model_obj.prior_pams[add_var_name+var] = np.asarray(prior_pams[1:], dtype=np.double)
 
         if 'starts' in conf:
             mc.starting_point_flag = True

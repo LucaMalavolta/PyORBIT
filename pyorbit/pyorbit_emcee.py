@@ -1,5 +1,5 @@
 from classes.common import *
-from classes.model_container import ModelContainer
+from classes.model_container_emcee import ModelContainerEmcee
 from classes.input_parser import yaml_parser, pars_input
 from classes.io_subroutines import pyde_save_to_pickle, pyde_load_from_cpickle, \
     emcee_save_to_cpickle, emcee_load_from_cpickle, emcee_flatchain
@@ -59,7 +59,7 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
 
     reloaded_mc = reloaded_pyde or reloaded_emcee_multirun or reloaded_emcee_multirun
     if not reloaded_mc:
-        mc = ModelContainer()
+        mc = ModelContainerEmcee()
 
         pars_input(config_in, mc, input_datasets)
 

@@ -21,7 +21,7 @@ models:
   RVmodel:
     kind: 'radial_velocities'
     planets: ['b']
-  Tcent_b:
+  transit_b:
     kind: transit_time
     planet: 'b'
 parameters:

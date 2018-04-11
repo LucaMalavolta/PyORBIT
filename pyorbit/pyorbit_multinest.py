@@ -1,5 +1,5 @@
 from classes.common import *
-from classes.model_container import ModelContainerMultiNest
+from classes.model_container_multinest import ModelContainerMultiNest
 from classes.input_parser import yaml_parser, pars_input
 from classes.io_subroutines import polychord_save_to_cpickle, polychord_load_from_cpickle
 import os
@@ -51,8 +51,6 @@ def pyorbit_multinest(config_in, input_datasets=None, return_output=None):
         mc.results_resumen(None, skip_theta=True)
 
         mc.polychord_dir_output = multinest_dir_output
-
-
 
     os.system("mkdir -p " + multinest_dir_output + mc.polychord_parameters['base_dir'] + "/clusters")
     #os.system("mkdir -p " +polychord_dir_output + "chains/clusters")

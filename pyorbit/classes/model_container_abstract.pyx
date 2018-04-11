@@ -4,75 +4,57 @@ __all__ = ["ModelContainer"]
 
 
 class ModelContainer:
-    def __init__(self):
-        self.planet_dict = {}
-        self.dynamical_dict = {}
-        self.dynamical_t0_dict = {}
-        self.dynamical_model = None
 
-        self.dataset_dict = {}
-
-        self.models = {}
-        self.common_models = {}
-
-        """ pyde/emcee variables
-        wondering if I should move these somewhere else, for now they are staying here because they are 
-        essentially harmless """
-        self.pyde_dir_output = None
-        self.emcee_dir_output = None
-
-        self.emcee_parameters = {'nsave': 0, 'npop_mult': 2, 'thin': 1, 'nburn':0,
-                                 'multirun': None, 'multirun_iter': 20, 'version': '2.2.1'}
-
-        self.pyde_parameters = {'ngen': 1000, 'npop_mult': 2}
-
-        self.polychord_parameters = {'nlive_mult': 25,
-                                'num_repeats_mult': 5,
-                                'feedback': 1,
-                                'precision_criterion': 0.001,
-                                'sampling_efficiency': 0.8,
-                                'max_ndead': -1,
-                                'boost_posterior': 0.0,
-                                'read_resume': True,
-                                'base_dir': './',
-                                'shutdown_jitter': False}
-        self.polychord_dir_output = None
-
-        self.ndata = None
-        self.ndof = None
-
-        self.starting_point = None
-        self.starting_point_flag = False
-        self.recenter_bounds_flag = True
-
-        self.bounds = None
-        self.range = None
-        self.ndim = 0
-        self.pam_names = ''
-        self.star_mass = [1.0000, 0.1000]
-        self.star_radius = [1.0000, 0.1000]
-
-        self.Tref = None
-
-        """
+    """
         Values have been taken from TRADES
         These variables will be renamed in the next release, right now I'm keeping the original names
         to avoid breaking the code
-        """
-        self.G_grav = constants.Gsi  # Gravitational Constants in SI system [m^3/kg/s^2]
-        self.G_ttvfast = constants.Giau  # G [AU^3/Msun/d^2]
-        self.M_SJratio = constants.Msjup
-        self.M_SEratio = constants.Msear
-        self.M_JEratio = constants.Mjear
+    """
+    G_grav = constants.Gsi  # Gravitational Constants in SI system [m^3/kg/s^2]
+    G_ttvfast = constants.Giau  # G [AU^3/Msun/d^2]
+    M_SJratio = constants.Msjup
+    M_SEratio = constants.Msear
+    M_JEratio = constants.Mjear
 
-        self.R_SJratio = constants.Rsjup
-        self.R_JEratio = constants.Rjear
-        self.R_SEratio = constants.Rsjup * constants.Rjear
+    R_SJratio = constants.Rsjup
+    R_JEratio = constants.Rjear
+    R_SEratio = constants.Rsjup * constants.Rjear
 
-        self.Mu_sun = constants.Gsi * constants.Msun
-        self.seconds_in_day = constants.d2s
-        self.AU_km = constants.AU
-        self.AUday2ms = self.AU_km / self.seconds_in_day * 1000.0
+    Mu_sun = constants.Gsi * constants.Msun
+    seconds_in_day = constants.d2s
+    AU_km = constants.AU
+    AUday2ms = AU_km / seconds_in_day * 1000.0
+
+    planet_dict = {}
+    dynamical_dict = {}
+    dynamical_t0_dict = {}
+    dynamical_model = None
+
+    dataset_dict = {}
+
+    models = {}
+    common_models = {}
+
+    include_priors = True
+
+    ndata = None
+    ndof = None
+
+    starting_point = None
+    starting_point_flag = False
+    recenter_bounds_flag = True
+
+    bounds = None
+    range = None
+    ndim = 0
+    pam_names = ''
+    star_mass = [1.0000, 0.1000]
+    star_radius = [1.0000, 0.1000]
+
+    Tref = None
+
+    def __init__(self):
+        return
 
     def model_setup(self):
         # First step: setting up the correct associations between models and dataset
@@ -191,10 +173,10 @@ class ModelContainer:
             dynamical_output = self.dynamical_model.compute(self, theta)
 
         logchi2_out = (-0.5) * self.ndof * np.log(2 * np.pi)
-        logchi2_out_copy = logchi2_out*1.
 
-        for model in self.common_models.itervalues():
-            logchi2_out += model.return_priors(theta)
+        if self.include_priors:
+            for model in self.common_models.itervalues():
+                logchi2_out += model.return_priors(theta)
 
         delayed_lnlk_computation = []
 
@@ -206,7 +188,8 @@ class ModelContainer:
             variable_values = dataset.convert(theta)
             dataset.compute(variable_values)
 
-            logchi2_out += dataset.return_priors(theta)
+            if self.include_priors:
+                logchi2_out += dataset.return_priors(theta)
 
             if 'none' in dataset.models or 'None' in dataset.models:
                 continue
@@ -221,7 +204,8 @@ class ModelContainer:
 
             for model_name in dataset.models:
 
-                logchi2_out += self.models[model_name].return_priors(theta, dataset_name)
+                if self.include_priors:
+                    logchi2_out += self.models[model_name].return_priors(theta, dataset_name)
 
                 if hasattr(self.models[model_name], 'internal_likelihood'):
                     logchi2_gp_model = model_name
@@ -534,7 +518,7 @@ def print_theta_bounds(i_dict, theta, bounds, skip_theta=False):
     format_string_long = "%10s  %4d  %12f   %12f %12f (15-84 p) ([%9f, %9f])"
 
     for var, i in i_dict.iteritems():
-        i_dict
+
         if skip_theta:
             print format_string_notheta % (var, i, bounds[i, 0], bounds[i, 1])
         elif len(np.shape(theta)) == 2:
@@ -560,52 +544,10 @@ def print_dictionary(variable_values):
     print
 
 
-class ModelContainerPolyChord(ModelContainer):
-    # Default values, taken from the PyPolyChord wrapper in PolyChord official distribution, V1.9
-    polychord_parameters = {'nlive_mult': 25,
-                                 'num_repeats_mult': 5,
-                                 'feedback': 1,
-                                 'precision_criterion': 0.001,
-                                 'max_ndead': -1,
-                                 'boost_posterior': 0.0,
-                                 'read_resume': True,
-                                 'base_dir': 'polychord/',
-                                 'shutdown_jitter': False}
-    polychord_dir_output = None
-
-    def polychord_priors(self, cube):
-        theta = (self.bounds[:, 1] - self.bounds[:, 0]) * cube + self.bounds[:, 0]
-        return theta.tolist()
-
-    def polychord_call(self, theta1):
-        #theta = np.empty(self.ndim)
-        #for i in xrange(0, self.ndim):
-        #    theta[i] = theta1[i]
-        theta = [theta1[i] for i in xrange(0, self.ndim)]
-        phi = [0.0] * 0
-        chi_out = self(theta)
-        if chi_out < -0.5e10:
-            return -0.5e10, phi
-        return chi_out, phi
 
 
-class ModelContainerMultiNest(ModelContainer):
-    def multinest_priors(self, cube, ndim, nparams):
-        # cube[:] = (self.bounds[:, 1] - self.bounds[:, 0]) * cube[:] + self.bounds[:, 0]
-        for i in xrange(0, ndim):
-            cube[i] = (self.bounds[i, 1] - self.bounds[i, 0]) * cube[i] + self.bounds[i, 0]
 
-    def multinest_call(self, theta1, ndim, nparams):
-        # Workaround for variable selection: if a variable as null index
-        # (i.e. it has not been included in the model)
-        # the numpy array will give back an empty list, the ctype will give back an error
-        theta = np.empty(ndim)
-        for i in xrange(0, ndim):
-            theta[i] = theta1[i]
-        chi_out = self(theta)
-        if chi_out < -0.5e10:
-            return -0.5e10
-        return chi_out
+
 
 
 """
