@@ -14,7 +14,7 @@ common:
     b:
       orbit: keplerian
       boundaries:
-        P: [1.0, 100.0]
+        P: [2.0, 100.0]
         K: [0.01, 1000.0]
         e: [0.00, 1.00]
       fixed:
@@ -35,18 +35,19 @@ models:
     common: poly_trend
     order: 2
 parameters:
-  star_mass: [1.00, 0.01]
+  star_mass: [0.80, 0.01]
   star_radius: [1.00, 0.01]
   Tref: 6025.00
 solver:
   pyde:
-    ngen: 4000
+    ngen: 160
     npop_mult: 4
   emcee:
     npop_mult: 4
-    nsteps: 50000
-    nburn: 20000
-    thin: 100
+    nsteps: 500
+    nburn: 200
+    thin: 1
+    include_priors: False
   polychord:
     nlive: 1000
     num_repeats_mult: 5

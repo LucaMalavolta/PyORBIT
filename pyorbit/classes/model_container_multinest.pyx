@@ -4,18 +4,21 @@ from model_container_abstract import ModelContainer
 
 class ModelContainerMultiNest(ModelContainer):
 
-    include_priors = False
-    polychord_parameters = {'nlive_mult': 25,
-                            'num_repeats_mult': 5,
-                            'feedback': 1,
-                            'precision_criterion': 0.001,
-                            'sampling_efficiency': 0.8,
-                            'max_ndead': -1,
-                            'boost_posterior': 0.0,
-                            'read_resume': True,
-                            'base_dir': './',
-                            'shutdown_jitter': False}
-    polychord_dir_output = None
+    def __init__(self):
+        super(self.__class__, self).__init__()
+
+        self.include_priors = False
+        self.polychord_parameters = {'nlive_mult': 25,
+                                'num_repeats_mult': 5,
+                                'feedback': 1,
+                                'precision_criterion': 0.001,
+                                'sampling_efficiency': 0.8,
+                                'max_ndead': -1,
+                                'boost_posterior': 0.0,
+                                'read_resume': True,
+                                'base_dir': './',
+                                'shutdown_jitter': False}
+        self.polychord_dir_output = None
 
 
     def multinest_priors(self, cube, ndim, nparams):

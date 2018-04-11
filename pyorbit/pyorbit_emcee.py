@@ -43,7 +43,6 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
     print 'reloaded_pyde: ', reloaded_pyde
     print 'reloaded_emcee_multirun: ', reloaded_emcee_multirun
     print 'reloaded_emcee: ', reloaded_emcee
-    print
 
     if reloaded_emcee:
         """ There's no need to do anything"""
@@ -51,6 +50,11 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
         mc.model_setup()
         mc.initialize_logchi2()
         mc.results_resumen(flatchain)
+
+        print
+        print mc.star_mass
+        print mc.common_models
+        print
 
         if return_output:
             return mc, sampler_chain, sampler_lnprobability
@@ -96,6 +100,8 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
 
     emcee_version = mc.emcee_parameters['version'][0]
 
+    print
+    print 'Include priors: ', mc.include_priors
     print
     print 'Reference Time Tref: ', mc.Tref
     print

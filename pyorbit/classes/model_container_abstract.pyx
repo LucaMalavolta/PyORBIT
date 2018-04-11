@@ -3,58 +3,57 @@ from common import *
 __all__ = ["ModelContainer"]
 
 
-class ModelContainer:
-
-    """
-        Values have been taken from TRADES
-        These variables will be renamed in the next release, right now I'm keeping the original names
-        to avoid breaking the code
-    """
-    G_grav = constants.Gsi  # Gravitational Constants in SI system [m^3/kg/s^2]
-    G_ttvfast = constants.Giau  # G [AU^3/Msun/d^2]
-    M_SJratio = constants.Msjup
-    M_SEratio = constants.Msear
-    M_JEratio = constants.Mjear
-
-    R_SJratio = constants.Rsjup
-    R_JEratio = constants.Rjear
-    R_SEratio = constants.Rsjup * constants.Rjear
-
-    Mu_sun = constants.Gsi * constants.Msun
-    seconds_in_day = constants.d2s
-    AU_km = constants.AU
-    AUday2ms = AU_km / seconds_in_day * 1000.0
-
-    planet_dict = {}
-    dynamical_dict = {}
-    dynamical_t0_dict = {}
-    dynamical_model = None
-
-    dataset_dict = {}
-
-    models = {}
-    common_models = {}
-
-    include_priors = True
-
-    ndata = None
-    ndof = None
-
-    starting_point = None
-    starting_point_flag = False
-    recenter_bounds_flag = True
-
-    bounds = None
-    range = None
-    ndim = 0
-    pam_names = ''
-    star_mass = [1.0000, 0.1000]
-    star_radius = [1.0000, 0.1000]
-
-    Tref = None
+class ModelContainer(object):
 
     def __init__(self):
-        return
+
+        """
+            Values have been taken from TRADES
+            These variables will be renamed in the next release, right now I'm keeping the original names
+            to avoid breaking the code
+        """
+        self.G_grav = constants.Gsi  # Gravitational Constants in SI system [m^3/kg/s^2]
+        self.G_ttvfast = constants.Giau  # G [AU^3/Msun/d^2]
+        self.M_SJratio = constants.Msjup
+        self.M_SEratio = constants.Msear
+        self.M_JEratio = constants.Mjear
+
+        self.R_SJratio = constants.Rsjup
+        self.R_JEratio = constants.Rjear
+        self.R_SEratio = constants.Rsjup * constants.Rjear
+
+        self.Mu_sun = constants.Gsi * constants.Msun
+        self.seconds_in_day = constants.d2s
+        self.AU_km = constants.AU
+        self.AUday2ms = self.AU_km / self.seconds_in_day * 1000.0
+
+        self.planet_dict = {}
+        self.dynamical_dict = {}
+        self.dynamical_t0_dict = {}
+        self.dynamical_model = None
+
+        self.dataset_dict = {}
+
+        self.models = {}
+        self.common_models = {}
+
+        self.include_priors = True
+
+        self.ndata = None
+        self.ndof = None
+
+        self.starting_point = None
+        self.starting_point_flag = False
+        self.recenter_bounds_flag = True
+
+        self.bounds = None
+        self.range = None
+        self.ndim = 0
+        self.pam_names = ''
+        self.star_mass = [1.0000, 0.1000]
+        self.star_radius = [1.0000, 0.1000]
+
+        self.Tref = None
 
     def model_setup(self):
         # First step: setting up the correct associations between models and dataset

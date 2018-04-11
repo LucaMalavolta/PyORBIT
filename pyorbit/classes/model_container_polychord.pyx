@@ -3,18 +3,23 @@ from model_container_abstract import ModelContainer
 
 
 class ModelContainerPolyChord(ModelContainer):
-    # Default values, taken from the PyPolyChord wrapper in PolyChord official distribution, V1.9
-    include_priors = False
-    polychord_parameters = {'nlive_mult': 25,
-                                 'num_repeats_mult': 5,
-                                 'feedback': 1,
-                                 'precision_criterion': 0.001,
-                                 'max_ndead': -1,
-                                 'boost_posterior': 0.0,
-                                 'read_resume': True,
-                                 'base_dir': 'polychord/',
-                                 'shutdown_jitter': False}
-    polychord_dir_output = None
+
+    def __init__(self):
+        super(self.__class__, self).__init__()
+
+        # Default values, taken from the PyPolyChord wrapper in PolyChord official distribution, V1.9
+        self.include_priors = False
+        self.polychord_parameters = {'nlive_mult': 25,
+                                     'num_repeats_mult': 5,
+                                     'feedback': 1,
+                                     'precision_criterion': 0.001,
+                                     'max_ndead': -1,
+                                     'boost_posterior': 0.0,
+                                     'read_resume': True,
+                                     'base_dir': 'polychord/',
+                                     'shutdown_jitter': False}
+
+        self.polychord_dir_output = None
 
     def polychord_priors(self, cube):
         theta = (self.bounds[:, 1] - self.bounds[:, 0]) * cube + self.bounds[:, 0]

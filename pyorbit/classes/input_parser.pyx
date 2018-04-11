@@ -324,6 +324,9 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, shutdown_
         if 'shutdown_jitter' in conf:
             mc.pyde_parameters['shutdown_jitter'] = np.asarray(conf['shutdown_jitter'], dtype=bool)
 
+        if 'include_priors' in conf:
+            mc.include_priors = np.asarray(conf['include_priors'], dtype=bool)
+
     if 'emcee' in conf_solver and hasattr(mc, 'emcee_parameters'):
         conf = conf_solver['emcee']
 
@@ -350,6 +353,9 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, shutdown_
 
         if 'shutdown_jitter' in conf:
             mc.emcee_parameters['shutdown_jitter'] = np.asarray(conf['shutdown_jitter'], dtype=bool)
+
+        if 'include_priors' in conf:
+            mc.include_priors = np.asarray(conf['include_priors'], dtype=bool)
 
     if 'polychord' in conf_solver  and hasattr(mc, 'polychord'):
         conf = conf_solver['polychord']
@@ -392,6 +398,9 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, shutdown_
 
         if 'shutdown_jitter' in conf:
             mc.polychord_parameters['shutdown_jitter'] = np.asarray(conf['shutdown_jitter'], dtype=bool)
+
+        if 'include_priors' in conf:
+            mc.include_priors = np.asarray(conf['include_priors'], dtype=bool)
 
     if 'recenter_bounds' in conf_solver:
         """ 
