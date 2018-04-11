@@ -50,6 +50,4 @@ class CommonActivity(AbstractCommon):
         'cel_c': ['Jeffrey', []]
     }
 
-
-
     recenter_pams = {'f'}

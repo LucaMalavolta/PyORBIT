@@ -63,6 +63,10 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
 
         pars_input(config_in, mc, input_datasets)
 
+        if mc.pyde_parameters['shutdown_jitter'] or mc.emcee_parameters['shutdown_jitter']:
+            for dataset in mc.dataset_dict.itervalues():
+                dataset.shutdown_jitter()
+
         # keep track of which version has been used to perform emcee computations
         mc.emcee_parameters['version'] = emcee.__version__[0]
 

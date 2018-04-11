@@ -8,8 +8,18 @@ class ModelContainerEmcee(ModelContainer):
     pyde_dir_output = None
     emcee_dir_output = None
 
-    emcee_parameters = {'nsave': 0, 'npop_mult': 2, 'thin': 1, 'nburn':0,
-                                 'multirun': None, 'multirun_iter': 20, 'version': '2.2.1'}
+    emcee_parameters = {'nsave': 0,
+                        'npop_mult': 4,
+                        'thin': 1,
+                        'nburn':0,
+                        'multirun': None,
+                        'multirun_iter': 20,
+                        'version': '2.2.1',
+                        'shutdown_jitter': False
+                        }
 
-    pyde_parameters = {'ngen': 1000, 'npop_mult': 2}
+    pyde_parameters = {'ngen': 8000,
+                       'npop_mult': 4,
+                       'shutdown_jitter': False
+                       }
 
