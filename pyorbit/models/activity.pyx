@@ -40,14 +40,14 @@ class CommonActivity(AbstractCommon):
     default_priors = {
         'Prot': ['Uniform', []],
         'Pdec': ['Uniform', []],
-        'Oamp': ['Jeffrey', []],
+        'Oamp': ['Jeffreys', []],
         'Hamp': ['Uniform', []],
         'P': ['Jeffreys', []],
         'K': ['ModifiedJeffreys', [1.0]],
         'f': ['Uniform', []],
-        'cel_a': ['Jeffrey', []],
-        'cel_b': ['Jeffrey', []],
-        'cel_c': ['Jeffrey', []]
+        'cel_a': ['Jeffreys', []],
+        'cel_b': ['Jeffreys', []],
+        'cel_c': ['Jeffreys', []]
     }
 
     recenter_pams = {'f'}

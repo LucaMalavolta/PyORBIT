@@ -95,6 +95,7 @@ class ModelContainer(object):
         for model in self.models.itervalues():
             if model.common_ref:
                 model.default_bounds = self.common_models[model.common_ref].default_bounds
+                model.default_priors = self.common_models[model.common_ref].default_priors
                 self.ndim, bounds_ext = self.common_models[model.common_ref].define_variables_bounds(
                         self.ndim, model.list_pams_common)
                 bounds_list.extend(bounds_ext)

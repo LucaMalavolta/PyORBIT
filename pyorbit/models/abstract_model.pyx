@@ -29,6 +29,7 @@ class AbstractModel():
         self.model_conf = None
 
     def initialize_model(self, mc, **kwargs):
+
         pass
 
     def setup_dataset(self, dataset, **kwargs):
