@@ -30,17 +30,20 @@ planet_c = {
 
 instrument = {
     'RV_precision': 1.000,
-    'RV_offset1': np.random.uniform(4000.0,5000.0),
-    'RV_offset2': np.random.uniform(4000.0,5000.0),
+    'RV_offset1': np.random.uniform(4000.0, 5000.0),
+    'RV_offset2': np.random.uniform(4000.0, 5000.0),
     'T0_precision': 0.001
 }
+
+bjd_syn = np.arange(6000, 6050, 1, dtype=np.double)
+bjd_syn -= (bjd_syn-6025.0)*(4./1440)
 
 bjd_obs = np.random.normal(np.arange(6000, 6050, 1, dtype=np.double), 0.2)
 Tref = 6025.0000
 
 photometry = {
     'phot_precision': 0.0001,
-    'phot_bjd': np.arange(6000.0,6070.0,(29.45/60./24.)*10.0) #pseudo-K2 range
+    'phot_bjd': np.arange(6000.0, 6070.0, (29.45/60./24.)*10.0) #pseudo-K2 range
 }
 
 

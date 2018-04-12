@@ -54,7 +54,7 @@ class CommonPlanets(AbstractCommon):
         'P': ['ModifiedJeffreys', [1.00]],
         'K': ['ModifiedJeffreys', [1.00]],
         'f': ['Uniform', []],
-        'e': ['Uniform', []],
+        'e': ['BetaDistribution', [0.71, 2.57]],
         'o': ['Uniform', []],
         'M': ['Uniform', []],  # Fix the unit
         'i': ['Uniform', []],

@@ -5,16 +5,12 @@ inputs:
       models:
         - RVmodel
         - poly_trend
-  Tcent_b:
-    file: TestCase08_Tcent_b.dat
-    kind: Tcent
-    models: transit_b
 common:
   planets:
     b:
       orbit: keplerian
       boundaries:
-        P: [5.0, 8.0]
+        P: [2.0, 100.0]
         K: [0.01, 1000.0]
         e: [0.00, 1.00]
       fixed:
@@ -40,7 +36,7 @@ parameters:
   Tref: 6025.00
 solver:
   pyde:
-    ngen: 4000
+    ngen: 8000
     npop_mult: 4
   emcee:
     npop_mult: 4

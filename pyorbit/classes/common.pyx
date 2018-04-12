@@ -1,5 +1,6 @@
 import os
 import sys
+from scipy import stats
 
 if 'celerite' not in sys.modules:
 
@@ -128,6 +129,11 @@ def giveback_priors(kind, bounds, pams, val):
         """
         return np.log(1./(pams[1]*(1.0 + val/pams[1])) * 1.0/np.log(1.0+bounds[1]/pams[1]))
 
+    if kind == "BetaDistribution":
+        """ bounds[1] = noise_max (99 m/s)
+            pams[0] = noise_0 (suggested 1 m/s) 
+        """
+        return np.log( stats.beta.pdf((val-bounds[0])/(bounds[1]-bounds[0]), pams[0], pams[1]) )
     ## CONVERT log2 to log
 
 def compute_value_sigma(samples):
