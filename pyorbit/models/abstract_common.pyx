@@ -60,6 +60,9 @@ class AbstractCommon(object):
                     self.variable_index[var] = self.nfix
                     #self.variable_sampler[var] = self.nfix
                     self.nfix += 1
+                    self.prior_kind[var] = 'None'
+                    self.prior_pams[var] = []
+
             elif var not in self.transformation:
                 '''If no bounds have been specified in the input file, we use the default ones
                     Bounds must be provided in any case to avoid a failure of PyDE '''

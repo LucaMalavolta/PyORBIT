@@ -70,6 +70,8 @@ class AbstractModel():
                 self.transformation[dataset_name][var] = get_fix_val
                 self.variable_index[dataset_name][var] = self.nfix
                 # self.variable_sampler[dataset_name][var] = self.nfix
+                self.prior_kind[dataset_name][var] = 'None'
+                self.prior_pams[dataset_name][var] = []
                 self.fixed.append(self.fix_list[dataset_name][var][0])
                 self.nfix += 1
             else:

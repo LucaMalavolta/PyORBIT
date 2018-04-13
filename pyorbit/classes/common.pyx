@@ -106,6 +106,9 @@ def giveback_priors(kind, bounds, pams, val):
     """ The code is supposed to give -np.inf log-likelihood when the parameters are outside the boundaries,
     so this case is not emcopassed in the definition of the priors """
 
+    if kind == 'None':
+        return 0.00
+
     if kind == 'Gaussian':
         return -(val - pams[0]) ** 2 / (2 * pams[1] ** 2)
 

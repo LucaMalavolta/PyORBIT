@@ -109,7 +109,6 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, shutdown_
                     if 'fixed' in planet_conf:
                         fixed_conf = planet_conf['fixed']
                         for var in fixed_conf:
-
                             mc.common_models[planet_name].fix_list[var] = np.asarray(fixed_conf[var], dtype=np.double)
 
 
