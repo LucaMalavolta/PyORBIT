@@ -163,20 +163,31 @@ class ModelContainer(object):
 
         return True
 
-    def __call__(self, theta):
+    def __call__(self, theta, include_priors=True):
+        log_priors, log_likelihood = self.log_priors_likelihood(theta)
+        if self.include_priors and include_priors:
+            return log_priors + log_likelihood
+        else:
+            return log_likelihood
+
+    def log_priors_likelihood(self, theta, return_priors=True):
+
+        log_priors = 0.00
+        log_likelihood = (-0.5) * self.ndof * np.log(2 * np.pi)
+
         if not self.check_bounds(theta):
-            return -np.inf
+            if return_priors is False:
+                return -np.inf
+            else:
+                return -np.inf, -np.inf
 
         if self.dynamical_model is not None:
             """ check if any keyword ahas get the output model from the dynamical tool
             we must do it here because all the planet are involved"""
             dynamical_output = self.dynamical_model.compute(self, theta)
 
-        logchi2_out = (-0.5) * self.ndof * np.log(2 * np.pi)
-
-        if self.include_priors:
-            for model in self.common_models.itervalues():
-                logchi2_out += model.return_priors(theta)
+        for model in self.common_models.itervalues():
+            log_priors += model.return_priors(theta)
 
         delayed_lnlk_computation = []
 
@@ -188,8 +199,7 @@ class ModelContainer(object):
             variable_values = dataset.convert(theta)
             dataset.compute(variable_values)
 
-            if self.include_priors:
-                logchi2_out += dataset.return_priors(theta)
+            log_priors += dataset.return_priors(theta)
 
             if 'none' in dataset.models or 'None' in dataset.models:
                 continue
@@ -204,8 +214,7 @@ class ModelContainer(object):
 
             for model_name in dataset.models:
 
-                if self.include_priors:
-                    logchi2_out += self.models[model_name].return_priors(theta, dataset_name)
+                log_priors += self.models[model_name].return_priors(theta, dataset_name)
 
                 if hasattr(self.models[model_name], 'internal_likelihood'):
                     logchi2_gp_model = model_name
@@ -242,15 +251,18 @@ class ModelContainer(object):
                                                                    reset_status=delayed_lnlk_computation)
                     delayed_lnlk_computation.append(logchi2_gp_model)
                 else:
-                    logchi2_out += self.models[logchi2_gp_model].lnlk_compute(variable_values, dataset)
+                    log_likelihood += self.models[logchi2_gp_model].lnlk_compute(variable_values, dataset)
             else:
-                logchi2_out += dataset.model_logchi2()
+                log_likelihood += dataset.model_logchi2()
 
         """ In case there is more than one GP model"""
         for logchi2_gp_model in delayed_lnlk_computation:
-            logchi2_out += self.models[logchi2_gp_model].lnlk_compute()
+            log_likelihood += self.models[logchi2_gp_model].lnlk_compute()
 
-        return logchi2_out
+        if return_priors is False:
+            return log_likelihood
+        else:
+            return log_priors, log_likelihood
 
     def recenter_bounds(self, pop_mean, recenter=True):
         # This function recenters the bounds limits for circular variables

@@ -81,6 +81,8 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
         flat_chain = emcee_flatchain(sampler_chain, nburnin, nthin)
         flat_lnprob = emcee_flatlnprob(sampler_lnprobability, nburnin, nthin, emcee_version)
 
+        flat_BiC = -2*flat_lnprob + mc.ndim * np.log(mc.ndata)
+
         lnprob_med = common.compute_value_sigma(flat_lnprob)
         chain_med = common.compute_value_sigma(flat_chain)
         chain_MAP, lnprob_MAP = common.pick_MAP_parameters(flat_chain, flat_lnprob)
@@ -115,13 +117,8 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
 
         """ Required to create the right objects inside each class - if defined inside """
         theta_dictionary = mc.get_theta_dictionary()
+        print
         print theta_dictionary
-
-        print
-        print 'Reference Time Tref: ', mc.Tref
-        print
-        print 'Dimensions = ', mc.ndim
-        print
 
         data_in = np.genfromtxt(dir_input + 'post_equal_weights.dat')
         flat_lnprob = data_in[:, -1]
@@ -164,12 +161,6 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
         theta_dictionary = mc.get_theta_dictionary()
         print theta_dictionary
 
-        print
-        print 'Reference Time Tref: ', mc.Tref
-        print
-        print 'Dimensions = ', mc.ndim
-        print
-
         data_in = np.genfromtxt(dir_input + 'pyorbit_equal_weights.txt')
         flat_lnprob = data_in[:, 1]
         flat_chain = data_in[:, 2:]
@@ -188,9 +179,39 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
         print 'Samples: ', nsample
         print
 
+    print
+    print ' LN posterior: %12f   %12f %12f (15-84 p) ' % (lnprob_med[0], lnprob_med[2], lnprob_med[1])
+
+    MAP_log_priors, MAP_log_likelihood = mc.log_priors_likelihood(chain_MAP)
+    BIC = -2.0 * MAP_log_likelihood + np.log(mc.ndata) * mc.ndim
+    AIC = -2.0 * MAP_log_likelihood + 2.0 * mc.ndim
+    AICc = AIC +  (2.0 + 2.0*mc.ndim) * mc.ndim / (mc.ndata - mc.ndim - 1.0)
+    # AICc for small sample
 
     print
-    print ' LN probability: %12f   %12f %12f (15-84 p) ' % (lnprob_med[0], lnprob_med[2], lnprob_med[1])
+    print ' MAP log_priors     = ', MAP_log_priors
+    print ' MAP log_likelihood = ', MAP_log_likelihood
+    print ' MAP BIC  (using likelihood)  = ', BIC
+    print ' MAP AIC  (using likelihood)  = ', AIC
+    print ' MAP AICc (using likelihood) = ', AICc
+
+    MAP_log_posterior = MAP_log_likelihood + MAP_log_priors
+    BIC = -2.0 * MAP_log_posterior + np.log(mc.ndata) * mc.ndim
+    AIC = -2.0 * MAP_log_posterior + 2.0 * mc.ndim
+    AICc = AIC +  (2.0 + 2.0*mc.ndim) * mc.ndim / (mc.ndata - mc.ndim - 1.0)
+
+    print
+    print ' MAP BIC  (using posterior)  = ', BIC
+    print ' MAP AIC  (using posterior)  = ', AIC
+    print ' MAP AICc (using posterior) = ', AICc
+
+    if mc.ndata < 40 * mc.ndim:
+        print
+        print ' AICc suggested over AIC because NDATA ( %12f ) < 40 * NDIM ( %12f )' % (mc.ndata, mc.ndim)
+    else:
+        print
+        print ' AIC suggested over AICs because NDATA ( %12f ) > 40 * NDIM ( %12f )' % (mc.ndata, mc.ndim)
+
     print
     print '****************************************************************************************************'
     print
