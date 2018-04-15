@@ -219,6 +219,7 @@ class ModelContainer(object):
                     """ Taking the parameter values from the common model"""
                     common_ref = self.models[model_name].common_ref
                     variable_values = self.common_models[common_ref].convert(theta)
+
                 else:
                     """ This model has no common model reference, i.e., it is strictly connected to the dataset"""
                     variable_values = {}
