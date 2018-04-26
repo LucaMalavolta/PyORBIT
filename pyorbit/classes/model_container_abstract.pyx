@@ -508,13 +508,15 @@ class ModelContainer(object):
                     model_x0[dataset_name][logchi2_gp_model + '_std'] = np.sqrt(var)
                     model_x0[dataset_name]['complete'] += model_x0[dataset_name][logchi2_gp_model]
 
+        print delayed_lnlk_computation
         for dataset_name, logchi2_gp_model in delayed_lnlk_computation.iteritems():
             model_out[dataset_name][logchi2_gp_model] = \
-                self.models[logchi2_gp_model].sample_conditional(dataset)
+                self.models[logchi2_gp_model].sample_conditional(self.dataset_dict[dataset_name])
+
             model_out[dataset_name]['complete'] += model_out[dataset_name][logchi2_gp_model]
 
             model_x0[dataset_name][logchi2_gp_model], var = \
-                self.models[logchi2_gp_model].sample_predict(dataset, x0_plot)
+                self.models[logchi2_gp_model].sample_predict(self.dataset_dict[dataset_name], x0_plot)
 
             model_x0[dataset_name][logchi2_gp_model + '_std'] = np.sqrt(var)
             model_x0[dataset_name]['complete'] += model_x0[dataset_name][logchi2_gp_model]

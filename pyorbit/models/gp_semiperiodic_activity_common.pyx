@@ -143,9 +143,9 @@ class GaussianProcess_QuasiPeriodicActivity_Common(AbstractModel):
         self.gp.compute(self.internal_dataset['x0'], self.internal_dataset['ej'])
 
         if x0_input is None:
-            return self.gp[dataset.name_ref].predict(self.internal_dataset['yr'], dataset.x0, return_var=True)
+            return self.gp.predict(self.internal_dataset['yr'], dataset.x0, return_var=True)
         else:
-            return self.gp[dataset.name_ref].predict(self.internal_dataset['yr'], x0_input, return_var=True)
+            return self.gp.predict(self.internal_dataset['yr'], x0_input, return_var=True)
 
     def sample_conditional(self, dataset, x0_input=None):
 
@@ -153,8 +153,8 @@ class GaussianProcess_QuasiPeriodicActivity_Common(AbstractModel):
         self.gp.compute(self.internal_dataset['x0'], self.internal_dataset['ej'])
 
         if x0_input is None:
-            return self.gp[dataset.name_ref].sample_conditional(self.internal_dataset['yr'], dataset.x0)
+            return self.gp.sample_conditional(self.internal_dataset['yr'], dataset.x0)
         else:
-            return self.gp[dataset.name_ref].sample_conditional(self.internal_dataset['yr'], x0_input)
+            return self.gp.sample_conditional(self.internal_dataset['yr'], x0_input)
 
 
