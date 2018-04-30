@@ -2,7 +2,7 @@ from classes.common import *
 from classes.model_container_emcee import ModelContainerEmcee
 from classes.input_parser import yaml_parser, pars_input
 from classes.io_subroutines import pyde_save_to_pickle, pyde_load_from_cpickle, \
-    emcee_save_to_cpickle, emcee_load_from_cpickle, emcee_flatchain
+    emcee_save_to_cpickle, emcee_load_from_cpickle, emcee_flatchain, emcee_create_dummy_file
 import emcee
 import os
 import sys
