@@ -39,6 +39,8 @@ class GaussianProcess_QuasiPeriodicActivity(AbstractModel):
     }
 
     gp = {}
+    use_HODLR = False
+
 
     def convert_val2gp(self, input_pams):
         """
@@ -77,7 +79,14 @@ class GaussianProcess_QuasiPeriodicActivity(AbstractModel):
         }
 
     def setup_dataset(self, dataset, **kwargs):
+
+        if 'use_HODLR' in kwargs:
+            self.use_HODLR = kwargs['use_HODLR']
+
         self.define_kernel(dataset)
+
+
+
         return
 
     def define_kernel(self, dataset):
@@ -100,8 +109,13 @@ class GaussianProcess_QuasiPeriodicActivity(AbstractModel):
          
         """
 
-        self.gp[dataset.name_ref] = george.GP(kernel)
-        #self.gp[dataset.name_ref] = george.GP(kernel, solver=george.HODLRSolver, mean=0.00)
+        if self.use_HODLR:
+            self.gp[dataset.name_ref] = george.GP(kernel, solver=george.HODLRSolver, mean=0.00)
+            print ' *** USING HODLR *** '
+            print
+
+        else:
+            self.gp[dataset.name_ref] = george.GP(kernel)
 
         """ I've decided to add the jitter in quadrature instead of using a constant kernel to allow the use of 
         different / selective jitter within the dataset

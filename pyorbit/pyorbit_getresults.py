@@ -613,6 +613,7 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
                         for x0, mod, std in zip(bjd_plot[dataset_name]['x0_plot'],
                                            bjd_plot[plot_x0_keyword][dataset_name][model_name],
                                            bjd_plot[plot_x0_keyword][dataset_name][model_name+'_std']):
+
                             fileout.write('{0:f} {1:f} {2:f} {3:f} \n'.format(x0+mc.Tref, x0, mod, std))
                         fileout.close()
                     else:

@@ -233,7 +233,7 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
         threads_pool.join()
 
     """ A dummy file is created to let the cpulimit script to proceed with the next step"""
-    mc.emcee_create_dummy_file(mc)
+    emcee_create_dummy_file(mc)
 
     if return_output:
         return mc, sampler.chain,  sampler.lnprobability
