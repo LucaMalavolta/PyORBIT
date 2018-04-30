@@ -3,6 +3,12 @@ import numpy as np
 import copy
 
 
+def pyde_create_dummy_file(mc,  prefix=''):
+    add_prefix = (prefix + '_' if prefix else '')
+    file_dummy = open(mc.pyde_dir_output + add_prefix + "dummy_file", "wb")
+    file_dummy.close()
+
+
 def pyde_save_to_pickle(mc, population, starting_point, prefix=''):
 
     add_prefix = (prefix + '_' if prefix else '')
@@ -20,6 +26,12 @@ def pyde_load_from_cpickle(pyde_dir_output, prefix=''):
     starting_point = pickle.load(open(pyde_dir_output + add_prefix + "starting_point.p", "rb"))
 
     return mc, population, starting_point
+
+
+def emcee_create_dummy_file(mc, prefix=''):
+    add_prefix = (prefix + '_' if prefix else '')
+    file_dummy = open(mc.emcee_dir_output + add_prefix + "dummy_file", "wb")
+    file_dummy.close()
 
 
 def emcee_save_to_cpickle(mc, starting_point, population, prob, state, sampler, samples=None, prefix=None):
@@ -53,6 +65,12 @@ def emcee_load_from_cpickle(emcee_dir_output, prefix=''):
 
     return mc, starting_point, population, prob, state, \
             sampler_chain, sampler_lnprobability, sampler_acceptance_fraction
+
+
+def polychord_create_dummy_file(mc, prefix=''):
+    add_prefix = (prefix + '_' if prefix else '')
+    file_dummy = open(mc.polychord_dir_output + add_prefix + "dummy_file", "wb")
+    file_dummy.close()
 
 
 def polychord_save_to_cpickle(mc, prefix=None):

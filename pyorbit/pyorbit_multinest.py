@@ -101,6 +101,9 @@ def pyorbit_multinest(config_in, input_datasets=None, return_output=None):
     print 'MultiNest COMPLETED'
     print
 
+    """ A dummy file is created to let the cpulimit script to proceed with the next step"""
+    mc.polychord_create_dummy_file(mc)
+
     if return_output:
         return mc
     else:
