@@ -45,6 +45,9 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
     print 'reloaded_emcee_multirun: ', reloaded_emcee_multirun
     print 'reloaded_emcee: ', reloaded_emcee
 
+    if not hasattr(mc, 'use_threading_pool'):
+        mc.use_threading_pool = False
+
     if reloaded_emcee:
         """ There's no need to do anything"""
         flatchain = emcee_flatchain(sampler_chain, mc.emcee_parameters['nburn'], mc.emcee_parameters['thin'])
@@ -156,7 +159,7 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
 
     mc.results_resumen(starting_point, compute_lnprob=True)
 
-    if mc.use_threding_pool:
+    if mc.use_threading_pool:
         if emcee_version =='2':
             threads_pool = emcee.interruptible_pool.InterruptiblePool(mc.emcee_parameters['nwalkers'])
         else:
@@ -169,7 +172,7 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
             print 'emcee exploratory run #', ii, ' of ', mc.emcee_parameters['multirun_iter']
             # sampler = emcee.EnsembleSampler(mc.emcee_parameters['nwalkers'], mc.ndim, mc,
             #                                 threads=mc.emcee_parameters['nwalkers'])
-            if mc.use_threding_pool:
+            if mc.use_threading_pool:
                 sampler = emcee.EnsembleSampler(mc.emcee_parameters['nwalkers'], mc.ndim, mc, pool=threads_pool)
             else:
                 sampler = emcee.EnsembleSampler(mc.emcee_parameters['nwalkers'], mc.ndim, mc)
@@ -196,7 +199,7 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
     print 'emcee'
     state = None
 
-    if mc.use_threding_pool:
+    if mc.use_threading_pool:
         sampler = emcee.EnsembleSampler(mc.emcee_parameters['nwalkers'], mc.ndim, mc, pool=threads_pool)
     else:
         sampler = emcee.EnsembleSampler(mc.emcee_parameters['nwalkers'], mc.ndim, mc)
@@ -226,7 +229,7 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
 
     print 'emcee completed'
 
-    if mc.use_threding_pool:
+    if mc.use_threading_pool:
         # close the pool of threads
         threads_pool.close()
         threads_pool.terminate()

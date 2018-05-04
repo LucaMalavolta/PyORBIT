@@ -409,8 +409,8 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, shutdown_
         """
         mc.recenter_bounds_flag = conf_solver['recenter_bounds']
 
-    if 'use_threding_pool' in conf_solver:
-        mc.use_threding_pool = conf_solver['use_threding_pool']
+    if 'use_threading_pool' in conf_solver:
+        mc.use_threading_pool = conf_solver['use_threading_pool']
 
 
 def boundaries_fixed_priors_starts(mc, model_obj, conf, dataset_1=None, dataset_2=None, add_var_name =''):
