@@ -45,7 +45,7 @@ class ModelContainer(object):
         self.starting_point = None
         self.starting_point_flag = False
         self.recenter_bounds_flag = True
-        self.use_threding_pool = True
+        self.use_threading_pool = True
 
         self.bounds = None
         self.range = None
