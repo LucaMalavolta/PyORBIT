@@ -45,9 +45,6 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
     print 'reloaded_emcee_multirun: ', reloaded_emcee_multirun
     print 'reloaded_emcee: ', reloaded_emcee
 
-    if not hasattr(mc, 'use_threading_pool'):
-        mc.use_threading_pool = False
-
     if reloaded_emcee:
         """ There's no need to do anything"""
         flatchain = emcee_flatchain(sampler_chain, mc.emcee_parameters['nburn'], mc.emcee_parameters['thin'])
@@ -101,6 +98,9 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
 
     if not os.path.exists(mc.emcee_dir_output):
         os.makedirs(mc.emcee_dir_output)
+
+    if not hasattr(mc, 'use_threading_pool'):
+        mc.use_threading_pool = False
 
     emcee_version = mc.emcee_parameters['version'][0]
 
