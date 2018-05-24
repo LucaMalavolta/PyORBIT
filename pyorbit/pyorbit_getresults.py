@@ -392,8 +392,8 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
         """
         i_is_missing = True
 
-        """ 
-        Check if the eccentricity and argument of pericenter were set as free parameters or fixed by simply 
+        """
+        Check if the eccentricity and argument of pericenter were set as free parameters or fixed by simply
         checking the size of their distribution
         """
         for var in variable_values.iterkeys():
@@ -593,6 +593,7 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
                         phase = dataset.x0 * 0.00
 
                     fileout.write('descriptor BJD BJD0 pha val,+- sys mod full val_compare,+- res,+- \n')
+
                     for x, x0, pha, y, e, sys, mod, com, obs_mod, res in zip(
                         dataset.x, dataset.x0, phase, dataset.y, dataset.e,
                             bjd_plot[plot_out_keyword][dataset_name]['systematics'],
@@ -656,8 +657,3 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
                 for x, y in zip(x_range, RV_out):
                     fileout.write('{0:f} {1:f} \n'.format(x, y))
                 fileout.close()
-
-
-
-
-

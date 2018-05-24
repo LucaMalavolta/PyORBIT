@@ -475,12 +475,16 @@ class ModelContainer(object):
 
                 dataset.model += self.models[model_name].compute(variable_values, dataset)
 
-                model_out[dataset_name][model_name] = self.models[model_name].compute(variable_values, dataset)
-                model_out[dataset_name]['complete'] += model_out[dataset_name][model_name]
-
-                if hasattr(self.models[model_name], 'not_time_dependant'):
+                if hasattr(self.models[model_name], 'single_value_output'):
+                    model_out[dataset_name][model_name] = np.zeros(dataset.n, dtype=np.double)
+                    model_x0[dataset_name][model_name] = np.zeros(np.size(x0_plot), dtype=np.double)
+                elif hasattr(self.models[model_name], 'not_time_dependant'):
+                    model_out[dataset_name][model_name] = self.models[model_name].compute(variable_values, dataset)
+                    model_out[dataset_name]['complete'] += model_out[dataset_name][model_name]
                     model_x0[dataset_name][model_name] = np.zeros(np.size(x0_plot), dtype=np.double)
                 else:
+                    model_out[dataset_name][model_name] = self.models[model_name].compute(variable_values, dataset)
+                    model_out[dataset_name]['complete'] += model_out[dataset_name][model_name]
                     model_x0[dataset_name][model_name] = \
                         self.models[model_name].compute(variable_values, dataset, x0_plot)
                     model_x0[dataset_name]['complete'] += model_x0[dataset_name][model_name]
