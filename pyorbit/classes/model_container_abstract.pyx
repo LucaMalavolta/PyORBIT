@@ -81,7 +81,6 @@ class ModelContainer(object):
                 #    if hasattr(self.common_models[common_model], 'common_initialization_with_dataset'):
                 #        self.common_models[common_model].setup_dataset(self.dataset_dict[dataset_name])
 
-
         if self.dynamical_model:
             self.dynamical_model.prepare(self)
 
@@ -248,6 +247,7 @@ class ModelContainer(object):
                 """ GP Log-likelihood is not computed now because a single matrix must be created with 
                 the joined dataset"""
                 if hasattr(self.models[logchi2_gp_model], 'delayed_lnlk_computation'):
+
                     self.models[logchi2_gp_model].add_internal_dataset(variable_values, dataset,
                                                                    reset_status=delayed_lnlk_computation)
                     delayed_lnlk_computation.append(logchi2_gp_model)
