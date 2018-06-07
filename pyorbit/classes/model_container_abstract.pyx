@@ -76,11 +76,6 @@ class ModelContainer(object):
                 if common_model:
                     self.common_models[common_model].common_initialization_with_dataset(dataset)
 
-                #print self.models[model_name].model_conf['common']
-                #for common_model in self.models[model_name].model_conf['common']:
-                #    if hasattr(self.common_models[common_model], 'common_initialization_with_dataset'):
-                #        self.common_models[common_model].setup_dataset(self.dataset_dict[dataset_name])
-
         if self.dynamical_model:
             self.dynamical_model.prepare(self)
 

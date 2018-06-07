@@ -40,7 +40,7 @@ class GaussianProcess_QuasiPeriodicActivity_Shared(AbstractModel):
     gp = {}
     internal_dataset = {'x0': [], 'yr': [], 'ej': []}
     internal_gp_pams = None
-    use_HODLR = False
+    use_HODLR = True
 
     def convert_val2gp(self, input_pams):
         """
@@ -125,9 +125,10 @@ class GaussianProcess_QuasiPeriodicActivity_Shared(AbstractModel):
             self.internal_dataset['ej'] = []
             self.internal_gp_pams = self.convert_val2gp(variable_value)
 
+        self.internal_dataset[dataset.name_ref] = variable_value['Hamp']
         self.internal_dataset['x0'].extend(dataset.x0)
         self.internal_dataset['yr'].extend((dataset.y - dataset.model)/variable_value['Hamp'])
-        self.internal_dataset['ej'].extend(np.sqrt((dataset.e /variable_value['Hamp'])**2.0 +
+        self.internal_dataset['ej'].extend(np.sqrt((dataset.e / variable_value['Hamp'])**2.0 +
                                                    (dataset.jitter/variable_value['Hamp'])**2.0))
 
     def lnlk_compute(self):
@@ -138,7 +139,7 @@ class GaussianProcess_QuasiPeriodicActivity_Shared(AbstractModel):
         self.gp.set_parameter_vector(self.internal_gp_pams)
         self.gp.compute(self.internal_dataset['x0'], self.internal_dataset['ej'])
 
-        return self.gp.lnlikelihood(self.internal_dataset['yr'], quiet=True)
+        return self.gp.log_likelihood(self.internal_dataset['yr'], quiet=True)
 
     def sample_predict(self, dataset, x0_input=None):
 
@@ -156,8 +157,8 @@ class GaussianProcess_QuasiPeriodicActivity_Shared(AbstractModel):
         self.gp.compute(self.internal_dataset['x0'], self.internal_dataset['ej'])
 
         if x0_input is None:
-            return self.gp.sample_conditional(self.internal_dataset['yr'], dataset.x0)
+            return self.gp.sample_conditional(self.internal_dataset['yr'], dataset.x0) * self.internal_dataset[dataset.name_ref]
         else:
-            return self.gp.sample_conditional(self.internal_dataset['yr'], x0_input)
+            return self.gp.sample_conditional(self.internal_dataset['yr'], x0_input) * self.internal_dataset[dataset.name_ref]
 
 

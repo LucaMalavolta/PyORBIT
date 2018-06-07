@@ -39,7 +39,7 @@ class GaussianProcess_QuasiPeriodicActivity(AbstractModel):
     }
 
     gp = {}
-    use_HODLR = False
+    use_HODLR = True
 
     def convert_val2gp(self, input_pams):
         """
@@ -77,7 +77,7 @@ class GaussianProcess_QuasiPeriodicActivity(AbstractModel):
             'Prot': np.exp(input_pams[self.gp_pams_index['Prot']])
         }
 
-    def initialize_model(self, **kwargs):
+    def initialize_model(self, mc,  **kwargs):
 
         if 'use_HODLR' in kwargs:
             self.use_HODLR = kwargs['use_HODLR']

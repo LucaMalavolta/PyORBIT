@@ -41,6 +41,7 @@ class GaussianProcess_QuasiPeriodicActivity_Common(AbstractModel):
     gp = {}
     internal_dataset = {'x0': [], 'yr': [], 'ej': []}
     internal_gp_pams = None
+    use_HODLR = True
 
     def convert_val2gp(self, input_pams):
         """
@@ -78,6 +79,11 @@ class GaussianProcess_QuasiPeriodicActivity_Common(AbstractModel):
             'Prot': np.exp(input_pams[self.gp_pams_index['Prot']])
         }
 
+    def initialize_model(self, mc,  **kwargs):
+
+        if 'use_HODLR' in kwargs:
+            self.use_HODLR = kwargs['use_HODLR']
+
     def common_initialization_with_dataset(self, dataset):
         self.define_kernel(dataset)
         return
@@ -101,8 +107,12 @@ class GaussianProcess_QuasiPeriodicActivity_Common(AbstractModel):
          gp_pams[3] = ln_theta = ln_Period -> ExpSine2Kernel(gamma, ln_period)
          
         """
-
-        self.gp = george.GP(kernel)
+        if self.use_HODLR:
+            self.gp = george.GP(kernel, solver=george.HODLRSolver, mean=0.00)
+            print ' *** USING HODLR *** '
+            print
+        else:
+            self.gp = george.GP(kernel)
         # self.gp = george.GP(kernel, solver=george.HODLRSolver, mean=0.00)
 
         """ I've decided to add the jitter in quadrature instead of using a constant kernel to allow the use of 
