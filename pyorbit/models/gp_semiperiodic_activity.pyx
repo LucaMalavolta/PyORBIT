@@ -39,7 +39,7 @@ class GaussianProcess_QuasiPeriodicActivity(AbstractModel):
     }
 
     gp = {}
-    use_HODLR = True
+    use_HODLR = False
 
     def convert_val2gp(self, input_pams):
         """

@@ -41,7 +41,7 @@ class GaussianProcess_QuasiPeriodicActivity_Common(AbstractModel):
     gp = {}
     internal_dataset = {'x0': [], 'yr': [], 'ej': []}
     internal_gp_pams = None
-    use_HODLR = True
+    use_HODLR = False
 
     def convert_val2gp(self, input_pams):
         """
