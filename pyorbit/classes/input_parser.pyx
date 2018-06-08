@@ -5,6 +5,7 @@ from ..models.activity import CommonActivity
 from ..models.radial_velocities import RVkeplerian, RVdynamical, TransitTimeKeplerian, TransitTimeDynamical, DynamicalIntegrator
 from ..models.gp_semiperiodic_activity import GaussianProcess_QuasiPeriodicActivity
 from ..models.gp_semiperiodic_activity_common import GaussianProcess_QuasiPeriodicActivity_Common
+from ..models.gp_semiperiodic_activity_shared import GaussianProcess_QuasiPeriodicActivity_Shared
 from ..models.celerite_semiperiodic_activity import Celerite_QuasiPeriodicActivity
 from ..models.correlations import Correlation_SingleDataset
 from ..models.polynomial_trend import CommonPolynomialTrend, PolynomialTrend
@@ -33,6 +34,7 @@ define_type_to_class = {
                      'dynamical': TransitTimeDynamical},
     'gp_quasiperiodic': GaussianProcess_QuasiPeriodicActivity,
     'gp_quasiperiodic_common': GaussianProcess_QuasiPeriodicActivity_Common,
+    'gp_quasiperiodic_shared': GaussianProcess_QuasiPeriodicActivity_Shared,
     'celerite_quasiperiodic': Celerite_QuasiPeriodicActivity,
     'correlation_singledataset': Correlation_SingleDataset,
     'polynomial_trend': PolynomialTrend,
@@ -109,7 +111,6 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, shutdown_
                     if 'fixed' in planet_conf:
                         fixed_conf = planet_conf['fixed']
                         for var in fixed_conf:
-
                             mc.common_models[planet_name].fix_list[var] = np.asarray(fixed_conf[var], dtype=np.double)
 
 
@@ -312,7 +313,7 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, shutdown_
     if 'dynamical_integrator' in conf_solver:
         mc.dynamical_model.dynamical_integrator = conf_solver['dynamical_integrator']
 
-    if 'pyde' in conf_solver:
+    if 'pyde' in conf_solver and hasattr(mc, 'pyde_parameters'):
         conf = conf_solver['pyde']
 
         if 'ngen' in conf:
@@ -321,7 +322,13 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, shutdown_
         if 'npop_mult' in conf:
             mc.pyde_parameters['npop_mult'] = np.asarray(conf['npop_mult'], dtype=np.int64)
 
-    if 'emcee' in conf_solver:
+        if 'shutdown_jitter' in conf:
+            mc.pyde_parameters['shutdown_jitter'] = np.asarray(conf['shutdown_jitter'], dtype=bool)
+
+        if 'include_priors' in conf:
+            mc.include_priors = np.asarray(conf['include_priors'], dtype=bool)
+
+    if 'emcee' in conf_solver and hasattr(mc, 'emcee_parameters'):
         conf = conf_solver['emcee']
 
         if 'multirun' in conf:
@@ -345,7 +352,13 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, shutdown_
         if 'thin' in conf:
             mc.emcee_parameters['thin'] = np.asarray(conf['thin'], dtype=np.int64)
 
-    if 'polychord' in conf_solver:
+        if 'shutdown_jitter' in conf:
+            mc.emcee_parameters['shutdown_jitter'] = np.asarray(conf['shutdown_jitter'], dtype=bool)
+
+        if 'include_priors' in conf:
+            mc.include_priors = np.asarray(conf['include_priors'], dtype=bool)
+
+    if 'polychord' in conf_solver  and hasattr(mc, 'polychord'):
         conf = conf_solver['polychord']
 
         if 'nlive' in conf:
@@ -387,6 +400,9 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, shutdown_
         if 'shutdown_jitter' in conf:
             mc.polychord_parameters['shutdown_jitter'] = np.asarray(conf['shutdown_jitter'], dtype=bool)
 
+        if 'include_priors' in conf:
+            mc.include_priors = np.asarray(conf['include_priors'], dtype=bool)
+
     if 'recenter_bounds' in conf_solver:
         """ 
         required to avoid a small bug in the code
@@ -394,6 +410,9 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, shutdown_
         then emcee walkers will start outside the bounds, causing an error
         """
         mc.recenter_bounds_flag = conf_solver['recenter_bounds']
+
+    if 'use_threading_pool' in conf_solver:
+        mc.use_threading_pool = conf_solver['use_threading_pool']
 
 
 def boundaries_fixed_priors_starts(mc, model_obj, conf, dataset_1=None, dataset_2=None, add_var_name =''):
@@ -413,8 +432,10 @@ def boundaries_fixed_priors_starts(mc, model_obj, conf, dataset_1=None, dataset_
         if 'priors' in conf:
             prior_conf = conf['priors']
             for var in prior_conf:
-                model_obj.prior_kind[add_var_name+var] = prior_conf[var][0]
-                model_obj.prior_pams[add_var_name+var] = np.asarray(prior_conf[var][1:], dtype=np.double)
+                prior_pams = np.atleast_1d(prior_conf[var])
+                model_obj.prior_kind[add_var_name+var] = prior_pams[0]
+                if np.size(prior_pams) > 1:
+                    model_obj.prior_pams[add_var_name+var] = np.asarray(prior_pams[1:], dtype=np.double)
 
         if 'starts' in conf:
             mc.starting_point_flag = True

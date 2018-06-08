@@ -142,9 +142,9 @@ class Celerite_QuasiPeriodicActivity(AbstractModel):
         self.gp[dataset.name_ref].compute(dataset.x0, env)
 
         if x0_input is None:
-            return self.gp[dataset.name_ref].predict(dataset.y - dataset.model, dataset.x0)
+            return self.gp[dataset.name_ref].predict(dataset.y - dataset.model, dataset.x0, return_var=True)
         else:
-            return self.gp[dataset.name_ref].predict(dataset.y - dataset.model, x0_input)
+            return self.gp[dataset.name_ref].predict(dataset.y - dataset.model, x0_input, return_var=True)
 
     def sample_conditional(self, variable_value, dataset,  x0_input=None):
 

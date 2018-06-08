@@ -41,12 +41,26 @@ class CommonPlanets(AbstractCommon):
         'e': [0.0, 1.0],
         'o': [0.0, 2 * np.pi],
         # Used by TTVfast/TRADES
-        'M': [0.5, 10000],  # Fix the unit
+        'M': [0.5, 1000.0],  # Fix the unit
         'i': [0.0, 180.0],
         'lN': [0.0, 2 * np.pi],
         # Used by BATMAN
         'R': [0.00001, 0.5],  # Fix the unit
         'a': [0.00001, 50.]  # Fix the unit
+    }
+
+    """ Must be the same parameters as in list_pams, because priors are applied only to _physical_ parameters """
+    default_priors = {
+        'P': ['ModifiedJeffreys', [1.00]],
+        'K': ['ModifiedJeffreys', [1.00]],
+        'f': ['Uniform', []],
+        'e': ['BetaDistribution', [0.71, 2.57]],
+        'o': ['Uniform', []],
+        'M': ['Uniform', []],  # Fix the unit
+        'i': ['Uniform', []],
+        'lN': ['Uniform', []],
+        'R': ['Uniform', []],  # Fix the unit
+        'a': ['Uniform', []]  # Fix the unit
     }
 
     recenter_pams = {'f', 'o', 'lN'}
@@ -105,6 +119,17 @@ class CommonPlanets(AbstractCommon):
         self.variable_sampler['esino'] = ndim + 1
         bounds_list.append(self.default_bounds['ecoso'])
         bounds_list.append(self.default_bounds['esino'])
+
+        for var in ['e', 'o']:
+            if var not in self.prior_pams:
+
+                if var in self.bounds:
+                    self.prior_pams[var] = self.bounds[var]
+                else:
+                    self.prior_pams[var] = self.default_bounds[var]
+
+                self.prior_kind[var] = 'Uniform'
+
         ndim += 2
 
         return ndim, bounds_list

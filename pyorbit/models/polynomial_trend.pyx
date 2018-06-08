@@ -36,6 +36,18 @@ class CommonPolynomialTrend(AbstractCommon):
         'c9': [-1.0, 1.0]
     }
 
+    default_priors = {
+        'c1': ['Uniform', []], # 10 m/s/day would be already an unbelievable value
+        'c2': ['Uniform', []],
+        'c3': ['Uniform', []],
+        'c4': ['Uniform', []],
+        'c5': ['Uniform', []],
+        'c6': ['Uniform', []],
+        'c7': ['Uniform', []],
+        'c8': ['Uniform', []],
+        'c9': ['Uniform', []]
+    }
+
     recenter_pams = {}
 
 
@@ -60,6 +72,9 @@ class PolynomialTrend(AbstractModel):
         for i_order in xrange(1, self.order+1):
             var = 'c'+repr(i_order)
             self.list_pams_common.update({var: 'U'})
+
+            # # ???????????????
+            # self.default_priors.update({var: ['Uniform', []]})
 
     def compute(self, variable_value, dataset, x0_input=None):
 

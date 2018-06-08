@@ -27,7 +27,7 @@ class SinusoidCommonPeriod(AbstractModel):
         'f': 'U'  # RV vurve phase, log-uniform prior
     }
 
-    recenter_pams_dataset = {}
+    recenter_pams_dataset = {'f'}
 
     def compute(self, variable_value, dataset, x0_input=None):
         if x0_input is None:

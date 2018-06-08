@@ -33,4 +33,21 @@ class CommonActivity(AbstractCommon):
         'cel_c': [0.00000001, 1000000.0]
     }
 
+    """ These default priors are used when the user does not define them in the yaml file
+        The boundaries are not included in this dictionary, because it is likely that the user will specify his
+        preferred boundaries without changing the priors
+    """
+    default_priors = {
+        'Prot': ['Uniform', []],
+        'Pdec': ['Uniform', []],
+        'Oamp': ['Jeffreys', []],
+        'Hamp': ['Uniform', []],
+        'P': ['Jeffreys', []],
+        'K': ['ModifiedJeffreys', [1.0]],
+        'f': ['Uniform', []],
+        'cel_a': ['Jeffreys', []],
+        'cel_b': ['Jeffreys', []],
+        'cel_c': ['Jeffreys', []]
+    }
+
     recenter_pams = {'f'}

@@ -60,27 +60,24 @@ class AbstractCommon(object):
                     self.variable_index[var] = self.nfix
                     #self.variable_sampler[var] = self.nfix
                     self.nfix += 1
+                    self.prior_kind[var] = 'None'
+                    self.prior_pams[var] = []
+
             elif var not in self.transformation:
                 '''If no bounds have been specified in the input file, we use the default ones
                     Bounds must be provided in any case to avoid a failure of PyDE '''
-                #if var in self.bounds:
-                #    bounds_tmp = self.bounds[var]
-                #else:
-                #    bounds_tmp = self.default_bounds[var]
-                #
-                #if self.list_pams[var] == 'U':
-                #    self.transformation[var] = get_var_val
-                #    bounds_list.append(bounds_tmp)
-                #elif self.list_pams[var] == 'LU':
-                #    self.transformation[var] = get_var_exp
-                #    bounds_list.append(np.log2(bounds_tmp))
 
                 if self.list_pams[var] == 'U':
                     self.transformation[var] = get_var_val
                     bounds_list.append(self.bounds[var])
+
                 elif self.list_pams[var] == 'LU':
                     self.transformation[var] = get_var_exp
                     bounds_list.append(np.log2(self.bounds[var]))
+
+                if var not in self.prior_pams:
+                    self.prior_kind[var] = self.default_priors[var][0]
+                    self.prior_pams[var] = self.default_priors[var][1]
 
                 self.variable_index[var] = ndim
                 self.variable_sampler[var] = ndim
@@ -124,8 +121,14 @@ class AbstractCommon(object):
 
         prior_out = 0.00
         variable_value = self.convert(theta)
-        for var in list(set(self.prior_pams) & set(variable_value)):
-            prior_out += giveback_priors(self.prior_kind[var], self.prior_pams[var], variable_value[var])
+
+        for var in variable_value:
+            # print self.prior_kind[var], self.bounds[var], self.prior_pams[var], variable_value[var]
+            prior_out += giveback_priors(self.prior_kind[var],
+                                         self.bounds[var],
+                                         self.prior_pams[var],
+                                         variable_value[var])
+
         return prior_out
 
     def index_recenter_bounds(self):

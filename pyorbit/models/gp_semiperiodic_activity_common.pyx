@@ -41,6 +41,7 @@ class GaussianProcess_QuasiPeriodicActivity_Common(AbstractModel):
     gp = {}
     internal_dataset = {'x0': [], 'yr': [], 'ej': []}
     internal_gp_pams = None
+    use_HODLR = False
 
     def convert_val2gp(self, input_pams):
         """
@@ -78,6 +79,11 @@ class GaussianProcess_QuasiPeriodicActivity_Common(AbstractModel):
             'Prot': np.exp(input_pams[self.gp_pams_index['Prot']])
         }
 
+    def initialize_model(self, mc,  **kwargs):
+
+        if 'use_HODLR' in kwargs:
+            self.use_HODLR = kwargs['use_HODLR']
+
     def common_initialization_with_dataset(self, dataset):
         self.define_kernel(dataset)
         return
@@ -101,8 +107,12 @@ class GaussianProcess_QuasiPeriodicActivity_Common(AbstractModel):
          gp_pams[3] = ln_theta = ln_Period -> ExpSine2Kernel(gamma, ln_period)
          
         """
-
-        self.gp = george.GP(kernel)
+        if self.use_HODLR:
+            self.gp = george.GP(kernel, solver=george.HODLRSolver, mean=0.00)
+            print ' *** USING HODLR *** '
+            print
+        else:
+            self.gp = george.GP(kernel)
         # self.gp = george.GP(kernel, solver=george.HODLRSolver, mean=0.00)
 
         """ I've decided to add the jitter in quadrature instead of using a constant kernel to allow the use of 
@@ -143,9 +153,9 @@ class GaussianProcess_QuasiPeriodicActivity_Common(AbstractModel):
         self.gp.compute(self.internal_dataset['x0'], self.internal_dataset['ej'])
 
         if x0_input is None:
-            return self.gp[dataset.name_ref].predict(self.internal_dataset['yr'], dataset.x0, return_var=True)
+            return self.gp.predict(self.internal_dataset['yr'], dataset.x0, return_var=True)
         else:
-            return self.gp[dataset.name_ref].predict(self.internal_dataset['yr'], x0_input, return_var=True)
+            return self.gp.predict(self.internal_dataset['yr'], x0_input, return_var=True)
 
     def sample_conditional(self, dataset, x0_input=None):
 
@@ -153,8 +163,8 @@ class GaussianProcess_QuasiPeriodicActivity_Common(AbstractModel):
         self.gp.compute(self.internal_dataset['x0'], self.internal_dataset['ej'])
 
         if x0_input is None:
-            return self.gp[dataset.name_ref].sample_conditional(self.internal_dataset['yr'], dataset.x0)
+            return self.gp.sample_conditional(self.internal_dataset['yr'], dataset.x0)
         else:
-            return self.gp[dataset.name_ref].sample_conditional(self.internal_dataset['yr'], x0_input)
+            return self.gp.sample_conditional(self.internal_dataset['yr'], x0_input)
 
 
