@@ -16,10 +16,12 @@ class Dataset(AbstractCommon):
         self.dynamical = False
         self.planet_name = None
 
-        self.generic_list_pams = {'jitter': 'LU', 'offset': 'U', 'linear': 'U'}
+        self.generic_list_pams = {'jitter': 'U', 'offset': 'U', 'linear': 'U'}
+        #self.generic_list_pams = {'jitter': 'LU', 'offset': 'U', 'linear': 'U'}
 
         self.generic_default_priors = {
-            'jitter': ['Jeffreys', []],
+            #'jitter': ['Jeffreys', []],
+            'jitter': ['Uniform', []],
             'offset': ['Uniform', []],
             'linear': ['Uniform', []]}
 
@@ -74,7 +76,7 @@ class Dataset(AbstractCommon):
                 self.Tref = np.mean(self.x, dtype=np.double)
 
             """Default boundaries are defined according to the characteristic of the dataset"""
-            self.generic_default_bounds = {'offset': [np.min(self.y) - 100., np.max(self.y) + 100.],
+            self.generic_default_bounds = {'offset': [np.min(self.y) - 1000., np.max(self.y) + 100.],
                                            'jitter': [np.min(self.e)/100., 100 * np.max(self.e)],
                                            'linear': [-1., 1.]}
 
