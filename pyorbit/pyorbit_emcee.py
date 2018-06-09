@@ -2,7 +2,7 @@ from classes.common import *
 from classes.model_container_emcee import ModelContainerEmcee
 from classes.input_parser import yaml_parser, pars_input
 from classes.io_subroutines import pyde_save_to_pickle, pyde_load_from_cpickle, \
-    emcee_save_to_cpickle, emcee_load_from_cpickle, emcee_flatchain
+    emcee_save_to_cpickle, emcee_load_from_cpickle, emcee_flatchain, emcee_create_dummy_file
 import emcee
 import os
 import sys
@@ -19,7 +19,6 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
     reloaded_emcee_multirun = False
     reloaded_emcee = False
 
-    use_threding_pool = False
 
     try:
         mc, population, starting_point = pyde_load_from_cpickle(pyde_dir_output, prefix='')
@@ -100,6 +99,9 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
     if not os.path.exists(mc.emcee_dir_output):
         os.makedirs(mc.emcee_dir_output)
 
+    if not hasattr(mc, 'use_threading_pool'):
+        mc.use_threading_pool = False
+
     emcee_version = mc.emcee_parameters['version'][0]
 
     print
@@ -157,7 +159,7 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
 
     mc.results_resumen(starting_point, compute_lnprob=True)
 
-    if use_threding_pool:
+    if mc.use_threading_pool:
         if emcee_version =='2':
             threads_pool = emcee.interruptible_pool.InterruptiblePool(mc.emcee_parameters['nwalkers'])
         else:
@@ -170,7 +172,7 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
             print 'emcee exploratory run #', ii, ' of ', mc.emcee_parameters['multirun_iter']
             # sampler = emcee.EnsembleSampler(mc.emcee_parameters['nwalkers'], mc.ndim, mc,
             #                                 threads=mc.emcee_parameters['nwalkers'])
-            if use_threding_pool:
+            if mc.use_threading_pool:
                 sampler = emcee.EnsembleSampler(mc.emcee_parameters['nwalkers'], mc.ndim, mc, pool=threads_pool)
             else:
                 sampler = emcee.EnsembleSampler(mc.emcee_parameters['nwalkers'], mc.ndim, mc)
@@ -197,7 +199,7 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
     print 'emcee'
     state = None
 
-    if use_threding_pool:
+    if mc.use_threading_pool:
         sampler = emcee.EnsembleSampler(mc.emcee_parameters['nwalkers'], mc.ndim, mc, pool=threads_pool)
     else:
         sampler = emcee.EnsembleSampler(mc.emcee_parameters['nwalkers'], mc.ndim, mc)
@@ -227,11 +229,15 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
 
     print 'emcee completed'
 
-    if use_threding_pool:
+    if mc.use_threading_pool:
         # close the pool of threads
         threads_pool.close()
         threads_pool.terminate()
         threads_pool.join()
 
+    """ A dummy file is created to let the cpulimit script to proceed with the next step"""
+    emcee_create_dummy_file(mc)
+
     if return_output:
         return mc, sampler.chain,  sampler.lnprobability
+

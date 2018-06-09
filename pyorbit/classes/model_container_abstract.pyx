@@ -45,6 +45,7 @@ class ModelContainer(object):
         self.starting_point = None
         self.starting_point_flag = False
         self.recenter_bounds_flag = True
+        self.use_threading_pool = True
 
         self.bounds = None
         self.range = None
@@ -74,12 +75,6 @@ class ModelContainer(object):
                 common_model = self.models[model_name].common_ref
                 if common_model:
                     self.common_models[common_model].common_initialization_with_dataset(dataset)
-
-                #print self.models[model_name].model_conf['common']
-                #for common_model in self.models[model_name].model_conf['common']:
-                #    if hasattr(self.common_models[common_model], 'common_initialization_with_dataset'):
-                #        self.common_models[common_model].setup_dataset(self.dataset_dict[dataset_name])
-
 
         if self.dynamical_model:
             self.dynamical_model.prepare(self)
@@ -247,6 +242,7 @@ class ModelContainer(object):
                 """ GP Log-likelihood is not computed now because a single matrix must be created with 
                 the joined dataset"""
                 if hasattr(self.models[logchi2_gp_model], 'delayed_lnlk_computation'):
+
                     self.models[logchi2_gp_model].add_internal_dataset(variable_values, dataset,
                                                                    reset_status=delayed_lnlk_computation)
                     delayed_lnlk_computation.append(logchi2_gp_model)
@@ -474,12 +470,16 @@ class ModelContainer(object):
 
                 dataset.model += self.models[model_name].compute(variable_values, dataset)
 
-                model_out[dataset_name][model_name] = self.models[model_name].compute(variable_values, dataset)
-                model_out[dataset_name]['complete'] += model_out[dataset_name][model_name]
-
-                if hasattr(self.models[model_name], 'not_time_dependant'):
+                if hasattr(self.models[model_name], 'single_value_output'):
+                    model_out[dataset_name][model_name] = np.zeros(dataset.n, dtype=np.double)
+                    model_x0[dataset_name][model_name] = np.zeros(np.size(x0_plot), dtype=np.double)
+                elif hasattr(self.models[model_name], 'not_time_dependant'):
+                    model_out[dataset_name][model_name] = self.models[model_name].compute(variable_values, dataset)
+                    model_out[dataset_name]['complete'] += model_out[dataset_name][model_name]
                     model_x0[dataset_name][model_name] = np.zeros(np.size(x0_plot), dtype=np.double)
                 else:
+                    model_out[dataset_name][model_name] = self.models[model_name].compute(variable_values, dataset)
+                    model_out[dataset_name]['complete'] += model_out[dataset_name][model_name]
                     model_x0[dataset_name][model_name] = \
                         self.models[model_name].compute(variable_values, dataset, x0_plot)
                     model_x0[dataset_name]['complete'] += model_x0[dataset_name][model_name]

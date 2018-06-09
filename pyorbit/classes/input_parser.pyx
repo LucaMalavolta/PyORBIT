@@ -5,6 +5,7 @@ from ..models.activity import CommonActivity
 from ..models.radial_velocities import RVkeplerian, RVdynamical, TransitTimeKeplerian, TransitTimeDynamical, DynamicalIntegrator
 from ..models.gp_semiperiodic_activity import GaussianProcess_QuasiPeriodicActivity
 from ..models.gp_semiperiodic_activity_common import GaussianProcess_QuasiPeriodicActivity_Common
+from ..models.gp_semiperiodic_activity_shared import GaussianProcess_QuasiPeriodicActivity_Shared
 from ..models.celerite_semiperiodic_activity import Celerite_QuasiPeriodicActivity
 from ..models.correlations import Correlation_SingleDataset
 from ..models.polynomial_trend import CommonPolynomialTrend, PolynomialTrend
@@ -33,6 +34,7 @@ define_type_to_class = {
                      'dynamical': TransitTimeDynamical},
     'gp_quasiperiodic': GaussianProcess_QuasiPeriodicActivity,
     'gp_quasiperiodic_common': GaussianProcess_QuasiPeriodicActivity_Common,
+    'gp_quasiperiodic_shared': GaussianProcess_QuasiPeriodicActivity_Shared,
     'celerite_quasiperiodic': Celerite_QuasiPeriodicActivity,
     'correlation_singledataset': Correlation_SingleDataset,
     'polynomial_trend': PolynomialTrend,
@@ -408,6 +410,9 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, shutdown_
         then emcee walkers will start outside the bounds, causing an error
         """
         mc.recenter_bounds_flag = conf_solver['recenter_bounds']
+
+    if 'use_threading_pool' in conf_solver:
+        mc.use_threading_pool = conf_solver['use_threading_pool']
 
 
 def boundaries_fixed_priors_starts(mc, model_obj, conf, dataset_1=None, dataset_2=None, add_var_name =''):
