@@ -16,12 +16,12 @@ class Dataset(AbstractCommon):
         self.dynamical = False
         self.planet_name = None
 
-        #self.generic_list_pams = {'jitter': 'U', 'offset': 'U', 'linear': 'U'}
-        self.generic_list_pams = {'jitter': 'LU', 'offset': 'U', 'linear': 'U'}
+        self.generic_list_pams = {'jitter': 'U', 'offset': 'U', 'linear': 'U'}
+        #self.generic_list_pams = {'jitter': 'LU', 'offset': 'U', 'linear': 'U'}
 
         self.generic_default_priors = {
-            'jitter': ['Jeffreys', []],
-            #'jitter': ['Uniform', []],
+            #'jitter': ['Jeffreys', []],
+            'jitter': ['Uniform', []],
             'offset': ['Uniform', []],
             'linear': ['Uniform', []]}
 
