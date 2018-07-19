@@ -63,6 +63,7 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
             return
 
     reloaded_mc = reloaded_pyde or reloaded_emcee_multirun or reloaded_emcee_multirun
+
     if not reloaded_mc:
         mc = ModelContainerEmcee()
 
@@ -90,6 +91,9 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
         #if mc.dynamical_model is not None:
         #    mc.dynamical_model.prepare(mc)
     else:
+        mc.pyde_dir_output = pyde_dir_output
+        mc.emcee_dir_output = emcee_dir_output
+
         """ reload nsteps, burnin and other parameters for emcee"""
         pars_input(config_in, mc, input_datasets, reload_emcee=True)
 
