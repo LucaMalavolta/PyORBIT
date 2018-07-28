@@ -15,6 +15,8 @@ import corner
 import classes.constants as constants
 import classes.kepler_exo as kepler_exo
 import classes.common as common
+import h5py
+import csv
 
 __all__ = ["pyorbit_getresults"]
 
@@ -507,153 +509,270 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
     print
     print '****************************************************************************************************'
     print
-    print ' Writing all the files '
 
-    bjd_plot = {
-        'full': {
-            'start': None, 'end': None, 'range': None
-        }
-    }
+    if plot_dictionary['plot_models'] or plot_dictionary['write_models']:
 
-    kinds = {}
-    for dataset_name, dataset in mc.dataset_dict.iteritems():
-        if dataset.kind in kinds.keys():
-            kinds[dataset.kind].extend([dataset_name])
-        else:
-            kinds[dataset.kind] = [dataset_name]
+        print ' Writing all the files '
 
-        bjd_plot[dataset_name] = {
-            'start': np.amin(dataset.x0),
-            'end': np.amax(dataset.x0),
-            'range': np.amax(dataset.x0)-np.amin(dataset.x0),
+        bjd_plot = {
+            'full': {
+                'start': None, 'end': None, 'range': None
+            }
         }
 
-        if bjd_plot[dataset_name]['range'] < 0.1 : bjd_plot[dataset_name]['range'] = 0.1
+        kinds = {}
+        for dataset_name, dataset in mc.dataset_dict.iteritems():
+            if dataset.kind in kinds.keys():
+                kinds[dataset.kind].extend([dataset_name])
+            else:
+                kinds[dataset.kind] = [dataset_name]
 
-        bjd_plot[dataset_name]['start'] -= bjd_plot[dataset_name]['range'] * 0.10
-        bjd_plot[dataset_name]['end'] += bjd_plot[dataset_name]['range'] * 0.10
-        bjd_plot[dataset_name]['x0_plot'] = \
-            np.arange(bjd_plot[dataset_name]['start'], bjd_plot[dataset_name]['end'], 0.1)
+            bjd_plot[dataset_name] = {
+                'start': np.amin(dataset.x0),
+                'end': np.amax(dataset.x0),
+                'range': np.amax(dataset.x0)-np.amin(dataset.x0),
+            }
 
-        if bjd_plot['full']['range']:
-            bjd_plot['full']['start'] = min(bjd_plot['full']['start'], np.amin(dataset.x0))
-            bjd_plot['full']['end'] = max(bjd_plot['full']['end'], np.amax(dataset.x0))
-            bjd_plot['full']['range'] = bjd_plot['full']['end']-bjd_plot['full']['start']
-        else:
-            bjd_plot['full']['start'] = np.amin(dataset.x0)
-            bjd_plot['full']['end'] = np.amax(dataset.x0)
-            bjd_plot['full']['range'] = bjd_plot['full']['end']-bjd_plot['full']['start']
+            if bjd_plot[dataset_name]['range'] < 0.1 : bjd_plot[dataset_name]['range'] = 0.1
 
-    bjd_plot['full']['start'] -= bjd_plot['full']['range']*0.10
-    bjd_plot['full']['end'] += bjd_plot['full']['range']*0.10
-    bjd_plot['full']['x0_plot'] = np.arange(bjd_plot['full']['start'], bjd_plot['full']['end'],0.1)
+            bjd_plot[dataset_name]['start'] -= bjd_plot[dataset_name]['range'] * 0.10
+            bjd_plot[dataset_name]['end'] += bjd_plot[dataset_name]['range'] * 0.10
+            bjd_plot[dataset_name]['x0_plot'] = \
+                np.arange(bjd_plot[dataset_name]['start'], bjd_plot[dataset_name]['end'], 0.1)
 
-    for dataset_name, dataset in mc.dataset_dict.iteritems():
-            bjd_plot[dataset_name] = bjd_plot['full']
+            if bjd_plot['full']['range']:
+                bjd_plot['full']['start'] = min(bjd_plot['full']['start'], np.amin(dataset.x0))
+                bjd_plot['full']['end'] = max(bjd_plot['full']['end'], np.amax(dataset.x0))
+                bjd_plot['full']['range'] = bjd_plot['full']['end']-bjd_plot['full']['start']
+            else:
+                bjd_plot['full']['start'] = np.amin(dataset.x0)
+                bjd_plot['full']['end'] = np.amax(dataset.x0)
+                bjd_plot['full']['range'] = bjd_plot['full']['end']-bjd_plot['full']['start']
 
-    bjd_plot['model_out'], bjd_plot['model_x0'] = mc.get_model(chain_med[:, 0], bjd_plot)
-    bjd_plot['MAP_model_out'], bjd_plot['MAP_model_x0'] = mc.get_model(chain_MAP, bjd_plot)
+        bjd_plot['full']['start'] -= bjd_plot['full']['range']*0.10
+        bjd_plot['full']['end'] += bjd_plot['full']['range']*0.10
+        bjd_plot['full']['x0_plot'] = np.arange(bjd_plot['full']['start'], bjd_plot['full']['end'],0.1)
 
-    for kind_name, kind in kinds.iteritems():
-        for dataset_name in kind:
-            fig = plt.figure(figsize=(12, 12))
-            plt.errorbar(mc.dataset_dict[dataset_name].x0,
-                         mc.dataset_dict[dataset_name].y - bjd_plot['model_out'][dataset_name]['systematics'],
-                         yerr=mc.dataset_dict[dataset_name]. e,
-                         fmt='o', zorder=2)
-            plt.plot(bjd_plot[dataset_name]['x0_plot'], bjd_plot['model_x0'][dataset_name]['complete'], zorder=2, c='b')
-            plt.plot(bjd_plot[dataset_name]['x0_plot'], bjd_plot['MAP_model_x0'][dataset_name]['complete'], zorder=1, c='r')
+        for dataset_name, dataset in mc.dataset_dict.iteritems():
+                bjd_plot[dataset_name] = bjd_plot['full']
 
-            plt.savefig(dir_output + 'model_' + kind_name + '_' + dataset_name + '.png', bbox_inches='tight', dpi=300)
-            plt.close(fig)
-    print
+        bjd_plot['model_out'], bjd_plot['model_x0'] = mc.get_model(chain_med[:, 0], bjd_plot)
+        bjd_plot['MAP_model_out'], bjd_plot['MAP_model_x0'] = mc.get_model(chain_MAP, bjd_plot)
 
-    for prepend_keyword in ['', 'MAP_']:
-        plot_out_keyword = prepend_keyword + 'model_out'
-        plot_x0_keyword = prepend_keyword + 'model_x0'
-        file_keyword = prepend_keyword + 'model_files'
+        if plot_dictionary['plot_models']:
 
-        if prepend_keyword == '':
-            planet_vars = planet_variables
-        elif prepend_keyword == 'MAP_':
-            planet_vars = planet_variables_MAP
+            for kind_name, kind in kinds.iteritems():
+                for dataset_name in kind:
+                    fig = plt.figure(figsize=(12, 12))
+                    plt.errorbar(mc.dataset_dict[dataset_name].x0,
+                                 mc.dataset_dict[dataset_name].y - bjd_plot['model_out'][dataset_name]['systematics'],
+                                 yerr=mc.dataset_dict[dataset_name]. e,
+                                 fmt='o', zorder=2)
+                    plt.plot(bjd_plot[dataset_name]['x0_plot'], bjd_plot['model_x0'][dataset_name]['complete'], zorder=2, c='b')
+                    plt.plot(bjd_plot[dataset_name]['x0_plot'], bjd_plot['MAP_model_x0'][dataset_name]['complete'], zorder=1, c='r')
 
-        if plot_dictionary[file_keyword]:
-            dir_models = dir_output + file_keyword + '/'
-            os.system('mkdir -p ' + dir_models)
+                    plt.savefig(dir_output + 'model_' + kind_name + '_' + dataset_name + '.png', bbox_inches='tight', dpi=300)
+                    plt.close(fig)
+            print
 
-            for dataset_name, dataset in mc.dataset_dict.items():
-                for model_name in dataset.models:
-                    fileout = open(dir_models + dataset_name + '_' + model_name + '.dat', 'w')
-                    common_ref = mc.models[model_name].common_ref
+        if plot_dictionary['print_models']:
+            for prepend_keyword in ['', 'MAP_']:
+                plot_out_keyword = prepend_keyword + 'model_out'
+                plot_x0_keyword = prepend_keyword + 'model_x0'
+                file_keyword = prepend_keyword + 'model_files'
 
-                    if common_ref in planet_vars:
-                        phase = (dataset.x0 / planet_vars[common_ref]['P']) % 1
-                    else:
-                        phase = dataset.x0 * 0.00
+                if prepend_keyword == '':
+                    planet_vars = planet_variables
+                elif prepend_keyword == 'MAP_':
+                    planet_vars = planet_variables_MAP
 
-                    fileout.write('descriptor BJD BJD0 pha val,+- sys mod full val_compare,+- res,+- \n')
+                if plot_dictionary[file_keyword]:
+                    dir_models = dir_output + file_keyword + '/'
+                    os.system('mkdir -p ' + dir_models)
 
-                    for x, x0, pha, y, e, sys, mod, com, obs_mod, res in zip(
-                        dataset.x, dataset.x0, phase, dataset.y, dataset.e,
-                            bjd_plot[plot_out_keyword][dataset_name]['systematics'],
-                            bjd_plot[plot_out_keyword][dataset_name][model_name],
-                            bjd_plot[plot_out_keyword][dataset_name]['complete'],
-                            dataset.y - bjd_plot[plot_out_keyword][dataset_name]['complete'] +
+                    for dataset_name, dataset in mc.dataset_dict.items():
+                        for model_name in dataset.models:
+                            fileout = open(dir_models + dataset_name + '_' + model_name + '.dat', 'w')
+                            common_ref = mc.models[model_name].common_ref
+
+                            if common_ref in planet_vars:
+                                phase = (dataset.x0 / planet_vars[common_ref]['P']) % 1
+                            else:
+                                phase = dataset.x0 * 0.00
+
+                            fileout.write('descriptor BJD BJD0 pha val,+- sys mod full val_compare,+- res,+- \n')
+
+                            for x, x0, pha, y, e, sys, mod, com, obs_mod, res in zip(
+                                dataset.x, dataset.x0, phase, dataset.y, dataset.e,
+                                    bjd_plot[plot_out_keyword][dataset_name]['systematics'],
                                     bjd_plot[plot_out_keyword][dataset_name][model_name],
-                            dataset.y - bjd_plot[plot_out_keyword][dataset_name]['complete']):
+                                    bjd_plot[plot_out_keyword][dataset_name]['complete'],
+                                    dataset.y - bjd_plot[plot_out_keyword][dataset_name]['complete'] +
+                                            bjd_plot[plot_out_keyword][dataset_name][model_name],
+                                    dataset.y - bjd_plot[plot_out_keyword][dataset_name]['complete']):
 
-                        fileout.write('{0:f} {1:f} {2:f} {3:f} {4:f} {5:f} {6:1f} {7:f} {8:f} {9:f} {10:f} {11:f}'
-                                      '\n'.format(x, x0, pha, y, e, sys, mod, com, obs_mod, e, res, e))
-                    fileout.close()
+                                fileout.write('{0:f} {1:f} {2:f} {3:f} {4:f} {5:f} {6:1f} {7:f} {8:f} {9:f} {10:f} {11:f}'
+                                              '\n'.format(x, x0, pha, y, e, sys, mod, com, obs_mod, e, res, e))
+                            fileout.close()
 
-                    fileout = open(dir_models + dataset_name + '_' + model_name + '_full.dat', 'w')
+                            fileout = open(dir_models + dataset_name + '_' + model_name + '_full.dat', 'w')
 
-                    if model_name+'_std' in bjd_plot[plot_x0_keyword][dataset_name]:
-                        fileout.write('descriptor BJD BJD0 mod,+- \n')
-                        for x0, mod, std in zip(bjd_plot[dataset_name]['x0_plot'],
-                                           bjd_plot[plot_x0_keyword][dataset_name][model_name],
-                                           bjd_plot[plot_x0_keyword][dataset_name][model_name+'_std']):
+                            if model_name+'_std' in bjd_plot[plot_x0_keyword][dataset_name]:
+                                fileout.write('descriptor BJD BJD0 mod,+- \n')
+                                for x0, mod, std in zip(bjd_plot[dataset_name]['x0_plot'],
+                                                   bjd_plot[plot_x0_keyword][dataset_name][model_name],
+                                                   bjd_plot[plot_x0_keyword][dataset_name][model_name+'_std']):
 
-                            fileout.write('{0:f} {1:f} {2:f} {3:f} \n'.format(x0+mc.Tref, x0, mod, std))
-                        fileout.close()
-                    else:
+                                    fileout.write('{0:f} {1:f} {2:f} {3:f} \n'.format(x0+mc.Tref, x0, mod, std))
+                                fileout.close()
+                            else:
+                                fileout.write('descriptor BJD BJD0 mod \n')
+                                for x0, mod in zip(bjd_plot[dataset_name]['x0_plot'],
+                                                   bjd_plot[plot_x0_keyword][dataset_name][model_name]):
+                                    fileout.write('{0:f} {1:f} {2:f} \n'.format(x0+mc.Tref, x0, mod))
+                                fileout.close()
+
+                        fileout = open(dir_models + dataset_name + '_full.dat', 'w')
                         fileout.write('descriptor BJD BJD0 mod \n')
                         for x0, mod in zip(bjd_plot[dataset_name]['x0_plot'],
-                                           bjd_plot[plot_x0_keyword][dataset_name][model_name]):
+                                           bjd_plot[plot_x0_keyword][dataset_name]['complete']):
                             fileout.write('{0:f} {1:f} {2:f} \n'.format(x0+mc.Tref, x0, mod))
                         fileout.close()
 
-                fileout = open(dir_models + dataset_name + '_full.dat', 'w')
-                fileout.write('descriptor BJD BJD0 mod \n')
-                for x0, mod in zip(bjd_plot[dataset_name]['x0_plot'],
-                                   bjd_plot[plot_x0_keyword][dataset_name]['complete']):
-                    fileout.write('{0:f} {1:f} {2:f} \n'.format(x0+mc.Tref, x0, mod))
-                fileout.close()
+                    for model in planet_vars:
 
-            for model in planet_vars:
+                        RV_out =  kepler_exo.kepler_RV_T0P(bjd_plot['full']['x0_plot'],
+                                                           planet_vars[model]['f'],
+                                                           planet_vars[model]['P'],
+                                                           planet_vars[model]['K'],
+                                                           planet_vars[model]['e'],
+                                                           planet_vars[model]['o'])
+                        fileout = open(dir_models + 'RV_planet_' + model + '_kep.dat', 'w')
+                        fileout.write('descriptor x_range x_range0 m_kepler \n')
+                        for x, y in zip(bjd_plot['full']['x0_plot'], RV_out):
+                            fileout.write('{0:f} {1:f} {2:f} \n'.format(x+mc.Tref, x, y))
+                        fileout.close()
 
-                RV_out =  kepler_exo.kepler_RV_T0P(bjd_plot['full']['x0_plot'],
-                                                   planet_vars[model]['f'],
-                                                   planet_vars[model]['P'],
-                                                   planet_vars[model]['K'],
-                                                   planet_vars[model]['e'],
-                                                   planet_vars[model]['o'])
-                fileout = open(dir_models + 'RV_planet_' + model + '_kep.dat', 'w')
-                fileout.write('descriptor x_range x_range0 m_kepler \n')
-                for x, y in zip(bjd_plot['full']['x0_plot'], RV_out):
-                    fileout.write('{0:f} {1:f} {2:f} \n'.format(x+mc.Tref, x, y))
-                fileout.close()
+                        x_range = np.arange(-0.50, 1.50, 0.001)
+                        RV_out = kepler_exo.kepler_RV_T0P(x_range*planet_vars[model]['P'],
+                                                           planet_vars[model]['f'],
+                                                           planet_vars[model]['P'],
+                                                           planet_vars[model]['K'],
+                                                           planet_vars[model]['e'],
+                                                           planet_vars[model]['o'])
+                        fileout = open(dir_models + 'RV_planet_' + model + '_pha.dat', 'w')
+                        fileout.write('descriptor x_phase m_phase \n')
+                        for x, y in zip(x_range, RV_out):
+                            fileout.write('{0:f} {1:f} \n'.format(x, y))
+                        fileout.close()
 
-                x_range = np.arange(-0.50, 1.50, 0.001)
-                RV_out = kepler_exo.kepler_RV_T0P(x_range*planet_vars[model]['P'],
-                                                   planet_vars[model]['f'],
-                                                   planet_vars[model]['P'],
-                                                   planet_vars[model]['K'],
-                                                   planet_vars[model]['e'],
-                                                   planet_vars[model]['o'])
-                fileout = open(dir_models + 'RV_planet_' + model + '_pha.dat', 'w')
-                fileout.write('descriptor x_phase m_phase \n')
-                for x, y in zip(x_range, RV_out):
-                    fileout.write('{0:f} {1:f} \n'.format(x, y))
-                fileout.close()
+
+    print
+    print '****************************************************************************************************'
+    print
+
+    veusz_dir = dir_output + '/Veuz_plot/'
+    if not os.path.exists(veusz_dir):
+        os.makedirs(veusz_dir)
+
+    all_variables_list = {}
+    for dataset_name, dataset in mc.dataset_dict.iteritems():
+        variable_values = dataset.convert(flat_chain)
+
+        for variable_name, variable in variable_values.iteritems():
+            all_variables_list[dataset_name + '_' + variable_name] = variable
+
+        for model_name in dataset.models:
+            variable_values = mc.models[model_name].convert(flat_chain, dataset_name)
+            for variable_name, variable in variable_values.iteritems():
+                all_variables_list[dataset_name + '_' + model_name + '_' + variable_name] = variable
+
+    for model in mc.common_models.itervalues():
+        variable_values = model.convert(flat_chain)
+
+        for variable_name, variable in variable_values.iteritems():
+            all_variables_list[model.common_ref + '_' + variable_name] = variable
+
+    n_int = len(all_variables_list)
+    output_plan = np.zeros([n_samplings, n_int], dtype=np.double)
+    output_names = []
+    for var_index, variable_name in enumerate(all_variables_list):
+        output_plan[:, var_index] = all_variables_list[variable_name]
+        output_names.extend([variable_name])
+
+    plot_truths = np.percentile(output_plan[:, :], [15.865, 50, 84.135], axis=0)
+    n_bins = 30 + 1
+
+    h5f = h5py.File(veusz_dir + '_hist1d.hdf5', "w")
+    data_grp = h5f.create_group("hist1d")
+
+    data_lim = np.zeros([n_int, 2], dtype=np.double)
+    data_edg = np.zeros([n_int, n_bins], dtype=np.double)
+    data_skip = np.zeros(n_int, dtype=bool)
+
+    for ii in xrange(0, n_int):
+
+        sig_minus = plot_truths[1, ii] - plot_truths[0, ii]
+        sig_plus = plot_truths[2, ii] - plot_truths[1, ii]
+
+        if sig_minus == 0. and sig_plus == 0.:
+            data_skip[ii] = True
+            continue
+
+        sigma5_selection = (output_plan[:, ii] > plot_truths[1, ii] - 5 * sig_minus) & \
+                           (output_plan[:, ii] < plot_truths[1, ii] + 5 * sig_plus)
+
+        data_lim[ii, :] = [np.amin(output_plan[sigma5_selection, ii]), np.amax(output_plan[sigma5_selection, ii])]
+        if data_lim[ii, 0] == data_lim[ii, 1]:
+            data_lim[ii, :] = [np.amin(output_plan[:, ii]), np.amax(output_plan[:, ii])]
+        if data_lim[ii, 0] == data_lim[ii, 1]:
+            data_skip[ii] = True
+            continue
+
+        data_edg[ii, :] = np.linspace(data_lim[ii, 0], data_lim[ii, 1], n_bins)
+
+    for ii in xrange(0, n_int):
+
+        if data_skip[ii]:
+            continue
+
+        for jj in xrange(0, n_int):
+
+            if data_skip[jj]:
+                continue
+
+            x_data = output_plan[:, ii]
+            y_data = output_plan[:, jj]
+            x_edges = data_edg[ii, :]
+            y_edges = data_edg[jj, :]
+
+            if ii != jj:
+
+                hist2d = np.histogram2d(x_data, y_data, bins=[x_edges, y_edges], normed=True)
+                hist1d_y = np.histogram(y_data, bins=y_edges, normed=True)
+
+                Hflat = hist2d[0].flatten()
+                inds = np.argsort(Hflat)[::-1]
+                Hflat = Hflat[inds]
+                sm = np.cumsum(Hflat)
+                sm /= sm[-1]
+
+                x_edges_1d = (x_edges[1:] + x_edges[:-1])/2
+                y_edges_1d = (y_edges[1:] + y_edges[:-1])/2
+                h2d_out = np.zeros([n_bins, n_bins])
+                h2d_out[0, 1:] = x_edges_1d
+                h2d_out[1:, 0] = y_edges_1d
+                h2d_out[1:, 1:] = hist2d[0].T *1. / np.amax(hist2d[0])
+
+                h2d_list =  h2d_out.tolist()
+                h2d_list[0][0] = ''
+                csvfile = veusz_dir + '_hist2d___' + output_names[ii] + '___' + output_names[jj] + '.csv'
+                with open(csvfile, "w") as output:
+                    writer = csv.writer(output, lineterminator='\n')
+                    writer.writerows(h2d_list)
+            else:
+                hist1d = np.histogram(x_data, bins=x_edges)
+                hist1d_norm = hist1d[0]*1. / n_samplings
+                x_edges_1d = (x_edges[1:]+ x_edges[:-1])/2
+                data_grp.create_dataset(output_names[ii]+'_x', data=x_edges_1d, compression="gzip")
+                data_grp.create_dataset(output_names[ii]+'_y', data=hist1d_norm, compression="gzip")
