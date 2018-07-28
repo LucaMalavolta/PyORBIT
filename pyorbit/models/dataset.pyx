@@ -23,9 +23,10 @@ class Dataset(AbstractCommon):
             'offset': ['Uniform', []],
             'linear': ['Uniform', []]}
 
-        #if self.kind == 'Tcent':
-        #    self.generic_list_pams['jitter'] = 'LU'
-        #    self.generic_default_priors['jitter'] = ['Jeffreys', []]
+        if self.kind == 'Tcent':
+            self.generic_list_pams['jitter'] = 'LU'
+            self.generic_default_priors['jitter'] = ['Uniform', []]
+            #self.generic_default_priors['jitter'] = ['Jeffreys', []]
 
         self.variable_compressed = {}
         self.variable_expanded = {}
