@@ -575,7 +575,7 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
                     plt.close(fig)
             print
 
-        if plot_dictionary['print_models']:
+        if plot_dictionary['write_models']:
             for prepend_keyword in ['', 'MAP_']:
                 plot_out_keyword = prepend_keyword + 'model_out'
                 plot_x0_keyword = prepend_keyword + 'model_x0'
