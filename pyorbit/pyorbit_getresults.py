@@ -586,85 +586,84 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
                 elif prepend_keyword == 'MAP_':
                     planet_vars = planet_variables_MAP
 
-                if plot_dictionary[file_keyword]:
-                    dir_models = dir_output + file_keyword + '/'
-                    os.system('mkdir -p ' + dir_models)
+                dir_models = dir_output + file_keyword + '/'
+                os.system('mkdir -p ' + dir_models)
 
-                    for dataset_name, dataset in mc.dataset_dict.items():
-                        for model_name in dataset.models:
-                            fileout = open(dir_models + dataset_name + '_' + model_name + '.dat', 'w')
-                            common_ref = mc.models[model_name].common_ref
+                for dataset_name, dataset in mc.dataset_dict.items():
+                    for model_name in dataset.models:
+                        fileout = open(dir_models + dataset_name + '_' + model_name + '.dat', 'w')
+                        common_ref = mc.models[model_name].common_ref
 
-                            if common_ref in planet_vars:
-                                phase = (dataset.x0 / planet_vars[common_ref]['P']) % 1
-                            else:
-                                phase = dataset.x0 * 0.00
+                        if common_ref in planet_vars:
+                            phase = (dataset.x0 / planet_vars[common_ref]['P']) % 1
+                        else:
+                            phase = dataset.x0 * 0.00
 
-                            fileout.write('descriptor BJD BJD0 pha val,+- sys mod full val_compare,+- res,+- \n')
+                        fileout.write('descriptor BJD BJD0 pha val,+- sys mod full val_compare,+- res,+- \n')
 
-                            for x, x0, pha, y, e, sys, mod, com, obs_mod, res in zip(
-                                dataset.x, dataset.x0, phase, dataset.y, dataset.e,
-                                    bjd_plot[plot_out_keyword][dataset_name]['systematics'],
-                                    bjd_plot[plot_out_keyword][dataset_name][model_name],
-                                    bjd_plot[plot_out_keyword][dataset_name]['complete'],
-                                    dataset.y - bjd_plot[plot_out_keyword][dataset_name]['complete'] +
-                                            bjd_plot[plot_out_keyword][dataset_name][model_name],
-                                    dataset.y - bjd_plot[plot_out_keyword][dataset_name]['complete']):
+                        for x, x0, pha, y, e, sys, mod, com, obs_mod, res in zip(
+                            dataset.x, dataset.x0, phase, dataset.y, dataset.e,
+                                bjd_plot[plot_out_keyword][dataset_name]['systematics'],
+                                bjd_plot[plot_out_keyword][dataset_name][model_name],
+                                bjd_plot[plot_out_keyword][dataset_name]['complete'],
+                                dataset.y - bjd_plot[plot_out_keyword][dataset_name]['complete'] +
+                                        bjd_plot[plot_out_keyword][dataset_name][model_name],
+                                dataset.y - bjd_plot[plot_out_keyword][dataset_name]['complete']):
 
-                                fileout.write('{0:f} {1:f} {2:f} {3:f} {4:f} {5:f} {6:1f} {7:f} {8:f} {9:f} {10:f} {11:f}'
-                                              '\n'.format(x, x0, pha, y, e, sys, mod, com, obs_mod, e, res, e))
+                            fileout.write('{0:f} {1:f} {2:f} {3:f} {4:f} {5:f} {6:1f} {7:f} {8:f} {9:f} {10:f} {11:f}'
+                                          '\n'.format(x, x0, pha, y, e, sys, mod, com, obs_mod, e, res, e))
+                        fileout.close()
+
+                        fileout = open(dir_models + dataset_name + '_' + model_name + '_full.dat', 'w')
+
+                        if model_name+'_std' in bjd_plot[plot_x0_keyword][dataset_name]:
+                            fileout.write('descriptor BJD BJD0 mod,+- \n')
+                            for x0, mod, std in zip(bjd_plot[dataset_name]['x0_plot'],
+                                               bjd_plot[plot_x0_keyword][dataset_name][model_name],
+                                               bjd_plot[plot_x0_keyword][dataset_name][model_name+'_std']):
+
+                                fileout.write('{0:f} {1:f} {2:f} {3:f} \n'.format(x0+mc.Tref, x0, mod, std))
+                            fileout.close()
+                        else:
+                            fileout.write('descriptor BJD BJD0 mod \n')
+                            for x0, mod in zip(bjd_plot[dataset_name]['x0_plot'],
+                                               bjd_plot[plot_x0_keyword][dataset_name][model_name]):
+                                fileout.write('{0:f} {1:f} {2:f} \n'.format(x0+mc.Tref, x0, mod))
                             fileout.close()
 
-                            fileout = open(dir_models + dataset_name + '_' + model_name + '_full.dat', 'w')
+                    fileout = open(dir_models + dataset_name + '_full.dat', 'w')
+                    fileout.write('descriptor BJD BJD0 mod \n')
+                    for x0, mod in zip(bjd_plot[dataset_name]['x0_plot'],
+                                       bjd_plot[plot_x0_keyword][dataset_name]['complete']):
+                        fileout.write('{0:f} {1:f} {2:f} \n'.format(x0+mc.Tref, x0, mod))
+                    fileout.close()
 
-                            if model_name+'_std' in bjd_plot[plot_x0_keyword][dataset_name]:
-                                fileout.write('descriptor BJD BJD0 mod,+- \n')
-                                for x0, mod, std in zip(bjd_plot[dataset_name]['x0_plot'],
-                                                   bjd_plot[plot_x0_keyword][dataset_name][model_name],
-                                                   bjd_plot[plot_x0_keyword][dataset_name][model_name+'_std']):
+                for model in planet_vars:
 
-                                    fileout.write('{0:f} {1:f} {2:f} {3:f} \n'.format(x0+mc.Tref, x0, mod, std))
-                                fileout.close()
-                            else:
-                                fileout.write('descriptor BJD BJD0 mod \n')
-                                for x0, mod in zip(bjd_plot[dataset_name]['x0_plot'],
-                                                   bjd_plot[plot_x0_keyword][dataset_name][model_name]):
-                                    fileout.write('{0:f} {1:f} {2:f} \n'.format(x0+mc.Tref, x0, mod))
-                                fileout.close()
+                    RV_out =  kepler_exo.kepler_RV_T0P(bjd_plot['full']['x0_plot'],
+                                                       planet_vars[model]['f'],
+                                                       planet_vars[model]['P'],
+                                                       planet_vars[model]['K'],
+                                                       planet_vars[model]['e'],
+                                                       planet_vars[model]['o'])
+                    fileout = open(dir_models + 'RV_planet_' + model + '_kep.dat', 'w')
+                    fileout.write('descriptor x_range x_range0 m_kepler \n')
+                    for x, y in zip(bjd_plot['full']['x0_plot'], RV_out):
+                        fileout.write('{0:f} {1:f} {2:f} \n'.format(x+mc.Tref, x, y))
+                    fileout.close()
 
-                        fileout = open(dir_models + dataset_name + '_full.dat', 'w')
-                        fileout.write('descriptor BJD BJD0 mod \n')
-                        for x0, mod in zip(bjd_plot[dataset_name]['x0_plot'],
-                                           bjd_plot[plot_x0_keyword][dataset_name]['complete']):
-                            fileout.write('{0:f} {1:f} {2:f} \n'.format(x0+mc.Tref, x0, mod))
-                        fileout.close()
-
-                    for model in planet_vars:
-
-                        RV_out =  kepler_exo.kepler_RV_T0P(bjd_plot['full']['x0_plot'],
-                                                           planet_vars[model]['f'],
-                                                           planet_vars[model]['P'],
-                                                           planet_vars[model]['K'],
-                                                           planet_vars[model]['e'],
-                                                           planet_vars[model]['o'])
-                        fileout = open(dir_models + 'RV_planet_' + model + '_kep.dat', 'w')
-                        fileout.write('descriptor x_range x_range0 m_kepler \n')
-                        for x, y in zip(bjd_plot['full']['x0_plot'], RV_out):
-                            fileout.write('{0:f} {1:f} {2:f} \n'.format(x+mc.Tref, x, y))
-                        fileout.close()
-
-                        x_range = np.arange(-0.50, 1.50, 0.001)
-                        RV_out = kepler_exo.kepler_RV_T0P(x_range*planet_vars[model]['P'],
-                                                           planet_vars[model]['f'],
-                                                           planet_vars[model]['P'],
-                                                           planet_vars[model]['K'],
-                                                           planet_vars[model]['e'],
-                                                           planet_vars[model]['o'])
-                        fileout = open(dir_models + 'RV_planet_' + model + '_pha.dat', 'w')
-                        fileout.write('descriptor x_phase m_phase \n')
-                        for x, y in zip(x_range, RV_out):
-                            fileout.write('{0:f} {1:f} \n'.format(x, y))
-                        fileout.close()
+                    x_range = np.arange(-0.50, 1.50, 0.001)
+                    RV_out = kepler_exo.kepler_RV_T0P(x_range*planet_vars[model]['P'],
+                                                       planet_vars[model]['f'],
+                                                       planet_vars[model]['P'],
+                                                       planet_vars[model]['K'],
+                                                       planet_vars[model]['e'],
+                                                       planet_vars[model]['o'])
+                    fileout = open(dir_models + 'RV_planet_' + model + '_pha.dat', 'w')
+                    fileout.write('descriptor x_phase m_phase \n')
+                    for x, y in zip(x_range, RV_out):
+                        fileout.write('{0:f} {1:f} \n'.format(x, y))
+                    fileout.close()
 
 
     print
