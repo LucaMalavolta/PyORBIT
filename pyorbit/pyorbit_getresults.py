@@ -127,7 +127,6 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
         flat_chain = data_in[:, :-1]
         nsample = np.size(flat_lnprob)
 
-
         lnprob_med = common.compute_value_sigma(flat_lnprob)
         chain_med = common.compute_value_sigma(flat_chain)
         chain_MAP, lnprob_MAP = common.pick_MAP_parameters(flat_chain, flat_lnprob)
@@ -709,17 +708,22 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
     data_edg = np.zeros([n_int, n_bins], dtype=np.double)
     data_skip = np.zeros(n_int, dtype=bool)
 
+    sigma_minus = plot_truths[1, :] - plot_truths[0, :]
+    sigma_plus = plot_truths[2, :] - plot_truths[1, :]
+    median_vals = plot_truths[1, :]
+
     for ii in xrange(0, n_int):
 
-        sig_minus = plot_truths[1, ii] - plot_truths[0, ii]
-        sig_plus = plot_truths[2, ii] - plot_truths[1, ii]
 
-        if sig_minus == 0. and sig_plus == 0.:
+        #sig_minus = plot_truths[1, ii] - plot_truths[0, ii]
+        #sig_plus = plot_truths[2, ii] - plot_truths[1, ii]
+
+        if sigma_minus[ii] == 0. and sigma_plus[ii] == 0.:
             data_skip[ii] = True
             continue
 
-        sigma5_selection = (output_plan[:, ii] > plot_truths[1, ii] - 5 * sig_minus) & \
-                           (output_plan[:, ii] < plot_truths[1, ii] + 5 * sig_plus)
+        sigma5_selection = (output_plan[:, ii] > median_vals[ii] - 5 * sigma_minus[ii]) & \
+                           (output_plan[:, ii] < median_vals[ii] + 5 * sigma_plus[ii])
 
         data_lim[ii, :] = [np.amin(output_plan[sigma5_selection, ii]), np.amax(output_plan[sigma5_selection, ii])]
         if data_lim[ii, 0] == data_lim[ii, 1]:
@@ -730,19 +734,23 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
 
         data_edg[ii, :] = np.linspace(data_lim[ii, 0], data_lim[ii, 1], n_bins)
 
+    veusz_workaround_descriptor = 'descriptor'
+    veusz_workaround_values = ''
+
     for ii in xrange(0, n_int):
 
         if data_skip[ii]:
             continue
+
+        x_data = output_plan[:, ii]
+        x_edges = data_edg[ii, :]
 
         for jj in xrange(0, n_int):
 
             if data_skip[jj]:
                 continue
 
-            x_data = output_plan[:, ii]
             y_data = output_plan[:, jj]
-            x_edges = data_edg[ii, :]
             y_edges = data_edg[jj, :]
 
             if ii != jj:
@@ -769,9 +777,22 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
                 with open(csvfile, "w") as output:
                     writer = csv.writer(output, lineterminator='\n')
                     writer.writerows(h2d_list)
-            else:
-                hist1d = np.histogram(x_data, bins=x_edges)
-                hist1d_norm = hist1d[0]*1. / n_samplings
-                x_edges_1d = (x_edges[1:]+ x_edges[:-1])/2
-                data_grp.create_dataset(output_names[ii]+'_x', data=x_edges_1d, compression="gzip")
-                data_grp.create_dataset(output_names[ii]+'_y', data=hist1d_norm, compression="gzip")
+
+        hist1d = np.histogram(x_data, bins=x_edges)
+        hist1d_norm = hist1d[0]*1. / n_samplings
+        x_edges_1d = (x_edges[1:]+ x_edges[:-1])/2
+        data_grp.create_dataset(output_names[ii]+'_x', data=x_edges_1d, compression="gzip")
+        data_grp.create_dataset(output_names[ii]+'_y', data=hist1d_norm, compression="gzip")
+
+        #data_grp.create_dataset(output_names[ii]+'_val', data=median_vals[ii])
+        #data_grp.create_dataset(output_names[ii]+'_val_-', data=sigma_minus[ii])
+        #data_grp.create_dataset(output_names[ii]+'_val_+', data=sigma_plus[ii])
+        #data_grp.attrs[output_names[ii]+'_val'] = median_vals[ii]
+
+        veusz_workaround_descriptor += ' ' + output_names[ii] + ',+,-'
+        veusz_workaround_values += ' ' + repr(median_vals[ii]) + ' ' + repr(sigma_plus[ii]) + ' ' + repr(sigma_minus[ii])
+
+    text_file = open(veusz_dir + "veusz_median_sigmas.txt", "w")
+    text_file.write('%s \n' % veusz_workaround_descriptor)
+    text_file.write('%s \n' % veusz_workaround_values)
+    text_file.close()
