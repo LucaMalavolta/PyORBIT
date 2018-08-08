@@ -20,21 +20,23 @@ class GaussianProcess_QuasiPeriodicActivity_Shared(AbstractModel):
         'Prot': 'U', # Rotational period of the star
         'Pdec': 'U', # Decay timescale of activity
         'Oamp': 'LU', # Granulation of activity
+        'Hamp': 'U'  # Amplitude of the signal in the covariance matrix
     }
 
     list_pams_dataset = {
-        'Hamp': 'U'  # Amplitude of the signal in the covariance matrix
+        'Hamp_factor': 'U'  # Amplitude of the signal in the covariance matrix
     }
     recenter_pams_dataset = {}
 
-    n_pams = 3
+    n_pams = 4
 
     """ Indexing is determined by the way the kernel is constructed, so it is specific of the Model and not of the 
     Common class"""
     gp_pams_index = {
-        'Pdec': 0, # metric
-        'Oamp': 1, # gamma
-        'Prot': 2 # ln_P
+        'Hamp': 0, # amp2
+        'Pdec': 1, # metric
+        'Oamp': 2, # gamma
+        'Prot': 3 # ln_P
     }
 
     gp = {}
@@ -56,6 +58,7 @@ class GaussianProcess_QuasiPeriodicActivity_Shared(AbstractModel):
         values to the parameter vector accepted by george.set_parameter_vector() function. Note: these values may be 
         different from ones accepted by the kernel
         """
+        output_pams[self.gp_pams_index['Hamp']] = np.log(input_pams['Hamp'])*2
         output_pams[self.gp_pams_index['Pdec']] = np.log(input_pams['Pdec'])*2
         output_pams[self.gp_pams_index['Oamp']] = 1. / (2.*input_pams['Oamp'] ** 2)
         output_pams[self.gp_pams_index['Prot']] = np.log(input_pams['Prot'])
@@ -71,6 +74,7 @@ class GaussianProcess_QuasiPeriodicActivity_Shared(AbstractModel):
         kernel combination
         """
         return {
+            'Hamp': np.exp(input_pams[self.gp_pams_index['Hamp']] / 2.0),
             'Pdec': np.exp(input_pams[self.gp_pams_index['Pdec']] / 2.0),
             'Oamp': np.sqrt(1. / (2.*input_pams[self.gp_pams_index['Oamp']])),
             'Prot': np.exp(input_pams[self.gp_pams_index['Prot']])
@@ -89,8 +93,9 @@ class GaussianProcess_QuasiPeriodicActivity_Shared(AbstractModel):
 
         gp_pams = np.ones(self.n_pams)
         """ Kernel initialized with fake values... don't worry, they'll be overwritten soon"""
-        kernel = george.kernels.ExpSquaredKernel(metric=np.exp(gp_pams[0])) * \
-                 george.kernels.ExpSine2Kernel(gamma=gp_pams[1], log_period=gp_pams[2])
+        kernel = np.exp(gp_pams[0]) * \
+                      george.kernels.ExpSquaredKernel(metric=np.exp(gp_pams[1])) * \
+                      george.kernels.ExpSine2Kernel(gamma=gp_pams[2], log_period=gp_pams[3])
 
         """
          gp_pams[0] = h^2 -> h^2 * ExpSquaredKernel * ExpSine2Kernel
@@ -125,11 +130,11 @@ class GaussianProcess_QuasiPeriodicActivity_Shared(AbstractModel):
             self.internal_dataset['ej'] = []
             self.internal_gp_pams = self.convert_val2gp(variable_value)
 
-        self.internal_dataset[dataset.name_ref] = variable_value['Hamp']
+        self.internal_dataset[dataset.name_ref] = variable_value['Hamp_factor']
         self.internal_dataset['x0'].extend(dataset.x0)
-        self.internal_dataset['yr'].extend((dataset.y - dataset.model)/variable_value['Hamp'])
-        self.internal_dataset['ej'].extend(np.sqrt((dataset.e / variable_value['Hamp'])**2.0 +
-                                                   (dataset.jitter/variable_value['Hamp'])**2.0))
+        self.internal_dataset['yr'].extend((dataset.y - dataset.model)/variable_value['Hamp_factor'])
+        self.internal_dataset['ej'].extend(np.sqrt((dataset.e / variable_value['Hamp_factor'])**2.0 +
+                                                   (dataset.jitter/variable_value['Hamp_factor'])**2.0))
 
     def lnlk_compute(self):
         """ 2 steps:

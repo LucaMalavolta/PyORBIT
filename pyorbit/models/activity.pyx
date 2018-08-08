@@ -11,6 +11,7 @@ class CommonActivity(AbstractCommon):
         'Pdec': 'U',  # Decay timescale of activity
         'Oamp': 'LU',  # Granulation of activity
         'Hamp': 'U',  # Amplitude of the signal in the covariance matrix
+        'Hamp_factor': 'U',
         'P': 'LU',  # Period, log-uniform prior
         'K': 'LU',  # RV semi-amplitude, log-uniform prior
         'f': 'U',  # RV curve phase, log-uniform
@@ -25,6 +26,7 @@ class CommonActivity(AbstractCommon):
         'Pdec': [1.0, 10000.0],
         'Oamp': [0.0001, 2.0],
         'Hamp': [0.00000001, 1000000.0],
+        'Hamp_factor': [0.01, 10.0],
         'P': [0.4, 100000.0],
         'K': [0.5, 2000.0],
         'f': [0.0, 2 * np.pi],
@@ -42,6 +44,7 @@ class CommonActivity(AbstractCommon):
         'Pdec': ['Uniform', []],
         'Oamp': ['Jeffreys', []],
         'Hamp': ['Uniform', []],
+        'Hamp_factor': ['Uniform', []],
         'P': ['Jeffreys', []],
         'K': ['ModifiedJeffreys', [1.0]],
         'f': ['Uniform', []],
