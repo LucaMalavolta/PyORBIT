@@ -132,9 +132,12 @@ class GaussianProcess_QuasiPeriodicActivity_Shared(AbstractModel):
 
         self.internal_dataset[dataset.name_ref] = variable_value['Hamp_factor']
         self.internal_dataset['x0'].extend(dataset.x0)
-        self.internal_dataset['yr'].extend((dataset.y - dataset.model)/variable_value['Hamp_factor'])
-        self.internal_dataset['ej'].extend(np.sqrt((dataset.e / variable_value['Hamp_factor'])**2.0 +
-                                                   (dataset.jitter/variable_value['Hamp_factor'])**2.0))
+        self.internal_dataset['yr'].extend((dataset.y - dataset.model)*variable_value['Hamp_factor'])
+
+        self.internal_dataset['ej'].extend(np.sqrt(dataset.e**2.0 + dataset.jitter**2.0)*variable_value['Hamp_factor'])
+
+        #self.internal_dataset['ej'].extend(np.sqrt((dataset.e / variable_value['Hamp_factor'])**2.0 +
+        #                                           (dataset.jitter/variable_value['Hamp_factor'])**2.0))
 
     def lnlk_compute(self):
         """ 2 steps:
