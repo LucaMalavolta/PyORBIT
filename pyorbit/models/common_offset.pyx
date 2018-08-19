@@ -9,14 +9,14 @@ class CommonOffset(AbstractCommon):
     model_class = 'common_offset'
 
     list_pams = {
-        'offset': 'U',  # order 1
+        'offset'  # order 1
     }
 
     default_bounds = {}
 
-    default_priors = {
-            'offset': ['Uniform', []]
-    }
+    default_spaces = {'offset': 'Linear'}
+
+    default_priors = { 'offset': ['Uniform', []]}
 
     recenter_pams = {}
 

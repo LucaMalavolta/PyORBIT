@@ -7,6 +7,7 @@ class Correlation_SingleDataset(AbstractModel):
     list_pams_common = {}
     list_pams_dataset = {}
     default_bounds = {}
+    default_spaces = {}
     default_priors = {}
 
     recenter_pams_dataset = {}
@@ -34,8 +35,9 @@ class Correlation_SingleDataset(AbstractModel):
 
         for i_order in xrange(1, self.order+1):
             var = 'c'+repr(i_order)
-            self.list_pams_dataset.update({var: 'U'})
+            self.list_pams_dataset.update({var: None})
             self.default_bounds.update({var: [-10**9, 10**9]})
+            self.default_spaces.update({var: 'Linear'})
             self.default_priors.update({var: ['Uniform', []]})
 
         self.x_vals = np.zeros(dataset_ref.n, dtype=np.double)

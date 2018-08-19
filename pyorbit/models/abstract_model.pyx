@@ -25,6 +25,7 @@ class AbstractModel():
 
         self.prior_kind = {}
         self.prior_pams = {}
+        self.spaces = {}
 
         self.model_conf = None
 
@@ -39,15 +40,14 @@ class AbstractModel():
         """ Initialization with dataset even if no dataset-specific parameter is present"""
         pass
 
-    def define_special_variables_bounds(self, ndim, dataset_name, var):
-        return ndim, []
+    def define_special_variable_properties(self, ndim, output_lists, dataset_name, var):
+        return ndim, output_lists, False
 
-    def define_variables_bounds(self, ndim, dataset_name):
+    def define_variable_properties(self, ndim, output_lists, dataset_name):
         """ Bounds are defined in this class, where all the Planet-related variables are stored
             Bounds and parameter index CANNOT be defined in the Common class: we don't know a priori which parameters
             will be actually used in the complete model.
         """
-        bounds_list = []
 
         self.transformation[dataset_name] = {}
         self.variable_index[dataset_name] = {}
@@ -56,42 +56,49 @@ class AbstractModel():
         if dataset_name not in self.bounds.keys():
             self.bounds[dataset_name] = {}
 
+        if dataset_name not in self.spaces.keys():
+            self.spaces[dataset_name] = {}
+
         for var in self.list_pams_dataset:
 
-            ndim, bounds_special = self.define_special_variables_bounds(ndim, dataset_name, var)
-            if len(bounds_special) > 0:
-                bounds_list.extend(bounds_special)
+            ndim, output_lists, applied = self.define_special_variable_properties(ndim, output_lists, dataset_name, var)
+            if applied:
                 continue
 
             if var not in self.bounds[dataset_name]:
                 self.bounds[dataset_name][var] = self.default_bounds[var]
 
+            if var not in self.spaces[dataset_name]:
+                self.spaces[dataset_name][var] = self.default_spaces[var]
+
             if var in self.fix_list[dataset_name]:
                 self.transformation[dataset_name][var] = get_fix_val
                 self.variable_index[dataset_name][var] = self.nfix
-                # self.variable_sampler[dataset_name][var] = self.nfix
                 self.prior_kind[dataset_name][var] = 'None'
                 self.prior_pams[dataset_name][var] = []
                 self.fixed.append(self.fix_list[dataset_name][var][0])
                 self.nfix += 1
             else:
-                if self.list_pams_dataset[var] == 'U':
+                if self.spaces[dataset_name][var] == 'Linear':
                     self.transformation[dataset_name][var] = get_var_val
-                    bounds_list.append(self.bounds[dataset_name][var])
+                    output_lists['bounds'].append(self.bounds[dataset_name][var])
 
-                if self.list_pams_dataset[var] == 'LU':
+                if self.spaces[dataset_name][var] == 'Logarithmic':
                     self.transformation[dataset_name][var] = get_var_exp
-                    bounds_list.append(np.log2(self.bounds[dataset_name][var]))
+                    output_lists['bounds'].append(np.log2(self.bounds[dataset_name][var]))
 
-                if var not in self.prior_pams:
+                if var not in self.prior_pams[dataset_name]:
                     self.prior_kind[dataset_name][var] = self.default_priors[var][0]
                     self.prior_pams[dataset_name][var] = self.default_priors[var][1]
+
+                output_lists['spaces'].append(self.spaces[dataset_name][var])
+                output_lists['priors'].append([self.prior_kind[dataset_name][var], self.prior_pams[dataset_name][var]])
 
                 self.variable_index[dataset_name][var] = ndim
                 self.variable_sampler[dataset_name][var] = ndim
                 ndim += 1
 
-        return ndim, bounds_list
+        return ndim, output_lists
 
     def define_special_starting_point(self, starting_point, dataset_name, var):
         return False
@@ -104,9 +111,9 @@ class AbstractModel():
 
             if self.define_special_starting_point(starting_point, dataset_name, var): continue
 
-            if self.list_pams_dataset[var] == 'U':
+            if self.spaces[dataset_name][var] == 'Linear':
                 start_converted = self.starts[dataset_name][var]
-            if self.list_pams_dataset[var] == 'LU':
+            if self.spaces[dataset_name][var] == 'Logarithmic':
                 start_converted = np.log2(self.starts[dataset_name][var])
             starting_point[self.variable_sampler[dataset_name][var]] = start_converted
 

@@ -14,10 +14,11 @@ class AbstractCommon(object):
 
         self.transformation = {}
         self.variable_index = {}
-        self.bounds = {}
         self.variables = {}
 
+        self.bounds = {}
         self.starts = {}
+        self.spaces = {}
 
         self.fix_list = {}
         self.fixed = []
@@ -30,35 +31,38 @@ class AbstractCommon(object):
         """ Sometimes the common variables still need to be initialized with values coming from a datasets"""
         pass
 
-    def define_special_variables_bounds(self, ndim, var):
-        return ndim, []
+    def define_special_variable_properties(self, ndim, output_lists, var):
+        return ndim, output_lists, False
 
-    def define_variables_bounds(self, ndim, variable_list):
+    def define_variable_properties(self, ndim, output_lists, variable_list):
         """ Bounds are defined in this class, where all the Planet-related variables are stored
             Bounds and parameter index CANNOT be defined in the Common class: we don't know a priori which parameters
             will be actually used in the complete model.
         """
-        bounds_list = []
+
         for var in variable_list:
             '''We check for each parameter (except eccentricity and omega) if the variable is a
-                fixed value or a free variable, and move the parameter into the requested space
+                fixed value or a free variable, and move the parameter into the requested spaces
                 Notice that 'e' and 'w' are not yet included in list_pams[pl_name] at this stage
             '''
 
-            ndim, bounds_special = self.define_special_variables_bounds(ndim, var)
-            if len(bounds_special) > 0:
-                bounds_list.extend(bounds_special)
+            ndim, output_lists, applied = self.define_special_variable_properties(ndim, output_lists, var)
+            if applied:
                 continue
 
+            #if var not in self.bounds:
+            #    self.bounds[var] = self.default_bounds[var]
             if var not in self.bounds:
                 self.bounds[var] = self.default_bounds[var]
+
+            if var not in self.spaces:
+                self.spaces[var] = self.default_spaces[var]
 
             if var in self.fix_list:
                 if var not in self.transformation:
                     self.transformation[var] = get_fix_val
                     self.fixed.append(self.fix_list[var][0])
                     self.variable_index[var] = self.nfix
-                    #self.variable_sampler[var] = self.nfix
                     self.nfix += 1
                     self.prior_kind[var] = 'None'
                     self.prior_pams[var] = []
@@ -67,23 +71,27 @@ class AbstractCommon(object):
                 '''If no bounds have been specified in the input file, we use the default ones
                     Bounds must be provided in any case to avoid a failure of PyDE '''
 
-                if self.list_pams[var] == 'U':
+                if self.spaces[var] == 'Linear':
                     self.transformation[var] = get_var_val
-                    bounds_list.append(self.bounds[var])
+                    output_lists['bounds'].append(self.bounds[var])
 
-                elif self.list_pams[var] == 'LU':
+                elif self.spaces[var] == 'Logarithmic':
                     self.transformation[var] = get_var_exp
-                    bounds_list.append(np.log2(self.bounds[var]))
+                    output_lists['bounds'].append(np.log2(self.bounds[var]))
+                    #bounds_list.append(np.log2(self.bounds[var]))
 
                 if var not in self.prior_pams:
                     self.prior_kind[var] = self.default_priors[var][0]
                     self.prior_pams[var] = self.default_priors[var][1]
 
+                output_lists['spaces'].append(self.spaces[var])
+                output_lists['priors'].append([self.prior_kind[var], self.prior_pams[var]])
+
                 self.variable_index[var] = ndim
                 self.variable_sampler[var] = ndim
                 ndim += 1
 
-        return ndim, bounds_list
+        return ndim, output_lists
 
     def convert(self, theta):
         variable_value = {}
@@ -100,9 +108,9 @@ class AbstractCommon(object):
 
             if self.define_special_starting_point(starting_point, var): continue
 
-            if self.list_pams[var] == 'U':
+            if self.spaces[var] == 'Linear':
                 start_converted = self.starts[var]
-            if self.list_pams[var] == 'LU':
+            if self.spaces[var] == 'Logarithmic':
                 start_converted = np.log2(self.starts[var])
             starting_point[self.variable_sampler[var]] = start_converted
 

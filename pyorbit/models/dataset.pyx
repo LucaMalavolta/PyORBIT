@@ -16,17 +16,21 @@ class Dataset(AbstractCommon):
         self.dynamical = False
         self.planet_name = None
 
-        self.generic_list_pams = {'jitter': 'U', 'offset': 'U', 'linear': 'U'}
+        self.generic_list_pams = {'jitter', 'offset', 'linear'}
 
         self.generic_default_priors = {
             'jitter': ['Uniform', []],
             'offset': ['Uniform', []],
             'linear': ['Uniform', []]}
 
+        self.generic_default_spaces = {
+            'jitter': 'Linear',
+            'offset': 'Linear',
+            'linear': 'Linear'}
+
         if self.kind == 'Tcent':
-            self.generic_list_pams['jitter'] = 'LU'
+            self.generic_default_spaces['jitter'] = 'Logarithmic'
             self.generic_default_priors['jitter'] = ['Uniform', []]
-            #self.generic_default_priors['jitter'] = ['Jeffreys', []]
 
         self.variable_compressed = {}
         self.variable_expanded = {}
@@ -34,6 +38,7 @@ class Dataset(AbstractCommon):
         self.model_class = 'dataset'
         self.list_pams = {}
         self.default_bounds = {}
+        self.default_spaces = {}
         self.default_priors = {}
         self.recenter_pams = {}
 
@@ -100,8 +105,9 @@ class Dataset(AbstractCommon):
         self.variable_compressed[var_generic] = {}
         for ii in xrange(0, n_sys):
             var = var_generic + '_' + repr(ii)
-            self.list_pams[var] = self.generic_list_pams[var_generic]
+            self.list_pams.update({var: None})
             self.default_bounds[var] = self.generic_default_bounds[var_generic]
+            self.default_spaces[var] = self.generic_default_spaces[var_generic]
             self.default_priors[var] = self.generic_default_priors[var_generic]
             self.variable_compressed[var_generic][var] = None
             self.variable_expanded[var] = var_generic
@@ -118,6 +124,7 @@ class Dataset(AbstractCommon):
         for var in self.variable_compressed[var_generic]:
             self.list_pams.pop(var, None)
             self.default_bounds.pop(var, None)
+            self.default_spaces.pop(var, None)
             self.default_priors.pop(var, None)
             self.variable_expanded.pop(var, None)
             self.mask.pop(var)
@@ -153,7 +160,15 @@ class Dataset(AbstractCommon):
         env = 1.0 / (self.e ** 2.0 + self.jitter ** 2.0)
         return -0.5 * (np.sum((self.y - self.model) ** 2 * env - np.log(env)))
 
-    def update_priors_starts_bounds(self):
+    def update_bounds_spaces_priors_starts(self):
+
+        for var_generic in list(set(self.bounds) & set(self.variable_compressed)):
+            for var in self.variable_compressed[var_generic]:
+                self.bounds[var] = self.bounds[var_generic]
+
+        for var_generic in list(set(self.spaces) & set(self.variable_compressed)):
+            for var in self.variable_compressed[var_generic]:
+                self.spaces[var] = self.spaces[var_generic]
 
         for var_generic in list(set(self.prior_pams) & set(self.variable_compressed)):
             for var in self.variable_compressed[var_generic]:
@@ -163,10 +178,6 @@ class Dataset(AbstractCommon):
         for var_generic in list(set(self.starts) & set(self.variable_compressed)):
             for var in self.variable_compressed[var_generic]:
                 self.starts[var] = self.starts[var_generic]
-
-        for var_generic in list(set(self.bounds) & set(self.variable_compressed)):
-            for var in self.variable_compressed[var_generic]:
-                self.bounds[var] = self.bounds[var_generic]
 
     def has_jitter(self):
         for var in self.list_pams:

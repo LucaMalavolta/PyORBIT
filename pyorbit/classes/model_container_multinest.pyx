@@ -12,14 +12,13 @@ class ModelContainerMultiNest(ModelContainer):
                                 'num_repeats_mult': 5,
                                 'feedback': 1,
                                 'precision_criterion': 0.001,
-                                'sampling_efficiency': 0.8,
+                                'sampling_efficiency': 0.5,
                                 'max_ndead': -1,
                                 'boost_posterior': 0.0,
                                 'read_resume': True,
                                 'base_dir': './',
                                 'shutdown_jitter': False}
         self.polychord_dir_output = None
-
 
     def multinest_priors(self, cube, ndim, nparams):
         # cube[:] = (self.bounds[:, 1] - self.bounds[:, 0]) * cube[:] + self.bounds[:, 0]

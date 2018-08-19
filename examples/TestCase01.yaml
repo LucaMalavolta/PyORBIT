@@ -2,7 +2,7 @@ inputs:
   RVdata1:
     file: TestCase01_RV.dat
     kind: RV
-    models: ['RVmodel']
+    models: RVmodel
 common:
   planets:
     b:
@@ -16,7 +16,7 @@ common:
 models:
   RVmodel:
     kind: rv_planets
-    planets: ['b']
+    planets: b
 parameters:
   star_mass: [1.00, 0.01]
   star_radius: [1.00, 0.01]
@@ -34,4 +34,5 @@ solver:
     nlive: 1000
     num_repeats_mult: 5
     shutdown_jitter: True
+    sampling_efficiency: 0.30
   recenter_bounds: True

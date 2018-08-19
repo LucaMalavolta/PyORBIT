@@ -17,14 +17,14 @@ class GaussianProcess_QuasiPeriodicActivity_Shared(AbstractModel):
     model_class = 'gp_quasiperiodic_shared'
 
     list_pams_common = {
-        'Prot': 'U', # Rotational period of the star
-        'Pdec': 'U', # Decay timescale of activity
-        'Oamp': 'LU', # Granulation of activity
-        'Hamp': 'U'  # Amplitude of the signal in the covariance matrix
+        'Prot', # Rotational period of the star
+        'Pdec', # Decay timescale of activity
+        'Oamp', # Granulation of activity
+        'Hamp'  # Amplitude of the signal in the covariance matrix
     }
 
     list_pams_dataset = {
-        'Hamp_factor': 'U'  # Amplitude of the signal in the covariance matrix
+        'Hamp_factor'  # Amplitude of the signal in the covariance matrix
     }
     recenter_pams_dataset = {}
 
@@ -141,7 +141,7 @@ class GaussianProcess_QuasiPeriodicActivity_Shared(AbstractModel):
 
     def lnlk_compute(self):
         """ 2 steps:
-           1) theta parameters must be converted in physical units (e.g. from logarithmic to linear space)
+           1) theta parameters must be converted in physical units (e.g. from logarithmic to linear spaces)
            2) physical values must be converted to {\tt george} input parameters
         """
         self.gp.set_parameter_vector(self.internal_gp_pams)

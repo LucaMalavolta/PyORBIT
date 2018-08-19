@@ -14,9 +14,9 @@ class CommonJitter(AbstractCommon):
 
     default_bounds = {}
 
-    default_priors = {
-            'jitter': ['Jeffreys', []]
-    }
+    default_spaces = {'jitter': 'Linear'}
+
+    default_priors = {'jitter': ['Uniform', []]}
 
     recenter_pams = {}
 
