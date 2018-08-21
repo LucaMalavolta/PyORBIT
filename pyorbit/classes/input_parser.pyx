@@ -362,7 +362,7 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, shutdown_
         if 'include_priors' in conf:
             mc.include_priors = np.asarray(conf['include_priors'], dtype=bool)
 
-    if 'nested_sampling' in conf_solver and hasattr(mc, 'nested_sampling'):
+    if 'nested_sampling' in conf_solver and hasattr(mc, 'nested_sampling_parameters'):
         conf = conf_solver['nested_sampling']
 
         for key_name, key_value in conf.items():

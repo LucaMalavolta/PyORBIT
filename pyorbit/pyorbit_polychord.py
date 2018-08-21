@@ -74,21 +74,16 @@ def pyorbit_polychord(config_in, input_datasets=None, return_output=None):
         if hasattr(settings, key_name):
             setattr(settings, key_name, key_value)
 
+        print key_name, key_value
+
     if 'nlive_mult' in mc.nested_sampling_parameters:
         setattr(settings, 'nlive', mc.ndim * mc.nested_sampling_parameters['nlive_mult'])
 
     if 'num_repeats_mult' in mc.nested_sampling_parameters:
         setattr(settings, 'num_repeats', mc.ndim * mc.nested_sampling_parameters['num_repeats_mult'])
 
-
     if 'include_priors' in mc.nested_sampling_parameters:
         mc.include_priors = mc.nested_sampling_parameters['include_priors']
-
-
-    settings.nlive=500
-
-    #settings.num_repeats=num_repeats
-
 
     output = PyPolyChord.run_polychord(mc.polychord_call, nDims=mc.ndim, nDerived=0, settings=settings,
                                        prior=mc.polychord_priors)
