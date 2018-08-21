@@ -362,50 +362,12 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, shutdown_
         if 'include_priors' in conf:
             mc.include_priors = np.asarray(conf['include_priors'], dtype=bool)
 
-    if 'polychord' in conf_solver and hasattr(mc, 'polychord_parameters'):
-        conf = conf_solver['polychord']
+    if 'nested_sampling' in conf_solver and hasattr(mc, 'nested_sampling'):
+        conf = conf_solver['nested_sampling']
 
-        if 'nlive' in conf:
-            mc.polychord_parameters['nlive'] = np.asarray(conf['nlive'], dtype=np.int64)
+        for key_name, key_value in conf.items():
+            mc.nested_sampling_parameters[key_name] = key_value
 
-        if 'nlive_mult' in conf:
-            mc.polychord_parameters['nlive_mult'] = np.asarray(conf['nlive_mult'], dtype=np.int64)
-
-        if 'num_repeats_mult' in conf:
-            mc.polychord_parameters['num_repeats_mult'] = np.asarray(conf['num_repeats_mult'], dtype=np.int64)
-
-        if 'feedback' in conf:
-            mc.polychord_parameters['feedback'] = np.asarray(conf['feedback'], dtype=np.int64)
-
-        if 'sample_efficiency' in conf:
-            mc.polychord_parameters['sampling_efficiency'] = np.asarray(conf['sample_efficiency'], dtype=np.double)
-
-        if 'sampling_efficiency' in conf:
-            mc.polychord_parameters['sampling_efficiency'] = np.asarray(conf['sampling_efficiency'], dtype=np.double)
-
-        if 'precision_criterion' in conf:
-            mc.polychord_parameters['precision_criterion'] = np.asarray(conf['precision_criterion'], dtype=np.double)
-
-        if 'max_ndead' in conf:
-            mc.polychord_parameters['max_ndead'] = np.asarray(conf['max_ndead'], dtype=np.int64)
-
-        if 'boost_posterior' in conf:
-            mc.polychord_parameters['boost_posterior'] = np.asarray(conf['boost_posterior'], dtype=np.double)
-
-        if 'read_resume' in conf:
-            mc.polychord_parameters['read_resume'] = np.asarray(conf['read_resume'], dtype=bool)
-
-        if 'base_dir' in conf:
-            mc.polychord_parameters['base_dir'] = np.asarray(conf['base_dir'], dtype=str)
-
-        #if 'file_root' in conf:
-        #    mc.polychord_parameters['file_root'] = np.asarray(conf['file_root'], dtype=str)
-
-        if 'shutdown_jitter' in conf:
-            mc.polychord_parameters['shutdown_jitter'] = np.asarray(conf['shutdown_jitter'], dtype=bool)
-
-        if 'include_priors' in conf:
-            mc.include_priors = np.asarray(conf['include_priors'], dtype=bool)
 
     if 'recenter_bounds' in conf_solver:
         """ 

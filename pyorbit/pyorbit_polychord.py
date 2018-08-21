@@ -1,7 +1,7 @@
 from classes.common import *
 from classes.model_container_polychord import ModelContainerPolyChord
 from classes.input_parser import yaml_parser, pars_input
-from classes.io_subroutines import polychord_save_to_cpickle, polychord_load_from_cpickle, polychord_create_dummy_file
+from classes.io_subroutines import nested_sampling_save_to_cpickle, nested_sampling_load_from_cpickle, nested_sampling_create_dummy_file
 import os
 import sys
 import argparse
@@ -19,13 +19,13 @@ def show(filepath):
 def pyorbit_polychord(config_in, input_datasets=None, return_output=None):
 
 
-    polychord_dir_output = './' + config_in['output'] + '/polychord/'
+    output_directory = './' + config_in['output'] + '/polychord/'
 
     reloaded_mc = False
 
 
     try:
-        mc = polychord_load_from_cpickle(polychord_dir_output, prefix='')
+        mc = nested_sampling_load_from_cpickle(output_directory, prefix='')
     #    reloaded_mc = True
     except:
         pass
@@ -38,7 +38,7 @@ def pyorbit_polychord(config_in, input_datasets=None, return_output=None):
         mc = ModelContainerPolyChord()
         pars_input(config_in, mc, input_datasets)
 
-        if mc.polychord_parameters['shutdown_jitter']:
+        if mc.nested_sampling_parameters['shutdown_jitter']:
             for dataset in mc.dataset_dict.itervalues():
                 dataset.shutdown_jitter()
 
@@ -50,12 +50,12 @@ def pyorbit_polychord(config_in, input_datasets=None, return_output=None):
 
         mc.results_resumen(None, skip_theta=True)
 
-        mc.polychord_dir_output = polychord_dir_output
+        mc.output_directory = output_directory
 
 
 
-    os.system("mkdir -p " + polychord_dir_output + "/clusters")
-    #os.system("mkdir -p " +polychord_dir_output + "chains/clusters")
+    #os.system("mkdir -p " + output_directory + "/clusters")
+    #os.system("mkdir -p " +output_directory + "chains/clusters")
 
     print
     print 'Reference Time Tref: ', mc.Tref
@@ -64,26 +64,31 @@ def pyorbit_polychord(config_in, input_datasets=None, return_output=None):
     print
 
 
-    num_repeats = mc.polychord_parameters['num_repeats_mult'] * mc.ndim
-
-    nlive = mc.ndim * mc.polychord_parameters['nlive_mult']
-    if 'nlive' in mc.polychord_parameters:
-        nlive = mc.polychord_parameters['nlive']
-
-    #os.chdir(polychord_dir_output)
-
     settings = PolyChordSettings(nDims=mc.ndim, nDerived=0)
-    settings.feedback=mc.polychord_parameters['feedback']
-    settings.base_dir = polychord_dir_output
-    settings.precision_criterion=mc.polychord_parameters['precision_criterion']
-    settings.max_ndead=mc.polychord_parameters['max_ndead']
-    settings.boost_posterior=mc.polychord_parameters['boost_posterior']
-    settings.read_resume=mc.polychord_parameters['read_resume']
-    settings.file_root = 'pyorbit'
 
-    settings.nlive=nlive
-    settings.num_repeats=num_repeats
-    settings.do_clustering = True
+    settings.file_root = 'pyorbit'
+    settings.base_dir = output_directory
+
+    for key_name, key_value in mc.nested_sampling_parameters.items():
+
+        if hasattr(settings, key_name):
+            setattr(settings, key_name, key_value)
+
+    if 'nlive_mult' in mc.nested_sampling_parameters:
+        setattr(settings, 'nlive', mc.ndim * mc.nested_sampling_parameters['nlive_mult'])
+
+    if 'num_repeats_mult' in mc.nested_sampling_parameters:
+        setattr(settings, 'num_repeats', mc.ndim * mc.nested_sampling_parameters['num_repeats_mult'])
+
+
+    if 'include_priors' in mc.nested_sampling_parameters:
+        mc.include_priors = mc.nested_sampling_parameters['include_priors']
+
+
+    settings.nlive=500
+
+    #settings.num_repeats=num_repeats
+
 
     output = PyPolyChord.run_polychord(mc.polychord_call, nDims=mc.ndim, nDerived=0, settings=settings,
                                        prior=mc.polychord_priors)
@@ -92,14 +97,14 @@ def pyorbit_polychord(config_in, input_datasets=None, return_output=None):
     paramnames += [('r*', 'r')]
     output.make_paramnames_files(paramnames)
 
-    polychord_save_to_cpickle(mc)
+    nested_sampling_save_to_cpickle(mc)
 
     print
     print 'PolyChord COMPLETED'
     print
 
     """ A dummy file is created to let the cpulimit script to proceed with the next step"""
-    polychord_create_dummy_file(mc)
+    nested_sampling_create_dummy_file(mc)
 
     if return_output:
         return mc
