@@ -108,7 +108,7 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
         dir_output = './' + config_in['output'] + '/multinest_plot/'
         os.system('mkdir -p ' + dir_output)
 
-        mc = polychord_load_from_cpickle(dir_input)
+        mc = nested_sampling_load_from_cpickle(dir_input)
 
         print mc.bounds
         #pars_input(config_in, mc)
@@ -149,7 +149,7 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
         dir_output = './' + config_in['output'] + '/polychord_plot/'
         os.system('mkdir -p ' + dir_output)
 
-        mc = polychord_load_from_cpickle(dir_input)
+        mc = nested_sampling_load_from_cpickle(dir_input)
 
         print mc.bounds
         #pars_input(config_in, mc)
