@@ -164,6 +164,7 @@ class ModelContainer(object):
 
     def __call__(self, theta, include_priors=True):
         log_priors, log_likelihood = self.log_priors_likelihood(theta)
+
         if self.include_priors and include_priors:
             return log_priors + log_likelihood
         else:
@@ -172,7 +173,10 @@ class ModelContainer(object):
     def log_priors_likelihood(self, theta, return_priors=True):
 
         log_priors = 0.00
-        log_likelihood = (-0.5) * self.ndof * np.log(2 * np.pi)
+        log_likelihood = 0.00
+        """ 
+        Constant term added either by dataset.model_logchi2() or gp.log_likelihood()
+        """
 
         if not self.check_bounds(theta):
             if return_priors is False:

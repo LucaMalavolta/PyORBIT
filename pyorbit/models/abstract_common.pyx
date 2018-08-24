@@ -131,7 +131,6 @@ class AbstractCommon(object):
         variable_value = self.convert(theta)
 
         for var in variable_value:
-            # print self.prior_kind[var], self.bounds[var], self.prior_pams[var], variable_value[var]
             prior_out += giveback_priors(self.prior_kind[var],
                                          self.bounds[var],
                                          self.prior_pams[var],

@@ -18,9 +18,9 @@ class RVkeplerian(AbstractModel):
     model_class = 'rv_keplerian'
 
     list_pams_common = {
-        'P': 'LU',  # Period, log-uniform prior
-        'K': 'LU',  # RV semi-amplitude, log-uniform prior
-        'f': 'U',  # RV curve phase,  prior
+        'P': 'LU',  # Period
+        'K': 'LU',  # RV semi-amplitude
+        'f': 'U',  # RV curve phase
         'e': 'U',  # eccentricity, uniform prior - to be fixed
         'o': 'U'}  # argument of pericenter
 

@@ -158,7 +158,7 @@ class Dataset(AbstractCommon):
 
     def model_logchi2(self):
         env = 1.0 / (self.e ** 2.0 + self.jitter ** 2.0)
-        return -0.5 * (np.sum((self.y - self.model) ** 2 * env - np.log(env)))
+        return -0.5 * (self.n * np.log(2 * np.pi) + np.sum((self.y - self.model) ** 2 * env - np.log(env)))
 
     def update_bounds_spaces_priors_starts(self):
 

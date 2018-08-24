@@ -402,6 +402,8 @@ def bounds_space_priors_starts_fixed(mc, model_obj, conf, dataset_1=None, datase
                 model_obj.prior_kind[add_var_name+var] = prior_pams[0]
                 if np.size(prior_pams) > 1:
                     model_obj.prior_pams[add_var_name+var] = np.asarray(prior_pams[1:], dtype=np.double)
+                else:
+                    model_obj.prior_pams[add_var_name+var] = np.asarray([0.00], dtype=np.double)
 
         if 'starts' in conf:
             mc.starting_point_flag = True

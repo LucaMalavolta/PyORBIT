@@ -144,8 +144,7 @@ class GaussianProcess_QuasiPeriodicActivity_Common(AbstractModel):
 
         self.gp.set_parameter_vector(self.internal_gp_pams)
         self.gp.compute(self.internal_dataset['x0'], self.internal_dataset['ej'])
-
-        return self.gp.lnlikelihood(self.internal_dataset['yr'], quiet=True)
+        return self.gp.log_likelihood(self.internal_dataset['yr'], quiet=True)
 
     def sample_predict(self, dataset, x0_input=None):
 
