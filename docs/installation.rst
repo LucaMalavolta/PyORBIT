@@ -116,6 +116,7 @@ Follow the instructions at `celerite installation page`_
 
 .. _celerite installation page: http://celerite.readthedocs.io/en/stable/python/install/
 
+On some computer importing ``george`` and ``celerite`` during the same Python session may cause a Segmentation fault. The only workaround I found is to install ``celerite`` using conda-forge instead of pip.
 
 ``PolyChord``
 -------------
@@ -148,7 +149,7 @@ Finally, to use the MPI functionalities, prepend the MPI command before the pyth
 If you already ran the command without the MPI instruction or with a different number of CPU, remember to delete the ``chains`` directory or the execution will fail.
 
 PolyChord on Mac troubleshooting
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 I run my code a Linux Box, but if I need to do a quick test or debug and I'm not in the office I do it on my Mac.
 
@@ -319,7 +320,7 @@ The solution to this error:
   for use.
   --------------------------------------------------------------------------
 
-Is quite simple: use a lower number after ``-np``. If `HyperThreading`_ is activated, the number of cores you see in your favorite task manger (or just ``htop``) is the number of _logical_ processor, while MPI cannot go further than the real number of cores in your machine.
+Is quite simple: use a lower number after ``-np``. If `HyperThreading`_ is activated, the number of cores you see in your favorite task manager (or just ``htop``) is the number of _logical_ processor, while MPI cannot go further than the real number of cores in your machine.
 
 
 .. _OpenMPI: https://www.open-mpi.org/

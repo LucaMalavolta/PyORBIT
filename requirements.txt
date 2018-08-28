@@ -5,3 +5,4 @@ corner
 cython
 emcee
 pyyaml
+argparse
