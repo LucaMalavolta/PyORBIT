@@ -86,24 +86,28 @@ class ModelContainer(object):
         # without using nested counters
 
         self.ndim = 0
-        bounds_list = []
+        output_lists = {'bounds': [],
+                        'spaces': [],
+                        'priors': []
+                        }
+
         for model in self.models.itervalues():
             if model.common_ref:
                 model.default_bounds = self.common_models[model.common_ref].default_bounds
+                model.default_spaces = self.common_models[model.common_ref].default_spaces
                 model.default_priors = self.common_models[model.common_ref].default_priors
-                self.ndim, bounds_ext = self.common_models[model.common_ref].define_variables_bounds(
-                        self.ndim, model.list_pams_common)
-                bounds_list.extend(bounds_ext)
+                self.ndim, output_lists = self.common_models[model.common_ref].define_variable_properties(
+                        self.ndim, output_lists, model.list_pams_common)
 
         for dataset in self.dataset_dict.itervalues():
-            self.ndim, bounds_ext = dataset.define_variables_bounds(self.ndim, dataset.list_pams)
-            bounds_list.extend(bounds_ext)
+            self.ndim, output_lists = dataset.define_variable_properties(self.ndim, output_lists, dataset.list_pams)
 
             for model_name in dataset.models:
-                self.ndim, bounds_ext = self.models[model_name].define_variables_bounds(self.ndim, dataset.name_ref)
-                bounds_list.extend(bounds_ext)
+                self.ndim, output_lists = self.models[model_name].define_variable_properties(self.ndim, output_lists, dataset.name_ref)
 
-        self.bounds = np.asarray(bounds_list)
+        self.bounds = np.asarray(output_lists['bounds'])
+        self.spaces = output_lists['spaces']
+        self.priors = output_lists['priors']
         self.range = self.bounds[:, 1] - self.bounds[:, 0]
 
     def initialize_logchi2(self):
@@ -160,6 +164,7 @@ class ModelContainer(object):
 
     def __call__(self, theta, include_priors=True):
         log_priors, log_likelihood = self.log_priors_likelihood(theta)
+
         if self.include_priors and include_priors:
             return log_priors + log_likelihood
         else:
@@ -168,7 +173,10 @@ class ModelContainer(object):
     def log_priors_likelihood(self, theta, return_priors=True):
 
         log_priors = 0.00
-        log_likelihood = (-0.5) * self.ndof * np.log(2 * np.pi)
+        log_likelihood = 0.00
+        """ 
+        Constant term added either by dataset.model_logchi2() or gp.log_likelihood()
+        """
 
         if not self.check_bounds(theta):
             if return_priors is False:

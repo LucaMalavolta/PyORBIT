@@ -9,7 +9,7 @@ New changes:
     variable_index is the third argument of transformation
     it identifies which values from theta must be taken to convert the variable_sampler values to the physical parameter
 
-    variable_sampler associate the value in theta to their label in the sampler space
+    variable_sampler associate the value in theta to their label in the sampler spaces
 """
 
 
@@ -18,9 +18,9 @@ class RVkeplerian(AbstractModel):
     model_class = 'rv_keplerian'
 
     list_pams_common = {
-        'P': 'LU',  # Period, log-uniform prior
-        'K': 'LU',  # RV semi-amplitude, log-uniform prior
-        'f': 'U',  # RV curve phase, log-uniform prior
+        'P': 'LU',  # Period
+        'K': 'LU',  # RV semi-amplitude
+        'f': 'U',  # RV curve phase
         'e': 'U',  # eccentricity, uniform prior - to be fixed
         'o': 'U'}  # argument of pericenter
 

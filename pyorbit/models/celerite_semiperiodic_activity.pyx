@@ -34,13 +34,13 @@ class Celerite_QuasiPeriodicActivity(AbstractModel):
     model_class = 'celerite_quasiperiodic'
 
     list_pams_common = {
-        'Prot': 'U', # Rotational period of the star
+        'Prot' # Rotational period of the star
     }
 
     list_pams_dataset = {
-        'cel_a': 'LU',  # celerite term A
-        'cel_b': 'LU',  # celerite term B
-        'cel_c': 'LU',  # celerite term C
+        'cel_a',  # celerite term A
+        'cel_b',  # celerite term B
+        'cel_c'  # celerite term C
     }
 
     recenter_pams_dataset = {}
@@ -123,7 +123,7 @@ class Celerite_QuasiPeriodicActivity(AbstractModel):
 
     def lnlk_compute(self, variable_value, dataset):
         """ 2 steps:
-           1) theta parameters must be converted in physical units (e.g. from logarithmic to linear space)
+           1) theta parameters must be converted in physical units (e.g. from logarithmic to linear spaces)
            2) physical values must be converted to {\tt george} input parameters
         """
         gp_pams = self.convert_val2gp(variable_value)

@@ -101,6 +101,18 @@ def get_2var_o(var, fix, i):
     return np.arctan2(esino, ecoso, dtype=np.double)
 
 
+def get_2darray_from_val(val):
+    out = np.zeros(2, dtype=np.double)
+    try:
+        if len(np.shape(val)) == 1:
+            out[0] = val[0]
+        else:
+            out[:] = val[0:2]
+    except:
+        out[0] = val
+    return out
+
+
 def giveback_priors(kind, bounds, pams, val):
 
     """ The code is supposed to give -np.inf log-likelihood when the parameters are outside the boundaries,
@@ -115,10 +127,10 @@ def giveback_priors(kind, bounds, pams, val):
     if kind == 'Uniform':
         return np.log(1./(bounds[1]-bounds[0]))
 
-    if kind == 'Jeffreys':
+    if kind == 'Jeffreys' or kind == 'TruncatedJeffreys':
         return np.log(1./(val*np.log(bounds[1]/bounds[0])))
 
-    if kind == 'ModifiedJeffreys':
+    if kind == 'ModifiedJeffreys' or kind == 'TruncatedModifiedJeffreys':
         """ Used for the semi-amplitude of the RV curve
             bounds[1] = Kmax (suggested 999 m/s)
             pams[0] = K_0 (suggested 1 m/s)
@@ -135,12 +147,9 @@ def giveback_priors(kind, bounds, pams, val):
         """ bounds[1] = noise_max (99 m/s)
             pams[0] = noise_0 (suggested 1 m/s) 
         """
-        return np.log(1./(pams[1]*(1.0 + val/pams[1])) * 1.0/np.log(1.0+bounds[1]/pams[1]))
+        return np.log(1./(pams[0]*(1.0 + val/pams[0])) * 1.0/np.log(1.0+bounds[1]/pams[1]))
 
     if kind == "BetaDistribution":
-        """ bounds[1] = noise_max (99 m/s)
-            pams[0] = noise_0 (suggested 1 m/s) 
-        """
         return np.log(stats.beta.pdf((val-bounds[0])/(bounds[1]-bounds[0]), pams[0], pams[1]))
 
 

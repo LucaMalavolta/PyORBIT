@@ -10,7 +10,7 @@ New changes:
     variable_index is the third argument of transformation
     it identifies which values from theta must be taken to convert the variable_sampler values to the physical parameter
 
-    variable_sampler associate the value in theta to their label in the sampler space
+    variable_sampler associate the value in theta to their label in the sampler spaces
 """
 
 
@@ -19,12 +19,12 @@ class SinusoidCommonPeriod(AbstractModel):
     model_class = 'sinusoid_common_period'
 
     list_pams_common = {
-        'P': 'LU'  # Period, log-uniform prior
+        'P' # Period, log-uniform prior
     }
 
     list_pams_dataset = {
-        'K': 'LU',  # RV semi-amplitude, log-uniform prior
-        'f': 'U'  # RV vurve phase, log-uniform prior
+        'K',  # RV semi-amplitude, log-uniform prior
+        'f'  # RV vurve phase, log-uniform prior
     }
 
     recenter_pams_dataset = {'f'}

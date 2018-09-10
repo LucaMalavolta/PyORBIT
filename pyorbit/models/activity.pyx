@@ -7,17 +7,17 @@ class CommonActivity(AbstractCommon):
 
     ''' all the possible parameters that can be assigned to a planet are listed here'''
     list_pams = {
-        'Prot': 'U',  # Rotational period of the star
-        'Pdec': 'U',  # Decay timescale of activity
-        'Oamp': 'LU',  # Granulation of activity
-        'Hamp': 'U',  # Amplitude of the signal in the covariance matrix
-        'Hamp_factor': 'U',
-        'P': 'LU',  # Period, log-uniform prior
-        'K': 'LU',  # RV semi-amplitude, log-uniform prior
-        'f': 'U',  # RV curve phase, log-uniform
-        'cel_a': 'LU',  # celerite term A
-        'cel_b': 'LU',  # celerite term B
-        'cel_c': 'LU',  # celerite term C
+        'Prot',  # Rotational period of the star
+        'Pdec',  # Decay timescale of activity
+        'Oamp',  # Granulation of activity
+        'Hamp',  # Amplitude of the signal in the covariance matrix
+        'Hamp_factor',
+        'P',  # Period
+        'K',  # Sinusoid semi-amplitude
+        'f',  # Sinusoid curve phase
+        'cel_a',  # celerite term A
+        'cel_b',  # celerite term B
+        'cel_c',  # celerite term C
     }
 
     """These default boundaries are used when the user does not define them in the yaml file"""
@@ -42,15 +42,29 @@ class CommonActivity(AbstractCommon):
     default_priors = {
         'Prot': ['Uniform', []],
         'Pdec': ['Uniform', []],
-        'Oamp': ['Jeffreys', []],
+        'Oamp': ['Uniform', []],
         'Hamp': ['Uniform', []],
         'Hamp_factor': ['Uniform', []],
-        'P': ['Jeffreys', []],
-        'K': ['ModifiedJeffreys', [1.0]],
+        'P': ['Uniform', []],
+        'K': ['Uniform', []],
         'f': ['Uniform', []],
-        'cel_a': ['Jeffreys', []],
-        'cel_b': ['Jeffreys', []],
-        'cel_c': ['Jeffreys', []]
+        'cel_a': ['Uniform', []],
+        'cel_b': ['Uniform', []],
+        'cel_c': ['Uniform', []]
+    }
+
+    default_spaces = {
+        'Prot': 'Linear',  # Rotational period of the star
+        'Pdec': 'Linear',  # Decay timescale of activity
+        'Oamp': 'Logarithmic',  # Granulation of activity
+        'Hamp': 'Linear',  # Amplitude of the signal in the covariance matrix
+        'Hamp_factor': 'Linear',
+        'P': 'Logarithmic',  # Period, log-uniform prior
+        'K': 'Logarithmic',  # RV semi-amplitude, log-uniform prior
+        'f': 'Linear',  # RV curve phase, log-uniform
+        'cel_a': 'Logarithmic',  # celerite term A
+        'cel_b': 'Logarithmic',  # celerite term B
+        'cel_c': 'Logarithmic',  # celerite term C
     }
 
     recenter_pams = {'f'}

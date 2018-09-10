@@ -67,22 +67,22 @@ def emcee_load_from_cpickle(emcee_dir_output, prefix=''):
             sampler_chain, sampler_lnprobability, sampler_acceptance_fraction
 
 
-def polychord_create_dummy_file(mc, prefix=''):
+def nested_sampling_create_dummy_file(mc, prefix=''):
     add_prefix = (prefix + '_' if prefix else '')
-    file_dummy = open(mc.polychord_dir_output + add_prefix + "dummy_file", "wb")
+    file_dummy = open(mc.output_directory + add_prefix + "dummy_file", "wb")
     file_dummy.close()
 
 
-def polychord_save_to_cpickle(mc, prefix=None):
+def nested_sampling_save_to_cpickle(mc, prefix=None):
 
     add_prefix = (prefix + '_' if prefix else '')
-    pickle.dump(mc, open(mc.polychord_dir_output + add_prefix + "model_container.p", "wb"))
+    pickle.dump(mc, open(mc.output_directory + add_prefix + "model_container.p", "wb"))
 
 
-def polychord_load_from_cpickle(polychord_dir_output, prefix=''):
+def nested_sampling_load_from_cpickle(output_directory, prefix=''):
 
     add_prefix = (prefix + '_' if prefix else '')
-    mc = pickle.load(open(polychord_dir_output + add_prefix + "model_container.p", "rb"))
+    mc = pickle.load(open(output_directory + add_prefix + "model_container.p", "rb"))
     return mc
 
 

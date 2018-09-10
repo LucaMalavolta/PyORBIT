@@ -111,8 +111,7 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, shutdown_
                     if 'fixed' in planet_conf:
                         fixed_conf = planet_conf['fixed']
                         for var in fixed_conf:
-                            mc.common_models[planet_name].fix_list[var] = np.asarray(fixed_conf[var], dtype=np.double)
-
+                            mc.common_models[planet_name].fix_list[var] = get_2darray_from_val(fixed_conf[var])
 
         return
 
@@ -148,13 +147,18 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, shutdown_
             for var in bound_conf:
                 mc.dataset_dict[dataset_name].bounds[var] = np.asarray(bound_conf[var], dtype=np.double)
 
+        if 'spaces' in dataset_conf:
+            space_conf = dataset_conf['spaces']
+            for var in space_conf:
+                mc.dataset_dict[dataset_name].spaces[var] = space_conf[var]
+
         if 'starts' in dataset_conf:
             mc.starting_point_flag = True
             starts_conf = dataset_conf['starts']
             for var in starts_conf:
                 mc.dataset_dict[dataset_name].starts[var] = np.asarray(starts_conf[var], dtype=np.double)
 
-        mc.dataset_dict[dataset_name].update_priors_starts_bounds()
+        mc.dataset_dict[dataset_name].update_bounds_spaces_priors_starts()
 
     for model_name, model_conf in conf_common.iteritems():
 
@@ -170,7 +174,7 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, shutdown_
 
                 mc.common_models[planet_name] = define_common_type_to_class['planets'](planet_name)
 
-                boundaries_fixed_priors_starts(mc, mc.common_models[planet_name], planet_conf)
+                bounds_space_priors_starts_fixed(mc, mc.common_models[planet_name], planet_conf)
 
                 if 'orbit' in planet_conf:
                     mc.planet_dict[planet_name] = planet_conf['orbit']
@@ -192,7 +196,7 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, shutdown_
                 model_type = model_name
 
             mc.common_models[model_name] = define_common_type_to_class[model_type](model_name)
-            boundaries_fixed_priors_starts(mc, mc.common_models[model_name], model_conf)
+            bounds_space_priors_starts_fixed(mc, mc.common_models[model_name], model_conf)
 
             """ Automatic detection of common models without dataset-specific parameters"""
             for dataset in mc.dataset_dict.itervalues():
@@ -242,7 +246,7 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, shutdown_
                     define_type_to_class[model_type][mc.planet_dict[planet_name]](model_name_exp, planet_name)
 
                 for dataset_name in list(set(model_name_exp) & set(mc.dataset_dict)):
-                    boundaries_fixed_priors_starts(mc, mc.models[model_name_exp], model_conf[dataset_name],
+                    bounds_space_priors_starts_fixed(mc, mc.models[model_name_exp], model_conf[dataset_name],
                                                    dataset_1=dataset_name)
 
         elif model_type == 'transit_time':
@@ -257,7 +261,7 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, shutdown_
                     define_type_to_class[model_type][mc.planet_dict[planet_name]](model_name, planet_name)
 
             """  CHECK THIS!!!!
-            boundaries_fixed_priors_starts(mc, mc.models[model_name], model_conf)
+            bounds_space_priors_starts_fixed(mc, mc.models[model_name], model_conf)
             """
             for dataset_name, dataset in mc.dataset_dict.iteritems():
                 if planet_name in mc.dynamical_dict and model_name in dataset.models:
@@ -269,7 +273,7 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, shutdown_
             mc.models[model_name] = \
                     define_type_to_class[model_type](model_name, None)
             mc.models[model_name].model_conf = model_conf.copy()
-            boundaries_fixed_priors_starts(mc, mc.models[model_name], model_conf, dataset_1=model_conf['reference'])
+            bounds_space_priors_starts_fixed(mc, mc.models[model_name], model_conf, dataset_1=model_conf['reference'])
 
         else:
 
@@ -279,7 +283,7 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, shutdown_
             mc.models[model_name].model_conf = model_conf.copy()
 
             #for dataset_name in list(set(model_conf) & set(mc.dataset_dict)):
-            #    boundaries_fixed_priors_starts(mc, mc.models[model_name], model_conf[dataset_name], dataset_1=dataset_name)
+            #    bounds_space_priors_starts_fixed(mc, mc.models[model_name], model_conf[dataset_name], dataset_1=dataset_name)
 
             """ Using default noundaries if one dataset is missing"""
             if not mc.models[model_name].list_pams_dataset:
@@ -295,7 +299,7 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, shutdown_
                         print 'for model: ', model_name, ' dataset: ', dataset_name
                         print
 
-                    boundaries_fixed_priors_starts(mc, mc.models[model_name], model_conf[dataset_name],
+                    bounds_space_priors_starts_fixed(mc, mc.models[model_name], model_conf[dataset_name],
                                                    dataset_1=dataset_name)
 
                 #mc.models[model_name].setup_dataset(mc.dataset_dict[dataset_name])
@@ -358,50 +362,12 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, shutdown_
         if 'include_priors' in conf:
             mc.include_priors = np.asarray(conf['include_priors'], dtype=bool)
 
-    if 'polychord' in conf_solver  and hasattr(mc, 'polychord'):
-        conf = conf_solver['polychord']
+    if 'nested_sampling' in conf_solver and hasattr(mc, 'nested_sampling_parameters'):
+        conf = conf_solver['nested_sampling']
 
-        if 'nlive' in conf:
-            mc.polychord_parameters['nlive'] = np.asarray(conf['nlive'], dtype=np.int64)
+        for key_name, key_value in conf.items():
+            mc.nested_sampling_parameters[key_name] = key_value
 
-        if 'nlive_mult' in conf:
-            mc.polychord_parameters['nlive_mult'] = np.asarray(conf['nlive_mult'], dtype=np.int64)
-
-        if 'num_repeats_mult' in conf:
-            mc.polychord_parameters['num_repeats_mult'] = np.asarray(conf['num_repeats_mult'], dtype=np.int64)
-
-        if 'feedback' in conf:
-            mc.polychord_parameters['feedback'] = np.asarray(conf['feedback'], dtype=np.int64)
-
-        if 'sample_efficiency' in conf:
-            mc.polychord_parameters['sampling_efficiency'] = np.asarray(conf['sample_efficiency'], dtype=np.double)
-
-        if 'sampling_efficiency' in conf:
-            mc.polychord_parameters['sampling_efficiency'] = np.asarray(conf['sampling_efficiency'], dtype=np.double)
-
-        if 'precision_criterion' in conf:
-            mc.polychord_parameters['precision_criterion'] = np.asarray(conf['precision_criterion'], dtype=np.double)
-
-        if 'max_ndead' in conf:
-            mc.polychord_parameters['max_ndead'] = np.asarray(conf['max_ndead'], dtype=np.int64)
-
-        if 'boost_posterior' in conf:
-            mc.polychord_parameters['boost_posterior'] = np.asarray(conf['boost_posterior'], dtype=np.double)
-
-        if 'read_resume' in conf:
-            mc.polychord_parameters['read_resume'] = np.asarray(conf['read_resume'], dtype=bool)
-
-        if 'base_dir' in conf:
-            mc.polychord_parameters['base_dir'] = np.asarray(conf['base_dir'], dtype=str)
-
-        #if 'file_root' in conf:
-        #    mc.polychord_parameters['file_root'] = np.asarray(conf['file_root'], dtype=str)
-
-        if 'shutdown_jitter' in conf:
-            mc.polychord_parameters['shutdown_jitter'] = np.asarray(conf['shutdown_jitter'], dtype=bool)
-
-        if 'include_priors' in conf:
-            mc.include_priors = np.asarray(conf['include_priors'], dtype=bool)
 
     if 'recenter_bounds' in conf_solver:
         """ 
@@ -415,7 +381,7 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, shutdown_
         mc.use_threading_pool = conf_solver['use_threading_pool']
 
 
-def boundaries_fixed_priors_starts(mc, model_obj, conf, dataset_1=None, dataset_2=None, add_var_name =''):
+def bounds_space_priors_starts_fixed(mc, model_obj, conf, dataset_1=None, dataset_2=None, add_var_name =''):
     # type: (object, object, object, object, object, object) -> object
 
     if dataset_1 is None:
@@ -424,10 +390,10 @@ def boundaries_fixed_priors_starts(mc, model_obj, conf, dataset_1=None, dataset_
             for var in bound_conf:
                 model_obj.bounds[add_var_name+var] = np.asarray(bound_conf[var], dtype=np.double)
 
-        if 'fixed' in conf:
-            fixed_conf = conf['fixed']
-            for var in fixed_conf:
-                model_obj.fix_list[add_var_name+var] = np.asarray(fixed_conf[var], dtype=np.double)
+        if 'spaces' in conf:
+            space_conf = conf['spaces']
+            for var in space_conf:
+                model_obj.spaces[add_var_name+var] =space_conf[var]
 
         if 'priors' in conf:
             prior_conf = conf['priors']
@@ -436,6 +402,8 @@ def boundaries_fixed_priors_starts(mc, model_obj, conf, dataset_1=None, dataset_
                 model_obj.prior_kind[add_var_name+var] = prior_pams[0]
                 if np.size(prior_pams) > 1:
                     model_obj.prior_pams[add_var_name+var] = np.asarray(prior_pams[1:], dtype=np.double)
+                else:
+                    model_obj.prior_pams[add_var_name+var] = np.asarray([0.00], dtype=np.double)
 
         if 'starts' in conf:
             mc.starting_point_flag = True
@@ -443,8 +411,14 @@ def boundaries_fixed_priors_starts(mc, model_obj, conf, dataset_1=None, dataset_
             for var in starts_conf:
                 model_obj.starts[add_var_name+var] = np.asarray(starts_conf[var], dtype=np.double)
 
+        if 'fixed' in conf:
+            fixed_conf = conf['fixed']
+            for var in fixed_conf:
+                model_obj.fix_list[add_var_name+var] = get_2darray_from_val(fixed_conf[var])
+
     elif dataset_2 is None:
         model_obj.bounds[dataset_1] = {}
+        model_obj.spaces[dataset_1] = {}
         model_obj.starts[dataset_1] = {}
         model_obj.fix_list[dataset_1] = {}
         model_obj.prior_kind[dataset_1] = {}
@@ -455,10 +429,10 @@ def boundaries_fixed_priors_starts(mc, model_obj, conf, dataset_1=None, dataset_
             for var in bound_conf:
                 model_obj.bounds[dataset_1][add_var_name+var] = np.asarray(bound_conf[var], dtype=np.double)
 
-        if 'fixed' in conf:
-            fixed_conf = conf['fixed']
-            for var in fixed_conf:
-                model_obj.fix_list[dataset_1][add_var_name+var] = np.asarray(fixed_conf[var], dtype=np.double)
+        if 'spaces' in conf:
+            space_conf = conf['spaces']
+            for var in space_conf:
+                model_obj.spaces[dataset_1][add_var_name+var] = space_conf[var]
 
         if 'priors' in conf:
             prior_conf = conf['priors']
@@ -473,6 +447,11 @@ def boundaries_fixed_priors_starts(mc, model_obj, conf, dataset_1=None, dataset_
                 print dataset_1, add_var_name+var, starts_conf[var]
                 model_obj.starts[dataset_1][add_var_name+var] = np.asarray(starts_conf[var], dtype=np.double)
 
+        if 'fixed' in conf:
+            fixed_conf = conf['fixed']
+            for var in fixed_conf:
+                model_obj.fix_list[dataset_1][add_var_name+var] = get_2darray_from_val(fixed_conf[var])
+
     else:
 
         if 'boundaries' in conf:
@@ -481,11 +460,10 @@ def boundaries_fixed_priors_starts(mc, model_obj, conf, dataset_1=None, dataset_
                 model_obj.bounds[dataset_1][dataset_2][add_var_name + var] = \
                     np.asarray(bound_conf[var], dtype=np.double)
 
-        if 'fixed' in conf:
-            fixed_conf = conf['fixed']
-            for var in fixed_conf:
-                model_obj.fix_list[dataset_1][dataset_2][add_var_name + var] = \
-                    np.asarray(fixed_conf[var], dtype=np.double)
+        if 'spaces' in conf:
+            space_conf = conf['spaces']
+            for var in space_conf:
+                model_obj.spaces[dataset_1][dataset_2][add_var_name + var] = space_conf[var]
 
         if 'priors' in conf:
             prior_conf = conf['priors']
@@ -501,4 +479,8 @@ def boundaries_fixed_priors_starts(mc, model_obj, conf, dataset_1=None, dataset_
                 model_obj.starts[dataset_1][dataset_2][add_var_name + var] = \
                     np.asarray(starts_conf[var], dtype=np.double)
 
+        if 'fixed' in conf:
+            fixed_conf = conf['fixed']
+            for var in fixed_conf:
+                model_obj.fix_list[dataset_1][dataset_2][add_var_name + var] = get_2darray_from_val(fixed_conf[var])
     return

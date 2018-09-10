@@ -7,19 +7,40 @@ class ModelContainerMultiNest(ModelContainer):
     def __init__(self):
         super(self.__class__, self).__init__()
 
-        self.include_priors = False
-        self.polychord_parameters = {'nlive_mult': 25,
-                                'num_repeats_mult': 5,
-                                'feedback': 1,
-                                'precision_criterion': 0.001,
-                                'sampling_efficiency': 0.8,
-                                'max_ndead': -1,
-                                'boost_posterior': 0.0,
-                                'read_resume': True,
-                                'base_dir': './',
-                                'shutdown_jitter': False}
-        self.polychord_dir_output = None
+        self.include_priors = True
+        self.nested_sampling_parameters = {'nlive_mult': 25,
+                                           'base_dir': './',
+                                           'verbose': True,
+                                           'sampling_efficiency': 0.3,
+                                           'shutdown_jitter': False,
+                                           'include_priors': True}
 
+        self.pymultinest_signature = [
+            'n_params',
+            'n_clustering_params',
+            'wrapped_params',
+            'importance_nested_sampling',
+            'multimodal',
+            'const_efficiency_mode',
+            'n_live_points',
+            'evidence_tolerance',
+            'sampling_efficiency',
+            'n_iter_before_update',
+            'null_log_evidence',
+            'max_modes',
+            'mode_tolerance',
+            'outputfiles_basename',
+            'seed',
+            'verbose',
+            'resume',
+            'context',
+            'write_output',
+            'log_zero',
+            'max_iter',
+            'init_MPI',
+            'dump_callback']
+
+        self.output_directory = None
 
     def multinest_priors(self, cube, ndim, nparams):
         # cube[:] = (self.bounds[:, 1] - self.bounds[:, 0]) * cube[:] + self.bounds[:, 0]

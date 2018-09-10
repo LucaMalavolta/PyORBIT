@@ -18,10 +18,10 @@ import classes.common as common
 import h5py
 import csv
 
-__all__ = ["pyorbit_getresults"]
+__all__ = ["pyorbit_getresults_getdist"]
 
 
-def pyorbit_getresults(config_in, sampler, plot_dictionary):
+def pyorbit_getresults_getdist(config_in, sampler, plot_dictionary):
 
     #plt.rc('font', **{'family': 'serif', 'serif': ['Computer Modern Roman']})
     plt.rcParams["font.family"] = "Times New Roman"
@@ -260,7 +260,11 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
         print '****************************************************************************************************'
         print
 
+
     if plot_dictionary['full_correlation']:
+        print 'ciao'
+
+    if plot_dictionary['full_correlation_old']:
 
         print 'full_correlation plot'
         # plotting mega-corner plot

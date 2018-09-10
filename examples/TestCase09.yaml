@@ -43,9 +43,8 @@ solver:
     nsteps: 50000
     nburn: 20000
     thin: 100
-  polychord:
+  nested_sampling:
     sampling_efficiency: model
     nlive_mult: 50
     num_repeats_mult: 10
-    shutdown_jitter: True
   recenter_bounds: True

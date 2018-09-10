@@ -12,15 +12,15 @@ class CommonPolynomialTrend(AbstractCommon):
 
     "polynomial trend up to 10th order"
     list_pams = {
-        'c1': 'U',  # order 1
-        'c2': 'U',  # order 2
-        'c3': 'U',  # order 3
-        'c4': 'U',  # order 4
-        'c5': 'U',  # order 5
-        'c6': 'U',  # order 6
-        'c7': 'U',  # order 7
-        'c8': 'U',  # order 8
-        'c9': 'U',  # order 9
+        'c1',  # order 1
+        'c2',  # order 2
+        'c3',  # order 3
+        'c4',  # order 4
+        'c5',  # order 5
+        'c6',  # order 6
+        'c7',  # order 7
+        'c8',  # order 8
+        'c9',  # order 9
     }
 
     """These default boundaries are used when the user does not define them in the yaml file"""
@@ -34,6 +34,18 @@ class CommonPolynomialTrend(AbstractCommon):
         'c7': [-1.0, 1.0],
         'c8': [-1.0, 1.0],
         'c9': [-1.0, 1.0]
+    }
+
+    default_spaces = {
+        'c1': 'Linear',  # order 1
+        'c2': 'Linear',  # order 2
+        'c3': 'Linear',  # order 3
+        'c4': 'Linear',  # order 4
+        'c5': 'Linear',  # order 5
+        'c6': 'Linear',  # order 6
+        'c7': 'Linear',  # order 7
+        'c8': 'Linear',  # order 8
+        'c9': 'Linear',  # order 9
     }
 
     default_priors = {
@@ -71,7 +83,7 @@ class PolynomialTrend(AbstractModel):
 
         for i_order in xrange(1, self.order+1):
             var = 'c'+repr(i_order)
-            self.list_pams_common.update({var: 'U'})
+            self.list_pams_common.update({var: None})
 
             # # ???????????????
             # self.default_priors.update({var: ['Uniform', []]})
