@@ -97,7 +97,7 @@ To clean the repository fro the compiled version, .i.e. if frequent changes are 
 
 .. code:: bash
 
-  ./compile.sh
+  ./clean_compile.sh
 
 Note that in order to allow cythonization, the ``.py`` files in the ``pyorbit/classes`` and ``pyorbit/models`` directory are actually symbolic links to the ``.pyx`` files in the same directory.
 
