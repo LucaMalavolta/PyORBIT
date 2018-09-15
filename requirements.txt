@@ -6,3 +6,4 @@ corner
 emcee
 pyyaml
 h5py
+cython
