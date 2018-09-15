@@ -78,7 +78,7 @@ def pyorbit_multinest(config_in, input_datasets=None, return_output=None):
 
     if 'nlive' in mc.nested_sampling_parameters:
         nlive = mc.nested_sampling_parameters['nlive']
-    elif 'nlive' in mc.nested_sampling_parameters:
+    elif 'nlive_mult' in mc.nested_sampling_parameters:
         nlive = mc.ndim * mc.nested_sampling_parameters['nlive_mult']
 
     print ' Sampling efficiency: ', mc.nested_sampling_parameters['sampling_efficiency']
