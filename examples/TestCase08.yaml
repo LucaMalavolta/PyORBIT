@@ -25,7 +25,7 @@ common:
     type: polynomial_trend
 models:
   RVmodel:
-    kind: 'radial_velocities'
+    kind: radial_velocities
     planets: b
   transit_b:
     kind: transit_time
@@ -49,6 +49,6 @@ solver:
     thin: 100
   nested_sampling:
     sampling_efficiency: model
-    nlive_mult: 50
-    num_repeats_mult: 10
+    nlive_mult: 10
+    num_repeats_mult: 5
   recenter_bounds: True

@@ -2,7 +2,7 @@ inputs:
   RVdata1:
     file: TestCase01_RV.dat
     kind: RV
-    models: RVmodel
+    models: RV_model
 common:
   planets:
     b:
@@ -14,7 +14,7 @@ common:
       fixed:
         i: [90.000, 0.001]
 models:
-  RVmodel:
+  RV_model:
     kind: rv_planets
     planets: b
 parameters:

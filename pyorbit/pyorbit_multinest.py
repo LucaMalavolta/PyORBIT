@@ -69,7 +69,7 @@ def pyorbit_multinest(config_in, input_datasets=None, return_output=None):
         on Mac:
         export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$PWD/lib
         export LD_PRELOAD=/usr/lib/x86_64-linux-gnu/libgfortran.so.3
-        export LD_PRELOAD=/opt/local/lib/openmpi//lib/libmpi.so:$LD_PRELOAD
+        export LD_PRELOAD=/opt/local/lib/openmpi/lib/libmpi.so:$LD_PRELOAD
         mpirun -np 4 python run_PyPolyChord.py
     
     '''

@@ -8,6 +8,9 @@ sys.path.insert(0, '../pyorbit/classes/')
 import kepler_exo as kp
 
 
+"""
+Initial realization of the parameters
+
 np.random.seed(12345678)
 
 planet_b = {
@@ -35,6 +38,33 @@ instrument = {
     'T0_precision': 0.001
 }
 
+"""
+
+planet_b  = {
+    'P': 6.737412701474708,
+    'K': 15.964286053214767,
+    'f': 1.1271771440198723,
+    'e': 0.07578202101359831,
+    'i': 86.19154785304445,
+    'o': 0.07681624494196555}
+
+planet_c  = {
+    'P': 14.327606002800504,
+    'K': 11.805410430293563,
+    'f': 2.63686698774923,
+    'e': 0.22822106564776393,
+    'i': 85.317208074894,
+    'o': 0.6966217861505585}
+
+instrument  = {
+    'RV_precision': 1.0,
+    'RV_offset1': 4779.443746523752,
+    'RV_offset2': 4721.741371149122,
+    'T0_precision': 0.001
+}
+
+
+
 bjd_syn = np.arange(6000, 6050, 1, dtype=np.double)
 bjd_syn -= (bjd_syn-6025.0)*(4./1440)
 
@@ -58,32 +88,9 @@ activity = {
 
 polynomial_trend = {'c1': 0.5454, 'c2': 0.08934}
 
-"""
 
-# planet_b {
-    'P': 6.737412701474708,
-    'K': 15.964286053214767,
-    'f': 1.1271771440198723,
-    'e': 0.07578202101359831,
-    'i': 86.19154785304445,
-    'o': 0.07681624494196555}
-
-# planet_c {
-    'P': 14.327606002800504,
-    'K': 11.805410430293563,
-    'f': 2.63686698774923,
-    'e': 0.22822106564776393,
-    'i': 85.317208074894,
-    'o': 0.6966217861505585}
-
-# instrument {
-    'RV_precision': 1.0,
-    'RV_offset1': 4779.443746523752,
-    'RV_offset2': 4721.741371149122}
 
 """
-
-""" 
 TestCase01: single planet, no external contraints
 TestCase02: single planet, transit times
 TestCase03: two planets, transit times of the first one
@@ -234,7 +241,7 @@ def create_testcase05():
     err = bjd0*0 + photometry['phot_precision']
 
     """ Conversion of the physical parameter to the internally defined parameter
-    to be passed to george 
+    to be passed to george
     """
     gp_pams = np.zeros(4)
     gp_pams[0] = np.log(activity['Hamp_PH'])*2
@@ -244,7 +251,7 @@ def create_testcase05():
 
     kernel = np.exp(gp_pams[0]) * \
                       george.kernels.ExpSquaredKernel(metric=np.exp(gp_pams[1])) * \
-                      george.kernels.ExpSine2Kernel(gamma=gp_pams[1], log_period=gp_pams[2])
+                      george.kernels.ExpSine2Kernel(gamma=gp_pams[2], log_period=gp_pams[3])
 
     gp = george.GP(kernel)
 
@@ -266,7 +273,7 @@ def create_testcase06():
     err = bjd0 * 0 + photometry['phot_precision']
 
     """ Conversion of the physical parameter to the internally defined parameter
-    to be passed to george 
+    to be passed to george
     """
     gp_pams = np.zeros(4)
     gp_pams[0] = np.log(activity['Hamp_PH']) * 2
@@ -276,7 +283,7 @@ def create_testcase06():
 
     kernel = np.exp(gp_pams[0]) * \
              george.kernels.ExpSquaredKernel(metric=np.exp(gp_pams[1])) * \
-             george.kernels.ExpSine2Kernel(gamma=gp_pams[1], log_period=gp_pams[2])
+             george.kernels.ExpSine2Kernel(gamma=gp_pams[2], log_period=gp_pams[3])
 
     gp = george.GP(kernel)
 
@@ -297,7 +304,7 @@ def create_testcase06():
     gp_pams[0] = np.log(activity['Hamp_RV1']) * 2
     kernel = np.exp(gp_pams[0]) * \
              george.kernels.ExpSquaredKernel(metric=np.exp(gp_pams[1])) * \
-             george.kernels.ExpSine2Kernel(gamma=gp_pams[1], log_period=gp_pams[2])
+             george.kernels.ExpSine2Kernel(gamma=gp_pams[2], log_period=gp_pams[3])
 
     gp = george.GP(kernel)
 
@@ -316,6 +323,11 @@ def create_testcase06():
     Tcent_b =  np.random.normal(
         np.arange(0,1)*planet_b['P'] + kp.kepler_Tcent_T0P(planet_b['P'], planet_b['f'], planet_b['e'], planet_b['o']) + Tref,
         instrument['T0_precision'])
+
+    fileout = open('TestCase06_Tcent_b.dat', 'w')
+    for i_Tc, v_Tc in enumerate(Tcent_b):
+        fileout.write('{0:d}  {1:.4f}  {2:.4f}  {3:d}\n'.format(i_Tc, v_Tc, instrument['T0_precision'], 0))
+    fileout.close()
 
     fileout = open('TestCase06_RV.dat', 'w')
     for b, r in zip(bjd_obs, mod_pl):
@@ -339,7 +351,7 @@ def create_testcase07():
 
     kernel = np.exp(gp_pams[0]) * \
              george.kernels.ExpSquaredKernel(metric=np.exp(gp_pams[1])) * \
-             george.kernels.ExpSine2Kernel(gamma=gp_pams[1], log_period=gp_pams[2])
+             george.kernels.ExpSine2Kernel(gamma=gp_pams[2], log_period=gp_pams[3])
 
     gp = george.GP(kernel)
 
@@ -349,7 +361,7 @@ def create_testcase07():
     gp_pams[0] = np.log(activity['Hamp_RV2']) * 2
     kernel = np.exp(gp_pams[0]) * \
              george.kernels.ExpSquaredKernel(metric=np.exp(gp_pams[1])) * \
-             george.kernels.ExpSine2Kernel(gamma=gp_pams[1], log_period=gp_pams[2])
+             george.kernels.ExpSine2Kernel(gamma=gp_pams[2], log_period=gp_pams[3])
 
     gp = george.GP(kernel)
 
@@ -422,8 +434,8 @@ def create_testcase08():
 # create_testcase03()
 # create_testcase04()
 # create_testcase05()
-# create_testcase06()
-# create_testcase07()
+create_testcase06()
+create_testcase07()
 create_testcase08()
 
 ###################################################################

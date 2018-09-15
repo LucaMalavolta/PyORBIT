@@ -6,7 +6,10 @@ from ..models.radial_velocities import RVkeplerian, RVdynamical, TransitTimeKepl
 from ..models.gp_semiperiodic_activity import GaussianProcess_QuasiPeriodicActivity
 from ..models.gp_semiperiodic_activity_common import GaussianProcess_QuasiPeriodicActivity_Common
 from ..models.gp_semiperiodic_activity_shared import GaussianProcess_QuasiPeriodicActivity_Shared
-from ..models.celerite_semiperiodic_activity import Celerite_QuasiPeriodicActivity
+
+if 'celerite' in sys.modules:
+  from ..models.celerite_semiperiodic_activity import Celerite_QuasiPeriodicActivity
+
 from ..models.correlations import Correlation_SingleDataset
 from ..models.polynomial_trend import CommonPolynomialTrend, PolynomialTrend
 from ..models.common_offset import CommonOffset, Offset
@@ -370,7 +373,7 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, shutdown_
 
 
     if 'recenter_bounds' in conf_solver:
-        """ 
+        """
         required to avoid a small bug in the code
         if the dispersion of PyDE walkers around the median value is too broad,
         then emcee walkers will start outside the bounds, causing an error

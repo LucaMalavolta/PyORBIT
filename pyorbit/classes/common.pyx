@@ -14,11 +14,10 @@ if 'celerite' not in sys.modules:
         import celerite
         import autograd.numpy as np
     except:
-        from dummy import dummy_one
-        celerite = dummy_one()
         import numpy as np
+        from dummy import Celerite_QuasiPeriodicActivity
         print('WARNING! Imported dummy celerite, models relying on this package will not work')
-
+    
     try:
         import PyPolyChord
         from PyPolyChord.settings import PolyChordSettings
@@ -138,14 +137,14 @@ def giveback_priors(kind, bounds, pams, val):
         return np.log(1./(pams[0]*(1. + val/bounds[1])) * 1./np.log(1.+bounds[1]/pams[0]))
 
     if kind == "TruncatedRayleigh":
-        """ bounds[1] = e_max 
+        """ bounds[1] = e_max
             pams[0] = sigma_2 (suggested 0.2)
         """
         return np.log((val/pams[0]**2 * np.exp(-0.5 *(val/pams[0])**2))/(1. - np.exp(-0.5*(bounds[1]/pams[0])**2)))
 
     if kind == "WhiteNoisePrior":
         """ bounds[1] = noise_max (99 m/s)
-            pams[0] = noise_0 (suggested 1 m/s) 
+            pams[0] = noise_0 (suggested 1 m/s)
         """
         return np.log(1./(pams[0]*(1.0 + val/pams[0])) * 1.0/np.log(1.0+bounds[1]/pams[1]))
 

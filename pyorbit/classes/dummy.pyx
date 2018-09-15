@@ -20,6 +20,9 @@ def george():
     pass
 
 ## absurd workaround to fix the lack of celerite in the system
+def Celerite_QuasiPeriodicActivity():
+    pass
+
 
 class dummy_one:
     def __init__(self):
@@ -27,10 +30,10 @@ class dummy_one:
 
 class dummy_two:
     def __init__(self):
-        self.Term = dummy_three(0, 0, 0)
+        self.Term = dummy_three(0, 0, 0, 0)
     #def Term(self):
     #    return
 
 class dummy_three:
-    def __init__(self, a, b, c):
+    def __init__(self, a, b, c, d):
         self.Term = 0

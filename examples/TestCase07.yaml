@@ -2,11 +2,15 @@ inputs:
   RVdata1:
     file: TestCase07_RV_dataset1.dat
     kind: RV
-    models: ['RVmodel','gp_model']
+    models:
+      - RV_model
+      - gp_model
   RVdata1:
     file: TestCase07_RV_dataset2.dat
     kind: RV
-    models: ['RVmodel','gp_model']
+    models:
+      - RV_model
+      - gp_model
   Tcent_b:
     file: TestCase07_Tcent_b.dat
     kind: Tcent
@@ -31,7 +35,7 @@ common:
       Pdec: ['Gaussian', 15.2, 1.5]
       Oamp: ['Gaussian', 0.50, 0.2]
 models:
-  RVmodel:
+  RV_model:
     kind: rv_planets
     common: b
   transit_b:

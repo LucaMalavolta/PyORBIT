@@ -2,11 +2,11 @@ inputs:
   RVdata1:
       file: TestCase04_RV.dat
       kind: RV
-      models: ['RVmodel']
+      models: RV_model
   Tcent_b:
     file: TestCase03_Tcent_b.dat
     kind: Tcent
-    models: ['transit_b']
+    models: transit_b
 common:
   planets:
     b:
@@ -26,12 +26,14 @@ common:
       fixed:
         i: [90.000, 0.001]
 models:
-  RVmodel:
-    kind: 'radial_velocities'
-    planets: ['b','c']
+  RV_model:
+    kind: radial_velocities
+    planets:
+      - b
+      - c
   transit_b:
     kind: transit_time
-    planet: 'b'
+    planet: b
 parameters:
   star_mass: [1.00, 0.01]
   star_radius: [1.00, 0.01]

@@ -2,7 +2,7 @@ inputs:
   RVdata1:
       file: TestCase03_RV.dat
       kind: RV
-      models: RVmodel
+      models: RV_model
   Tcent_b:
     file: TestCase03_Tcent_b.dat
     kind: Tcent
@@ -26,9 +26,11 @@ common:
       fixed:
         i: [90.000, 0.001]
 models:
-  RVmodel:
+  RV_model:
     kind: rv_planets
-    planets: ['b','c']
+    planets:
+      - b
+      - c
   transit_b:
     kind: transit_time
     planet: b

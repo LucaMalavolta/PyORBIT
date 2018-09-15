@@ -2,7 +2,9 @@ inputs:
   RVdata1:
     file: TestCase06_RV.dat
     kind: RV
-    models: ['RVmodel','gp_model']
+    models:
+      - RV_model
+      - gp_model
   Tcent_b:
     file: TestCase06_Tcent_b.dat
     kind: Tcent
@@ -29,7 +31,7 @@ common:
       Pdec: [5.0, 200.00]
       Oamp: [0.01, 2.00]
 models:
-  RVmodel:
+  RV_model:
     kind: rv_planets
     common: b
   transit_b:
@@ -58,6 +60,6 @@ solver:
     nburn: 20000
     thin: 100
   nested_sampling:
-    nlive: 1000
+    nlive_mult: 25
     num_repeats_mult: 5
   recenter_bounds: True
