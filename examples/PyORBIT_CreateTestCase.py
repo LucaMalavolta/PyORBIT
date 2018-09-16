@@ -2,7 +2,7 @@ import numpy as np
 
 import sys
 import os
-#import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt
 
 sys.path.insert(0, '../pyorbit/classes/')
 import kepler_exo as kp
@@ -79,8 +79,8 @@ photometry = {
 
 activity = {
     'Prot': 10.34,
-    'Pdec': 15.23,
-    'Oamp': 0.55,
+    'Pdec': 55.23,
+    'Oamp': 0.34,
     'Hamp_RV1': 9.24,
     'Hamp_RV2': 15.80,
     'Hamp_PH': 0.023,
@@ -289,7 +289,7 @@ def create_testcase06():
 
     gp.compute(bjd0, err)
     prediction = gp.sample(bjd0)
-    obs_photometry = np.random.normal(prediction, instrument['RV_precision'])
+    obs_photometry = np.random.normal(prediction, photometry['phot_precision'])
 
     fileout = open('TestCase06_photometry.dat', 'w')
     for b, p in zip(photometry['phot_bjd'], obs_photometry):
@@ -429,11 +429,11 @@ def create_testcase08():
 
 
 
-# create_testcase01()
-# create_testcase02()
-# create_testcase03()
-# create_testcase04()
-# create_testcase05()
+create_testcase01()
+create_testcase02()
+create_testcase03()
+create_testcase04()
+create_testcase05()
 create_testcase06()
 create_testcase07()
 create_testcase08()
