@@ -19,7 +19,7 @@ Any of these models can be applied to a dataset. The user can choose which model
 **Priors**
 These priors can be applied to any of the parameters (it's up to the user to choice the appropriate ones):
 
-- `Uniform` default prior for all the paprameters
+- `Uniform` default prior for all the parameters
 - `Gaussian`
 - `Jeffreys`
 - `Modified Jeffreys`
