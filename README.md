@@ -30,6 +30,6 @@ These priors can be applied to any of the parameters (it's up to the user to cho
 `Jeffreys` and `Modified Jeffreys` priors are actually `Truncated Jeffreys` and `Truncated Modified Jeffreys`, with truncation defined by the boundaries of the parameter space.
 
 **Parameter exploration**
-The user can choice between `Linear` and `Logarithmic`. Note that in the second case the parameter space is transformed in base-2 Logarithm.
+The user can choice between `Linear` and `Logarithmic`. Note that in the second case the parameter space is transformed into base-2 logarithm.
 
 Most of the information can be found in [Malavolta et al. (2016)](https://ui.adsabs.harvard.edu//#abs/2016A&A...588A.118M/abstract) and [Malavolta et al. (2018)](https://ui.adsabs.harvard.edu//#abs/2018AJ....155..107M/abstract).  
