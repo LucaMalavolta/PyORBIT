@@ -383,7 +383,7 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, shutdown_
         mc.recenter_bounds_flag = conf_solver['recenter_bounds']
 
     if 'include_priors' in conf_solver:
-        mc.include_priors = np.asarray(conf['include_priors'], dtype=bool)
+        mc.include_priors = np.asarray(conf_solver['include_priors'], dtype=bool)
 
     if 'use_threading_pool' in conf_solver:
         mc.use_threading_pool = conf_solver['use_threading_pool']
