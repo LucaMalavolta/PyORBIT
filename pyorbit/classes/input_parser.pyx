@@ -371,7 +371,7 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, shutdown_
         for key_name, key_value in conf.items():
             mc.nested_sampling_parameters[key_name] = key_value
 
-        if 'include_priors' in conf_solver:
+        if 'include_priors' in conf:
             mc.include_priors = np.asarray(conf['include_priors'], dtype=bool)
 
     if 'recenter_bounds' in conf_solver:
