@@ -146,7 +146,7 @@ def giveback_priors(kind, bounds, pams, val):
         """ bounds[1] = noise_max (99 m/s)
             pams[0] = noise_0 (suggested 1 m/s)
         """
-        return np.log(1./(pams[0]*(1.0 + val/pams[0])) * 1.0/np.log(1.0+bounds[1]/pams[1]))
+        return np.log(1./(pams[0]*(1.0 + val/pams[0])) * 1.0/np.log(1.0+bounds[1]/pams[0]))
 
     if kind == "BetaDistribution":
         return np.log(stats.beta.pdf((val-bounds[0])/(bounds[1]-bounds[0]), pams[0], pams[1]))
