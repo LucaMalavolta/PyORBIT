@@ -86,6 +86,12 @@ class AbstractCommon(object):
 
                 output_lists['spaces'].append(self.spaces[var])
                 output_lists['priors'].append([self.prior_kind[var], self.prior_pams[var]])
+                output_lists['nested'].append(nested_sampling_prior_transformation(
+                        self.prior_kind[var],
+                        output_lists['bounds'][-1],
+                        self.prior_pams[var])
+                )
+
 
                 self.variable_index[var] = ndim
                 self.variable_sampler[var] = ndim

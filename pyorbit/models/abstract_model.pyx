@@ -93,6 +93,12 @@ class AbstractModel():
 
                 output_lists['spaces'].append(self.spaces[dataset_name][var])
                 output_lists['priors'].append([self.prior_kind[dataset_name][var], self.prior_pams[dataset_name][var]])
+                output_lists['nested'].append(nested_sampling_prior_transformation(
+                        self.prior_kind[dataset_name][var],
+                        output_lists['bounds'][-1],
+                        self.prior_pams[dataset_name][var]
+                    )
+                )
 
                 self.variable_index[dataset_name][var] = ndim
                 self.variable_sampler[dataset_name][var] = ndim

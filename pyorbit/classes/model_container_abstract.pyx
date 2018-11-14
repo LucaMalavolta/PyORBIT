@@ -48,6 +48,7 @@ class ModelContainer(object):
         self.use_threading_pool = True
 
         self.bounds = None
+        self.nested = None
         self.range = None
         self.ndim = 0
         self.pam_names = ''
@@ -88,7 +89,8 @@ class ModelContainer(object):
         self.ndim = 0
         output_lists = {'bounds': [],
                         'spaces': [],
-                        'priors': []
+                        'priors': [],
+                        'nested': []
                         }
 
         for model in self.models.itervalues():
@@ -108,6 +110,7 @@ class ModelContainer(object):
         self.bounds = np.asarray(output_lists['bounds'])
         self.spaces = output_lists['spaces']
         self.priors = output_lists['priors']
+        self.nested = output_lists['nested']
         self.range = self.bounds[:, 1] - self.bounds[:, 0]
 
     def initialize_logchi2(self):

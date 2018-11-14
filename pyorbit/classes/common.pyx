@@ -1,6 +1,7 @@
 import os
 import sys
 from scipy import stats
+from scipy.interpolate import interp1d
 
 if 'celerite' not in sys.modules:
 
@@ -150,6 +151,27 @@ def giveback_priors(kind, bounds, pams, val):
 
     if kind == "BetaDistribution":
         return np.log(stats.beta.pdf((val-bounds[0])/(bounds[1]-bounds[0]), pams[0], pams[1]))
+
+
+"""
+Special subroutine to transform MultiNest/PolyChord priors, i.e., trasnform the datacube from [0:1] to physical 
+values while taking into account the priors
+"""
+
+def nested_sampling_prior_transformation(kind, bounds, pams):
+
+    x = np.linspace(0.000000, 1.000000, num=1001, endpoint=True)
+    x_var = x*(bounds[1]-bounds[0]) + bounds[0]
+    area = np.zeros(len(x))
+
+    for x_num, x_val in enumerate(x):
+        area[x_num:] += giveback_priors(kind, bounds, pams, x_val) * (1. / 100.)
+
+    area[0] = 0
+    area /= area[-1]
+
+    return interp1d(area, x_var, kind='cubic')
+
 
 
 def compute_value_sigma(samples):

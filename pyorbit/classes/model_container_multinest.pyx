@@ -7,7 +7,7 @@ class ModelContainerMultiNest(ModelContainer):
     def __init__(self):
         super(self.__class__, self).__init__()
 
-        self.include_priors = True
+        self.include_priors = False
         self.nested_sampling_parameters = {'nlive_mult': 25,
                                            'base_dir': './',
                                            'verbose': True,
@@ -44,8 +44,11 @@ class ModelContainerMultiNest(ModelContainer):
 
     def multinest_priors(self, cube, ndim, nparams):
         # cube[:] = (self.bounds[:, 1] - self.bounds[:, 0]) * cube[:] + self.bounds[:, 0]
+
         for i in xrange(0, ndim):
-            cube[i] = (self.bounds[i, 1] - self.bounds[i, 0]) * cube[i] + self.bounds[i, 0]
+            #cube[i] = (self.bounds[i, 1] - self.bounds[i, 0]) * cube[i] + self.bounds[i, 0]
+            cube[i] = self.nested[i](cube[i])
+
 
     def multinest_call(self, theta1, ndim, nparams):
         # Workaround for variable selection: if a variable as null index
