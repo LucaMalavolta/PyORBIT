@@ -371,6 +371,8 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, shutdown_
         for key_name, key_value in conf.items():
             mc.nested_sampling_parameters[key_name] = key_value
 
+        if 'include_priors' in conf_solver:
+            mc.include_priors = np.asarray(conf['include_priors'], dtype=bool)
 
     if 'recenter_bounds' in conf_solver:
         """
@@ -379,6 +381,9 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, shutdown_
         then emcee walkers will start outside the bounds, causing an error
         """
         mc.recenter_bounds_flag = conf_solver['recenter_bounds']
+
+    if 'include_priors' in conf_solver:
+        mc.include_priors = np.asarray(conf['include_priors'], dtype=bool)
 
     if 'use_threading_pool' in conf_solver:
         mc.use_threading_pool = conf_solver['use_threading_pool']
