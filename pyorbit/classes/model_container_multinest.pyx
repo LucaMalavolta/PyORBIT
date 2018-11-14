@@ -13,7 +13,7 @@ class ModelContainerMultiNest(ModelContainer):
                                            'verbose': True,
                                            'sampling_efficiency': 0.3,
                                            'shutdown_jitter': False,
-                                           'include_priors': True}
+                                           'include_priors': False}
 
         self.pymultinest_signature = [
             'n_params',
@@ -50,6 +50,7 @@ class ModelContainerMultiNest(ModelContainer):
             cube[i] = self.nested[i](cube[i])
 
 
+
     def multinest_call(self, theta1, ndim, nparams):
         # Workaround for variable selection: if a variable as null index
         # (i.e. it has not been included in the model)
@@ -57,6 +58,7 @@ class ModelContainerMultiNest(ModelContainer):
         theta = np.empty(ndim)
         for i in xrange(0, ndim):
             theta[i] = theta1[i]
+
         chi_out = self(theta)
         if chi_out < -0.5e10:
             return -0.5e10

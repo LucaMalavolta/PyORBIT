@@ -160,16 +160,14 @@ values while taking into account the priors
 
 def nested_sampling_prior_transformation(kind, bounds, pams):
 
-    x = np.linspace(0.000000, 1.000000, num=1001, endpoint=True)
-    x_var = x*(bounds[1]-bounds[0]) + bounds[0]
-    area = np.zeros(len(x), dtype=np.double)
+    #x = np.linspace(0.000000, 1.000000, num=1001, endpoint=True)
+    x_var = np.linspace(0.000000, 1.000000, num=1001, endpoint=True, dtype=np.double)*(bounds[1]-bounds[0]) + bounds[0]
+    area = np.zeros(len(x_var), dtype=np.double)
 
     print kind, bounds
-    for x_num, x_val in enumerate(x):
-        area[x_num:] += giveback_priors(kind, bounds, pams, x_val) * (1. / 100.) + 0.0001
-        print area[x_num]
+    for x_num, x_val in enumerate(x_var):
+        area[x_num:] += np.exp(giveback_priors(kind, bounds, pams, x_val) * (1. / 1000.)) + 0.000000001
     area[0] = 0
-    print area[-1]
     area /= area[-1]
 
     return interp1d(area, x_var, kind='cubic')
