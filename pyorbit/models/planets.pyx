@@ -30,12 +30,12 @@ class CommonPlanets(AbstractCommon):
     list_pams = {
         'P',  # Period, log-uniform prior
         'K',  # RV semi-amplitude, log-uniform prior
-        'f',  # RV curve phase, log-uniform
+        'f',  # mean longitude = argument of pericenter + mean anomaly at Tref
         'e',  # eccentricity, uniform prior - to be fixed
         'o',  # argument of pericenter (in radians)
         'M',  # Mass in Earth masses
         'i',  # orbital inclination (in degrees)
-        'lN',  # longitude of ascending node
+        'lN',  # longitude of ascending node (usually 180 degrees when unknown)
         'R',  # planet radius (in units of stellar radii)
         'a'  # semi-major axis (in units of stellar radii)
     }
