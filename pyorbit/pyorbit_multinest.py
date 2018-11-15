@@ -95,6 +95,8 @@ def pyorbit_multinest(config_in, input_datasets=None, return_output=None):
 
     pymultinest.run(LogLikelihood= mc.multinest_call, Prior=mc.multinest_priors, n_dims=mc.ndim, **mnest_kwargs)
 
+    mc.nested = []
+
     nested_sampling_save_to_cpickle(mc)
 
     print

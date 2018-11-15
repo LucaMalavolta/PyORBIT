@@ -19,6 +19,14 @@ class CommonPlanets(AbstractCommon):
 
     model_class = 'planet'
 
+    """ choice to parametrize the eccentricity and argument of pericenter:
+        Standard: $e$ and $\omega$
+        Ford2006: $e \cos{\omega }$ and $e \sin{\omega}$
+        Eastman2013: $\sqrt{e} \cos{\omega }$ and $\sqrt{e} \sin{\omega}$
+    """
+    parametrization = 'Eastman2013'
+    parametrization_list = ['Ford2006', 'Eastman2013', 'Standard']
+
     list_pams = {
         'P',  # Period, log-uniform prior
         'K',  # RV semi-amplitude, log-uniform prior
@@ -36,8 +44,10 @@ class CommonPlanets(AbstractCommon):
         'P': [0.4, 100000.0],
         'K': [0.5, 2000.0],
         'f': [0.0, 2 * np.pi],
-        'ecoso': [-1.0, 1.0],
-        'esino': [-1.0, 1.0],
+        'e_coso': [-1.0, 1.0],
+        'e_sino': [-1.0, 1.0],
+        'sre_coso': [-1.0, 1.0],
+        'sre_sino': [-1.0, 1.0],
         'e': [0.0, 1.0],
         'o': [0.0, 2 * np.pi],
         # Used by TTVfast/TRADES
@@ -55,8 +65,10 @@ class CommonPlanets(AbstractCommon):
         'K': ['Uniform', []],
         'f': ['Uniform', []],
         'e': ['BetaDistribution', [0.71, 2.57]],
-        'ecoso': ['Uniform', []],
-        'esino': ['Uniform', []],
+        'e_coso': ['Uniform', []],
+        'e_sino': ['Uniform', []],
+        'sre_coso': ['Uniform', []],
+        'sre_sino': ['Uniform', []],
         'o': ['Uniform', []],
         'M': ['Uniform', []],  # Fix the unit
         'i': ['Uniform', []],
@@ -69,8 +81,10 @@ class CommonPlanets(AbstractCommon):
         'P': 'Logarithmic',
         'K': 'Logarithmic',
         'f': 'Linear',
-        'ecoso': 'Linear',
-        'esino':'Linear',
+        'e_coso': 'Linear',
+        'e_sino': 'Linear',
+        'sre_coso': 'Linear',
+        'sre_sino': 'Linear',
         'e': 'Linear',
         'o': 'Linear',
         'M': 'Linear',
@@ -121,16 +135,32 @@ class CommonPlanets(AbstractCommon):
            'o' in self.fix_list:
             return ndim, output_lists, False
 
-        if 'coso' in self.variable_sampler or \
-            'esino' in self.variable_sampler:
-            return ndim, output_lists, False
+        for var_check in ['e', 'o', 'e_coso', 'e_sino', 'sre_coso', 'sre_sino']:
+            if var_check in self.variable_sampler:
+                return ndim, output_lists, False
 
-        self.transformation['e'] = get_2var_e
-        self.variable_index['e'] = [ndim, ndim + 1]
-        self.transformation['o'] = get_2var_o
-        self.variable_index['o'] = [ndim, ndim + 1]
+        if self.parametrization == 'Standard:':
+            self.transformation['e'] = get_var_val
+            self.variable_index['e'] = ndim
+            self.transformation['o'] = get_var_val
+            self.variable_index['o'] = ndim + 1
+            variable_list = ['e', 'o']
 
-        for var in ['ecoso', 'esino']:
+        else:
+            if self.parametrization == 'Ford2006':
+                self.transformation['e'] = get_2var_e
+                self.variable_index['e'] = [ndim, ndim + 1]
+                variable_list = ['e_coso', 'e_sino']
+            else:
+                # 'Eastman2013' is the standard choice
+                self.transformation['e'] = get_2var_sre
+                self.variable_index['e'] = [ndim, ndim + 1]
+                variable_list = ['sre_coso', 'sre_sino']
+
+            self.transformation['o'] = get_2var_o
+            self.variable_index['o'] = [ndim, ndim + 1]
+
+        for var in variable_list:
 
             if var not in self.bounds:
                 self.bounds[var] = self.default_bounds[var]

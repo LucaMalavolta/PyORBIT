@@ -81,6 +81,16 @@ def get_fix_val(var, fix, i):
         return fix[:, i]
 
 
+def get_2var_sre(var, fix, i):
+    if len(np.shape(var)) == 1:
+        ecoso = var[i[0]]
+        esino = var[i[1]]
+    else:
+        ecoso = var[:, i[0]]
+        esino = var[:, i[1]]
+    return np.sqrt(np.square(ecoso, dtype=np.double) + np.square(esino, dtype=np.double))
+
+
 def get_2var_e(var, fix, i):
     if len(np.shape(var)) == 1:
         ecoso = var[i[0]]
@@ -135,7 +145,7 @@ def giveback_priors(kind, bounds, pams, val):
             bounds[1] = Kmax (suggested 999 m/s)
             pams[0] = K_0 (suggested 1 m/s)
         """
-        return np.log(1./(pams[0]*(1. + val/bounds[1])) * 1./np.log(1.+bounds[1]/pams[0]))
+        return np.log(1./(pams[0]*(1. + val/pams[0])) * 1./np.log(1.+bounds[1]/pams[0]))
 
     if kind == "TruncatedRayleigh":
         """ bounds[1] = e_max
@@ -161,12 +171,12 @@ values while taking into account the priors
 def nested_sampling_prior_transformation(kind, bounds, pams):
 
     #x = np.linspace(0.000000, 1.000000, num=1001, endpoint=True)
-    x_var = np.linspace(0.000000, 1.000000, num=1001, endpoint=True, dtype=np.double)*(bounds[1]-bounds[0]) + bounds[0]
+    x_var = np.linspace(0.000000, 1.000000, num=10001, endpoint=True, dtype=np.double)*(bounds[1]-bounds[0]) + bounds[0]
     area = np.zeros(len(x_var), dtype=np.double)
 
-    print kind, bounds
+    print kind, bounds, pams
     for x_num, x_val in enumerate(x_var):
-        area[x_num:] += np.exp(giveback_priors(kind, bounds, pams, x_val) * (1. / 1000.)) + 0.000000001
+        area[x_num:] += np.exp(giveback_priors(kind, bounds, pams, x_val)) * (1. / 10000.) + 0.000000000001
     area[0] = 0
     area /= area[-1]
 

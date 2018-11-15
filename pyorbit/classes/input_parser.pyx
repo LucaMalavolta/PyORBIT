@@ -190,6 +190,16 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, shutdown_
                 else:
                     mc.planet_dict[planet_name] = 'keplerian'
 
+                if 'parametrization' in planet_conf:
+                    if planet_conf['parametrization'] in mc.common_models[planet_name].parametrization_list:
+                        mc.common_models[planet_name].parametrization = planet_conf['parametrization']
+                    else:
+                        print 'Orbital parametrization not recognized, switching to ', \
+                            mc.common_models[planet_name].parametrization, ' for planet ', planet_name
+                else:
+                    print 'Using standard orbital parametrization ', mc.common_models[planet_name].parametrization, \
+                        ' for planet ', planet_name
+
         else:
             if 'type' in model_conf:
                 model_type = model_conf['type']
