@@ -215,30 +215,44 @@ class CommonPlanets(AbstractCommon):
         if not (var == "e" or var == "o"):
             return False
 
-        if 'ecoso' in self.variable_sampler and \
-                        'esino' in self.variable_sampler:
+        if 'sre_coso' in self.variable_sampler and \
+                        'sre_sino' in self.variable_sampler:
 
             if 'e' in self.starts and 'o' in self.starts:
-                starting_point[self.variable_sampler['ecoso']] = \
+                starting_point[self.variable_sampler['sre_coso']] = \
                     np.sqrt(self.starts['e']) * np.cos(self.starts['o'])
-                starting_point[self.variable_sampler['esino']] = \
+                starting_point[self.variable_sampler['sre_sino']] = \
                     np.sqrt(self.starts['e']) * np.sin(self.starts['o'])
 
-            elif 'ecoso' in self.starts and 'esino' in self.starts:
-                starting_point[self.variable_sampler['ecoso']] = self.starts['ecoso']
-                starting_point[self.variable_sampler['ecoso']] = self.starts['esino']
+            elif 'sre_coso' in self.starts and 'sre_sino' in self.starts:
+                starting_point[self.variable_sampler['sre_coso']] = self.starts['sre_coso']
+                starting_point[self.variable_sampler['sre_coso']] = self.starts['sre_sino']
+
+        if 'e_coso' in self.variable_sampler and \
+                        'e_sino' in self.variable_sampler:
+
+            if 'e' in self.starts and 'o' in self.starts:
+                starting_point[self.variable_sampler['e_coso']] = \
+                    self.starts['e'] * np.cos(self.starts['o'])
+                starting_point[self.variable_sampler['e_sino']] = \
+                    self.starts['e'] * np.sin(self.starts['o'])
+
+            elif 'e_coso' in self.starts and 'e_sino' in self.starts:
+                starting_point[self.variable_sampler['e_coso']] = self.starts['e_coso']
+                starting_point[self.variable_sampler['e_coso']] = self.starts['e_sino']
+
 
         return True
 
     def special_fix_population(self, population):
 
         n_pop = np.size(population, axis=0)
-        if 'esino' in self.variable_sampler and \
-           'ecoso' in self.variable_sampler:
-                esino_list = self.variable_sampler['esino']
-                ecoso_list = self.variable_sampler['ecoso']
-                e_pops = population[:, esino_list] ** 2 + population[:, ecoso_list] ** 2
-                o_pops = np.arctan2(population[:, esino_list], population[:, ecoso_list], dtype=np.double)
+        if 'e_sino' in self.variable_sampler and \
+           'e_coso' in self.variable_sampler:
+                e_sino_list = self.variable_sampler['e_sino']
+                e_coso_list = self.variable_sampler['e_coso']
+                e_pops = np.sqrt(population[:, e_sino_list] ** 2 + population[:, e_coso_list] ** 2)
+                o_pops = np.arctan2(population[:, e_sino_list], population[:, e_coso_list], dtype=np.double)
                 # e_mean = (self[planet_name].bounds['e'][0] +
                 # self[planet_name].bounds['e'][1]) / 2.
                 for ii in xrange(0, n_pop):
@@ -246,6 +260,21 @@ class CommonPlanets(AbstractCommon):
                                     self.bounds['e'][1] - 0.02:
                         e_random = np.random.uniform(self.bounds['e'][0],
                                                      self.bounds['e'][1])
-                        population[ii, esino_list] = np.sqrt(e_random) * np.sin(o_pops[ii])
-                        population[ii, ecoso_list] = np.sqrt(e_random) * np.cos(o_pops[ii])
+                        population[ii, e_sino_list] = e_random * np.sin(o_pops[ii])
+                        population[ii, e_coso_list] = e_random * np.cos(o_pops[ii])
 
+        if 'sre_sino' in self.variable_sampler and \
+           'sre_coso' in self.variable_sampler:
+                sre_sino_list = self.variable_sampler['sre_sino']
+                sre_coso_list = self.variable_sampler['sre_coso']
+                e_pops = population[:, sre_sino_list] ** 2 + population[:, sre_coso_list] ** 2
+                o_pops = np.arctan2(population[:, sre_sino_list], population[:, sre_coso_list], dtype=np.double)
+                # e_mean = (self[planet_name].bounds['e'][0] +
+                # self[planet_name].bounds['e'][1]) / 2.
+                for ii in xrange(0, n_pop):
+                    if not self.bounds['e'][0] + 0.02 <= e_pops[ii] < \
+                                    self.bounds['e'][1] - 0.02:
+                        e_random = np.random.uniform(self.bounds['e'][0],
+                                                     self.bounds['e'][1])
+                        population[ii, sre_sino_list] = np.sqrt(e_random) * np.sin(o_pops[ii])
+                        population[ii, sre_coso_list] = np.sqrt(e_random) * np.cos(o_pops[ii])
