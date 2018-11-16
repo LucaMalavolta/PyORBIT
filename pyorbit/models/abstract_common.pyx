@@ -27,6 +27,7 @@ class AbstractCommon(object):
         self.prior_kind = {}
         self.prior_pams = {}
 
+
     def common_initialization_with_dataset(self, dataset):
         """ Sometimes the common variables still need to be initialized with values coming from a datasets"""
         pass
