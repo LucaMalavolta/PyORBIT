@@ -174,7 +174,6 @@ def nested_sampling_prior_transformation(kind, bounds, pams):
     x_var = np.linspace(0.000000, 1.000000, num=10001, endpoint=True, dtype=np.double)*(bounds[1]-bounds[0]) + bounds[0]
     area = np.zeros(len(x_var), dtype=np.double)
 
-    print kind, bounds, pams
     for x_num, x_val in enumerate(x_var):
         area[x_num:] += np.exp(giveback_priors(kind, bounds, pams, x_val)) * (1. / 10000.) + 0.000000000001
     area[0] = 0

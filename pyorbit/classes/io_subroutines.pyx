@@ -12,9 +12,9 @@ def pyde_create_dummy_file(mc,  prefix=''):
 def pyde_save_to_pickle(mc, population, starting_point, prefix=''):
 
     add_prefix = (prefix + '_' if prefix else '')
-    pickle.dump(mc, open(mc.pyde_dir_output + add_prefix + "model_container.p", "wb"), -1)
-    pickle.dump(population, open(mc.pyde_dir_output + add_prefix + "population.p", "wb"), -1)
-    pickle.dump(starting_point, open(mc.pyde_dir_output + add_prefix + "starting_point.p", "wb"), -1)
+    pickle.dump(mc, open(mc.pyde_dir_output + add_prefix + "model_container.p", "wb"))
+    pickle.dump(population, open(mc.pyde_dir_output + add_prefix + "population.p", "wb"))
+    pickle.dump(starting_point, open(mc.pyde_dir_output + add_prefix + "starting_point.p", "wb"))
 
 
 def pyde_load_from_cpickle(pyde_dir_output, prefix=''):
@@ -40,14 +40,14 @@ def emcee_save_to_cpickle(mc, starting_point, population, prob, state, sampler, 
         mc.emcee_parameters['nsteps'] = samples
     add_prefix = (prefix + '_' if prefix else '')
 
-    pickle.dump(mc, open(mc.emcee_dir_output + add_prefix + "model_container.p", "wb"), -1)
-    pickle.dump(starting_point, open(mc.emcee_dir_output + add_prefix + "starting_point.p", "wb"), -1)
-    pickle.dump(population, open(mc.emcee_dir_output + add_prefix + "starting_population.p", "wb"), -1)
-    pickle.dump(prob, open(mc.emcee_dir_output + add_prefix + "prob.p", "wb"), -1)
-    pickle.dump(state, open(mc.emcee_dir_output + add_prefix + "state.p", "wb"), -1)
-    pickle.dump(sampler.chain, open(mc.emcee_dir_output + add_prefix + "sampler_chain.p", "wb"), -1)
-    pickle.dump(sampler.lnprobability, open(mc.emcee_dir_output + add_prefix + "sampler_lnprobability.p", "wb"), -1)
-    pickle.dump(sampler.acceptance_fraction, open(mc.emcee_dir_output + add_prefix + "sampler_acceptance_fraction.p", "wb"), -1)
+    pickle.dump(mc, open(mc.emcee_dir_output + add_prefix + "model_container.p", "wb"))
+    pickle.dump(starting_point, open(mc.emcee_dir_output + add_prefix + "starting_point.p", "wb"))
+    pickle.dump(population, open(mc.emcee_dir_output + add_prefix + "starting_population.p", "wb"))
+    pickle.dump(prob, open(mc.emcee_dir_output + add_prefix + "prob.p", "wb"))
+    pickle.dump(state, open(mc.emcee_dir_output + add_prefix + "state.p", "wb"))
+    pickle.dump(sampler.chain, open(mc.emcee_dir_output + add_prefix + "sampler_chain.p", "wb"))
+    pickle.dump(sampler.lnprobability, open(mc.emcee_dir_output + add_prefix + "sampler_lnprobability.p", "wb"))
+    pickle.dump(sampler.acceptance_fraction, open(mc.emcee_dir_output + add_prefix + "sampler_acceptance_fraction.p", "wb"))
 
 
 def emcee_load_from_cpickle(emcee_dir_output, prefix=''):
@@ -76,7 +76,7 @@ def nested_sampling_create_dummy_file(mc, prefix=''):
 def nested_sampling_save_to_cpickle(mc, prefix=None):
 
     add_prefix = (prefix + '_' if prefix else '')
-    pickle.dump(mc, open(mc.output_directory + add_prefix + "model_container.p", "wb"), -1)
+    pickle.dump(mc, open(mc.output_directory + add_prefix + "model_container.p", "wb"))
 
 
 def nested_sampling_load_from_cpickle(output_directory, prefix=''):
