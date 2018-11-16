@@ -226,6 +226,15 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, shutdown_
         if not isinstance(model_name, str):
             model_name = repr(model_name)
 
+
+
+        """ Check if the keplerian approximation must be used for this dataset even if the planet has the dynamical flag"""
+
+        if 'keplerian_approximation' in model_conf:
+            keplerian_approximation = model_conf['keplerian_approximation']
+        else:
+            keplerian_approximation = False
+
         if 'type' in model_conf:
             model_type = model_conf['type']
         elif 'kind' in model_conf:
@@ -251,7 +260,7 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, shutdown_
                     dataset.models.remove(model_name)
                     dataset.models.extend(model_name_expanded)
 
-                    if len(list(set(planet_list) & set(mc.dynamical_dict))):
+                    if len(list(set(planet_list) & set(mc.dynamical_dict))) and not keplerian_approximation:
                         dataset.dynamical = True
 
             for model_name_exp, planet_name in zip(model_name_expanded, planet_list):
@@ -277,7 +286,7 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, shutdown_
             bounds_space_priors_starts_fixed(mc, mc.models[model_name], model_conf)
             """
             for dataset_name, dataset in mc.dataset_dict.iteritems():
-                if planet_name in mc.dynamical_dict and model_name in dataset.models:
+                if planet_name in mc.dynamical_dict and model_name in dataset.models and not keplerian_approximation:
                     dataset.planet_name = planet_name
                     dataset.dynamical = True
                     mc.dynamical_t0_dict[planet_name] = dataset_name
