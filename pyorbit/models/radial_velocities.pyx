@@ -54,7 +54,7 @@ class RVdynamical(AbstractModel):
             'P': 'LU',  # Period in days
             'M': 'LU',  # Mass in Earth masses
             'i': 'U',  # inclination in degrees
-            'f': 'U',  # phase - as defined by Malavolta+2016
+            'f': 'U',  # mean longitude
             'lN': 'U',  # longitude of ascending node
             'e': 'U',  # eccentricity, uniform prior - to be fixed
             'R': 'U',  # planet radius (in units of stellar radii)
@@ -103,7 +103,7 @@ class TransitTimeDynamical(AbstractModel):
             'P': 'LU',  # Period in days
             'M': 'LU',  # Mass in Earth masses
             'i': 'U',  # inclination in degrees
-            'f': 'U',  # phase - as defined by Malavolta+2016
+            'f': 'U',  # mean longitude
             'lN': 'U',  # longitude of ascending node
             'e': 'U',  # eccentricity, uniform prior - to be fixed
             'R': 'U',  # planet radius (in units of stellar radii)
@@ -329,7 +329,7 @@ class DynamicalIntegrator:
             self.dynamical_set['pams']['mA'][n_plan] = (dict_pams['f'] - dict_pams['o']) * (180. / np.pi)
 
         # sample_plan[:, convert_out['Tcent']] = mc.Tref + kepler_exo.kepler_Tcent_T0P(
-        #    sample_plan[:, convert_out['P']], sample_plan[:, convert_out['f']],
+        #    sample_plan[:, convert_out['P']], sample_plan[:, convert_out['mL']],
         #    sample_plan[:, convert_out['e']], sample_plan[:, convert_out['o']])
 
         """ Extracted from TRADES: 
@@ -391,7 +391,7 @@ class DynamicalIntegrator:
                 self.dynamical_set['data']['rv_times'],
                 self.dynamical_set['data']['t0_flg'], self.n_max_t0)
         else:
-            rv_sim, t0_sim = pytrades_lib.pytrades.kelements_to_data(
+            rv_sim, t0_sim = pytrades.kelements_to_data(
                 self.dynamical_set['trades']['ti_beg'],
                 self.dynamical_set['trades']['ti_ref'],
                 self.dynamical_set['trades']['i_step'],
@@ -493,7 +493,7 @@ class DynamicalIntegrator:
 
             dict_pams = mc.common_models[planet_name].convert(theta)
 
-            mA = (dict_pams['f'] - dict_pams['o']) * (180. / np.pi) + \
+            mA = (dict_pams['mL'] - dict_pams['o']) * (180. / np.pi) + \
                  self.dynamical_set['ttvfast']['t_beg'] / dict_pams['P'] * 360.0000000000
 
             params.extend([

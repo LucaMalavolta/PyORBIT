@@ -94,6 +94,7 @@ class CommonPlanets(AbstractCommon):
         'a': 'Linear'
     }
 
+    omega_star = True
 
     recenter_pams = {'f', 'o', 'lN'}
 
