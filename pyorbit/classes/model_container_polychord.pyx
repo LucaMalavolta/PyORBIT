@@ -8,14 +8,17 @@ class ModelContainerPolyChord(ModelContainer):
         super(self.__class__, self).__init__()
 
         # Default values, taken from the PyPolyChord wrapper in PolyChord official distribution, V1.9
-        self.include_priors = True
+        self.include_priors = False
         self.nested_sampling_parameters = {'shutdown_jitter': False,
-                                     'include_priors': True}
+                                     'include_priors': False}
 
         self.output_directory = None
 
     def polychord_priors(self, cube):
-        theta = (self.bounds[:, 1] - self.bounds[:, 0]) * cube + self.bounds[:, 0]
+        theta = []
+        for i in xrange(0, len(cube)):
+            theta.append(self.nested[i](cube[i]))
+
         return theta.tolist()
 
     def polychord_call(self, theta1):
