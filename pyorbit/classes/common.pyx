@@ -182,6 +182,21 @@ def nested_sampling_prior_transformation(kind, bounds, pams):
     return interp1d(area, x_var, kind='cubic')
 
 
+def nested_sampling_prior_prepare(kind, bounds, pams):
+    """
+    This subroutine computes the coefficient of the spline interpolation of the inverse cumulative function
+    In some special cases, ruterns the parameters required by the intrinsic function, e.g. scipi.stats.norm.icf
+    according to their implementation in nested_sampling_prior_compute()
+
+    :param kind:
+    :param bounds:
+    :param pams:
+    :return:
+    """
+    
+    if kind == 'Uniform' or kind=='Gaussian':
+        return pams
+
 
 def compute_value_sigma(samples):
     if np.size(np.shape(samples)) == 1:
