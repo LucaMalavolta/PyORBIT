@@ -85,36 +85,44 @@ def pyorbit_multinest(config_in, input_datasets=None, return_output=None):
     print ' N live points:', nlive
 
     import pymultinest
+
     mnest_kwargs = dict(n_live_points=nlive, outputfiles_basename=output_directory + './')
 
     for key_name, key_value in mc.nested_sampling_parameters.items():
         if key_name in mc.pymultinest_signature:
             mnest_kwargs[key_name] = key_value
 
-
     print 'Including priors to log-likelihood calculation (must be False):', mc.include_priors
 
     pymultinest.run(LogLikelihood= mc.multinest_call, Prior=mc.multinest_priors, n_dims=mc.ndim, **mnest_kwargs)
 
-    # must delete this, otherwise the object is not pickleable
-    mc.nested = []
-
     nested_sampling_save_to_cpickle(mc)
+
+    analyzer = pymultinest.Analyzer(mc.ndim, outputfiles_basename=output_directory)
+    stats = analyzer.get_stats()
+    samples = analyzer.get_equal_weighted_posterior()[:, :-1]
+
+    result = dict(logZ=stats['nested sampling global log-evidence'],
+         logZerr=stats['nested sampling global log-evidence error'],
+         samples=samples,
+         )
+
+    nested_sampling_save_to_cpickle(mc, 'result')
 
     print
     print 'MultiNest COMPLETED'
     print
 
-    result = pymultinest.solve(LogLikelihood=mc.multinest_call, Prior=mc.multinest_priors,
-                               n_dims=mc.ndim, outputfiles_basename=output_directory + './',
-                               n_live_points=1000, sampling_efficiency=0.3, multimodal=True,
-                               verbose=True, resume=True)
+    #result = pymultinest.solve(LogLikelihood=mc.multinest_call, Prior=mc.multinest_priors,
+    #                           n_dims=mc.ndim, outputfiles_basename=output_directory + './',
+    #                           n_live_points=1000, sampling_efficiency=0.3, multimodal=True,
+    #                           verbose=True, resume=True)
 
     print('evidence: %(logZ).1f +- %(logZerr).1f' % result)
     print(result['logZ']//np.log(10.00), result['logZerr']//np.log(10.00))
 
-    """ A dummy file is created to let the cpulimit script to proceed with the next step"""
-    nested_sampling_create_dummy_file(mc)
+    #""" A dummy file is created to let the cpulimit script to proceed with the next step"""
+    #nested_sampling_create_dummy_file(mc)
 
     if return_output:
         return mc

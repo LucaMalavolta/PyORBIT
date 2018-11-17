@@ -92,9 +92,6 @@ def pyorbit_polychord(config_in, input_datasets=None, return_output=None):
     paramnames += [('r*', 'r')]
     output.make_paramnames_files(paramnames)
 
-    mc.nested = []
-
-
     nested_sampling_save_to_cpickle(mc)
 
     print

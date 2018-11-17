@@ -85,14 +85,12 @@ class AbstractCommon(object):
                     self.prior_kind[var] = self.default_priors[var][0]
                     self.prior_pams[var] = self.default_priors[var][1]
 
-                output_lists['spaces'].append(self.spaces[var])
-                output_lists['priors'].append([self.prior_kind[var], self.prior_pams[var]])
-                output_lists['nested'].append(nested_sampling_prior_transformation(
-                        self.prior_kind[var],
-                        output_lists['bounds'][-1],
-                        self.prior_pams[var])
-                )
+                nested_coeff =  nested_sampling_prior_prepare(self.prior_kind[var],
+                                                              output_lists['bounds'][-1],
+                                                              self.prior_pams[var])
 
+                output_lists['spaces'].append(self.spaces[var])
+                output_lists['priors'].append([self.prior_kind[var], self.prior_pams[var], nested_coeff])
 
                 self.variable_index[var] = ndim
                 self.variable_sampler[var] = ndim

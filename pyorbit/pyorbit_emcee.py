@@ -239,8 +239,6 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
         threads_pool.terminate()
         threads_pool.join()
 
-    mc.nested = []
-
     """ A dummy file is created to let the cpulimit script to proceed with the next step"""
     emcee_create_dummy_file(mc)
 

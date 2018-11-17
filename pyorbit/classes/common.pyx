@@ -1,7 +1,8 @@
 import os
 import sys
 from scipy import stats
-from scipy.interpolate import interp1d
+from scipy.interpolate import interp1d, splrep, splev
+
 
 if 'celerite' not in sys.modules:
 
@@ -164,9 +165,9 @@ def giveback_priors(kind, bounds, pams, val):
 
 
 """
+DEPRECATED
 Special subroutine to transform MultiNest/PolyChord priors, i.e., trasnform the datacube from [0:1] to physical 
 values while taking into account the priors
-"""
 
 def nested_sampling_prior_transformation(kind, bounds, pams):
 
@@ -180,6 +181,7 @@ def nested_sampling_prior_transformation(kind, bounds, pams):
     area /= area[-1]
 
     return interp1d(area, x_var, kind='cubic')
+"""
 
 
 def nested_sampling_prior_prepare(kind, bounds, pams):
@@ -188,14 +190,51 @@ def nested_sampling_prior_prepare(kind, bounds, pams):
     In some special cases, ruterns the parameters required by the intrinsic function, e.g. scipi.stats.norm.icf
     according to their implementation in nested_sampling_prior_compute()
 
-    :param kind:
-    :param bounds:
-    :param pams:
+    :param kind: type of prior
+    :param bounds: list/array with lower and upper limits for parameter exploration
+    :param pams: parameters relative to the prior probability function
     :return:
     """
     
-    if kind == 'Uniform' or kind=='Gaussian':
+    if kind == 'Uniform':
+        return bounds
+
+    if kind == 'Gaussian':
         return pams
+
+    if kind == 'beta':
+        return pams
+
+    x_var = np.linspace(0.000000, 1.000000, num=10001, endpoint=True, dtype=np.double)*(bounds[1]-bounds[0]) + bounds[0]
+    area = np.zeros(len(x_var), dtype=np.double)
+
+    for x_num, x_val in enumerate(x_var):
+        area[x_num:] += np.exp(giveback_priors(kind, bounds, pams, x_val)) * (1. / 10000.) + 0.000000000001
+    area[0] = 0
+    area /= area[-1]
+
+    return splrep(area, x_var)
+
+
+def nested_sampling_prior_compute(val, kind, coeff):
+    """
+
+    :param val:
+    :param kind:
+    :param coeff:
+    :return:
+    """
+
+    if kind == 'Uniform':
+        return val*(coeff[1]-coeff[0]) + coeff[0]
+
+    if kind == 'Gaussian':
+        return stats.norm.isf(val, coeff[0], coeff[1])
+
+    if kind == 'beta':
+        return stats.beta.isf(val, coeff[0], coeff[1])
+
+    return splev(val, coeff)
 
 
 def compute_value_sigma(samples):
