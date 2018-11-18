@@ -101,7 +101,7 @@ class CommonPlanets(AbstractCommon):
         'sre_sino': 0.0000,
         'e': 0.0000,
         'o': np.pi/2.,
-        'i': 90.0,
+        'i': [90.000000, 0.0000001],
         'lN': np.pi/2.,
         'R': 1.0,
     }
