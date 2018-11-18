@@ -40,6 +40,7 @@ class Dataset(AbstractCommon):
         self.default_bounds = {}
         self.default_spaces = {}
         self.default_priors = {}
+        self.default_fixed = {}
         self.recenter_pams = {}
 
         self.Tref = None

@@ -94,6 +94,18 @@ class CommonPlanets(AbstractCommon):
         'a': 'Linear'
     }
 
+    default_fixed = {
+        'e_coso': 0.0000,
+        'e_sino': 0.0000,
+        'sre_coso': 0.0000,
+        'sre_sino': 0.0000,
+        'e': 0.0000,
+        'o': np.pi/2.,
+        'i': 90.0,
+        'lN': np.pi/2.,
+        'R': 1.0,
+    }
+
     omega_star = True
 
     recenter_pams = {'f', 'o', 'lN'}

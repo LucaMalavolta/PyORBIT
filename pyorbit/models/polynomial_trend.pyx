@@ -60,6 +60,8 @@ class CommonPolynomialTrend(AbstractCommon):
         'c9': ['Uniform', []]
     }
 
+    default_fixed = {}
+
     recenter_pams = {}
 
 

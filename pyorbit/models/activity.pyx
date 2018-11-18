@@ -67,4 +67,6 @@ class CommonActivity(AbstractCommon):
         'cel_c': 'Logarithmic',  # celerite term C
     }
 
+    default_fixed = {}
+
     recenter_pams = {'f'}
