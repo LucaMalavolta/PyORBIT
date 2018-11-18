@@ -24,7 +24,8 @@ common:
         K: [0.01, 1000.0]
         e: [0.00, 1.00]
       fixed:
-        i: [90.000, 0.001]
+        i: default
+        lN: default
   activity:
     boundaries:
       Prot: [5.00, 50.00]

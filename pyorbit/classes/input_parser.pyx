@@ -2,7 +2,7 @@ from common import *
 from ..models.dataset import *
 from ..models.planets import CommonPlanets
 from ..models.activity import CommonActivity
-from ..models.radial_velocities import RVkeplerian, RVdynamical, TransitTimeKeplerian, TransitTimeDynamical, DynamicalIntegrator
+from ..models.radial_velocities import RVkeplerian, RVdynamical, TransitTimeKeplerian, TransitTimeDynamical, DynamicalIntegrator, RVkeplerianMass
 from ..models.gp_semiperiodic_activity import GaussianProcess_QuasiPeriodicActivity
 from ..models.gp_semiperiodic_activity_common import GaussianProcess_QuasiPeriodicActivity_Common
 from ..models.gp_semiperiodic_activity_shared import GaussianProcess_QuasiPeriodicActivity_Shared
@@ -28,10 +28,12 @@ define_common_type_to_class = {
 define_type_to_class = {
     'radial_velocities': {'circular': RVkeplerian,
                           'keplerian': RVkeplerian,
-                          'dynamical': RVdynamical},
+                          'dynamical': RVdynamical,
+                          'keplerian_mass': RVkeplerianMass},
     'rv_planets': {'circular': RVkeplerian,
                    'keplerian': RVkeplerian,
-                   'dynamical': RVdynamical},
+                   'dynamical': RVdynamical,
+                   'keplerian_mass': RVkeplerianMass},
     'transit_time': {'circular': TransitTimeKeplerian,
                      'keplerian': TransitTimeKeplerian,
                      'dynamical': TransitTimeDynamical},
@@ -231,6 +233,7 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, shutdown_
 
         if 'keplerian_approximation' in model_conf:
             keplerian_approximation = model_conf['keplerian_approximation']
+            print 'Using Keplerian approximation'
         else:
             keplerian_approximation = False
 
@@ -263,8 +266,14 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, shutdown_
                         dataset.dynamical = True
 
             for model_name_exp, planet_name in zip(model_name_expanded, planet_list):
-                mc.models[model_name_exp] = \
-                    define_type_to_class[model_type][mc.planet_dict[planet_name]](model_name_exp, planet_name)
+
+                if keplerian_approximation:
+                    """ override default model from input file, to apply keplerian approximation """
+                    mc.models[model_name_exp] = \
+                        define_type_to_class[model_type]['keplerian_mass'](model_name_exp, planet_name)
+                else:
+                    mc.models[model_name_exp] = \
+                        define_type_to_class[model_type][mc.planet_dict[planet_name]](model_name_exp, planet_name)
 
                 for dataset_name in list(set(model_name_exp) & set(mc.dataset_dict)):
                     bounds_space_priors_starts_fixed(mc, mc.models[model_name_exp], model_conf[dataset_name],
@@ -278,8 +287,16 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, shutdown_
             except:
                 planet_name = np.atleast_1d(model_conf['common']).tolist()[0]
 
-            mc.models[model_name] = \
+            if keplerian_approximation:
+                """ override default model from input file, to apply keplerian approximation """
+                mc.models[model_name] = \
+                    define_type_to_class[model_type]['keplerian'](model_name_exp, planet_name)
+            else:
+                mc.models[model_name] = \
                     define_type_to_class[model_type][mc.planet_dict[planet_name]](model_name, planet_name)
+
+            #mc.models[model_name] = \
+            #        define_type_to_class[model_type][mc.planet_dict[planet_name]](model_name, planet_name)
 
             """  CHECK THIS!!!!
             bounds_space_priors_starts_fixed(mc, mc.models[model_name], model_conf)

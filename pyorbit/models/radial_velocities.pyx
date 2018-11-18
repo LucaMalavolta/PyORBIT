@@ -44,6 +44,49 @@ class RVkeplerian(AbstractModel):
                                             variable_value['e'],
                                             variable_value['o'])
 
+class RVkeplerianMass(AbstractModel):
+
+    model_class = 'rv_keplerian_mass'
+
+    list_pams_common = {
+        'P': 'LU',  # Period
+        'M': 'LU',  # RV semi-amplitude
+        'f': 'U',  # RV curve phase
+        'e': 'U',  # eccentricity, uniform prior - to be fixed
+        'o': 'U'}  # argument of pericenter
+
+    list_pams_dataset = {}
+
+    recenter_pams_dataset = {}
+
+    star_mass = 1.0
+    M_SEratio = constants.Msear
+
+    def initialize_model(self, mc, **kwargs):
+        self.star_mass = mc.star_mass[0]
+        self.M_SEratio = mc.M_SEratio
+        pass
+
+    def compute(self, variable_value, dataset, x0_input=None):
+
+        K = kepler_exo.kepler_K1(self.star_mass,
+                                 variable_value['M']/self.M_SEratio, variable_value['P'], variable_value['i'], variable_value['e'])
+
+        if x0_input is None:
+            return kepler_exo.kepler_RV_T0P(dataset.x0,
+                                            variable_value['f'],
+                                            variable_value['P'],
+                                            K,
+                                            variable_value['e'],
+                                            variable_value['o'])
+        else:
+            return kepler_exo.kepler_RV_T0P(x0_input,
+                                            variable_value['f'],
+                                            variable_value['P'],
+                                            K,
+                                            variable_value['e'],
+                                            variable_value['o'])
+
 
 class RVdynamical(AbstractModel):
 
