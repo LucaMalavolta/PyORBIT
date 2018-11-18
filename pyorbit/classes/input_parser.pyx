@@ -227,8 +227,6 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, shutdown_
         if not isinstance(model_name, str):
             model_name = repr(model_name)
 
-
-
         """ Check if the keplerian approximation must be used for this dataset even if the planet has the dynamical flag"""
 
         if 'keplerian_approximation' in model_conf:
