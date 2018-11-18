@@ -12,7 +12,8 @@ common:
         K: [0.01, 1000.0]
         e: [0.00, 1.00]
       fixed:
-        i: [90.000, 0.001]
+        i: default
+        lN: default
 models:
   RV_model:
     kind: rv_planets
