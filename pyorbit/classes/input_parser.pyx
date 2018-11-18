@@ -114,10 +114,8 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, shutdown_
                     if 'fixed' in planet_conf:
                         fixed_conf = planet_conf['fixed']
                         for var in fixed_conf:
-                            try:
-                                mc.common_models[planet_name].fix_list[var] = get_2darray_from_val(fixed_conf[var])
-                            except:
-                                mc.common_models[planet_name].fix_list[var] = fixed_conf[var]
+                            mc.common_models[planet_name].fix_list[var] = get_2darray_from_val(fixed_conf[var])
+
 
         return
 

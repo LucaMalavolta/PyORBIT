@@ -120,7 +120,10 @@ def get_2darray_from_val(val):
         else:
             out[:] = val[0:2]
     except:
-        out[0] = val
+        try:
+            out[0] = val
+        except:
+            out = val
     return out
 
 
