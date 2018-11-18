@@ -43,12 +43,10 @@ class ModelContainerMultiNest(ModelContainer):
         self.output_directory = None
 
     def multinest_priors(self, cube, ndim, nparams):
-        # cube[:] = (self.bounds[:, 1] - self.bounds[:, 0]) * cube[:] + self.bounds[:, 0]
 
         for i in xrange(0, ndim):
             #cube[i] = (self.bounds[i, 1] - self.bounds[i, 0]) * cube[i] + self.bounds[i, 0]
-            cube[i] = self.nested[i](cube[i])
-
+            cube[i] = nested_sampling_prior_compute(cube[i], self.priors[i][0], self.priors[i][2])
 
 
     def multinest_call(self, theta1, ndim, nparams):

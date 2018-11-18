@@ -116,6 +116,7 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, shutdown_
                         for var in fixed_conf:
                             mc.common_models[planet_name].fix_list[var] = get_2darray_from_val(fixed_conf[var])
 
+
         return
 
     for dataset_name, dataset_conf in conf_inputs.iteritems():

@@ -17,7 +17,8 @@ class ModelContainerPolyChord(ModelContainer):
     def polychord_priors(self, cube):
         theta = []
         for i in xrange(0, len(cube)):
-            theta.append(self.nested[i](cube[i]))
+            #theta.append(self.nested[i](cube[i]))
+            theta.append(nested_sampling_prior_compute(cube[i], self.priors[i][0], self.priors[i][2]))
 
         return theta.tolist()
 

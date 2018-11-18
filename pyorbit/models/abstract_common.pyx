@@ -27,6 +27,7 @@ class AbstractCommon(object):
         self.prior_kind = {}
         self.prior_pams = {}
 
+
     def common_initialization_with_dataset(self, dataset):
         """ Sometimes the common variables still need to be initialized with values coming from a datasets"""
         pass
@@ -61,7 +62,10 @@ class AbstractCommon(object):
             if var in self.fix_list:
                 if var not in self.transformation:
                     self.transformation[var] = get_fix_val
-                    self.fixed.append(self.fix_list[var][0])
+                    if self.fix_list[var] == 'default' and var in self.default_fixed:
+                        self.fixed.append(get_2darray_from_val(self.default_fixed[var])[0])
+                    else:
+                        self.fixed.append(self.fix_list[var][0])
                     self.variable_index[var] = self.nfix
                     self.nfix += 1
                     self.prior_kind[var] = 'None'
@@ -84,14 +88,12 @@ class AbstractCommon(object):
                     self.prior_kind[var] = self.default_priors[var][0]
                     self.prior_pams[var] = self.default_priors[var][1]
 
-                output_lists['spaces'].append(self.spaces[var])
-                output_lists['priors'].append([self.prior_kind[var], self.prior_pams[var]])
-                output_lists['nested'].append(nested_sampling_prior_transformation(
-                        self.prior_kind[var],
-                        output_lists['bounds'][-1],
-                        self.prior_pams[var])
-                )
+                nested_coeff =  nested_sampling_prior_prepare(self.prior_kind[var],
+                                                              output_lists['bounds'][-1],
+                                                              self.prior_pams[var])
 
+                output_lists['spaces'].append(self.spaces[var])
+                output_lists['priors'].append([self.prior_kind[var], self.prior_pams[var], nested_coeff])
 
                 self.variable_index[var] = ndim
                 self.variable_sampler[var] = ndim

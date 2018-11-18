@@ -94,6 +94,18 @@ class CommonPlanets(AbstractCommon):
         'a': 'Linear'
     }
 
+    default_fixed = {
+        'e_coso': 0.0000,
+        'e_sino': 0.0000,
+        'sre_coso': 0.0000,
+        'sre_sino': 0.0000,
+        'e': 0.0000,
+        'o': np.pi/2.,
+        'i': [90.000000, 0.0000001],
+        'lN': np.pi/2.,
+        'R': 1.0,
+    }
+
     omega_star = True
 
     recenter_pams = {'f', 'o', 'lN'}
@@ -174,14 +186,12 @@ class CommonPlanets(AbstractCommon):
                 self.prior_kind[var] = self.default_priors[var][0]
                 self.prior_pams[var] = self.default_priors[var][1]
 
+            nested_coeff = nested_sampling_prior_prepare(self.prior_kind[var],
+                                                          output_lists['bounds'][-1],
+                                                          self.prior_pams[var])
+
             output_lists['spaces'].append(self.spaces[var])
-            output_lists['priors'].append([self.prior_kind[var], self.prior_pams[var]])
-            output_lists['nested'].append(nested_sampling_prior_transformation(
-                    self.prior_kind[var],
-                    output_lists['bounds'][-1],
-                    self.prior_pams[var],
-                )
-            )
+            output_lists['priors'].append([self.prior_kind[var], self.prior_pams[var], nested_coeff])
 
             self.variable_sampler[var] = ndim
             ndim += 1
