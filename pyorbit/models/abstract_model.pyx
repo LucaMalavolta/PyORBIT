@@ -77,7 +77,7 @@ class AbstractModel():
                 self.prior_kind[dataset_name][var] = 'None'
                 self.prior_pams[dataset_name][var] = []
 
-                if self.fix_list[dataset_name][var][0] == 'default' and var in self.default_fixed:
+                if self.fix_list[dataset_name][var] == 'default' and var in self.default_fixed:
                     self.fixed.append(get_2darray_from_val(self.default_fixed[var])[0])
                 else:
                     self.fixed.append(self.fix_list[dataset_name][var][0])
