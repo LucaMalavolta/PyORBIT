@@ -231,10 +231,10 @@ class ModelContainer(object):
                     """ Taking the parameter values from the common model"""
                     common_ref = self.models[model_name].common_ref
                     variable_values = self.common_models[common_ref].convert(theta)
-
                 else:
                     """ This model has no common model reference, i.e., it is strictly connected to the dataset"""
                     variable_values = {}
+
 
                 variable_values.update(self.models[model_name].convert(theta, dataset_name))
                 dataset.model += self.models[model_name].compute(variable_values, dataset)
@@ -267,6 +267,7 @@ class ModelContainer(object):
             return log_likelihood
         else:
             return log_priors, log_likelihood
+
 
     def recenter_bounds(self, pop_mean, recenter=True):
         # This function recenters the bounds limits for circular variables
