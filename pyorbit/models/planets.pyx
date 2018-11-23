@@ -188,7 +188,8 @@ class CommonPlanets(AbstractCommon):
 
             nested_coeff = nested_sampling_prior_prepare(self.prior_kind[var],
                                                           output_lists['bounds'][-1],
-                                                          self.prior_pams[var])
+                                                          self.prior_pams[var],
+                                                          self.spaces[var])
 
             output_lists['spaces'].append(self.spaces[var])
             output_lists['priors'].append([self.prior_kind[var], self.prior_pams[var], nested_coeff])

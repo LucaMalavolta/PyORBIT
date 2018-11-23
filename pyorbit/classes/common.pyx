@@ -187,7 +187,7 @@ def nested_sampling_prior_transformation(kind, bounds, pams):
 """
 
 
-def nested_sampling_prior_prepare(kind, bounds, pams):
+def nested_sampling_prior_prepare(kind, bounds, pams, space):
     """
     This subroutine computes the coefficient of the spline interpolation of the inverse cumulative function
     In some special cases, ruterns the parameters required by the intrinsic function, e.g. scipi.stats.norm.icf
@@ -208,6 +208,18 @@ def nested_sampling_prior_prepare(kind, bounds, pams):
     if kind == 'beta':
         return pams
 
+    """ All the following priors are defined only if the variable is sampled in the Natural space"""
+    if space is not 'Linear':
+        print
+        print ' *** ERROR in the YAML file ***'
+        print ' You are using a prior that is not supported in a not-Linear sampling space'
+        print ' add this keyword in the YAML file for each parameter not sampled in the '
+        print ' Linear space and with a prior other than Uniform or Gaussian'
+        print '   spaces: '
+        print '       pam: Linear'
+        print
+        quit()
+
     x_var = np.linspace(0.000000, 1.000000, num=10001, endpoint=True, dtype=np.double)*(bounds[1]-bounds[0]) + bounds[0]
     area = np.zeros(len(x_var), dtype=np.double)
 
@@ -219,23 +231,31 @@ def nested_sampling_prior_prepare(kind, bounds, pams):
     return splrep(area, x_var)
 
 
-def nested_sampling_prior_compute(val, kind, coeff):
+def nested_sampling_prior_compute(val, kind, coeff, space):
     """
+    In same cases ()
 
     :param val:
     :param kind:
     :param coeff:
+    :param space:
     :return:
     """
 
     if kind == 'Uniform':
-        return val*(coeff[1]-coeff[0]) + coeff[0]
+        return val * (coeff[1] - coeff[0]) + coeff[0]
 
     if kind == 'Gaussian':
-        return stats.norm.isf(val, coeff[0], coeff[1])
+        if space == 'Logarithmic':
+            return np.log2(stats.norm.isf(val, coeff[0], coeff[1]))
+        else:
+            return stats.norm.isf(val, coeff[0], coeff[1])
 
-    if kind == 'beta':
-        return stats.beta.isf(val, coeff[0], coeff[1])
+    elif kind == 'beta':
+        if space == 'Logarithmic':
+            return np.log2(stats.norm.isf(stats.beta.isf(val, coeff[0], coeff[1])))
+        else:
+            return stats.beta.isf(val, coeff[0], coeff[1])
 
     return splev(val, coeff)
 

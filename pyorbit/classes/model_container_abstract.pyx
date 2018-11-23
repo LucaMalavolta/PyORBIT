@@ -48,6 +48,8 @@ class ModelContainer(object):
         self.use_threading_pool = True
 
         self.bounds = None
+        self.spaces = None
+        self.priors = None
         self.range = None
         self.ndim = 0
         self.pam_names = ''
@@ -517,7 +519,6 @@ class ModelContainer(object):
                     model_x0[dataset_name][logchi2_gp_model + '_std'] = np.sqrt(var)
                     model_x0[dataset_name]['complete'] += model_x0[dataset_name][logchi2_gp_model]
 
-        print delayed_lnlk_computation
         for dataset_name, logchi2_gp_model in delayed_lnlk_computation.iteritems():
             model_out[dataset_name][logchi2_gp_model] = \
                 self.models[logchi2_gp_model].sample_conditional(self.dataset_dict[dataset_name])
@@ -568,41 +569,3 @@ def print_dictionary(variable_values):
     print
 
 
-
-
-
-
-
-
-"""
-
-
-
-
-class ModelContainerDnest4(ModelContainer):
-    def from_prior(self):
-        return self.starting_point
-
-    def perturb(self, params):
-        
-        #Unlike in C++, this takes a numpy array of parameters as input,
-        #and modifies it in-place. The return value is still logH.
-        
-        logH = 0.0
-        which = np.random.randint(np.size(params))
-
-        logH -= -0.5 * (params[which] / self.range[which]) ** 2
-        params_mod = params[which] + self.range[which] * dnest4.randh()
-        params[which] = dnest4.wrap(params_mod, self.bounds[which, 0], self.bounds[which, 1])
-
-        logH += -0.5 * (params[which] / self.range[which]) ** 2
-
-        # if which == 0:
-        #    print which,  params[0], np.exp2(params[0])
-
-        return logH
-
-    def log_likelihood(self, theta):
-        return self(theta)
-
-"""

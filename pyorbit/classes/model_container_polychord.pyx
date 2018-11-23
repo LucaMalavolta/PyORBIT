@@ -16,16 +16,14 @@ class ModelContainerPolyChord(ModelContainer):
 
     def polychord_priors(self, cube):
         theta = []
+
         for i in xrange(0, len(cube)):
-            #theta.append(self.nested[i](cube[i]))
-            theta.append(nested_sampling_prior_compute(cube[i], self.priors[i][0], self.priors[i][2]))
+            theta.append(nested_sampling_prior_compute(cube[i], self.priors[i][0], self.priors[i][2], self.spaces[i]))
 
         return theta.tolist()
 
     def polychord_call(self, theta1):
-        #theta = np.empty(self.ndim)
-        #for i in xrange(0, self.ndim):
-        #    theta[i] = theta1[i]
+
         theta = [theta1[i] for i in xrange(0, self.ndim)]
         phi = [0.0] * 0
         chi_out = self(theta)

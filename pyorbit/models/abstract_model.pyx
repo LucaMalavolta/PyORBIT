@@ -97,7 +97,8 @@ class AbstractModel():
 
                 nested_coeff =  nested_sampling_prior_prepare(self.prior_kind[dataset_name][var],
                                                               output_lists['bounds'][-1],
-                                                              self.prior_pams[dataset_name][var])
+                                                              self.prior_pams[dataset_name][var],
+                                                              self.spaces[dataset_name][var])
 
                 output_lists['spaces'].append(self.spaces[dataset_name][var])
                 output_lists['priors'].append([self.prior_kind[dataset_name][var],
@@ -169,8 +170,3 @@ class AbstractModel():
 
     def compute(self, variable_value, dataset, x0_input=None):
         return np.zeros(dataset.n, dtype=np.double)
-
-    #def initialize(self):
-    #    for var in self.list_pams_dataset:
-    #        pam_names[self.variable_index[dataset_name][var]] =
-
