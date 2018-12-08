@@ -316,7 +316,7 @@ class ModelContainer(object):
 
         return population
 
-    def results_resumen(self, theta, skip_theta=False, compute_lnprob=False):
+    def results_resumen(self, theta, skip_theta=False, compute_lnprob=False, chain_med=False):
         # Function with two goals:
         # * Unfold and print out the output from theta
         # * give back a parameter name associated to each value in the result array
@@ -359,7 +359,17 @@ class ModelContainer(object):
         for model in self.common_models.itervalues():
             print '----- common model: ', model.common_ref
             variable_values = model.convert(theta)
-            print_dictionary(variable_values)
+            if chain_med is not False:
+                recenter_pams = {}
+                variable_values_med = model.convert(chain_med)
+
+                #for var in list(set(self.recenter_pams_dataset) & set(self.variable_sampler[dataset_name])):
+                for var in list(set(model.recenter_pams) & set(variable_values_med)):
+                        recenter_pams[var] = [variable_values_med[var], model.default_bounds[var][1]-model.default_bounds[var][0]]
+                print_dictionary(variable_values, recenter=recenter_pams)
+
+            else:
+                print_dictionary(variable_values)
 
         if compute_lnprob:
             print
@@ -557,12 +567,22 @@ def print_theta_bounds(i_dict, theta, bounds, skip_theta=False):
     print
 
 
-def print_dictionary(variable_values):
+def print_dictionary(variable_values, recenter=[]):
     format_string_long = "%10s   %15f   %15f %15f (15-84 p)"
     format_string = "%10s   %15f "
     for var_names, var_vals in variable_values.iteritems():
         if np.size(var_vals) > 1:
-            perc0, perc1, perc2 = np.percentile(var_vals, [15.865, 50, 84.135], axis=0)
+            if var_names in recenter:
+                move_back = (var_vals > recenter[var_names][0] + recenter[var_names][1]/2.)
+                move_forw = (var_vals < recenter[var_names][0] - recenter[var_names][1]/2.)
+                var_vals_recentered = var_vals.copy()
+                var_vals_recentered[move_back] -= recenter[var_names][1]
+                var_vals_recentered[move_forw] += recenter[var_names][1]
+                perc0, perc1, perc2 = np.percentile(var_vals_recentered, [15.865, 50, 84.135], axis=0)
+
+            else:
+                perc0, perc1, perc2 = np.percentile(var_vals, [15.865, 50, 84.135], axis=0)
+
             print format_string_long %(var_names,  perc1, perc0-perc1, perc2-perc1)
         else:
             print format_string % (var_names, var_vals)
