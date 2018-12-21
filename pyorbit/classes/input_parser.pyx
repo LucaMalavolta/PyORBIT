@@ -2,7 +2,7 @@ from common import *
 from ..models.dataset import *
 from ..models.planets import CommonPlanets
 from ..models.activity import CommonActivity
-from ..models.radial_velocities import RVkeplerian, RVdynamical, TransitTimeKeplerian, TransitTimeDynamical, DynamicalIntegrator
+from ..models.radial_velocities import RVkeplerian, RVdynamical, TransitTimeKeplerian, TransitTimeDynamical, DynamicalIntegrator, RVkeplerianMass
 from ..models.gp_semiperiodic_activity import GaussianProcess_QuasiPeriodicActivity
 from ..models.gp_semiperiodic_activity_common import GaussianProcess_QuasiPeriodicActivity_Common
 from ..models.gp_semiperiodic_activity_shared import GaussianProcess_QuasiPeriodicActivity_Shared
@@ -28,10 +28,12 @@ define_common_type_to_class = {
 define_type_to_class = {
     'radial_velocities': {'circular': RVkeplerian,
                           'keplerian': RVkeplerian,
-                          'dynamical': RVdynamical},
+                          'dynamical': RVdynamical,
+                          'keplerian_mass': RVkeplerianMass},
     'rv_planets': {'circular': RVkeplerian,
                    'keplerian': RVkeplerian,
-                   'dynamical': RVdynamical},
+                   'dynamical': RVdynamical,
+                   'keplerian_mass': RVkeplerianMass},
     'transit_time': {'circular': TransitTimeKeplerian,
                      'keplerian': TransitTimeKeplerian,
                      'dynamical': TransitTimeDynamical},
@@ -116,6 +118,7 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, shutdown_
                         for var in fixed_conf:
                             mc.common_models[planet_name].fix_list[var] = get_2darray_from_val(fixed_conf[var])
 
+
         return
 
     for dataset_name, dataset_conf in conf_inputs.iteritems():
@@ -190,6 +193,16 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, shutdown_
                 else:
                     mc.planet_dict[planet_name] = 'keplerian'
 
+                if 'parametrization' in planet_conf:
+                    if planet_conf['parametrization'] in mc.common_models[planet_name].parametrization_list:
+                        mc.common_models[planet_name].parametrization = planet_conf['parametrization']
+                    else:
+                        print 'Orbital parametrization not recognized, switching to ', \
+                            mc.common_models[planet_name].parametrization, ' for planet ', planet_name
+                else:
+                    print 'Using standard orbital parametrization ', mc.common_models[planet_name].parametrization, \
+                        ' for planet ', planet_name
+
         else:
             if 'type' in model_conf:
                 model_type = model_conf['type']
@@ -216,6 +229,14 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, shutdown_
         if not isinstance(model_name, str):
             model_name = repr(model_name)
 
+        """ Check if the keplerian approximation must be used for this dataset even if the planet has the dynamical flag"""
+
+        if 'keplerian_approximation' in model_conf:
+            keplerian_approximation = model_conf['keplerian_approximation']
+            print 'Using Keplerian approximation'
+        else:
+            keplerian_approximation = False
+
         if 'type' in model_conf:
             model_type = model_conf['type']
         elif 'kind' in model_conf:
@@ -241,12 +262,18 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, shutdown_
                     dataset.models.remove(model_name)
                     dataset.models.extend(model_name_expanded)
 
-                    if len(list(set(planet_list) & set(mc.dynamical_dict))):
+                    if len(list(set(planet_list) & set(mc.dynamical_dict))) and not keplerian_approximation:
                         dataset.dynamical = True
 
             for model_name_exp, planet_name in zip(model_name_expanded, planet_list):
-                mc.models[model_name_exp] = \
-                    define_type_to_class[model_type][mc.planet_dict[planet_name]](model_name_exp, planet_name)
+
+                if keplerian_approximation:
+                    """ override default model from input file, to apply keplerian approximation """
+                    mc.models[model_name_exp] = \
+                        define_type_to_class[model_type]['keplerian_mass'](model_name_exp, planet_name)
+                else:
+                    mc.models[model_name_exp] = \
+                        define_type_to_class[model_type][mc.planet_dict[planet_name]](model_name_exp, planet_name)
 
                 for dataset_name in list(set(model_name_exp) & set(mc.dataset_dict)):
                     bounds_space_priors_starts_fixed(mc, mc.models[model_name_exp], model_conf[dataset_name],
@@ -260,14 +287,22 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, shutdown_
             except:
                 planet_name = np.atleast_1d(model_conf['common']).tolist()[0]
 
-            mc.models[model_name] = \
+            if keplerian_approximation:
+                """ override default model from input file, to apply keplerian approximation """
+                mc.models[model_name] = \
+                    define_type_to_class[model_type]['keplerian'](model_name_exp, planet_name)
+            else:
+                mc.models[model_name] = \
                     define_type_to_class[model_type][mc.planet_dict[planet_name]](model_name, planet_name)
+
+            #mc.models[model_name] = \
+            #        define_type_to_class[model_type][mc.planet_dict[planet_name]](model_name, planet_name)
 
             """  CHECK THIS!!!!
             bounds_space_priors_starts_fixed(mc, mc.models[model_name], model_conf)
             """
             for dataset_name, dataset in mc.dataset_dict.iteritems():
-                if planet_name in mc.dynamical_dict and model_name in dataset.models:
+                if planet_name in mc.dynamical_dict and model_name in dataset.models and not keplerian_approximation:
                     dataset.planet_name = planet_name
                     dataset.dynamical = True
                     mc.dynamical_t0_dict[planet_name] = dataset_name
@@ -371,7 +406,7 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, shutdown_
         for key_name, key_value in conf.items():
             mc.nested_sampling_parameters[key_name] = key_value
 
-        if 'include_priors' in conf_solver:
+        if 'include_priors' in conf:
             mc.include_priors = np.asarray(conf['include_priors'], dtype=bool)
 
     if 'recenter_bounds' in conf_solver:
@@ -383,7 +418,7 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, shutdown_
         mc.recenter_bounds_flag = conf_solver['recenter_bounds']
 
     if 'include_priors' in conf_solver:
-        mc.include_priors = np.asarray(conf['include_priors'], dtype=bool)
+        mc.include_priors = np.asarray(conf_solver['include_priors'], dtype=bool)
 
     if 'use_threading_pool' in conf_solver:
         mc.use_threading_pool = conf_solver['use_threading_pool']

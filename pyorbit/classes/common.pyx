@@ -1,6 +1,8 @@
 import os
 import sys
 from scipy import stats
+from scipy.interpolate import interp1d, splrep, splev
+
 
 if 'celerite' not in sys.modules:
 
@@ -80,6 +82,16 @@ def get_fix_val(var, fix, i):
         return fix[:, i]
 
 
+def get_2var_sre(var, fix, i):
+    if len(np.shape(var)) == 1:
+        ecoso = var[i[0]]
+        esino = var[i[1]]
+    else:
+        ecoso = var[:, i[0]]
+        esino = var[:, i[1]]
+    return np.sqrt(np.square(ecoso, dtype=np.double) + np.square(esino, dtype=np.double))
+
+
 def get_2var_e(var, fix, i):
     if len(np.shape(var)) == 1:
         ecoso = var[i[0]]
@@ -108,7 +120,10 @@ def get_2darray_from_val(val):
         else:
             out[:] = val[0:2]
     except:
-        out[0] = val
+        try:
+            out[0] = val
+        except:
+            out = val
     return out
 
 
@@ -134,7 +149,7 @@ def giveback_priors(kind, bounds, pams, val):
             bounds[1] = Kmax (suggested 999 m/s)
             pams[0] = K_0 (suggested 1 m/s)
         """
-        return np.log(1./(pams[0]*(1. + val/bounds[1])) * 1./np.log(1.+bounds[1]/pams[0]))
+        return np.log(1./(pams[0]*(1. + val/pams[0])) * 1./np.log(1.+bounds[1]/pams[0]))
 
     if kind == "TruncatedRayleigh":
         """ bounds[1] = e_max
@@ -146,10 +161,103 @@ def giveback_priors(kind, bounds, pams, val):
         """ bounds[1] = noise_max (99 m/s)
             pams[0] = noise_0 (suggested 1 m/s)
         """
-        return np.log(1./(pams[0]*(1.0 + val/pams[0])) * 1.0/np.log(1.0+bounds[1]/pams[1]))
+        return np.log(1./(pams[0]*(1.0 + val/pams[0])) * 1.0/np.log(1.0+bounds[1]/pams[0]))
 
     if kind == "BetaDistribution":
         return np.log(stats.beta.pdf((val-bounds[0])/(bounds[1]-bounds[0]), pams[0], pams[1]))
+
+
+"""
+DEPRECATED
+Special subroutine to transform MultiNest/PolyChord priors, i.e., trasnform the datacube from [0:1] to physical 
+values while taking into account the priors
+
+def nested_sampling_prior_transformation(kind, bounds, pams):
+
+    #x = np.linspace(0.000000, 1.000000, num=1001, endpoint=True)
+    x_var = np.linspace(0.000000, 1.000000, num=10001, endpoint=True, dtype=np.double)*(bounds[1]-bounds[0]) + bounds[0]
+    area = np.zeros(len(x_var), dtype=np.double)
+
+    for x_num, x_val in enumerate(x_var):
+        area[x_num:] += np.exp(giveback_priors(kind, bounds, pams, x_val)) * (1. / 10000.) + 0.000000000001
+    area[0] = 0
+    area /= area[-1]
+
+    return interp1d(area, x_var, kind='cubic')
+"""
+
+
+def nested_sampling_prior_prepare(kind, bounds, pams, space):
+    """
+    This subroutine computes the coefficient of the spline interpolation of the inverse cumulative function
+    In some special cases, ruterns the parameters required by the intrinsic function, e.g. scipi.stats.norm.icf
+    according to their implementation in nested_sampling_prior_compute()
+
+    :param kind: type of prior
+    :param bounds: list/array with lower and upper limits for parameter exploration
+    :param pams: parameters relative to the prior probability function
+    :return:
+    """
+    
+    if kind == 'Uniform':
+        return bounds
+
+    if kind == 'Gaussian':
+        return pams
+
+    if kind == 'beta':
+        return pams
+
+    """ All the following priors are defined only if the variable is sampled in the Natural space"""
+    if space is not 'Linear':
+        print
+        print ' *** ERROR in the YAML file ***'
+        print ' You are using a prior that is not supported in a not-Linear sampling space'
+        print ' add this keyword in the YAML file for each parameter not sampled in the '
+        print ' Linear space and with a prior other than Uniform or Gaussian'
+        print '   spaces: '
+        print '       pam: Linear'
+        print
+        quit()
+
+    x_var = np.linspace(0.000000, 1.000000, num=10001, endpoint=True, dtype=np.double)*(bounds[1]-bounds[0]) + bounds[0]
+    area = np.zeros(len(x_var), dtype=np.double)
+
+    for x_num, x_val in enumerate(x_var):
+        area[x_num:] += np.exp(giveback_priors(kind, bounds, pams, x_val)) * (1. / 10000.) + 0.000000000001
+    area[0] = 0
+    area /= area[-1]
+
+    return splrep(area, x_var)
+
+
+def nested_sampling_prior_compute(val, kind, coeff, space):
+    """
+    In same cases ()
+
+    :param val:
+    :param kind:
+    :param coeff:
+    :param space:
+    :return:
+    """
+
+    if kind == 'Uniform':
+        return val * (coeff[1] - coeff[0]) + coeff[0]
+
+    if kind == 'Gaussian':
+        if space == 'Logarithmic':
+            return np.log2(stats.norm.isf(val, coeff[0], coeff[1]))
+        else:
+            return stats.norm.isf(val, coeff[0], coeff[1])
+
+    elif kind == 'beta':
+        if space == 'Logarithmic':
+            return np.log2(stats.norm.isf(stats.beta.isf(val, coeff[0], coeff[1])))
+        else:
+            return stats.beta.isf(val, coeff[0], coeff[1])
+
+    return splev(val, coeff)
 
 
 def compute_value_sigma(samples):

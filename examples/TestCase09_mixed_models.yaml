@@ -1,0 +1,74 @@
+inputs:
+  RVdata1:
+    file: TestCase07_RV_dataset1.dat
+    kind: RV
+    models:
+      - RV_model
+      - gp_model
+  RVdata2:
+    file: TestCase07_RV_dataset2.dat
+    kind: RV
+    models:
+      - RV_model_approximate
+      - gp_model
+  Tcent_b:
+    file: TestCase07_Tcent_b.dat
+    kind: Tcent
+    models: transit_b
+common:
+  planets:
+    b:
+      orbit: dynamical
+      boundaries:
+        P: [1.0, 100.0]
+        K: [0.01, 1000.0]
+        e: [0.00, 1.00]
+      fixed:
+        i: default
+        lN: default
+  activity:
+    boundaries:
+      Prot: [5.00, 50.00]
+      Pdec: [5.0, 200.00]
+      Oamp: [0.01, 2.00]
+    priors:
+      Prot: ['Gaussian', 10.3, 0.5]
+      Pdec: ['Gaussian', 15.2, 1.5]
+      Oamp: ['Gaussian', 0.50, 0.2]
+models:
+  RV_model:
+    kind: rv_planets
+    common: b
+  RV_model_approximate:
+    kind: rv_planets
+    common: b
+    keplerian_approximation: True
+  transit_b:
+    kind: transit_time
+    common: b
+  gp_model:
+    kind: gp_quasiperiodic
+    common: activity
+    RVdata1:
+      boundaries:
+        Hamp: [0.1, 100.0]
+    RVdata2:
+      boundaries:
+        Hamp: [0.1, 100.0]
+parameters:
+  star_mass: [1.00, 0.01]
+  star_radius: [1.00, 0.01]
+  Tref: 6025.00
+solver:
+  pyde:
+    ngen: 4000
+    npop_mult: 4
+  emcee:
+    npop_mult: 4
+    nsteps: 30000
+    nburn: 10000
+    thin: 100
+  nested_sampling:
+    nlive: 1000
+    num_repeats_mult: 5
+  recenter_bounds: True

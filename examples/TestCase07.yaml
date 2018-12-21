@@ -5,7 +5,7 @@ inputs:
     models:
       - RV_model
       - gp_model
-  RVdata1:
+  RVdata2:
     file: TestCase07_RV_dataset2.dat
     kind: RV
     models:
@@ -60,8 +60,8 @@ solver:
     npop_mult: 4
   emcee:
     npop_mult: 4
-    nsteps: 50000
-    nburn: 20000
+    nsteps: 30000
+    nburn: 10000
     thin: 100
   nested_sampling:
     nlive: 1000

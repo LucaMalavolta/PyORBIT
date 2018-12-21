@@ -48,6 +48,8 @@ class ModelContainer(object):
         self.use_threading_pool = True
 
         self.bounds = None
+        self.spaces = None
+        self.priors = None
         self.range = None
         self.ndim = 0
         self.pam_names = ''
@@ -88,7 +90,7 @@ class ModelContainer(object):
         self.ndim = 0
         output_lists = {'bounds': [],
                         'spaces': [],
-                        'priors': []
+                        'priors': [],
                         }
 
         for model in self.models.itervalues():
@@ -231,10 +233,10 @@ class ModelContainer(object):
                     """ Taking the parameter values from the common model"""
                     common_ref = self.models[model_name].common_ref
                     variable_values = self.common_models[common_ref].convert(theta)
-
                 else:
                     """ This model has no common model reference, i.e., it is strictly connected to the dataset"""
                     variable_values = {}
+
 
                 variable_values.update(self.models[model_name].convert(theta, dataset_name))
                 dataset.model += self.models[model_name].compute(variable_values, dataset)
@@ -267,6 +269,7 @@ class ModelContainer(object):
             return log_likelihood
         else:
             return log_priors, log_likelihood
+
 
     def recenter_bounds(self, pop_mean, recenter=True):
         # This function recenters the bounds limits for circular variables
@@ -313,7 +316,7 @@ class ModelContainer(object):
 
         return population
 
-    def results_resumen(self, theta, skip_theta=False, compute_lnprob=False):
+    def results_resumen(self, theta, skip_theta=False, compute_lnprob=False, chain_med=False):
         # Function with two goals:
         # * Unfold and print out the output from theta
         # * give back a parameter name associated to each value in the result array
@@ -356,7 +359,17 @@ class ModelContainer(object):
         for model in self.common_models.itervalues():
             print '----- common model: ', model.common_ref
             variable_values = model.convert(theta)
-            print_dictionary(variable_values)
+            if chain_med is not False:
+                recenter_pams = {}
+                variable_values_med = model.convert(chain_med)
+
+                #for var in list(set(self.recenter_pams_dataset) & set(self.variable_sampler[dataset_name])):
+                for var in list(set(model.recenter_pams) & set(variable_values_med)):
+                        recenter_pams[var] = [variable_values_med[var], model.default_bounds[var][1]-model.default_bounds[var][0]]
+                print_dictionary(variable_values, recenter=recenter_pams)
+
+            else:
+                print_dictionary(variable_values)
 
         if compute_lnprob:
             print
@@ -516,7 +529,6 @@ class ModelContainer(object):
                     model_x0[dataset_name][logchi2_gp_model + '_std'] = np.sqrt(var)
                     model_x0[dataset_name]['complete'] += model_x0[dataset_name][logchi2_gp_model]
 
-        print delayed_lnlk_computation
         for dataset_name, logchi2_gp_model in delayed_lnlk_computation.iteritems():
             model_out[dataset_name][logchi2_gp_model] = \
                 self.models[logchi2_gp_model].sample_conditional(self.dataset_dict[dataset_name])
@@ -555,53 +567,25 @@ def print_theta_bounds(i_dict, theta, bounds, skip_theta=False):
     print
 
 
-def print_dictionary(variable_values):
+def print_dictionary(variable_values, recenter=[]):
     format_string_long = "%10s   %15f   %15f %15f (15-84 p)"
     format_string = "%10s   %15f "
     for var_names, var_vals in variable_values.iteritems():
         if np.size(var_vals) > 1:
-            perc0, perc1, perc2 = np.percentile(var_vals, [15.865, 50, 84.135], axis=0)
+            if var_names in recenter:
+                move_back = (var_vals > recenter[var_names][0] + recenter[var_names][1]/2.)
+                move_forw = (var_vals < recenter[var_names][0] - recenter[var_names][1]/2.)
+                var_vals_recentered = var_vals.copy()
+                var_vals_recentered[move_back] -= recenter[var_names][1]
+                var_vals_recentered[move_forw] += recenter[var_names][1]
+                perc0, perc1, perc2 = np.percentile(var_vals_recentered, [15.865, 50, 84.135], axis=0)
+
+            else:
+                perc0, perc1, perc2 = np.percentile(var_vals, [15.865, 50, 84.135], axis=0)
+
             print format_string_long %(var_names,  perc1, perc0-perc1, perc2-perc1)
         else:
             print format_string % (var_names, var_vals)
     print
 
 
-
-
-
-
-
-
-"""
-
-
-
-
-class ModelContainerDnest4(ModelContainer):
-    def from_prior(self):
-        return self.starting_point
-
-    def perturb(self, params):
-        
-        #Unlike in C++, this takes a numpy array of parameters as input,
-        #and modifies it in-place. The return value is still logH.
-        
-        logH = 0.0
-        which = np.random.randint(np.size(params))
-
-        logH -= -0.5 * (params[which] / self.range[which]) ** 2
-        params_mod = params[which] + self.range[which] * dnest4.randh()
-        params[which] = dnest4.wrap(params_mod, self.bounds[which, 0], self.bounds[which, 1])
-
-        logH += -0.5 * (params[which] / self.range[which]) ** 2
-
-        # if which == 0:
-        #    print which,  params[0], np.exp2(params[0])
-
-        return logH
-
-    def log_likelihood(self, theta):
-        return self(theta)
-
-"""

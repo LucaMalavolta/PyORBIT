@@ -219,7 +219,7 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
     print ' Print MEDIAN result '
     print
 
-    mc.results_resumen(flat_chain)
+    mc.results_resumen(flat_chain, chain_med=chain_MAP)
 
     print
     print '****************************************************************************************************'

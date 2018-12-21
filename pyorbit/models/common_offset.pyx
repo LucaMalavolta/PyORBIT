@@ -18,6 +18,8 @@ class CommonOffset(AbstractCommon):
 
     default_priors = { 'offset': ['Uniform', []]}
 
+    default_fixed = {}
+
     recenter_pams = {}
 
     def common_initialization_with_dataset(self, dataset):

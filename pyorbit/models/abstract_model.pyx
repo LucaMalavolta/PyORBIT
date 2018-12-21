@@ -30,7 +30,6 @@ class AbstractModel():
         self.model_conf = None
 
     def initialize_model(self, mc, **kwargs):
-
         pass
 
     def setup_dataset(self, dataset, **kwargs):
@@ -76,7 +75,12 @@ class AbstractModel():
                 self.variable_index[dataset_name][var] = self.nfix
                 self.prior_kind[dataset_name][var] = 'None'
                 self.prior_pams[dataset_name][var] = []
-                self.fixed.append(self.fix_list[dataset_name][var][0])
+
+                if self.fix_list[dataset_name][var] == 'default' and var in self.default_fixed:
+                    self.fixed.append(get_2darray_from_val(self.default_fixed[var])[0])
+                else:
+                    self.fixed.append(self.fix_list[dataset_name][var][0])
+
                 self.nfix += 1
             else:
                 if self.spaces[dataset_name][var] == 'Linear':
@@ -91,8 +95,15 @@ class AbstractModel():
                     self.prior_kind[dataset_name][var] = self.default_priors[var][0]
                     self.prior_pams[dataset_name][var] = self.default_priors[var][1]
 
+                nested_coeff =  nested_sampling_prior_prepare(self.prior_kind[dataset_name][var],
+                                                              output_lists['bounds'][-1],
+                                                              self.prior_pams[dataset_name][var],
+                                                              self.spaces[dataset_name][var])
+
                 output_lists['spaces'].append(self.spaces[dataset_name][var])
-                output_lists['priors'].append([self.prior_kind[dataset_name][var], self.prior_pams[dataset_name][var]])
+                output_lists['priors'].append([self.prior_kind[dataset_name][var],
+                                               self.prior_pams[dataset_name][var],
+                                               nested_coeff])
 
                 self.variable_index[dataset_name][var] = ndim
                 self.variable_sampler[dataset_name][var] = ndim
@@ -159,8 +170,3 @@ class AbstractModel():
 
     def compute(self, variable_value, dataset, x0_input=None):
         return np.zeros(dataset.n, dtype=np.double)
-
-    #def initialize(self):
-    #    for var in self.list_pams_dataset:
-    #        pam_names[self.variable_index[dataset_name][var]] =
-

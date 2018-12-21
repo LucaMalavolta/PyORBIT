@@ -44,6 +44,49 @@ class RVkeplerian(AbstractModel):
                                             variable_value['e'],
                                             variable_value['o'])
 
+class RVkeplerianMass(AbstractModel):
+
+    model_class = 'rv_keplerian_mass'
+
+    list_pams_common = {
+        'P': 'LU',  # Period
+        'M': 'LU',  # RV semi-amplitude
+        'f': 'U',  # RV curve phase
+        'e': 'U',  # eccentricity, uniform prior - to be fixed
+        'o': 'U'}  # argument of pericenter
+
+    list_pams_dataset = {}
+
+    recenter_pams_dataset = {}
+
+    star_mass = 1.0
+    M_SEratio = constants.Msear
+
+    def initialize_model(self, mc, **kwargs):
+        self.star_mass = mc.star_mass[0]
+        self.M_SEratio = mc.M_SEratio
+        pass
+
+    def compute(self, variable_value, dataset, x0_input=None):
+
+        K = kepler_exo.kepler_K1(self.star_mass,
+                                 variable_value['M']/self.M_SEratio, variable_value['P'], variable_value['i'], variable_value['e'])
+
+        if x0_input is None:
+            return kepler_exo.kepler_RV_T0P(dataset.x0,
+                                            variable_value['f'],
+                                            variable_value['P'],
+                                            K,
+                                            variable_value['e'],
+                                            variable_value['o'])
+        else:
+            return kepler_exo.kepler_RV_T0P(x0_input,
+                                            variable_value['f'],
+                                            variable_value['P'],
+                                            K,
+                                            variable_value['e'],
+                                            variable_value['o'])
+
 
 class RVdynamical(AbstractModel):
 
@@ -54,7 +97,7 @@ class RVdynamical(AbstractModel):
             'P': 'LU',  # Period in days
             'M': 'LU',  # Mass in Earth masses
             'i': 'U',  # inclination in degrees
-            'f': 'U',  # phase - as defined by Malavolta+2016
+            'f': 'U',  # mean longitude
             'lN': 'U',  # longitude of ascending node
             'e': 'U',  # eccentricity, uniform prior - to be fixed
             'R': 'U',  # planet radius (in units of stellar radii)
@@ -103,7 +146,7 @@ class TransitTimeDynamical(AbstractModel):
             'P': 'LU',  # Period in days
             'M': 'LU',  # Mass in Earth masses
             'i': 'U',  # inclination in degrees
-            'f': 'U',  # phase - as defined by Malavolta+2016
+            'f': 'U',  # mean longitude
             'lN': 'U',  # longitude of ascending node
             'e': 'U',  # eccentricity, uniform prior - to be fixed
             'R': 'U',  # planet radius (in units of stellar radii)
@@ -119,6 +162,7 @@ class DynamicalIntegrator:
         self.model_name = 'dynamical_integrator'
         self.dynamical_integrator = 'TRADES'
         self.dynamical_set = {}
+        self.n_max_t0 = 0
 
     def prepare(self, mc):
         """
@@ -240,14 +284,14 @@ class DynamicalIntegrator:
             self.dynamical_set['fake_t0s'] = False
 
         """ Identification the maximum number of transit """
-        n_max_t0 = np.max(t0_ntot)
+        self.n_max_t0 = np.max(t0_ntot)
 
         self.dynamical_set['data']['t0_tot'] = np.asarray(t0_ntot).astype(int)
         self.dynamical_set['data']['t0_flg'] = np.asarray(t0_flag)
 
-        self.dynamical_set['data']['t0_num'] = np.zeros([n_max_t0, n_body]).astype(int)
-        self.dynamical_set['data']['t0_obs'] = np.zeros([n_max_t0, n_body], dtype=np.float64)
-        self.dynamical_set['data']['t0_err'] = np.zeros([n_max_t0, n_body], dtype=np.float64)
+        self.dynamical_set['data']['t0_num'] = np.zeros([self.n_max_t0, n_body]).astype(int)
+        self.dynamical_set['data']['t0_obs'] = np.zeros([self.n_max_t0, n_body], dtype=np.float64)
+        self.dynamical_set['data']['t0_err'] = np.zeros([self.n_max_t0, n_body], dtype=np.float64)
 
         for planet_name in mc.dynamical_dict:
             plan_n = self.dynamical_set['data']['plan_ref'][planet_name]
@@ -328,8 +372,50 @@ class DynamicalIntegrator:
             self.dynamical_set['pams']['mA'][n_plan] = (dict_pams['f'] - dict_pams['o']) * (180. / np.pi)
 
         # sample_plan[:, convert_out['Tcent']] = mc.Tref + kepler_exo.kepler_Tcent_T0P(
-        #    sample_plan[:, convert_out['P']], sample_plan[:, convert_out['f']],
+        #    sample_plan[:, convert_out['P']], sample_plan[:, convert_out['mL']],
         #    sample_plan[:, convert_out['e']], sample_plan[:, convert_out['o']])
+
+        """ Extracted from TRADES: 
+          !!! SUBROUTINE TO RUN TRADES INTEGRATION AND RETURN RV_SIM AND T0_SIM
+        !   subroutine kelements_to_data(t_start,t_epoch,step_in,t_int,&
+        !     &m_msun,R_rsun,P_day,ecc,argp_deg,mA_deg,inc_deg,lN_deg,&
+        !     &t_rv,transit_flag,n_t0,t0_num,& ! input
+        !     &rv_sim,t0_sim,& ! output
+        !     &n_body,n_rv,n_max_t0) ! dimensions
+          subroutine kelements_to_data(t_start,t_epoch,step_in,t_int,&
+            &m_msun,R_rsun,P_day,ecc,argp_deg,mA_deg,inc_deg,lN_deg,&
+            &t_rv,transit_flag,& ! input
+            &rv_sim,t0_sim,& ! output
+            &n_body,n_rv,n_max_t0) ! dimensions
+        
+            ! INPUT
+            ! t_start      == start of the integration
+            ! t_epoch      == reference time epoch
+            ! step_in      == initial step size of the integration
+            ! t_int        == total integration time in days
+            
+            ! m_msun       == masses of all the bodies in Msun m_sun(n_body)
+            ! R_rsun       == radii of all the bodies in Rsun r_rsun(n_body)
+            ! P_day        == periods of all the bodies in days p_day(n_body); p_day(0) = 0
+            ! ecc          == eccentricities of all the bodies ecc(n_body); ecc(0) = 0
+            ! argp_deg     == argument of pericentre of all the bodies argp_deg(n_body); argp_deg(0) = 0
+            ! mA_deg       == mean anomaly of all the bodies mA_deg(n_body); mA_deg(0) = 0
+            ! inc_deg      == inclination of all the bodies inc_deg(n_body); inc_deg(0) = 0
+            ! lN_deg       == longitude of node of all the bodies lN_deg(n_body); lN_deg(0) = 0
+        
+            ! t_rv         == time of the RV datapoints t_rv(n_rv)
+            ! transit_flag == logical/boolean vector with which bodies should transit (.true.) or not (.false) transit_flag(n_body); transit_flag(0) = False
+            
+            ! OUTPUT
+            ! rv_sim       == rv simulated in m/s, same dimension of t_rv
+            ! t0_sim       == t0 simulated in days, same dimension of t0_num
+            
+            ! DIMENSIONS
+            ! n_body       == number of bodies (take into account the star)
+            ! n_rv         == number of radial velocities datapoints
+            ! n_max_t0     == maxval(n_t0) == maxval of transits available
+
+        """
 
         if x0_input is None:
             rv_sim, t0_sim = pytrades.kelements_to_data(
@@ -346,11 +432,9 @@ class DynamicalIntegrator:
                 self.dynamical_set['pams']['i'],
                 self.dynamical_set['pams']['lN'],
                 self.dynamical_set['data']['rv_times'],
-                self.dynamical_set['data']['t0_flg'],
-                self.dynamical_set['data']['t0_tot'],
-                self.dynamical_set['data']['t0_num'])
+                self.dynamical_set['data']['t0_flg'], self.n_max_t0)
         else:
-            rv_sim, t0_sim = pytrades_lib.pytrades.kelements_to_data(
+            rv_sim, t0_sim = pytrades.kelements_to_data(
                 self.dynamical_set['trades']['ti_beg'],
                 self.dynamical_set['trades']['ti_ref'],
                 self.dynamical_set['trades']['i_step'],
@@ -364,9 +448,7 @@ class DynamicalIntegrator:
                 self.dynamical_set['pams']['i'],
                 self.dynamical_set['pams']['lN'],
                 x0_input,
-                self.dynamical_set['data']['t0_flg'],
-                self.dynamical_set['data']['t0_tot'],
-                self.dynamical_set['data']['t0_num'])
+                self.dynamical_set['data']['t0_flg'], self.n_max_t0)
 
 
 
@@ -454,7 +536,7 @@ class DynamicalIntegrator:
 
             dict_pams = mc.common_models[planet_name].convert(theta)
 
-            mA = (dict_pams['f'] - dict_pams['o']) * (180. / np.pi) + \
+            mA = (dict_pams['mL'] - dict_pams['o']) * (180. / np.pi) + \
                  self.dynamical_set['ttvfast']['t_beg'] / dict_pams['P'] * 360.0000000000
 
             params.extend([
