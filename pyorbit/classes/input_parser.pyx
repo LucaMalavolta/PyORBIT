@@ -3,6 +3,7 @@ from ..models.dataset import *
 from ..models.planets import CommonPlanets
 from ..models.activity import CommonActivity
 from ..models.radial_velocities import RVkeplerian, RVdynamical, TransitTimeKeplerian, TransitTimeDynamical, DynamicalIntegrator, RVkeplerianMass
+from ..models.batman_transit import Batman_Transit
 from ..models.gp_semiperiodic_activity import GaussianProcess_QuasiPeriodicActivity
 from ..models.gp_semiperiodic_activity_common import GaussianProcess_QuasiPeriodicActivity_Common
 from ..models.gp_semiperiodic_activity_shared import GaussianProcess_QuasiPeriodicActivity_Shared
@@ -37,6 +38,7 @@ define_type_to_class = {
     'transit_time': {'circular': TransitTimeKeplerian,
                      'keplerian': TransitTimeKeplerian,
                      'dynamical': TransitTimeDynamical},
+    'batman_transit': Batman_Transit,
     'gp_quasiperiodic': GaussianProcess_QuasiPeriodicActivity,
     'gp_quasiperiodic_common': GaussianProcess_QuasiPeriodicActivity_Common,
     'gp_quasiperiodic_shared': GaussianProcess_QuasiPeriodicActivity_Shared,
@@ -244,9 +246,9 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, shutdown_
         else:
             model_type = model_name
 
-        if model_type == 'radial_velocities' or model_type == 'rv_planets':
+        if model_type == 'radial_velocities' or model_type == 'rv_planets' or model_type == 'batman_transit':
 
-            """ radial_velocities is just a wrapper for the planets to be actually included in the model, so we
+            """ radial_velocities and transits are just wrappers for the planets to be actually included in the model, so we
                 substitue it with the individual planets in the list"""
 
             try:
@@ -267,13 +269,21 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, shutdown_
 
             for model_name_exp, planet_name in zip(model_name_expanded, planet_list):
 
-                if keplerian_approximation:
-                    """ override default model from input file, to apply keplerian approximation """
+                try:
+                    """ This snippet will work only for RV class"""
+                    if keplerian_approximation:
+                        """ override default model from input file, to apply keplerian approximation """
+                        mc.models[model_name_exp] = \
+                            define_type_to_class[model_type]['keplerian_mass'](model_name_exp, planet_name)
+                    else:
+                        mc.models[model_name_exp] = \
+                            define_type_to_class[model_type][mc.planet_dict[planet_name]](model_name_exp, planet_name)
+
+                except:
                     mc.models[model_name_exp] = \
-                        define_type_to_class[model_type]['keplerian_mass'](model_name_exp, planet_name)
-                else:
-                    mc.models[model_name_exp] = \
-                        define_type_to_class[model_type][mc.planet_dict[planet_name]](model_name_exp, planet_name)
+                            define_type_to_class[model_type](model_name_exp, planet_name)
+
+                    mc.models[model_name_exp].model_conf = model_conf.copy()
 
                 for dataset_name in list(set(model_name_exp) & set(mc.dataset_dict)):
                     bounds_space_priors_starts_fixed(mc, mc.models[model_name_exp], model_conf[dataset_name],
@@ -315,15 +325,19 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, shutdown_
 
         else:
 
-            mc.models[model_name] = \
+            try:
+                mc.models[model_name] = \
                     define_type_to_class[model_type](model_name, model_conf['common'])
+            except:
+                mc.models[model_name] = \
+                    define_type_to_class[model_type](model_name, None)
 
             mc.models[model_name].model_conf = model_conf.copy()
 
             #for dataset_name in list(set(model_conf) & set(mc.dataset_dict)):
             #    bounds_space_priors_starts_fixed(mc, mc.models[model_name], model_conf[dataset_name], dataset_1=dataset_name)
 
-            """ Using default noundaries if one dataset is missing"""
+            """ Using default boundaries if one dataset is missing"""
             if not mc.models[model_name].list_pams_dataset:
                 continue
             for dataset_name, dataset in mc.dataset_dict.iteritems():

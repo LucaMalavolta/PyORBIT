@@ -49,6 +49,13 @@ if 'celerite' not in sys.modules:
         from dummy import george
         print('WARNING! Imported dummy george, models relying on this package will not work')
 
+    try:
+        import batman
+    except:
+        from dummy import batman
+        print('WARNING! Imported dummy batman, models relying on this package will not work')
+
+
 import kepler_exo
 import yaml
 import constants

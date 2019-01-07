@@ -414,7 +414,12 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
             corner_plot['labels'].append(var)
             corner_plot['truths'].append(variable_median[var])
 
-        if common_model.model_class == 'planet':
+
+        """ Check if the semi-amplitude K is among the parameters that have been fitted. 
+            If so, it computes the correpsing planetary mass with uncertainty """
+
+        if common_model.model_class == 'planet' and 'K' in variable_values.keys():
+
             if i_is_missing:
                 if 'i' in common_model.fix_list:
                     variable_values['i'] = np.random.normal(common_model.fix_list['i'][0], common_model.fix_list['i'][1], size=n_samplings)

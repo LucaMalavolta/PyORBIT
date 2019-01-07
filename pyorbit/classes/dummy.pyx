@@ -19,6 +19,9 @@ def ttvfast():
 def george():
     pass
 
+def batman():
+    pass
+
 ## absurd workaround to fix the lack of celerite in the system
 def Celerite_QuasiPeriodicActivity():
     pass

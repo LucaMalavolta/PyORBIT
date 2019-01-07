@@ -61,6 +61,8 @@ class ModelContainer(object):
     def model_setup(self):
         # First step: setting up the correct associations between models and dataset
 
+        print self.models
+
         for model_name, model in self.models.iteritems():
             if not model.model_conf:
                 continue
@@ -156,10 +158,10 @@ class ModelContainer(object):
             if not self.common_models[planet_name].bounds['e'][0] <= e < self.common_models[planet_name].bounds['e'][1]:
                 return False
 
-        """ Step 4 check ofr overlapping periods (within 5% arbitrarily chosen)"""
+        """ Step 4 check ofr overlapping periods (within 2.5% arbitrarily chosen)"""
         for i_n, i_v in enumerate(period_storage):
             if i_n == len(period_storage) - 1: break
-            if np.amin(np.abs(period_storage[i_n + 1:] - i_v)) / i_v < 0.05:
+            if np.amin(np.abs(period_storage[i_n + 1:] - i_v)) / i_v < 0.025:
                 return False
 
         return True
@@ -226,7 +228,7 @@ class ModelContainer(object):
                     continue
 
                 if dataset.dynamical:
-                    dataset.model += dynamical_output[dataset_name]
+                    dataset.additive_model += dynamical_output[dataset_name]
                     continue
 
                 if self.models[model_name].common_ref:
@@ -239,7 +241,20 @@ class ModelContainer(object):
 
 
                 variable_values.update(self.models[model_name].convert(theta, dataset_name))
-                dataset.model += self.models[model_name].compute(variable_values, dataset)
+
+                """ residuals will be computed following the definition in Dataset class:
+                self.residuals = (self.y - self.pre_additive_model)/self.multiplicative_model - self.post_additive_model                
+                Default models are post-additive: they are removed from the dataset after data normalization.
+                Only exception is the offset
+                """
+                if getattr(self.models[model_name], 'multiplicative_model', 'False'):
+                    dataset.multiplicative_model += self.models[model_name].compute(variable_values, dataset)
+                elif getattr(self.models[model_name], 'pre_additive_model', 'False'):
+                    dataset.pre_additive_model += self.models[model_name].compute(variable_values, dataset)
+                else:
+                    dataset.post_additive_model += self.models[model_name].compute(variable_values, dataset)
+
+            dataset.compute_residuals()
 
             """ Gaussian Process check MUST be the last one or the program will fail
              that's because for the GP to work we need to know the _deterministic_ part of the model 
@@ -269,7 +284,6 @@ class ModelContainer(object):
             return log_likelihood
         else:
             return log_priors, log_likelihood
-
 
     def recenter_bounds(self, pop_mean, recenter=True):
         # This function recenters the bounds limits for circular variables
@@ -450,11 +464,11 @@ class ModelContainer(object):
                 if hasattr(self.models[model_name], 'common_jitter'):
                     self.models[model_name].compute(variable_values, dataset)
                 if hasattr(self.models[model_name], 'common_offset'):
-                    dataset.model += self.models[model_name].compute(variable_values, dataset)
+                    dataset.pre_additive_model += self.models[model_name].compute(variable_values, dataset)
 
-            model_out[dataset_name]['systematics'] = dataset.model.copy()
+            model_out[dataset_name]['systematics'] = dataset.pre_additive_model.copy()
             model_out[dataset_name]['jitter'] = dataset.jitter.copy()
-            model_out[dataset_name]['complete'] = dataset.model.copy()
+            model_out[dataset_name]['complete'] = dataset.pre_additive_model.copy()
 
             model_x0[dataset_name]['complete'] = np.zeros(n_input, dtype=np.double)
 
@@ -472,7 +486,7 @@ class ModelContainer(object):
                     continue
 
                 if dataset.dynamical:
-                    dataset.model += dynamical_output[dataset_name]
+                    dataset.post_additive_model += dynamical_output[dataset_name]
                     model_out[dataset_name][model_name] = dynamical_output[dataset_name].copy()
                     model_out[dataset_name]['complete'] += dynamical_output[dataset_name]
 
@@ -489,7 +503,18 @@ class ModelContainer(object):
                     variable_values = {}
                 variable_values.update(self.models[model_name].convert(theta, dataset_name))
 
-                dataset.model += self.models[model_name].compute(variable_values, dataset)
+                """ residuals will be computed following the definition in Dataset class:
+                self.residuals = (self.y - self.pre_additive_model)/self.multiplicative_model - self.post_additive_model                
+                Default models are post-additive: they are removed from the dataset after data normalization.
+                Only exception is the offset
+                """
+                if getattr(self.models[model_name], 'multiplicative_model', 'False'):
+                    dataset.multiplicative_model += self.models[model_name].compute(variable_values, dataset)
+                elif getattr(self.models[model_name], 'pre_additive_model', 'False'):
+                    dataset.pre_additive_model += self.models[model_name].compute(variable_values, dataset)
+                else:
+                    dataset.post_additive_model += self.models[model_name].compute(variable_values, dataset)
+                #dataset.model += self.models[model_name].compute(variable_values, dataset)
 
                 if hasattr(self.models[model_name], 'single_value_output'):
                     model_out[dataset_name][model_name] = np.zeros(dataset.n, dtype=np.double)
@@ -528,6 +553,8 @@ class ModelContainer(object):
 
                     model_x0[dataset_name][logchi2_gp_model + '_std'] = np.sqrt(var)
                     model_x0[dataset_name]['complete'] += model_x0[dataset_name][logchi2_gp_model]
+
+            dataset.compute_model()
 
         for dataset_name, logchi2_gp_model in delayed_lnlk_computation.iteritems():
             model_out[dataset_name][logchi2_gp_model] = \

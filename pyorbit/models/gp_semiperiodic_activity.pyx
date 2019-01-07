@@ -132,7 +132,7 @@ class GaussianProcess_QuasiPeriodicActivity(AbstractModel):
         self.gp[dataset.name_ref].set_parameter_vector(gp_pams)
         self.gp[dataset.name_ref].compute(dataset.x0, env)
 
-        return self.gp[dataset.name_ref].log_likelihood(dataset.y - dataset.model, quiet=True)
+        return self.gp[dataset.name_ref].log_likelihood(dataset.residuals, quiet=True)
 
     def sample_predict(self, variable_value, dataset, x0_input=None):
 
@@ -142,9 +142,9 @@ class GaussianProcess_QuasiPeriodicActivity(AbstractModel):
         self.gp[dataset.name_ref].set_parameter_vector(gp_pams)
         self.gp[dataset.name_ref].compute(dataset.x0, env)
         if x0_input is None:
-            return self.gp[dataset.name_ref].predict(dataset.y - dataset.model, dataset.x0, return_var=True)
+            return self.gp[dataset.name_ref].predict(dataset.residuals, dataset.x0, return_var=True)
         else:
-            return self.gp[dataset.name_ref].predict(dataset.y - dataset.model, x0_input, return_var=True)
+            return self.gp[dataset.name_ref].predict(dataset.residuals, x0_input, return_var=True)
 
 
     def sample_conditional(self, variable_value, dataset, x0_input=None):
@@ -155,8 +155,8 @@ class GaussianProcess_QuasiPeriodicActivity(AbstractModel):
         self.gp[dataset.name_ref].set_parameter_vector(gp_pams)
         self.gp[dataset.name_ref].compute(dataset.x0, env)
         if x0_input is None:
-            return self.gp[dataset.name_ref].sample_conditional(dataset.y - dataset.model, dataset.x0)
+            return self.gp[dataset.name_ref].sample_conditional(dataset.residuals, dataset.x0)
         else:
-            return self.gp[dataset.name_ref].sample_conditional(dataset.y - dataset.model, x0_input)
+            return self.gp[dataset.name_ref].sample_conditional(dataset.residuals, x0_input)
 
 

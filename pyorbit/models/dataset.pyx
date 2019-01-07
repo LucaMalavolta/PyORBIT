@@ -4,6 +4,7 @@ from abstract_common import AbstractCommon
 
 kind_definition = {
     'RV': ['RV', 'RVs', 'rv', 'rvs'],
+    'Tcent': ['Tcent', 'TCent', 'Tc', 'TC', 'T0', 'TT'],
     'H-alpha': ['H', 'HA', 'h', 'ha', 'Halpha', 'H-alpha', 'halpha', 'h-alpha'],
     'Phot': ['P', 'Ph', 'p', 'ph', 'PHOT', 'Phot', 'phot', 'Photometry', 'photometry'],
     'BIS': ['BIS', 'bis'],
@@ -57,7 +58,11 @@ class Dataset(AbstractCommon):
         self.recenter_pams = {}
 
         self.Tref = None
-        self.model= None
+        self.residuals= None
+        self.model = None
+        self.pre_additive_model = None
+        self.post_additive_model = None
+        self.multiplicative_model = None
         self.jitter = None
         self.mask = {}
 
@@ -102,6 +107,9 @@ class Dataset(AbstractCommon):
                                            'jitter': [np.min(self.e)/100., 100 * np.max(self.e)],
                                            'linear': [-1., 1.]}
 
+            if self.kind == 'Phot':
+                self.generic_default_bounds['offset'][0] = -1000.0 * np.max(self.e)
+
             self.create_systematic_dictionaries('jitter', data_input[:, 3])
             self.create_systematic_dictionaries('offset', data_input[:, 4])
             self.create_systematic_dictionaries('linear', data_input[:, 5])
@@ -111,8 +119,7 @@ class Dataset(AbstractCommon):
         self.create_systematic_mask('offset', data_input[:, 4])
         self.create_systematic_mask('linear', data_input[:, 5])
 
-        self.model = np.zeros(self.n, dtype=np.double)
-        self.jitter = np.zeros(self.n, dtype=np.double)
+        self.model_reset()
 
     def create_systematic_dictionaries(self, var_generic, dataset_vals):
         n_sys = np.max(dataset_vals.astype(np.int64)) + 1
@@ -159,7 +166,11 @@ class Dataset(AbstractCommon):
         return
 
     def model_reset(self):
-        self.model = np.zeros(self.n, dtype=np.double)
+        self.residuals = None
+        self.model = None
+        self.pre_additive_model = np.zeros(self.n, dtype=np.double)
+        self.post_additive_model = np.zeros(self.n, dtype=np.double)
+        self.multiplicative_model = np.ones(self.n, dtype=np.double)
         self.jitter = np.zeros(self.n, dtype=np.double)
         return
 
@@ -168,11 +179,18 @@ class Dataset(AbstractCommon):
             if self.variable_expanded[var] == 'jitter':
                 self.jitter[self.mask[var]] += variable_value[var]
             else:
-                self.model[self.mask[var]] += variable_value[var]
+                self.pre_additive_model[self.mask[var]] += variable_value[var]
+
+    def compute_model(self):
+        self.model =  self.pre_additive_model + self.post_additive_model*self.multiplicative_model
+
+    def compute_residuals(self):
+        self.residuals = (self.y - self.pre_additive_model)/self.multiplicative_model - self.post_additive_model
 
     def model_logchi2(self):
         env = 1.0 / (self.e ** 2.0 + self.jitter ** 2.0)
-        return -0.5 * (self.n * np.log(2 * np.pi) + np.sum((self.y - self.model) ** 2 * env - np.log(env)))
+        return -0.5 * (self.n * np.log(2 * np.pi) +
+                       np.sum(self.residuals ** 2 * env - np.log(env)))
 
     def update_bounds_spaces_priors_starts(self):
 

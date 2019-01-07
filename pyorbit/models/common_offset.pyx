@@ -7,6 +7,7 @@ class CommonOffset(AbstractCommon):
     '''
 
     model_class = 'common_offset'
+    pre_additive_model = True
 
     list_pams = {
         'offset'  # order 1

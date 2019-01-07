@@ -133,7 +133,7 @@ class GaussianProcess_QuasiPeriodicActivity_Common(AbstractModel):
             self.internal_gp_pams = self.convert_val2gp(variable_value)
 
         self.internal_dataset['x0'].extend(dataset.x0)
-        self.internal_dataset['yr'].extend(dataset.y - dataset.model)
+        self.internal_dataset['yr'].extend(dataset.residuals)
         self.internal_dataset['ej'].extend(np.sqrt(dataset.e ** 2.0 + dataset.jitter ** 2.0))
 
     def lnlk_compute(self):
