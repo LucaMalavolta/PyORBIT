@@ -77,7 +77,7 @@ class PolynomialTrend(AbstractModel):
 
     def initialize_model(self, mc, **kwargs):
         """ A special kind of initialization is required for this module, since it has to take a second dataset
-        and check the corrispondence with the points
+        and check the correspondence with the points
 
         """
         if 'order' in kwargs:

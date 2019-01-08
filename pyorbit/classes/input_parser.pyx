@@ -16,6 +16,13 @@ from ..models.polynomial_trend import CommonPolynomialTrend, PolynomialTrend
 from ..models.common_offset import CommonOffset, Offset
 from ..models.common_jitter import CommonJitter, Jitter
 from ..models.sinusoid_common_period import SinusoidCommonPeriod
+
+from ..models.batman_limb_darkening import Batman_LimbDarkening_Linear, Batman_LimbDarkening_Quadratic, \
+    Batman_LimbDarkening_SquareRoot, Batman_LimbDarkening_Logarithmic, \
+    Batman_LimbDarkening_Exponential, Batman_LimbDarkening_Power2, \
+    Batman_LimbDarkening_NonLinear
+
+
 __all__ = ["pars_input", "yaml_parser"]
 
 define_common_type_to_class = {
@@ -23,7 +30,14 @@ define_common_type_to_class = {
     'activity': CommonActivity,
     'polynomial_trend': CommonPolynomialTrend,
     'common_offset': CommonOffset,
-    'common_jitter': CommonJitter
+    'common_jitter': CommonJitter,
+    'batman_ld_linear': Batman_LimbDarkening_Linear,
+    'batman_ld_quadratic': Batman_LimbDarkening_Quadratic,
+    'batman_ld_square-root': Batman_LimbDarkening_SquareRoot,
+    'batman_ld_logarithmic': Batman_LimbDarkening_Logarithmic,
+    'batman_ld_exponential': Batman_LimbDarkening_Exponential,
+    'batman_ld_power2': Batman_LimbDarkening_Power2,
+    'batman_ld_nonlinear': Batman_LimbDarkening_NonLinear
 }
 
 define_type_to_class = {
@@ -47,7 +61,7 @@ define_type_to_class = {
     'polynomial_trend': PolynomialTrend,
     'common_offset': Offset,
     'common_jitter': Jitter,
-    'sinusoid_common_period': SinusoidCommonPeriod
+    'sinusoid_common_period': SinusoidCommonPeriod,
 }
 
 accepted_extensions = ['.yaml', '.yml', '.conf', '.config', '.input', ]
@@ -285,6 +299,19 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, shutdown_
 
                     mc.models[model_name_exp].model_conf = model_conf.copy()
 
+                """
+                TEMPORARY SNIPPET
+                for dataset_name in list(set(model_conf) & set(mc.dataset_dict)):
+                    print dataset_name
+
+                    common_name = mc.models[model_name_exp].model_conf[dataset_name]['limb_darkening']
+                    print mc.common_models[common_name].ld_type
+
+                    mc.models[model_name_exp].model_conf[dataset_name]['limb_darkening_model'] = \
+                         mc.common_models[common_name].ld_type
+                """
+
+                ## Not sure if this line of code is supposed to work
                 for dataset_name in list(set(model_name_exp) & set(mc.dataset_dict)):
                     bounds_space_priors_starts_fixed(mc, mc.models[model_name_exp], model_conf[dataset_name],
                                                    dataset_1=dataset_name)
@@ -355,6 +382,8 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, shutdown_
                                                    dataset_1=dataset_name)
 
                 #mc.models[model_name].setup_dataset(mc.dataset_dict[dataset_name])
+
+    quit()
 
     if 'Tref' in conf_parameters:
         mc.Tref = np.asarray(conf_parameters['Tref'])
