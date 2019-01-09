@@ -9,7 +9,7 @@ class AbstractCommon(object):
     """
 
     def __init__(self, common_ref):
-        self.common_ref = common_ref
+        self.common_ref = np.atleast_1d(common_ref).tolist()
         self.variable_sampler = {}
 
         self.transformation = {}

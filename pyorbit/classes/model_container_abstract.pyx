@@ -76,9 +76,11 @@ class ModelContainer(object):
             for model_name in dataset.models:
                 self.models[model_name].common_initialization_with_dataset(dataset)
 
-                common_model = self.models[model_name].common_ref
-                if common_model:
-                    self.common_models[common_model].common_initialization_with_dataset(dataset)
+                try:
+                    for common_model in self.models[model_name].common_ref:
+                        self.common_models[common_model].common_initialization_with_dataset(dataset)
+                except:
+                    pass
 
         if self.dynamical_model:
             self.dynamical_model.prepare(self)
@@ -96,12 +98,15 @@ class ModelContainer(object):
                         }
 
         for model in self.models.itervalues():
-            if model.common_ref:
-                model.default_bounds = self.common_models[model.common_ref].default_bounds
-                model.default_spaces = self.common_models[model.common_ref].default_spaces
-                model.default_priors = self.common_models[model.common_ref].default_priors
-                self.ndim, output_lists = self.common_models[model.common_ref].define_variable_properties(
-                        self.ndim, output_lists, model.list_pams_common)
+            try:
+                for common_ref in model.common_ref:
+                    model.default_bounds = self.common_models[common_ref].default_bounds
+                    model.default_spaces = self.common_models[common_ref].default_spaces
+                    model.default_priors = self.common_models[common_ref].default_priors
+                    self.ndim, output_lists = self.common_models[common_ref].define_variable_properties(
+                            self.ndim, output_lists, model.list_pams_common)
+            except:
+                pass
 
         for dataset in self.dataset_dict.itervalues():
             self.ndim, output_lists = dataset.define_variable_properties(self.ndim, output_lists, dataset.list_pams)
@@ -215,9 +220,9 @@ class ModelContainer(object):
 
             for model_name in dataset.models:
                 if hasattr(self.models[model_name], 'common_jitter'):
-                    common_ref = self.models[model_name].common_ref
-                    variable_values = self.common_models[common_ref].convert(theta)
-                    self.models[model_name].compute(variable_values, dataset)
+                    for common_ref in self.models[model_name].common_ref:
+                        variable_values = self.common_models[common_ref].convert(theta)
+                        self.models[model_name].compute(variable_values, dataset)
 
             for model_name in dataset.models:
 
@@ -231,14 +236,14 @@ class ModelContainer(object):
                     dataset.additive_model += dynamical_output[dataset_name]
                     continue
 
-                if self.models[model_name].common_ref:
-                    """ Taking the parameter values from the common model"""
-                    common_ref = self.models[model_name].common_ref
-                    variable_values = self.common_models[common_ref].convert(theta)
-                else:
+                variable_values = {}
+                try:
+                    """ Taking the parameter values from the common models"""
+                    for common_ref in self.models[model_name].common_ref:
+                        variable_values.update(self.common_models[common_ref].convert(theta))
+                except:
                     """ This model has no common model reference, i.e., it is strictly connected to the dataset"""
-                    variable_values = {}
-
+                    pass
 
                 variable_values.update(self.models[model_name].convert(theta, dataset_name))
 
@@ -260,8 +265,13 @@ class ModelContainer(object):
              that's because for the GP to work we need to know the _deterministic_ part of the model 
              (i.e. the theoretical values you get when you feed your model with the parameter values) """
             if logchi2_gp_model:
-                common_ref = self.models[logchi2_gp_model].common_ref
-                variable_values = self.common_models[common_ref].convert(theta)
+                variable_values = {}
+                try:
+                    for common_ref in  self.models[logchi2_gp_model].common_ref:
+                        variable_values.update(self.common_models[common_ref].convert(theta))
+                except:
+                    pass
+
                 variable_values.update(self.models[logchi2_gp_model].convert(theta, dataset_name))
 
                 """ GP Log-likelihood is not computed now because a single matrix must be created with 
@@ -455,12 +465,13 @@ class ModelContainer(object):
             dataset.compute(variable_values)
 
             for model_name in dataset.models:
-                common_ref = self.models[model_name].common_ref
-
-                if common_ref is None:
+                variable_values = {}
+                try:
+                    for common_ref in self.models[model_name].common_ref:
+                        variable_values.update(self.common_models[common_ref].convert(theta))
+                except:
                     continue
 
-                variable_values = self.common_models[common_ref].convert(theta)
                 if hasattr(self.models[model_name], 'common_jitter'):
                     self.models[model_name].compute(variable_values, dataset)
                 if hasattr(self.models[model_name], 'common_offset'):
@@ -494,13 +505,15 @@ class ModelContainer(object):
                     model_x0[dataset_name]['complete'] += dynamical_output_x0[dataset_name]
                     continue
 
-                if self.models[model_name].common_ref:
-                    """ Taking the parameter values from the common model"""
-                    common_ref = self.models[model_name].common_ref
-                    variable_values = self.common_models[common_ref].convert(theta)
-                else:
+                variable_values = {}
+                try:
+                    """ Taking the parameter values from the common models"""
+                    for common_ref in self.models[model_name].common_ref:
+                        variable_values.update(self.common_models[common_ref].convert(theta))
+                except:
                     """ This model has no common model reference, i.e., it is strictly connected to the dataset"""
-                    variable_values = {}
+                    pass
+
                 variable_values.update(self.models[model_name].convert(theta, dataset_name))
 
                 """ residuals will be computed following the definition in Dataset class:
@@ -534,8 +547,13 @@ class ModelContainer(object):
              that's because for the GP to work we need to know the _deterministic_ part of the model 
              (i.e. the theoretical values you get when you feed your model with the parameter values) """
             if logchi2_gp_model:
-                common_ref = self.models[logchi2_gp_model].common_ref
-                variable_values = self.common_models[common_ref].convert(theta)
+                variable_values = {}
+                try:
+                    for common_ref in  self.models[logchi2_gp_model].common_ref:
+                        variable_values.update(self.common_models[common_ref].convert(theta))
+                except:
+                    pass
+
                 variable_values.update(self.models[logchi2_gp_model].convert(theta, dataset.name_ref))
 
                 if hasattr(self.models[logchi2_gp_model], 'delayed_lnlk_computation'):

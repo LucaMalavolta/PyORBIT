@@ -48,6 +48,9 @@ class Batman_Transit(AbstractModel):
         self.batman_params[dataset.name_ref].w = 90. #longitude of periastron (in degrees)
 
 
+
+
+
         self.batman_params[dataset.name_ref].u = [0.1, 0.3] #limb darkening coefficients
 
 

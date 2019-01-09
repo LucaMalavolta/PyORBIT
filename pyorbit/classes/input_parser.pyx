@@ -299,6 +299,18 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, shutdown_
 
                     mc.models[model_name_exp].model_conf = model_conf.copy()
 
+
+                try:
+                    for dataset_name in list(set(model_conf) & set(mc.dataset_dict)):
+                        common_name = mc.models[model_name_exp].model_conf[dataset_name]['limb_darkening']
+                        mc.models[model_name_exp].common_ref.append(common_name)
+                        mc.models[model_name_exp].model_conf[dataset_name]['limb_darkening_model'] = \
+                            mc.common_models[common_name].ld_type
+                        mc.models[model_name_exp].model_conf[dataset_name]['limb_darkening_ncoeff'] = \
+                            mc.common_models[common_name].ld_ncoeff
+                except:
+                    pass
+
                 """
                 TEMPORARY SNIPPET
                 for dataset_name in list(set(model_conf) & set(mc.dataset_dict)):
@@ -382,8 +394,6 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, shutdown_
                                                    dataset_1=dataset_name)
 
                 #mc.models[model_name].setup_dataset(mc.dataset_dict[dataset_name])
-
-    quit()
 
     if 'Tref' in conf_parameters:
         mc.Tref = np.asarray(conf_parameters['Tref'])
