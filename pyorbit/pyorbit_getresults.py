@@ -486,8 +486,8 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
                 variable_values = dataset.convert(flat_chain)
                 variable_median = dataset.convert(chain_med[:, 0])
 
-                if mc.models[model_name].common_ref:
-                    common_ref = mc.models[model_name].common_ref
+                for common_ref in mc.models[model_name].common_ref:
+                    #common_ref = mc.models[model_name].common_ref
                     variable_values.update(mc.common_models[common_ref].convert(flat_chain))
                     variable_median.update(mc.common_models[common_ref].convert(chain_med[:, 0]))
 

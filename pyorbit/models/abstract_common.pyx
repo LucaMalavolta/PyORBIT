@@ -9,7 +9,7 @@ class AbstractCommon(object):
     """
 
     def __init__(self, common_ref):
-        self.common_ref = np.atleast_1d(common_ref).tolist()
+        self.common_ref = common_ref
         self.variable_sampler = {}
 
         self.transformation = {}
@@ -41,7 +41,8 @@ class AbstractCommon(object):
             will be actually used in the complete model.
         """
 
-        for var in variable_list:
+        #for var in variable_list:
+        for var in list(set(variable_list) & set(self.list_pams)):
             '''We check for each parameter (except eccentricity and omega) if the variable is a
                 fixed value or a free variable, and move the parameter into the requested spaces
                 Notice that 'e' and 'w' are not yet included in list_pams[pl_name] at this stage

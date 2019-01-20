@@ -4,7 +4,7 @@ from abstract_model import *
 class Batman_Transit(AbstractModel):
 
     model_class = 'transit'
-    multiplicative_model = True
+    unitary_model = True
 
     list_pams_common = {
         'P',  # Period, log-uniform prior
@@ -31,6 +31,8 @@ class Batman_Transit(AbstractModel):
     batman_models = {}
     batman_options = {}
 
+    ld_ncoeff = 0
+
     #def initialize_model(self, mc, **kwargs):
 
     def setup_dataset(self, dataset, **kwargs):
@@ -47,18 +49,18 @@ class Batman_Transit(AbstractModel):
         self.batman_params[dataset.name_ref].ecc = 0. #eccentricity
         self.batman_params[dataset.name_ref].w = 90. #longitude of periastron (in degrees)
 
-
-
-
-
-        self.batman_params[dataset.name_ref].u = [0.1, 0.3] #limb darkening coefficients
-
-
-
         try:
-            self.batman_params[dataset.name_ref].limb_dark = kwargs[dataset.name_ref]['limb_darkening']
+            self.ld_ncoeff = kwargs[dataset.name_ref]['limb_darkening_ncoeff']
+            self.batman_params[dataset.name_ref].limb_dark = kwargs[dataset.name_ref]['limb_darkening_model']
         except:
-            self.batman_params[dataset.name_ref].limb_dark = kwargs['limb_darkening']
+            self.ld_ncoeff = kwargs['limb_darkening_ncoeff']
+            self.batman_params[dataset.name_ref].limb_dark = kwargs['limb_darkening_model']
+
+        for i_coeff in xrange(1, self.ld_ncoeff+1):
+            var = 'ld_c'+repr(i_coeff)
+            self.list_pams_common.update({var: None})
+
+        self.batman_params[dataset.name_ref].u = np.ones(self.ld_ncoeff, dtype=np.double)*0.1 #limb darkening coefficients
 
         try:
             self.batman_options[dataset.name_ref]['sample_factor'] = kwargs[dataset.name_ref]['supersample_factor']
@@ -97,8 +99,10 @@ class Batman_Transit(AbstractModel):
         self.batman_params[dataset.name_ref].inc = variable_value['i'] #orbital inclination (in degrees)
         self.batman_params[dataset.name_ref].ecc = variable_value['e'] #eccentricity
         self.batman_params[dataset.name_ref].w = variable_value['o'] * (180./np.pi) #longitude of periastron (in degrees)
-        self.batman_params[dataset.name_ref].u = [0.1, 0.3] #limb darkening coefficients
 
+        for i_coeff in xrange(1, self.ld_ncoeff+1):
+            var = 'ld_c'+repr(i_coeff)
+            self.batman_params[dataset.name_ref].u[i_coeff-1] = variable_value[var]
 
         """ 
         From the batman manual:
@@ -120,7 +124,7 @@ class Batman_Transit(AbstractModel):
             self.batman_options[dataset.name_ref]['initialization_counter'] += 1
 
         if x0_input is None:
-            return 1. - self.batman_models[dataset.name_ref].light_curve(self.batman_params[dataset.name_ref])
+            return self.batman_models[dataset.name_ref].light_curve(self.batman_params[dataset.name_ref]) - 1.
         else:
             temporary_model = batman.TransitModel(self.batman_params[dataset.name_ref],
                                                                        x0_input,
@@ -129,4 +133,4 @@ class Batman_Transit(AbstractModel):
                                                                            'sample_factor'],
                                                                        exp_time=self.batman_options[dataset.name_ref][
                                                                            'exp_time'])
-            return 1. - temporary_model.light_curve(self.batman_params[dataset.name_ref])
+            return temporary_model.light_curve(self.batman_params[dataset.name_ref]) - 1.

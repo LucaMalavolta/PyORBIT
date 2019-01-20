@@ -13,7 +13,7 @@ class LimbDarkening_1Pam(AbstractCommon):
 
     """These default boundaries are used when the user does not define them in the yaml file"""
     default_bounds = {
-        'ld_c1': [-10.0, 10.0]
+        'ld_c1': [0.00, 1.00]
 
     }
 
@@ -44,8 +44,8 @@ class LimbDarkening_2Pam(AbstractCommon):
 
     """These default boundaries are used when the user does not define them in the yaml file"""
     default_bounds = {
-        'ld_c1': [-10.0, 10.0],
-        'ld_c2': [-10.0, 10.0]
+        'ld_c1': [0.00, 1.00],
+        'ld_c2': [0.00, 1.00]
     }
 
     default_spaces = {
@@ -79,10 +79,10 @@ class LimbDarkening_4Pam(AbstractCommon):
 
     """These default boundaries are used when the user does not define them in the yaml file"""
     default_bounds = {
-        'ld_c1': [-10.0, 10.0],
-        'ld_c2': [-10.0, 10.0],
-        'ld_c3': [-10.0, 10.0],
-        'ld_c4': [-10.0, 10.0]
+        'ld_c1': [0.00, 1.00],
+        'ld_c2': [0.00, 1.00],
+        'ld_c3': [0.00, 1.00],
+        'ld_c4': [0.00, 1.00]
     }
 
     default_spaces = {

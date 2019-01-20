@@ -219,6 +219,41 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, shutdown_
                     print 'Using standard orbital parametrization ', mc.common_models[planet_name].parametrization, \
                         ' for planet ', planet_name
 
+        elif model_name == 'star':
+            for conf_name, star_conf in model_conf.iteritems():
+                if 'type' in star_conf:
+                    model_type = star_conf['type']
+                elif 'kind' in star_conf:
+                    model_type = star_conf['kind']
+                else:
+                    model_type = conf_name
+
+                print conf_name
+            """
+            Two ways to include the limb darkening:
+                1) just specify its properties, if all data has been gathered with the same filter
+                2) include different models, for dataset obtained with different filters
+                
+            """
+            if conf_name == 'limb_darkening':
+                dict_copy = model_conf['limb_darkening'].copy()
+
+                for key in ['type', 'kind', 'priors', 'spaces', 'boundaries', 'starts']:
+                    if key in dict_copy: del dict_copy[key]
+
+                if len(dict_copy) == 0 :
+                    dict_copy = {'limb_darkening': model_conf['limb_darkening'].copy()}
+
+                for key_name, key_vals in dict_copy.iteritems():
+
+                    mc.common_models[key_name] = define_common_type_to_class[model_type](key_name)
+                    bounds_space_priors_starts_fixed(mc, mc.common_models[key_name], key_vals)
+
+                    """ Automatic detection of common models without dataset-specific parameters"""
+                    for dataset in mc.dataset_dict.itervalues():
+                        if key_name in dataset.models and not (key_name in dict_copy):
+                            conf_models[key_name] = {'common': key_name}
+
         else:
             if 'type' in model_conf:
                 model_type = model_conf['type']
@@ -299,11 +334,22 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, shutdown_
 
                     mc.models[model_name_exp].model_conf = model_conf.copy()
 
-
                 try:
                     for dataset_name in list(set(model_conf) & set(mc.dataset_dict)):
-                        common_name = mc.models[model_name_exp].model_conf[dataset_name]['limb_darkening']
+
+                        try:
+                            common_name = mc.models[model_name_exp].model_conf[dataset_name]['limb_darkening']
+                        except:
+                            common_name = 'limb_darkening'
+
+                        print 'ADD MODELS'
+                        print ' model name: ', model_name_exp
+                        print ' common models pre_append', mc.models[model_name_exp].common_ref
+
                         mc.models[model_name_exp].common_ref.append(common_name)
+                        print ' common models post_append', mc.models[model_name_exp].common_ref
+
+                        print
                         mc.models[model_name_exp].model_conf[dataset_name]['limb_darkening_model'] = \
                             mc.common_models[common_name].ld_type
                         mc.models[model_name_exp].model_conf[dataset_name]['limb_darkening_ncoeff'] = \
@@ -540,7 +586,6 @@ def bounds_space_priors_starts_fixed(mc, model_obj, conf, dataset_1=None, datase
             mc.starting_point_flag = True
             starts_conf = conf['starts']
             for var in starts_conf:
-                print dataset_1, add_var_name+var, starts_conf[var]
                 model_obj.starts[dataset_1][add_var_name+var] = np.asarray(starts_conf[var], dtype=np.double)
 
         if 'fixed' in conf:

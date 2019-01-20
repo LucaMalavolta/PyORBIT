@@ -61,8 +61,6 @@ class ModelContainer(object):
     def model_setup(self):
         # First step: setting up the correct associations between models and dataset
 
-        print self.models
-
         for model_name, model in self.models.iteritems():
             if not model.model_conf:
                 continue
@@ -98,14 +96,18 @@ class ModelContainer(object):
                         }
 
         for model in self.models.itervalues():
-            try:
+            if len(model.common_ref)> 0:
+                print
+                print model.common_ref
                 for common_ref in model.common_ref:
-                    model.default_bounds = self.common_models[common_ref].default_bounds
-                    model.default_spaces = self.common_models[common_ref].default_spaces
-                    model.default_priors = self.common_models[common_ref].default_priors
+
+                    model.default_bounds.update(self.common_models[common_ref].default_bounds)
+                    model.default_spaces.update(self.common_models[common_ref].default_spaces)
+                    model.default_priors.update(self.common_models[common_ref].default_priors)
                     self.ndim, output_lists = self.common_models[common_ref].define_variable_properties(
-                            self.ndim, output_lists, model.list_pams_common)
-            except:
+                        self.ndim, output_lists, model.list_pams_common)
+
+            else:
                 pass
 
         for dataset in self.dataset_dict.itervalues():
@@ -237,40 +239,47 @@ class ModelContainer(object):
                     continue
 
                 variable_values = {}
-                try:
-                    """ Taking the parameter values from the common models"""
-                    for common_ref in self.models[model_name].common_ref:
-                        variable_values.update(self.common_models[common_ref].convert(theta))
-                except:
-                    """ This model has no common model reference, i.e., it is strictly connected to the dataset"""
-                    pass
+                for common_ref in self.models[model_name].common_ref:
+                     variable_values.update(self.common_models[common_ref].convert(theta))
+
+                #try:
+                #    """ Taking the parameter values from the common models"""
+                #    for common_ref in self.models[model_name].common_ref:
+                #        variable_values.update(self.common_models[common_ref].convert(theta))
+                #except:
+                #    """ This model has no common model reference, i.e., it is strictly connected to the dataset"""
+                #    pass
 
                 variable_values.update(self.models[model_name].convert(theta, dataset_name))
 
-                """ residuals will be computed following the definition in Dataset class:
-                self.residuals = (self.y - self.pre_additive_model)/self.multiplicative_model - self.post_additive_model                
-                Default models are post-additive: they are removed from the dataset after data normalization.
-                Only exception is the offset
+                """ residuals will be computed following the definition in Dataset class
                 """
-                if getattr(self.models[model_name], 'multiplicative_model', 'False'):
-                    dataset.multiplicative_model += self.models[model_name].compute(variable_values, dataset)
-                elif getattr(self.models[model_name], 'pre_additive_model', 'False'):
-                    dataset.pre_additive_model += self.models[model_name].compute(variable_values, dataset)
-                else:
-                    dataset.post_additive_model += self.models[model_name].compute(variable_values, dataset)
 
+                if getattr(self.models[model_name], 'unitary_model', 'False'):
+                    dataset.unitary_model += self.models[model_name].compute(variable_values, dataset)
+                    if dataset.normalization_model is None:
+                        dataset.normalization_model = np.ones(dataset.n, dtype=np.double)
+                elif getattr(self.models[model_name], 'normalization_model', 'False'):
+                    dataset.normalization_model+= self.models[model_name].compute(variable_values, dataset)
+                else:
+                    dataset.additive_model += self.models[model_name].compute(variable_values, dataset)
+
+            dataset.compute_model()
             dataset.compute_residuals()
 
             """ Gaussian Process check MUST be the last one or the program will fail
              that's because for the GP to work we need to know the _deterministic_ part of the model 
              (i.e. the theoretical values you get when you feed your model with the parameter values) """
             if logchi2_gp_model:
+
+                dataset.compute_residuals_for_regression()
+
                 variable_values = {}
-                try:
-                    for common_ref in  self.models[logchi2_gp_model].common_ref:
+                #try:
+                for common_ref in self.models[logchi2_gp_model].common_ref:
                         variable_values.update(self.common_models[common_ref].convert(theta))
-                except:
-                    pass
+                #except:
+                #    pass
 
                 variable_values.update(self.models[logchi2_gp_model].convert(theta, dataset_name))
 
@@ -438,6 +447,7 @@ class ModelContainer(object):
 
         for model in self.common_models.itervalues():
             for var, i in model.variable_sampler.iteritems():
+                print model.common_ref
                 theta_dictionary[model.common_ref + '_' + var] = i
 
         return theta_dictionary

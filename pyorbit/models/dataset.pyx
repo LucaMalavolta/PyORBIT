@@ -59,10 +59,11 @@ class Dataset(AbstractCommon):
 
         self.Tref = None
         self.residuals= None
+        self.residuals_for_regression = None
         self.model = None
-        self.pre_additive_model = None
-        self.post_additive_model = None
-        self.multiplicative_model = None
+        self.additive_model = None
+        self.unitary_model = None
+        self.normalization_model = None
         self.jitter = None
         self.mask = {}
 
@@ -168,9 +169,9 @@ class Dataset(AbstractCommon):
     def model_reset(self):
         self.residuals = None
         self.model = None
-        self.pre_additive_model = np.zeros(self.n, dtype=np.double)
-        self.post_additive_model = np.zeros(self.n, dtype=np.double)
-        self.multiplicative_model = np.ones(self.n, dtype=np.double)
+        self.additive_model = np.zeros(self.n, dtype=np.double)
+        self.unitary_model = np.zeros(self.n, dtype=np.double)
+        self.normalization_model = None
         self.jitter = np.zeros(self.n, dtype=np.double)
         return
 
@@ -179,15 +180,19 @@ class Dataset(AbstractCommon):
             if self.variable_expanded[var] == 'jitter':
                 self.jitter[self.mask[var]] += variable_value[var]
             else:
-                self.pre_additive_model[self.mask[var]] += variable_value[var]
+                self.additive_model[self.mask[var]] += variable_value[var]
 
     def compute_model(self):
-        self.model =  self.pre_additive_model + self.post_additive_model*self.multiplicative_model
+        if self.normalization_model is None:
+            self.model = self.additive_model
+        else:
+            self.model = self.additive_model + (1. + self.unitary_model)*self.normalization_model
 
     def compute_residuals(self):
-        self.residuals = (self.y - self.pre_additive_model)/self.multiplicative_model - self.post_additive_model
+        self.residuals = self.y - self.model
 
     def model_logchi2(self):
+
         env = 1.0 / (self.e ** 2.0 + self.jitter ** 2.0)
         return -0.5 * (self.n * np.log(2 * np.pi) +
                        np.sum(self.residuals ** 2 * env - np.log(env)))

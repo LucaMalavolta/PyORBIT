@@ -9,7 +9,7 @@ class AbstractModel():
     """
     def __init__(self, model_name, common_ref):
         self.model_name = model_name
-        self.common_ref = common_ref
+        self.common_ref = np.atleast_1d(common_ref).tolist()
         self.variable_sampler = {}
 
         self.transformation = {}
@@ -26,6 +26,10 @@ class AbstractModel():
         self.prior_kind = {}
         self.prior_pams = {}
         self.spaces = {}
+
+        self.default_bounds = {}
+        self.default_spaces = {}
+        self.default_priors = {}
 
         self.model_conf = None
 
