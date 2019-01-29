@@ -27,7 +27,6 @@ class AbstractCommon(object):
         self.prior_kind = {}
         self.prior_pams = {}
 
-
     def common_initialization_with_dataset(self, dataset):
         """ Sometimes the common variables still need to be initialized with values coming from a datasets"""
         pass
@@ -41,7 +40,6 @@ class AbstractCommon(object):
             will be actually used in the complete model.
         """
 
-        #for var in variable_list:
         for var in list(set(variable_list) & set(self.list_pams)):
             '''We check for each parameter (except eccentricity and omega) if the variable is a
                 fixed value or a free variable, and move the parameter into the requested spaces
@@ -61,8 +59,8 @@ class AbstractCommon(object):
             if var in self.fix_list:
                 if var not in self.transformation:
                     self.transformation[var] = get_fix_val
-                    if self.fix_list[var] == 'default' and var in self.default_fixed:
-                        self.fixed.append(get_2darray_from_val(self.default_fixed[var])[0])
+                    if self.fix_list[var] is 'default' and var in self.default_fixed:
+                            self.fixed.append(get_2darray_from_val(self.default_fixed[var])[0])
                     else:
                         self.fixed.append(self.fix_list[var][0])
                     self.variable_index[var] = self.nfix
@@ -81,7 +79,6 @@ class AbstractCommon(object):
                 elif self.spaces[var] == 'Logarithmic':
                     self.transformation[var] = get_var_exp
                     output_lists['bounds'].append(np.log2(self.bounds[var]))
-                    #bounds_list.append(np.log2(self.bounds[var]))
 
                 if var not in self.prior_pams:
                     self.prior_kind[var] = self.default_priors[var][0]

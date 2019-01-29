@@ -7,9 +7,16 @@ class AbstractModel():
         Comments to be updated
 
     """
+
+    unitary_model = False
+    normalization_model = False
+
     def __init__(self, model_name, common_ref):
         self.model_name = model_name
+
         self.common_ref = np.atleast_1d(common_ref).tolist()
+        self.planet_ref = common_ref
+
         self.variable_sampler = {}
 
         self.transformation = {}

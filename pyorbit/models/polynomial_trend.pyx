@@ -12,52 +12,52 @@ class CommonPolynomialTrend(AbstractCommon):
 
     "polynomial trend up to 10th order"
     list_pams = {
-        'c1',  # order 1
-        'c2',  # order 2
-        'c3',  # order 3
-        'c4',  # order 4
-        'c5',  # order 5
-        'c6',  # order 6
-        'c7',  # order 7
-        'c8',  # order 8
-        'c9',  # order 9
+        'poly_c1',  # order 1
+        'poly_c2',  # order 2
+        'poly_c3',  # order 3
+        'poly_c4',  # order 4
+        'poly_c5',  # order 5
+        'poly_c6',  # order 6
+        'poly_c7',  # order 7
+        'poly_c8',  # order 8
+        'poly_c9',  # order 9
     }
 
     """These default boundaries are used when the user does not define them in the yaml file"""
     default_bounds = {
-        'c1': [-10.0, 10.0], # 10 m/s/day would be already an unbelievable value
-        'c2': [-1.0, 1.0],
-        'c3': [-1.0, 1.0],
-        'c4': [-1.0, 1.0],
-        'c5': [-1.0, 1.0],
-        'c6': [-1.0, 1.0],
-        'c7': [-1.0, 1.0],
-        'c8': [-1.0, 1.0],
-        'c9': [-1.0, 1.0]
+        'poly_c1': [-10.0, 10.0], # 10 m/s/day would be already an unbelievable value
+        'poly_c2': [-1.0, 1.0],
+        'poly_c3': [-1.0, 1.0],
+        'poly_c4': [-1.0, 1.0],
+        'poly_c5': [-1.0, 1.0],
+        'poly_c6': [-1.0, 1.0],
+        'poly_c7': [-1.0, 1.0],
+        'poly_c8': [-1.0, 1.0],
+        'poly_c9': [-1.0, 1.0]
     }
 
     default_spaces = {
-        'c1': 'Linear',  # order 1
-        'c2': 'Linear',  # order 2
-        'c3': 'Linear',  # order 3
-        'c4': 'Linear',  # order 4
-        'c5': 'Linear',  # order 5
-        'c6': 'Linear',  # order 6
-        'c7': 'Linear',  # order 7
-        'c8': 'Linear',  # order 8
-        'c9': 'Linear',  # order 9
+        'poly_c1': 'Linear',  # order 1
+        'poly_c2': 'Linear',  # order 2
+        'poly_c3': 'Linear',  # order 3
+        'poly_c4': 'Linear',  # order 4
+        'poly_c5': 'Linear',  # order 5
+        'poly_c6': 'Linear',  # order 6
+        'poly_c7': 'Linear',  # order 7
+        'poly_c8': 'Linear',  # order 8
+        'poly_c9': 'Linear',  # order 9
     }
 
     default_priors = {
-        'c1': ['Uniform', []], # 10 m/s/day would be already an unbelievable value
-        'c2': ['Uniform', []],
-        'c3': ['Uniform', []],
-        'c4': ['Uniform', []],
-        'c5': ['Uniform', []],
-        'c6': ['Uniform', []],
-        'c7': ['Uniform', []],
-        'c8': ['Uniform', []],
-        'c9': ['Uniform', []]
+        'poly_c1': ['Uniform', []], # 10 m/s/day would be already an unbelievable value
+        'poly_c2': ['Uniform', []],
+        'poly_c3': ['Uniform', []],
+        'poly_c4': ['Uniform', []],
+        'poly_c5': ['Uniform', []],
+        'poly_c6': ['Uniform', []],
+        'poly_c7': ['Uniform', []],
+        'poly_c8': ['Uniform', []],
+        'poly_c9': ['Uniform', []]
     }
 
     default_fixed = {}
@@ -84,7 +84,7 @@ class PolynomialTrend(AbstractModel):
             self.order = kwargs['order']
 
         for i_order in xrange(1, self.order+1):
-            var = 'c'+repr(i_order)
+            var = 'poly_c'+repr(i_order)
             self.list_pams_common.update({var: None})
 
             # # ???????????????
@@ -94,7 +94,7 @@ class PolynomialTrend(AbstractModel):
 
         coeff = np.zeros(self.order+1)
         for i_order in xrange(1, self.order+1):
-            var = 'c'+repr(i_order)
+            var = 'poly_c'+repr(i_order)
             coeff[i_order] = variable_value[var]
 
         """ In our array, coefficient are sorted from the lowest degree to the highr

@@ -6,14 +6,15 @@ class Batman_Transit(AbstractModel):
     model_class = 'transit'
     unitary_model = True
 
+    use_semimajor_axis = False
+    use_inclination = False
+
     list_pams_common = {
         'P',  # Period, log-uniform prior
         'f',  # mean longitude = argument of pericenter + mean anomaly at Tref
-        'e',  # eccentricity, uniform prior - to be fixed
+        'e',  # eccentricity, uniform prior
         'o',  # argument of pericenter (in radians)
-        'i',  # orbital inclination (in degrees)
         'R',  # planet radius (in units of stellar radii)
-        'a'  # semi-major axis (in units of stellar radii)
     }
     list_pams_dataset = {}
 
@@ -33,7 +34,23 @@ class Batman_Transit(AbstractModel):
 
     ld_ncoeff = 0
 
-    #def initialize_model(self, mc, **kwargs):
+    def initialize_model(self, mc, **kwargs):
+
+        if mc.common_models[self.planet_ref].use_semimajor_axis:
+            """ a is the semi-major axis (in units of stellar radii) """
+            self.list_pams_common.update({'a': None})
+            self.use_semimajor_axis = True
+        else:
+            """ rho is the density of the star (in solar units) """
+            self.list_pams_common.update({'rho': None})
+
+        if mc.common_models[self.planet_ref].use_inclination:
+            """ i is the orbital inclination (in degrees) """
+            self.list_pams_common.update({'i': None})
+            self.use_inclination = True
+        else:
+            """ b is the impact parameter """
+            self.list_pams_common.update({'b': None})
 
     def setup_dataset(self, dataset, **kwargs):
 
@@ -49,6 +66,7 @@ class Batman_Transit(AbstractModel):
         self.batman_params[dataset.name_ref].ecc = 0. #eccentricity
         self.batman_params[dataset.name_ref].w = 90. #longitude of periastron (in degrees)
 
+        """ Setting up the limb darkening calculation"""
         try:
             self.ld_ncoeff = kwargs[dataset.name_ref]['limb_darkening_ncoeff']
             self.batman_params[dataset.name_ref].limb_dark = kwargs[dataset.name_ref]['limb_darkening_model']
@@ -81,12 +99,26 @@ class Batman_Transit(AbstractModel):
     def compute(self, variable_value, dataset, x0_input=None):
 
         """
-
         :param variable_value:
         :param dataset:
         :param x0_input:
         :return:
         """
+
+        if self.use_semimajor_axis:
+            # semi-major axis (in units of stellar radii)
+            self.batman_params[dataset.name_ref].a = variable_value['a']
+        else:
+            self.batman_params[dataset.name_ref].a = convert_rho_to_a(variable_value['P'], variable_value['rho'])
+
+        if self.use_inclination:
+            # orbital inclination (in degrees)
+            self.batman_params[dataset.name_ref].inc = variable_value['i']
+        else:
+            self.batman_params[dataset.name_ref].inc = convert_b_to_i(variable_value['b'],
+                                                                      variable_value['e'],
+                                                                      variable_value['o'],
+                                                                      self.batman_params[dataset.name_ref].a)
 
         self.batman_params[dataset.name_ref].t0 = kepler_exo.kepler_Tcent_T0P(variable_value['P'],
                                                      variable_value['f'],
@@ -95,8 +127,6 @@ class Batman_Transit(AbstractModel):
 
         self.batman_params[dataset.name_ref].per = variable_value['P'] #orbital period
         self.batman_params[dataset.name_ref].rp = variable_value['R']  #planet radius (in units of stellar radii)
-        self.batman_params[dataset.name_ref].a = variable_value['a']   #semi-major axis (in units of stellar radii)
-        self.batman_params[dataset.name_ref].inc = variable_value['i'] #orbital inclination (in degrees)
         self.batman_params[dataset.name_ref].ecc = variable_value['e'] #eccentricity
         self.batman_params[dataset.name_ref].w = variable_value['o'] * (180./np.pi) #longitude of periastron (in degrees)
 

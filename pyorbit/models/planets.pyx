@@ -26,6 +26,11 @@ class CommonPlanets(AbstractCommon):
     """
     parametrization = 'Eastman2013'
     parametrization_list = ['Ford2006', 'Eastman2013', 'Standard']
+    orbit_list = ['circular', 'keplerian', 'dynamical']
+    orbit = 'keplerian'
+
+    use_inclination = False
+    use_semimajor_axis = False
 
     list_pams = {
         'P',  # Period, log-uniform prior
@@ -37,7 +42,8 @@ class CommonPlanets(AbstractCommon):
         'i',  # orbital inclination (in degrees)
         'lN',  # longitude of ascending node (usually 180 degrees when unknown)
         'R',  # planet radius (in units of stellar radii)
-        'a'  # semi-major axis (in units of stellar radii)
+        'a',  # semi-major axis (in units of stellar radii)
+        'b' # impact parameter
     }
 
     default_bounds = {
@@ -56,7 +62,8 @@ class CommonPlanets(AbstractCommon):
         'lN': [0.0, 2 * np.pi],
         # Used by BATMAN
         'R': [0.00001, 0.5],  # Fix the unit
-        'a': [0.00001, 500.]  # Fix the unit
+        'a': [0.00001, 500.],  # Fix the unit
+        'b': [0.0, 1.0]
     }
 
     """ Must be the same parameters as in list_pams, because priors are applied only to _physical_ parameters """
@@ -74,7 +81,8 @@ class CommonPlanets(AbstractCommon):
         'i': ['Uniform', []],
         'lN': ['Uniform', []],
         'R': ['Uniform', []],  # Fix the unit
-        'a': ['Uniform', []]  # Fix the unit
+        'a': ['Uniform', []],  # Fix the unit
+        'b': ['Uniform', []]  # Fix the unit
     }
 
     default_spaces = {
@@ -91,7 +99,8 @@ class CommonPlanets(AbstractCommon):
         'i': 'Linear',
         'lN': 'Linear',
         'R': 'Linear',
-        'a': 'Linear'
+        'a': 'Linear',
+        'b': 'Linear'
     }
 
     default_fixed = {
@@ -101,9 +110,11 @@ class CommonPlanets(AbstractCommon):
         'sre_sino': 0.0000,
         'e': 0.0000,
         'o': np.pi/2.,
-        'i': [90.000000, 0.0000001],
+        'i': 90.000000,
         'lN': np.pi/2.,
         'R': 1.0,
+        'a': 1.0,
+        'b': 1.0
     }
 
     omega_star = True

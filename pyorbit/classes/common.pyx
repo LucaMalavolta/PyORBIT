@@ -1,8 +1,11 @@
 import os
 import sys
 from scipy import stats
-from scipy.interpolate import interp1d, splrep, splev
-
+from scipy.interpolate import splrep, splev
+import kepler_exo
+import yaml
+import constants
+import gc
 
 if 'celerite' not in sys.modules:
 
@@ -56,10 +59,7 @@ if 'celerite' not in sys.modules:
         print('WARNING! Imported dummy batman, models relying on this package will not work')
 
 
-import kepler_exo
-import yaml
-import constants
-import gc
+
 
 def get_var_log(var, fix, i):
     if len(np.shape(var)) == 1:
@@ -296,3 +296,19 @@ def pick_MAP_parameters(samples, lnprob):
     else:
         print 'ERROR!!! '
         return None
+
+def convert_rho_to_a(P, rho):
+
+    return np.power(constants.Gsi / (constants.d2s * constants.d2s) * (P**2) *
+                  rho * constants.rho_Sun / (3. * np.pi), 1./3.)
+
+def convert_b_to_i(b,e,o,a):
+
+    rho_e = (1. - e ** 2) / (1. + e * np.sin(o))
+    arccos_argument = b / a / rho_e
+    if arccos_argument > 1.: arccos_argument=1
+    if arccos_argument < -1.: arccos_argument=-1
+
+    return np.arccos(arccos_argument)
+
+

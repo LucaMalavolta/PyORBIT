@@ -487,7 +487,6 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
                 variable_median = dataset.convert(chain_med[:, 0])
 
                 for common_ref in mc.models[model_name].common_ref:
-                    #common_ref = mc.models[model_name].common_ref
                     variable_values.update(mc.common_models[common_ref].convert(flat_chain))
                     variable_median.update(mc.common_models[common_ref].convert(chain_med[:, 0]))
 
@@ -596,14 +595,22 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
                 for dataset_name, dataset in mc.dataset_dict.items():
                     for model_name in dataset.models:
                         fileout = open(dir_models + dataset_name + '_' + model_name + '.dat', 'w')
-                        common_ref = mc.models[model_name].common_ref
-
-                        if common_ref in planet_vars:
-                            phase = (dataset.x0 / planet_vars[common_ref]['P']) % 1
-                        else:
-                            phase = dataset.x0 * 0.00
+                        for common_ref in mc.models[model_name].common_ref:
+                            if common_ref in planet_vars:
+                                phase = (dataset.x0 / planet_vars[common_ref]['P']) % 1
+                            else:
+                                phase = dataset.x0 * 0.00
 
                         fileout.write('descriptor BJD BJD0 pha val,+- sys mod full val_compare,+- res,+- \n')
+
+                        try:
+                            len(bjd_plot[plot_out_keyword][dataset_name][model_name])
+                        except:
+                            bjd_plot[plot_out_keyword][dataset_name][model_name] = \
+                                bjd_plot[plot_out_keyword][dataset_name][model_name] * np.ones(dataset.n)
+
+                            bjd_plot[plot_x0_keyword][dataset_name][model_name] = \
+                                bjd_plot[plot_x0_keyword][dataset_name][model_name] * np.ones(dataset.n)
 
                         for x, x0, pha, y, e, sys, mod, com, obs_mod, res in zip(
                             dataset.x, dataset.x0, phase, dataset.y, dataset.e,
@@ -694,7 +701,8 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
         variable_values = model.convert(flat_chain)
 
         for variable_name, variable in variable_values.iteritems():
-            all_variables_list[model.common_ref + '_' + variable_name] = variable
+            for common_ref in mc.models[model_name].common_ref:
+                all_variables_list[model.common_ref + '_' + variable_name] = variable
 
     n_int = len(all_variables_list)
     output_plan = np.zeros([n_samplings, n_int], dtype=np.double)

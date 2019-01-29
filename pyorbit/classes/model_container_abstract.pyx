@@ -255,14 +255,17 @@ class ModelContainer(object):
                 """ residuals will be computed following the definition in Dataset class
                 """
 
-                if getattr(self.models[model_name], 'unitary_model', 'False'):
+                if getattr(self.models[model_name], 'unitary_model', False):
                     dataset.unitary_model += self.models[model_name].compute(variable_values, dataset)
                     if dataset.normalization_model is None:
                         dataset.normalization_model = np.ones(dataset.n, dtype=np.double)
-                elif getattr(self.models[model_name], 'normalization_model', 'False'):
-                    dataset.normalization_model+= self.models[model_name].compute(variable_values, dataset)
+
+                elif getattr(self.models[model_name], 'normalization_model', False):
+                    dataset.normalization_model += self.models[model_name].compute(variable_values, dataset)
+
                 else:
                     dataset.additive_model += self.models[model_name].compute(variable_values, dataset)
+
 
             dataset.compute_model()
             dataset.compute_residuals()
@@ -272,14 +275,9 @@ class ModelContainer(object):
              (i.e. the theoretical values you get when you feed your model with the parameter values) """
             if logchi2_gp_model:
 
-                dataset.compute_residuals_for_regression()
-
                 variable_values = {}
-                #try:
                 for common_ref in self.models[logchi2_gp_model].common_ref:
                         variable_values.update(self.common_models[common_ref].convert(theta))
-                #except:
-                #    pass
 
                 variable_values.update(self.models[logchi2_gp_model].convert(theta, dataset_name))
 
@@ -485,11 +483,11 @@ class ModelContainer(object):
                 if hasattr(self.models[model_name], 'common_jitter'):
                     self.models[model_name].compute(variable_values, dataset)
                 if hasattr(self.models[model_name], 'common_offset'):
-                    dataset.pre_additive_model += self.models[model_name].compute(variable_values, dataset)
+                    dataset.additive_model += self.models[model_name].compute(variable_values, dataset)
 
-            model_out[dataset_name]['systematics'] = dataset.pre_additive_model.copy()
+            model_out[dataset_name]['systematics'] = dataset.additive_model.copy()
             model_out[dataset_name]['jitter'] = dataset.jitter.copy()
-            model_out[dataset_name]['complete'] = dataset.pre_additive_model.copy()
+            model_out[dataset_name]['complete'] = dataset.additive_model.copy()
 
             model_x0[dataset_name]['complete'] = np.zeros(n_input, dtype=np.double)
 
@@ -526,18 +524,14 @@ class ModelContainer(object):
 
                 variable_values.update(self.models[model_name].convert(theta, dataset_name))
 
-                """ residuals will be computed following the definition in Dataset class:
-                self.residuals = (self.y - self.pre_additive_model)/self.multiplicative_model - self.post_additive_model                
-                Default models are post-additive: they are removed from the dataset after data normalization.
-                Only exception is the offset
-                """
-                if getattr(self.models[model_name], 'multiplicative_model', 'False'):
-                    dataset.multiplicative_model += self.models[model_name].compute(variable_values, dataset)
-                elif getattr(self.models[model_name], 'pre_additive_model', 'False'):
-                    dataset.pre_additive_model += self.models[model_name].compute(variable_values, dataset)
+                if getattr(self.models[model_name], 'unitary_model', False):
+                    dataset.unitary_model += self.models[model_name].compute(variable_values, dataset)
+                    if dataset.normalization_model is None:
+                        dataset.normalization_model = np.ones(dataset.n, dtype=np.double)
+                elif getattr(self.models[model_name], 'normalization_model', False):
+                    dataset.normalization_model += self.models[model_name].compute(variable_values, dataset)
                 else:
-                    dataset.post_additive_model += self.models[model_name].compute(variable_values, dataset)
-                #dataset.model += self.models[model_name].compute(variable_values, dataset)
+                    dataset.additive_model += self.models[model_name].compute(variable_values, dataset)
 
                 if hasattr(self.models[model_name], 'single_value_output'):
                     model_out[dataset_name][model_name] = np.zeros(dataset.n, dtype=np.double)
@@ -552,6 +546,9 @@ class ModelContainer(object):
                     model_x0[dataset_name][model_name] = \
                         self.models[model_name].compute(variable_values, dataset, x0_plot)
                     model_x0[dataset_name]['complete'] += model_x0[dataset_name][model_name]
+
+            dataset.compute_model()
+            dataset.compute_residuals()
 
             """ Gaussian Process check MUST be the last one or the program will fail
              that's because for the GP to work we need to know the _deterministic_ part of the model 
@@ -582,8 +579,6 @@ class ModelContainer(object):
                     model_x0[dataset_name][logchi2_gp_model + '_std'] = np.sqrt(var)
                     model_x0[dataset_name]['complete'] += model_x0[dataset_name][logchi2_gp_model]
 
-            dataset.compute_model()
-
         for dataset_name, logchi2_gp_model in delayed_lnlk_computation.iteritems():
             model_out[dataset_name][logchi2_gp_model] = \
                 self.models[logchi2_gp_model].sample_conditional(self.dataset_dict[dataset_name])
@@ -599,7 +594,11 @@ class ModelContainer(object):
         # workaround to avoid memory leaks from GP module
         #gc.collect()
 
-        return model_out, model_x0
+        if np.shape(model_out) == 1:
+            return model_out*np.ones(), model_x0
+
+        else:
+            return model_out, model_x0
 
 
 def print_theta_bounds(i_dict, theta, bounds, skip_theta=False):

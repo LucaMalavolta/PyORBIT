@@ -22,6 +22,9 @@ from ..models.batman_limb_darkening import Batman_LimbDarkening_Linear, Batman_L
     Batman_LimbDarkening_Exponential, Batman_LimbDarkening_Power2, \
     Batman_LimbDarkening_NonLinear
 
+from ..models.dilution_factor import CommonDilutionFactor, DilutionFactor
+from ..models.normalization_factor import CommonNormalizationFactor, NormalizationFactor
+from ..models.star_parameters import CommonStarParameters
 
 __all__ = ["pars_input", "yaml_parser"]
 
@@ -37,7 +40,10 @@ define_common_type_to_class = {
     'batman_ld_logarithmic': Batman_LimbDarkening_Logarithmic,
     'batman_ld_exponential': Batman_LimbDarkening_Exponential,
     'batman_ld_power2': Batman_LimbDarkening_Power2,
-    'batman_ld_nonlinear': Batman_LimbDarkening_NonLinear
+    'batman_ld_nonlinear': Batman_LimbDarkening_NonLinear,
+    'dilution_factor': CommonDilutionFactor,
+    'normalization_factor': CommonNormalizationFactor,
+    'star_parameters': CommonStarParameters
 }
 
 define_type_to_class = {
@@ -62,9 +68,13 @@ define_type_to_class = {
     'common_offset': Offset,
     'common_jitter': Jitter,
     'sinusoid_common_period': SinusoidCommonPeriod,
+    'dilution_factor': DilutionFactor,
+    'normalization_factor': NormalizationFactor
 }
 
 accepted_extensions = ['.yaml', '.yml', '.conf', '.config', '.input', ]
+
+star_properties_list = ['limb_darkening', 'dilution_factor']
 
 
 def yaml_parser(file_conf):
@@ -182,6 +192,8 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, shutdown_
 
         mc.dataset_dict[dataset_name].update_bounds_spaces_priors_starts()
 
+    print
+
     for model_name, model_conf in conf_common.iteritems():
 
         if not isinstance(model_name, str):
@@ -191,6 +203,8 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, shutdown_
 
             for planet_name, planet_conf in model_conf.iteritems():
 
+                print 'Adding common model for planet: ', planet_name
+
                 if not isinstance(planet_name, str):
                     planet_name = repr(planet_name)
 
@@ -198,26 +212,51 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, shutdown_
 
                 bounds_space_priors_starts_fixed(mc, mc.common_models[planet_name], planet_conf)
 
-                if 'orbit' in planet_conf:
-                    mc.planet_dict[planet_name] = planet_conf['orbit']
+                try:
+                    if planet_conf['orbit'] in mc.common_models[planet_name].orbit_list:
 
-                    if planet_conf['orbit'] == 'circular':
-                        mc.common_models[planet_name].fix_list['e'] = np.asarray([0.000, 0.0000], dtype=np.double)
-                        mc.common_models[planet_name].fix_list['o'] = np.asarray([np.pi/2., 0.0000], dtype=np.double)
-                    if planet_conf['orbit'] == 'dynamical':
-                        mc.dynamical_dict[planet_name] = True
-                else:
-                    mc.planet_dict[planet_name] = 'keplerian'
+                        mc.planet_dict[planet_name] = planet_conf['orbit']
+                        mc.common_models[planet_name].orbit = planet_conf['orbit']
 
-                if 'parametrization' in planet_conf:
+                        print 'Using orbital model: ', mc.common_models[planet_name].orbit
+
+                        if planet_conf['orbit'] == 'circular':
+                            mc.common_models[planet_name].fix_list['e'] = np.asarray([0.000, 0.0000], dtype=np.double)
+                            mc.common_models[planet_name].fix_list['o'] = np.asarray([np.pi/2., 0.0000], dtype=np.double)
+                        if planet_conf['orbit'] == 'dynamical':
+                            mc.dynamical_dict[planet_name] = True
+                    else:
+                        mc.planet_dict[planet_name] = mc.common_models[planet_name].orbit
+                        print 'Orbital model not recognized, switching to: ', mc.common_models[planet_name].orbit
+                except:
+                    mc.planet_dict[planet_name] = mc.common_models[planet_name].orbit
+                    print 'Using default orbital model: ', mc.common_models[planet_name].orbit
+
+                try:
                     if planet_conf['parametrization'] in mc.common_models[planet_name].parametrization_list:
                         mc.common_models[planet_name].parametrization = planet_conf['parametrization']
+                        print 'Using orbital parametrization: ', mc.common_models[planet_name].parametrization
                     else:
-                        print 'Orbital parametrization not recognized, switching to ', \
-                            mc.common_models[planet_name].parametrization, ' for planet ', planet_name
-                else:
-                    print 'Using standard orbital parametrization ', mc.common_models[planet_name].parametrization, \
-                        ' for planet ', planet_name
+                        print 'Orbital parametrization not recognized, switching to: ', \
+                            mc.common_models[planet_name].parametrization
+                except:
+                    print 'Using default orbital parametrization: ', mc.common_models[planet_name].parametrization
+
+                try:
+                    mc.common_models[planet_name].use_inclination = planet_conf['use_inclination']
+                    print 'Inclination will be included as free parameter: ', planet_conf['use_inclination']
+                except:
+                    # False by default
+                    pass
+
+                try:
+                    mc.common_models[planet_name].use_semimajor_axis = planet_conf['use_semimajor_axis']
+                    print 'Semi-major axis will be included as free parameter: ', planet_conf['use_inclination']
+                except:
+                    # False by default
+                    pass
+
+                print
 
         elif model_name == 'star':
             for conf_name, star_conf in model_conf.iteritems():
@@ -228,21 +267,20 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, shutdown_
                 else:
                     model_type = conf_name
 
-                print conf_name
-            """
-            Two ways to include the limb darkening:
-                1) just specify its properties, if all data has been gathered with the same filter
-                2) include different models, for dataset obtained with different filters
-                
-            """
-            if conf_name == 'limb_darkening':
-                dict_copy = model_conf['limb_darkening'].copy()
+                """
+                Two ways to include the limb darkening:
+                    1) just specify its properties, if all data has been gathered with the same filter
+                    2) include different models, for dataset obtained with different filters
+                """
+
+                # conf_name or model_type ???
+                dict_copy = model_conf[conf_name].copy()
 
                 for key in ['type', 'kind', 'priors', 'spaces', 'boundaries', 'starts']:
                     if key in dict_copy: del dict_copy[key]
 
                 if len(dict_copy) == 0 :
-                    dict_copy = {'limb_darkening': model_conf['limb_darkening'].copy()}
+                    dict_copy = {conf_name: model_conf[conf_name].copy()}
 
                 for key_name, key_vals in dict_copy.iteritems():
 
@@ -251,7 +289,7 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, shutdown_
 
                     """ Automatic detection of common models without dataset-specific parameters"""
                     for dataset in mc.dataset_dict.itervalues():
-                        if key_name in dataset.models and not (key_name in dict_copy):
+                        if key_name in dataset.models and not (key_name in conf_models):
                             conf_models[key_name] = {'common': key_name}
 
         else:
@@ -265,11 +303,21 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, shutdown_
             mc.common_models[model_name] = define_common_type_to_class[model_type](model_name)
             bounds_space_priors_starts_fixed(mc, mc.common_models[model_name], model_conf)
 
-            """ Automatic detection of common models without dataset-specific parameters"""
+            """ Automatic detection of common models without dataset-specific parameters 
+                If the required parameters are included in the "model-specific section", 
+                the relative dictionary is created and the keywords are copied there 
+            """
             for dataset in mc.dataset_dict.itervalues():
-                if model_name in dataset.models and not (model_name in conf_models):
-                    conf_models[model_name] = {'common': model_name}
 
+                if model_name in dataset.models and not (model_name in conf_models):
+                    try:
+                        conf_models[model_name] = model_conf
+                        conf_models[model_name]['common'] = model_name
+                    except:
+                        conf_models[model_name] = {'common': model_name}
+
+        if 'star_parameters' not in mc.common_models:
+            mc.common_models['star_parameters'] = define_common_type_to_class['star_parameters']('star_parameters')
 
     """ Check if there is any planet that requires dynamical computations"""
     if mc.dynamical_dict:
@@ -318,8 +366,8 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, shutdown_
 
             for model_name_exp, planet_name in zip(model_name_expanded, planet_list):
 
+                """ This snippet will work only for RV class"""
                 try:
-                    """ This snippet will work only for RV class"""
                     if keplerian_approximation:
                         """ override default model from input file, to apply keplerian approximation """
                         mc.models[model_name_exp] = \
@@ -334,40 +382,34 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, shutdown_
 
                     mc.models[model_name_exp].model_conf = model_conf.copy()
 
+                """ This snippet will work only for transit class"""
                 try:
                     for dataset_name in list(set(model_conf) & set(mc.dataset_dict)):
 
+                        """ adding the limb darkening model"""
                         try:
                             common_name = mc.models[model_name_exp].model_conf[dataset_name]['limb_darkening']
                         except:
                             common_name = 'limb_darkening'
 
-                        print 'ADD MODELS'
-                        print ' model name: ', model_name_exp
-                        print ' common models pre_append', mc.models[model_name_exp].common_ref
-
+                        """ Limb darkening common model is appended to the list of common models"""
                         mc.models[model_name_exp].common_ref.append(common_name)
-                        print ' common models post_append', mc.models[model_name_exp].common_ref
 
-                        print
+                        """ Some keywords of the LD common model are attached to the configuration 
+                        dictionary of the dataset-specific model, in in order to assist the creation of the class 
+                        """
                         mc.models[model_name_exp].model_conf[dataset_name]['limb_darkening_model'] = \
                             mc.common_models[common_name].ld_type
                         mc.models[model_name_exp].model_conf[dataset_name]['limb_darkening_ncoeff'] = \
                             mc.common_models[common_name].ld_ncoeff
+
                 except:
                     pass
 
-                """
-                TEMPORARY SNIPPET
-                for dataset_name in list(set(model_conf) & set(mc.dataset_dict)):
-                    print dataset_name
-
-                    common_name = mc.models[model_name_exp].model_conf[dataset_name]['limb_darkening']
-                    print mc.common_models[common_name].ld_type
-
-                    mc.models[model_name_exp].model_conf[dataset_name]['limb_darkening_model'] = \
-                         mc.common_models[common_name].ld_type
-                """
+                mc.models[model_name_exp].common_ref.append('star_parameters')
+                #else:
+                #    mc.common_models[planet_name].use_semimajor_axis = True
+                #    mc.common_models[planet_name].use_inclination = True
 
                 ## Not sure if this line of code is supposed to work
                 for dataset_name in list(set(model_name_exp) & set(mc.dataset_dict)):
@@ -402,6 +444,9 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, shutdown_
                     dataset.dynamical = True
                     mc.dynamical_t0_dict[planet_name] = dataset_name
 
+            mc.models[model_name_exp].common_ref.append('star_parameters')
+
+
         elif model_type == 'correlation_singledataset':
             mc.models[model_name] = \
                     define_type_to_class[model_type](model_name, None)
@@ -419,12 +464,34 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, shutdown_
 
             mc.models[model_name].model_conf = model_conf.copy()
 
+            try:
+                if mc.models[model_name].model_conf['normalization_model'] is True:
+                    mc.models[model_name].normalization_model = True
+                    mc.models[model_name].unitary_model = False
+            except:
+                pass
+
+            try:
+                if mc.models[model_name].model_conf['unitary_model'] is True:
+                    mc.models[model_name].unitary_model = True
+                    mc.models[model_name].normalization_model = False
+            except:
+                pass
+
+            try:
+                if mc.models[model_name].model_conf['additive_model'] is True:
+                    mc.models[model_name].unitary_model = False
+                    mc.models[model_name].normalization_model = False
+            except:
+                pass
+
             #for dataset_name in list(set(model_conf) & set(mc.dataset_dict)):
             #    bounds_space_priors_starts_fixed(mc, mc.models[model_name], model_conf[dataset_name], dataset_1=dataset_name)
 
             """ Using default boundaries if one dataset is missing"""
             if not mc.models[model_name].list_pams_dataset:
                 continue
+
             for dataset_name, dataset in mc.dataset_dict.iteritems():
                 if model_name in dataset.models:
 
