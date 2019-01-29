@@ -1,8 +1,16 @@
 # PyORBIT
 
-## `PyORBIT` version 6.0 by Luca Malavolta - September 2018   
+## `PyORBIT` version 7.0b by Luca Malavolta - February 2019
 
-**New** Version 6 correctly implements model selection with nested sampling performed by `MultiNest`/`PolyChord`. Because of the way the software has been structured, each model must be contained in a different `yaml` file, i.e. the number of planets is not an hyperparameter but it must be fixed a priori. However, the same `yaml` file can be used to run `emcee`, `MultiNest` or `PolyChord` independently.
+**News** Starting with Version 7 it is now possible to fit planetary transits!
+Testing is on-going
+Refer to the 
+
+**Warnings**
+- Due to the different implementation of inclination and stellar parameters in Transit and RV Dynamical models, 
+at the moment there could be problems when performing transit fit and dynamical modelling at the same time. Additionally, at the moment transit fit 
+ does not include Transit Time Variations modelling (i.e., it's not a photodynamical model).
+- GetResults needs to be fixed in the part of model extraction
 
 **Documentation** Some incomplete documentation is available [here](http://pyorbit.readthedocs.io/). For any doubt, feel free to contact me at luca.malavolta_at_inaf.it, I'll be happy to work out together any problem that may arise during installation or usage of this software.
 

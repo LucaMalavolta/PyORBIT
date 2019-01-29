@@ -107,6 +107,22 @@ class RVdynamical(AbstractModel):
 
     recenter_pams_dataset = {}
 
+    def initialize_model(self, mc, **kwargs):
+
+        if mc.common_models[self.planet_ref].use_inclination:
+            """ i is the orbital inclination (in degrees) """
+            self.list_pams_common.update({'i': None})
+        else:
+            """ b is the impact parameter """
+            self.list_pams_common.update({'b': None})
+
+            if mc.common_models[self.planet_ref].use_semimajor_axis:
+                """ a is the semi-major axis (in units of stellar radii) """
+                self.list_pams_common.update({'a': None})
+            else:
+                """ rho is the density of the star (in solar units) """
+                self.list_pams_common.update({'rho': None})
+
 
 class TransitTimeKeplerian(AbstractModel):
 
@@ -145,7 +161,6 @@ class TransitTimeDynamical(AbstractModel):
     list_pams_common = {
             'P': 'LU',  # Period in days
             'M': 'LU',  # Mass in Earth masses
-            'i': 'U',  # inclination in degrees
             'f': 'U',  # mean longitude
             'lN': 'U',  # longitude of ascending node
             'e': 'U',  # eccentricity, uniform prior - to be fixed
@@ -155,6 +170,24 @@ class TransitTimeDynamical(AbstractModel):
     list_pams_dataset = {}
 
     recenter_pams_dataset = {}
+
+    def initialize_model(self, mc, **kwargs):
+
+        if mc.common_models[self.planet_ref].use_inclination:
+            """ i is the orbital inclination (in degrees) """
+            self.list_pams_common.update({'i': None})
+            self.use_inclination = True
+        else:
+            """ b is the impact parameter """
+            self.list_pams_common.update({'b': None})
+
+            if mc.common_models[self.planet_ref].use_semimajor_axis:
+                """ a is the semi-major axis (in units of stellar radii) """
+                self.list_pams_common.update({'a': None})
+                self.use_semimajor_axis = True
+            else:
+                """ rho is the density of the star (in solar units) """
+                self.list_pams_common.update({'rho': None})
 
 
 class DynamicalIntegrator:
@@ -362,12 +395,29 @@ class DynamicalIntegrator:
         for planet_name in mc.dynamical_dict:
             n_plan = self.dynamical_set['data']['plan_ref'][planet_name]
             dict_pams = mc.common_models[planet_name].convert(theta)
+
+            if mc.common_models[planet_name].use_inclination:
+                self.dynamical_set['pams']['i'][n_plan] = dict_pams['i']
+            else:
+                if mc.common_models[planet_name].use_semimajor_axis:
+                    self.dynamical_set['pams']['i'][n_plan] = \
+                        convert_b_to_i(dict_pams['b'],
+                                       dict_pams['e'],
+                                       dict_pams['o'],
+                                       dict_pams['a'])
+                else:
+                    a_temp = convert_rho_to_a(dict_pams['P'], dict_pams['rho'])
+                    self.dynamical_set['pams']['i'][n_plan] = \
+                        convert_b_to_i(dict_pams['b'],
+                                       dict_pams['e'],
+                                       dict_pams['o'],
+                                       a_temp)
+
             self.dynamical_set['pams']['M'][n_plan] = dict_pams['M'] / mc.M_SEratio
             self.dynamical_set['pams']['R'][n_plan] = dict_pams['R'] / mc.R_SEratio
             self.dynamical_set['pams']['P'][n_plan] = dict_pams['P']
             self.dynamical_set['pams']['e'][n_plan] = dict_pams['e']
             self.dynamical_set['pams']['o'][n_plan] = dict_pams['o'] * (180. / np.pi)
-            self.dynamical_set['pams']['i'][n_plan] = dict_pams['i']
             self.dynamical_set['pams']['lN'][n_plan] = dict_pams['lN'] * (180. / np.pi)
             self.dynamical_set['pams']['mA'][n_plan] = (dict_pams['f'] - dict_pams['o']) * (180. / np.pi)
 
@@ -539,11 +589,29 @@ class DynamicalIntegrator:
             mA = (dict_pams['mL'] - dict_pams['o']) * (180. / np.pi) + \
                  self.dynamical_set['ttvfast']['t_beg'] / dict_pams['P'] * 360.0000000000
 
+            if mc.common_models[planet_name].use_inclination:
+                i_temp = dict_pams['i']
+            else:
+                if mc.common_models[planet_name].use_semimajor_axis:
+                    i_temp = \
+                        convert_b_to_i(dict_pams['b'],
+                                       dict_pams['e'],
+                                       dict_pams['o'],
+                                       dict_pams['a'])
+                else:
+                    a_temp = convert_rho_to_a(dict_pams['P'], dict_pams['rho'])
+                    i_temp = \
+                        convert_b_to_i(dict_pams['b'],
+                                       dict_pams['e'],
+                                       dict_pams['o'],
+                                       a_temp)
+
+
             params.extend([
                 dict_pams['M'] / mc.M_SEratio,  # mass in Solar unit
                 dict_pams['P'],
                 dict_pams['e'],
-                dict_pams['i'],
+                i_temp,
                 dict_pams['lN'] * (180. / np.pi),
                 dict_pams['o'] * (180. / np.pi),
                 mA])
