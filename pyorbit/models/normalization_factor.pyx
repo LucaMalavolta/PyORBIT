@@ -15,7 +15,7 @@ class CommonNormalizationFactor(AbstractCommon):
     }
 
     default_bounds = {
-        'n_factor': [0.00010, 10000000000000.0000]
+        'n_factor': [0.0000010, 100000.0000]
     }
 
     """ Must be the same parameters as in list_pams, because priors are applied only to _physical_ parameters """

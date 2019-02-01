@@ -97,8 +97,7 @@ class ModelContainer(object):
 
         for model in self.models.itervalues():
             if len(model.common_ref)> 0:
-                print
-                print model.common_ref
+
                 for common_ref in model.common_ref:
 
                     model.default_bounds.update(self.common_models[common_ref].default_bounds)
@@ -261,11 +260,11 @@ class ModelContainer(object):
                         dataset.normalization_model = np.ones(dataset.n, dtype=np.double)
 
                 elif getattr(self.models[model_name], 'normalization_model', False):
-                    dataset.normalization_model += self.models[model_name].compute(variable_values, dataset)
-
+                    if dataset.normalization_model is None:
+                        dataset.normalization_model = np.ones(dataset.n, dtype=np.double)
+                    dataset.normalization_model *= self.models[model_name].compute(variable_values, dataset)
                 else:
                     dataset.additive_model += self.models[model_name].compute(variable_values, dataset)
-
 
             dataset.compute_model()
             dataset.compute_residuals()
@@ -469,6 +468,10 @@ class ModelContainer(object):
             model_x0[dataset_name] = {}
             dataset.model_reset()
 
+            additive_model = np.zeros(np.size(x0_plot))
+            unitary_model = np.zeros(np.size(x0_plot))
+            normalization_model = None
+
             variable_values = dataset.convert(theta)
             dataset.compute(variable_values)
 
@@ -505,13 +508,16 @@ class ModelContainer(object):
                     continue
 
                 if dataset.dynamical:
-                    dataset.post_additive_model += dynamical_output[dataset_name]
+                    dataset.additive_model += dynamical_output[dataset_name]
                     model_out[dataset_name][model_name] = dynamical_output[dataset_name].copy()
                     model_out[dataset_name]['complete'] += dynamical_output[dataset_name]
 
                     model_x0[dataset_name][model_name] = dynamical_output_x0[dataset_name].copy()
                     model_x0[dataset_name]['complete'] += dynamical_output_x0[dataset_name]
                     continue
+
+                if hasattr(self.models[model_name], 'systematic_model'):
+                    pass
 
                 variable_values = {}
                 try:
@@ -524,31 +530,39 @@ class ModelContainer(object):
 
                 variable_values.update(self.models[model_name].convert(theta, dataset_name))
 
+                model_out[dataset_name][model_name] = self.models[model_name].compute(variable_values, dataset)
+                if getattr(self.models[model_name], 'time_independent_model', False):
+                    model_x0[dataset_name][model_name] = np.zeros(np.size(x0_plot), dtype=np.double)
+                else:
+                    model_x0[dataset_name][model_name] = self.models[model_name].compute(variable_values, dataset, x0_plot)
+
+                if hasattr(self.models[model_name], 'systematic_model'):
+                    pass
+
                 if getattr(self.models[model_name], 'unitary_model', False):
-                    dataset.unitary_model += self.models[model_name].compute(variable_values, dataset)
+                    dataset.unitary_model += model_out[dataset_name][model_name]
+                    unitary_model += model_x0[dataset_name][model_name]
+
                     if dataset.normalization_model is None:
                         dataset.normalization_model = np.ones(dataset.n, dtype=np.double)
-                elif getattr(self.models[model_name], 'normalization_model', False):
-                    dataset.normalization_model += self.models[model_name].compute(variable_values, dataset)
-                else:
-                    dataset.additive_model += self.models[model_name].compute(variable_values, dataset)
+                        normalization_model = np.ones(np.size(x0_plot), dtype=np.double)
 
-                if hasattr(self.models[model_name], 'single_value_output'):
-                    model_out[dataset_name][model_name] = np.zeros(dataset.n, dtype=np.double)
-                    model_x0[dataset_name][model_name] = np.zeros(np.size(x0_plot), dtype=np.double)
-                elif hasattr(self.models[model_name], 'not_time_dependant'):
-                    model_out[dataset_name][model_name] = self.models[model_name].compute(variable_values, dataset)
-                    model_out[dataset_name]['complete'] += model_out[dataset_name][model_name]
-                    model_x0[dataset_name][model_name] = np.zeros(np.size(x0_plot), dtype=np.double)
+                elif getattr(self.models[model_name], 'normalization_model', False):
+                    if dataset.normalization_model is None:
+                        dataset.normalization_model = np.ones(dataset.n, dtype=np.double)
+                        normalization_model = np.ones(np.size(x0_plot), dtype=np.double)
+                    dataset.normalization_model *= model_out[dataset_name][model_name]
+                    normalization_model *= model_x0[dataset_name][model_name]
+
                 else:
-                    model_out[dataset_name][model_name] = self.models[model_name].compute(variable_values, dataset)
-                    model_out[dataset_name]['complete'] += model_out[dataset_name][model_name]
-                    model_x0[dataset_name][model_name] = \
-                        self.models[model_name].compute(variable_values, dataset, x0_plot)
-                    model_x0[dataset_name]['complete'] += model_x0[dataset_name][model_name]
+                    dataset.additive_model += model_out[dataset_name][model_name]
+                    additive_model += model_x0[dataset_name][model_name]
 
             dataset.compute_model()
             dataset.compute_residuals()
+
+            model_x0[dataset_name]['complete'] += dataset.compute_model_from_arbitrary_datasets(additive_model, unitary_model, normalization_model)
+            model_out[dataset_name]['complete'] += dataset.model
 
             """ Gaussian Process check MUST be the last one or the program will fail
              that's because for the GP to work we need to know the _deterministic_ part of the model 
@@ -556,7 +570,7 @@ class ModelContainer(object):
             if logchi2_gp_model:
                 variable_values = {}
                 try:
-                    for common_ref in  self.models[logchi2_gp_model].common_ref:
+                    for common_ref in self.models[logchi2_gp_model].common_ref:
                         variable_values.update(self.common_models[common_ref].convert(theta))
                 except:
                     pass

@@ -540,8 +540,14 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
 
             bjd_plot[dataset_name]['start'] -= bjd_plot[dataset_name]['range'] * 0.10
             bjd_plot[dataset_name]['end'] += bjd_plot[dataset_name]['range'] * 0.10
+
+            if dataset.kind == 'Phot':
+                step_size = np.min(bjd_plot[dataset_name]['range']/dataset.n/20.)
+            else:
+                step_size = 0.10
+
             bjd_plot[dataset_name]['x0_plot'] = \
-                np.arange(bjd_plot[dataset_name]['start'], bjd_plot[dataset_name]['end'], 0.1)
+                np.arange(bjd_plot[dataset_name]['start'], bjd_plot[dataset_name]['end'], step_size)
 
             if bjd_plot['full']['range']:
                 bjd_plot['full']['start'] = min(bjd_plot['full']['start'], np.amin(dataset.x0))
@@ -557,6 +563,7 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
         bjd_plot['full']['x0_plot'] = np.arange(bjd_plot['full']['start'], bjd_plot['full']['end'],0.1)
 
         for dataset_name, dataset in mc.dataset_dict.iteritems():
+            if dataset.kind =='RV':
                 bjd_plot[dataset_name] = bjd_plot['full']
 
         bjd_plot['model_out'], bjd_plot['model_x0'] = mc.get_model(chain_med[:, 0], bjd_plot)

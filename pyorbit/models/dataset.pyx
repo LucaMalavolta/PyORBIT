@@ -68,7 +68,6 @@ class Dataset(AbstractCommon):
         self.mask = {}
 
     def convert_dataset_from_file(self, input_file):
-        print 'Opening: ', input_file
         data = np.atleast_2d(np.loadtxt(input_file))
 
         data_input = np.zeros([np.size(data, axis=0), 6], dtype=np.double) - 1.
@@ -187,6 +186,12 @@ class Dataset(AbstractCommon):
             self.model = self.additive_model
         else:
             self.model = self.additive_model + (1. + self.unitary_model)*self.normalization_model
+
+    def compute_model_from_arbitrary_datasets(self, additive_model, unitary_model, normalization_model):
+        if normalization_model is None or unitary_model is None:
+            return additive_model
+        else:
+            return additive_model + (1. + unitary_model)*normalization_model
 
     def compute_residuals(self):
         self.residuals = self.y - self.model

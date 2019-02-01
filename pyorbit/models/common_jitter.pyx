@@ -9,7 +9,7 @@ class CommonJitter(AbstractCommon):
     model_class = 'common_jitter'
 
     list_pams = {
-        'jitter': 'LU',  # order 1
+        'jitter'
     }
 
     default_bounds = {}
@@ -37,11 +37,11 @@ class CommonJitter(AbstractCommon):
 class Jitter(AbstractModel):
 
     model_class = 'common_jitter'
-    list_pams_common = {'jitter': 'LU'}
+    list_pams_common = {'jitter'}
     list_pams_dataset = {}
 
     recenter_pams_dataset = {}
-    single_value_output = True
+    systematic_model = True
 
     def compute(self, variable_value, dataset, x0_input=None):
         return variable_value['jitter']

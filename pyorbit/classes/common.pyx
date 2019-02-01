@@ -299,7 +299,7 @@ def pick_MAP_parameters(samples, lnprob):
 
 def convert_rho_to_a(P, rho):
 
-    return np.power(constants.Gsi / (constants.d2s * constants.d2s) * (P**2) *
+    return np.power(constants.Gsi * (constants.d2s * constants.d2s) * (P**2) *
                   rho * constants.rho_Sun / (3. * np.pi), 1./3.)
 
 def convert_b_to_i(b,e,o,a):
@@ -309,6 +309,6 @@ def convert_b_to_i(b,e,o,a):
     if arccos_argument > 1.: arccos_argument=1
     if arccos_argument < -1.: arccos_argument=-1
 
-    return np.arccos(arccos_argument)
+    return np.arccos(arccos_argument)*180./np.pi
 
 

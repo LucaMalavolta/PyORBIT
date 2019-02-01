@@ -12,7 +12,7 @@ class Correlation_SingleDataset(AbstractModel):
 
     recenter_pams_dataset = {}
 
-    not_time_dependant = True
+    time_independent_model = True
 
     order = 1
     x_vals = None

@@ -12,7 +12,7 @@ if 'celerite' in sys.modules:
   from ..models.celerite_semiperiodic_activity import Celerite_QuasiPeriodicActivity
 
 from ..models.correlations import Correlation_SingleDataset
-from ..models.polynomial_trend import CommonPolynomialTrend, PolynomialTrend
+from ..models.polynomial_trend import CommonPolynomialTrend, PolynomialTrend, LocalPolynomialTrend
 from ..models.common_offset import CommonOffset, Offset
 from ..models.common_jitter import CommonJitter, Jitter
 from ..models.sinusoid_common_period import SinusoidCommonPeriod
@@ -65,6 +65,7 @@ define_type_to_class = {
     'celerite_quasiperiodic': Celerite_QuasiPeriodicActivity,
     'correlation_singledataset': Correlation_SingleDataset,
     'polynomial_trend': PolynomialTrend,
+    'local_polynomial_trend': LocalPolynomialTrend,
     'common_offset': Offset,
     'common_jitter': Jitter,
     'sinusoid_common_period': SinusoidCommonPeriod,
@@ -147,6 +148,7 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, shutdown_
 
         return
 
+    print
     for dataset_name, dataset_conf in conf_inputs.iteritems():
 
         if not isinstance(dataset_name, str):
@@ -154,6 +156,8 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, shutdown_
 
         """ The keyword in dataset_dict and the name assigned internally to the databes must be the same
             or everything will fall apart """
+        print('Opening: ' + dataset_name)
+
         mc.dataset_dict[dataset_name] = Dataset(dataset_name,
                                                 dataset_conf['kind'],
                                                 np.atleast_1d(dataset_conf['models']).tolist())
@@ -203,7 +207,7 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, shutdown_
 
             for planet_name, planet_conf in model_conf.iteritems():
 
-                print 'Adding common model for planet: ', planet_name
+                print 'Adding common model of planet: ', planet_name
 
                 if not isinstance(planet_name, str):
                     planet_name = repr(planet_name)
@@ -235,16 +239,16 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, shutdown_
                 try:
                     if planet_conf['parametrization'] in mc.common_models[planet_name].parametrization_list:
                         mc.common_models[planet_name].parametrization = planet_conf['parametrization']
-                        print 'Using orbital parametrization: ', mc.common_models[planet_name].parametrization
+                        print('Using orbital parametrization: ' + mc.common_models[planet_name].parametrization)
                     else:
-                        print 'Orbital parametrization not recognized, switching to: ', \
-                            mc.common_models[planet_name].parametrization
+                        print('Orbital parametrization not recognized, switching to: ' + mc.common_models[planet_name].parametrization)
+
                 except:
-                    print 'Using default orbital parametrization: ', mc.common_models[planet_name].parametrization
+                    print('Using default orbital parametrization: ' + mc.common_models[planet_name].parametrization)
 
                 try:
                     mc.common_models[planet_name].use_inclination = planet_conf['use_inclination']
-                    print 'Inclination will be included as free parameter: ', planet_conf['use_inclination']
+                    print('Inclination will be included as free parameter: ' + planet_conf['use_inclination'])
                 except:
                     # False by default
                     pass
@@ -468,6 +472,7 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, shutdown_
                 if mc.models[model_name].model_conf['normalization_model'] is True:
                     mc.models[model_name].normalization_model = True
                     mc.models[model_name].unitary_model = False
+                    print('Model type: normalization')
             except:
                 pass
 
@@ -475,6 +480,7 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, shutdown_
                 if mc.models[model_name].model_conf['unitary_model'] is True:
                     mc.models[model_name].unitary_model = True
                     mc.models[model_name].normalization_model = False
+                    print('Model type: unitary')
             except:
                 pass
 
@@ -482,6 +488,7 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, shutdown_
                 if mc.models[model_name].model_conf['additive_model'] is True:
                     mc.models[model_name].unitary_model = False
                     mc.models[model_name].normalization_model = False
+                    print('Model type: additive')
             except:
                 pass
 
@@ -489,23 +496,21 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, shutdown_
             #    bounds_space_priors_starts_fixed(mc, mc.models[model_name], model_conf[dataset_name], dataset_1=dataset_name)
 
             """ Using default boundaries if one dataset is missing"""
-            if not mc.models[model_name].list_pams_dataset:
-                continue
+            #if not mc.models[model_name].list_pams_dataset:
+            #    continue
 
-            for dataset_name, dataset in mc.dataset_dict.iteritems():
-                if model_name in dataset.models:
+            try:
+                for dataset_name, dataset in mc.dataset_dict.iteritems():
 
-                    if dataset_name not in model_conf:
-                        model_conf[dataset_name] = {}
-                        print
-                        print '*********************************** WARNING *********************************** '
-                        print 'Using default boundaries for dataset-specific parameters '
-                        print 'for model: ', model_name, ' dataset: ', dataset_name
-                        print
+                    if model_name in dataset.models:
 
-                    bounds_space_priors_starts_fixed(mc, mc.models[model_name], model_conf[dataset_name],
-                                                   dataset_1=dataset_name)
+                        if dataset_name not in model_conf:
+                            model_conf[dataset_name] = {}
 
+                        bounds_space_priors_starts_fixed(mc, mc.models[model_name], model_conf[dataset_name],
+                                                       dataset_1=dataset_name)
+            except:
+                pass
                 #mc.models[model_name].setup_dataset(mc.dataset_dict[dataset_name])
 
     if 'Tref' in conf_parameters:
