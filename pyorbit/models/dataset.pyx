@@ -7,6 +7,7 @@ kind_definition = {
     'Tcent': ['Tcent', 'TCent', 'Tc', 'TC', 'T0', 'TT'],
     'H-alpha': ['H', 'HA', 'h', 'ha', 'Halpha', 'H-alpha', 'halpha', 'h-alpha'],
     'Phot': ['P', 'Ph', 'p', 'ph', 'PHOT', 'Phot', 'phot', 'Photometry', 'photometry'],
+    'FWHM': ['FWHM', 'fwhm'],
     'BIS': ['BIS', 'bis'],
     'Ca_HK': ['Ca_HK', 'logR'],
     'S_index': ['S', 'S_index']
