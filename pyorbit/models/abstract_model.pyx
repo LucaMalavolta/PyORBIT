@@ -14,7 +14,14 @@ class AbstractModel():
     def __init__(self, model_name, common_ref):
         self.model_name = model_name
 
-        self.common_ref = np.atleast_1d(common_ref).tolist()
+        try:
+            if len(common_ref) >0:
+                self.common_ref = np.atleast_1d(common_ref).tolist()
+            else:
+                self.common_ref = []
+        except:
+            self.common_ref = []
+
         self.planet_ref = common_ref
 
         self.variable_sampler = {}

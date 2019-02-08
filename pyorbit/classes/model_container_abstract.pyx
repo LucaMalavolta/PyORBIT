@@ -96,10 +96,9 @@ class ModelContainer(object):
                         }
 
         for model in self.models.itervalues():
-            if len(model.common_ref)> 0:
+            if len(model.common_ref) > 0:
 
                 for common_ref in model.common_ref:
-
                     model.default_bounds.update(self.common_models[common_ref].default_bounds)
                     model.default_spaces.update(self.common_models[common_ref].default_spaces)
                     model.default_priors.update(self.common_models[common_ref].default_priors)
