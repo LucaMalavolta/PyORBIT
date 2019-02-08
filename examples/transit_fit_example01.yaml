@@ -1,0 +1,105 @@
+inputs:
+  LCdata_transit01:
+    file: K2-139_transit01.dat
+    kind: Phot
+    models:
+      - lc_model
+      #- dilution_factor
+      - common_jitter
+      - normalization_factor
+      - local_polynomial_trend
+  LCdata_transit02:
+    file: K2-139_transit02.dat
+    kind: Phot
+    models:
+      - lc_model
+      - common_jitter
+      #- dilution_factor
+      - normalization_factor
+      - local_polynomial_trend
+  LCdata_transit03:
+    file: K2-139_transit03.dat
+    kind: Phot
+    models:
+      - lc_model
+      - common_jitter
+      #- dilution_factor
+      - normalization_factor
+      - local_polynomial_trend
+  Tcent_b:
+    file: raw_transit_b.dat
+    kind: Tcent
+    models: transit_b
+common:
+  planets:
+    b:
+      orbit: circular
+      boundaries:
+        P: [28.3773, 28.3873]
+        K: [0.01, 200.0]
+  star:
+    star_parameters:
+      priors:
+        mass: ['Gaussian', 1.000, 0.100]
+    limb_darkening:
+      type: batman_ld_quadratic
+    #dilution_factor:
+    #  priors:
+    #    d_factor: ['Gaussian', 0.3500, 0.0100]
+  polynomial_trend:
+    type: polynomial_trend
+  normalization_factor:
+    boundaries:
+      n_factor: [0.015625, 2.0]
+  common_jitter:
+    type: common_jitter
+models:
+  transit_b:
+    kind: transit_time
+    planet: b
+  lc_model:
+    kind: batman_transit
+    planets:
+      - b
+    LCdata_transit01:
+      supersample_factor: 10
+      exposure_time: 1800.00
+    LCdata_transit02:
+      supersample_factor: 10
+      exposure_time: 1800.00
+    LCdata_transit03:
+      supersample_factor: 10
+      exposure_time: 1800.00
+  local_polynomial_trend:
+    common: polynomial_trend
+    order: 2
+    LCdata_transit01:
+      boundaries:
+          poly_c1: [-1.0, 1.]
+          poly_c2: [-1.0, 1.]
+    LCdata_transit02:
+      boundaries:
+          poly_c1: [-1.0, 1.]
+          poly_c2: [-1.0, 1.]
+    LCdata_transit03:
+      boundaries:
+          poly_c1: [-1.0, 1.]
+          poly_c2: [-1.0, 1.]
+parameters:
+  star_mass: [1.00, 0.01]
+  star_radius: [1.00, 0.01]
+  Tref: 7350.00
+solver:
+  pyde:
+    ngen: 16000
+    npop_mult: 8
+  emcee:
+    npop_mult: 8
+    nsteps: 50000
+    nburn: 35000
+    thin: 100
+  nested_sampling:
+    nlive: 1000
+    num_repeats_mult: 5
+    sampling_efficiency: 0.30
+  recenter_bounds: True

@@ -1,0 +1,73 @@
+inputs:
+  LCdata:
+    file: K2-139_fullLC.dat
+    kind: Phot
+    models:
+      - lc_model
+      - normalization_factor
+      - gp_model
+  Tcent_b:
+    file: raw_transit_b.dat
+    kind: Tcent
+    models: transit_b
+common:
+  planets:
+    b:
+      orbit: circular
+      boundaries:
+        P: [28.3773, 28.3873]
+        K: [0.01, 200.0]
+  star:
+    star_parameters:
+      priors:
+        mass: ['Gaussian', 1.000, 0.100]
+    limb_darkening:
+      type: batman_ld_quadratic
+    #dilution_factor:
+    #  priors:
+    #    d_factor: ['Gaussian', 0.3500, 0.0100]
+  activity:
+    boundaries:
+      Prot: [15.00, 20.00]
+      Pdec: [15.0, 2000.00]
+      Oamp: [0.20, 0.50]
+    priors:
+      Oamp: ['Gaussian', 0.350, 0.035]
+  normalization_factor:
+    boundaries:
+      n_factor: [0.015625, 2.0]
+models:
+  transit_b:
+    kind: transit_time
+    planet: b
+  lc_model:
+    kind: batman_transit
+    planets:
+      - b
+    LCdata:
+      supersample_factor: 10
+      exposure_time: 1800.00
+  gp_model:
+    kind: gp_quasiperiodic
+    common: activity
+    LCdata:
+      boundaries:
+        Hamp: [0.0001, 0.1000]
+parameters:
+  star_mass: [1.00, 0.01]
+  star_radius: [1.00, 0.01]
+  Tref: 7350.00
+solver:
+  pyde:
+    ngen: 16000
+    npop_mult: 8
+  emcee:
+    npop_mult: 8
+    nsteps: 50000
+    nburn: 35000
+    thin: 100
+  nested_sampling:
+    nlive: 1000
+    num_repeats_mult: 5
+    sampling_efficiency: 0.30
+  recenter_bounds: True
