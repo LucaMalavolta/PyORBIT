@@ -109,15 +109,14 @@ class AbstractCommon(object):
 
     def define_starting_point(self, starting_point):
 
-        for var in list(set(self.starts) and set(self.variable_sampler)):
+        for var_sampler in list(set(self.starts) and set(self.variable_sampler)):
+            if self.define_special_starting_point(starting_point, var_sampler): continue
 
-            if self.define_special_starting_point(starting_point, var): continue
-
-            if self.spaces[var] == 'Linear':
-                start_converted = self.starts[var]
-            if self.spaces[var] == 'Logarithmic':
-                start_converted = np.log2(self.starts[var])
-            starting_point[self.variable_sampler[var]] = start_converted
+            if self.spaces[var_sampler] == 'Linear':
+                start_converted = self.starts[var_sampler]
+            if self.spaces[var_sampler] == 'Logarithmic':
+                start_converted = np.log2(self.starts[var_sampler])
+            starting_point[self.variable_sampler[var_sampler]] = start_converted
 
     def return_priors(self, theta):
         """Compute the prior probability for a given set of input parameters

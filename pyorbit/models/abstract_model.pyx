@@ -15,7 +15,7 @@ class AbstractModel():
         self.model_name = model_name
 
         try:
-            if len(common_ref) >0:
+            if len(common_ref) > 0:
                 self.common_ref = np.atleast_1d(common_ref).tolist()
             else:
                 self.common_ref = []

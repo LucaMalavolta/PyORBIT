@@ -220,7 +220,7 @@ class CommonPlanets(AbstractCommon):
 
         return ndim, output_lists, True
 
-    def define_special_starting_point(self, starting_point, var):
+    def define_special_starting_point(self, starting_point, var_sampler):
         """
         Eccentricity and argument of pericenter require a special treatment
 
@@ -229,19 +229,15 @@ class CommonPlanets(AbstractCommon):
 
         Args:
             :starting_point:
-            :var:
+            :var_sampler:
         Returns:
             :bool:
 
         """
-
-        if not (var == "e" or var == "o"):
-            return False
-
-        if 'sre_coso' in self.variable_sampler and \
-                        'sre_sino' in self.variable_sampler:
+        if var_sampler == 'sre_coso' or var_sampler=='sre_sino':
 
             if 'e' in self.starts and 'o' in self.starts:
+
                 starting_point[self.variable_sampler['sre_coso']] = \
                     np.sqrt(self.starts['e']) * np.cos(self.starts['o'])
                 starting_point[self.variable_sampler['sre_sino']] = \
@@ -251,8 +247,9 @@ class CommonPlanets(AbstractCommon):
                 starting_point[self.variable_sampler['sre_coso']] = self.starts['sre_coso']
                 starting_point[self.variable_sampler['sre_coso']] = self.starts['sre_sino']
 
-        if 'e_coso' in self.variable_sampler and \
-                        'e_sino' in self.variable_sampler:
+            return True
+
+        if var_sampler == 'e_coso' or var_sampler=='e_sino':
 
             if 'e' in self.starts and 'o' in self.starts:
                 starting_point[self.variable_sampler['e_coso']] = \
@@ -264,8 +261,9 @@ class CommonPlanets(AbstractCommon):
                 starting_point[self.variable_sampler['e_coso']] = self.starts['e_coso']
                 starting_point[self.variable_sampler['e_coso']] = self.starts['e_sino']
 
+            return True
 
-        return True
+        return False
 
     def special_fix_population(self, population):
 

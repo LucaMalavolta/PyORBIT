@@ -8,9 +8,9 @@ class CommonStarParameters(AbstractCommon):
     model_class = 'star_parameters'
 
     list_pams = {
-        'radius',  # diluition factor
-        'mass',  # diluition factor
-        'rho'  # diluition factor
+        'radius',  # radius of the star, in Solar radii
+        'mass',  # mass of the star, in Solar masses
+        'rho'  # density of the star, in Solar density units
     }
 
     default_bounds = {
