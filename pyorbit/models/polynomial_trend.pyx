@@ -132,6 +132,7 @@ class LocalPolynomialTrend(AbstractModel):
 
     order = 1
     starting_order = 1
+    x_zero = {}
 
     def initialize_model(self, mc, **kwargs):
         """ A special kind of initialization is required for this module, since it has to take a second dataset
@@ -156,6 +157,12 @@ class LocalPolynomialTrend(AbstractModel):
             var = 'poly_c'+repr(i_order)
             self.list_pams_dataset.update({var: None})
 
+    def setup_model(self, dataset, **kwargs):
+
+        if 'x_zero' in kwargs:
+            self.x_zero[dataset.name_ref] = kwargs['x_zero']
+        else:
+            self.x_zero[dataset.name_ref] = np.median(dataset.x0)
 
     def compute(self, variable_value, dataset, x0_input=None):
 
@@ -168,6 +175,6 @@ class LocalPolynomialTrend(AbstractModel):
         Numpy Polinomials requires the inverse order (from high to small) as input"""
 
         if x0_input is None:
-            return numpy.polynomial.polynomial.polyval(dataset.x0, coeff)
+            return numpy.polynomial.polynomial.polyval(dataset.x0-self.x_zero[dataset.name_ref], coeff)
         else:
-            return numpy.polynomial.polynomial.polyval(x0_input, coeff)
+            return numpy.polynomial.polynomial.polyval(x0_input-self.x_zero[dataset.name_ref], coeff)
