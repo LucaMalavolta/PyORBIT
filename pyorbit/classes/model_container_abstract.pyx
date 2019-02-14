@@ -62,6 +62,7 @@ class ModelContainer(object):
         # First step: setting up the correct associations between models and dataset
 
         for model_name, model in self.models.iteritems():
+
             if not model.model_conf:
                 continue
 
@@ -443,7 +444,6 @@ class ModelContainer(object):
 
         for model in self.common_models.itervalues():
             for var, i in model.variable_sampler.iteritems():
-                print model.common_ref
                 theta_dictionary[model.common_ref + '_' + var] = i
 
         return theta_dictionary

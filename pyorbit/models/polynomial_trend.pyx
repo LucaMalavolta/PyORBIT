@@ -112,9 +112,6 @@ class PolynomialTrend(AbstractModel):
 
         """ In our array, coefficient are sorted from the lowest degree to the highr
         Numpy Polinomials requires the inverse order (from high to small) as input"""
-        # print variable_value
-        # print coeff
-        # print numpy.polynomial.polynomial.polyval(dataset.x0, coeff)
 
         if x0_input is None:
             return numpy.polynomial.polynomial.polyval(dataset.x0, coeff)
@@ -157,7 +154,7 @@ class LocalPolynomialTrend(AbstractModel):
             var = 'poly_c'+repr(i_order)
             self.list_pams_dataset.update({var: None})
 
-    def setup_model(self, dataset, **kwargs):
+    def setup_dataset(self, dataset, **kwargs):
 
         if 'x_zero' in kwargs:
             self.x_zero[dataset.name_ref] = kwargs['x_zero']

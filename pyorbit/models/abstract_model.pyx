@@ -82,8 +82,6 @@ class AbstractModel():
             if applied:
                 continue
 
-            print self.bounds[dataset_name]
-
             if var not in self.bounds[dataset_name]:
                 self.bounds[dataset_name][var] = self.default_bounds[var]
 

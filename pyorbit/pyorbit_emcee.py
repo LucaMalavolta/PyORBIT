@@ -52,11 +52,6 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
         mc.initialize_logchi2()
         mc.results_resumen(flatchain)
 
-        print
-        print mc.star_mass
-        print mc.common_models
-        print
-
         if return_output:
             return mc, sampler_chain, sampler_lnprobability
         else:
@@ -127,7 +122,7 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
             population[ii, :] = np.random.normal(starting_point, 0.0000001)
         reloaded_pyde = True
 
-        print 'PyDE reloaded'
+        print 'Using user-defined starting point'
         sys.stdout.flush()
 
     if not reloaded_pyde:
