@@ -163,7 +163,7 @@ class CommonPlanets(AbstractCommon):
             if var_check in self.variable_sampler:
                 return ndim, output_lists, False
 
-        if self.parametrization == 'Standard:':
+        if self.parametrization == 'Standard':
             self.transformation['e'] = get_var_val
             self.variable_index['e'] = ndim
             self.transformation['o'] = get_var_val
