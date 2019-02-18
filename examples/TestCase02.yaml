@@ -30,7 +30,7 @@ parameters:
   Tref: 6025.00
 solver:
   pyde:
-    ngen: 16000
+    ngen: 8000
     npop_mult: 4
   emcee:
     npop_mult: 4

@@ -25,30 +25,36 @@ class CommonPlanets(AbstractCommon):
         Eastman2013: $\sqrt{e} \cos{\omega }$ and $\sqrt{e} \sin{\omega}$
     """
     parametrization = 'Eastman2013'
-    parametrization_list = ['Ford2006', 'Eastman2013', 'Standard']
+    parametrization_list = ['Ford2006', 'Eastman2013', 'Standard',
+                            'Ford2006_Tcent', 'Eastman2013_Tcent', 'Standard_Tcent',
+                            'Ford2006_Tc', 'Eastman2013_Tc', 'Standard_Tc']
     orbit_list = ['circular', 'keplerian', 'dynamical']
     orbit = 'keplerian'
 
     use_inclination = False
     use_semimajor_axis = False
+    use_time_of_transit = False
+    use_mass_for_planets = False
 
     list_pams = {
         'P',  # Period, log-uniform prior
         'K',  # RV semi-amplitude, log-uniform prior
+        'Tc', # central time of transit
         'f',  # mean longitude = argument of pericenter + mean anomaly at Tref
         'e',  # eccentricity, uniform prior - to be fixed
         'o',  # argument of pericenter (in radians)
         'M',  # Mass in Earth masses
         'i',  # orbital inclination (in degrees)
-        'lN',  # longitude of ascending node (usually 180 degrees when unknown)
+        'lN', # longitude of ascending node (usually 180 degrees when unknown)
         'R',  # planet radius (in units of stellar radii)
         'a',  # semi-major axis (in units of stellar radii)
-        'b' # impact parameter
+        'b'   # impact parameter
     }
 
     default_bounds = {
         'P': [0.4, 100000.0],
         'K': [0.5, 2000.0],
+        'Tc': [0.0, 1000.0],
         'f': [0.0, 2 * np.pi],
         'e_coso': [-1.0, 1.0],
         'e_sino': [-1.0, 1.0],
@@ -70,6 +76,7 @@ class CommonPlanets(AbstractCommon):
     default_priors = {
         'P': ['Uniform', []],
         'K': ['Uniform', []],
+        'Tc': ['Uniform', []],
         'f': ['Uniform', []],
         'e': ['BetaDistribution', [0.71, 2.57]],
         'e_coso': ['Uniform', []],
@@ -88,6 +95,7 @@ class CommonPlanets(AbstractCommon):
     default_spaces = {
         'P': 'Logarithmic',
         'K': 'Logarithmic',
+        'Tc': 'Linear',
         'f': 'Linear',
         'e_coso': 'Linear',
         'e_sino': 'Linear',
@@ -95,7 +103,7 @@ class CommonPlanets(AbstractCommon):
         'sre_sino': 'Linear',
         'e': 'Linear',
         'o': 'Linear',
-        'M': 'Linear',
+        'M': 'Logarithmic',
         'i': 'Linear',
         'lN': 'Linear',
         'R': 'Linear',
@@ -163,7 +171,7 @@ class CommonPlanets(AbstractCommon):
             if var_check in self.variable_sampler:
                 return ndim, output_lists, False
 
-        if self.parametrization == 'Standard':
+        if self.parametrization[:8] == 'Standard':
             self.transformation['e'] = get_var_val
             self.variable_index['e'] = ndim
             self.transformation['o'] = get_var_val
@@ -171,7 +179,7 @@ class CommonPlanets(AbstractCommon):
             variable_list = ['e', 'o']
 
         else:
-            if self.parametrization == 'Ford2006':
+            if self.parametrization[:8] == 'Ford2006':
                 self.transformation['e'] = get_2var_e
                 self.variable_index['e'] = [ndim, ndim + 1]
                 variable_list = ['e_coso', 'e_sino']

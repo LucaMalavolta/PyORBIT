@@ -12,7 +12,7 @@ from scipy.optimize import fsolve
 #       Newton-Raphson iteration to extend the applicability of this
 #       function to higher eccentricities
 
-__all__ = ["kepler_K1", "kepler_RV", "kepler_RV_T0P", "kepler_Tcent_T0P", "get_planet_mass"]
+__all__ = ["kepler_K1", "kepler_RV", "kepler_Tc2phase_Tref", "kepler_phase2Tc_Tref", "get_planet_mass"]
 
 G_grav = 6.67428e-11 # Gravitational Constants in SI system [m^3/kg/s^2]
 M_sun = 1.9884e30 # Value from TRADES
@@ -187,12 +187,20 @@ def kepler_RV_T0P(BJD0, phase, Period, K, e0, omega0):
     return rv
 
 
-def kepler_Tcent_T0P(Period, phase, e0, omega0):
+def kepler_phase2Tc_Tref(Period, phase, e0, omega0):
     # The closest Tcent after Tref is given back
     TrAn = np.pi / 2 - omega0
     EccAn = 2. * np.arctan(np.sqrt((1.0 - e0) / (1.0 + e0)) * np.tan(TrAn / 2.0))
     MeAn = EccAn - e0 * np.sin(EccAn)
     return (MeAn - phase + omega0) / (2 * np.pi) * Period % Period
+
+
+def kepler_Tc2phase_Tref(Period, Tcent, e0, omega0):
+    # The closest Tcent after Tref is given back
+    TrAn = np.pi / 2 - omega0
+    EccAn = 2. * np.arctan(np.sqrt((1.0 - e0) / (1.0 + e0)) * np.tan(TrAn / 2.0))
+    MeAn = EccAn - e0 * np.sin(EccAn)
+    return (omega0 + MeAn - Tcent / Period * 2 * np.pi) % (2 * np.pi)
 
 
 def f_get_mass(M_star2, M_star1, Period, K1, e0):

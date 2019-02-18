@@ -62,14 +62,13 @@ class ModelContainer(object):
         # First step: setting up the correct associations between models and dataset
 
         for model_name, model in self.models.iteritems():
+            try:
+                model.initialize_model(self, **model.model_conf)
 
-            if not model.model_conf:
-                continue
-
-            model.initialize_model(self, **model.model_conf)
-
-            for dataset_name in list(set(model.model_conf) & set(self.dataset_dict)):
-                model.setup_dataset(self.dataset_dict[dataset_name], **model.model_conf)
+                for dataset_name in list(set(model.model_conf) & set(self.dataset_dict)):
+                    model.setup_dataset(self.dataset_dict[dataset_name], **model.model_conf)
+            except:
+                model.initialize_model(self, **{})
 
         for dataset_name, dataset in self.dataset_dict.iteritems():
             for model_name in dataset.models:

@@ -6,12 +6,8 @@ class Batman_Transit(AbstractModel):
     model_class = 'transit'
     unitary_model = True
 
-    use_semimajor_axis = False
-    use_inclination = False
-
     list_pams_common = {
         'P',  # Period, log-uniform prior
-        'f',  # mean longitude = argument of pericenter + mean anomaly at Tref
         'e',  # eccentricity, uniform prior
         'o',  # argument of pericenter (in radians)
         'R',  # planet radius (in units of stellar radii)
@@ -34,6 +30,10 @@ class Batman_Transit(AbstractModel):
 
     ld_ncoeff = 0
 
+    use_semimajor_axis = False
+    use_inclination = False
+    use_time_of_transit = False
+
     def initialize_model(self, mc, **kwargs):
 
         if mc.common_models[self.planet_ref].use_semimajor_axis:
@@ -51,6 +51,15 @@ class Batman_Transit(AbstractModel):
         else:
             """ b is the impact parameter """
             self.list_pams_common.update({'b': None})
+
+        if mc.common_models[self.planet_ref].use_time_of_transit:
+            self.list_pams_common.update({'Tc': None})
+            self.use_time_of_transit = True
+            # Copying the property to the class for faster access
+        else:
+            self.list_pams_common.update({'f': None})
+            # mean longitude = argument of pericenter + mean anomaly at Tref
+
 
     def setup_dataset(self, dataset, **kwargs):
 
@@ -120,10 +129,13 @@ class Batman_Transit(AbstractModel):
                                                                       variable_value['o'],
                                                                       self.batman_params[dataset.name_ref].a)
 
-        self.batman_params[dataset.name_ref].t0 = kepler_exo.kepler_Tcent_T0P(variable_value['P'],
-                                                     variable_value['f'],
-                                                     variable_value['e'],
-                                                     variable_value['o'])
+        if self.use_time_of_transit:
+            self.batman_params[dataset.name_ref].t0 = variable_value['Tc']-dataset.Tref
+        else:
+            self.batman_params[dataset.name_ref].t0 = kepler_exo.kepler_phase2Tc_Tref(variable_value['P'],
+                                                         variable_value['f'],
+                                                         variable_value['e'],
+                                                         variable_value['o'])
 
         self.batman_params[dataset.name_ref].per = variable_value['P'] #orbital period
         self.batman_params[dataset.name_ref].rp = variable_value['R']  #planet radius (in units of stellar radii)

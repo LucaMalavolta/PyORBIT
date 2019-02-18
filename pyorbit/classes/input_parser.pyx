@@ -2,7 +2,7 @@ from common import *
 from ..models.dataset import *
 from ..models.planets import CommonPlanets
 from ..models.activity import CommonActivity
-from ..models.radial_velocities import RVkeplerian, RVdynamical, TransitTimeKeplerian, TransitTimeDynamical, DynamicalIntegrator, RVkeplerianMass
+from ..models.radial_velocities import RVkeplerian, RVdynamical, TransitTimeKeplerian, TransitTimeDynamical, DynamicalIntegrator
 from ..models.batman_transit import Batman_Transit
 from ..models.gp_semiperiodic_activity import GaussianProcess_QuasiPeriodicActivity
 from ..models.gp_semiperiodic_activity_common import GaussianProcess_QuasiPeriodicActivity_Common
@@ -49,12 +49,10 @@ define_common_type_to_class = {
 define_type_to_class = {
     'radial_velocities': {'circular': RVkeplerian,
                           'keplerian': RVkeplerian,
-                          'dynamical': RVdynamical,
-                          'keplerian_mass': RVkeplerianMass},
+                          'dynamical': RVdynamical},
     'rv_planets': {'circular': RVkeplerian,
                    'keplerian': RVkeplerian,
-                   'dynamical': RVdynamical,
-                   'keplerian_mass': RVkeplerianMass},
+                   'dynamical': RVdynamical},
     'transit_time': {'circular': TransitTimeKeplerian,
                      'keplerian': TransitTimeKeplerian,
                      'dynamical': TransitTimeDynamical},
@@ -196,8 +194,6 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, shutdown_
 
         mc.dataset_dict[dataset_name].update_bounds_spaces_priors_starts()
 
-    print
-
     for model_name, model_conf in conf_common.iteritems():
 
         if not isinstance(model_name, str):
@@ -243,6 +239,11 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, shutdown_
                     else:
                         print('Orbital parametrization not recognized, switching to: ' + mc.common_models[planet_name].parametrization)
 
+                    if mc.common_models[planet_name].parametrization[-5:] == 'Tcent' or \
+                            mc.common_models[planet_name].parametrization[-5:] == 'Tc':
+                        print('Using Central Time of Transit instead of phase')
+                        mc.common_models[planet_name].use_time_of_transit = True
+
                 except:
                     print('Using default orbital parametrization: ' + mc.common_models[planet_name].parametrization)
 
@@ -256,6 +257,20 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, shutdown_
                 try:
                     mc.common_models[planet_name].use_semimajor_axis = planet_conf['use_semimajor_axis']
                     print 'Semi-major axis will be included as free parameter: ', planet_conf['use_inclination']
+                except:
+                    # False by default
+                    pass
+
+                try:
+                    mc.common_models[planet_name].use_time_of_transit = planet_conf['use_time_of_transit']
+                    print 'Using Central Time of Transit instead of phase: ', planet_conf['use_time_of_transit']
+                except:
+                    # False by default
+                    pass
+
+                try:
+                    mc.common_models[planet_name].use_mass_for_planets = planet_conf['use_mass_for_planets']
+                    print 'Using planetary mass instead of RV semiamplitude: ', planet_conf['use_mass_for_planets']
                 except:
                     # False by default
                     pass
@@ -334,11 +349,10 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, shutdown_
 
         """ Check if the keplerian approximation must be used for this dataset even if the planet has the dynamical flag"""
 
+        keplerian_approximation = False
         if 'keplerian_approximation' in model_conf:
             keplerian_approximation = model_conf['keplerian_approximation']
             print 'Using Keplerian approximation'
-        else:
-            keplerian_approximation = False
 
         if 'type' in model_conf:
             model_type = model_conf['type']
@@ -372,13 +386,12 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, shutdown_
 
                 """ This snippet will work only for RV class"""
                 try:
-                    if keplerian_approximation:
-                        """ override default model from input file, to apply keplerian approximation """
-                        mc.models[model_name_exp] = \
-                            define_type_to_class[model_type]['keplerian_mass'](model_name_exp, planet_name)
-                    else:
-                        mc.models[model_name_exp] = \
+                    mc.models[model_name_exp] = \
                             define_type_to_class[model_type][mc.planet_dict[planet_name]](model_name_exp, planet_name)
+
+                    if keplerian_approximation:
+                        mc.common_models[planet_name].use_mass_for_planets = True
+                        print 'Using planetary mass instead of RV semiamplitude: ', planet_conf['use_mass_for_planets']
 
                 except:
                     mc.models[model_name_exp] = \
@@ -411,9 +424,6 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, shutdown_
                     pass
 
                 mc.models[model_name_exp].common_ref.append('star_parameters')
-                #else:
-                #    mc.common_models[planet_name].use_semimajor_axis = True
-                #    mc.common_models[planet_name].use_inclination = True
 
                 ## Not sure if this line of code is supposed to work
                 for dataset_name in list(set(model_name_exp) & set(mc.dataset_dict)):
@@ -448,7 +458,7 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, shutdown_
                     dataset.dynamical = True
                     mc.dynamical_t0_dict[planet_name] = dataset_name
 
-            mc.models[model_name_exp].common_ref.append('star_parameters')
+            mc.models[model_name].common_ref.append('star_parameters')
 
 
         elif model_type == 'correlation_singledataset':

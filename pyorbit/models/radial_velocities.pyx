@@ -14,74 +14,66 @@ New changes:
 
 
 class RVkeplerian(AbstractModel):
-
     model_class = 'rv_keplerian'
 
     list_pams_common = {
-        'P': 'LU',  # Period
-        'K': 'LU',  # RV semi-amplitude
-        'f': 'U',  # RV curve phase
-        'e': 'U',  # eccentricity, uniform prior - to be fixed
-        'o': 'U'}  # argument of pericenter
+        'P',  # Period
+        'K',  # RV semi-amplitude
+        'e',  # eccentricity, uniform prior - to be fixed
+        'o'}  # argument of pericenter
 
     list_pams_dataset = {}
 
     recenter_pams_dataset = {}
+    use_time_of_transit = False
+    use_mass_for_planets = False
 
-    def compute(self, variable_value, dataset, x0_input=None):
-        if x0_input is None:
-            return kepler_exo.kepler_RV_T0P(dataset.x0,
-                                            variable_value['f'],
-                                            variable_value['P'],
-                                            variable_value['K'],
-                                            variable_value['e'],
-                                            variable_value['o'])
-        else:
-            return kepler_exo.kepler_RV_T0P(x0_input,
-                                            variable_value['f'],
-                                            variable_value['P'],
-                                            variable_value['K'],
-                                            variable_value['e'],
-                                            variable_value['o'])
-
-class RVkeplerianMass(AbstractModel):
-
-    model_class = 'rv_keplerian_mass'
-
-    list_pams_common = {
-        'P': 'LU',  # Period
-        'M': 'LU',  # RV semi-amplitude
-        'f': 'U',  # RV curve phase
-        'e': 'U',  # eccentricity, uniform prior - to be fixed
-        'o': 'U'}  # argument of pericenter
-
-    list_pams_dataset = {}
-
-    recenter_pams_dataset = {}
-
-    star_mass = 1.0
     M_SEratio = constants.Msear
 
     def initialize_model(self, mc, **kwargs):
-        self.star_mass = mc.star_mass[0]
-        self.M_SEratio = mc.M_SEratio
-        pass
+
+        if mc.common_models[self.planet_ref].use_time_of_transit:
+            self.list_pams_common.update({'Tc': None})
+            self.use_time_of_transit = True
+            # Copying the property to the class for faster access
+        else:
+            self.list_pams_common.update({'f': None})
+
+        if mc.common_models[self.planet_ref].use_mass_for_planets:
+            self.list_pams_common.update({'M': None})
+            self.list_pams_common.update({'mass': None})
+            self.use_mass_for_planets = True
+        else:
+            self.list_pams_common.update({'K': None})
 
     def compute(self, variable_value, dataset, x0_input=None):
 
-        K = kepler_exo.kepler_K1(self.star_mass,
-                                 variable_value['M']/self.M_SEratio, variable_value['P'], variable_value['i'], variable_value['e'])
+        if self.use_time_of_transit:
+            f = kepler_exo.kepler_Tc2phase_Tref(variable_value['P'],
+                                                variable_value['Tc'] - dataset.Tref,
+                                                variable_value['e'],
+                                                variable_value['o'])
+        else:
+            f = variable_value['f']
+
+        if self.use_mass_for_planets:
+
+            K = kepler_exo.kepler_K1(variable_value['mass'],
+                                     variable_value['M'] / self.M_SEratio, variable_value['P'], variable_value['i'],
+                                     variable_value['e'])
+        else:
+            K = variable_value['K']
 
         if x0_input is None:
             return kepler_exo.kepler_RV_T0P(dataset.x0,
-                                            variable_value['f'],
+                                            f,
                                             variable_value['P'],
                                             K,
                                             variable_value['e'],
                                             variable_value['o'])
         else:
             return kepler_exo.kepler_RV_T0P(x0_input,
-                                            variable_value['f'],
+                                            f,
                                             variable_value['P'],
                                             K,
                                             variable_value['e'],
@@ -89,19 +81,17 @@ class RVkeplerianMass(AbstractModel):
 
 
 class RVdynamical(AbstractModel):
-
     model_class = 'rv_dynamical'
 
     ''' Orbital parameters to be used in the dynamical fit '''
     list_pams_common = {
-            'P': 'LU',  # Period in days
-            'M': 'LU',  # Mass in Earth masses
-            'i': 'U',  # inclination in degrees
-            'f': 'U',  # mean longitude
-            'lN': 'U',  # longitude of ascending node
-            'e': 'U',  # eccentricity, uniform prior - to be fixed
-            'R': 'U',  # planet radius (in units of stellar radii)
-            'o': 'U'}  # argument of pericenter
+        'P',  # Period in days
+        'M',  # Mass in Earth masses
+        'i',  # inclination in degrees
+        'lN',  # longitude of ascending node
+        'e',  # eccentricity, uniform prior - to be fixed
+        'R',  # planet radius (in units of stellar radii)
+        'o'}  # argument of pericenter
 
     list_pams_dataset = {}
 
@@ -123,53 +113,71 @@ class RVdynamical(AbstractModel):
                 """ rho is the density of the star (in solar units) """
                 self.list_pams_common.update({'rho': None})
 
+        if mc.common_models[self.planet_ref].use_time_of_transit:
+            self.list_pams_common.update({'Tc': None})
+        else:
+            self.list_pams_common.update({'f': None})
+
 
 class TransitTimeKeplerian(AbstractModel):
-
     model_class = 'transit_time_keplerian'
 
-    list_pams_common = {
-            'P': 'LU',  # Period, log-uniform prior
-            'f': 'U',  # RV curve phase, log-uniform prior
-            'e': 'U',  # eccentricity, uniform prior - to be fixed
-            'o': 'U'}  # argument of pericenter
+    list_pams_common = {'P'}  # Period
 
     list_pams_dataset = {}
-
     recenter_pams_dataset = {}
 
-    def compute(self, variable_value, dataset, x0_input=None):
-        if x0_input is None:
-            return np.floor(dataset.x0 / variable_value['P']) * variable_value['P'] + dataset.Tref + \
-                   kepler_exo.kepler_Tcent_T0P(variable_value['P'],
-                                               variable_value['f'],
-                                               variable_value['e'],
-                                               variable_value['o'])
+    use_time_of_transit = False
+
+    def initialize_model(self, mc, **kwargs):
+
+        if mc.common_models[self.planet_ref].use_time_of_transit:
+            self.list_pams_common.update({'Tc': None})
+            self.use_time_of_transit = True
+            # Copying the property to the class for faster access
         else:
-            return np.floor(x0_input/ variable_value['P']) * variable_value['P'] + dataset.Tref + \
-                   kepler_exo.kepler_Tcent_T0P(variable_value['P'],
-                                               variable_value['f'],
-                                               variable_value['e'],
-                                               variable_value['o'])
+            self.list_pams_common.update({'f': None})
+            self.list_pams_common.update({'e': None})
+            self.list_pams_common.update({'o': None})
+            # mean longitude = argument of pericenter + mean anomaly at Tref
+
+    def compute(self, variable_value, dataset, x0_input=None):
+
+        if self.use_time_of_transit:
+            delta_T = variable_value['Tc'] - \
+                np.floor((variable_value['Tc'] - dataset.Tref) / variable_value['P']) * variable_value['P']
+        else:
+            delta_T = dataset.Tref + \
+                      kepler_exo.kepler_phase2Tc_Tref(variable_value['P'],
+                                                      variable_value['f'],
+                                                      variable_value['e'],
+                                                      variable_value['o'])
+
+        if x0_input is None:
+            return np.floor(dataset.x0 / variable_value['P']) * variable_value['P'] + delta_T
+        else:
+            return np.floor(x0_input / variable_value['P']) * variable_value['P'] + delta_T
 
 
 class TransitTimeDynamical(AbstractModel):
-
     model_class = 'transit_time_dynamical'
 
     ''' Orbital parameters to be used in the dynamical fit '''
     list_pams_common = {
-            'P': 'LU',  # Period in days
-            'M': 'LU',  # Mass in Earth masses
-            'f': 'U',  # mean longitude
-            'lN': 'U',  # longitude of ascending node
-            'e': 'U',  # eccentricity, uniform prior - to be fixed
-            'R': 'U',  # planet radius (in units of stellar radii)
-            'o': 'U'}  # argument of pericenter
+        'P': 'LU',  # Period in days
+        'M': 'LU',  # Mass in Earth masses
+        'lN': 'U',  # longitude of ascending node
+        'e': 'U',  # eccentricity, uniform prior - to be fixed
+        'R': 'U',  # planet radius (in units of stellar radii)
+        'o': 'U'}  # argument of pericenter
 
     list_pams_dataset = {}
 
     recenter_pams_dataset = {}
+
+    use_semimajor_axis = False
+    use_inclination = False
+    use_time_of_transit = False
 
     def initialize_model(self, mc, **kwargs):
 
@@ -188,6 +196,14 @@ class TransitTimeDynamical(AbstractModel):
             else:
                 """ rho is the density of the star (in solar units) """
                 self.list_pams_common.update({'rho': None})
+
+        if mc.common_models[self.planet_ref].use_time_of_transit:
+            self.list_pams_common.update({'Tc': None})
+            self.use_time_of_transit = True
+            # Copying the property to the class for faster access
+        else:
+            self.list_pams_common.update({'f': None})
+            # mean longitude = argument of pericenter + mean anomaly at Tref
 
 
 class DynamicalIntegrator:
@@ -211,7 +227,7 @@ class DynamicalIntegrator:
             self.prepare_ttvfast(mc)
         return
 
-    def compute(self, mc,  *args, **kwargs):
+    def compute(self, mc, *args, **kwargs):
         """
         Run the appropriate subroutine according to chosen dynamical integrator
         :param mc:
@@ -413,6 +429,12 @@ class DynamicalIntegrator:
                                        dict_pams['o'],
                                        a_temp)
 
+            if mc.common_models[planet_name].use_time_of_transit:
+                dict_pams['f'] = kepler_exo.kepler_Tc2phase_Tref(dict_pams['P'],
+                                                                 dict_pams['Tc'] - mc.Tref,
+                                                                 dict_pams['e'],
+                                                                 dict_pams['o'])
+
             self.dynamical_set['pams']['M'][n_plan] = dict_pams['M'] / mc.M_SEratio
             self.dynamical_set['pams']['R'][n_plan] = dict_pams['R'] / mc.R_SEratio
             self.dynamical_set['pams']['P'][n_plan] = dict_pams['P']
@@ -421,7 +443,7 @@ class DynamicalIntegrator:
             self.dynamical_set['pams']['lN'][n_plan] = dict_pams['lN'] * (180. / np.pi)
             self.dynamical_set['pams']['mA'][n_plan] = (dict_pams['f'] - dict_pams['o']) * (180. / np.pi)
 
-        # sample_plan[:, convert_out['Tcent']] = mc.Tref + kepler_exo.kepler_Tcent_T0P(
+        # sample_plan[:, convert_out['Tcent']] = mc.Tref + kepler_exo.kepler_phase2Tc_Tref(
         #    sample_plan[:, convert_out['P']], sample_plan[:, convert_out['mL']],
         #    sample_plan[:, convert_out['e']], sample_plan[:, convert_out['o']])
 
@@ -500,12 +522,10 @@ class DynamicalIntegrator:
                 x0_input,
                 self.dynamical_set['data']['t0_flg'], self.n_max_t0)
 
-
-
         output = {}
-        #print 'T0_sim: ', t0_sim
-        #print 'RV_sim: ', rv_sim
-        #t0_sim -= mc.Tref
+        # print 'T0_sim: ', t0_sim
+        # print 'RV_sim: ', rv_sim
+        # t0_sim -= mc.Tref
         for dataset_name, dataset in mc.dataset_dict.iteritems():
             if dataset.dynamical is False: continue
             if dataset.kind == 'RV':
@@ -516,7 +536,7 @@ class DynamicalIntegrator:
             # print 'RV out', output[dataset.name_ref]
             elif dataset.kind == 'Tcent' and dataset.planet_name in mc.dynamical_dict:
                 n_plan = self.dynamical_set['data']['plan_ref'][dataset.planet_name]
-                #print ' T0_sim selected: ', t0_sim[:self.dynamical_set['data']['t0_tot'][n_plan], n_plan]
+                # print ' T0_sim selected: ', t0_sim[:self.dynamical_set['data']['t0_tot'][n_plan], n_plan]
                 output[dataset_name] = t0_sim[:self.dynamical_set['data']['t0_tot'][n_plan], n_plan]
 
         return output
@@ -605,7 +625,6 @@ class DynamicalIntegrator:
                                        dict_pams['e'],
                                        dict_pams['o'],
                                        a_temp)
-
 
             params.extend([
                 dict_pams['M'] / mc.M_SEratio,  # mass in Solar unit

@@ -418,7 +418,7 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
         """ Check if the semi-amplitude K is among the parameters that have been fitted. 
             If so, it computes the correpsing planetary mass with uncertainty """
 
-        if common_model.model_class == 'planet' and 'K' in variable_values.keys():
+        if common_model.model_class == 'planet':
 
             if i_is_missing:
                 if 'i' in common_model.fix_list:
@@ -427,28 +427,81 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
                     variable_values['i'] = 90.00 * np.ones(n_samplings)
                     variable_median['i'] = 90.00
 
-            Mass_E = np.empty(n_samplings)
-            var_index = np.arange(0, n_samplings, dtype=int)
-            star_mass_randomized = np.random.normal(mc.star_mass[0], mc.star_mass[1], size=n_samplings)
+            if 'K' in variable_values.keys():
 
-            fileout = open(dir_output + common_name + '_orbital_pams.dat', 'w')
+                Mass_E = np.empty(n_samplings)
+                var_index = np.arange(0, n_samplings, dtype=int)
+                star_mass_randomized = np.random.normal(mc.star_mass[0], mc.star_mass[1], size=n_samplings)
 
-            for P, K, e, i, star, ii in zip(
-                    variable_values['P'],
-                    variable_values['K'],
-                    variable_values['e'],
-                    variable_values['i'],
-                    star_mass_randomized,
-                    var_index):
-                Mass_E[ii] = M_SEratio / np.sin(np.radians(i)) * \
-                             kepler_exo.get_planet_mass(P, K, e, star, Minit=0.0065)
+                fileout = open(dir_output + common_name + '_orbital_pams.dat', 'w')
 
-                fileout.write('{0:f} {1:f} {2:f} {3:f} {4:f} {5:f}  \n'.format(P, K, e, i, star, Mass_E[ii]))
-            fileout.close()
+                for P, K, e, i, star, ii in zip(
+                        variable_values['P'],
+                        variable_values['K'],
+                        variable_values['e'],
+                        variable_values['i'],
+                        star_mass_randomized,
+                        var_index):
+                    Mass_E[ii] = M_SEratio / np.sin(np.radians(i)) * \
+                                 kepler_exo.get_planet_mass(P, K, e, star, Minit=0.0065)
 
-            Mass_E_med = common.compute_value_sigma(Mass_E)
-            variable_median['Me'] = Mass_E_med[0]
-            variable_MAP['Me'], _ = common.pick_MAP_parameters(Mass_E, flat_lnprob)
+                    fileout.write('{0:f} {1:f} {2:f} {3:f} {4:f} {5:f}  \n'.format(P, K, e, i, star, Mass_E[ii]))
+                fileout.close()
+
+                Mass_E_med = common.compute_value_sigma(Mass_E)
+                variable_median['Me'] = Mass_E_med[0]
+                variable_MAP['Me'], _ = common.pick_MAP_parameters(Mass_E, flat_lnprob)
+
+            else:
+
+                K_all = np.empty(n_samplings)
+                var_index = np.arange(0, n_samplings, dtype=int)
+                for star, M, P, i, e, ii in zip(variable_values['mass'],
+                                                variable_values['M'],
+                                                variable_values['P'],
+                                                variable_values['i'],
+                                                variable_values['e']):
+                    K_all[ii] = kepler_exo.kepler_K1(star, M/constants.M_SEratio, P, i ,e )
+
+                K_all_med = common.compute_value_sigma(K_all)
+                variable_median['K'] = K_all_med[0]
+                variable_MAP['K'], _ = common.pick_MAP_parameters(K_all, flat_lnprob)
+
+            if 'Tc' in variable_values.keys():
+                phase = np.empty(n_samplings)
+                var_index = np.arange(0, n_samplings, dtype=int)
+
+
+
+                for P, Tc, e, o, ii in zip(
+                        variable_values['P'],
+                        variable_values['Tc'],
+                        variable_values['e'],
+                        variable_values['o'],
+                        var_index):
+
+                    phase[ii]=kepler_exo.kepler_Tc2phase_Tref(P, Tc - mc.Tref, e, o)
+
+                phase_med = common.compute_value_sigma(phase)
+                variable_median['f'] = phase_med[0]
+                variable_MAP['f'], _ = common.pick_MAP_parameters(phase, flat_lnprob)
+
+            else:
+                Tcent = np.empty(n_samplings)
+                var_index = np.arange(0, n_samplings, dtype=int)
+
+                for P, f, e, o, ii in zip(
+                        variable_values['P'],
+                        variable_values['f'],
+                        variable_values['e'],
+                        variable_values['o'],
+                        var_index):
+
+                    Tcent[ii] = mc.Tref + kepler_exo.kepler_phase2Tc_Tref(P, f, e, o)
+
+                Tcent_med = common.compute_value_sigma(Tcent)
+                variable_median['Tc'] = Tcent_med[0]
+                variable_MAP['Tc'], _ = common.pick_MAP_parameters(Tcent, flat_lnprob)
 
             planet_variables[common_name] = variable_median
             planet_variables_MAP[common_name] = variable_MAP
