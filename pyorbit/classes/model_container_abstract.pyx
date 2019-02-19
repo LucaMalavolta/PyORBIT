@@ -488,7 +488,7 @@ class ModelContainer(object):
 
             model_out[dataset_name]['systematics'] = dataset.additive_model.copy()
             model_out[dataset_name]['jitter'] = dataset.jitter.copy()
-            model_out[dataset_name]['complete'] = dataset.additive_model.copy()
+            model_out[dataset_name]['complete'] =  np.zeros(dataset.n, dtype=np.double)# dataset.additive_model.copy()
 
             model_x0[dataset_name]['complete'] = np.zeros(n_input, dtype=np.double)
 

@@ -655,11 +655,11 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
                 for dataset_name, dataset in mc.dataset_dict.items():
                     for model_name in dataset.models:
                         fileout = open(dir_models + dataset_name + '_' + model_name + '.dat', 'w')
+                        phase = dataset.x0 * 0.00
                         for common_ref in mc.models[model_name].common_ref:
                             if common_ref in planet_vars:
                                 phase = (dataset.x0 / planet_vars[common_ref]['P']) % 1
-                            else:
-                                phase = dataset.x0 * 0.00
+                                continue
 
                         fileout.write('descriptor BJD BJD0 pha val,+- sys mod full val_compare,+- res,+- \n')
 
