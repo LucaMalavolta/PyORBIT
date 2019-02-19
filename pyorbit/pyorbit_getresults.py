@@ -63,14 +63,11 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
 
         pars_input(config_in, mc, reload_emcee=True)
 
-        # for retrocompatibility with V5.0 of PyORBIT, the default emcee is set to 2.2.1
         if hasattr(mc.emcee_parameters, 'version'):
             emcee_version = mc.emcee_parameters['version'][0]
         else:
-            if sampler_lnprobability.shape[0] > sampler_lnprobability.shape[1]:
-                emcee_version = '3'
-            else:
-                emcee_version = '2'
+            import emcee
+            emcee_version = emcee.__version__[0]
 
         mc.model_setup()
         """ Required to create the right objects inside each class - if defined inside """
@@ -326,25 +323,24 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
             plt.savefig(file_name, bbox_inches='tight', dpi=300)
             plt.close(fig)
 
-        for theta_name, th in theta_dictionary.iteritems():
-            file_name = dir_output + 'gr_traces/' + repr(th) + '_' + theta_name + '.png'
-            out_absc = np.arange(0, nburnin/nthin, 1)
-            out_lines = np.zeros(nburnin/nthin)
-
-            #for ii in xrange(20, nburnin/nthin):
-            #    out_lines[ii] = GelmanRubin(sampler_chain[:, :ii, th].T)
-            #fig = plt.figure(figsize=(12, 12))
-            #plt.plot(out_absc[20:], out_lines[20:], '-', color='k')
-            #plt.axhline(1.01)
-
-            rhat = np.array([GelmanRubin(sampler_chain[:, :steps, th].T) for steps in step_sampling])
-            print ' Gelman-Rubin: %5i %12f %s ' % (th, rhat[-1], theta_name)
-            fig = plt.figure(figsize=(12, 12))
-            plt.plot(step_sampling, rhat[:], '-', color='k')
-
-
-            plt.savefig(file_name, bbox_inches='tight', dpi=300)
-            plt.close(fig)
+        #for theta_name, th in theta_dictionary.iteritems():
+        #    file_name = dir_output + 'gr_traces/' + repr(th) + '_' + theta_name + '.png'
+        #    out_absc = np.arange(0, nburnin/nthin, 1)
+        #    out_lines = np.zeros(nburnin/nthin)
+        #
+        #    #for ii in xrange(20, nburnin/nthin):
+        #    #    out_lines[ii] = GelmanRubin(sampler_chain[:, :ii, th].T)
+        #    #fig = plt.figure(figsize=(12, 12))
+        #    #plt.plot(out_absc[20:], out_lines[20:], '-', color='k')
+        #    #plt.axhline(1.01)
+        #
+        #    rhat = np.array([GelmanRubin(sampler_chain[:, :steps, th].T) for steps in step_sampling])
+        #    print ' Gelman-Rubin: %5i %12f %s ' % (th, rhat[-1], theta_name)
+        #    fig = plt.figure(figsize=(12, 12))
+        #    plt.plot(step_sampling, rhat[:], '-', color='k')
+        #
+        #    plt.savefig(file_name, bbox_inches='tight', dpi=300)
+        #    plt.close(fig)
 
         print
         print '****************************************************************************************************'
@@ -452,7 +448,7 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
                 variable_median['Me'] = Mass_E_med[0]
                 variable_MAP['Me'], _ = common.pick_MAP_parameters(Mass_E, flat_lnprob)
 
-            else:
+            elif 'M' in variable_values.keys():
 
                 K_all = np.empty(n_samplings)
                 var_index = np.arange(0, n_samplings, dtype=int)
@@ -467,11 +463,14 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
                 variable_median['K'] = K_all_med[0]
                 variable_MAP['K'], _ = common.pick_MAP_parameters(K_all, flat_lnprob)
 
+                Mass_E = variable_values['M'] * M_SEratio
+                Mass_E_med = common.compute_value_sigma(Mass_E)
+                variable_median['Me'] = Mass_E_med[0]
+                variable_MAP['Me'], _ = common.pick_MAP_parameters(Mass_E, flat_lnprob)
+
             if 'Tc' in variable_values.keys():
                 phase = np.empty(n_samplings)
                 var_index = np.arange(0, n_samplings, dtype=int)
-
-
 
                 for P, Tc, e, o, ii in zip(
                         variable_values['P'],
@@ -486,7 +485,7 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
                 variable_median['f'] = phase_med[0]
                 variable_MAP['f'], _ = common.pick_MAP_parameters(phase, flat_lnprob)
 
-            else:
+            elif 'Tc' in variable_values.keys():
                 Tcent = np.empty(n_samplings)
                 var_index = np.arange(0, n_samplings, dtype=int)
 
@@ -506,16 +505,18 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
             planet_variables[common_name] = variable_median
             planet_variables_MAP[common_name] = variable_MAP
 
-            fig = plt.figure(figsize=(12, 12))
-            plt.hist(Mass_E, bins=50)
-            plt.savefig(dir_output + 'planet_mass_' + common_name + '.png', bbox_inches='tight', dpi=300)
-            plt.close(fig)
+            if 'K' in variable_values.keys() or 'M' in variable_values.keys():
+                fig = plt.figure(figsize=(12, 12))
+                plt.hist(Mass_E, bins=50)
+                plt.savefig(dir_output + 'planet_mass_' + common_name + '.png', bbox_inches='tight', dpi=300)
+                plt.close(fig)
 
-            print 'Planet', common_name, '   Mass (Earths): %12f   %12f %12f (15-84 p) ' % (Mass_E_med[0], Mass_E_med[2], Mass_E_med[1])
-            print
-            corner_plot['samples'].extend([Mass_E])
-            corner_plot['labels'].append('M [M$_\oplus$]')
-            corner_plot['truths'].append(Mass_E_med[0])
+                print 'Planet', common_name, '   Mass (Earths): %12f   %12f %12f (15-84 p) ' % (Mass_E_med[0], Mass_E_med[2], Mass_E_med[1])
+                print
+
+                corner_plot['samples'].extend([Mass_E])
+                corner_plot['labels'].append('M [M$_\oplus$]')
+                corner_plot['truths'].append(Mass_E_med[0])
 
         if plot_dictionary['common_corner']:
 
@@ -711,30 +712,33 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
 
                 for model in planet_vars:
 
-                    RV_out =  kepler_exo.kepler_RV_T0P(bjd_plot['full']['x0_plot'],
-                                                       planet_vars[model]['f'],
-                                                       planet_vars[model]['P'],
-                                                       planet_vars[model]['K'],
-                                                       planet_vars[model]['e'],
-                                                       planet_vars[model]['o'])
-                    fileout = open(dir_models + 'RV_planet_' + model + '_kep.dat', 'w')
-                    fileout.write('descriptor x_range x_range0 m_kepler \n')
-                    for x, y in zip(bjd_plot['full']['x0_plot'], RV_out):
-                        fileout.write('{0:f} {1:f} {2:f} \n'.format(x+mc.Tref, x, y))
-                    fileout.close()
+                    try:
+                        RV_out =  kepler_exo.kepler_RV_T0P(bjd_plot['full']['x0_plot'],
+                                                           planet_vars[model]['f'],
+                                                           planet_vars[model]['P'],
+                                                           planet_vars[model]['K'],
+                                                           planet_vars[model]['e'],
+                                                           planet_vars[model]['o'])
+                        fileout = open(dir_models + 'RV_planet_' + model + '_kep.dat', 'w')
+                        fileout.write('descriptor x_range x_range0 m_kepler \n')
+                        for x, y in zip(bjd_plot['full']['x0_plot'], RV_out):
+                            fileout.write('{0:f} {1:f} {2:f} \n'.format(x+mc.Tref, x, y))
+                        fileout.close()
 
-                    x_range = np.arange(-0.50, 1.50, 0.001)
-                    RV_out = kepler_exo.kepler_RV_T0P(x_range*planet_vars[model]['P'],
-                                                       planet_vars[model]['f'],
-                                                       planet_vars[model]['P'],
-                                                       planet_vars[model]['K'],
-                                                       planet_vars[model]['e'],
-                                                       planet_vars[model]['o'])
-                    fileout = open(dir_models + 'RV_planet_' + model + '_pha.dat', 'w')
-                    fileout.write('descriptor x_phase m_phase \n')
-                    for x, y in zip(x_range, RV_out):
-                        fileout.write('{0:f} {1:f} \n'.format(x, y))
-                    fileout.close()
+                        x_range = np.arange(-0.50, 1.50, 0.001)
+                        RV_out = kepler_exo.kepler_RV_T0P(x_range*planet_vars[model]['P'],
+                                                           planet_vars[model]['f'],
+                                                           planet_vars[model]['P'],
+                                                           planet_vars[model]['K'],
+                                                           planet_vars[model]['e'],
+                                                           planet_vars[model]['o'])
+                        fileout = open(dir_models + 'RV_planet_' + model + '_pha.dat', 'w')
+                        fileout.write('descriptor x_phase m_phase \n')
+                        for x, y in zip(x_range, RV_out):
+                            fileout.write('{0:f} {1:f} \n'.format(x, y))
+                        fileout.close()
+                    except:
+                        pass
 
 
     print

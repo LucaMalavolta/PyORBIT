@@ -67,7 +67,7 @@ class Correlation_SingleDataset(AbstractModel):
         for i_order in xrange(1, self.order+1):
             var = 'c'+repr(i_order)
             coeff[i_order] = variable_value[var]
-        """ In our array, coefficient are sorted from the lowest degree to the highr
+        """ In our array, coefficient are sorted from the lowest degree to the higher
         Numpy Polinomials requires the inverse order (from high to small) as input"""
         if x0_input is None:
             return np.where(self.x_mask, numpy.polynomial.polynomial.polyval(self.x_vals-self.x_zero, coeff), 0.0)

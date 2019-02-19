@@ -63,14 +63,11 @@ def pyorbit_getresults_getdist(config_in, sampler, plot_dictionary):
 
         pars_input(config_in, mc, reload_emcee=True)
 
-        # for retrocompatibility with V5.0 of PyORBIT, the default emcee is set to 2.2.1
         if hasattr(mc.emcee_parameters, 'version'):
             emcee_version = mc.emcee_parameters['version'][0]
         else:
-            if sampler_lnprobability.shape[0] > sampler_lnprobability.shape[1]:
-                emcee_version = '3'
-            else:
-                emcee_version = '2'
+            import emcee
+            emcee_version = emcee.__version__[0]
 
         mc.model_setup()
         """ Required to create the right objects inside each class - if defined inside """

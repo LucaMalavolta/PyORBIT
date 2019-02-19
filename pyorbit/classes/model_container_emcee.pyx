@@ -17,7 +17,6 @@ class ModelContainerEmcee(ModelContainer):
                             'nburn':0,
                             'multirun': None,
                             'multirun_iter': 20,
-                            'version': '2.2.1',
                             'shutdown_jitter': False
                             }
 

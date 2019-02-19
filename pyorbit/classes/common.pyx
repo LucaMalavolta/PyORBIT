@@ -288,7 +288,6 @@ def compute_value_sigma(samples):
 def pick_MAP_parameters(samples, lnprob):
 
     indmax = np.argmax(lnprob)
-
     if np.size(np.shape(samples)) == 1:
         return samples[indmax], lnprob[indmax]
     elif np.size(np.shape(samples)) == 2:
