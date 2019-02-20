@@ -46,6 +46,9 @@ class AbstractCommon(object):
                 Notice that 'e' and 'w' are not yet included in list_pams[pl_name] at this stage
             '''
 
+            print self.common_ref, self.fix_list
+
+
             ndim, output_lists, applied = self.define_special_variable_properties(ndim, output_lists, var)
             if applied:
                 continue
@@ -55,6 +58,7 @@ class AbstractCommon(object):
 
             if var not in self.spaces:
                 self.spaces[var] = self.default_spaces[var]
+
 
             if var in self.fix_list:
                 if var not in self.transformation:

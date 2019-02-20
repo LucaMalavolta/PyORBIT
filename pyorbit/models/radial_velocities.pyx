@@ -118,6 +118,8 @@ class RVdynamical(AbstractModel):
         else:
             self.list_pams_common.update({'f': None})
 
+    def compute(self, variable_value, dataset, x0_input=None):
+        return dataset.external_model
 
 class TransitTimeKeplerian(AbstractModel):
     model_class = 'transit_time_keplerian'
@@ -410,7 +412,9 @@ class DynamicalIntegrator:
 
         for planet_name in mc.dynamical_dict:
             n_plan = self.dynamical_set['data']['plan_ref'][planet_name]
-            dict_pams = mc.common_models[planet_name].convert(theta)
+
+            dict_pams = mc.common_models['star_parameters'].convert(theta)
+            dict_pams.update(mc.common_models[planet_name].convert(theta))
 
             if mc.common_models[planet_name].use_inclination:
                 self.dynamical_set['pams']['i'][n_plan] = dict_pams['i']

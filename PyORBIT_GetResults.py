@@ -65,7 +65,6 @@ if __name__ == '__main__':
         plot_dictionary['common_corner'] = True
         plot_dictionary['dataset_corner'] = True
 
-    print plot_dictionary
     config_in = pyorbit.yaml_parser(file_conf)
 
     pyorbit.pyorbit_getresults(config_in, sampler, plot_dictionary)

@@ -219,22 +219,8 @@ class ModelContainer(object):
                 continue
 
             for model_name in dataset.models:
-                if hasattr(self.models[model_name], 'common_jitter'):
-                    for common_ref in self.models[model_name].common_ref:
-                        variable_values = self.common_models[common_ref].convert(theta)
-                        self.models[model_name].compute(variable_values, dataset)
-
-            for model_name in dataset.models:
 
                 log_priors += self.models[model_name].return_priors(theta, dataset_name)
-
-                if hasattr(self.models[model_name], 'internal_likelihood'):
-                    logchi2_gp_model = model_name
-                    continue
-
-                if dataset.dynamical:
-                    dataset.additive_model += dynamical_output[dataset_name]
-                    continue
 
                 variable_values = {}
                 for common_ref in self.models[model_name].common_ref:
@@ -252,6 +238,17 @@ class ModelContainer(object):
 
                 """ residuals will be computed following the definition in Dataset class
                 """
+
+                if hasattr(self.models[model_name], 'internal_likelihood'):
+                    logchi2_gp_model = model_name
+                    continue
+
+                if getattr(self.models[model_name], 'model_class', None) is 'common_jitter':
+                    dataset.jitter = self.models[model_name].compute(variable_values, dataset)
+                    continue
+
+                if dataset.dynamical:
+                    dataset.external_model = dynamical_output[dataset_name]
 
                 if getattr(self.models[model_name], 'unitary_model', False):
                     dataset.unitary_model += self.models[model_name].compute(variable_values, dataset)

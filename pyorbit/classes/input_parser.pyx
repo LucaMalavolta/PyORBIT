@@ -292,10 +292,9 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, shutdown_
                     2) include different models, for dataset obtained with different filters
                 """
 
-                # conf_name or model_type ???
                 dict_copy = model_conf[conf_name].copy()
 
-                for key in ['type', 'kind', 'priors', 'spaces', 'boundaries', 'starts']:
+                for key in ['type', 'kind', 'priors', 'spaces', 'boundaries', 'starts', 'fixed']:
                     if key in dict_copy: del dict_copy[key]
 
                 if len(dict_copy) == 0 :
@@ -310,6 +309,7 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, shutdown_
                     for dataset in mc.dataset_dict.itervalues():
                         if key_name in dataset.models and not (key_name in conf_models):
                             conf_models[key_name] = {'common': key_name}
+
 
         else:
             if 'type' in model_conf:

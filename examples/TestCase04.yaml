@@ -17,7 +17,7 @@ common:
         e: [0.00, 1.00]
       fixed:
         i: [90.000, 0.001]
-    b:
+    c:
       orbit: keplerian
       boundaries:
         P: [1.0, 100.0]
@@ -25,6 +25,10 @@ common:
         e: [0.00, 1.00]
       fixed:
         i: [90.000, 0.001]
+  star:
+    star_parameters:
+      fixed:
+        rho: 1.00
 models:
   RV_model:
     kind: radial_velocities
