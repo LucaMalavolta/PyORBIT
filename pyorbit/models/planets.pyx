@@ -120,7 +120,7 @@ class CommonPlanets(AbstractCommon):
         'o': np.pi/2.,
         'i': 90.000000,
         'lN': np.pi/2.,
-        'R': 1.0,
+        'R': 0.05,
         'a': 1.0,
         'b': 1.0
     }
