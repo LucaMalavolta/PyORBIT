@@ -174,7 +174,8 @@ class Batman_Transit(AbstractModel):
         -> However, we estimated the optimal step size from random parameters, so at some point we'll need to 
         reinitialize the model so that the correct step size is computed.
         """
-        if self.batman_options[dataset.name_ref]['initialization_counter'] > 100:
+        if self.batman_options[dataset.name_ref]['initialization_counter'] > 1000:
+            #fac = self.batman_models[dataset.name_ref].fac
             self.batman_options[dataset.name_ref]['initialization_counter'] = 0
             self.batman_models[dataset.name_ref] = batman.TransitModel(self.batman_params[dataset.name_ref],
                                                                        dataset.x0,
@@ -183,15 +184,14 @@ class Batman_Transit(AbstractModel):
                                                                            'sample_factor'],
                                                                        exp_time=self.batman_options[dataset.name_ref][
                                                                            'exp_time'],
-                                                                       nthreads=self.nthreads)
+                                                                       nthreads=self.nthreads),
+                                                                       #fac = fac)
         else:
             self.batman_options[dataset.name_ref]['initialization_counter'] += 1
 
         if x0_input is None:
-            # print self.batman_params[dataset.name_ref].per, self.batman_params[dataset.name_ref].t0, np.amin(dataset.x0), np.amax(dataset.x0)
-            # print ' -----> ', np.average(self.batman_models[dataset.name_ref].light_curve(self.batman_params[dataset.name_ref])), np.amin(self.batman_models[dataset.name_ref].light_curve(self.batman_params[dataset.name_ref]))
-
             return self.batman_models[dataset.name_ref].light_curve(self.batman_params[dataset.name_ref]) - 1.
+
         else:
             temporary_model = batman.TransitModel(self.batman_params[dataset.name_ref],
                                                   x0_input,

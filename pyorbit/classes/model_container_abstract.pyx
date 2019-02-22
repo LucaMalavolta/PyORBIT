@@ -183,6 +183,7 @@ class ModelContainer(object):
 
         log_priors = 0.00
         log_likelihood = 0.00
+
         """ 
         Constant term added either by dataset.model_logchi2() or gp.log_likelihood()
         """
@@ -235,6 +236,11 @@ class ModelContainer(object):
                 #    pass
 
                 variable_values.update(self.models[model_name].convert(theta, dataset_name))
+
+                if 'e' in variable_values:
+                    eee = variable_values['e']
+                    rrr = variable_values['R']
+                    bbb = variable_values['b']
 
                 """ residuals will be computed following the definition in Dataset class
                 """
@@ -291,6 +297,8 @@ class ModelContainer(object):
         """ In case there is more than one GP model"""
         for logchi2_gp_model in delayed_lnlk_computation:
             log_likelihood += self.models[logchi2_gp_model].lnlk_compute()
+
+        #print 'R: {0:f}  e: {1:f}  b: {2:f}    priors: {3:f}   logL: {4:f}'.format(rrr, eee, bbb, log_priors, log_likelihood)
 
         if return_priors is False:
             return log_likelihood
