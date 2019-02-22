@@ -184,7 +184,7 @@ class Batman_Transit(AbstractModel):
                                                                            'sample_factor'],
                                                                        exp_time=self.batman_options[dataset.name_ref][
                                                                            'exp_time'],
-                                                                       nthreads=self.nthreads),
+                                                                       nthreads=self.nthreads)
                                                                        #fac = fac)
         else:
             self.batman_options[dataset.name_ref]['initialization_counter'] += 1
