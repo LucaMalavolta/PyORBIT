@@ -173,6 +173,7 @@ class Dataset(AbstractCommon):
         self.additive_model = np.zeros(self.n, dtype=np.double)
         self.unitary_model = np.zeros(self.n, dtype=np.double)
         self.normalization_model = None
+        self.external_model = np.zeros(self.n, dtype=np.double)
         self.jitter = np.zeros(self.n, dtype=np.double)
         return
 
@@ -185,15 +186,17 @@ class Dataset(AbstractCommon):
 
     def compute_model(self):
         if self.normalization_model is None:
-            self.model = self.additive_model
+            self.model = self.additive_model + self.external_model
         else:
-            self.model = self.additive_model + (1. + self.unitary_model)*self.normalization_model
+            self.model = self.additive_model + \
+                         self.external_model + \
+                         (1. + self.unitary_model)*self.normalization_model
 
-    def compute_model_from_arbitrary_datasets(self, additive_model, unitary_model, normalization_model):
+    def compute_model_from_arbitrary_datasets(self, additive_model, unitary_model, normalization_model, external_model):
         if normalization_model is None or unitary_model is None:
-            return additive_model
+            return additive_model + external_model
         else:
-            return additive_model + (1. + unitary_model)*normalization_model
+            return additive_model + external_model + (1. + unitary_model)*normalization_model
 
     def compute_residuals(self):
         self.residuals = self.y - self.model

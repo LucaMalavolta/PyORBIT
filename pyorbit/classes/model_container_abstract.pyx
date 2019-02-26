@@ -237,15 +237,10 @@ class ModelContainer(object):
 
                 variable_values.update(self.models[model_name].convert(theta, dataset_name))
 
-                if 'e' in variable_values:
-                    eee = variable_values['e']
-                    rrr = variable_values['R']
-                    bbb = variable_values['b']
-
                 """ residuals will be computed following the definition in Dataset class
                 """
 
-                if hasattr(self.models[model_name], 'internal_likelihood'):
+                if getattr(self.models[model_name], 'internal_likelihood', False):
                     logchi2_gp_model = model_name
                     continue
 
@@ -253,7 +248,7 @@ class ModelContainer(object):
                     dataset.jitter = self.models[model_name].compute(variable_values, dataset)
                     continue
 
-                if dataset.dynamical:
+                if getattr(dataset, 'dynamical', False):
                     dataset.external_model = dynamical_output[dataset_name]
 
                 if getattr(self.models[model_name], 'unitary_model', False):
@@ -299,6 +294,7 @@ class ModelContainer(object):
             log_likelihood += self.models[logchi2_gp_model].lnlk_compute()
 
         #print 'R: {0:f}  e: {1:f}  b: {2:f}    priors: {3:f}   logL: {4:f}'.format(rrr, eee, bbb, log_priors, log_likelihood)
+
 
         if return_priors is False:
             return log_likelihood
@@ -465,6 +461,7 @@ class ModelContainer(object):
             dynamical_output = self.dynamical_model.compute(self, theta)
 
         for dataset_name, dataset in self.dataset_dict.iteritems():
+
             x0_plot = bjd_dict[dataset_name]['x0_plot']
             n_input = np.size(x0_plot)
             model_out[dataset_name] = {}
@@ -473,6 +470,7 @@ class ModelContainer(object):
 
             additive_model = np.zeros(np.size(x0_plot))
             unitary_model = np.zeros(np.size(x0_plot))
+            external_model = np.zeros(np.size(x0_plot))
             normalization_model = None
 
             variable_values = dataset.convert(theta)
@@ -480,20 +478,28 @@ class ModelContainer(object):
 
             for model_name in dataset.models:
                 variable_values = {}
-                try:
-                    for common_ref in self.models[model_name].common_ref:
-                        variable_values.update(self.common_models[common_ref].convert(theta))
-                except:
+
+                for common_ref in self.models[model_name].common_ref:
+                     variable_values.update(self.common_models[common_ref].convert(theta))
+
+                #try:
+                #    for common_ref in self.models[model_name].common_ref:
+                #        variable_values.update(self.common_models[common_ref].convert(theta))
+                #except:
+                #    continue
+                variable_values.update(self.models[model_name].convert(theta, dataset_name))
+
+                if getattr(self.models[model_name], 'model_class', None) is 'common_jitter':
+                    dataset.jitter = self.models[model_name].compute(variable_values, dataset)
                     continue
 
-                if hasattr(self.models[model_name], 'common_jitter'):
-                    self.models[model_name].compute(variable_values, dataset)
-                if hasattr(self.models[model_name], 'common_offset'):
+                if getattr(self.models[model_name], 'systematic_model', False):
                     dataset.additive_model += self.models[model_name].compute(variable_values, dataset)
+
 
             model_out[dataset_name]['systematics'] = dataset.additive_model.copy()
             model_out[dataset_name]['jitter'] = dataset.jitter.copy()
-            model_out[dataset_name]['complete'] =  np.zeros(dataset.n, dtype=np.double)# dataset.additive_model.copy()
+            model_out[dataset_name]['complete'] = np.zeros(dataset.n, dtype=np.double)# dataset.additive_model.copy()
 
             model_x0[dataset_name]['complete'] = np.zeros(n_input, dtype=np.double)
 
@@ -506,41 +512,30 @@ class ModelContainer(object):
 
             for model_name in dataset.models:
 
-                if hasattr(self.models[model_name], 'internal_likelihood'):
+                variable_values = {}
+                for common_ref in self.models[model_name].common_ref:
+                     variable_values.update(self.common_models[common_ref].convert(theta))
+                variable_values.update(self.models[model_name].convert(theta, dataset_name))
+
+                if getattr(self.models[model_name], 'internal_likelihood', False):
                     logchi2_gp_model = model_name
                     continue
 
-                if dataset.dynamical:
-                    dataset.additive_model += dynamical_output[dataset_name]
-                    model_out[dataset_name][model_name] = dynamical_output[dataset_name].copy()
-                    model_out[dataset_name]['complete'] += dynamical_output[dataset_name]
-
-                    model_x0[dataset_name][model_name] = dynamical_output_x0[dataset_name].copy()
-                    model_x0[dataset_name]['complete'] += dynamical_output_x0[dataset_name]
+                if getattr(self.models[model_name], 'systematic_model', False):
                     continue
 
-                if hasattr(self.models[model_name], 'systematic_model'):
-                    pass
-
-                variable_values = {}
-                try:
-                    """ Taking the parameter values from the common models"""
-                    for common_ref in self.models[model_name].common_ref:
-                        variable_values.update(self.common_models[common_ref].convert(theta))
-                except:
-                    """ This model has no common model reference, i.e., it is strictly connected to the dataset"""
-                    pass
-
-                variable_values.update(self.models[model_name].convert(theta, dataset_name))
+                if getattr(dataset, 'dynamical', False):
+                    dataset.external_model = dynamical_output[dataset_name]
+                    external_model = dynamical_output_x0[dataset_name].copy()
+                    model_out[dataset_name]['dynamical'] = dynamical_output[dataset_name].copy()
+                    model_x0[dataset_name]['dynamical'] = dynamical_output_x0[dataset_name].copy()
 
                 model_out[dataset_name][model_name] = self.models[model_name].compute(variable_values, dataset)
+
                 if getattr(self.models[model_name], 'time_independent_model', False):
                     model_x0[dataset_name][model_name] = np.zeros(np.size(x0_plot), dtype=np.double)
                 else:
                     model_x0[dataset_name][model_name] = self.models[model_name].compute(variable_values, dataset, x0_plot)
-
-                if hasattr(self.models[model_name], 'systematic_model'):
-                    pass
 
                 if getattr(self.models[model_name], 'unitary_model', False):
                     dataset.unitary_model += model_out[dataset_name][model_name]
@@ -564,7 +559,10 @@ class ModelContainer(object):
             dataset.compute_model()
             dataset.compute_residuals()
 
-            model_x0[dataset_name]['complete'] += dataset.compute_model_from_arbitrary_datasets(additive_model, unitary_model, normalization_model)
+            model_x0[dataset_name]['complete'] += dataset.compute_model_from_arbitrary_datasets(additive_model,
+                                                                                                unitary_model,
+                                                                                                normalization_model,
+                                                                                                external_model)
             model_out[dataset_name]['complete'] += dataset.model
 
             """ Gaussian Process check MUST be the last one or the program will fail

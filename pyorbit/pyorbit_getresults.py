@@ -655,6 +655,10 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
 
                 for dataset_name, dataset in mc.dataset_dict.items():
                     for model_name in dataset.models:
+
+                        if getattr(mc.models[model_name], 'systematic_model', False):
+                            continue
+
                         fileout = open(dir_models + dataset_name + '_' + model_name + '.dat', 'w')
                         phase = dataset.x0 * 0.00
                         for common_ref in mc.models[model_name].common_ref:
