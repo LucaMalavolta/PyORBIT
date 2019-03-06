@@ -15,6 +15,7 @@ import corner
 import classes.constants as constants
 import classes.kepler_exo as kepler_exo
 import classes.common as common
+import classes.results_analysis as results_analysis
 import h5py
 import csv
 
@@ -23,27 +24,17 @@ __all__ = ["pyorbit_getresults"]
 
 def pyorbit_getresults(config_in, sampler, plot_dictionary):
 
+    try:
+        use_tex = config_in['parameters']['use_tex']
+    except:
+        use_tex = True
+
+    if plot_dictionary['use_getdist']:
+        from getdist import plots, MCSamples
+
     #plt.rc('font', **{'family': 'serif', 'serif': ['Computer Modern Roman']})
     plt.rcParams["font.family"] = "Times New Roman"
-    plt.rc('text', usetex=True)
-
-    G_grav = constants.Gsi # Gravitational Constants in SI system [m^3/kg/s^2]
-    G_ttvfast = constants.Giau  # G [AU^3/Msun/d^2]
-    M_SJratio = constants.Msjup
-    M_SEratio = constants.Msear
-    M_JEratio = constants.Mjear
-
-    R_SJratio = constants.Rsjup
-    R_JEratio = constants.Rjear
-    R_SEratio = constants.Rsjup * constants.Rjear
-
-    M_sun = constants.Msun
-    M_jup = constants.Mjup
-
-    Mu_sun = constants.Gsi * constants.Msun
-    seconds_in_day = constants.d2s
-    AU_km = constants.AU
-    AUday2ms = AU_km / seconds_in_day * 1000.0
+    plt.rc('text', usetex=use_tex)
 
     sample_keyword = {
         'multinest': ['multinest', 'MultiNest', 'multi'],
@@ -71,7 +62,7 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
 
         mc.model_setup()
         """ Required to create the right objects inside each class - if defined inside """
-        theta_dictionary = mc.get_theta_dictionary()
+        theta_dictionary = results_analysis.get_theta_dictionary(mc)
 
         nburnin = mc.emcee_parameters['nburn']
         nthin = mc.emcee_parameters['thin']
@@ -86,14 +77,14 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
         chain_med = common.compute_value_sigma(flat_chain)
         chain_MAP, lnprob_MAP = common.pick_MAP_parameters(flat_chain, flat_lnprob)
 
-        print
-        print 'Reference Time Tref: ', mc.Tref
-        print
-        print 'Dimensions = ', mc.ndim
-        print 'Nwalkers = ', mc.emcee_parameters['nwalkers']
-        print
-        print 'Steps: ', nsteps
-        print
+        print()
+        print('Reference Time Tref: {}'.format(mc.Tref))
+        print()
+        print('Dimensions = {}'.format(mc.ndim))
+        print('Nwalkers = {}'.format(mc.emcee_parameters['nwalkers']))
+        print()
+        print('Steps: {}'.format(nsteps))
+        print()
 
     if sampler in sample_keyword['multinest']:
 
@@ -112,10 +103,10 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
 
         mc.model_setup()
         mc.initialize_logchi2()
-        mc.results_resumen(None, skip_theta=True)
+        results_analysis.results_resumen(mc, None, skip_theta=True)
 
         """ Required to create the right objects inside each class - if defined inside """
-        theta_dictionary = mc.get_theta_dictionary()
+        theta_dictionary = results_analysis.get_theta_dictionary(mc)
         print
         print theta_dictionary
 
@@ -153,10 +144,10 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
 
         mc.model_setup()
         mc.initialize_logchi2()
-        mc.results_resumen(None, skip_theta=True)
+        results_analysis.results_resumen(mc, None, skip_theta=True)
 
         """ Required to create the right objects inside each class - if defined inside """
-        theta_dictionary = mc.get_theta_dictionary()
+        theta_dictionary = results_analysis.get_theta_dictionary(mc)
         print theta_dictionary
 
         data_in = np.genfromtxt(dir_input + 'pyorbit_equal_weights.txt')
@@ -216,7 +207,8 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
     print ' Print MEDIAN result '
     print
 
-    mc.results_resumen(flat_chain, chain_med=chain_MAP)
+    results_analysis.results_resumen(mc, flat_chain, chain_med=chain_MAP)
+    results_analysis.results_derived(mc, flat_chain)
 
     print
     print '****************************************************************************************************'
@@ -224,17 +216,18 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
     print ' Print MAP result (', lnprob_MAP, ')'
     print
 
-    mc.results_resumen(chain_MAP)
+    results_analysis.results_resumen(mc, chain_MAP)
+    results_analysis.results_derived(mc, chain_MAP)
 
     print
     print '****************************************************************************************************'
     print
-    print ' Plot FLAT chain '
-    print
 
     if plot_dictionary['lnprob_chain'] or plot_dictionary['chains']:
 
-        #mc.results_resumen(flat_chain)
+        print ' Plot FLAT chain '
+        print
+        #results_analysis.results_resumen(mc, flat_chain)
 
         if emcee_version == '2':
             fig = plt.figure(figsize=(12, 12))
@@ -259,29 +252,44 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
 
     if plot_dictionary['full_correlation']:
 
-        print 'full_correlation plot'
-        # plotting mega-corner plot
-        plt.rc('text', usetex=False)
-
         corner_plot = {
-            'samples': [],
+            'samples': np.zeros([np.size(flat_chain, axis=0), np.size(flat_chain, axis=1)]),
             'labels': [],
             'truths': []
         }
+        import re
+
         for var, var_dict in theta_dictionary.iteritems():
-            corner_plot['samples'].extend([flat_chain[:, var_dict]])
-            corner_plot['labels'].append(var)
+            corner_plot['samples'][:, var_dict] = flat_chain[:, var_dict]
+            corner_plot['labels'].append(re.sub('_', '-', var))
             corner_plot['truths'].append(chain_med[var_dict, 0])
 
-        corner_plot['samples'].extend([flat_lnprob])
-        corner_plot['labels'].append('ln prob')
+        corner_plot['samples'][:, -1] = flat_lnprob[:]
+        corner_plot['labels'].append('ln-prob')
         corner_plot['truths'].append(lnprob_med[0])
 
-        fig = corner.corner(np.asarray(corner_plot['samples']).T,
-                            labels=corner_plot['labels'], truths=corner_plot['truths'])
-        fig.savefig(dir_output + "all_internal_variables_corner.pdf", bbox_inches='tight', dpi=300)
-        plt.close(fig)
-        plt.rc('text', usetex=True)
+        if plot_dictionary['use_getdist']:
+            print(' Plotting full_correlation plot with GetDist')
+            print(' Ignore the no burnin error warning from getdist, since burnin has been already removed from the chains')
+
+            plt.rc('text', usetex=False)
+            samples = MCSamples(samples=corner_plot['samples'], names=corner_plot['labels'], labels=corner_plot['labels'])
+
+            g = plots.getSubplotPlotter()
+            g.settings.num_plot_contours = 6
+            g.triangle_plot(samples, filled=True)
+            g.export(dir_output + "all_internal_variables_corner_getdist.pdf")
+
+        else:
+            # plotting mega-corner plot
+            print('Plotting full_correlation plot with Corner')
+            plt.rc('text', usetex=False)
+
+            fig = corner.corner(np.asarray(corner_plot['samples']).T,
+                                labels=corner_plot['labels'], truths=corner_plot['truths'])
+            fig.savefig(dir_output + "all_internal_variables_corner_test.pdf", bbox_inches='tight', dpi=300)
+            plt.close(fig)
+            plt.rc('text', usetex=use_tex)
 
         print
         print '****************************************************************************************************'
@@ -303,13 +311,14 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
         print '****************************************************************************************************'
         print
 
-
-    #print sampler.acor.max()
     if plot_dictionary['traces']:
-        print 'plotting the Gelman-Rubin traces... '
+        print 'Plotting the Gelman-Rubin traces... '
         print
+        """
+        Gelman-Rubin traces are stored in the dedicated folder iniside the _plot folder
+        Note that the GR statistics is not robust because the wlakers are not independent 
+        """
         os.system('mkdir -p ' + dir_output + 'gr_traces')
-        #for theta_name, th in theta_dictionary.iteritems():
 
         step_sampling = np.arange(nburnin/nthin, nsteps/nthin, 1)
 
@@ -319,213 +328,66 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
             file_name = dir_output + 'gr_traces/v2_' + repr(th) + '_' + theta_name + '.png'
             fig = plt.figure(figsize=(12, 12))
             plt.plot(step_sampling, rhat[:], '-', color='k')
-            #plt.axhline(1.01)
+            plt.axhline(1.01, c='C0')
             plt.savefig(file_name, bbox_inches='tight', dpi=300)
             plt.close(fig)
-
-        #for theta_name, th in theta_dictionary.iteritems():
-        #    file_name = dir_output + 'gr_traces/' + repr(th) + '_' + theta_name + '.png'
-        #    out_absc = np.arange(0, nburnin/nthin, 1)
-        #    out_lines = np.zeros(nburnin/nthin)
-        #
-        #    #for ii in xrange(20, nburnin/nthin):
-        #    #    out_lines[ii] = GelmanRubin(sampler_chain[:, :ii, th].T)
-        #    #fig = plt.figure(figsize=(12, 12))
-        #    #plt.plot(out_absc[20:], out_lines[20:], '-', color='k')
-        #    #plt.axhline(1.01)
-        #
-        #    rhat = np.array([GelmanRubin(sampler_chain[:, :steps, th].T) for steps in step_sampling])
-        #    print ' Gelman-Rubin: %5i %12f %s ' % (th, rhat[-1], theta_name)
-        #    fig = plt.figure(figsize=(12, 12))
-        #    plt.plot(step_sampling, rhat[:], '-', color='k')
-        #
-        #    plt.savefig(file_name, bbox_inches='tight', dpi=300)
-        #    plt.close(fig)
 
         print
         print '****************************************************************************************************'
         print
 
-    print
+    if plot_dictionary['common_corner']:
 
-    print
-    print '****************************************************************************************************'
-    print
-    print ' Common models analysis '
-    print
+        print(' Plotting the common models corner plots')
 
-    plt.rc('text', usetex=False)
+        plt.rc('text', usetex=False)
+        for common_name, common_model in mc.common_models.iteritems():
 
-    """ in this variable we store the physical variables of """
-    planet_variables = {}
-    planet_variables_MAP = {}
+            print('     Common model: ' + common_name)
 
-    for common_name, common_model in mc.common_models.iteritems():
+            corner_plot = {
+                'var_list': [],
+                'samples': [],
+                'labels': [],
+                'truths': []
+            }
+            variable_values = common_model.convert(flat_chain)
+            variable_median = common_model.convert(chain_med[:, 0])
 
-        print '     Common model: ', common_name
+            if len(variable_median) < 1.:
+                continue
 
-        corner_plot = {
-            'var_list': [],
-            'samples': [],
-            'labels': [],
-            'truths': []
-        }
-        variable_values = common_model.convert(flat_chain)
-        variable_median = common_model.convert(chain_med[:, 0])
-        variable_MAP = common_model.convert(chain_MAP)
+            n_samplings, n_pams = np.shape(flat_chain)
 
-        if len(variable_median) < 1.:
-            print
-            continue
-
-        n_samplings, n_pams = np.shape(flat_chain)
-
-        print '     variable_median: ', variable_median
-        print '     n_samplings, n_pams: ',  n_samplings, n_pams
-        print
-
-        """ Sometimes the user forget to include the value for the inclination among the parameters
-        We do our check and then we fix it
-        """
-        i_is_missing = True
-
-        """
-        Check if the eccentricity and argument of pericenter were set as free parameters or fixed by simply
-        checking the size of their distribution
-        """
-        for var in variable_values.iterkeys():
-            if np.size(variable_values[var]) == 1:
-                    variable_values[var] = variable_values[var] * np.ones(n_samplings)
-            else:
-                corner_plot['var_list'].append(var)
-
-            if var == 'i':
-                i_is_missing = False
-
-        corner_plot['samples'] = []
-        corner_plot['labels'] = []
-        corner_plot['truths'] = []
-        for var_i, var in enumerate(corner_plot['var_list']):
-            corner_plot['samples'].extend([variable_values[var]])
-            corner_plot['labels'].append(var)
-            corner_plot['truths'].append(variable_median[var])
-
-
-        """ Check if the semi-amplitude K is among the parameters that have been fitted. 
-            If so, it computes the correpsing planetary mass with uncertainty """
-
-        if common_model.model_class == 'planet':
-
-            if i_is_missing:
-                if 'i' in common_model.fix_list:
-                    variable_values['i'] = np.random.normal(common_model.fix_list['i'][0], common_model.fix_list['i'][1], size=n_samplings)
+            """
+            Check if the eccentricity and argument of pericenter were set as free parameters or fixed by simply
+            checking the size of their distribution
+            """
+            for var in variable_values.keys():
+                if np.size(variable_values[var]) == 1:
+                        variable_values[var] = variable_values[var] * np.ones(n_samplings)
                 else:
-                    variable_values['i'] = 90.00 * np.ones(n_samplings)
-                    variable_median['i'] = 90.00
+                    corner_plot['var_list'].append(var)
 
-            if 'K' in variable_values.keys():
+            corner_plot['samples'] = []
+            corner_plot['labels'] = []
+            corner_plot['truths'] = []
+            for var_i, var in enumerate(corner_plot['var_list']):
+                corner_plot['samples'].extend([variable_values[var]])
+                corner_plot['labels'].append(var)
+                corner_plot['truths'].append(variable_median[var])
 
-                Mass_E = np.empty(n_samplings)
-                var_index = np.arange(0, n_samplings, dtype=int)
-                star_mass_randomized = np.random.normal(mc.star_mass[0], mc.star_mass[1], size=n_samplings)
+            """ Check if the semi-amplitude K is among the parameters that have been fitted. 
+                If so, it computes the correpsing planetary mass with uncertainty """
 
-                fileout = open(dir_output + common_name + '_orbital_pams.dat', 'w')
-
-                for P, K, e, i, star, ii in zip(
-                        variable_values['P'],
-                        variable_values['K'],
-                        variable_values['e'],
-                        variable_values['i'],
-                        star_mass_randomized,
-                        var_index):
-                    Mass_E[ii] = M_SEratio / np.sin(np.radians(i)) * \
-                                 kepler_exo.get_planet_mass(P, K, e, star, Minit=0.0065)
-
-                    fileout.write('{0:f} {1:f} {2:f} {3:f} {4:f} {5:f}  \n'.format(P, K, e, i, star, Mass_E[ii]))
-                fileout.close()
-
-                Mass_E_med = common.compute_value_sigma(Mass_E)
-                variable_median['Me'] = Mass_E_med[0]
-                variable_MAP['Me'], _ = common.pick_MAP_parameters(Mass_E, flat_lnprob)
-
-            elif 'M' in variable_values.keys():
-
-                K_all = np.empty(n_samplings)
-                var_index = np.arange(0, n_samplings, dtype=int)
-                for star, M, P, i, e, ii in zip(variable_values['mass'],
-                                                variable_values['M'],
-                                                variable_values['P'],
-                                                variable_values['i'],
-                                                variable_values['e']):
-                    K_all[ii] = kepler_exo.kepler_K1(star, M/constants.M_SEratio, P, i ,e )
-
-                K_all_med = common.compute_value_sigma(K_all)
-                variable_median['K'] = K_all_med[0]
-                variable_MAP['K'], _ = common.pick_MAP_parameters(K_all, flat_lnprob)
-
-                Mass_E = variable_values['M'] * M_SEratio
-                Mass_E_med = common.compute_value_sigma(Mass_E)
-                variable_median['Me'] = Mass_E_med[0]
-                variable_MAP['Me'], _ = common.pick_MAP_parameters(Mass_E, flat_lnprob)
-
-            if 'Tc' in variable_values.keys():
-                phase = np.empty(n_samplings)
-                var_index = np.arange(0, n_samplings, dtype=int)
-
-                for P, Tc, e, o, ii in zip(
-                        variable_values['P'],
-                        variable_values['Tc'],
-                        variable_values['e'],
-                        variable_values['o'],
-                        var_index):
-
-                    phase[ii]=kepler_exo.kepler_Tc2phase_Tref(P, Tc - mc.Tref, e, o)
-
-                phase_med = common.compute_value_sigma(phase)
-                variable_median['f'] = phase_med[0]
-                variable_MAP['f'], _ = common.pick_MAP_parameters(phase, flat_lnprob)
-
-            elif 'Tc' in variable_values.keys():
-                Tcent = np.empty(n_samplings)
-                var_index = np.arange(0, n_samplings, dtype=int)
-
-                for P, f, e, o, ii in zip(
-                        variable_values['P'],
-                        variable_values['f'],
-                        variable_values['e'],
-                        variable_values['o'],
-                        var_index):
-
-                    Tcent[ii] = mc.Tref + kepler_exo.kepler_phase2Tc_Tref(P, f, e, o)
-
-                Tcent_med = common.compute_value_sigma(Tcent)
-                variable_median['Tc'] = Tcent_med[0]
-                variable_MAP['Tc'], _ = common.pick_MAP_parameters(Tcent, flat_lnprob)
-
-            planet_variables[common_name] = variable_median
-            planet_variables_MAP[common_name] = variable_MAP
-
-            if 'K' in variable_values.keys() or 'M' in variable_values.keys():
-                fig = plt.figure(figsize=(12, 12))
-                plt.hist(Mass_E, bins=50)
-                plt.savefig(dir_output + 'planet_mass_' + common_name + '.png', bbox_inches='tight', dpi=300)
-                plt.close(fig)
-
-                print 'Planet', common_name, '   Mass (Earths): %12f   %12f %12f (15-84 p) ' % (Mass_E_med[0], Mass_E_med[2], Mass_E_med[1])
-                print
-
-                corner_plot['samples'].extend([Mass_E])
-                corner_plot['labels'].append('M [M$_\oplus$]')
-                corner_plot['truths'].append(Mass_E_med[0])
-
-        if plot_dictionary['common_corner']:
 
             fig = corner.corner(np.asarray(corner_plot['samples']).T, labels=corner_plot['labels'], truths=corner_plot['truths'])
             fig.savefig(dir_output + common_name + "_corners.pdf", bbox_inches='tight', dpi=300)
             plt.close(fig)
 
-            print 'Common model: ', common_name , '  corner plot done.'
-            print
+        print
+        print '****************************************************************************************************'
+        print
 
     if plot_dictionary['dataset_corner']:
 
@@ -577,6 +439,18 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
             }
         }
 
+        # Computation of all the planetary variables
+        planet_variables = get_planet_variables(mc, chain_med[:, 0])
+        planet_variables_MAP = get_planet_variables(mc, chain_MAP)
+
+        #     """ in this variable we store the physical variables of """
+        #     planet_variables = {}
+        #     planet_variables_MAP = {}
+        #
+        #     chain_med[:, 0]
+        #     variable_MAP = common_model.convert(chain_MAP)
+
+
         kinds = {}
         for dataset_name, dataset in mc.dataset_dict.iteritems():
             if dataset.kind in kinds.keys():
@@ -620,8 +494,8 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
             if dataset.kind =='RV':
                 bjd_plot[dataset_name] = bjd_plot['full']
 
-        bjd_plot['model_out'], bjd_plot['model_x0'] = mc.get_model(chain_med[:, 0], bjd_plot)
-        bjd_plot['MAP_model_out'], bjd_plot['MAP_model_x0'] = mc.get_model(chain_MAP, bjd_plot)
+        bjd_plot['model_out'], bjd_plot['model_x0'] = results_analysis.get_model(mc, chain_med[:, 0], bjd_plot)
+        bjd_plot['MAP_model_out'], bjd_plot['MAP_model_x0'] = results_analysis.get_model(mc, chain_MAP, bjd_plot)
 
         if plot_dictionary['plot_models']:
 
@@ -769,8 +643,8 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
         variable_values = model.convert(flat_chain)
 
         for variable_name, variable in variable_values.iteritems():
-            for common_ref in mc.models[model_name].common_ref:
-                all_variables_list[model.common_ref + '_' + variable_name] = variable
+            #for common_ref in mc.models[model_name].common_ref:
+            all_variables_list[model.common_ref + '_' + variable_name] = variable
 
     n_int = len(all_variables_list)
     output_plan = np.zeros([n_samplings, n_int], dtype=np.double)
@@ -794,7 +668,6 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
     median_vals = plot_truths[1, :]
 
     for ii in xrange(0, n_int):
-
 
         #sig_minus = plot_truths[1, ii] - plot_truths[0, ii]
         #sig_plus = plot_truths[2, ii] - plot_truths[1, ii]

@@ -17,6 +17,7 @@ if __name__ == '__main__':
     parser.add_argument('-dc', type=str, nargs='?', default=False, help='Create individual corner plots of reach dataset')
     parser.add_argument('-all_corners', type=str, nargs='?', default=False, help='Do all the corner plots')
     parser.add_argument('-all', type=str, nargs='?', default=False, help='Active all flags')
+    parser.add_argument('-dfm_corner', type=str, nargs='?', default=False, help='Use DFM corner script for corner plots')
 
     plot_dictionary = {
         'plot_models': False,
@@ -26,7 +27,8 @@ if __name__ == '__main__':
         'lnprob_chain': False,
         'full_correlation': False,
         'dataset_corner': False,
-        'common_corner': False
+        'common_corner': False,
+        'use_getdist': True
     }
 
     args = parser.parse_args()
@@ -49,6 +51,8 @@ if __name__ == '__main__':
         plot_dictionary['dataset_corner'] = True
     if args.cc is not False:
         plot_dictionary['common_corner'] = True
+    if args.dfm_corner is not False :
+        plot_dictionary['use_getdist'] = False
 
     if args.all is not False:
         plot_dictionary['plot_models'] = True
