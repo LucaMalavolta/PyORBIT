@@ -103,31 +103,26 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, shutdown_
     conf_solver = config_in['solver']
 
     if reload_emcee:
-        if 'star_mass' in conf_parameters:
-            mc.star_mass = np.asarray(conf_parameters['star_mass'][:], dtype=np.double)
-        if 'star_radius' in config_in:
-            mc.star_radius = np.asarray(conf_parameters['star_radius'][:], dtype=np.double)
+        #if 'emcee' in conf_solver:
+        #    conf = conf_solver['emcee']
 
-        if 'emcee' in conf_solver:
-            conf = conf_solver['emcee']
+        #    if 'multirun' in conf:
+        #        mc.emcee_parameters['multirun'] = np.asarray(conf['multirun'], dtype=np.int64)
 
-            if 'multirun' in conf:
-                mc.emcee_parameters['multirun'] = np.asarray(conf['multirun'], dtype=np.int64)
+        #    if 'multirun_iter' in conf:
+        #        mc.emcee_parameters['multirun_iter'] = np.asarray(conf['multirun_iter'], dtype=np.int64)
 
-            if 'multirun_iter' in conf:
-                mc.emcee_parameters['multirun_iter'] = np.asarray(conf['multirun_iter'], dtype=np.int64)
+        #    if 'nsave' in conf:
+        #        mc.emcee_parameters['nsave'] = np.asarray(conf['nsave'], dtype=np.double)
 
-            if 'nsave' in conf:
-                mc.emcee_parameters['nsave'] = np.asarray(conf['nsave'], dtype=np.double)
+        #    if 'nsteps' in conf:
+        #        mc.emcee_parameters['nsteps'] = np.asarray(conf['nsteps'], dtype=np.int64)
 
-            if 'nsteps' in conf:
-                mc.emcee_parameters['nsteps'] = np.asarray(conf['nsteps'], dtype=np.int64)
+        #    if 'nburn' in conf:
+        #        mc.emcee_parameters['nburn'] = np.asarray(conf['nburn'], dtype=np.int64)
 
-            if 'nburn' in conf:
-                mc.emcee_parameters['nburn'] = np.asarray(conf['nburn'], dtype=np.int64)
-
-            if 'thin' in conf:
-                mc.emcee_parameters['thin'] = np.asarray(conf['thin'], dtype=np.int64)
+        #    if 'thin' in conf:
+        #        mc.emcee_parameters['thin'] = np.asarray(conf['thin'], dtype=np.int64)
 
         # Check if inclination has been updated
         for model_name, model_conf in conf_common.iteritems():
@@ -146,7 +141,6 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, shutdown_
 
         return
 
-    print()
     for dataset_name, dataset_conf in conf_inputs.iteritems():
 
         if not isinstance(dataset_name, str):

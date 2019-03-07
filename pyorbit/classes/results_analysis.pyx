@@ -455,8 +455,8 @@ def get_model(mc, theta, bjd_dict):
 
 def print_theta_bounds(i_dict, theta, bounds, skip_theta=False):
 
-    format_string = '{0:10s}  {1:4d}  {2:12f} ([{3:10f}, {4:10f]})'
-    format_string_long = '{0:10s}  {1:4d}  {2:12f}   {3:12f}  {4:12f} (15-84 p) ([{5:9f}, {6:9f]})'
+    format_string = '{0:10s}  {1:4d}  {2:12f} ([{3:10f}, {4:10f}])'
+    format_string_long = '{0:10s}  {1:4d}  {2:12f}   {3:12f}  {4:12f} (15-84 p) ([{5:9f}, {6:9f}])'
     format_string_notheta = '{0:10s}  {1:4d}  ([{2:10f}, {3:10f}])'
 
     for var, i in i_dict.iteritems():
@@ -492,7 +492,11 @@ def print_dictionary(variable_values, recenter=[]):
 
             print(format_string_long.format(var_names,  perc1, perc0-perc1, perc2-perc1))
         else:
-            print(format_string.format(var_names, var_vals))
+            try:
+                print(format_string.format(var_names, var_vals[0]))
+            except:
+                print(format_string.format(var_names, var_vals))
+
     print()
 
 

@@ -2,19 +2,19 @@ import cPickle as pickle
 import numpy as np
 import copy
 
-
-def pyde_create_dummy_file(mc,  prefix=''):
+def pyde_create_dummy_file(mc, prefix=''):
     add_prefix = (prefix + '_' if prefix else '')
     file_dummy = open(mc.pyde_dir_output + add_prefix + "dummy_file", "wb")
     file_dummy.close()
 
 
-def pyde_save_to_pickle(mc, population, starting_point, prefix=''):
+def pyde_save_to_pickle(mc, population, starting_point, theta_dict, prefix=''):
 
     add_prefix = (prefix + '_' if prefix else '')
     pickle.dump(mc, open(mc.pyde_dir_output + add_prefix + "model_container.p", "wb"))
     pickle.dump(population, open(mc.pyde_dir_output + add_prefix + "population.p", "wb"))
     pickle.dump(starting_point, open(mc.pyde_dir_output + add_prefix + "starting_point.p", "wb"))
+    pickle.dump(theta_dict, open(mc.pyde_dir_output + add_prefix + "theta_dictionary.p", "wb"))
 
 
 def pyde_load_from_cpickle(pyde_dir_output, prefix=''):
@@ -24,8 +24,9 @@ def pyde_load_from_cpickle(pyde_dir_output, prefix=''):
     mc = pickle.load(open(pyde_dir_output + add_prefix + "model_container.p", "rb"))
     population = pickle.load(open(pyde_dir_output + add_prefix + "population.p", "rb"))
     starting_point = pickle.load(open(pyde_dir_output + add_prefix + "starting_point.p", "rb"))
+    theta_dict = pickle.load(open(pyde_dir_output + add_prefix + "theta_dictionary.p", "rb"))
 
-    return mc, population, starting_point
+    return mc, population, starting_point, theta_dict
 
 
 def emcee_create_dummy_file(mc, prefix=''):
@@ -34,12 +35,13 @@ def emcee_create_dummy_file(mc, prefix=''):
     file_dummy.close()
 
 
-def emcee_save_to_cpickle(mc, starting_point, population, prob, state, sampler, samples=None, prefix=None):
+def emcee_save_to_cpickle(mc, starting_point, population, prob, state, sampler, theta_dict, samples=None, prefix=None):
 
     if samples:
         mc.emcee_parameters['nsteps'] = samples
     add_prefix = (prefix + '_' if prefix else '')
 
+    pickle.dump(theta_dict, open(mc.emcee_dir_output + add_prefix + "theta_dict.p", "wb"))
     pickle.dump(mc, open(mc.emcee_dir_output + add_prefix + "model_container.p", "wb"))
     pickle.dump(starting_point, open(mc.emcee_dir_output + add_prefix + "starting_point.p", "wb"))
     pickle.dump(population, open(mc.emcee_dir_output + add_prefix + "starting_population.p", "wb"))
@@ -54,6 +56,12 @@ def emcee_load_from_cpickle(emcee_dir_output, prefix=''):
 
     add_prefix = (prefix + '_' if prefix else '')
 
+    # For backward compatibility
+    try:
+        theta_dict = pickle.load(open(emcee_dir_output + add_prefix + "theta_dict.p", "rb"))
+    except:
+        theta_dict = None
+
     mc = pickle.load(open(emcee_dir_output + add_prefix + "model_container.p", "rb"))
     starting_point = pickle.load(open(emcee_dir_output + add_prefix + "starting_point.p", "rb"))
     population = pickle.load(open(emcee_dir_output + add_prefix + "starting_population.p", "rb"))
@@ -64,7 +72,22 @@ def emcee_load_from_cpickle(emcee_dir_output, prefix=''):
     sampler_acceptance_fraction = pickle.load(open(emcee_dir_output + add_prefix + "sampler_acceptance_fraction.p", "rb"))
 
     return mc, starting_point, population, prob, state, \
-            sampler_chain, sampler_lnprobability, sampler_acceptance_fraction
+            sampler_chain, sampler_lnprobability, sampler_acceptance_fraction, theta_dict
+
+
+def starting_point_save_to_cpickle(dir_output, starting_point, theta_dict, prefix=None):
+
+    add_prefix = (prefix + '_' if prefix else '')
+    pickle.dump(theta_dict, open(dir_output + add_prefix + "theta_dictionary.p", "wb"))
+    pickle.dump(starting_point, open(dir_output + add_prefix + "starting_point.p", "wb"))
+
+
+def starting_point_load_from_cpickle(dir_output, prefix=None):
+
+    add_prefix = (prefix + '_' if prefix else '')
+    theta_dict = pickle.load(open(dir_output + add_prefix + "theta_dictionary.p", "rb"))
+    starting_point = pickle.load(open(dir_output + add_prefix + "starting_point.p", "rb"))
+    return starting_point, theta_dict
 
 
 def nested_sampling_create_dummy_file(mc, prefix=''):

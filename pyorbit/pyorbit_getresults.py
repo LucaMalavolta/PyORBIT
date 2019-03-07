@@ -49,7 +49,7 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
         os.system('mkdir -p ' + dir_output)
 
         mc, starting_point, population, prob, state, \
-        sampler_chain, sampler_lnprobability, sampler_acceptance_fraction = \
+        sampler_chain, sampler_lnprobability, sampler_acceptance_fraction, _ = \
             emcee_load_from_cpickle(dir_input)
 
         pars_input(config_in, mc, reload_emcee=True)
@@ -62,6 +62,7 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
 
         mc.model_setup()
         """ Required to create the right objects inside each class - if defined inside """
+        theta_dictionary = results_analysis.get_theta_dictionary(mc)
         theta_dictionary = results_analysis.get_theta_dictionary(mc)
 
         nburnin = mc.emcee_parameters['nburn']
@@ -76,6 +77,8 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
         lnprob_med = common.compute_value_sigma(flat_lnprob)
         chain_med = common.compute_value_sigma(flat_chain)
         chain_MAP, lnprob_MAP = common.pick_MAP_parameters(flat_chain, flat_lnprob)
+
+        n_samplings, n_pams = np.shape(flat_chain)
 
         print()
         print('Reference Time Tref: {}'.format(mc.Tref))
@@ -113,7 +116,8 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
         data_in = np.genfromtxt(dir_input + 'post_equal_weights.dat')
         flat_lnprob = data_in[:, -1]
         flat_chain = data_in[:, :-1]
-        nsample = np.size(flat_lnprob)
+        # nsample = np.size(flat_lnprob)
+        n_samplings, n_pams = np.shape(flat_chain)
 
         lnprob_med = common.compute_value_sigma(flat_lnprob)
         chain_med = common.compute_value_sigma(flat_chain)
@@ -124,7 +128,7 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
         print
         print 'Dimensions = ', mc.ndim
         print
-        print 'Samples: ', nsample
+        print 'Samples: ', n_samplings
         print
 
     if sampler in sample_keyword['polychord']:
@@ -153,8 +157,9 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
         data_in = np.genfromtxt(dir_input + 'pyorbit_equal_weights.txt')
         flat_lnprob = data_in[:, 1]
         flat_chain = data_in[:, 2:]
-        nsample = np.size(flat_lnprob)
+        #nsample = np.size(flat_lnprob)
 
+        n_samplings, n_pams = np.shape(flat_chain)
 
         lnprob_med = common.compute_value_sigma(flat_lnprob)
         chain_med = common.compute_value_sigma(flat_chain)
@@ -165,7 +170,7 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
         print
         print 'Dimensions = ', mc.ndim
         print
-        print 'Samples: ', nsample
+        print 'Samples: ', n_samplings
         print
 
     print
@@ -356,8 +361,6 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
 
             if len(variable_median) < 1.:
                 continue
-
-            n_samplings, n_pams = np.shape(flat_chain)
 
             """
             Check if the eccentricity and argument of pericenter were set as free parameters or fixed by simply

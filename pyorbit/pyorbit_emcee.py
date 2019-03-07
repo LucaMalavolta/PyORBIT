@@ -2,11 +2,13 @@ from classes.common import *
 from classes.model_container_emcee import ModelContainerEmcee
 from classes.input_parser import yaml_parser, pars_input
 from classes.io_subroutines import pyde_save_to_pickle, pyde_load_from_cpickle, \
-    emcee_save_to_cpickle, emcee_load_from_cpickle, emcee_flatchain, emcee_create_dummy_file
+    emcee_save_to_cpickle, emcee_load_from_cpickle, emcee_flatchain, emcee_create_dummy_file, \
+    starting_point_load_from_cpickle, starting_point_save_to_cpickle
 import classes.results_analysis as results_analysis
 import emcee
 import os
 import sys
+
 
 __all__ = ["pyorbit_emcee", "yaml_parser"]
 
@@ -22,20 +24,20 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
 
 
     try:
-        mc, population, starting_point = pyde_load_from_cpickle(pyde_dir_output, prefix='')
+        _, population, starting_point, theta_dict = pyde_load_from_cpickle(pyde_dir_output, prefix='')
         reloaded_pyde = True
     except:
         pass
 
     try:
-        mc, starting_point, population, _, _, sampler_chain, _, _ = \
+        _, starting_point, population, _, _, sampler_chain, _, _, theta_dict = \
             emcee_load_from_cpickle(emcee_dir_output, prefix='MR')
         reloaded_emcee_multirun = True
     except:
         pass
 
     try:
-        mc, starting_point, population, _, _, sampler_chain, sampler_lnprobability, _ = \
+        mc, starting_point, population, _, _, sampler_chain, sampler_lnprobability, _, theta_dict = \
             emcee_load_from_cpickle(emcee_dir_output)
         reloaded_emcee = True
     except:
@@ -58,43 +60,51 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
         else:
             return
 
-    reloaded_mc = reloaded_pyde or reloaded_emcee_multirun or reloaded_emcee_multirun
+    reloaded_mc = reloaded_pyde or reloaded_emcee_multirun
 
-    if not reloaded_mc:
-        mc = ModelContainerEmcee()
+    #if not reloaded_mc:
+    mc = ModelContainerEmcee()
 
-        pars_input(config_in, mc, input_datasets)
+    pars_input(config_in, mc, input_datasets)
 
-        if mc.pyde_parameters['shutdown_jitter'] or mc.emcee_parameters['shutdown_jitter']:
-            for dataset in mc.dataset_dict.itervalues():
-                dataset.shutdown_jitter()
+    if mc.pyde_parameters['shutdown_jitter'] or mc.emcee_parameters['shutdown_jitter']:
+        for dataset in mc.dataset_dict.itervalues():
+            dataset.shutdown_jitter()
 
-        # keep track of which version has been used to perform emcee computations
-        mc.emcee_parameters['version'] = emcee.__version__[0]
+    # keep track of which version has been used to perform emcee computations
+    mc.emcee_parameters['version'] = emcee.__version__[0]
 
-        mc.model_setup()
-        mc.create_variables_bounds()
-        mc.initialize_logchi2()
+    mc.model_setup()
+    mc.create_variables_bounds()
+    mc.initialize_logchi2()
 
-        results_analysis.results_resumen(mc, None, skip_theta=True)
+    results_analysis.results_resumen(mc, None, skip_theta=True)
 
-        mc.pyde_dir_output = pyde_dir_output
-        mc.emcee_dir_output = emcee_dir_output
+    mc.pyde_dir_output = pyde_dir_output
+    mc.emcee_dir_output = emcee_dir_output
 
-        mc.emcee_parameters['nwalkers'] = mc.ndim * mc.emcee_parameters['npop_mult']
-        if mc.emcee_parameters['nwalkers']%2 == 1: mc.emcee_parameters['nwalkers'] += 1
+    mc.emcee_parameters['nwalkers'] = mc.ndim * mc.emcee_parameters['npop_mult']
+    if mc.emcee_parameters['nwalkers']%2 == 1: mc.emcee_parameters['nwalkers'] += 1
 
-        #if mc.dynamical_model is not None:
-        #    mc.dynamical_model.prepare(mc)
-    else:
-        mc.pyde_dir_output = pyde_dir_output
-        mc.emcee_dir_output = emcee_dir_output
+    #if mc.dynamical_model is not None:
+    #    mc.dynamical_model.prepare(mc)
 
-        """ reload nsteps, burnin and other parameters for emcee"""
-        pars_input(config_in, mc, input_datasets, reload_emcee=True)
 
-        mc.model_setup()
-        mc.initialize_logchi2()
+
+
+    #else:
+
+    #    mc.pyde_dir_output = pyde_dir_output
+    #    mc.emcee_dir_output = emcee_dir_output
+
+    #    """ reload nsteps, burnin and other parameters for emcee"""
+    #    pars_input(config_in, mc, input_datasets, reload_emcee=True)
+
+
+    #    mc.model_setup()
+    #    mc.create_variables_bounds()
+
+    #    mc.initialize_logchi2()
 
     if not os.path.exists(mc.emcee_dir_output):
         os.makedirs(mc.emcee_dir_output)
@@ -115,9 +125,24 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
     print '*************************************************************'
     print
 
+    if reloaded_mc:
+
+        theta_dict_legacy = theta_dict.copy()
+        population_legacy = population.copy()
+
+        theta_dict = results_analysis.get_theta_dictionary(mc)
+        population = np.zeros([mc.emcee_parameters['nwalkers'], mc.ndim], dtype=np.double)
+
+        for theta_name, theta_i in theta_dict.iteritems():
+            population[:, theta_i] = population_legacy[:, theta_dict_legacy[theta_name]]
+
+        print 'Using previous population as starting point'
+        sys.stdout.flush()
+
     if mc.starting_point_flag:
         mc.create_starting_point()
         starting_point = mc.starting_point
+
         population = np.zeros([mc.emcee_parameters['nwalkers'], mc.ndim], dtype=np.double)
         for ii in xrange(0, mc.emcee_parameters['nwalkers']):
             population[ii, :] = np.random.normal(starting_point, 0.0000001)
@@ -126,7 +151,7 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
         print 'Using user-defined starting point'
         sys.stdout.flush()
 
-    if not reloaded_pyde:
+    if not reloaded_mc:
         if not os.path.exists(mc.pyde_dir_output):
             os.makedirs(mc.pyde_dir_output)
 
@@ -139,8 +164,6 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
         population = de.population
         starting_point = np.median(population, axis=0)
 
-        #np.savetxt(mc.pyde_dir_output + 'pyDEout_original_bounds.dat', mc.bounds)
-        #np.savetxt(mc.pyde_dir_output + 'pyDEout_original_pops.dat', population)
 
         """ bounds redefinition and fix for PyDE anomalous results """
         if mc.recenter_bounds_flag:
@@ -183,12 +206,14 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
 
             max_ind = np.argmax(prob)
             starting_point = population[max_ind, :]
+
             population = np.asarray([starting_point + 1e-4*np.random.randn(mc.ndim) for i in range(mc.emcee_parameters['nwalkers'])])
             sampler.reset()
 
-            emcee_save_to_cpickle(mc, starting_point, population, prob, state, sampler, prefix='MR_'+repr(ii))
+            theta_dict = results_analysis.get_theta_dictionary(mc)
+            emcee_save_to_cpickle(mc, starting_point, population, prob, state, sampler, theta_dict, prefix='MR_'+repr(ii))
 
-        emcee_save_to_cpickle(mc, starting_point, population, prob, state, sampler, prefix='MR')
+        emcee_save_to_cpickle(mc, starting_point, population, prob, state, sampler,theta_dict, prefix='MR')
 
         flatchain = emcee_flatchain(sampler.chain, mc.emcee_parameters['nburn'], mc.emcee_parameters['thin'])
         results_analysis.results_resumen(mc, flatchain)
@@ -211,7 +236,8 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
         for i in xrange(0, niter):
             population, prob, state = sampler.run_mcmc(population, mc.emcee_parameters['nsave'], thin=mc.emcee_parameters['thin'], rstate0=state)
             sampled += mc.emcee_parameters['nsave']
-            emcee_save_to_cpickle(mc, starting_point, population, prob, state, sampler, samples=sampled)
+            theta_dict = results_analysis.get_theta_dictionary(mc)
+            emcee_save_to_cpickle(mc, starting_point, population, prob, state, sampler, theta_dict, samples=sampled)
 
             flatchain = emcee_flatchain(sampler.chain, mc.emcee_parameters['nburn'], mc.emcee_parameters['thin'])
             results_analysis.results_resumen(mc, flatchain)
@@ -222,7 +248,8 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
     else:
         population, prob, state = sampler.run_mcmc(population, mc.emcee_parameters['nsteps'], thin=mc.emcee_parameters['thin'])
 
-        emcee_save_to_cpickle(mc, starting_point, population, prob, state, sampler)
+        theta_dict = results_analysis.get_theta_dictionary(mc)
+        emcee_save_to_cpickle(mc, starting_point, population, prob, state, sampler, theta_dict)
 
         flatchain = emcee_flatchain(sampler.chain, mc.emcee_parameters['nburn'], mc.emcee_parameters['thin'])
         results_analysis.results_resumen(mc, flatchain)

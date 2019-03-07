@@ -24,7 +24,7 @@ class Batman_Transit(AbstractModel):
         }
         self.list_pams_dataset = {}
 
-        self.batman_ldvar_list = []
+        self.batman_ldvars = {}
         self.ld_ncoeff = 2
         self.parametrization = 'Standard'
 
@@ -86,7 +86,7 @@ class Batman_Transit(AbstractModel):
 
         for i_coeff in xrange(1, kwargs['limb_darkening_ncoeff'] + 1):
             var = 'ld_c' + repr(i_coeff)
-            self.batman_ldvar_list.extend([var])
+            self.batman_ldvars[var] = i_coeff - 1
             self.list_pams_common.update({var: None})
 
         self.batman_params.u = np.ones(kwargs['limb_darkening_ncoeff'],
@@ -165,7 +165,7 @@ class Batman_Transit(AbstractModel):
         print 'w    ', self.batman_params.w
         print 'u    ', self.batman_params.u
         """
-        for i_var, var in enumerate(self.batman_ldvar_list):
+        for var, i_var in self.batman_ldvars.iteritems():
             self.batman_params.u[i_var] = variable_value[var]
 
         """ 
