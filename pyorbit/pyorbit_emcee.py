@@ -3,6 +3,7 @@ from classes.model_container_emcee import ModelContainerEmcee
 from classes.input_parser import yaml_parser, pars_input
 from classes.io_subroutines import pyde_save_to_pickle, pyde_load_from_cpickle, \
     emcee_save_to_cpickle, emcee_load_from_cpickle, emcee_flatchain, emcee_create_dummy_file
+import classes.results_analysis as results_analysis
 import emcee
 import os
 import sys
@@ -50,7 +51,7 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
         flatchain = emcee_flatchain(sampler_chain, mc.emcee_parameters['nburn'], mc.emcee_parameters['thin'])
         mc.model_setup()
         mc.initialize_logchi2()
-        mc.results_resumen(flatchain)
+        results_analysis.results_resumen(mc, flatchain)
 
         if return_output:
             return mc, sampler_chain, sampler_lnprobability
@@ -75,7 +76,7 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
         mc.create_variables_bounds()
         mc.initialize_logchi2()
 
-        mc.results_resumen(None, skip_theta=True)
+        results_analysis.results_resumen(mc, None, skip_theta=True)
 
         mc.pyde_dir_output = pyde_dir_output
         mc.emcee_dir_output = emcee_dir_output
@@ -156,7 +157,7 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
         print 'PyDE completed'
         sys.stdout.flush()
 
-    mc.results_resumen(starting_point, compute_lnprob=True)
+    results_analysis.results_resumen(mc, starting_point, compute_lnprob=True)
 
     if mc.use_threading_pool:
         if emcee_version =='2':
@@ -178,7 +179,7 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
 
             population, prob, state = sampler.run_mcmc(population, mc.emcee_parameters['multirun'])
             flatchain = emcee_flatchain(sampler.chain, mc.emcee_parameters['nburn'], mc.emcee_parameters['thin'])
-            mc.results_resumen(flatchain)
+            results_analysis.results_resumen(mc, flatchain)
 
             max_ind = np.argmax(prob)
             starting_point = population[max_ind, :]
@@ -190,7 +191,7 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
         emcee_save_to_cpickle(mc, starting_point, population, prob, state, sampler, prefix='MR')
 
         flatchain = emcee_flatchain(sampler.chain, mc.emcee_parameters['nburn'], mc.emcee_parameters['thin'])
-        mc.results_resumen(flatchain)
+        results_analysis.results_resumen(mc, flatchain)
 
         print 'emcee exploratory runs completed'
         sys.stdout.flush()
@@ -213,7 +214,7 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
             emcee_save_to_cpickle(mc, starting_point, population, prob, state, sampler, samples=sampled)
 
             flatchain = emcee_flatchain(sampler.chain, mc.emcee_parameters['nburn'], mc.emcee_parameters['thin'])
-            mc.results_resumen(flatchain)
+            results_analysis.results_resumen(mc, flatchain)
 
             print sampled, '  steps completed, average lnprob:, ', np.median(prob)
             sys.stdout.flush()
@@ -224,7 +225,7 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
         emcee_save_to_cpickle(mc, starting_point, population, prob, state, sampler)
 
         flatchain = emcee_flatchain(sampler.chain, mc.emcee_parameters['nburn'], mc.emcee_parameters['thin'])
-        mc.results_resumen(flatchain)
+        results_analysis.results_resumen(mc, flatchain)
 
     print 'emcee completed'
 

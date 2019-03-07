@@ -25,10 +25,12 @@ class RVkeplerian(AbstractModel):
     list_pams_dataset = {}
 
     recenter_pams_dataset = {}
-    use_time_of_transit = False
-    use_mass_for_planets = False
 
-    M_SEratio = constants.Msear
+    def __init__(self, *args, **kwargs):
+        super(RVkeplerian, self).__init__(*args, **kwargs)
+        self.use_time_of_transit = False
+        self.use_mass_for_planets = False
+
 
     def initialize_model(self, mc, **kwargs):
 
@@ -59,7 +61,7 @@ class RVkeplerian(AbstractModel):
         if self.use_mass_for_planets:
 
             K = kepler_exo.kepler_K1(variable_value['mass'],
-                                     variable_value['M'] / self.M_SEratio, variable_value['P'], variable_value['i'],
+                                     variable_value['M'] / constants.Msear, variable_value['P'], variable_value['i'],
                                      variable_value['e'])
         else:
             K = variable_value['K']
@@ -129,7 +131,9 @@ class TransitTimeKeplerian(AbstractModel):
     list_pams_dataset = {}
     recenter_pams_dataset = {}
 
-    use_time_of_transit = False
+    def __init__(self, *args, **kwargs):
+        super(TransitTimeKeplerian, self).__init__(*args, **kwargs)
+        self.use_time_of_transit = False
 
     def initialize_model(self, mc, **kwargs):
 
@@ -177,9 +181,11 @@ class TransitTimeDynamical(AbstractModel):
 
     recenter_pams_dataset = {}
 
-    use_semimajor_axis = False
-    use_inclination = False
-    use_time_of_transit = False
+    def __init__(self, *args, **kwargs):
+        super(TransitTimeDynamical, self).__init__(*args, **kwargs)
+        self.use_semimajor_axis = False
+        self.use_inclination = False
+        self.use_time_of_transit = False
 
     def initialize_model(self, mc, **kwargs):
 
@@ -439,8 +445,8 @@ class DynamicalIntegrator:
                                                                  dict_pams['e'],
                                                                  dict_pams['o'])
 
-            self.dynamical_set['pams']['M'][n_plan] = dict_pams['M'] / mc.M_SEratio
-            self.dynamical_set['pams']['R'][n_plan] = dict_pams['R'] / mc.R_SEratio
+            self.dynamical_set['pams']['M'][n_plan] = dict_pams['M'] / constants.Msear
+            self.dynamical_set['pams']['R'][n_plan] = dict_pams['R'] / constants.Msear
             self.dynamical_set['pams']['P'][n_plan] = dict_pams['P']
             self.dynamical_set['pams']['e'][n_plan] = dict_pams['e']
             self.dynamical_set['pams']['o'][n_plan] = dict_pams['o'] * (180. / np.pi)
@@ -631,7 +637,7 @@ class DynamicalIntegrator:
                                        a_temp)
 
             params.extend([
-                dict_pams['M'] / mc.M_SEratio,  # mass in Solar unit
+                dict_pams['M'] / constants.Msear,  # mass in Solar unit
                 dict_pams['P'],
                 dict_pams['e'],
                 i_temp,

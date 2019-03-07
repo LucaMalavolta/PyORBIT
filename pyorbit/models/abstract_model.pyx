@@ -1,7 +1,7 @@
 from ..classes.common import *
 
 
-class AbstractModel():
+class AbstractModel(object):
     """
 
         Comments to be updated

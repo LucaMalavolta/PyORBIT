@@ -56,7 +56,9 @@ class Celerite_QuasiPeriodicActivity(AbstractModel):
         'Prot': 3  # ln_P
     }
 
-    gp = {}
+    def __init__(self, *args, **kwargs):
+        super(Celerite_QuasiPeriodicActivity, self).__init__(*args, **kwargs)
+        self.gp = {}
 
     def convert_val2gp(self, input_pams):
         """

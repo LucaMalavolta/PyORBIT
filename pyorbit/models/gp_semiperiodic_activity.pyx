@@ -38,8 +38,11 @@ class GaussianProcess_QuasiPeriodicActivity(AbstractModel):
         'Prot': 3 # ln_P
     }
 
-    gp = {}
-    use_HODLR = False
+    def __init__(self, *args, **kwargs):
+        super(GaussianProcess_QuasiPeriodicActivity, self).__init__(*args, **kwargs)
+
+        self.gp = {}
+        self.use_HODLR = False
 
     def convert_val2gp(self, input_pams):
         """

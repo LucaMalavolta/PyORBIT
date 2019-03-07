@@ -73,7 +73,6 @@ class ModelContainer(object):
         for dataset_name, dataset in self.dataset_dict.iteritems():
             for model_name in dataset.models:
                 self.models[model_name].common_initialization_with_dataset(dataset)
-
                 try:
                     for common_model in self.models[model_name].common_ref:
                         self.common_models[common_model].common_initialization_with_dataset(dataset)
@@ -225,7 +224,7 @@ class ModelContainer(object):
 
                 variable_values = {}
                 for common_ref in self.models[model_name].common_ref:
-                     variable_values.update(self.common_models[common_ref].convert(theta))
+                    variable_values.update(self.common_models[common_ref].convert(theta))
 
                 #try:
                 #    """ Taking the parameter values from the common models"""

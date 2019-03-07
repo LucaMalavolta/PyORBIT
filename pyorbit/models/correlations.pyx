@@ -4,21 +4,24 @@ import numpy.polynomial.polynomial
 class Correlation_SingleDataset(AbstractModel):
 
     model_class = 'correlations'
-    list_pams_common = {}
-    list_pams_dataset = {}
-    default_bounds = {}
-    default_spaces = {}
-    default_priors = {}
-
-    recenter_pams_dataset = {}
-
     time_independent_model = True
 
-    order = 1
-    x_vals = None
-    x_mask = None
-    x_zero = 0.000
-    threshold = 0.001
+    def __init__(self, *args, **kwargs):
+        super(Correlation_SingleDataset, self).__init__(*args, **kwargs)
+
+        self.list_pams_common = {}
+        self.list_pams_dataset = {}
+        self.default_bounds = {}
+        self.default_spaces = {}
+        self.default_priors = {}
+
+        self.recenter_pams_dataset = {}
+
+        self.order = 1
+        self.x_vals = None
+        self.x_mask = None
+        self.x_zero = 0.000
+        self.threshold = 0.001
 
     def initialize_model(self, mc, **kwargs):
         """ A special kind of initialization is required for this module, since it has to take a second dataset

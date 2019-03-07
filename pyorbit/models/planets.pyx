@@ -24,17 +24,10 @@ class CommonPlanets(AbstractCommon):
         Ford2006: $e \cos{\omega }$ and $e \sin{\omega}$
         Eastman2013: $\sqrt{e} \cos{\omega }$ and $\sqrt{e} \sin{\omega}$
     """
-    parametrization = 'Eastman2013'
     parametrization_list = ['Ford2006', 'Eastman2013', 'Standard',
                             'Ford2006_Tcent', 'Eastman2013_Tcent', 'Standard_Tcent',
                             'Ford2006_Tc', 'Eastman2013_Tc', 'Standard_Tc']
     orbit_list = ['circular', 'keplerian', 'dynamical']
-    orbit = 'keplerian'
-
-    use_inclination = False
-    use_semimajor_axis = False
-    use_time_of_transit = False
-    use_mass_for_planets = False
 
     list_pams = {
         'P',  # Period, log-uniform prior
@@ -125,12 +118,23 @@ class CommonPlanets(AbstractCommon):
         'b': 1.0
     }
 
-    omega_star = True
-
     recenter_pams = {'f', 'o', 'lN'}
 
-    # Variable used only by TRADES
-    period_average = None
+    def __init__(self, *args, **kwargs):
+        super(CommonPlanets, self).__init__(*args, **kwargs)
+
+        self.orbit = 'keplerian'
+        self.parametrization = 'Eastman2013'
+
+        self.use_inclination = False
+        self.use_semimajor_axis = False
+        self.use_time_of_transit = False
+        self.use_mass_for_planets = False
+
+        self.omega_star = True
+
+        self.period_average = None
+        # Variable used only by TRADES
 
     def define_special_variable_properties(self, ndim, output_lists, var):
         """ Boundaries definition for eccentricity :math:`e` and argument of pericenter :math:`\omega`
@@ -217,6 +221,9 @@ class CommonPlanets(AbstractCommon):
             ndim += 1
 
         for var in ['e', 'o']:
+            if var not in self.bounds:
+                self.bounds[var] = self.default_bounds[var]
+
             if var not in self.prior_pams:
 
                 if var in self.bounds:

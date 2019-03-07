@@ -39,10 +39,13 @@ class GaussianProcess_QuasiPeriodicActivity_Shared(AbstractModel):
         'Prot': 3 # ln_P
     }
 
-    gp = {}
-    internal_dataset = {'x0': [], 'yr': [], 'ej': []}
-    internal_gp_pams = None
-    use_HODLR = False
+    def __init__(self, *args, **kwargs):
+        super(GaussianProcess_QuasiPeriodicActivity_Shared, self).__init__(*args, **kwargs)
+
+        self.gp = {}
+        self.internal_dataset = {'x0': [], 'yr': [], 'ej': []}
+        self.internal_gp_pams = None
+        self.use_HODLR = False
 
     def convert_val2gp(self, input_pams):
         """

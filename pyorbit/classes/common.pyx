@@ -1,3 +1,5 @@
+from __future__ import print_function
+from future.utils import itervalues
 import os
 import sys
 from scipy import stats
@@ -58,9 +60,6 @@ if 'celerite' not in sys.modules:
         from dummy import batman
         print('WARNING! Imported dummy batman, models relying on this package will not work')
 
-
-
-
 def get_var_log(var, fix, i):
     if len(np.shape(var)) == 1:
         return np.log2(var[i], dtype=np.double)
@@ -117,6 +116,27 @@ def get_2var_o(var, fix, i):
         ecoso = var[:, i[0]]
         esino = var[:, i[1]]
     return np.arctan2(esino, ecoso, dtype=np.double)
+
+
+# Kipping transformation for quadratic limb darkening coefficients
+def get_2var_c1(var, fix, i):
+    if len(np.shape(var)) == 1:
+        q1 = var[i[0]]
+        q2 = var[i[1]]
+    else:
+        q1 = var[:, i[0]]
+        q2 = var[:, i[1]]
+    return 2.0*np.sqrt(q1, dtype=np.double) * q2
+
+
+def get_2var_c2(var, fix, i):
+    if len(np.shape(var)) == 1:
+        q1 = var[i[0]]
+        q2 = var[i[1]]
+    else:
+        q1 = var[:, i[0]]
+        q2 = var[:, i[1]]
+    return np.sqrt(q1, dtype=np.double) * (1.0 - 2.0*q2)
 
 
 def get_2darray_from_val(val):
@@ -217,14 +237,14 @@ def nested_sampling_prior_prepare(kind, bounds, pams, space):
 
     """ All the following priors are defined only if the variable is sampled in the Natural space"""
     if space is not 'Linear':
-        print
-        print ' *** ERROR in the YAML file ***'
-        print ' You are using a prior that is not supported in a not-Linear sampling space'
-        print ' add this keyword in the YAML file for each parameter not sampled in the '
-        print ' Linear space and with a prior other than Uniform or Gaussian'
-        print '   spaces: '
-        print '       pam: Linear'
-        print
+        print()
+        print(' *** ERROR in the YAML file ***')
+        print(' You are using a prior that is not supported in a not-Linear sampling space')
+        print(' add this keyword in the YAML file for each parameter not sampled in the ')
+        print(' Linear space and with a prior other than Uniform or Gaussian')
+        print('   spaces: ')
+        print('       pam: Linear')
+        print()
         quit()
 
     x_var = np.linspace(0.000000, 1.000000, num=10001, endpoint=True, dtype=np.double)*(bounds[1]-bounds[0]) + bounds[0]
@@ -280,7 +300,7 @@ def compute_value_sigma(samples):
                                    zip(*np.percentile(samples, [15.865, 50, 84.135], axis=0))))
 
     else:
-        print 'ERROR!!! '
+        print('ERROR!!! ')
         return None
     return sample_med
 
@@ -293,7 +313,7 @@ def pick_MAP_parameters(samples, lnprob):
     elif np.size(np.shape(samples)) == 2:
         return samples[indmax, :], lnprob[indmax]
     else:
-        print 'ERROR!!! '
+        print('ERROR!!! ')
         return None
 
 def convert_rho_to_a(P, rho):

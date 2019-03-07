@@ -51,7 +51,6 @@ class NormalizationFactor(AbstractModel):
 
     recenter_pams_dataset = {}
 
-    unitary_array = {}
 
     #def setup_dataset(self, dataset, **kwargs):
     #    self.unitary_array[dataset.name_ref] = np.ones(dataset.n, dtype=np.double)

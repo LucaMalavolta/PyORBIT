@@ -72,13 +72,17 @@ class CommonPolynomialTrend(AbstractCommon):
 class PolynomialTrend(AbstractModel):
 
     model_class = 'polynomial_trend'
-    list_pams_common = {}
-    list_pams_dataset = {}
 
-    recenter_pams_dataset = {}
+    def __init__(self, *args, **kwargs):
+        super(PolynomialTrend, self).__init__(*args, **kwargs)
 
-    order = 1
-    starting_order = 1
+        self.list_pams_common = {}
+        self.list_pams_dataset = {}
+
+        self.recenter_pams_dataset = {}
+
+        self.order = 1
+        self.starting_order = 1
 
     def initialize_model(self, mc, **kwargs):
         """ A special kind of initialization is required for this module, since it has to take a second dataset

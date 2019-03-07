@@ -13,6 +13,7 @@ kind_definition = {
     'S_index': ['S', 'S_index']
 }
 
+
 class Dataset(AbstractCommon):
 
     def __init__(self, model_name, kind, models):

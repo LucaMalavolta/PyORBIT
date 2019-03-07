@@ -2,6 +2,7 @@ from classes.common import *
 from classes.model_container_polychord import ModelContainerPolyChord
 from classes.input_parser import yaml_parser, pars_input
 from classes.io_subroutines import nested_sampling_save_to_cpickle, nested_sampling_load_from_cpickle, nested_sampling_create_dummy_file
+import classes.results_analysis as results_analysis
 import os
 import sys
 import argparse
@@ -33,7 +34,7 @@ def pyorbit_polychord(config_in, input_datasets=None, return_output=None):
     if reloaded_mc:
         mc.model_setup()
         mc.initialize_logchi2()
-        #mc.results_resumen(flatchain)
+        results_analysis.results_resumen(mc, flatchain)
     else:
         mc = ModelContainerPolyChord()
         pars_input(config_in, mc, input_datasets)
@@ -48,7 +49,7 @@ def pyorbit_polychord(config_in, input_datasets=None, return_output=None):
 
         mc.create_starting_point()
 
-        mc.results_resumen(None, skip_theta=True)
+        results_analysis.results_resumen(mc, None, skip_theta=True)
 
         mc.output_directory = output_directory
 
