@@ -20,7 +20,7 @@ class ModelContainerPolyChord(ModelContainer):
         for i in xrange(0, len(cube)):
             theta.append(nested_sampling_prior_compute(cube[i], self.priors[i][0], self.priors[i][2], self.spaces[i]))
 
-        return theta.tolist()
+        return theta
 
     def polychord_call(self, theta1):
 
