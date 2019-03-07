@@ -75,8 +75,6 @@ def pyorbit_polychord(config_in, input_datasets=None, return_output=None):
         if hasattr(settings, key_name):
             setattr(settings, key_name, key_value)
 
-        print key_name, key_value
-
     if 'nlive_mult' in mc.nested_sampling_parameters:
         setattr(settings, 'nlive', mc.ndim * mc.nested_sampling_parameters['nlive_mult'])
 

@@ -31,7 +31,6 @@ class RVkeplerian(AbstractModel):
         self.use_time_of_transit = False
         self.use_mass_for_planets = False
 
-
     def initialize_model(self, mc, **kwargs):
 
         if mc.common_models[self.planet_ref].use_time_of_transit:
