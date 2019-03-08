@@ -208,21 +208,22 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
 
     print
     print '****************************************************************************************************'
+    print '****************************************************************************************************'
     print
-    print ' Print MEDIAN result '
-    print
+    print ' Confidence intervals (median value, 34.135th percentile from the median on the left and right side)  '
+
 
     results_analysis.results_resumen(mc, flat_chain, chain_med=chain_MAP)
-    results_analysis.results_derived(mc, flat_chain)
+    #results_analysis.results_derived(mc, flat_chain)
 
     print
     print '****************************************************************************************************'
     print
-    print ' Print MAP result (', lnprob_MAP, ')'
+    print ' Parameters corresponding to the Maximum a Posteriori probability (', lnprob_MAP, ')'
     print
 
     results_analysis.results_resumen(mc, chain_MAP)
-    results_analysis.results_derived(mc, chain_MAP)
+    #results_analysis.results_derived(mc, chain_MAP)
 
     print
     print '****************************************************************************************************'

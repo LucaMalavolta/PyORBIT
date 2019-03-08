@@ -1,7 +1,8 @@
 from __future__ import print_function
 from common import *
 
-__all__ = ["results_resumen", "results_derived", "get_planet_variables", "get_theta_dictionary", "get_model", "print_theta_bounds", "print_dictionary"]
+__all__ = ["results_resumen", "results_derived", "get_planet_variables", "get_theta_dictionary", "get_model",
+           "print_theta_bounds", "print_dictionary"]
 
 
 def results_resumen(mc, theta, skip_theta=False, compute_lnprob=False, chain_med=False):
@@ -11,7 +12,7 @@ def results_resumen(mc, theta, skip_theta=False, compute_lnprob=False, chain_med
 
     print()
     print('====================================================================================================')
-    print('     ------------------------------------------------------------------------------------------     ')
+    print('     Statistics on the posterior of the sampler variables     ')
     print('====================================================================================================')
     print()
     for dataset_name, dataset in mc.dataset_dict.iteritems():
@@ -30,6 +31,7 @@ def results_resumen(mc, theta, skip_theta=False, compute_lnprob=False, chain_med
         return
 
     print('====================================================================================================')
+    print('     Statistics on the physical parameters obtained from the posteriors samples     ')
     print('====================================================================================================')
     print()
 
@@ -51,27 +53,36 @@ def results_resumen(mc, theta, skip_theta=False, compute_lnprob=False, chain_med
             recenter_pams = {}
             variable_values_med = model.convert(chain_med)
 
-            #for var in list(set(mc.recenter_pams_dataset) & set(mc.variable_sampler[dataset_name])):
+            # for var in list(set(mc.recenter_pams_dataset) & set(mc.variable_sampler[dataset_name])):
             for var in list(set(model.recenter_pams) & set(variable_values_med)):
-                    recenter_pams[var] = [variable_values_med[var], model.default_bounds[var][1]-model.default_bounds[var][0]]
+                recenter_pams[var] = [variable_values_med[var],
+                                      model.default_bounds[var][1] - model.default_bounds[var][0]]
             print_dictionary(variable_values, recenter=recenter_pams)
 
         else:
             print_dictionary(variable_values)
 
+    print('====================================================================================================')
+    print('     Statistics on the derived parameters obtained from the posteriors samples     ')
+    print('====================================================================================================')
+    print()
+
+    _ = get_planet_variables(mc, theta, verbose=True)
+
     if compute_lnprob:
         print()
         print('====================================================================================================')
+        print('     Statistics on the log-likelihood     ')
         print('====================================================================================================')
         print()
 
         if len(np.shape(theta)) == 2:
             n_samples, n_values = np.shape(theta)
             logchi2_collection = np.zeros(n_samples)
-            for i in xrange(0,n_samples):
+            for i in xrange(0, n_samples):
                 logchi2_collection[i] = mc(theta[i, :])
             perc0, perc1, perc2 = np.percentile(logchi2_collection, [15.865, 50, 84.135], axis=0)
-            print(' LN probability: %12f   %12f %12f (15-84 p) ' % (perc1, perc0-perc1, perc2-perc1))
+            print(' LN probability: %12f   %12f %12f (15-84 p) ' % (perc1, perc0 - perc1, perc2 - perc1))
         else:
             print(' LN probability: %12f ' % (mc(theta)))
 
@@ -84,7 +95,6 @@ def results_resumen(mc, theta, skip_theta=False, compute_lnprob=False, chain_med
 
 
 def get_stellar_parameters(mc, theta):
-
     try:
         n_samplings, n_pams = np.shape(theta)
     except:
@@ -99,41 +109,40 @@ def get_stellar_parameters(mc, theta):
         if 'radius' not in stellar_values:
             if stellar_model.prior_kind['radius'] is 'Gaussian':
                 stellar_values['radius'] = np.random.normal(stellar_model.prior_pams['radius'][0],
-                                                          stellar_model.prior_pams['radius'][1],
-                                                          size=n_samplings)
+                                                            stellar_model.prior_pams['radius'][1],
+                                                            size=n_samplings)
         if 'mass' not in stellar_values:
             if stellar_model.prior_kind['mass'] is 'Gaussian':
                 stellar_values['mass'] = np.random.normal(stellar_model.prior_pams['mass'][0],
                                                           stellar_model.prior_pams['mass'][1],
                                                           size=n_samplings)
 
-        stellar_values['rho'] = stellar_values['mass'] / stellar_values['radius']**3
+        stellar_values['rho'] = stellar_values['mass'] / stellar_values['radius'] ** 3
 
     else:
         if 'mass' in stellar_values:
-            stellar_values['radius'] = (stellar_values['mass'] / stellar_values['rho'])**(1./3.)
+            stellar_values['radius'] = (stellar_values['mass'] / stellar_values['rho']) ** (1. / 3.)
         elif 'radius' in stellar_values:
-            stellar_values['mass'] = stellar_values['radius']**3. * stellar_values['rho']
+            stellar_values['mass'] = stellar_values['radius'] ** 3. * stellar_values['rho']
         else:
             if 'mass' in stellar_model.prior_pams:
                 if stellar_model.prior_kind['mass'] == 'Gaussian':
                     stellar_values['mass'] = np.random.normal(stellar_model.prior_pams['mass'][0],
                                                               stellar_model.prior_pams['mass'][1],
                                                               size=n_samplings)
-                    stellar_values['radius'] = (stellar_values['mass'] / stellar_values['rho'])**(1./3.)
+                    stellar_values['radius'] = (stellar_values['mass'] / stellar_values['rho']) ** (1. / 3.)
             elif 'radius' in stellar_model.prior_pams:
 
                 if stellar_model.prior_kind['radius'] is 'Gaussian':
                     stellar_values['radius'] = np.random.normal(stellar_model.prior_pams['mass'][0],
-                                                              stellar_model.prior_pams['mass'][1],
-                                                              size=n_samplings)
-                    stellar_values['mass'] = stellar_values['radius']**3. * stellar_values['rho']
+                                                                stellar_model.prior_pams['mass'][1],
+                                                                size=n_samplings)
+                    stellar_values['mass'] = stellar_values['radius'] ** 3. * stellar_values['rho']
 
     return stellar_values
 
 
 def results_derived(mc, theta):
-
     _ = get_planet_variables(mc, theta, verbose=True)
 
 
@@ -161,7 +170,7 @@ def get_planet_variables(mc, theta, verbose=False):
 
             remove_i = False
             if verbose:
-                print('----- common model: ',common_name)
+                print('----- common model: ', common_name)
 
             """
             Check if the eccentricity and argument of pericenter were set as free parameters or fixed by simply
@@ -173,12 +182,24 @@ def get_planet_variables(mc, theta, verbose=False):
                 if np.size(variable_values[var]) == 1:
                     variable_values[var] = variable_values[var] * np.ones(n_samplings)
 
+            if 'a' not in variable_values.keys():
+                derived_variables['a'] = True
+                variable_values['a'] = convert_rho_to_a(variable_values['P'],
+                                                        stellar_values['rho'])
+
             if 'i' not in variable_values.keys():
                 derived_variables['i'] = True
                 if 'i' in common_model.fix_list:
                     if verbose:
                         print('Inclination fixed to ', common_model.fix_list['i'][0])
-                    variable_values['i'] = np.random.normal(common_model.fix_list['i'][0], common_model.fix_list['i'][1], size=n_samplings)
+                    variable_values['i'] = np.random.normal(common_model.fix_list['i'][0],
+                                                            common_model.fix_list['i'][1],
+                                                            size=n_samplings)
+                elif 'b' in variable_values.keys():
+                    variable_values['i'] = convert_b_to_i(variable_values['b'],
+                                                          variable_values['e'],
+                                                          variable_values['o'],
+                                                          variable_values['a'])
                 else:
                     variable_values['i'] = 90.00 * np.ones(n_samplings)
                     remove_i = True
@@ -205,7 +226,7 @@ def get_planet_variables(mc, theta, verbose=False):
                                                 variable_values['P'],
                                                 variable_values['i'],
                                                 variable_values['e']):
-                    derived_variables['K'][ii] = kepler_exo.kepler_K1(star, M/constants.Msear, P, i, e)
+                    derived_variables['K'][ii] = kepler_exo.kepler_K1(star, M / constants.Msear, P, i, e)
 
             if 'Tc' in variable_values.keys():
                 variable_values['f'] = np.empty(n_samplings)
@@ -217,7 +238,7 @@ def get_planet_variables(mc, theta, verbose=False):
                         variable_values['e'],
                         variable_values['o'],
                         var_index):
-                    variable_values['f'][ii]=kepler_exo.kepler_Tc2phase_Tref(P, Tc - mc.Tref, e, o)
+                    variable_values['f'][ii] = kepler_exo.kepler_Tc2phase_Tref(P, Tc - mc.Tref, e, o)
 
             elif 'f' in variable_values.keys():
                 variable_values['Tc'] = np.empty(n_samplings)
@@ -274,7 +295,7 @@ def get_theta_dictionary(mc):
         for model_name in dataset.models:
             for var, i in mc.models[model_name].variable_sampler[dataset_name].iteritems():
                 try:
-                    theta_dictionary[dataset_name + '_' + model_name +  '_' + var] = i
+                    theta_dictionary[dataset_name + '_' + model_name + '_' + var] = i
                 except:
                     theta_dictionary[repr(dataset_name) + '_' + model_name + '_' + var] = i
 
@@ -317,12 +338,12 @@ def get_model(mc, theta, bjd_dict):
             variable_values = {}
 
             for common_ref in mc.models[model_name].common_ref:
-                 variable_values.update(mc.common_models[common_ref].convert(theta))
+                variable_values.update(mc.common_models[common_ref].convert(theta))
 
-            #try:
+            # try:
             #    for common_ref in mc.models[model_name].common_ref:
             #        variable_values.update(mc.common_models[common_ref].convert(theta))
-            #except:
+            # except:
             #    continue
             variable_values.update(mc.models[model_name].convert(theta, dataset_name))
 
@@ -333,10 +354,9 @@ def get_model(mc, theta, bjd_dict):
             if getattr(mc.models[model_name], 'systematic_model', False):
                 dataset.additive_model += mc.models[model_name].compute(variable_values, dataset)
 
-
         model_out[dataset_name]['systematics'] = dataset.additive_model.copy()
         model_out[dataset_name]['jitter'] = dataset.jitter.copy()
-        model_out[dataset_name]['complete'] = np.zeros(dataset.n, dtype=np.double)# dataset.additive_model.copy()
+        model_out[dataset_name]['complete'] = np.zeros(dataset.n, dtype=np.double)  # dataset.additive_model.copy()
 
         model_x0[dataset_name]['complete'] = np.zeros(n_input, dtype=np.double)
 
@@ -351,7 +371,7 @@ def get_model(mc, theta, bjd_dict):
 
             variable_values = {}
             for common_ref in mc.models[model_name].common_ref:
-                 variable_values.update(mc.common_models[common_ref].convert(theta))
+                variable_values.update(mc.common_models[common_ref].convert(theta))
             variable_values.update(mc.models[model_name].convert(theta, dataset_name))
 
             if getattr(mc.models[model_name], 'internal_likelihood', False):
@@ -417,7 +437,7 @@ def get_model(mc, theta, bjd_dict):
 
             if hasattr(mc.models[logchi2_gp_model], 'delayed_lnlk_computation'):
                 mc.models[logchi2_gp_model].add_internal_dataset(variable_values, dataset,
-                                                               reset_status=delayed_lnlk_computation)
+                                                                 reset_status=delayed_lnlk_computation)
                 delayed_lnlk_computation[dataset.name_ref] = logchi2_gp_model
 
             else:
@@ -425,7 +445,7 @@ def get_model(mc, theta, bjd_dict):
                     mc.models[logchi2_gp_model].sample_conditional(variable_values, dataset)
                 model_out[dataset_name]['complete'] += model_out[dataset_name][logchi2_gp_model]
 
-                model_x0[dataset_name][logchi2_gp_model], var  = \
+                model_x0[dataset_name][logchi2_gp_model], var = \
                     mc.models[logchi2_gp_model].sample_predict(variable_values, dataset, x0_plot)
 
                 model_x0[dataset_name][logchi2_gp_model + '_std'] = np.sqrt(var)
@@ -444,17 +464,16 @@ def get_model(mc, theta, bjd_dict):
         model_x0[dataset_name]['complete'] += model_x0[dataset_name][logchi2_gp_model]
 
     # workaround to avoid memory leaks from GP module
-    #gc.collect()
+    # gc.collect()
 
     if np.shape(model_out) == 1:
-        return model_out*np.ones(), model_x0
+        return model_out * np.ones(), model_x0
 
     else:
         return model_out, model_x0
 
 
 def print_theta_bounds(i_dict, theta, bounds, skip_theta=False):
-
     format_string = '{0:10s}  {1:4d}  {2:12f} ([{3:10f}, {4:10f}])'
     format_string_long = '{0:10s}  {1:4d}  {2:12f}   {3:12f}  {4:12f} (15-84 p) ([{5:9f}, {6:9f}])'
     format_string_notheta = '{0:10s}  {1:4d}  ([{2:10f}, {3:10f}])'
@@ -466,22 +485,22 @@ def print_theta_bounds(i_dict, theta, bounds, skip_theta=False):
         elif len(np.shape(theta)) == 2:
 
             theta_med = compute_value_sigma(theta[:, i])
-            print(format_string_long.format(var, i, theta_med[0], theta_med[2], theta_med[1], bounds[i, 0], bounds[i, 1]))
+            print(
+                format_string_long.format(var, i, theta_med[0], theta_med[2], theta_med[1], bounds[i, 0], bounds[i, 1]))
         else:
             print(format_string.format(var, i, theta[i], bounds[i, 0], bounds[i, 1]))
     print()
 
 
 def print_dictionary(variable_values, recenter=[]):
-
     format_string = '{0:10s}   {1:15f} '
     format_string_long = '{0:10s}   {1:15f}   {2:15f}  {3:15f} (15-84 p)'
 
     for var_names, var_vals in variable_values.iteritems():
         if np.size(var_vals) > 1:
             if var_names in recenter:
-                move_back = (var_vals > recenter[var_names][0] + recenter[var_names][1]/2.)
-                move_forw = (var_vals < recenter[var_names][0] - recenter[var_names][1]/2.)
+                move_back = (var_vals > recenter[var_names][0] + recenter[var_names][1] / 2.)
+                move_forw = (var_vals < recenter[var_names][0] - recenter[var_names][1] / 2.)
                 var_vals_recentered = var_vals.copy()
                 var_vals_recentered[move_back] -= recenter[var_names][1]
                 var_vals_recentered[move_forw] += recenter[var_names][1]
@@ -490,7 +509,7 @@ def print_dictionary(variable_values, recenter=[]):
             else:
                 perc0, perc1, perc2 = np.percentile(var_vals, [15.865, 50, 84.135], axis=0)
 
-            print(format_string_long.format(var_names,  perc1, perc0-perc1, perc2-perc1))
+            print(format_string_long.format(var_names, perc1, perc0 - perc1, perc2 - perc1))
         else:
             try:
                 print(format_string.format(var_names, var_vals[0]))
@@ -498,6 +517,3 @@ def print_dictionary(variable_values, recenter=[]):
                 print(format_string.format(var_names, var_vals))
 
     print()
-
-
-

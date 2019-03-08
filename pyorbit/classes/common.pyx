@@ -325,8 +325,13 @@ def convert_b_to_i(b,e,o,a):
 
     rho_e = (1. - e ** 2) / (1. + e * np.sin(o))
     arccos_argument = b / a / rho_e
-    if arccos_argument > 1.: arccos_argument=1
-    if arccos_argument < -1.: arccos_argument=-1
+    if np.size(arccos_argument)<=1:
+
+        if arccos_argument > 1.: arccos_argument=1
+        if arccos_argument < -1.: arccos_argument=-1
+    else:
+        arccos_argument = [1. if b > 1. else b for b in arccos_argument]
+        arccos_argument = [-1. if b < -1. else b for b in arccos_argument]
 
     return np.arccos(arccos_argument)*180./np.pi
 
