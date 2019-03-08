@@ -24,12 +24,14 @@ It is possible to use other samplers as well, such as:
 
 Additional packages may be required to perform certain types of analysis:
 
-- ``cython`` : C extension for Python (`Cython home page`_)
+- ``batman``: Bad-Ass Transit Model cAlculatioN (`BATMAN home page`_)
 - ``george`` : Fast and flexible Gaussian Process regression in Python (`george home page`_)
 - ``celerite`` : scalable 1D Gaussian Processes (`celerite home page`_)
 - ``TRADES`` : dynamical simulation of exoplanetary systems (`TRADES home page`_)
 - ``TTVfast`` : transit times for and radial velocities for n-planet systems (`TTVfast home page`_)
+- ``cython`` : C extension for Python (`Cython home page`_)
 
+.. _BATMAN home page: https://www.cfa.harvard.edu/~lkreidberg/batman/
 .. _Cython home page: http://cython.org/
 .. _george home page: https://github.com/dfm/george
 .. _celerite home page: https://github.com/dfm/celerite
