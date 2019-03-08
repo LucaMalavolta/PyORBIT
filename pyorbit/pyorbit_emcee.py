@@ -163,11 +163,12 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
 
         population = de.population
         starting_point = np.median(population, axis=0)
+        theta_dict = results_analysis.get_theta_dictionary(mc)
 
 
         """ bounds redefinition and fix for PyDE anomalous results """
         if mc.recenter_bounds_flag:
-            pyde_save_to_pickle(mc, population, starting_point, prefix='orig')
+            pyde_save_to_pickle(mc, population, starting_point, theta_dict, prefix='orig')
 
             mc.recenter_bounds(starting_point)
             population = mc.fix_population(starting_point, population)
@@ -175,7 +176,7 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
 
             print 'Boundaries redefined after PyDE output'
 
-        pyde_save_to_pickle(mc, population, starting_point)
+        pyde_save_to_pickle(mc, population, starting_point, theta_dict)
 
         print 'PyDE completed'
         sys.stdout.flush()
@@ -213,7 +214,7 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
             theta_dict = results_analysis.get_theta_dictionary(mc)
             emcee_save_to_cpickle(mc, starting_point, population, prob, state, sampler, theta_dict, prefix='MR_'+repr(ii))
 
-        emcee_save_to_cpickle(mc, starting_point, population, prob, state, sampler,theta_dict, prefix='MR')
+        emcee_save_to_cpickle(mc, starting_point, population, prob, state, sampler, theta_dict, prefix='MR')
 
         flatchain = emcee_flatchain(sampler.chain, mc.emcee_parameters['nburn'], mc.emcee_parameters['thin'])
         results_analysis.results_resumen(mc, flatchain)
