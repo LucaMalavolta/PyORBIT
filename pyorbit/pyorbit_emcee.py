@@ -142,47 +142,49 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
         print 'Using previous population as starting point'
         sys.stdout.flush()
 
-    if mc.starting_point_flag:
-        mc.create_starting_point()
-        starting_point = mc.starting_point
+    else:
 
-        population = np.zeros([mc.emcee_parameters['nwalkers'], mc.ndim], dtype=np.double)
-        for ii in xrange(0, mc.emcee_parameters['nwalkers']):
-            population[ii, :] = np.random.normal(starting_point, 0.0000001)
-        reloaded_pyde = True
+        if mc.starting_point_flag:
+            mc.create_starting_point()
+            starting_point = mc.starting_point
 
-        print 'Using user-defined starting point'
-        sys.stdout.flush()
+            population = np.zeros([mc.emcee_parameters['nwalkers'], mc.ndim], dtype=np.double)
+            for ii in xrange(0, mc.emcee_parameters['nwalkers']):
+                population[ii, :] = np.random.normal(starting_point, 0.0000001)
+            reloaded_mc = True
 
-    if not reloaded_mc:
-        if not os.path.exists(mc.pyde_dir_output):
-            os.makedirs(mc.pyde_dir_output)
+            print 'Using user-defined starting point'
+            sys.stdout.flush()
 
-        print 'PyDE running'
-        sys.stdout.flush()
+        else:
+            if not os.path.exists(mc.pyde_dir_output):
+                os.makedirs(mc.pyde_dir_output)
 
-        de = DiffEvol(mc, mc.bounds, mc.emcee_parameters['nwalkers'], maximize=True)
-        de.optimize(mc.pyde_parameters['ngen'])
+            print 'PyDE running'
+            sys.stdout.flush()
 
-        population = de.population
-        starting_point = np.median(population, axis=0)
-        theta_dict = results_analysis.get_theta_dictionary(mc)
+            de = DiffEvol(mc, mc.bounds, mc.emcee_parameters['nwalkers'], maximize=True)
+            de.optimize(mc.pyde_parameters['ngen'])
 
-
-        """ bounds redefinition and fix for PyDE anomalous results """
-        if mc.recenter_bounds_flag:
-            pyde_save_to_pickle(mc, population, starting_point, theta_dict, prefix='orig')
-
-            mc.recenter_bounds(starting_point)
-            population = mc.fix_population(starting_point, population)
+            population = de.population
             starting_point = np.median(population, axis=0)
+            theta_dict = results_analysis.get_theta_dictionary(mc)
 
-            print 'Boundaries redefined after PyDE output'
 
-        pyde_save_to_pickle(mc, population, starting_point, theta_dict)
+            """ bounds redefinition and fix for PyDE anomalous results """
+            if mc.recenter_bounds_flag:
+                pyde_save_to_pickle(mc, population, starting_point, theta_dict, prefix='orig')
 
-        print 'PyDE completed'
-        sys.stdout.flush()
+                mc.recenter_bounds(starting_point)
+                population = mc.fix_population(starting_point, population)
+                starting_point = np.median(population, axis=0)
+
+                print 'Boundaries redefined after PyDE output'
+
+            pyde_save_to_pickle(mc, population, starting_point, theta_dict)
+
+            print 'PyDE completed'
+            sys.stdout.flush()
 
     results_analysis.results_resumen(mc, starting_point, compute_lnprob=True)
 

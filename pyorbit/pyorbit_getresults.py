@@ -63,7 +63,6 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
         mc.model_setup()
         """ Required to create the right objects inside each class - if defined inside """
         theta_dictionary = results_analysis.get_theta_dictionary(mc)
-        theta_dictionary = results_analysis.get_theta_dictionary(mc)
 
         nburnin = mc.emcee_parameters['nburn']
         nthin = mc.emcee_parameters['thin']
