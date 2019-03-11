@@ -1,3 +1,5 @@
+from __future__ import print_function
+from classes.common import *
 from classes.model_container_multinest import ModelContainerMultiNest
 from classes.model_container_polychord import ModelContainerPolyChord
 from classes.model_container_emcee import ModelContainerEmcee
@@ -18,6 +20,7 @@ import classes.common as common
 import classes.results_analysis as results_analysis
 import h5py
 import csv
+import re
 
 __all__ = ["pyorbit_getresults"]
 
@@ -100,17 +103,12 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
 
         mc = nested_sampling_load_from_cpickle(dir_input)
 
-        print mc.bounds
-        #pars_input(config_in, mc)
-
         mc.model_setup()
         mc.initialize_logchi2()
         results_analysis.results_resumen(mc, None, skip_theta=True)
 
         """ Required to create the right objects inside each class - if defined inside """
         theta_dictionary = results_analysis.get_theta_dictionary(mc)
-        print
-        print theta_dictionary
 
         data_in = np.genfromtxt(dir_input + 'post_equal_weights.dat')
         flat_lnprob = data_in[:, -1]
@@ -122,13 +120,13 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
         chain_med = common.compute_value_sigma(flat_chain)
         chain_MAP, lnprob_MAP = common.pick_MAP_parameters(flat_chain, flat_lnprob)
 
-        print
-        print 'Reference Time Tref: ', mc.Tref
-        print
-        print 'Dimensions = ', mc.ndim
-        print
-        print 'Samples: ', n_samplings
-        print
+        print()
+        print('Reference Time Tref: {}'.format(mc.Tref))
+        print()
+        print('Dimensions: {}'.format(mc.ndim))
+        print()
+        print('Samples: {}'.format(n_samplings))
+        print()
 
     if sampler in sample_keyword['polychord']:
 
@@ -142,7 +140,6 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
 
         mc = nested_sampling_load_from_cpickle(dir_input)
 
-        print mc.bounds
         #pars_input(config_in, mc)
 
         mc.model_setup()
@@ -151,7 +148,6 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
 
         """ Required to create the right objects inside each class - if defined inside """
         theta_dictionary = results_analysis.get_theta_dictionary(mc)
-        print theta_dictionary
 
         data_in = np.genfromtxt(dir_input + 'pyorbit_equal_weights.txt')
         flat_lnprob = data_in[:, 1]
@@ -164,16 +160,16 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
         chain_med = common.compute_value_sigma(flat_chain)
         chain_MAP, lnprob_MAP = common.pick_MAP_parameters(flat_chain, flat_lnprob)
 
-        print
-        print 'Reference Time Tref: ', mc.Tref
-        print
-        print 'Dimensions = ', mc.ndim
-        print
-        print 'Samples: ', n_samplings
-        print
+        print()
+        print('Reference Time Tref: {}'.format(mc.Tref))
+        print()
+        print('Dimensions: {}'.format(mc.ndim))
+        print()
+        print('Samples: {}'.format(n_samplings))
+        print()
 
-    print
-    print ' LN posterior: %12f   %12f %12f (15-84 p) ' % (lnprob_med[0], lnprob_med[2], lnprob_med[1])
+    print()
+    print(' LN posterior: {0:12f}   {1:12f} {2:12f} (15-84 p) '.format(lnprob_med[0], lnprob_med[2], lnprob_med[1]))
 
     MAP_log_priors, MAP_log_likelihood = mc.log_priors_likelihood(chain_MAP)
     BIC = -2.0 * MAP_log_likelihood + np.log(mc.ndata) * mc.ndim
@@ -181,55 +177,54 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
     AICc = AIC +  (2.0 + 2.0*mc.ndim) * mc.ndim / (mc.ndata - mc.ndim - 1.0)
     # AICc for small sample
 
-    print
-    print ' MAP log_priors     = ', MAP_log_priors
-    print ' MAP log_likelihood = ', MAP_log_likelihood
-    print ' MAP BIC  (using likelihood)  = ', BIC
-    print ' MAP AIC  (using likelihood)  = ', AIC
-    print ' MAP AICc (using likelihood) = ', AICc
+    print()
+    print(' MAP log_priors     = {}'.format(MAP_log_priors))
+    print(' MAP log_likelihood = {}'.format(MAP_log_likelihood))
+    print(' MAP BIC  (using likelihood) = {}'.format(BIC))
+    print(' MAP AIC  (using likelihood) = {}'.format(AIC))
+    print(' MAP AICc (using likelihood) = {}'.format(AICc))
 
     MAP_log_posterior = MAP_log_likelihood + MAP_log_priors
     BIC = -2.0 * MAP_log_posterior + np.log(mc.ndata) * mc.ndim
     AIC = -2.0 * MAP_log_posterior + 2.0 * mc.ndim
     AICc = AIC +  (2.0 + 2.0*mc.ndim) * mc.ndim / (mc.ndata - mc.ndim - 1.0)
 
-    print
-    print ' MAP BIC  (using posterior)  = ', BIC
-    print ' MAP AIC  (using posterior)  = ', AIC
-    print ' MAP AICc (using posterior) = ', AICc
+    print()
+    print(' MAP BIC  (using posterior)  = {}'.format(BIC))
+    print(' MAP AIC  (using posterior)  = {}'.format(AIC))
+    print(' MAP AICc (using posterior)  = {}'.format(AICc))
 
     if mc.ndata < 40 * mc.ndim:
-        print
-        print ' AICc suggested over AIC because NDATA ( %12f ) < 40 * NDIM ( %12f )' % (mc.ndata, mc.ndim)
+        print()
+        print(' AICc suggested over AIC because NDATA ( {0:12f} ) < 40 * NDIM ( {1:12f} )'.format(mc.ndata, mc.ndim))
     else:
-        print
-        print ' AIC suggested over AICs because NDATA ( %12f ) > 40 * NDIM ( %12f )' % (mc.ndata, mc.ndim)
+        print()
+        print(' AIC suggested over AICs because NDATA ( {0:12f} ) > 40 * NDIM ( {1:12f} )'.format(mc.ndata, mc.ndim))
 
-    print
-    print '****************************************************************************************************'
-    print '****************************************************************************************************'
-    print
-    print ' Confidence intervals (median value, 34.135th percentile from the median on the left and right side)  '
-
+    print()
+    print('****************************************************************************************************')
+    print('****************************************************************************************************')
+    print()
+    print(' Confidence intervals (median value, 34.135th percentile from the median on the left and right side)')
 
     results_analysis.results_resumen(mc, flat_chain, chain_med=chain_MAP)
 
-    print
-    print '****************************************************************************************************'
-    print
-    print ' Parameters corresponding to the Maximum a Posteriori probability (', lnprob_MAP, ')'
-    print
+    print()
+    print('****************************************************************************************************')
+    print()
+    print(' Parameters corresponding to the Maximum a Posteriori probability ( {} )'.format(lnprob_MAP))
+    print()
 
     results_analysis.results_resumen(mc, chain_MAP)
 
-    print
-    print '****************************************************************************************************'
-    print
+    print()
+    print('****************************************************************************************************')
+    print()
 
     if plot_dictionary['lnprob_chain'] or plot_dictionary['chains']:
 
-        print ' Plot FLAT chain '
-        print
+        print(' Plot FLAT chain ')
+        print()
         #results_analysis.results_resumen(mc, flat_chain)
 
         if emcee_version == '2':
@@ -249,18 +244,17 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
             plt.savefig(dir_output + 'LNprob_chain.png', bbox_inches='tight', dpi=300)
             plt.close(fig)
 
-        print
-        print '****************************************************************************************************'
-        print
+        print()
+        print('****************************************************************************************************')
+        print()
 
     if plot_dictionary['full_correlation']:
 
         corner_plot = {
-            'samples': np.zeros([np.size(flat_chain, axis=0), np.size(flat_chain, axis=1)]),
+            'samples': np.zeros([np.size(flat_chain, axis=0), np.size(flat_chain, axis=1)+1]),
             'labels': [],
             'truths': []
         }
-        import re
 
         for var, var_dict in theta_dictionary.iteritems():
             corner_plot['samples'][:, var_dict] = flat_chain[:, var_dict]
@@ -276,6 +270,7 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
             print(' Ignore the no burnin error warning from getdist, since burnin has been already removed from the chains')
 
             plt.rc('text', usetex=False)
+
             samples = MCSamples(samples=corner_plot['samples'], names=corner_plot['labels'], labels=corner_plot['labels'])
 
             g = plots.getSubplotPlotter()
@@ -294,12 +289,12 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
             plt.close(fig)
             plt.rc('text', usetex=use_tex)
 
-        print
-        print '****************************************************************************************************'
-        print
+        print()
+        print('****************************************************************************************************')
+        print()
 
     if plot_dictionary['chains']:
-        print 'plotting the chains... '
+        print(' Plotting the chains... ')
 
         os.system('mkdir -p ' + dir_output + 'chains')
         for theta_name, ii in theta_dictionary.iteritems():
@@ -310,13 +305,13 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
             plt.savefig(file_name, bbox_inches='tight', dpi=300)
             plt.close(fig)
 
-        print
-        print '****************************************************************************************************'
-        print
+        print()
+        print('****************************************************************************************************')
+        print()
 
     if plot_dictionary['traces']:
-        print 'Plotting the Gelman-Rubin traces... '
-        print
+        print(' Plotting the Gelman-Rubin traces... ')
+        print()
         """
         Gelman-Rubin traces are stored in the dedicated folder iniside the _plot folder
         Note that the GR statistics is not robust because the wlakers are not independent 
@@ -327,7 +322,7 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
 
         for theta_name, th in theta_dictionary.iteritems():
             rhat = np.array([GelmanRubin_v2(sampler_chain[:, :steps, th]) for steps in step_sampling])
-            print ' Gelman-Rubin: %5i %12f %s ' % (th, rhat[-1], theta_name)
+            print('     Gelman-Rubin: {0:5d} {1:12f} {2:s} '.format(th, rhat[-1], theta_name))
             file_name = dir_output + 'gr_traces/v2_' + repr(th) + '_' + theta_name + '.png'
             fig = plt.figure(figsize=(12, 12))
             plt.plot(step_sampling, rhat[:], '-', color='k')
@@ -335,9 +330,9 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
             plt.savefig(file_name, bbox_inches='tight', dpi=300)
             plt.close(fig)
 
-        print
-        print '****************************************************************************************************'
-        print
+        print()
+        print('****************************************************************************************************')
+        print()
 
     if plot_dictionary['common_corner']:
 
@@ -346,7 +341,7 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
         plt.rc('text', usetex=False)
         for common_name, common_model in mc.common_models.iteritems():
 
-            print('     Common model: ' + common_name)
+            print('     Common model: ', common_name)
 
             corner_plot = {
                 'var_list': [],
@@ -386,16 +381,17 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
             fig.savefig(dir_output + common_name + "_corners.pdf", bbox_inches='tight', dpi=300)
             plt.close(fig)
 
-        print
-        print '****************************************************************************************************'
-        print
+        print()
+        print('****************************************************************************************************')
+        print()
 
     if plot_dictionary['dataset_corner']:
 
-        print '****************************************************************************************************'
-        print
-        print ' Dataset + models corner plots '
-        print
+        print('****************************************************************************************************')
+        print()
+        print(' Dataset + models corner plots ')
+        print()
+
         for dataset_name, dataset in mc.dataset_dict.iteritems():
 
             for model_name in dataset.models:
@@ -424,15 +420,15 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
                 fig.savefig(dir_output + dataset_name + '_' + model_name + "_corners.pdf", bbox_inches='tight', dpi=300)
                 plt.close(fig)
 
-                print 'Dataset: ', dataset_name , '    model: ', model_name, ' corner plot  done '
+                print('     Dataset: ', dataset_name , '    model: ', model_name, ' corner plot  done ')
 
-    print
-    print '****************************************************************************************************'
-    print
+        print()
+        print('****************************************************************************************************')
+        print()
 
     if plot_dictionary['plot_models'] or plot_dictionary['write_models']:
 
-        print ' Writing all the files '
+        print(' Writing all the files ')
 
         bjd_plot = {
             'full': {
@@ -441,8 +437,8 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
         }
 
         # Computation of all the planetary variables
-        planet_variables = get_planet_variables(mc, chain_med[:, 0])
-        planet_variables_MAP = get_planet_variables(mc, chain_MAP)
+        planet_variables = results_analysis.get_planet_variables(mc, chain_med[:, 0])
+        planet_variables_MAP = results_analysis.get_planet_variables(mc, chain_MAP)
 
         #     """ in this variable we store the physical variables of """
         #     planet_variables = {}
@@ -512,7 +508,6 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
 
                     plt.savefig(dir_output + 'model_' + kind_name + '_' + dataset_name + '.png', bbox_inches='tight', dpi=300)
                     plt.close(fig)
-            print
 
         if plot_dictionary['write_models']:
             for prepend_keyword in ['', 'MAP_']:
@@ -620,9 +615,9 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
                         pass
 
 
-    print
-    print '****************************************************************************************************'
-    print
+        print()
+        print('****************************************************************************************************')
+        print()
 
     veusz_dir = dir_output + '/Veuz_plot/'
     if not os.path.exists(veusz_dir):

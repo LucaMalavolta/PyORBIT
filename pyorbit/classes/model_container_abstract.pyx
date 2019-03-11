@@ -50,16 +50,6 @@ class ModelContainer(object):
         # First step: setting up the correct associations between models and dataset
 
         for model_name, model in self.models.iteritems():
-
-            try:
-                print model.model_conf
-                print
-                print
-            except:
-                'model!!!!! '
-                print
-                print
-
             try:
                 model.initialize_model(self, **model.model_conf)
 

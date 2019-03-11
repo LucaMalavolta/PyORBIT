@@ -1,3 +1,4 @@
+#from __future__ import print_function
 from classes.common import *
 from classes.model_container_emcee import ModelContainerEmcee
 from classes.input_parser import yaml_parser, pars_input
@@ -43,10 +44,10 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
     except:
         pass
 
-    print
-    print 'reloaded_pyde: ', reloaded_pyde
-    print 'reloaded_emcee_multirun: ', reloaded_emcee_multirun
-    print 'reloaded_emcee: ', reloaded_emcee
+    print()
+    print('reloaded_pyde: ', reloaded_pyde)
+    print('reloaded_emcee_multirun: ', reloaded_emcee_multirun)
+    print('reloaded_emcee: ', reloaded_emcee)
 
     if reloaded_emcee:
         """ There's no need to do anything"""
@@ -116,16 +117,16 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
 
     emcee_version = mc.emcee_parameters['version'][0]
 
-    print
-    print 'Include priors: ', mc.include_priors
-    print
-    print 'Reference Time Tref: ', mc.Tref
-    print
-    print 'Dimensions = ', mc.ndim
-    print 'Nwalkers = ', mc.emcee_parameters['nwalkers']
-    print
-    print '*************************************************************'
-    print
+    print()
+    print('Include priors: ', mc.include_priors)
+    print()
+    print('Reference Time Tref: ', mc.Tref)
+    print()
+    print('Dimensions = ', mc.ndim)
+    print('Nwalkers = ', mc.emcee_parameters['nwalkers'])
+    print()
+    print('*************************************************************')
+    print()
 
     if reloaded_mc:
 
@@ -139,7 +140,7 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
             population[:, theta_i] = population_legacy[:, theta_dict_legacy[theta_name]]
             mc.bounds[theta_i] = previous_boundaries[theta_dict_legacy[theta_name]]
 
-        print 'Using previous population as starting point'
+        print('Using previous population as starting point')
         sys.stdout.flush()
 
     else:
@@ -151,16 +152,15 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
             population = np.zeros([mc.emcee_parameters['nwalkers'], mc.ndim], dtype=np.double)
             for ii in xrange(0, mc.emcee_parameters['nwalkers']):
                 population[ii, :] = np.random.normal(starting_point, 0.0000001)
-            reloaded_mc = True
 
-            print 'Using user-defined starting point'
+            print('Using user-defined starting point')
             sys.stdout.flush()
 
         else:
             if not os.path.exists(mc.pyde_dir_output):
                 os.makedirs(mc.pyde_dir_output)
 
-            print 'PyDE running'
+            print('PyDE running')
             sys.stdout.flush()
 
             de = DiffEvol(mc, mc.bounds, mc.emcee_parameters['nwalkers'], maximize=True)
@@ -179,11 +179,11 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
                 population = mc.fix_population(starting_point, population)
                 starting_point = np.median(population, axis=0)
 
-                print 'Boundaries redefined after PyDE output'
+                print('Boundaries redefined after PyDE output')
 
             pyde_save_to_pickle(mc, population, starting_point, theta_dict)
 
-            print 'PyDE completed'
+            print('PyDE completed')
             sys.stdout.flush()
 
     results_analysis.results_resumen(mc, starting_point, compute_lnprob=True)
@@ -198,7 +198,7 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
     if mc.emcee_parameters['multirun'] and not reloaded_emcee_multirun:
 
         for ii in xrange(0, mc.emcee_parameters['multirun_iter']):
-            print 'emcee exploratory run #', ii, ' of ', mc.emcee_parameters['multirun_iter']
+            print('emcee exploratory run #', ii, ' of ', mc.emcee_parameters['multirun_iter'])
             # sampler = emcee.EnsembleSampler(mc.emcee_parameters['nwalkers'], mc.ndim, mc,
             #                                 threads=mc.emcee_parameters['nwalkers'])
             if mc.use_threading_pool:
@@ -224,10 +224,10 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
         flatchain = emcee_flatchain(sampler.chain, mc.emcee_parameters['nburn'], mc.emcee_parameters['thin'])
         results_analysis.results_resumen(mc, flatchain)
 
-        print 'emcee exploratory runs completed'
+        print('emcee exploratory runs completed')
         sys.stdout.flush()
 
-    print 'emcee'
+    print('emcee')
     state = None
 
     if mc.use_threading_pool:
@@ -236,7 +236,7 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
         sampler = emcee.EnsembleSampler(mc.emcee_parameters['nwalkers'], mc.ndim, mc)
 
     if mc.emcee_parameters['nsave'] > 0:
-        print ' Saving temporary steps'
+        print(' Saving temporary steps')
         niter = int(mc.emcee_parameters['nsteps']/mc.emcee_parameters['nsave'])
         sampled = 0
         for i in xrange(0, niter):
@@ -248,7 +248,7 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
             flatchain = emcee_flatchain(sampler.chain, mc.emcee_parameters['nburn'], mc.emcee_parameters['thin'])
             results_analysis.results_resumen(mc, flatchain)
 
-            print sampled, '  steps completed, average lnprob:, ', np.median(prob)
+            print(sampled, '  steps completed, average lnprob:, ', np.median(prob))
             sys.stdout.flush()
 
     else:
@@ -260,7 +260,7 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
         flatchain = emcee_flatchain(sampler.chain, mc.emcee_parameters['nburn'], mc.emcee_parameters['thin'])
         results_analysis.results_resumen(mc, flatchain)
 
-    print 'emcee completed'
+    print('emcee completed')
 
     if mc.use_threading_pool:
         # close the pool of threads
