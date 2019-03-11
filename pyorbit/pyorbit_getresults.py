@@ -224,8 +224,6 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
     if plot_dictionary['lnprob_chain'] or plot_dictionary['chains']:
 
         print(' Plot FLAT chain ')
-        print()
-        #results_analysis.results_resumen(mc, flat_chain)
 
         if emcee_version == '2':
             fig = plt.figure(figsize=(12, 12))
@@ -294,6 +292,7 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
         print()
 
     if plot_dictionary['chains']:
+
         print(' Plotting the chains... ')
 
         os.system('mkdir -p ' + dir_output + 'chains')
@@ -310,6 +309,7 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
         print()
 
     if plot_dictionary['traces']:
+
         print(' Plotting the Gelman-Rubin traces... ')
         print()
         """
@@ -387,8 +387,6 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
 
     if plot_dictionary['dataset_corner']:
 
-        print('****************************************************************************************************')
-        print()
         print(' Dataset + models corner plots ')
         print()
 
@@ -619,130 +617,139 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
         print('****************************************************************************************************')
         print()
 
-    veusz_dir = dir_output + '/Veuz_plot/'
-    if not os.path.exists(veusz_dir):
-        os.makedirs(veusz_dir)
+    if plot_dictionary['veuz_corner_files']:
 
-    all_variables_list = {}
-    for dataset_name, dataset in mc.dataset_dict.iteritems():
-        variable_values = dataset.convert(flat_chain)
+        print(' Writing Veusz-compatible files for personalized corner plots')
 
-        for variable_name, variable in variable_values.iteritems():
-            all_variables_list[dataset_name + '_' + variable_name] = variable
 
-        for model_name in dataset.models:
-            variable_values = mc.models[model_name].convert(flat_chain, dataset_name)
+        veusz_dir = dir_output + '/Veuz_plot/'
+        if not os.path.exists(veusz_dir):
+            os.makedirs(veusz_dir)
+
+        all_variables_list = {}
+        for dataset_name, dataset in mc.dataset_dict.iteritems():
+            variable_values = dataset.convert(flat_chain)
+
             for variable_name, variable in variable_values.iteritems():
-                all_variables_list[dataset_name + '_' + model_name + '_' + variable_name] = variable
+                all_variables_list[dataset_name + '_' + variable_name] = variable
 
-    for model in mc.common_models.itervalues():
-        variable_values = model.convert(flat_chain)
+            for model_name in dataset.models:
+                variable_values = mc.models[model_name].convert(flat_chain, dataset_name)
+                for variable_name, variable in variable_values.iteritems():
+                    all_variables_list[dataset_name + '_' + model_name + '_' + variable_name] = variable
 
-        for variable_name, variable in variable_values.iteritems():
-            #for common_ref in mc.models[model_name].common_ref:
-            all_variables_list[model.common_ref + '_' + variable_name] = variable
+        for model in mc.common_models.itervalues():
+            variable_values = model.convert(flat_chain)
 
-    n_int = len(all_variables_list)
-    output_plan = np.zeros([n_samplings, n_int], dtype=np.double)
-    output_names = []
-    for var_index, variable_name in enumerate(all_variables_list):
-        output_plan[:, var_index] = all_variables_list[variable_name]
-        output_names.extend([variable_name])
+            for variable_name, variable in variable_values.iteritems():
+                #for common_ref in mc.models[model_name].common_ref:
+                all_variables_list[model.common_ref + '_' + variable_name] = variable
 
-    plot_truths = np.percentile(output_plan[:, :], [15.865, 50, 84.135], axis=0)
-    n_bins = 30 + 1
+        n_int = len(all_variables_list)
+        output_plan = np.zeros([n_samplings, n_int], dtype=np.double)
+        output_names = []
+        for var_index, variable_name in enumerate(all_variables_list):
+            output_plan[:, var_index] = all_variables_list[variable_name]
+            output_names.extend([variable_name])
 
-    h5f = h5py.File(veusz_dir + '_hist1d.hdf5', "w")
-    data_grp = h5f.create_group("hist1d")
+        plot_truths = np.percentile(output_plan[:, :], [15.865, 50, 84.135], axis=0)
+        n_bins = 30 + 1
 
-    data_lim = np.zeros([n_int, 2], dtype=np.double)
-    data_edg = np.zeros([n_int, n_bins], dtype=np.double)
-    data_skip = np.zeros(n_int, dtype=bool)
+        h5f = h5py.File(veusz_dir + '_hist1d.hdf5', "w")
+        data_grp = h5f.create_group("hist1d")
 
-    sigma_minus = plot_truths[1, :] - plot_truths[0, :]
-    sigma_plus = plot_truths[2, :] - plot_truths[1, :]
-    median_vals = plot_truths[1, :]
+        data_lim = np.zeros([n_int, 2], dtype=np.double)
+        data_edg = np.zeros([n_int, n_bins], dtype=np.double)
+        data_skip = np.zeros(n_int, dtype=bool)
 
-    for ii in xrange(0, n_int):
+        sigma_minus = plot_truths[1, :] - plot_truths[0, :]
+        sigma_plus = plot_truths[2, :] - plot_truths[1, :]
+        median_vals = plot_truths[1, :]
 
-        #sig_minus = plot_truths[1, ii] - plot_truths[0, ii]
-        #sig_plus = plot_truths[2, ii] - plot_truths[1, ii]
+        for ii in xrange(0, n_int):
 
-        if sigma_minus[ii] == 0. and sigma_plus[ii] == 0.:
-            data_skip[ii] = True
-            continue
+            #sig_minus = plot_truths[1, ii] - plot_truths[0, ii]
+            #sig_plus = plot_truths[2, ii] - plot_truths[1, ii]
 
-        sigma5_selection = (output_plan[:, ii] > median_vals[ii] - 5 * sigma_minus[ii]) & \
-                           (output_plan[:, ii] < median_vals[ii] + 5 * sigma_plus[ii])
-
-        data_lim[ii, :] = [np.amin(output_plan[sigma5_selection, ii]), np.amax(output_plan[sigma5_selection, ii])]
-        if data_lim[ii, 0] == data_lim[ii, 1]:
-            data_lim[ii, :] = [np.amin(output_plan[:, ii]), np.amax(output_plan[:, ii])]
-        if data_lim[ii, 0] == data_lim[ii, 1]:
-            data_skip[ii] = True
-            continue
-
-        data_edg[ii, :] = np.linspace(data_lim[ii, 0], data_lim[ii, 1], n_bins)
-
-    veusz_workaround_descriptor = 'descriptor'
-    veusz_workaround_values = ''
-
-    for ii in xrange(0, n_int):
-
-        if data_skip[ii]:
-            continue
-
-        x_data = output_plan[:, ii]
-        x_edges = data_edg[ii, :]
-
-        for jj in xrange(0, n_int):
-
-            if data_skip[jj]:
+            if sigma_minus[ii] == 0. and sigma_plus[ii] == 0.:
+                data_skip[ii] = True
                 continue
 
-            y_data = output_plan[:, jj]
-            y_edges = data_edg[jj, :]
+            sigma5_selection = (output_plan[:, ii] > median_vals[ii] - 5 * sigma_minus[ii]) & \
+                               (output_plan[:, ii] < median_vals[ii] + 5 * sigma_plus[ii])
 
-            if ii != jj:
+            data_lim[ii, :] = [np.amin(output_plan[sigma5_selection, ii]), np.amax(output_plan[sigma5_selection, ii])]
+            if data_lim[ii, 0] == data_lim[ii, 1]:
+                data_lim[ii, :] = [np.amin(output_plan[:, ii]), np.amax(output_plan[:, ii])]
+            if data_lim[ii, 0] == data_lim[ii, 1]:
+                data_skip[ii] = True
+                continue
 
-                hist2d = np.histogram2d(x_data, y_data, bins=[x_edges, y_edges], density=True)
-                hist1d_y = np.histogram(y_data, bins=y_edges, density=True)
+            data_edg[ii, :] = np.linspace(data_lim[ii, 0], data_lim[ii, 1], n_bins)
 
-                Hflat = hist2d[0].flatten()
-                inds = np.argsort(Hflat)[::-1]
-                Hflat = Hflat[inds]
-                sm = np.cumsum(Hflat)
-                sm /= sm[-1]
+        veusz_workaround_descriptor = 'descriptor'
+        veusz_workaround_values = ''
 
-                x_edges_1d = (x_edges[1:] + x_edges[:-1])/2
-                y_edges_1d = (y_edges[1:] + y_edges[:-1])/2
-                h2d_out = np.zeros([n_bins, n_bins])
-                h2d_out[0, 1:] = x_edges_1d
-                h2d_out[1:, 0] = y_edges_1d
-                h2d_out[1:, 1:] = hist2d[0].T *1. / np.amax(hist2d[0])
+        for ii in xrange(0, n_int):
 
-                h2d_list =  h2d_out.tolist()
-                h2d_list[0][0] = ''
-                csvfile = veusz_dir + '_hist2d___' + output_names[ii] + '___' + output_names[jj] + '.csv'
-                with open(csvfile, "w") as output:
-                    writer = csv.writer(output, lineterminator='\n')
-                    writer.writerows(h2d_list)
+            if data_skip[ii]:
+                continue
 
-        hist1d = np.histogram(x_data, bins=x_edges)
-        hist1d_norm = hist1d[0]*1. / n_samplings
-        x_edges_1d = (x_edges[1:]+ x_edges[:-1])/2
-        data_grp.create_dataset(output_names[ii]+'_x', data=x_edges_1d, compression="gzip")
-        data_grp.create_dataset(output_names[ii]+'_y', data=hist1d_norm, compression="gzip")
+            x_data = output_plan[:, ii]
+            x_edges = data_edg[ii, :]
 
-        #data_grp.create_dataset(output_names[ii]+'_val', data=median_vals[ii])
-        #data_grp.create_dataset(output_names[ii]+'_val_-', data=sigma_minus[ii])
-        #data_grp.create_dataset(output_names[ii]+'_val_+', data=sigma_plus[ii])
-        #data_grp.attrs[output_names[ii]+'_val'] = median_vals[ii]
+            for jj in xrange(0, n_int):
 
-        veusz_workaround_descriptor += ' ' + output_names[ii] + ',+,-'
-        veusz_workaround_values += ' ' + repr(median_vals[ii]) + ' ' + repr(sigma_plus[ii]) + ' ' + repr(sigma_minus[ii])
+                if data_skip[jj]:
+                    continue
 
-    text_file = open(veusz_dir + "veusz_median_sigmas.txt", "w")
-    text_file.write('%s \n' % veusz_workaround_descriptor)
-    text_file.write('%s \n' % veusz_workaround_values)
-    text_file.close()
+                y_data = output_plan[:, jj]
+                y_edges = data_edg[jj, :]
+
+                if ii != jj:
+
+                    hist2d = np.histogram2d(x_data, y_data, bins=[x_edges, y_edges], density=True)
+                    hist1d_y = np.histogram(y_data, bins=y_edges, density=True)
+
+                    Hflat = hist2d[0].flatten()
+                    inds = np.argsort(Hflat)[::-1]
+                    Hflat = Hflat[inds]
+                    sm = np.cumsum(Hflat)
+                    sm /= sm[-1]
+
+                    x_edges_1d = (x_edges[1:] + x_edges[:-1])/2
+                    y_edges_1d = (y_edges[1:] + y_edges[:-1])/2
+                    h2d_out = np.zeros([n_bins, n_bins])
+                    h2d_out[0, 1:] = x_edges_1d
+                    h2d_out[1:, 0] = y_edges_1d
+                    h2d_out[1:, 1:] = hist2d[0].T *1. / np.amax(hist2d[0])
+
+                    h2d_list =  h2d_out.tolist()
+                    h2d_list[0][0] = ''
+                    csvfile = veusz_dir + '_hist2d___' + output_names[ii] + '___' + output_names[jj] + '.csv'
+                    with open(csvfile, "w") as output:
+                        writer = csv.writer(output, lineterminator='\n')
+                        writer.writerows(h2d_list)
+
+            hist1d = np.histogram(x_data, bins=x_edges)
+            hist1d_norm = hist1d[0]*1. / n_samplings
+            x_edges_1d = (x_edges[1:]+ x_edges[:-1])/2
+            data_grp.create_dataset(output_names[ii]+'_x', data=x_edges_1d, compression="gzip")
+            data_grp.create_dataset(output_names[ii]+'_y', data=hist1d_norm, compression="gzip")
+
+            #data_grp.create_dataset(output_names[ii]+'_val', data=median_vals[ii])
+            #data_grp.create_dataset(output_names[ii]+'_val_-', data=sigma_minus[ii])
+            #data_grp.create_dataset(output_names[ii]+'_val_+', data=sigma_plus[ii])
+            #data_grp.attrs[output_names[ii]+'_val'] = median_vals[ii]
+
+            veusz_workaround_descriptor += ' ' + output_names[ii] + ',+,-'
+            veusz_workaround_values += ' ' + repr(median_vals[ii]) + ' ' + repr(sigma_plus[ii]) + ' ' + repr(sigma_minus[ii])
+
+        text_file = open(veusz_dir + "veusz_median_sigmas.txt", "w")
+        text_file.write('%s \n' % veusz_workaround_descriptor)
+        text_file.write('%s \n' % veusz_workaround_values)
+        text_file.close()
+
+        print()
+        print('****************************************************************************************************')
+        print()

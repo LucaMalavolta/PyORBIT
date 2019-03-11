@@ -9,12 +9,13 @@ if __name__ == '__main__':
     parser.add_argument('config_file', type=str, nargs=1, help='config file')
     parser.add_argument('-p', type=str, nargs='?', default=False, help='Plot model files')
     parser.add_argument('-w', type=str, nargs='?', default=False, help='Write model files')
-    parser.add_argument('-c', type=str, nargs='?', default=False, help='Create chains plots')
-    parser.add_argument('-ln', type=str, nargs='?', default=False, help='Create ln_prob chain plot')
-    parser.add_argument('-t', type=str, nargs='?', default=False, help='Create Gelman-Rubin traces')
-    parser.add_argument('-fc', type=str, nargs='?', default=False, help='Create full corellation plot - it may be slow!')
-    parser.add_argument('-cc', type=str, nargs='?', default=False, help='Create corner plots of common variables')
-    parser.add_argument('-dc', type=str, nargs='?', default=False, help='Create individual corner plots of reach dataset')
+    parser.add_argument('-c', type=str, nargs='?', default=False, help='Save chains plots')
+    parser.add_argument('-ln', type=str, nargs='?', default=False, help='Save ln_prob chain plot')
+    parser.add_argument('-t', type=str, nargs='?', default=False, help='Compute and save Gelman-Rubin traces')
+    parser.add_argument('-fc', type=str, nargs='?', default=False, help='Save full corellation plot - it may be slow!')
+    parser.add_argument('-cc', type=str, nargs='?', default=False, help='Save corner plots of common variables')
+    parser.add_argument('-dc', type=str, nargs='?', default=False, help='Save individual corner plots of reach dataset')
+    parser.add_argument('-v', type=str, nargs='?', default=False, help='Write Veusz files for corner plot')
     parser.add_argument('-all_corners', type=str, nargs='?', default=False, help='Do all the corner plots')
     parser.add_argument('-all', type=str, nargs='?', default=False, help='Active all flags')
     parser.add_argument('-dfm_corner', type=str, nargs='?', default=False, help='Use DFM corner script for corner plots')
@@ -28,7 +29,8 @@ if __name__ == '__main__':
         'full_correlation': False,
         'dataset_corner': False,
         'common_corner': False,
-        'use_getdist': True
+        'use_getdist': True,
+        'veuz_corner_files': True
     }
 
     args = parser.parse_args()
@@ -51,6 +53,8 @@ if __name__ == '__main__':
         plot_dictionary['dataset_corner'] = True
     if args.cc is not False:
         plot_dictionary['common_corner'] = True
+    if args.v is not False:
+        plot_dictionary['veuz_corner_files'] = True
     if args.dfm_corner is not False :
         plot_dictionary['use_getdist'] = False
 
@@ -63,6 +67,7 @@ if __name__ == '__main__':
         plot_dictionary['full_correlation'] = True
         plot_dictionary['common_corner'] = True
         plot_dictionary['dataset_corner'] = True
+        plot_dictionary['veuz_corner_files'] = True
 
     if args.all_corners is not False:
         plot_dictionary['full_correlation'] = True
