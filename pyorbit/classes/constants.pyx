@@ -72,13 +72,13 @@ Rjear = Rjup/Rear # Rjupiter to Rearth
 
 
 # astronomical constants
-AU = 149597870700. #Astronomical Unit in meters
-kappa = 0.01720209895 # Gaussian gravitational constant
-Giau = kappa*kappa # G [AU^3/Msun/d^2]
-Gsi = 6.67428e-11 #Gravitational Constants in SI system [m^3/kg/s^2]
-Gaumjd = Gsi*d2s*d2s*Mjup/(AU**3) # G in [AU,Mjup,day]
-speed = 299792458. # speed of light (c) in [m/s]
-speedaud = speed*d2s/AU # speed of light in [AU/d]
+AU = 149597870700.  # Astronomical Unit in meters
+kappa = 0.01720209895  # Gaussian gravitational constant
+Giau = kappa*kappa  # G [AU^3/Msun/d^2]
+Gsi = 6.67428e-11  # Gravitational Constant in SI system [m^3/kg/s^2]
+Gaumjd = Gsi*d2s*d2s*Mjup/(AU**3)  # G in [AU,Mjup,day]
+speed = 299792458.  # speed of light (c) in [m/s]
+speedaud = speed*d2s/AU  # speed of light in [AU/d]
 pc2AU = 206264.806 
 
 

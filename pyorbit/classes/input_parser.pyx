@@ -102,6 +102,7 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, shutdown_
     conf_parameters = config_in['parameters']
     conf_solver = config_in['solver']
 
+    """ 
     if reload_emcee:
         #if 'emcee' in conf_solver:
         #    conf = conf_solver['emcee']
@@ -139,7 +140,8 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, shutdown_
                             mc.common_models[planet_name].fix_list[var] = get_2darray_from_val(fixed_conf[var])
 
 
-        return
+        #return
+    """
 
     for dataset_name, dataset_conf in conf_inputs.iteritems():
 
@@ -209,7 +211,7 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, shutdown_
                 try:
                     if planet_conf['orbit'] in mc.common_models[planet_name].orbit_list:
 
-                        mc.planet_dict[planet_name] = planet_conf['orbit']
+                        #mc.planet_dict[planet_name] = planet_conf['orbit']
                         mc.common_models[planet_name].orbit = planet_conf['orbit']
 
                         print('Using orbital model: ', mc.common_models[planet_name].orbit)
@@ -220,10 +222,10 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, shutdown_
                         if planet_conf['orbit'] == 'dynamical':
                             mc.dynamical_dict[planet_name] = True
                     else:
-                        mc.planet_dict[planet_name] = mc.common_models[planet_name].orbit
+                        #mc.planet_dict[planet_name] = mc.common_models[planet_name].orbit
                         print('Orbital model not recognized, switching to: ', mc.common_models[planet_name].orbit)
                 except:
-                    mc.planet_dict[planet_name] = mc.common_models[planet_name].orbit
+                    #mc.planet_dict[planet_name] = mc.common_models[planet_name].orbit
                     print('Using default orbital model: ', mc.common_models[planet_name].orbit)
 
                 try:
@@ -272,6 +274,7 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, shutdown_
                 print()
 
         elif model_name == 'star':
+
             for conf_name, star_conf in model_conf.iteritems():
                 if 'type' in star_conf:
                     model_type = star_conf['type']
@@ -387,7 +390,7 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, shutdown_
                 """ This snippet will work only for RV class"""
                 try:
                     mc.models[model_name_exp] = \
-                            define_type_to_class[model_type][mc.planet_dict[planet_name]](model_name_exp, planet_name)
+                            define_type_to_class[model_type][mc.common_models[planet_name].orbit](model_name_exp, planet_name)
 
                     if keplerian_approximation:
                         mc.common_models[planet_name].use_mass_for_planets = True
@@ -462,7 +465,7 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, shutdown_
                     define_type_to_class[model_type]['keplerian'](model_name_exp, planet_name)
             else:
                 mc.models[model_name] = \
-                    define_type_to_class[model_type][mc.planet_dict[planet_name]](model_name, planet_name)
+                    define_type_to_class[model_type][mc.common_models[planet_name].orbit](model_name, planet_name)
 
             #mc.models[model_name] = \
             #        define_type_to_class[model_type][mc.planet_dict[planet_name]](model_name, planet_name)

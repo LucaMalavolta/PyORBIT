@@ -4,38 +4,26 @@ __all__ = ["ModelContainer"]
 
 
 class ModelContainer(object):
+    """
+
+    """
 
     def __init__(self):
 
-        """
-            Values have been taken from TRADES
-            These variables will be renamed in the next release, right now I'm keeping the original names
-            to avoid breaking the code
-        """
-        self.G_grav = constants.Gsi  # Gravitational Constants in SI system [m^3/kg/s^2]
-        self.G_ttvfast = constants.Giau  # G [AU^3/Msun/d^2]
-        self.M_SJratio = constants.Msjup
-        self.M_SEratio = constants.Msear
-        self.M_JEratio = constants.Mjear
+        # FIXME: change the renaming and link directly the variables in constants module
 
-        self.R_SJratio = constants.Rsjup
-        self.R_JEratio = constants.Rjear
-        self.R_SEratio = constants.Rsjup * constants.Rjear
-
-        self.Mu_sun = constants.Gsi * constants.Msun
-        self.seconds_in_day = constants.d2s
-        self.AU_km = constants.AU
-        self.AUday2ms = self.AU_km / self.seconds_in_day * 1000.0
-
-        self.planet_dict = {}
+        # These dictionaries are dedicated to RVs and T0s computed via dynamical integration
+        # Since the individual contribution of each planet cannot be disentagled, the output of
+        # the dynamical integration cannot be associated to a model.
         self.dynamical_dict = {}
         self.dynamical_t0_dict = {}
         self.dynamical_model = None
 
         self.dataset_dict = {}
 
-        self.models = {}
+        # Dictionaries including the common models and data-specific models
         self.common_models = {}
+        self.models = {}
 
         self.include_priors = True
 
@@ -158,19 +146,21 @@ class ModelContainer(object):
                 return False
 
         period_storage = []
-        for planet_name in self.planet_dict:
+        for model_name, model in self.common_models.items():
 
-            """ Step 1: save the all planet periods into a list"""
-            period_storage.extend(
-                [self.common_models[planet_name].transformation['P'](theta, self.common_models[planet_name].fixed,
-                                                               self.common_models[planet_name].variable_index['P'])])
+            if model.model_class == 'planet':
 
-            """ Step 2: check if the eccentricity is within the given range"""
-            e = self.common_models[planet_name].transformation['e'](theta,
-                                                              self.common_models[planet_name].fixed,
-                                                              self.common_models[planet_name].variable_index['e'])
-            if not self.common_models[planet_name].bounds['e'][0] <= e < self.common_models[planet_name].bounds['e'][1]:
-                return False
+                """ Step 1: save the all planet periods into a list"""
+                period_storage.extend(
+                    [model.transformation['P'](theta, model.fixed,
+                                               model.variable_index['P'])])
+
+                """ Step 2: check if the eccentricity is within the given range"""
+                e = model.transformation['e'](theta,
+                                              model.fixed,
+                                              model.variable_index['e'])
+                if not model.bounds['e'][0] <= e < model.bounds['e'][1]:
+                    return False
 
         """ Step 4 check ofr overlapping periods (within 2.5% arbitrarily chosen)"""
         for i_n, i_v in enumerate(period_storage):

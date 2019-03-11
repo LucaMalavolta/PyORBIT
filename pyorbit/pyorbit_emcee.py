@@ -24,13 +24,13 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
 
 
     try:
-        _, population, starting_point, theta_dict = pyde_load_from_cpickle(pyde_dir_output, prefix='')
+        mc, population, starting_point, theta_dict = pyde_load_from_cpickle(pyde_dir_output, prefix='')
         reloaded_pyde = True
     except:
         pass
 
     try:
-        _, starting_point, population, _, _, sampler_chain, _, _, theta_dict = \
+        mc, starting_point, population, _, _, sampler_chain, _, _, theta_dict = \
             emcee_load_from_cpickle(emcee_dir_output, prefix='MR')
         reloaded_emcee_multirun = True
     except:
@@ -61,6 +61,8 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
             return
 
     reloaded_mc = reloaded_pyde or reloaded_emcee_multirun
+    if reloaded_mc:
+        previous_boundaries = mc.bounds
 
     #if not reloaded_mc:
     mc = ModelContainerEmcee()
@@ -135,6 +137,7 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
 
         for theta_name, theta_i in theta_dict.iteritems():
             population[:, theta_i] = population_legacy[:, theta_dict_legacy[theta_name]]
+            mc.bounds[theta_i] = previous_boundaries[theta_dict_legacy[theta_name]]
 
         print 'Using previous population as starting point'
         sys.stdout.flush()

@@ -1,5 +1,7 @@
 import numpy as np
 from scipy.optimize import fsolve
+import constants
+
 # +
 # NAME:
 #    exofast_keplereq
@@ -13,9 +15,6 @@ from scipy.optimize import fsolve
 #       function to higher eccentricities
 
 __all__ = ["kepler_K1", "kepler_RV", "kepler_Tc2phase_Tref", "kepler_phase2Tc_Tref", "get_planet_mass"]
-
-G_grav = 6.67428e-11 # Gravitational Constants in SI system [m^3/kg/s^2]
-M_sun = 1.9884e30 # Value from TRADES
 
 
 def kepler_E(M_in, ec):
@@ -120,16 +119,24 @@ def kepler_E(M_in, ec):
     return eccanom
 
 
-def kepler_K1(M_star1, M_star2, Period, i, e0):
-    # M_star1, M_star2 in solar masses
-    # P in days -> Period is converted in seconds in the routine
-    # i in degrees
-    # Gravitational constant is given in m^3 kg^-1 s^-2
-    # output in m/s
-    K1 = (2. * np.pi * G_grav * M_sun / 86400.0) ** (1.0 / 3.0) * (
-    np.sin(i * np.pi / 180.0) / np.sqrt(1.0 - e0 ** 2.0)) * (Period) ** (-1.0 / 3.0) * (
-         M_star2 * (M_star1 + M_star2) ** (-2.0 / 3.0))
-    return K1
+def kepler_K1(m_star1, m_star2, period, i, e0):
+    """ Computes the radial velocity semi-amplitude of the primary star
+
+    :param m_star1: mass of the primary, in Solar mass units
+    :param m_star2: mass of the secondary/planet, in Solar mass units
+    :param period: orbital period of star2, in [d]
+    :param i: orbital inclination of star2 wrt the observer (0=face on), in [deg]
+    :param e0: orbital eccentricity of star2
+    :return: k1, the observed radial velocity semi-amplitude of the primary, in [m s^-1]
+    """
+    # period must be given in days, conversion factor to seconds are included in the routine
+    # constants.Gsi: Gravitational constant in SI system [m^3 kg^-1 s^-2]
+    # constants.Msun: Sun mass in SI system [kg]
+    # 86400. / constants.d2s: seconds in a day
+
+    return (2. * np.pi * constants.Gsi * constants.Msun / 86400.) ** (1. / 3.) \
+           * (np.sin(i * np.pi / 180.0) / np.sqrt(1. - e0 ** 2.)) * period ** (-1. / 3.) \
+           * (m_star2 * (m_star1 + m_star2) ** (-2. / 3.))
 
 
 def kepler_RV(BJD, TPeri, Period, gamma, K, e0, omega0):
@@ -203,19 +210,37 @@ def kepler_Tc2phase_Tref(Period, Tcent, e0, omega0):
     return (omega0 + MeAn - Tcent / Period * 2 * np.pi) % (2 * np.pi)
 
 
-def f_get_mass(M_star2, M_star1, Period, K1, e0):
+def f_get_mass(m_star2, m_star1, period, e0, k1):
+    """ Computes the difference between the input radial velocity semi-amplitude
+    of the primary star and the value corresponding to the provided orbital parameters.
+    Supporting function to get_planet_mass subroutine
+
+    :param m_star2: mass of the secondary/planet, in Solar mass units
+    :param m_star1: mass of the primary, in Solar mass units
+    :param period: orbital period of star2, in [d]
+    :param i: orbital inclination of star2 wrt the observer (0=face on), in [deg]
+    :param e0: orbital eccentricity of star2
+    :param k1: observed RV semi-amplitude of the primary
+    :return: the difference between the observed and theoretical RV semi-amplitude of the primary, in [m s^-1]
+    """
+    # period must be given in days, conversion factor to seconds are included in the routine
+    # constants.Gsi: Gravitational constant in SI system [m^3 kg^-1 s^-2]
+    # constants.Msun: Sun mass in SI system [kg]
+    # 86400. / constants.d2s: seconds in a day
+
     # M_star1, M_star2 in solar masses
     # P in days -> Period is converted in seconds in the routine
     # inclination assumed to be 90 degrees
-    # Gravitational constant is given in m^3 kg^-1 s^-2
+    # Gravitational constant in SI system [in m^3 kg^-1 s^-2]
     # output in m/s
-    output = K1 - (2. * np.pi * G_grav * M_sun / 86400.0) ** (1.0 / 3.0) * (1.000 / np.sqrt(1.0 - e0 ** 2.0)) * (
-                                                                                                                    Period) ** (
-                                                                                                                    -1.0 / 3.0) * (
-                      M_star2 * (M_star1 + M_star2) ** (-2.0 / 3.0))
-    return output
+
+    return k1 \
+           - ((2. * np.pi * constants.Gsi * constants.Msun / 86400.0) ** (1. / 3.)
+              * (1. / np.sqrt(1. - e0 ** 2.))
+              * period ** (-1. / 3.)
+              * (m_star2 * (m_star1 + m_star2) ** (-2. / 3.)))
 
 
 def get_planet_mass(P, K, e, Mstar, Minit=0.0065):
     # Return planet mass in solar units
-    return fsolve(f_get_mass, Minit, args=(Mstar, P, K, e))
+    return fsolve(f_get_mass, Minit, args=(Mstar, P, e, K))

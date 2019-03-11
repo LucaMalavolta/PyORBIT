@@ -608,7 +608,9 @@ class DynamicalIntegrator:
         P_min = None
 
         plan_ref = {}
-        params = [mc.G_ttvfast, mc.star_mass[0]]
+        # Gravitational constant in G [AU^3/Msun/d^2], stellar mass in Solar units
+        # FIXME: still using the old star_mass definition
+        params = [constants.Giau, mc.star_mass[0]]
 
         for planet_name in mc.dynamical_dict:
             plan_ref[planet_name] = n_plan
@@ -668,7 +670,7 @@ class DynamicalIntegrator:
                                                 len(x0_input), x0_input.tolist())
 
         positions = np.asarray(pos)
-        rv_meas = np.asarray(rv) * mc.AUday2ms
+        rv_meas = np.asarray(rv) * constants.AU / constants.d2s
         output = {}
         # print 'RV  ------->  ', rv[:10]
         # print self.dynamical_set['len_rv'], rv_meas[:10]

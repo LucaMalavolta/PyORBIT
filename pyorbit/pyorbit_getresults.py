@@ -214,7 +214,6 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
 
 
     results_analysis.results_resumen(mc, flat_chain, chain_med=chain_MAP)
-    #results_analysis.results_derived(mc, flat_chain)
 
     print
     print '****************************************************************************************************'
@@ -223,7 +222,6 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
     print
 
     results_analysis.results_resumen(mc, chain_MAP)
-    #results_analysis.results_derived(mc, chain_MAP)
 
     print
     print '****************************************************************************************************'

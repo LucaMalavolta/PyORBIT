@@ -12,7 +12,11 @@ def results_resumen(mc, theta, skip_theta=False, compute_lnprob=False, chain_med
 
     print()
     print('====================================================================================================')
-    print('     Statistics on the posterior of the sampler variables     ')
+    if skip_theta:
+        print('     Boundaries of the sampler variables     ')
+    else:
+        print('     Statistics on the posterior of the sampler variables     ')
+
     print('====================================================================================================')
     print()
     for dataset_name, dataset in mc.dataset_dict.iteritems():
@@ -106,13 +110,14 @@ def get_stellar_parameters(mc, theta):
     stellar_values = stellar_model.convert(theta)
 
     if 'rho' not in stellar_values:
+
         if 'radius' not in stellar_values:
-            if stellar_model.prior_kind['radius'] is 'Gaussian':
+            if stellar_model.prior_kind['radius'] == 'Gaussian':
                 stellar_values['radius'] = np.random.normal(stellar_model.prior_pams['radius'][0],
                                                             stellar_model.prior_pams['radius'][1],
                                                             size=n_samplings)
         if 'mass' not in stellar_values:
-            if stellar_model.prior_kind['mass'] is 'Gaussian':
+            if stellar_model.prior_kind['mass'] == 'Gaussian':
                 stellar_values['mass'] = np.random.normal(stellar_model.prior_pams['mass'][0],
                                                           stellar_model.prior_pams['mass'][1],
                                                           size=n_samplings)
@@ -133,7 +138,7 @@ def get_stellar_parameters(mc, theta):
                     stellar_values['radius'] = (stellar_values['mass'] / stellar_values['rho']) ** (1. / 3.)
             elif 'radius' in stellar_model.prior_pams:
 
-                if stellar_model.prior_kind['radius'] is 'Gaussian':
+                if stellar_model.prior_kind['radius'] == 'Gaussian':
                     stellar_values['radius'] = np.random.normal(stellar_model.prior_pams['mass'][0],
                                                                 stellar_model.prior_pams['mass'][1],
                                                                 size=n_samplings)
