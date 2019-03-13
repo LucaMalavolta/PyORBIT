@@ -55,7 +55,7 @@ class ModelContainerMultiNest(ModelContainer):
         for i in xrange(0, ndim):
             theta[i] = theta1[i]
 
-        chi_out = self(theta)
+        chi_out = self(theta, self.include_priors)
 
         if chi_out < -0.5e10:
             return -0.5e10

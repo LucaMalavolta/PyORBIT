@@ -1,4 +1,4 @@
-#from __future__ import print_function
+from __future__ import print_function
 from classes.common import *
 from classes.model_container_emcee import ModelContainerEmcee
 from classes.input_parser import yaml_parser, pars_input
@@ -112,8 +112,8 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
     if not os.path.exists(mc.emcee_dir_output):
         os.makedirs(mc.emcee_dir_output)
 
-    if not hasattr(mc, 'use_threading_pool'):
-        mc.use_threading_pool = False
+
+
 
     emcee_version = mc.emcee_parameters['version'][0]
 
@@ -124,6 +124,12 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
     print()
     print('Dimensions = ', mc.ndim)
     print('Nwalkers = ', mc.emcee_parameters['nwalkers'])
+
+    if not getattr(mc, 'use_threading_pool', False):
+        mc.use_threading_pool = False
+
+    print()
+    print('Using threading pool:', mc.use_threading_pool)
     print()
     print('*************************************************************')
     print()

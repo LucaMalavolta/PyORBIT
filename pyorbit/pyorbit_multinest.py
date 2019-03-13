@@ -19,37 +19,24 @@ def show(filepath):
 
 def pyorbit_multinest(config_in, input_datasets=None, return_output=None):
 
-
     output_directory = './' + config_in['output'] + '/multinest/'
-    reloaded_mc = False
 
-    try:
-        mc = nested_sampling_load_from_cpickle(output_directory, prefix='')
-        reloaded_mc = True
-    except:
-        pass
+    mc = ModelContainerMultiNest()
+    pars_input(config_in, mc, input_datasets)
 
-    if reloaded_mc:
-        mc.model_setup()
-        mc.initialize_logchi2()
-        #mc.results_resumen(flatchain)
-    else:
-        mc = ModelContainerMultiNest()
-        pars_input(config_in, mc, input_datasets)
+    if mc.nested_sampling_parameters['shutdown_jitter']:
+        for dataset in mc.dataset_dict.itervalues():
+            dataset.shutdown_jitter()
 
-        if mc.nested_sampling_parameters['shutdown_jitter']:
-            for dataset in mc.dataset_dict.itervalues():
-                dataset.shutdown_jitter()
+    mc.model_setup()
+    mc.create_variables_bounds()
+    mc.initialize_logchi2()
 
-        mc.model_setup()
-        mc.create_variables_bounds()
-        mc.initialize_logchi2()
+    mc.create_starting_point()
 
-        mc.create_starting_point()
+    results_analysis.results_resumen(mc, None, skip_theta=True)
 
-        results_analysis.results_resumen(mc, None, skip_theta=True)
-
-        mc.output_directory = output_directory
+    mc.output_directory = output_directory
 
     os.system("mkdir -p " + output_directory + mc.nested_sampling_parameters['base_dir'] + "/clusters")
     #os.system("mkdir -p " +polychord_dir_output + "chains/clusters")

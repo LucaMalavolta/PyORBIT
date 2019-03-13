@@ -274,6 +274,22 @@ def get_planet_variables(mc, theta, verbose=False):
             if remove_i:
                 del variable_values['i']
 
+            if 'b' in variable_values.keys():
+
+                k = variable_values['R']
+
+                variable_values['T_41'] =  variable_values['P'] / np.pi \
+                                          * np.arcsin(1./variable_values['a'] *
+                                                      np.sqrt((1. + k)**2 - variable_values['b']**2)
+                                                      / np.sin(variable_values['i']*constants.deg2rad))
+                derived_variables['T_41'] = True
+
+                variable_values['T_32'] =  variable_values['P'] / np.pi \
+                                          * np.arcsin(1./variable_values['a'] *
+                                                      np.sqrt((1. - k)**2 - variable_values['b']**2)
+                                                      / np.sin(variable_values['i']*constants.deg2rad))
+                derived_variables['T_32'] = True
+
             planet_variables[common_name] = variable_values.copy()
 
             for var in variable_values.keys():
