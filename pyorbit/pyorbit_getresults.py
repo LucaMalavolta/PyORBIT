@@ -621,29 +621,57 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
 
         print(' Writing Veusz-compatible files for personalized corner plots')
 
+        # Transit times are too lenghty for the 'tiny' corner plot, so we apply a reduction to their value
+        variable_with_offset = {}
 
         veusz_dir = dir_output + '/Veuz_plot/'
         if not os.path.exists(veusz_dir):
             os.makedirs(veusz_dir)
 
         all_variables_list = {}
-        for dataset_name, dataset in mc.dataset_dict.iteritems():
+        for dataset_name, dataset in mc.dataset_dict.items():
             variable_values = dataset.convert(flat_chain)
 
-            for variable_name, variable in variable_values.iteritems():
+            for variable_name, variable in variable_values.items():
                 all_variables_list[dataset_name + '_' + variable_name] = variable
 
             for model_name in dataset.models:
                 variable_values = mc.models[model_name].convert(flat_chain, dataset_name)
-                for variable_name, variable in variable_values.iteritems():
+                for variable_name, variable in variable_values.items():
                     all_variables_list[dataset_name + '_' + model_name + '_' + variable_name] = variable
 
         for model in mc.common_models.itervalues():
             variable_values = model.convert(flat_chain)
 
-            for variable_name, variable in variable_values.iteritems():
-                #for common_ref in mc.models[model_name].common_ref:
+            for variable_name, variable in variable_values.items():
+
                 all_variables_list[model.common_ref + '_' + variable_name] = variable
+
+                # Special treatment for transit time, since ti can be very long but yet very precise, making
+                # the axis of corner plot quite messy
+                if variable_name == 'Tc':
+                    offset = np.median(variable)
+                    variable_with_offset[model.common_ref + '_' + variable_name] = offset
+                    all_variables_list[model.common_ref + '_' + variable_name] -= offset
+
+        derived_variables = results_analysis.get_planet_variables(mc, flat_chain)
+        for common_ref, variable_values in derived_variables.items():
+            for variable_name, variable in variable_values.items():
+
+                # Skipping the variables that have been already included in all_variables_list
+                if common_ref + '_' + variable_name in all_variables_list:
+                    continue
+                all_variables_list[common_ref + '_' + variable_name] = variable
+
+                if variable_name == 'Tc':
+                    offset = np.median(variable)
+                    variable_with_offset[common_ref + '_' + variable_name] = offset
+                    all_variables_list[common_ref + '_' + variable_name] -= offset
+
+        text_file = open(veusz_dir + "veusz_offsets.txt", "w")
+        for variable_name, offset_value in variable_with_offset.items():
+            text_file.write('{0:s} {1:16.9f}'.format(variable_name, offset_value))
+        text_file.close()
 
         n_int = len(all_variables_list)
         output_plan = np.zeros([n_samplings, n_int], dtype=np.double)
@@ -667,9 +695,6 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
         median_vals = plot_truths[1, :]
 
         for ii in xrange(0, n_int):
-
-            #sig_minus = plot_truths[1, ii] - plot_truths[0, ii]
-            #sig_plus = plot_truths[2, ii] - plot_truths[1, ii]
 
             if sigma_minus[ii] == 0. and sigma_plus[ii] == 0.:
                 data_skip[ii] = True
