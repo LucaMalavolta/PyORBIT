@@ -101,7 +101,7 @@ def get_2var_sre(var, fix, i):
     else:
         ecoso = var[:, i[0]]
         esino = var[:, i[1]]
-    return np.sqrt(np.square(ecoso, dtype=np.double) + np.square(esino, dtype=np.double))
+    return np.square(ecoso, dtype=np.double) + np.square(esino, dtype=np.double)
 
 
 def get_2var_e(var, fix, i):
@@ -111,7 +111,7 @@ def get_2var_e(var, fix, i):
     else:
         ecoso = var[:, i[0]]
         esino = var[:, i[1]]
-    return np.square(ecoso, dtype=np.double) + np.square(esino, dtype=np.double)
+    return np.sqrt(np.square(ecoso, dtype=np.double) + np.square(esino, dtype=np.double))
 
 
 def get_2var_o(var, fix, i):
