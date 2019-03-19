@@ -203,7 +203,7 @@ def get_planet_variables(mc, theta, verbose=False):
                 if np.size(variable_values[var]) == 1:
                     variable_values[var] = variable_values[var] * np.ones(n_samplings)
 
-            if 'a' not in variable_values.keys():
+            if 'a' not in variable_values.keys() and stellar_values['provided']:
                 derived_variables['a'] = True
                 variable_values['a'] = convert_rho_to_a(variable_values['P'],
                                                         stellar_values['rho'])
@@ -216,7 +216,7 @@ def get_planet_variables(mc, theta, verbose=False):
                     variable_values['i'] = np.random.normal(common_model.fix_list['i'][0],
                                                             common_model.fix_list['i'][1],
                                                             size=n_samplings)
-                elif 'b' in variable_values.keys():
+                elif 'b' in variable_values.keys() and 'a' in variable_values.keys():
                     variable_values['i'] = convert_b_to_i(variable_values['b'],
                                                           variable_values['e'],
                                                           variable_values['o'],
