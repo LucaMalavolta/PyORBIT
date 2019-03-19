@@ -22,6 +22,9 @@ def george():
 def batman():
     pass
 
+def dynesty():
+    pass
+
 ## absurd workaround to fix the lack of celerite in the system
 def Celerite_QuasiPeriodicActivity():
     pass

@@ -6,7 +6,6 @@ import classes.results_analysis as results_analysis
 import os
 import sys
 import argparse
-import dynesty
 
 __all__ = ["pyorbit_dynesty", "yaml_parser"]
 

@@ -12,6 +12,12 @@ import gc
 if 'celerite' not in sys.modules:
 
     try:
+        import dynesty
+    except:
+        from dummy import dynesty
+        print('WARNING! Imported dummy dynesty, models relying on this package will not work')
+
+    try:
         from pyde.de import DiffEvol
     except:
         from dummy import DiffEvol

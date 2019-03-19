@@ -409,13 +409,13 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, shutdown_
                     except:
                         common_name = 'limb_darkening'
 
-                    mc.models[model_name_exp].common_ref.append(common_name)
-
                     mc.models[model_name_exp].model_conf['limb_darkening_model'] = \
                         mc.common_models[common_name].ld_type
 
                     mc.models[model_name_exp].model_conf['limb_darkening_ncoeff'] = \
                         mc.common_models[common_name].ld_ncoeff
+
+                    mc.models[model_name_exp].common_ref.append(common_name)
 
                     #for dataset_name in list(set(model_conf) & set(mc.dataset_dict)):
                     #
@@ -442,6 +442,7 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, shutdown_
                     #       mc.common_models[common_name].parametrization
                 except:
                     pass
+
 
                 mc.models[model_name_exp].common_ref.append('star_parameters')
 
