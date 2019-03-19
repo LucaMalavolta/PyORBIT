@@ -108,7 +108,6 @@ def get_stellar_parameters(mc, theta):
     "Stellar mass, radius and density are pre-oaded since they are are required by most of the common models"
     stellar_model = mc.common_models['star_parameters']
     stellar_values = stellar_model.convert(theta)
-    stellar_values['provided'] = True
 
     if 'rho' not in stellar_values:
 
@@ -120,7 +119,6 @@ def get_stellar_parameters(mc, theta):
                                                                 size=n_samplings)
             except:
                 print(' *** Please provide a prior on stellar Radius *** ')
-                stellar_values['provided'] = False
 
         if 'mass' not in stellar_values:
             try:
@@ -130,9 +128,8 @@ def get_stellar_parameters(mc, theta):
                                                               size=n_samplings)
             except:
                 print(' *** Please provide a prior on stellar Mass *** ')
-                stellar_values['provided'] = False
 
-        if stellar_values['provided']:
+        if 'mass' in stellar_values.keys() and 'radius' in stellar_values.keys():
             stellar_values['rho'] = stellar_values['mass'] / stellar_values['radius'] ** 3
 
     else:
@@ -157,7 +154,6 @@ def get_stellar_parameters(mc, theta):
                     stellar_values['mass'] = stellar_values['radius'] ** 3. * stellar_values['rho']
             else:
                 print(' *** Please provide a prior either on stellar Mass or stellar Radius *** ')
-                stellar_values['provided'] = False
 
 
     return stellar_values
@@ -203,7 +199,7 @@ def get_planet_variables(mc, theta, verbose=False):
                 if np.size(variable_values[var]) == 1:
                     variable_values[var] = variable_values[var] * np.ones(n_samplings)
 
-            if 'a' not in variable_values.keys() and stellar_values['provided']:
+            if 'a' not in variable_values.keys() and 'rho' in stellar_values.keys():
                 derived_variables['a'] = True
                 variable_values['a'] = convert_rho_to_a(variable_values['P'],
                                                         stellar_values['rho'])
@@ -225,7 +221,7 @@ def get_planet_variables(mc, theta, verbose=False):
                     variable_values['i'] = 90.00 * np.ones(n_samplings)
                     remove_i = True
 
-            if 'K' in variable_values.keys():
+            if 'K' in variable_values.keys() and 'mass' in stellar_values.keys():
                 variable_values['M'] = np.empty(n_samplings)
                 derived_variables['M'] = True
 
@@ -239,7 +235,7 @@ def get_planet_variables(mc, theta, verbose=False):
                     variable_values['M'][ii] = kepler_exo.get_planet_mass(P, K, e, star, Minit=0.0065) \
                                                / np.sin(np.radians(i))
 
-            elif 'M' in variable_values.keys():
+            elif 'M' in variable_values.keys() and 'mass' in stellar_values.keys():
                 variable_values['K'] = np.empty(n_samplings)
                 derived_variables['K'] = True
                 for star, M, P, i, e, ii in zip(stellar_values['mass'],
@@ -273,14 +269,14 @@ def get_planet_variables(mc, theta, verbose=False):
                         var_index):
                     variable_values['Tc'][ii] = mc.Tref + kepler_exo.kepler_phase2Tc_Tref(P, f, e, o)
 
-            if 'R' in variable_values.keys() and stellar_values['provided']:
+            if 'R' in variable_values.keys() and 'radius' in stellar_values.keys():
                 variable_values['R_Rj'] = variable_values['R'] * constants.Rsjup * stellar_values['radius']
                 derived_variables['R_Rj'] = True
 
                 variable_values['R_Re'] = variable_values['R'] * constants.Rsear * stellar_values['radius']
                 derived_variables['R_Re'] = True
 
-            if 'M' in variable_values.keys() and stellar_values['provided']:
+            if 'M' in variable_values.keys() and 'mass' in stellar_values.keys():
                 variable_values['M_Mj'] = variable_values['M'] * constants.Msjup * stellar_values['mass']
                 derived_variables['M_Mj'] = True
 
@@ -290,8 +286,9 @@ def get_planet_variables(mc, theta, verbose=False):
             if remove_i:
                 del variable_values['i']
 
-            if 'b' in variable_values.keys() and stellar_values['provided']:
-
+            #if 'b' in variable_values.keys():
+            # Too many variables to check...
+            try:
                 k = variable_values['R']
 
                 variable_values['T_41'] =  variable_values['P'] / np.pi \
@@ -305,6 +302,8 @@ def get_planet_variables(mc, theta, verbose=False):
                                                       np.sqrt((1. - k)**2 - variable_values['b']**2)
                                                       / np.sin(variable_values['i']*constants.deg2rad))
                 derived_variables['T_32'] = True
+            except:
+                pass
 
             planet_variables[common_name] = variable_values.copy()
 
