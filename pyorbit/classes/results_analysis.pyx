@@ -108,19 +108,29 @@ def get_stellar_parameters(mc, theta):
     "Stellar mass, radius and density are pre-oaded since they are are required by most of the common models"
     stellar_model = mc.common_models['star_parameters']
     stellar_values = stellar_model.convert(theta)
+    stellar_values['provided'] = True
 
     if 'rho' not in stellar_values:
 
         if 'radius' not in stellar_values:
-            if stellar_model.prior_kind['radius'] == 'Gaussian':
-                stellar_values['radius'] = np.random.normal(stellar_model.prior_pams['radius'][0],
-                                                            stellar_model.prior_pams['radius'][1],
-                                                            size=n_samplings)
+            try:
+                if stellar_model.prior_kind['radius'] == 'Gaussian':
+                    stellar_values['radius'] = np.random.normal(stellar_model.prior_pams['radius'][0],
+                                                                stellar_model.prior_pams['radius'][1],
+                                                                size=n_samplings)
+            except:
+                print(' *** Please provide a prior on stellar Radius *** ')
+                stellar_values['provided'] = False
+
         if 'mass' not in stellar_values:
-            if stellar_model.prior_kind['mass'] == 'Gaussian':
-                stellar_values['mass'] = np.random.normal(stellar_model.prior_pams['mass'][0],
-                                                          stellar_model.prior_pams['mass'][1],
-                                                          size=n_samplings)
+            try:
+                if stellar_model.prior_kind['mass'] == 'Gaussian':
+                    stellar_values['mass'] = np.random.normal(stellar_model.prior_pams['mass'][0],
+                                                              stellar_model.prior_pams['mass'][1],
+                                                              size=n_samplings)
+            except:
+                print(' *** Please provide a prior on stellar Mass *** ')
+                stellar_values['provided'] = False
 
         stellar_values['rho'] = stellar_values['mass'] / stellar_values['radius'] ** 3
 
@@ -136,6 +146,7 @@ def get_stellar_parameters(mc, theta):
                                                               stellar_model.prior_pams['mass'][1],
                                                               size=n_samplings)
                     stellar_values['radius'] = (stellar_values['mass'] / stellar_values['rho']) ** (1. / 3.)
+
             elif 'radius' in stellar_model.prior_pams:
 
                 if stellar_model.prior_kind['radius'] == 'Gaussian':
@@ -143,6 +154,10 @@ def get_stellar_parameters(mc, theta):
                                                                 stellar_model.prior_pams['mass'][1],
                                                                 size=n_samplings)
                     stellar_values['mass'] = stellar_values['radius'] ** 3. * stellar_values['rho']
+            else:
+                print(' *** Please provide a prior either on stellar Mass or stellar Radius *** ')
+                stellar_values['provided'] = False
+
 
     return stellar_values
 
@@ -257,24 +272,24 @@ def get_planet_variables(mc, theta, verbose=False):
                         var_index):
                     variable_values['Tc'][ii] = mc.Tref + kepler_exo.kepler_phase2Tc_Tref(P, f, e, o)
 
-            if 'R' in variable_values.keys():
+            if 'R' in variable_values.keys() and stellar_values['provided']:
                 variable_values['R_Rj'] = variable_values['R'] * constants.Rsjup * stellar_values['radius']
                 derived_variables['R_Rj'] = True
 
                 variable_values['R_Re'] = variable_values['R'] * constants.Rsear * stellar_values['radius']
                 derived_variables['R_Re'] = True
 
-            if 'M' in variable_values.keys():
+            if 'M' in variable_values.keys() and stellar_values['provided']:
                 variable_values['M_Mj'] = variable_values['M'] * constants.Msjup * stellar_values['mass']
                 derived_variables['M_Mj'] = True
 
-                variable_values['M_Me'] = variable_values['M'] * constants.Msjup * stellar_values['mass']
+                variable_values['M_Me'] = variable_values['M'] * constants.Msear * stellar_values['mass']
                 derived_variables['M_Me'] = True
 
             if remove_i:
                 del variable_values['i']
 
-            if 'b' in variable_values.keys():
+            if 'b' in variable_values.keys() and stellar_values['provided']:
 
                 k = variable_values['R']
 
