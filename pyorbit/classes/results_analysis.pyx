@@ -132,7 +132,8 @@ def get_stellar_parameters(mc, theta):
                 print(' *** Please provide a prior on stellar Mass *** ')
                 stellar_values['provided'] = False
 
-        stellar_values['rho'] = stellar_values['mass'] / stellar_values['radius'] ** 3
+        if stellar_values['provided']:
+            stellar_values['rho'] = stellar_values['mass'] / stellar_values['radius'] ** 3
 
     else:
         if 'mass' in stellar_values:
