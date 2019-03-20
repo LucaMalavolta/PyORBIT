@@ -265,7 +265,7 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
 
         if plot_dictionary['use_getdist']:
             print(' Plotting full_correlation plot with GetDist')
-            print(' Ignore the no burnin error warning from getdist, since burnin has been already removed from the chains')
+            print(' Ignore the no burn in error warning from getdist, since burn in has been already removed from the chains')
 
             plt.rc('text', usetex=False)
 

@@ -119,6 +119,7 @@ def get_stellar_parameters(mc, theta):
                                                                 size=n_samplings)
             except:
                 print(' *** Please provide a prior on stellar Radius *** ')
+                print()
 
         if 'mass' not in stellar_values:
             try:
@@ -128,6 +129,7 @@ def get_stellar_parameters(mc, theta):
                                                               size=n_samplings)
             except:
                 print(' *** Please provide a prior on stellar Mass *** ')
+                print()
 
         if 'mass' in stellar_values.keys() and 'radius' in stellar_values.keys():
             stellar_values['rho'] = stellar_values['mass'] / stellar_values['radius'] ** 3
@@ -154,6 +156,7 @@ def get_stellar_parameters(mc, theta):
                     stellar_values['mass'] = stellar_values['radius'] ** 3. * stellar_values['rho']
             else:
                 print(' *** Please provide a prior either on stellar Mass or stellar Radius *** ')
+                print()
 
 
     return stellar_values
@@ -207,8 +210,9 @@ def get_planet_variables(mc, theta, verbose=False):
             if 'i' not in variable_values.keys():
                 derived_variables['i'] = True
                 if 'i' in common_model.fix_list:
+
                     if verbose:
-                        print('Inclination fixed to ', common_model.fix_list['i'][0])
+                        print('Inclination randomized to ', common_model.fix_list['i'])
                     variable_values['i'] = np.random.normal(common_model.fix_list['i'][0],
                                                             common_model.fix_list['i'][1],
                                                             size=n_samplings)

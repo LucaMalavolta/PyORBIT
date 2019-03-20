@@ -148,7 +148,7 @@ def get_2var_c2(var, fix, i):
 def get_2darray_from_val(val):
     out = np.zeros(2, dtype=np.double)
     try:
-        if len(np.shape(val)) == 1:
+        if np.shape(val) == 1:
             out[0] = val[0]
         else:
             out[:] = val[0:2]
