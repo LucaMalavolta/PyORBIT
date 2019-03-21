@@ -16,20 +16,20 @@ New changes:
 class RVkeplerian(AbstractModel):
     model_class = 'rv_keplerian'
 
-    list_pams_common = {
-        'P',  # Period
-        'K',  # RV semi-amplitude
-        'e',  # eccentricity, uniform prior - to be fixed
-        'o'}  # argument of pericenter
-
-    list_pams_dataset = {}
-
-    recenter_pams_dataset = {}
-
     def __init__(self, *args, **kwargs):
         super(RVkeplerian, self).__init__(*args, **kwargs)
+
+        self.list_pams_common = {
+            'P',  # Period
+            'K',  # RV semi-amplitude
+            'e',  # eccentricity, uniform prior - to be fixed
+            'o'}  # argument of pericenter
+
+        self.list_pams_dataset = {}
+
         self.use_time_of_transit = False
         self.use_mass_for_planets = False
+        self.recenter_pams_dataset = {}
 
     def initialize_model(self, mc, **kwargs):
 
@@ -84,19 +84,21 @@ class RVkeplerian(AbstractModel):
 class RVdynamical(AbstractModel):
     model_class = 'rv_dynamical'
 
-    ''' Orbital parameters to be used in the dynamical fit '''
-    list_pams_common = {
-        'P',  # Period in days
-        'M',  # Mass in Earth masses
-        'i',  # inclination in degrees
-        'lN',  # longitude of ascending node
-        'e',  # eccentricity, uniform prior - to be fixed
-        'R',  # planet radius (in units of stellar radii)
-        'o'}  # argument of pericenter
+    def __init__(self, *args, **kwargs):
+        super(RVdynamical, self).__init__(*args, **kwargs)
 
-    list_pams_dataset = {}
+        ''' Orbital parameters to be used in the dynamical fit '''
+        self.list_pams_common = {
+            'P',  # Period in days
+            'M',  # Mass in Earth masses
+            'i',  # inclination in degrees
+            'lN',  # longitude of ascending node
+            'e',  # eccentricity, uniform prior - to be fixed
+            'R',  # planet radius (in units of stellar radii)
+            'o'}  # argument of pericenter
 
-    recenter_pams_dataset = {}
+        self.list_pams_dataset = {}
+        self.recenter_pams_dataset = {}
 
     def initialize_model(self, mc, **kwargs):
 
@@ -125,14 +127,14 @@ class RVdynamical(AbstractModel):
 class TransitTimeKeplerian(AbstractModel):
     model_class = 'transit_time_keplerian'
 
-    list_pams_common = {'P'}  # Period
-
-    list_pams_dataset = {}
-    recenter_pams_dataset = {}
-
     def __init__(self, *args, **kwargs):
         super(TransitTimeKeplerian, self).__init__(*args, **kwargs)
         self.use_time_of_transit = False
+
+        self.list_pams_common = {'P'}  # Period
+
+        self.list_pams_dataset = {}
+        self.recenter_pams_dataset = {}
 
     def initialize_model(self, mc, **kwargs):
 
@@ -167,21 +169,24 @@ class TransitTimeKeplerian(AbstractModel):
 class TransitTimeDynamical(AbstractModel):
     model_class = 'transit_time_dynamical'
 
-    ''' Orbital parameters to be used in the dynamical fit '''
-    list_pams_common = {
-        'P': 'LU',  # Period in days
-        'M': 'LU',  # Mass in Earth masses
-        'lN': 'U',  # longitude of ascending node
-        'e': 'U',  # eccentricity, uniform prior - to be fixed
-        'R': 'U',  # planet radius (in units of stellar radii)
-        'o': 'U'}  # argument of pericenter
 
-    list_pams_dataset = {}
-
-    recenter_pams_dataset = {}
 
     def __init__(self, *args, **kwargs):
         super(TransitTimeDynamical, self).__init__(*args, **kwargs)
+
+        ''' Orbital parameters to be used in the dynamical fit '''
+        self.list_pams_common = {
+            'P': 'LU',  # Period in days
+            'M': 'LU',  # Mass in Earth masses
+            'lN': 'U',  # longitude of ascending node
+            'e': 'U',  # eccentricity, uniform prior - to be fixed
+            'R': 'U',  # planet radius (in units of stellar radii)
+            'o': 'U'}  # argument of pericenter
+
+        self.list_pams_dataset = {}
+
+        self.recenter_pams_dataset = {}
+
         self.use_semimajor_axis = False
         self.use_inclination = False
         self.use_time_of_transit = False
