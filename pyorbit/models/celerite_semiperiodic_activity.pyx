@@ -12,19 +12,19 @@ class Celerite_SemiPeriodic_Term(celerite.terms.Term):
     # differently from the example provided in the paper, here the terms are passed in the linear space already. It will
     # the job of the sampler to convert from Logarithmic to Linear space for those variables that the user has decided
     # to explore in logarithmic space
-    parameter_names = ("Hamp", "Pdec", "Prot", "factor")
+    parameter_names = ("Hamp", "Pdec", "Prot", "cel_factor")
     #parameter_names = ("Hamp", "cel_b", "cel_c", "Prot")
 
     def get_real_coefficients(self, params):
-        Hamp, Pdec, Prot, factor = params
+        Hamp, Pdec, Prot, cel_factor = params
         return (
-            Hamp * (1.0 + factor) / (2.0 + factor), 1./Pdec,
+            Hamp * (1.0 + cel_factor) / (2.0 + cel_factor), 1./Pdec,
         )
 
     def get_complex_coefficients(self, params):
-        Hamp, Pdec, Prot, factor = params
+        Hamp, Pdec, Prot, cel_factor = params
         return (
-            Hamp / (2.0 + factor),
+            Hamp / (2.0 + cel_factor),
             0.0,
             1. / Pdec,
             2 * np.pi * (1./Prot),
@@ -44,7 +44,7 @@ class Celerite_QuasiPeriodicActivity(AbstractModel):
 
     list_pams_dataset = {
         'Hamp',
-        'factor'
+        'cel_factor'
     }
 
     recenter_pams_dataset = {}
@@ -57,7 +57,7 @@ class Celerite_QuasiPeriodicActivity(AbstractModel):
         'Hamp': 0,
         'Pdec': 1,
         'Prot': 2,
-        'factor': 3
+        'cel_factor': 3
     }
 
     def __init__(self, *args, **kwargs):
@@ -81,7 +81,7 @@ class Celerite_QuasiPeriodicActivity(AbstractModel):
         output_pams[self.gp_pams_index['Hamp']] = input_pams['Hamp']
         output_pams[self.gp_pams_index['Pdec']] = input_pams['Pdec']
         output_pams[self.gp_pams_index['Prot']] = input_pams['Prot']
-        output_pams[self.gp_pams_index['factor']] = input_pams['factor']
+        output_pams[self.gp_pams_index['cel_factor']] = input_pams['cel_factor']
 
         return output_pams
 
@@ -97,7 +97,7 @@ class Celerite_QuasiPeriodicActivity(AbstractModel):
             'Hamp': input_pams[self.gp_pams_index['Hamp']],
             'Pdec': input_pams[self.gp_pams_index['Pdec']],
             'Prot': input_pams[self.gp_pams_index['Prot']],
-            'factor': input_pams[self.gp_pams_index['factor']]
+            'cel_factor': input_pams[self.gp_pams_index['cel_factor']]
         }
 
     def setup_dataset(self, dataset, **kwargs):
@@ -106,7 +106,7 @@ class Celerite_QuasiPeriodicActivity(AbstractModel):
 
     def define_kernel(self, dataset):
         gp_pams = np.ones(self.n_pams)
-        kernel = Celerite_SemiPeriodic_Term(Hamp=gp_pams[0], Pdec=gp_pams[1], Prot=gp_pams[2], factor=gp_pams[3])
+        kernel = Celerite_SemiPeriodic_Term(Hamp=gp_pams[0], Pdec=gp_pams[1], Prot=gp_pams[2], cel_factor=gp_pams[3])
 
         self.gp[dataset.name_ref] = celerite.GP(kernel)
 
