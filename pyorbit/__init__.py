@@ -7,4 +7,4 @@ from .pyorbit_multinest import *
 from .pyorbit_dynesty import *
 from .pyorbit_getresults import *
 
-__version__ = "7.0"
+__version__ = "8.0"
