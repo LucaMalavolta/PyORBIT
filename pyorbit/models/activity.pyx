@@ -15,6 +15,7 @@ class CommonActivity(AbstractCommon):
         'P',  # Period
         'K',  # Sinusoid semi-amplitude
         'f',  # Sinusoid curve phase
+        'cel_factor',
         'cel_a',  # celerite term A
         'cel_b',  # celerite term B
         'cel_c',  # celerite term C
@@ -30,6 +31,7 @@ class CommonActivity(AbstractCommon):
         'P': [0.4, 100000.0],
         'K': [0.5, 2000.0],
         'f': [0.0, 2 * np.pi],
+        'cel_factor': [0.00000001, 1000000.0],
         'cel_a': [0.00000001, 1000000.0],
         'cel_b': [0.00000001, 1000000.0],
         'cel_c': [0.00000001, 1000000.0]
@@ -48,6 +50,7 @@ class CommonActivity(AbstractCommon):
         'P': ['Uniform', []],
         'K': ['Uniform', []],
         'f': ['Uniform', []],
+        'cel_factor': ['Uniform', []],
         'cel_a': ['Uniform', []],
         'cel_b': ['Uniform', []],
         'cel_c': ['Uniform', []]
@@ -62,6 +65,7 @@ class CommonActivity(AbstractCommon):
         'P': 'Logarithmic',  # Period, log-uniform prior
         'K': 'Logarithmic',  # RV semi-amplitude, log-uniform prior
         'f': 'Linear',  # RV curve phase, log-uniform
+        'cel_factor': 'Linear',
         'cel_a': 'Logarithmic',  # celerite term A
         'cel_b': 'Logarithmic',  # celerite term B
         'cel_c': 'Logarithmic',  # celerite term C
