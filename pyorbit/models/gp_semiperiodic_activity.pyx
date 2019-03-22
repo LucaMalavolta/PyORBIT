@@ -2,6 +2,7 @@ from ..classes.common import *
 from abstract_common import *
 from abstract_model import *
 
+
 class GaussianProcess_QuasiPeriodicActivity(AbstractModel):
     ''' Three parameters out of four are the same for all the datasets, since they are related to
     the properties of the physical process rather than the observed effects on a dataset

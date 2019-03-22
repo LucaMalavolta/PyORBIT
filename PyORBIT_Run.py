@@ -1,10 +1,11 @@
+from __future__ import print_function
 import pyorbit
 import argparse
 import os
 import sys
 
 if __name__ == '__main__':
-    print 'This program is being run by itself'
+    print('This program is being run by itself')
 
     parser = argparse.ArgumentParser(prog='PyORBIT_run.py', description='PyORBIT runner')
     parser.add_argument('sampler', type=str, nargs=1, help='sampler (emcee or polychord)')

@@ -4,43 +4,47 @@ from abstract_model import *
 
 """ Straight copy from Celerite exmple"""
 class Celerite_SemiPeriodic_Term(celerite.terms.Term):
-    parameter_names = ("cel_a", "cel_b", "cel_c", "Prot")
+    """
+
+    """
+
+    # from Foreman-Mackey+2017, but keeping the notation of the semi-periodic goerge kernel used in PyORBIT
+    # differently from the example provided in the paper, here the terms are passed in the linear space already. It will
+    # the job of the sampler to convert from Logarithmic to Linear space for those variables that the user has decided
+    # to explore in logarithmic space
+    parameter_names = ("Hamp", "Pdec", "Prot", "factor")
+    #parameter_names = ("Hamp", "cel_b", "cel_c", "Prot")
 
     def get_real_coefficients(self, params):
-        a, b, c, P = params
+        Hamp, Pdec, Prot, factor = params
         return (
-            a * (1.0 + b) / (2.0 + b), c,
+            Hamp * (1.0 + factor) / (2.0 + factor), 1./Pdec,
         )
 
     def get_complex_coefficients(self, params):
-        a, b, c, P = params
+        Hamp, Pdec, Prot, factor = params
         return (
-            a / (2.0 + b), 0.0,
-            c, 2 * np.pi * (1./P),
+            Hamp / (2.0 + factor),
+            0.0,
+            1. / Pdec,
+            2 * np.pi * (1./Prot),
         )
 
 
 class Celerite_QuasiPeriodicActivity(AbstractModel):
-    ''' Three parameters out of four are the same for all the datasets, since they are related to
-    the properties of the physical process rather than the observed effects on a dataset
-     From Grunblatt+2015, Affer+2016
-     - theta: is usually related to the rotation period of the star( or one of its harmonics);
-     - lambda: is the correlation decay timescale, and it can be related to the lifetime of the active regions.
-     - omega: is the length scale of the periodic component, and can be linked to the size evolution of the active regions;
-     - h: represents the amplitude of the correlations '''
 
     internal_likelihood = True
 
     model_class = 'celerite_quasiperiodic'
 
     list_pams_common = {
-        'Prot' # Rotational period of the star
+        'Prot', # Rotational period of the star
+        'Pdec',
     }
 
     list_pams_dataset = {
-        'cel_a',  # celerite term A
-        'cel_b',  # celerite term B
-        'cel_c'  # celerite term C
+        'Hamp',
+        'factor'
     }
 
     recenter_pams_dataset = {}
@@ -50,10 +54,10 @@ class Celerite_QuasiPeriodicActivity(AbstractModel):
     """ Indexing is determined by the way the kernel is constructed, so it is specific of the Model and not of the 
     Common class"""
     gp_pams_index = {
-        'cel_a': 0, # celerite term A
-        'cel_b': 1, # celerite term B
-        'cel_c': 2, # celerite term C
-        'Prot': 3  # ln_P
+        'Hamp': 0,
+        'Pdec': 1,
+        'Prot': 2,
+        'factor': 3
     }
 
     def __init__(self, *args, **kwargs):
@@ -62,22 +66,22 @@ class Celerite_QuasiPeriodicActivity(AbstractModel):
 
     def convert_val2gp(self, input_pams):
         """
-        :param input_pam: dictonary with the 'physically meaningful' parameters of the GP kernel
+        :param input_pams: dictionary with the 'physically meaningful' parameters of the GP kernel
         :return: array with the parameters to be fed to 'celerite'
-        WARNING: this subroutine is HIGHLY specific of your choice of the kernel! I reccomend to
+        WARNING: this subroutine is HIGHLY specific of your choice of the kernel! I recommend to
         create a new Class with different transformations if you are planning of using a different
         kernel combination
         """
         output_pams = np.zeros(self.n_pams, dtype=np.double)
 
         """ You must check _george_ documentation (and possibily do a lot of testing) to know how to convert physical 
-        values to the parameter vector accepted by george.set_parameter_vector() function. Note: these values may be 
+        values to the parameter vector accepted by celerite.set_parameter_vector() function. Note: these values may be 
         different from ones accepted by the kernel
         """
-        output_pams[self.gp_pams_index['cel_a']] = input_pams['cel_a']
-        output_pams[self.gp_pams_index['cel_b']] = input_pams['cel_b']
-        output_pams[self.gp_pams_index['cel_c']] = input_pams['cel_c']
+        output_pams[self.gp_pams_index['Hamp']] = input_pams['Hamp']
+        output_pams[self.gp_pams_index['Pdec']] = input_pams['Pdec']
         output_pams[self.gp_pams_index['Prot']] = input_pams['Prot']
+        output_pams[self.gp_pams_index['factor']] = input_pams['factor']
 
         return output_pams
 
@@ -90,10 +94,10 @@ class Celerite_QuasiPeriodicActivity(AbstractModel):
         kernel combination
         """
         return {
-            'cel_a': input_pams[self.gp_pams_index['cel_a']],
-            'cel_b': input_pams[self.gp_pams_index['cel_b']],
-            'cel_c': input_pams[self.gp_pams_index['cel_c']],
-            'Prot': input_pams[self.gp_pams_index['Prot']]
+            'Hamp': input_pams[self.gp_pams_index['Hamp']],
+            'Pdec': input_pams[self.gp_pams_index['Pdec']],
+            'Prot': input_pams[self.gp_pams_index['Prot']],
+            'factor': input_pams[self.gp_pams_index['factor']]
         }
 
     def setup_dataset(self, dataset, **kwargs):
@@ -102,17 +106,7 @@ class Celerite_QuasiPeriodicActivity(AbstractModel):
 
     def define_kernel(self, dataset):
         gp_pams = np.ones(self.n_pams)
-        kernel = Celerite_SemiPeriodic_Term(cel_a=gp_pams[0], cel_b=gp_pams[1], cel_c=gp_pams[2], Prot=gp_pams[3])
-
-        """
-         gp_pams[0] = h^2 -> h^2 * ExpSquaredKernel * ExpSine2Kernel
-           -> set_parameter_vector() accepts the natural logarithm of this value
-         gp_pams[1] = metric = r^2 = lambda**2  -> ExpSquaredKernel(metric=r^2)
-           -> set_parameter_vector() accepts the natural logarithm of this value
-         gp_pams[2] = Gamma =  1/ (2 omega**2) -> ExpSine2Kernel(gamma, ln_period)
-         gp_pams[3] = ln_theta = ln_Period -> ExpSine2Kernel(gamma, ln_period)
-         
-        """
+        kernel = Celerite_SemiPeriodic_Term(Hamp=gp_pams[0], Pdec=gp_pams[1], Prot=gp_pams[2], factor=gp_pams[3])
 
         self.gp[dataset.name_ref] = celerite.GP(kernel)
 
@@ -132,7 +126,7 @@ class Celerite_QuasiPeriodicActivity(AbstractModel):
         env = np.sqrt(dataset.e ** 2.0 + dataset.jitter ** 2.0)
         self.gp[dataset.name_ref].set_parameter_vector(gp_pams)
         self.gp[dataset.name_ref].compute(dataset.x0, env)
-        #self.gp[dataset.name_ref].recompute()
+
         return self.gp[dataset.name_ref].log_likelihood(dataset.residuals)
 
     def sample_predict(self, variable_value, dataset, x0_input=None):

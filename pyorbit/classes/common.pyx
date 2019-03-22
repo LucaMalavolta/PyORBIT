@@ -5,8 +5,8 @@ import sys
 from scipy import stats
 from scipy.interpolate import splrep, splev
 import kepler_exo
-import yaml
 import constants
+import yaml
 import gc
 
 if 'celerite' not in sys.modules:
