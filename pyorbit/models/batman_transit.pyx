@@ -85,7 +85,7 @@ class Batman_Transit(AbstractModel):
 
         self.batman_params.limb_dark = kwargs['limb_darkening_model']
 
-        for i_coeff in xrange(1, kwargs['limb_darkening_ncoeff'] + 1):
+        for i_coeff in range(1, kwargs['limb_darkening_ncoeff'] + 1):
             var = 'ld_c' + repr(i_coeff)
             self.batman_ldvars[var] = i_coeff - 1
             self.list_pams_common.update({var: None})
@@ -166,7 +166,7 @@ class Batman_Transit(AbstractModel):
         print 'w    ', self.batman_params.w
         print 'u    ', self.batman_params.u
         """
-        for var, i_var in self.batman_ldvars.iteritems():
+        for var, i_var in self.batman_ldvars.items():
             self.batman_params.u[i_var] = variable_value[var]
 
         """ 

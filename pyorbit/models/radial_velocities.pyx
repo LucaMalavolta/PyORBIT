@@ -265,7 +265,7 @@ class DynamicalIntegrator:
         """ Putting all the RV epochs in the same array, flagging in the temporary buffer
             the stored values according to their dataset of origin
         """
-        for dataset_name, dataset in mc.dataset_dict.iteritems():
+        for dataset_name, dataset in mc.dataset_dict.items():
             if dataset.dynamical is False: continue
             if dataset.kind == 'RV':
                 int_buffer['rv_times'].extend(dataset.x.tolist())
@@ -278,7 +278,7 @@ class DynamicalIntegrator:
         """ Creating the flag array after all the RV epochs have been mixed
         """
         self.dynamical_set['data'] = {'selection': {}}
-        for dataset_name, dataset in mc.dataset_dict.iteritems():
+        for dataset_name, dataset in mc.dataset_dict.items():
             if dataset.dynamical is False: continue
             if dataset.kind == 'RV':
                 self.dynamical_set['data']['selection'][dataset_name] = \
@@ -543,7 +543,7 @@ class DynamicalIntegrator:
         # print 'T0_sim: ', t0_sim
         # print 'RV_sim: ', rv_sim
         # t0_sim -= mc.Tref
-        for dataset_name, dataset in mc.dataset_dict.iteritems():
+        for dataset_name, dataset in mc.dataset_dict.items():
             if dataset.dynamical is False: continue
             if dataset.kind == 'RV':
                 if x0_input is None:
@@ -566,7 +566,7 @@ class DynamicalIntegrator:
         dataset_rv = 0
         int_buffer = dict(rv_times=[], t0_times=[], rv_ref=[], t0_ref=[], key_ref={})
 
-        for dataset_name, dataset in mc.dataset_dict.iteritems():
+        for dataset_name, dataset in mc.dataset_dict.items():
             if dataset.dynamical is False: continue
             if dataset.kind == 'RV':
                 int_buffer['rv_times'].extend(dataset.x0.tolist())
@@ -579,7 +579,7 @@ class DynamicalIntegrator:
         if np.size(int_buffer['t0_times']) == 0:
             int_buffer['t0_times'] = int_buffer['rv_times']
 
-        for dataset_name, dataset in mc.dataset_dict.iteritems():
+        for dataset_name, dataset in mc.dataset_dict.items():
             if dataset.dynamical is False: continue
             if dataset.kind == 'RV':
                 self.dynamical_set['data_selection'][dataset_name] = \
@@ -688,7 +688,7 @@ class DynamicalIntegrator:
         # print 'Full orbit flag: ', x0_input
         # print positions[:10,:]
 
-        for dataset_name, dataset in mc.dataset_dict.iteritems():
+        for dataset_name, dataset in mc.dataset_dict.items():
             if dataset.dynamical is False: continue
             if dataset.kind == 'RV':
                 if x0_input is None:

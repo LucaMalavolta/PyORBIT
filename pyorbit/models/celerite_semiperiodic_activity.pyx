@@ -17,18 +17,18 @@ class Celerite_SemiPeriodic_Term(celerite.terms.Term):
     #parameter_names = ("Hamp", "cel_b", "cel_c", "Prot")
 
     def get_real_coefficients(self, params):
-        Hamp, Pdec, Prot, cel_factor = params
+        B, Pdec, Prot, C = params
         return (
-            Hamp * (1.0 + cel_factor) / (2.0 + cel_factor), 1./Pdec,
+            B * (1.0 + C) / (2.0 + C), 1./Pdec,
         )
 
     def get_complex_coefficients(self, params):
-        Hamp, Pdec, Prot, cel_factor = params
+        B, Pdec, Prot, C = params
         return (
-            Hamp / (2.0 + cel_factor),
+            B / (2.0 + C),
             0.0,
             1. / Pdec,
-            2 * np.pi * (1./Prot),
+            2 * np.pi / Prot,
         )
 
 
@@ -44,8 +44,8 @@ class Celerite_QuasiPeriodicActivity(AbstractModel):
     }
 
     list_pams_dataset = {
-        'Hamp',
-        'cel_factor'
+        'cel_B',
+        'cel_C'
     }
 
     recenter_pams_dataset = {}
@@ -55,10 +55,10 @@ class Celerite_QuasiPeriodicActivity(AbstractModel):
     """ Indexing is determined by the way the kernel is constructed, so it is specific of the Model and not of the 
     Common class"""
     gp_pams_index = {
-        'Hamp': 0,
+        'cel_B': 0,
         'Pdec': 1,
         'Prot': 2,
-        'cel_factor': 3
+        'cel_C': 3
     }
 
     def __init__(self, *args, **kwargs):
@@ -79,10 +79,10 @@ class Celerite_QuasiPeriodicActivity(AbstractModel):
         values to the parameter vector accepted by celerite.set_parameter_vector() function. Note: these values may be 
         different from ones accepted by the kernel
         """
-        output_pams[self.gp_pams_index['Hamp']] = input_pams['Hamp']
+        output_pams[self.gp_pams_index['cel_B']] = input_pams['cel_B']
         output_pams[self.gp_pams_index['Pdec']] = input_pams['Pdec']
         output_pams[self.gp_pams_index['Prot']] = input_pams['Prot']
-        output_pams[self.gp_pams_index['cel_factor']] = input_pams['cel_factor']
+        output_pams[self.gp_pams_index['cel_C']] = input_pams['cel_C']
 
         return output_pams
 
@@ -95,10 +95,10 @@ class Celerite_QuasiPeriodicActivity(AbstractModel):
         kernel combination
         """
         return {
-            'Hamp': input_pams[self.gp_pams_index['Hamp']],
+            'cel_B': input_pams[self.gp_pams_index['cel_B']],
             'Pdec': input_pams[self.gp_pams_index['Pdec']],
             'Prot': input_pams[self.gp_pams_index['Prot']],
-            'cel_factor': input_pams[self.gp_pams_index['cel_factor']]
+            'cel_C': input_pams[self.gp_pams_index['cel_C']]
         }
 
     def setup_dataset(self, dataset, **kwargs):

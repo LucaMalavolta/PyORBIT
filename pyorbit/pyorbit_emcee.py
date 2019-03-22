@@ -71,7 +71,7 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
     pars_input(config_in, mc, input_datasets)
 
     if mc.pyde_parameters['shutdown_jitter'] or mc.emcee_parameters['shutdown_jitter']:
-        for dataset in mc.dataset_dict.itervalues():
+        for dataset_name, dataset in mc.dataset_dict.items():
             dataset.shutdown_jitter()
 
     # keep track of which version has been used to perform emcee computations
@@ -142,7 +142,7 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
         theta_dict = results_analysis.get_theta_dictionary(mc)
         population = np.zeros([mc.emcee_parameters['nwalkers'], mc.ndim], dtype=np.double)
 
-        for theta_name, theta_i in theta_dict.iteritems():
+        for theta_name, theta_i in theta_dict.items():
             population[:, theta_i] = population_legacy[:, theta_dict_legacy[theta_name]]
             mc.bounds[theta_i] = previous_boundaries[theta_dict_legacy[theta_name]]
 
@@ -156,7 +156,7 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
             starting_point = mc.starting_point
 
             population = np.zeros([mc.emcee_parameters['nwalkers'], mc.ndim], dtype=np.double)
-            for ii in xrange(0, mc.emcee_parameters['nwalkers']):
+            for ii in range(0, mc.emcee_parameters['nwalkers']):
                 population[ii, :] = np.random.normal(starting_point, 0.0000001)
 
             print('Using user-defined starting point')
@@ -170,12 +170,12 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
             sys.stdout.flush()
 
             de = DiffEvol(mc, mc.bounds, mc.emcee_parameters['nwalkers'], maximize=True)
-            de.optimize(mc.pyde_parameters['ngen'])
+            de.optimize(int(mc.pyde_parameters['ngen']))
 
             population = de.population
             starting_point = np.median(population, axis=0)
-            theta_dict = results_analysis.get_theta_dictionary(mc)
 
+            theta_dict = results_analysis.get_theta_dictionary(mc)
 
             """ bounds redefinition and fix for PyDE anomalous results """
             if mc.recenter_bounds_flag:
@@ -203,7 +203,7 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
 
     if mc.emcee_parameters['multirun'] and not reloaded_emcee_multirun:
 
-        for ii in xrange(0, mc.emcee_parameters['multirun_iter']):
+        for ii in range(0, mc.emcee_parameters['multirun_iter']):
             print('emcee exploratory run #', ii, ' of ', mc.emcee_parameters['multirun_iter'])
             # sampler = emcee.EnsembleSampler(mc.emcee_parameters['nwalkers'], mc.ndim, mc,
             #                                 threads=mc.emcee_parameters['nwalkers'])
@@ -245,7 +245,7 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
         print(' Saving temporary steps')
         niter = int(mc.emcee_parameters['nsteps']/mc.emcee_parameters['nsave'])
         sampled = 0
-        for i in xrange(0, niter):
+        for i in range(0, niter):
             population, prob, state = sampler.run_mcmc(population, mc.emcee_parameters['nsave'], thin=mc.emcee_parameters['thin'], rstate0=state)
             sampled += mc.emcee_parameters['nsave']
             theta_dict = results_analysis.get_theta_dictionary(mc)

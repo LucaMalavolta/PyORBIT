@@ -1,5 +1,4 @@
 from __future__ import print_function
-from future.utils import itervalues
 import os
 import sys
 from scipy import stats
@@ -301,8 +300,8 @@ def compute_value_sigma(samples):
         sample_med[2] = sample_tmp[0] - sample_tmp[1]
 
     elif np.size(np.shape(samples)) == 2:
-        sample_med = np.asarray(map(lambda v: (v[1], v[2] - v[1], v[1] - v[0]),
-                                   zip(*np.percentile(samples, [15.865, 50, 84.135], axis=0))))
+        sample_med = np.asarray(list(map(lambda v: (v[1], v[2] - v[1], v[1] - v[0]),
+                                   zip(*np.percentile(samples, [15.865, 50, 84.135], axis=0)))))
 
     else:
         print('ERROR!!! ')
@@ -321,10 +320,12 @@ def pick_MAP_parameters(samples, lnprob):
         print('ERROR!!! ')
         return None
 
+
 def convert_rho_to_a(P, rho):
 
-    return np.power(constants.Gsi * (constants.d2s * constants.d2s) * (P**2) *
-                  rho * constants.rho_Sun / (3. * np.pi), 1./3.)
+    return np.power(constants.Gsi * (constants.d2s * constants.d2s) * (P**2)
+                    * rho * constants.rho_Sun / (3. * np.pi), 1./3.)
+
 
 def convert_b_to_i(b,e,o,a):
 

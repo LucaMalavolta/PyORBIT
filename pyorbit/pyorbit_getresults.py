@@ -4,17 +4,15 @@ from pyorbit.classes.model_container_multinest import ModelContainerMultiNest
 from pyorbit.classes.model_container_polychord import ModelContainerPolyChord
 from pyorbit.classes.model_container_emcee import ModelContainerEmcee
 
-from pyorbit.classes.input_parser import yaml_parser, pars_input
+from pyorbit.classes.input_parser import pars_input
 from pyorbit.classes.io_subroutines import *
 import numpy as np
 import os
 import matplotlib as mpl
-from matplotlib.ticker import FormatStrFormatter
 import sys
 mpl.use('Agg')
 from matplotlib import pyplot as plt
 import corner
-import pyorbit.classes.constants as constants
 import pyorbit.classes.kepler_exo as kepler_exo
 import pyorbit.classes.common as common
 import pyorbit.classes.results_analysis as results_analysis
@@ -67,9 +65,9 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
         """ Required to create the right objects inside each class - if defined inside """
         theta_dictionary = results_analysis.get_theta_dictionary(mc)
 
-        nburnin = mc.emcee_parameters['nburn']
-        nthin = mc.emcee_parameters['thin']
-        nsteps = sampler_chain.shape[1] * nthin
+        nburnin = int(mc.emcee_parameters['nburn'])
+        nthin = int(mc.emcee_parameters['thin'])
+        nsteps = int(sampler_chain.shape[1] * nthin)
 
         flat_chain = emcee_flatchain(sampler_chain, nburnin, nthin)
         flat_lnprob = emcee_flatlnprob(sampler_lnprobability, nburnin, nthin, emcee_version)
@@ -254,10 +252,11 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
             'truths': []
         }
 
-        for var, var_dict in theta_dictionary.iteritems():
+        for var, var_dict in theta_dictionary.items():
             corner_plot['samples'][:, var_dict] = flat_chain[:, var_dict]
             corner_plot['labels'].append(re.sub('_', '-', var))
             corner_plot['truths'].append(chain_med[var_dict, 0])
+
 
         corner_plot['samples'][:, -1] = flat_lnprob[:]
         corner_plot['labels'].append('ln-prob')
@@ -296,7 +295,7 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
         print(' Plotting the chains... ')
 
         os.system('mkdir -p ' + dir_output + 'chains')
-        for theta_name, ii in theta_dictionary.iteritems():
+        for theta_name, ii in theta_dictionary.items():
             file_name = dir_output + 'chains/' + repr(ii) + '_' + theta_name + '.png'
             fig = plt.figure(figsize=(12, 12))
             plt.plot(sampler_chain[:, :, ii].T, '-', alpha=0.5)
@@ -318,9 +317,9 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
         """
         os.system('mkdir -p ' + dir_output + 'gr_traces')
 
-        step_sampling = np.arange(nburnin/nthin, nsteps/nthin, 1)
+        step_sampling = np.arange(nburnin/nthin, nsteps/nthin, 1, dtype=int)
 
-        for theta_name, th in theta_dictionary.iteritems():
+        for theta_name, th in theta_dictionary.items():
             rhat = np.array([GelmanRubin_v2(sampler_chain[:, :steps, th]) for steps in step_sampling])
             print('     Gelman-Rubin: {0:5d} {1:12f} {2:s} '.format(th, rhat[-1], theta_name))
             file_name = dir_output + 'gr_traces/v2_' + repr(th) + '_' + theta_name + '.png'
@@ -339,7 +338,7 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
         print(' Plotting the common models corner plots')
 
         plt.rc('text', usetex=False)
-        for common_name, common_model in mc.common_models.iteritems():
+        for common_name, common_model in mc.common_models.items():
 
             print('     Common model: ', common_name)
 
@@ -390,7 +389,7 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
         print(' Dataset + models corner plots ')
         print()
 
-        for dataset_name, dataset in mc.dataset_dict.iteritems():
+        for dataset_name, dataset in mc.dataset_dict.items():
 
             for model_name in dataset.models:
 
@@ -447,7 +446,7 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
 
 
         kinds = {}
-        for dataset_name, dataset in mc.dataset_dict.iteritems():
+        for dataset_name, dataset in mc.dataset_dict.items():
             if dataset.kind in kinds.keys():
                 kinds[dataset.kind].extend([dataset_name])
             else:
@@ -485,7 +484,7 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
         bjd_plot['full']['end'] += bjd_plot['full']['range']*0.10
         bjd_plot['full']['x0_plot'] = np.arange(bjd_plot['full']['start'], bjd_plot['full']['end'],0.1)
 
-        for dataset_name, dataset in mc.dataset_dict.iteritems():
+        for dataset_name, dataset in mc.dataset_dict.items():
             if dataset.kind =='RV':
                 bjd_plot[dataset_name] = bjd_plot['full']
 
@@ -494,15 +493,15 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
 
         if plot_dictionary['plot_models']:
 
-            for kind_name, kind in kinds.iteritems():
+            for kind_name, kind in kinds.items():
                 for dataset_name in kind:
                     fig = plt.figure(figsize=(12, 12))
                     plt.errorbar(mc.dataset_dict[dataset_name].x0,
                                  mc.dataset_dict[dataset_name].y - bjd_plot['model_out'][dataset_name]['systematics'],
                                  yerr=mc.dataset_dict[dataset_name]. e,
-                                 fmt='o', zorder=2)
-                    plt.plot(bjd_plot[dataset_name]['x0_plot'], bjd_plot['model_x0'][dataset_name]['complete'], zorder=2, c='b')
-                    plt.plot(bjd_plot[dataset_name]['x0_plot'], bjd_plot['MAP_model_x0'][dataset_name]['complete'], zorder=1, c='r')
+                                 fmt='o', zorder=2, alpha=0.5)
+                    plt.plot(bjd_plot[dataset_name]['x0_plot'], bjd_plot['model_x0'][dataset_name]['complete'], zorder=4, c='b')
+                    plt.plot(bjd_plot[dataset_name]['x0_plot'], bjd_plot['MAP_model_x0'][dataset_name]['complete'], zorder=3, c='r')
 
                     plt.savefig(dir_output + 'model_' + kind_name + '_' + dataset_name + '.png', bbox_inches='tight', dpi=300)
                     plt.close(fig)
@@ -640,7 +639,7 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
                 for variable_name, variable in variable_values.items():
                     all_variables_list[dataset_name + '_' + model_name + '_' + variable_name] = variable
 
-        for model in mc.common_models.itervalues():
+        for model_name, model in mc.common_models.items():
             variable_values = model.convert(flat_chain)
 
             for variable_name, variable in variable_values.items():
@@ -694,7 +693,7 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
         sigma_plus = plot_truths[2, :] - plot_truths[1, :]
         median_vals = plot_truths[1, :]
 
-        for ii in xrange(0, n_int):
+        for ii in range(0, n_int):
 
             if sigma_minus[ii] == 0. and sigma_plus[ii] == 0.:
                 data_skip[ii] = True
@@ -715,7 +714,7 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
         veusz_workaround_descriptor = 'descriptor'
         veusz_workaround_values = ''
 
-        for ii in xrange(0, n_int):
+        for ii in range(0, n_int):
 
             if data_skip[ii]:
                 continue
@@ -723,7 +722,7 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
             x_data = output_plan[:, ii]
             x_edges = data_edg[ii, :]
 
-            for jj in xrange(0, n_int):
+            for jj in range(0, n_int):
 
                 if data_skip[jj]:
                     continue

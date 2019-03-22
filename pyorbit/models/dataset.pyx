@@ -127,7 +127,7 @@ class Dataset(AbstractCommon):
     def create_systematic_dictionaries(self, var_generic, dataset_vals):
         n_sys = np.max(dataset_vals.astype(np.int64)) + 1
         self.variable_compressed[var_generic] = {}
-        for ii in xrange(0, n_sys):
+        for ii in range(0, n_sys):
             var = var_generic + '_' + repr(ii)
             self.list_pams.update({var: None})
             self.default_bounds[var] = self.generic_default_bounds[var_generic]
@@ -138,7 +138,7 @@ class Dataset(AbstractCommon):
 
     def create_systematic_mask(self, var_generic, dataset_vals):
         n_sys = np.max(dataset_vals.astype(np.int64)) + 1
-        for ii in xrange(0, n_sys):
+        for ii in range(0, n_sys):
             var = var_generic + '_' + repr(ii)
             self.mask[var] = np.zeros(self.n, dtype=bool)
             self.mask[var][(abs(dataset_vals - ii) < 0.1)] = True

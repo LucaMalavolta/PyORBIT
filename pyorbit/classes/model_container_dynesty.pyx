@@ -17,7 +17,7 @@ class ModelContainerDynesty(ModelContainer):
     def dynesty_priors(self, cube):
         theta = np.zeros(len(cube), dtype=np.double)
 
-        for i in xrange(0, len(cube)):
+        for i in range(0, len(cube)):
             theta[i] = nested_sampling_prior_compute(cube[i], self.priors[i][0], self.priors[i][2], self.spaces[i])
         return theta
 

@@ -37,7 +37,7 @@ class Correlation_SingleDataset(AbstractModel):
         if 'order' in kwargs:
             self.order = kwargs['order']
 
-        for i_order in xrange(1, self.order+1):
+        for i_order in range(1, self.order+1):
             var = 'c'+repr(i_order)
             self.list_pams_dataset.update({var: None})
             self.default_bounds.update({var: [-10**9, 10**9]})
@@ -68,7 +68,7 @@ class Correlation_SingleDataset(AbstractModel):
     def compute(self, variable_value, dataset, x0_input=None):
 
         coeff = np.zeros(self.order+1)
-        for i_order in xrange(1, self.order+1):
+        for i_order in range(1, self.order+1):
             var = 'c'+repr(i_order)
             coeff[i_order] = variable_value[var]
         """ In our array, coefficient are sorted from the lowest degree to the higher

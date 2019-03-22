@@ -22,7 +22,7 @@ def results_resumen(mc, theta, skip_theta=False, compute_lnprob=False, chain_med
 
     print('====================================================================================================')
     print()
-    for dataset_name, dataset in mc.dataset_dict.iteritems():
+    for dataset_name, dataset in mc.dataset_dict.items():
         print('----- dataset: ', dataset_name)
         print_theta_bounds(dataset.variable_sampler, theta, mc.bounds, skip_theta)
 
@@ -30,8 +30,8 @@ def results_resumen(mc, theta, skip_theta=False, compute_lnprob=False, chain_med
             print('---------- ', dataset_name, '     ----- model: ', model_name)
             print_theta_bounds(mc.models[model_name].variable_sampler[dataset_name], theta, mc.bounds, skip_theta)
 
-    for model in mc.common_models.itervalues():
-        print('----- common model: ', model.common_ref)
+    for model_name, model in mc.common_models.items():
+        print('----- common model: ', model_name)
         print_theta_bounds(model.variable_sampler, theta, mc.bounds, skip_theta)
 
     if skip_theta:
@@ -42,7 +42,7 @@ def results_resumen(mc, theta, skip_theta=False, compute_lnprob=False, chain_med
     print('====================================================================================================')
     print()
 
-    for dataset_name, dataset in mc.dataset_dict.iteritems():
+    for dataset_name, dataset in mc.dataset_dict.items():
         print('----- dataset: ', dataset_name)
         variable_values = dataset.convert(theta)
         print_dictionary(variable_values)
@@ -53,8 +53,8 @@ def results_resumen(mc, theta, skip_theta=False, compute_lnprob=False, chain_med
             variable_values = mc.models[model_name].convert(theta, dataset_name)
             print_dictionary(variable_values)
 
-    for model in mc.common_models.itervalues():
-        print('----- common model: ', model.common_ref)
+    for model_name, model in mc.common_models.items():
+        print('----- common model: ', model_name)
         variable_values = model.convert(theta)
         if chain_med is not False:
             recenter_pams = {}
@@ -86,7 +86,7 @@ def results_resumen(mc, theta, skip_theta=False, compute_lnprob=False, chain_med
         if len(np.shape(theta)) == 2:
             n_samples, n_values = np.shape(theta)
             logchi2_collection = np.zeros(n_samples)
-            for i in xrange(0, n_samples):
+            for i in range(0, n_samples):
                 logchi2_collection[i] = mc(theta[i, :])
             perc0, perc1, perc2 = np.percentile(logchi2_collection, [15.865, 50, 84.135], axis=0)
             print(' LN probability: %12f   %12f %12f (15-84 p) ' % (perc1, perc0 - perc1, perc2 - perc1))
@@ -185,7 +185,7 @@ def get_planet_variables(mc, theta, verbose=False):
 
     planet_variables = {}
 
-    for common_name, common_model in mc.common_models.iteritems():
+    for common_name, common_model in mc.common_models.items():
         variable_values = common_model.convert(theta)
         derived_variables = {}
 
@@ -201,7 +201,7 @@ def get_planet_variables(mc, theta, verbose=False):
             """
 
             var_index = np.arange(0, n_samplings, dtype=int)
-            for var in variable_values.iterkeys():
+            for var in variable_values.keys():
                 if np.size(variable_values[var]) == 1:
                     variable_values[var] = variable_values[var] * np.ones(n_samplings)
 
@@ -314,7 +314,7 @@ def get_planet_variables(mc, theta, verbose=False):
 
             planet_variables[common_name] = variable_values.copy()
 
-            for var in variable_values.keys():
+            for var in planet_variables[common_name].keys():
                 if var not in derived_variables.keys():
                     del variable_values[var]
 
@@ -328,22 +328,22 @@ def get_theta_dictionary(mc):
     # * give back a parameter name associated to each value in the result array
 
     theta_dictionary = {}
-    for dataset_name, dataset in mc.dataset_dict.iteritems():
-        for var, i in dataset.variable_sampler.iteritems():
+    for dataset_name, dataset in mc.dataset_dict.items():
+        for var, i in dataset.variable_sampler.items():
             try:
                 theta_dictionary[dataset_name + '_' + var] = i
             except:
                 theta_dictionary[repr(dataset_name) + '_' + var] = i
 
         for model_name in dataset.models:
-            for var, i in mc.models[model_name].variable_sampler[dataset_name].iteritems():
+            for var, i in mc.models[model_name].variable_sampler[dataset_name].items():
                 try:
                     theta_dictionary[dataset_name + '_' + model_name + '_' + var] = i
                 except:
                     theta_dictionary[repr(dataset_name) + '_' + model_name + '_' + var] = i
 
-    for model in mc.common_models.itervalues():
-        for var, i in model.variable_sampler.iteritems():
+    for model_name, model in mc.common_models.items():
+        for var, i in model.variable_sampler.items():
             theta_dictionary[model.common_ref + '_' + var] = i
 
     return theta_dictionary
@@ -361,7 +361,7 @@ def get_model(mc, theta, bjd_dict):
         dynamical_output_x0 = mc.dynamical_model.compute(mc, theta, bjd_dict['full']['x0_plot'])
         dynamical_output = mc.dynamical_model.compute(mc, theta)
 
-    for dataset_name, dataset in mc.dataset_dict.iteritems():
+    for dataset_name, dataset in mc.dataset_dict.items():
 
         x0_plot = bjd_dict[dataset_name]['x0_plot']
         n_input = np.size(x0_plot)
@@ -494,7 +494,7 @@ def get_model(mc, theta, bjd_dict):
                 model_x0[dataset_name][logchi2_gp_model + '_std'] = np.sqrt(var)
                 model_x0[dataset_name]['complete'] += model_x0[dataset_name][logchi2_gp_model]
 
-    for dataset_name, logchi2_gp_model in delayed_lnlk_computation.iteritems():
+    for dataset_name, logchi2_gp_model in delayed_lnlk_computation.items():
         model_out[dataset_name][logchi2_gp_model] = \
             mc.models[logchi2_gp_model].sample_conditional(mc.dataset_dict[dataset_name])
 
@@ -521,7 +521,7 @@ def print_theta_bounds(i_dict, theta, bounds, skip_theta=False):
     format_string_long = '{0:10s}  {1:4d}  {2:12f}   {3:12f}  {4:12f} (15-84 p) ([{5:9f}, {6:9f}])'
     format_string_notheta = '{0:10s}  {1:4d}  ([{2:10f}, {3:10f}])'
 
-    for var, i in i_dict.iteritems():
+    for var, i in i_dict.items():
 
         if skip_theta:
             print(format_string_notheta.format(var, i, bounds[i, 0], bounds[i, 1]))
@@ -539,7 +539,7 @@ def print_dictionary(variable_values, recenter=[]):
     format_string = '{0:10s}   {1:15f} '
     format_string_long = '{0:10s}   {1:15f}   {2:15f}  {3:15f} (15-84 p)'
 
-    for var_names, var_vals in variable_values.iteritems():
+    for var_names, var_vals in variable_values.items():
         if np.size(var_vals) > 1:
             if var_names in recenter:
                 move_back = (var_vals > recenter[var_names][0] + recenter[var_names][1] / 2.)

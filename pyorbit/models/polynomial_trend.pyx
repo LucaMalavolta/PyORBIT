@@ -104,14 +104,14 @@ class PolynomialTrend(AbstractModel):
         if self.normalization_model:
             self.starting_order = 0
 
-        for i_order in xrange(self.starting_order, self.order+1):
+        for i_order in range(self.starting_order, self.order+1):
             var = 'poly_c'+repr(i_order)
             self.list_pams_common.update({var: None})
 
     def compute(self, variable_value, dataset, x0_input=None):
 
         coeff = np.zeros(self.order+1)
-        for i_order in xrange(self.starting_order, self.order+1):
+        for i_order in range(self.starting_order, self.order+1):
             var = 'poly_c'+repr(i_order)
             coeff[i_order] = variable_value[var]
 
@@ -155,7 +155,7 @@ class LocalPolynomialTrend(AbstractModel):
         if self.normalization_model:
             self.starting_order = 0
 
-        for i_order in xrange(self.starting_order, self.order+1):
+        for i_order in range(self.starting_order, self.order+1):
             var = 'poly_c'+repr(i_order)
             self.list_pams_dataset.update({var: None})
 
@@ -169,7 +169,7 @@ class LocalPolynomialTrend(AbstractModel):
     def compute(self, variable_value, dataset, x0_input=None):
 
         coeff = np.zeros(self.order+1)
-        for i_order in xrange(self.starting_order, self.order+1):
+        for i_order in range(self.starting_order, self.order+1):
             var = 'poly_c'+repr(i_order)
             coeff[i_order] = variable_value[var]
 

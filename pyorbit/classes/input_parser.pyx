@@ -102,6 +102,9 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, shutdown_
     conf_parameters = config_in['parameters']
     conf_solver = config_in['solver']
 
+    if conf_models is None:
+        conf_models = {'dummy_model': True}
+
     if reload_emcee:
         if 'emcee' in conf_solver:
             conf = conf_solver['emcee']
@@ -140,7 +143,6 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, shutdown_
 
 
         return
-
 
     for dataset_name, dataset_conf in conf_inputs.items():
 
@@ -302,7 +304,7 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, shutdown_
                     bounds_space_priors_starts_fixed(mc, mc.common_models[key_name], key_vals)
 
                     """ Automatic detection of common models without dataset-specific parameters"""
-                    for dataset in mc.dataset_dict.itervalues():
+                    for dataset_name, dataset in mc.dataset_dict.items():
                         if key_name in dataset.models and not (key_name in conf_models):
                             conf_models[key_name] = {'common': key_name}
 
@@ -328,9 +330,23 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, shutdown_
                 If the required parameters are included in the "model-specific section", 
                 the relative dictionary is created and the keywords are copied there 
             """
-            for dataset in mc.dataset_dict.itervalues():
+
+            for dataset_name, dataset in mc.dataset_dict.items():
+
+                if model_name in dataset.models and (model_name in conf_models):
+                    print('Common model: ', model_name, 'Data-specific model:', model_name)
+                    print('Using the same name for a common model and a data-specific model causes')
+                    print('the automatic assignment of the former to the latter')
+                    print()
+
+                    conf_models[model_name].update(model_conf)
+                    conf_models[model_name]['common'] = model_name
 
                 if model_name in dataset.models and not (model_name in conf_models):
+                    print('Common model: ', model_name, 'used by dataset', dataset.name_ref)
+                    print('Common model will be used as data-specific model for this dataset')
+                    print()
+
                     try:
                         conf_models[model_name] = model_conf
                         conf_models[model_name]['common'] = model_name
@@ -345,6 +361,9 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, shutdown_
         mc.dynamical_model = DynamicalIntegrator()
 
     for model_name, model_conf in conf_models.items():
+
+        if model_name == 'dummy_model':
+            continue
 
         if not isinstance(model_name, str):
             model_name = repr(model_name)
@@ -376,7 +395,7 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, shutdown_
             model_name_expanded = [model_name + '_' + pl_name for pl_name in planet_list]
             """ Let's avoid some dumb user using the planet names to name the models"""
 
-            for dataset in mc.dataset_dict.itervalues():
+            for dataset_name, dataset in mc.dataset_dict.items():
                 if model_name in dataset.models:
                     dataset.models.remove(model_name)
                     dataset.models.extend(model_name_expanded)
@@ -496,10 +515,9 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, shutdown_
                 mc.models[model_name] = \
                     define_type_to_class[model_type](model_name, None)
 
-            mc.models[model_name].model_conf = model_conf.copy()
 
             try:
-                if mc.models[model_name].model_conf['normalization_model'] is True:
+                if model_conf['normalization_model'] is True:
                     mc.models[model_name].normalization_model = True
                     mc.models[model_name].unitary_model = False
                     print('Model type: normalization')
@@ -507,7 +525,7 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, shutdown_
                 pass
 
             try:
-                if mc.models[model_name].model_conf['unitary_model'] is True:
+                if model_conf['unitary_model'] is True:
                     mc.models[model_name].unitary_model = True
                     mc.models[model_name].normalization_model = False
                     print('Model type: unitary')
@@ -515,19 +533,14 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, shutdown_
                 pass
 
             try:
-                if mc.models[model_name].model_conf['additive_model'] is True:
+                if model_conf['additive_model'] is True:
                     mc.models[model_name].unitary_model = False
                     mc.models[model_name].normalization_model = False
                     print('Model type: additive')
             except:
                 pass
 
-            #for dataset_name in list(set(model_conf) & set(mc.dataset_dict)):
-            #    bounds_space_priors_starts_fixed(mc, mc.models[model_name], model_conf[dataset_name], dataset_1=dataset_name)
-
             """ Using default boundaries if one dataset is missing"""
-            #if not mc.models[model_name].list_pams_dataset:
-            #    continue
 
             try:
                 for dataset_name, dataset in mc.dataset_dict.items():
@@ -542,6 +555,12 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, shutdown_
             except:
                 pass
                 #mc.models[model_name].setup_dataset(mc.dataset_dict[dataset_name])
+
+            try:
+                mc.models[model_name].model_conf.update(model_conf)
+            except:
+                mc.models[model_name].model_conf = model_conf.copy()
+
 
     if 'Tref' in conf_parameters:
         mc.Tref = np.asarray(conf_parameters['Tref'])

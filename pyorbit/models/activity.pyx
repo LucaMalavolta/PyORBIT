@@ -31,10 +31,8 @@ class CommonActivity(AbstractCommon):
         'P': [0.4, 100000.0],
         'K': [0.5, 2000.0],
         'f': [0.0, 2 * np.pi],
-        'cel_factor': [0.00000001, 1000000.0],
-        'cel_a': [0.00000001, 1000000.0],
-        'cel_b': [0.00000001, 1000000.0],
-        'cel_c': [0.00000001, 1000000.0]
+        'cel_B': [0.0000000001, 1.0],
+        'cel_C': [0.00001, 100000.0],
     }
 
     """ These default priors are used when the user does not define them in the yaml file
@@ -50,10 +48,8 @@ class CommonActivity(AbstractCommon):
         'P': ['Uniform', []],
         'K': ['Uniform', []],
         'f': ['Uniform', []],
-        'cel_factor': ['Uniform', []],
-        'cel_a': ['Uniform', []],
-        'cel_b': ['Uniform', []],
-        'cel_c': ['Uniform', []]
+        'cel_B': ['Uniform', []],
+        'cel_C': ['Uniform', []],
     }
 
     default_spaces = {
@@ -66,9 +62,8 @@ class CommonActivity(AbstractCommon):
         'K': 'Logarithmic',  # RV semi-amplitude, log-uniform prior
         'f': 'Linear',  # RV curve phase, log-uniform
         'cel_factor': 'Linear',
-        'cel_a': 'Logarithmic',  # celerite term A
-        'cel_b': 'Logarithmic',  # celerite term B
-        'cel_c': 'Logarithmic',  # celerite term C
+        'cel_B': 'Logarithmic',  # celerite term B
+        'cel_C': 'Logarithmic',  # celerite term C
     }
 
     default_fixed = {}

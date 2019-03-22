@@ -24,7 +24,7 @@ class ModelContainerPolyChord(ModelContainer):
 
     def polychord_call(self, theta1):
 
-        theta = [theta1[i] for i in xrange(0, self.ndim)]
+        theta = [theta1[i] for i in range(0, self.ndim)]
         phi = [0.0] * 0
         chi_out = self(theta, self.include_priors)
         if chi_out < -0.5e10:

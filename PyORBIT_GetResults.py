@@ -2,7 +2,7 @@ import pyorbit
 import argparse
 
 if __name__ == '__main__':
-    print 'This program is being run by itself'
+    # print 'This program is being run by itself'
 
     parser = argparse.ArgumentParser(prog='PyORBIT_GetResults.py', description='PyDE+emcee runner')
     parser.add_argument('sampler', type=str, nargs=1, help='sampler (emcee or polychord)')

@@ -44,7 +44,7 @@ class ModelContainerMultiNest(ModelContainer):
 
     def multinest_priors(self, cube, ndim, nparams):
 
-        for i in xrange(0, ndim):
+        for i in range(0, ndim):
             cube[i] = nested_sampling_prior_compute(cube[i], self.priors[i][0], self.priors[i][2], self.spaces[i])
 
     def multinest_call(self, theta1, ndim, nparams):
@@ -52,7 +52,7 @@ class ModelContainerMultiNest(ModelContainer):
         # (i.e. it has not been included in the model)
         # the numpy array will give back an empty list, the ctype will give back an error
         theta = np.empty(ndim)
-        for i in xrange(0, ndim):
+        for i in range(0, ndim):
             theta[i] = theta1[i]
 
         chi_out = self(theta, self.include_priors)

@@ -293,7 +293,7 @@ class CommonPlanets(AbstractCommon):
                 o_pops = np.arctan2(population[:, e_sino_list], population[:, e_coso_list], dtype=np.double)
                 # e_mean = (self[planet_name].bounds['e'][0] +
                 # self[planet_name].bounds['e'][1]) / 2.
-                for ii in xrange(0, n_pop):
+                for ii in range(0, n_pop):
                     if not self.bounds['e'][0] + 0.02 <= e_pops[ii] < \
                                     self.bounds['e'][1] - 0.02:
                         e_random = np.random.uniform(self.bounds['e'][0],
@@ -309,7 +309,7 @@ class CommonPlanets(AbstractCommon):
                 o_pops = np.arctan2(population[:, sre_sino_list], population[:, sre_coso_list], dtype=np.double)
                 # e_mean = (self[planet_name].bounds['e'][0] +
                 # self[planet_name].bounds['e'][1]) / 2.
-                for ii in xrange(0, n_pop):
+                for ii in range(0, n_pop):
                     if not self.bounds['e'][0] + 0.02 <= e_pops[ii] < \
                                     self.bounds['e'][1] - 0.02:
                         e_random = np.random.uniform(self.bounds['e'][0],

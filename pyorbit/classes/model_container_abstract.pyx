@@ -49,17 +49,18 @@ class ModelContainer(object):
     def model_setup(self):
         # First step: setting up the correct associations between models and dataset
 
-        for model_name, model in self.models.iteritems():
-
+        for model_name, model in self.models.items():
             try:
                 model.initialize_model(self, **model.model_conf)
 
                 for dataset_name in list(set(model.model_conf) & set(self.dataset_dict)):
                     model.setup_dataset(self.dataset_dict[dataset_name], **model.model_conf)
+
             except:
                 model.initialize_model(self, **{})
 
-        for dataset_name, dataset in self.dataset_dict.iteritems():
+        # TODO check if this can be dropped
+        for dataset_name, dataset in self.dataset_dict.items():
             for model_name in dataset.models:
                 self.models[model_name].common_initialization_with_dataset(dataset)
                 try:
@@ -83,7 +84,7 @@ class ModelContainer(object):
                         'priors': [],
                         }
 
-        for model in self.models.itervalues():
+        for model_name, model in self.models.items():
             if len(model.common_ref) > 0:
 
                 for common_ref in model.common_ref:
@@ -96,7 +97,7 @@ class ModelContainer(object):
             else:
                 pass
 
-        for dataset in self.dataset_dict.itervalues():
+        for dataset_name, dataset in self.dataset_dict.items():
             self.ndim, output_lists = dataset.define_variable_properties(self.ndim, output_lists, dataset.list_pams)
 
             for model_name in dataset.models:
@@ -112,7 +113,7 @@ class ModelContainer(object):
         # Second step: define the number of variables and setting up the boundaries
         # To be done only the first time ever
         self.ndata = 0
-        for dataset in self.dataset_dict.itervalues():
+        for dataset_name, dataset in self.dataset_dict.items():
             if not dataset.models:
                 continue
             self.ndata += dataset.n
@@ -122,17 +123,17 @@ class ModelContainer(object):
 
         self.starting_point = np.average(self.bounds, axis=1)
 
-        for model in self.common_models.itervalues():
+        for model_name, model in self.common_models.items():
             model.define_starting_point(self.starting_point)
 
-        for dataset_name, dataset in self.dataset_dict.iteritems():
+        for dataset_name, dataset in self.dataset_dict.items():
             dataset.define_starting_point(self.starting_point)
 
             for model in dataset.models:
                 self.models[model].define_starting_point(self.starting_point, dataset_name)
 
     def check_bounds(self, theta):
-        for ii in xrange(0, self.ndim):
+        for ii in range(0, self.ndim):
             if not (self.bounds[ii, 0] < theta[ii] < self.bounds[ii, 1]):
                 return False
 
@@ -189,12 +190,12 @@ class ModelContainer(object):
             we must do it here because all the planet are involved"""
             dynamical_output = self.dynamical_model.compute(self, theta)
 
-        for model in self.common_models.itervalues():
+        for model_name, model in self.common_models.items():
             log_priors += model.return_priors(theta)
 
         delayed_lnlk_computation = []
 
-        for dataset_name, dataset in self.dataset_dict.iteritems():
+        for dataset_name, dataset in self.dataset_dict.items():
 
             logchi2_gp_model = None
 
@@ -294,11 +295,11 @@ class ModelContainer(object):
 
         ind_list = []
 
-        for model in self.common_models.itervalues():
+        for model_name, model in self.common_models.items():
             ind_list.extend(model.special_index_recenter_bounds())
             ind_list.extend(model.index_recenter_bounds())
 
-        for dataset in self.dataset_dict.itervalues():
+        for dataset_name, dataset in self.dataset_dict.items():
             for model in dataset.models:
                 ind_list.extend(self.models[model].special_index_recenter_bounds(dataset.name_ref))
                 ind_list.extend(self.models[model].index_recenter_bounds(dataset.name_ref))
@@ -324,12 +325,10 @@ class ModelContainer(object):
                     population[:, var_ind] >= self.bounds[var_ind, 1])
                 population[fix_sel, var_ind] = pop_mean[var_ind]
 
-        for ii in xrange(0, self.ndim):
-            if np.amax(population[:, ii]) - np.amin(population[:, ii]) < 10e-7:
-                range_restricted = (self.bounds[ii, 1] - self.bounds[ii, 0]) / 100.
-                min_bound = np.maximum((pop_mean[ii] - range_restricted / 2.0), self.bounds[ii, 0])
-                max_bound = np.minimum((pop_mean[ii] + range_restricted / 2.0), self.bounds[ii, 1])
-                population[:, ii] = np.random.uniform(min_bound, max_bound, n_pop)
+        for ii in range(0, self.ndim):
+            if np.amax(population[:, ii]) - np.amin(population[:, ii]) < 10e-14:
+                average_pops = np.average(population[:, ii])
+                population[:, ii] = np.random.normal(average_pops, 10e-12, n_pop)
 
         return population
 
