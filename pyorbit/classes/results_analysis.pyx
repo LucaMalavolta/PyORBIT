@@ -1,5 +1,5 @@
 from __future__ import print_function
-from common import *
+from pyorbit.classes.common import *
 
 __all__ = ["results_resumen", "results_derived", "get_planet_variables", "get_theta_dictionary", "get_model",
            "print_theta_bounds", "print_dictionary"]

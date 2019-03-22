@@ -1,5 +1,5 @@
-from common import *
-from model_container_abstract import ModelContainer
+from pyorbit.classes.common import *
+from pyorbit.classes.model_container_abstract import ModelContainer
 
 
 class ModelContainerPolyChord(ModelContainer):
@@ -17,7 +17,7 @@ class ModelContainerPolyChord(ModelContainer):
     def polychord_priors(self, cube):
         theta = []
 
-        for i in xrange(0, len(cube)):
+        for i in range(0, len(cube)):
             theta.append(nested_sampling_prior_compute(cube[i], self.priors[i][0], self.priors[i][2], self.spaces[i]))
 
         return theta
@@ -30,3 +30,4 @@ class ModelContainerPolyChord(ModelContainer):
         if chi_out < -0.5e10:
             return -0.5e10, phi
         return chi_out, phi
+

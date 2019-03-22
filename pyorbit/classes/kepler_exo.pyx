@@ -1,6 +1,6 @@
 import numpy as np
 from scipy.optimize import fsolve
-import constants
+import pyorbit.classes.constants as constants
 
 # +
 # NAME:
@@ -24,7 +24,7 @@ def kepler_E(M_in, ec):
     ecc = np.asarray(ec, dtype=np.double)
     eccanom = np.zeros(np.size(M), dtype=np.double)
 
-    for ii in xrange(0, np.size(M)):
+    for ii in range(0, np.size(M)):
         # -np.pi < M < np.pi
         mx = M[ii]
         if mx > np.pi:

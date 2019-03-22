@@ -1,4 +1,4 @@
-from common import *
+from pyorbit.classes.common import *
 
 __all__ = ["ModelContainer"]
 

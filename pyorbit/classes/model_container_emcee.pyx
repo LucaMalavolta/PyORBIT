@@ -1,5 +1,5 @@
-from common import *
-from model_container_abstract import ModelContainer
+from pyorbit.classes.common import *
+from pyorbit.classes.model_container_abstract import ModelContainer
 
 
 class ModelContainerEmcee(ModelContainer):

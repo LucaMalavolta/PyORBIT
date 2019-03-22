@@ -4,8 +4,8 @@ import os
 import sys
 from scipy import stats
 from scipy.interpolate import splrep, splev
-import kepler_exo
-import constants
+import pyorbit.classes.kepler_exo
+import pyorbit.classes.constants
 import yaml
 import gc
 
