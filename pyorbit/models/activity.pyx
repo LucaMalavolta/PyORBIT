@@ -1,4 +1,4 @@
-from abstract_common import *
+from pyorbit.models.abstract_common import *
 
 
 class CommonActivity(AbstractCommon):

@@ -1,6 +1,6 @@
-from ..classes.common import *
-from abstract_common import *
-from abstract_model import *
+from pyorbit.classes.common import *
+from pyorbit.models.abstract_common import *
+from pyorbit.models.abstract_model import *
 
 """
 New changes:

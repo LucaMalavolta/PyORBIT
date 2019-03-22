@@ -1,4 +1,6 @@
-from abstract_common import *
+from pyorbit.classes.common import *
+from pyorbit.models.abstract_common import *
+from pyorbit.models.abstract_model import *
 
 
 class CommonPlanets(AbstractCommon):

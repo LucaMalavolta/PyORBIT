@@ -1,8 +1,9 @@
-from classes.common import *
-from classes.model_container_multinest import ModelContainerMultiNest
-from classes.input_parser import yaml_parser, pars_input
-from classes.io_subroutines import nested_sampling_save_to_cpickle, nested_sampling_load_from_cpickle, nested_sampling_create_dummy_file
-import classes.results_analysis as results_analysis
+from __future__ import print_function
+from pyorbit.classes.common import *
+from pyorbit.classes.model_container_multinest import ModelContainerMultiNest
+from pyorbit.classes.input_parser import yaml_parser, pars_input
+from pyorbit.classes.io_subroutines import nested_sampling_save_to_cpickle, nested_sampling_load_from_cpickle, nested_sampling_create_dummy_file
+import pyorbit.classes.results_analysis as results_analysis
 import os
 import sys
 import argparse
@@ -41,11 +42,11 @@ def pyorbit_multinest(config_in, input_datasets=None, return_output=None):
     os.system("mkdir -p " + output_directory + mc.nested_sampling_parameters['base_dir'] + "/clusters")
     #os.system("mkdir -p " +polychord_dir_output + "chains/clusters")
 
-    print
-    print 'Reference Time Tref: ', mc.Tref
-    print
-    print '*************************************************************'
-    print
+    print()
+    print('Reference Time Tref: ', mc.Tref)
+    print()
+    print('*************************************************************')
+    print()
 
     '''
         On Linux system (BASH):
@@ -69,8 +70,8 @@ def pyorbit_multinest(config_in, input_datasets=None, return_output=None):
     elif 'nlive_mult' in mc.nested_sampling_parameters:
         nlive = mc.ndim * mc.nested_sampling_parameters['nlive_mult']
 
-    print ' Sampling efficiency: ', mc.nested_sampling_parameters['sampling_efficiency']
-    print ' N live points:', nlive
+    print(' Sampling efficiency: ', mc.nested_sampling_parameters['sampling_efficiency'])
+    print(' N live points:', nlive)
 
     import pymultinest
 
@@ -80,7 +81,7 @@ def pyorbit_multinest(config_in, input_datasets=None, return_output=None):
         if key_name in mc.pymultinest_signature:
             mnest_kwargs[key_name] = key_value
 
-    print 'Including priors to log-likelihood calculation (must be False):', mc.include_priors
+    print('Including priors to log-likelihood calculation (must be False):', mc.include_priors)
 
     pymultinest.run(LogLikelihood= mc.multinest_call, Prior=mc.multinest_priors, n_dims=mc.ndim, **mnest_kwargs)
 
@@ -97,9 +98,9 @@ def pyorbit_multinest(config_in, input_datasets=None, return_output=None):
 
     nested_sampling_save_to_cpickle(mc, 'result')
 
-    print
-    print 'MultiNest COMPLETED'
-    print
+    print()
+    print('MultiNest COMPLETED')
+    print()
 
     #result = pymultinest.solve(LogLikelihood=mc.multinest_call, Prior=mc.multinest_priors,
     #                           n_dims=mc.ndim, outputfiles_basename=output_directory + './',

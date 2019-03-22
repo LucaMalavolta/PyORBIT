@@ -1,4 +1,4 @@
-from ..classes.common import *
+from pyorbit.classes.common import *
 
 
 class AbstractModel(object):

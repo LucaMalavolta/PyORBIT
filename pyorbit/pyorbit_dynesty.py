@@ -1,8 +1,9 @@
-from classes.common import *
-from classes.model_container_dynesty import ModelContainerDynesty
-from classes.input_parser import yaml_parser, pars_input
-from classes.io_subroutines import nested_sampling_save_to_cpickle, nested_sampling_load_from_cpickle, nested_sampling_create_dummy_file
-import classes.results_analysis as results_analysis
+from __future__ import print_function
+from pyorbit.classes.common import *
+from pyorbit.classes.model_container_dynesty import ModelContainerDynesty
+from pyorbit.classes.input_parser import yaml_parser, pars_input
+from pyorbit.classes.io_subroutines import nested_sampling_save_to_cpickle, nested_sampling_load_from_cpickle, nested_sampling_create_dummy_file
+import pyorbit.classes.results_analysis as results_analysis
 import os
 import sys
 import argparse
@@ -39,11 +40,11 @@ def pyorbit_dynesty(config_in, input_datasets=None, return_output=None):
 
     mc.output_directory = output_directory
 
-    print
-    print 'Reference Time Tref: ', mc.Tref
-    print
-    print '*************************************************************'
-    print
+    print()
+    print('Reference Time Tref: ', mc.Tref)
+    print()
+    print('*************************************************************')
+    print()
 
     import dynesty
 

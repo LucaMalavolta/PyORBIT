@@ -77,7 +77,7 @@ star_properties_list = ['limb_darkening', 'dilution_factor']
 
 
 def yaml_parser(file_conf):
-    stream = file(file_conf, 'r')
+    stream = open(file_conf, 'r')
     config_in = yaml.load(stream)
 
     if 'output' not in config_in:
@@ -125,13 +125,13 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, shutdown_
                 mc.emcee_parameters['thin'] = np.asarray(conf['thin'], dtype=np.int64)
 
         # Check if inclination has been updated
-        for model_name, model_conf in conf_common.iteritems():
+        for model_name, model_conf in conf_common.items():
             if not isinstance(model_name, str):
                 model_name = repr(model_name)
 
             if model_name == 'planets':
 
-                for planet_name, planet_conf in model_conf.iteritems():
+                for planet_name, planet_conf in model_conf.items():
 
                     if 'fixed' in planet_conf:
                         fixed_conf = planet_conf['fixed']
@@ -142,7 +142,7 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, shutdown_
         return
 
 
-    for dataset_name, dataset_conf in conf_inputs.iteritems():
+    for dataset_name, dataset_conf in conf_inputs.items():
 
         if not isinstance(dataset_name, str):
             dataset_name = repr(dataset_name)
@@ -189,14 +189,14 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, shutdown_
 
         mc.dataset_dict[dataset_name].update_bounds_spaces_priors_starts()
 
-    for model_name, model_conf in conf_common.iteritems():
+    for model_name, model_conf in conf_common.items():
 
         if not isinstance(model_name, str):
             model_name = repr(model_name)
 
         if model_name == 'planets':
 
-            for planet_name, planet_conf in model_conf.iteritems():
+            for planet_name, planet_conf in model_conf.items():
 
                 print('Adding common model of planet: ', planet_name)
 
@@ -274,7 +274,7 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, shutdown_
 
         elif model_name == 'star':
 
-            for conf_name, star_conf in model_conf.iteritems():
+            for conf_name, star_conf in model_conf.items():
                 if 'type' in star_conf:
                     model_type = star_conf['type']
                 elif 'kind' in star_conf:
@@ -296,7 +296,7 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, shutdown_
                 if len(dict_copy) == 0 :
                     dict_copy = {conf_name: model_conf[conf_name].copy()}
 
-                for key_name, key_vals in dict_copy.iteritems():
+                for key_name, key_vals in dict_copy.items():
 
                     mc.common_models[key_name] = define_common_type_to_class[model_type](key_name)
                     bounds_space_priors_starts_fixed(mc, mc.common_models[key_name], key_vals)
@@ -344,7 +344,7 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, shutdown_
     if mc.dynamical_dict:
         mc.dynamical_model = DynamicalIntegrator()
 
-    for model_name, model_conf in conf_models.iteritems():
+    for model_name, model_conf in conf_models.items():
 
         if not isinstance(model_name, str):
             model_name = repr(model_name)
@@ -473,7 +473,7 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, shutdown_
             """  CHECK THIS!!!!
             bounds_space_priors_starts_fixed(mc, mc.models[model_name], model_conf)
             """
-            for dataset_name, dataset in mc.dataset_dict.iteritems():
+            for dataset_name, dataset in mc.dataset_dict.items():
                 if planet_name in mc.dynamical_dict and model_name in dataset.models and not keplerian_approximation:
                     dataset.planet_name = planet_name
                     dataset.dynamical = True
@@ -530,7 +530,7 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, shutdown_
             #    continue
 
             try:
-                for dataset_name, dataset in mc.dataset_dict.iteritems():
+                for dataset_name, dataset in mc.dataset_dict.items():
 
                     if model_name in dataset.models:
 

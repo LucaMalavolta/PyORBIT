@@ -1,6 +1,6 @@
-from ..classes.common import *
-from abstract_common import *
-from abstract_model import *
+from pyorbit.classes.common import *
+from pyorbit.models.abstract_common import *
+from pyorbit.models.abstract_model import *
 
 class GaussianProcess_QuasiPeriodicActivity_Shared(AbstractModel):
     ''' Three parameters out of four are the same for all the datasets, since they are related to
@@ -111,8 +111,8 @@ class GaussianProcess_QuasiPeriodicActivity_Shared(AbstractModel):
         """
         if self.use_HODLR:
             self.gp = george.GP(kernel, solver=george.HODLRSolver, mean=0.00)
-            print ' *** USING HODLR *** '
-            print
+            print(' *** USING HODLR *** ')
+            print()
         else:
             self.gp = george.GP(kernel)
 

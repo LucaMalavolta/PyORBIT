@@ -1,6 +1,6 @@
-from ..classes.common import *
-from abstract_common import *
-from abstract_model import *
+from pyorbit.classes.common import *
+from pyorbit.models.abstract_common import *
+from pyorbit.models.abstract_model import *
 
 
 class GaussianProcess_QuasiPeriodicActivity(AbstractModel):
@@ -112,8 +112,8 @@ class GaussianProcess_QuasiPeriodicActivity(AbstractModel):
 
         if self.use_HODLR:
             self.gp[dataset.name_ref] = george.GP(kernel, solver=george.HODLRSolver, mean=0.00)
-            print ' *** USING HODLR *** '
-            print
+            print(' *** USING HODLR *** ')
+            print()
 
         else:
             self.gp[dataset.name_ref] = george.GP(kernel)

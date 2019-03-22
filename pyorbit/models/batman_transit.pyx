@@ -1,5 +1,6 @@
-from ..classes.common import *
-from abstract_model import *
+from pyorbit.classes.common import *
+import pyorbit.classes.constants as constants
+from pyorbit.models.abstract_model import *
 
 
 class Batman_Transit(AbstractModel):

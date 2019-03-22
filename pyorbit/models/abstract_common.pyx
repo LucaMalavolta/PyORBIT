@@ -1,4 +1,4 @@
-from ..classes.common import *
+from pyorbit.classes.common import *
 
 
 class AbstractCommon(object):
@@ -110,8 +110,6 @@ class AbstractCommon(object):
     def define_starting_point(self, starting_point):
 
         for var_sampler in list(set(self.starts) and set(self.variable_sampler)):
-
-            print var_sampler
 
             if self.define_special_starting_point(starting_point, var_sampler): continue
 

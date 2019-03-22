@@ -1,6 +1,5 @@
-from abstract_common import *
-from abstract_model import *
-
+from pyorbit.models.abstract_common import *
+from pyorbit.models.abstract_model import *
 
 class CommonOffset(AbstractCommon):
     ''' Common offset for datasets in different files

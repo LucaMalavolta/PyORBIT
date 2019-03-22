@@ -1,11 +1,11 @@
 from __future__ import print_function
-from classes.common import *
-from classes.model_container_multinest import ModelContainerMultiNest
-from classes.model_container_polychord import ModelContainerPolyChord
-from classes.model_container_emcee import ModelContainerEmcee
+from pyorbit.classes.common import *
+from pyorbit.classes.model_container_multinest import ModelContainerMultiNest
+from pyorbit.classes.model_container_polychord import ModelContainerPolyChord
+from pyorbit.classes.model_container_emcee import ModelContainerEmcee
 
-from classes.input_parser import yaml_parser, pars_input
-from classes.io_subroutines import *
+from pyorbit.classes.input_parser import yaml_parser, pars_input
+from pyorbit.classes.io_subroutines import *
 import numpy as np
 import os
 import matplotlib as mpl
@@ -14,10 +14,10 @@ import sys
 mpl.use('Agg')
 from matplotlib import pyplot as plt
 import corner
-import classes.constants as constants
-import classes.kepler_exo as kepler_exo
-import classes.common as common
-import classes.results_analysis as results_analysis
+import pyorbit.classes.constants as constants
+import pyorbit.classes.kepler_exo as kepler_exo
+import pyorbit.classes.common as common
+import pyorbit.classes.results_analysis as results_analysis
 import h5py
 import csv
 import re

@@ -1,8 +1,9 @@
-from classes.common import *
-from classes.model_container_polychord import ModelContainerPolyChord
-from classes.input_parser import yaml_parser, pars_input
-from classes.io_subroutines import nested_sampling_save_to_cpickle, nested_sampling_load_from_cpickle, nested_sampling_create_dummy_file
-import classes.results_analysis as results_analysis
+from __future__ import print_function
+from pyorbit.classes.common import *
+from pyorbit.classes.model_container_polychord import ModelContainerPolyChord
+from pyorbit.classes.input_parser import yaml_parser, pars_input
+from pyorbit.classes.io_subroutines import nested_sampling_save_to_cpickle, nested_sampling_load_from_cpickle, nested_sampling_create_dummy_file
+import pyorbit.classes.results_analysis as results_analysis
 import os
 import sys
 import argparse
@@ -44,11 +45,11 @@ def pyorbit_polychord(config_in, input_datasets=None, return_output=None):
     #os.system("mkdir -p " + output_directory + "/clusters")
     #os.system("mkdir -p " +output_directory + "chains/clusters")
 
-    print
-    print 'Reference Time Tref: ', mc.Tref
-    print
-    print '*************************************************************'
-    print
+    print()
+    print('Reference Time Tref: ', mc.Tref)
+    print()
+    print('*************************************************************')
+    print()
 
 
     settings = PolyChordSettings(nDims=mc.ndim, nDerived=0)
@@ -79,9 +80,9 @@ def pyorbit_polychord(config_in, input_datasets=None, return_output=None):
 
     nested_sampling_save_to_cpickle(mc)
 
-    print
-    print 'PolyChord COMPLETED'
-    print
+    print()
+    print('PolyChord COMPLETED')
+    print()
 
     """ A dummy file is created to let the cpulimit script to proceed with the next step"""
     nested_sampling_create_dummy_file(mc)

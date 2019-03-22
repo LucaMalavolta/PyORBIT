@@ -1,5 +1,8 @@
 from __future__ import print_function
 from pyorbit.classes.common import *
+import pyorbit.classes.constants as constants
+import pyorbit.classes.kepler_exo as kepler_exo
+
 
 __all__ = ["results_resumen", "results_derived", "get_planet_variables", "get_theta_dictionary", "get_model",
            "print_theta_bounds", "print_dictionary"]

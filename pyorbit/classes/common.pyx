@@ -4,8 +4,7 @@ import os
 import sys
 from scipy import stats
 from scipy.interpolate import splrep, splev
-import pyorbit.classes.kepler_exo
-import pyorbit.classes.constants
+import pyorbit.classes.constants as constants
 import yaml
 import gc
 
@@ -14,29 +13,29 @@ if 'celerite' not in sys.modules:
     try:
         import dynesty
     except:
-        from dummy import dynesty
-        print('WARNING! Imported dummy dynesty, models relying on this package will not work')
+        from pyorbit.classes.dummy import dynesty
+        print('WARNING! Imported pyorbit.classes.dummy dynesty, models relying on this package will not work')
 
     try:
         from pyde.de import DiffEvol
     except:
-        from dummy import DiffEvol
-        print('WARNING! Imported dummy pyde, nothing will work')
+        from pyorbit.classes.dummy import DiffEvol
+        print('WARNING! Imported pyorbit.classes.dummy pyde, nothing will work')
 
     try:
         import celerite
         import autograd.numpy as np
     except:
         import numpy as np
-        from dummy import Celerite_QuasiPeriodicActivity
-        print('WARNING! Imported dummy celerite, models relying on this package will not work')
+        from pyorbit.classes.dummy import Celerite_QuasiPeriodicActivity
+        print('WARNING! Imported pyorbit.classes.dummy celerite, models relying on this package will not work')
     
     try:
         import PyPolyChord
         from PyPolyChord.settings import PolyChordSettings
     except:
-        from dummy import PyPolyChord
-        print('WARNING! Imported dummy PyPolyChord, models relying on this package will not work')
+        from pyorbit.classes.dummy import PyPolyChord
+        print('WARNING! Imported pyorbit.classes.dummy PyPolyChord, models relying on this package will not work')
 
     try:
         if os.path.isdir('/Users/malavolta/Astro/CODE/'):
@@ -45,26 +44,26 @@ if 'celerite' not in sys.modules:
             sys.path.insert(0, '/home/malavolta/CODE/trades/pytrades/')
         from pytrades_lib import pytrades
     except:
-        from dummy import pytrades
-        print('WARNING! Imported dummy TRADES, models relying on this package will not work')
+        from pyorbit.classes.dummy import pytrades
+        print('WARNING! Imported pyorbit.classes.dummy TRADES, models relying on this package will not work')
 
     try:
         import ttvfast
     except:
-        from dummy import ttvfast
-        print('WARNING! Imported dummy TTVFAST, models relying on this package will not work')
+        from pyorbit.classes.dummy import ttvfast
+        print('WARNING! Imported pyorbit.classes.dummy TTVFAST, models relying on this package will not work')
 
     try:
         import george
     except:
-        from dummy import george
-        print('WARNING! Imported dummy george, models relying on this package will not work')
+        from pyorbit.classes.dummy import george
+        print('WARNING! Imported pyorbit.classes.dummy george, models relying on this package will not work')
 
     try:
         import batman
     except:
-        from dummy import batman
-        print('WARNING! Imported dummy batman, models relying on this package will not work')
+        from pyorbit.classes.dummy import batman
+        print('WARNING! Imported pyorbit.classes.dummy batman, models relying on this package will not work')
 
 def get_var_log(var, fix, i):
     if len(np.shape(var)) == 1:

@@ -1,5 +1,8 @@
-from ..classes.common import *
-from abstract_model import *
+from __future__ import print_function
+from pyorbit.classes.common import *
+from pyorbit.models.abstract_common import *
+from pyorbit.models.abstract_model import *
+import pyorbit.classes.kepler_exo as kepler_exo
 
 """
 New changes:
@@ -392,8 +395,8 @@ class DynamicalIntegrator:
         """ When the object is copied, data on RV and other properties are somehow lost
             but the object is still initialized - somehow """
 
-        print 'TRADES parameters', self.dynamical_set['trades']
-        print
+        print('TRADES parameters', self.dynamical_set['trades'])
+        print()
 
         return
 

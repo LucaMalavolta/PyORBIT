@@ -1,5 +1,5 @@
-from abstract_common import *
-#from abstract_model import *
+from pyorbit.models.abstract_common import *
+from pyorbit.models.abstract_model import *
 
 class LimbDarkening_1Pam(AbstractCommon):
     ''' This class must be created for each planet in the system

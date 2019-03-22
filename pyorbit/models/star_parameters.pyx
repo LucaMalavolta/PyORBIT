@@ -1,5 +1,7 @@
-from ..classes.common import *
-from abstract_common import *
+from pyorbit.classes.common import *
+from pyorbit.models.abstract_common import *
+from pyorbit.models.abstract_model import *
+
 
 class CommonStarParameters(AbstractCommon):
     ''' This class must be created for each planet in the system

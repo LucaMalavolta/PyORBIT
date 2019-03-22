@@ -1,5 +1,6 @@
-from abstract_model import *
 import numpy.polynomial.polynomial
+from pyorbit.models.abstract_common import *
+from pyorbit.models.abstract_model import *
 
 class Correlation_SingleDataset(AbstractModel):
 

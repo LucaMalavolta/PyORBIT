@@ -1,5 +1,5 @@
-from ..classes.common import *
-from abstract_common import AbstractCommon
+from pyorbit.classes.common import *
+from pyorbit.models.abstract_common import *
 
 
 kind_definition = {
