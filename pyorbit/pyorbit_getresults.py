@@ -428,7 +428,7 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
 
     if plot_dictionary['plot_models'] or plot_dictionary['write_models']:
 
-        print(' Writing all the files ')
+        print(' Computing the models for plot/data writing ')
 
         bjd_plot = {
             'full': {
@@ -448,6 +448,8 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
         #     variable_MAP = common_model.convert(chain_MAP)
 
         kinds = {}
+
+
         for dataset_name, dataset in mc.dataset_dict.items():
             if dataset.kind in kinds.keys():
                 kinds[dataset.kind].extend([dataset_name])
@@ -494,6 +496,7 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
         bjd_plot['MAP_model_out'], bjd_plot['MAP_model_x'] = results_analysis.get_model(mc, chain_MAP, bjd_plot)
 
         if plot_dictionary['plot_models']:
+            print(' Writing the plots ')
 
             for kind_name, kind in kinds.items():
                 for dataset_name in kind:
@@ -512,7 +515,11 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
                     plt.close(fig)
 
         if plot_dictionary['write_models']:
+
             for prepend_keyword in ['', 'MAP_']:
+
+                print(' Writing the ', prepend_keyword, 'data files ')
+
                 plot_out_keyword = prepend_keyword + 'model_out'
                 plot_x_keyword = prepend_keyword + 'model_x'
                 file_keyword = prepend_keyword + 'model_files'
@@ -559,7 +566,7 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
                                         tc_folded_plot = (bjd_plot[dataset_name]['x_plot'] - mc.Tref) % \
                                                          planet_vars[common_ref]['P']
 
-                        fileout.write('descriptor BJD BJD0 pha val,+- sys mod full val_compare,+- res,+- \n')
+                        fileout.write('descriptor BJD Tc_folded pha val,+- sys mod full val_compare,+- res,+- \n')
 
                         try:
                             len(bjd_plot[plot_out_keyword][dataset_name][model_name])
@@ -585,7 +592,7 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
                         fileout = open(dir_models + dataset_name + '_' + model_name + '_full.dat', 'w')
 
                         if model_name + '_std' in bjd_plot[plot_x_keyword][dataset_name]:
-                            fileout.write('descriptor BJD BJD0 mod,+- \n')
+                            fileout.write('descriptor BJD Tc_folded phase mod,+- \n')
                             for x, tfc, pha, mod, std in zip(
                                     bjd_plot[dataset_name]['x_plot'],
                                     tc_folded_plot,
@@ -595,12 +602,31 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
                                 fileout.write('{0:f} {1:f} {2:f} {3:f} {4:f} \n'.format(x, tcf, pha, mod, std))
                             fileout.close()
                         else:
-                            fileout.write('descriptor BJD BJD0 mod \n')
+                            fileout.write('descriptor BJD Tc_folded phase mod \n')
                             for x, tcf, pha, mod in zip(bjd_plot[dataset_name]['x_plot'],
                                                         tc_folded_plot,
                                                         phase_plot,
                                                         bjd_plot[plot_x_keyword][dataset_name][model_name]):
                                 fileout.write('{0:f} {1:f} {2:f} {3:f}\n'.format(x, tcf, pha, mod))
+                            fileout.close()
+
+                        if getattr(mc.models[model_name], 'model_class', False) == 'transit':
+                            """
+                            Exceptional model writing to deal with under-sampled lightcurves, i.e. when folding the 
+                            the light curve from the model file is not good enough. Something similar is performed later
+                            with the planetary RVs, but here we must keep into account the differences  between datasets
+                            due to limb darkening, exposure times, etc.
+                            """
+                            fileout = open(dir_models + dataset_name + '_' + model_name + '_transit.dat', 'w')
+
+                            x_range = np.arange(-planet_vars[model_name]['P']/2., planet_vars[model_name]['P']/2., 0.01)
+                            delta_T = planet_vars[model_name]['Tc']-dataset.Tref
+
+                            y_plot  = mc.models[model_name].compute(planet_vars[model_name], dataset, x_range+delta_T)
+
+                            fileout.write('descriptor Tc_folded  mod \n')
+                            for x, mod in zip(x_range, y_plot):
+                                fileout.write('{0:f} {1:f} \n'.format(x, mod))
                             fileout.close()
 
                     fileout = open(dir_models + dataset_name + '_full.dat', 'w')
@@ -639,6 +665,8 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
                         fileout.close()
                     except:
                         pass
+
+
 
 
 

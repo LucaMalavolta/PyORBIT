@@ -77,5 +77,7 @@ if __name__ == '__main__':
 
     config_in = pyorbit.yaml_parser(file_conf)
 
+    print(config_in)
+    quit()
     pyorbit.pyorbit_getresults(config_in, sampler, plot_dictionary)
     #pyorbit.pyorbit_getresults_getdist(config_in, sampler, plot_dictionary)
