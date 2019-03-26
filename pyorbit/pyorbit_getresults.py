@@ -588,13 +588,15 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
                             fileout.write('descriptor BJD BJD0 mod,+- \n')
                             for x, tfc, pha, mod, std in zip(
                                     bjd_plot[dataset_name]['x_plot'],
+                                    tc_folded_plot,
+                                    phase_plot,
                                     bjd_plot[plot_x_keyword][dataset_name][model_name],
                                     bjd_plot[plot_x_keyword][dataset_name][model_name + '_std']):
-                                fileout.write('{0:f} {1:f} {2:f} {3:f} \n'.format(x, x - mc.Tref, mod, std))
+                                fileout.write('{0:f} {1:f} {2:f} {3:f} {4:f} \n'.format(x, tcf, pha, mod, std))
                             fileout.close()
                         else:
                             fileout.write('descriptor BJD BJD0 mod \n')
-                            for x, tcf, pha, mod in zip(bjd_plot[dataset_name]['x0_plot'],
+                            for x, tcf, pha, mod in zip(bjd_plot[dataset_name]['x_plot'],
                                                         tc_folded_plot,
                                                         phase_plot,
                                                         bjd_plot[plot_x_keyword][dataset_name][model_name]):
@@ -602,7 +604,7 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
                             fileout.close()
 
                     fileout = open(dir_models + dataset_name + '_full.dat', 'w')
-                    fileout.write('descriptor BJD BJD0 mod \n')
+                    fileout.write('descriptor BJD mod \n')
                     for x, mod in zip(bjd_plot[dataset_name]['x_plot'],
                                                 bjd_plot[plot_x_keyword][dataset_name]['complete']):
                         fileout.write('{0:f} {1:f} \n'.format(x, mod))
