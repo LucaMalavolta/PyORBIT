@@ -10,6 +10,7 @@ import numpy as np
 import os
 import matplotlib as mpl
 import sys
+
 mpl.use('Agg')
 from matplotlib import pyplot as plt
 import corner
@@ -24,7 +25,6 @@ __all__ = ["pyorbit_getresults"]
 
 
 def pyorbit_getresults(config_in, sampler, plot_dictionary):
-
     try:
         use_tex = config_in['parameters']['use_tex']
     except:
@@ -33,13 +33,13 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
     if plot_dictionary['use_getdist']:
         from getdist import plots, MCSamples
 
-    #plt.rc('font', **{'family': 'serif', 'serif': ['Computer Modern Roman']})
+    # plt.rc('font', **{'family': 'serif', 'serif': ['Computer Modern Roman']})
     plt.rcParams["font.family"] = "Times New Roman"
     plt.rc('text', usetex=use_tex)
 
     sample_keyword = {
         'multinest': ['multinest', 'MultiNest', 'multi'],
-        'polychord':['polychord', 'PolyChord', 'polychrod', 'poly'],
+        'polychord': ['polychord', 'PolyChord', 'polychrod', 'poly'],
         'emcee': ['emcee', 'MCMC', 'Emcee']
     }
 
@@ -72,7 +72,7 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
         flat_chain = emcee_flatchain(sampler_chain, nburnin, nthin)
         flat_lnprob = emcee_flatlnprob(sampler_lnprobability, nburnin, nthin, emcee_version)
 
-        flat_BiC = -2*flat_lnprob + mc.ndim * np.log(mc.ndata)
+        flat_BiC = -2 * flat_lnprob + mc.ndim * np.log(mc.ndata)
 
         lnprob_med = common.compute_value_sigma(flat_lnprob)
         chain_med = common.compute_value_sigma(flat_chain)
@@ -90,7 +90,6 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
         print()
 
     if sampler in sample_keyword['multinest']:
-
         plot_dictionary['lnprob_chain'] = False
         plot_dictionary['chains'] = False
         plot_dictionary['traces'] = False
@@ -127,7 +126,6 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
         print()
 
     if sampler in sample_keyword['polychord']:
-
         plot_dictionary['lnprob_chain'] = False
         plot_dictionary['chains'] = False
         plot_dictionary['traces'] = False
@@ -138,7 +136,7 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
 
         mc = nested_sampling_load_from_cpickle(dir_input)
 
-        #pars_input(config_in, mc)
+        # pars_input(config_in, mc)
 
         mc.model_setup()
         mc.initialize_logchi2()
@@ -150,7 +148,7 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
         data_in = np.genfromtxt(dir_input + 'pyorbit_equal_weights.txt')
         flat_lnprob = data_in[:, 1]
         flat_chain = data_in[:, 2:]
-        #nsample = np.size(flat_lnprob)
+        # nsample = np.size(flat_lnprob)
 
         n_samplings, n_pams = np.shape(flat_chain)
 
@@ -172,7 +170,7 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
     MAP_log_priors, MAP_log_likelihood = mc.log_priors_likelihood(chain_MAP)
     BIC = -2.0 * MAP_log_likelihood + np.log(mc.ndata) * mc.ndim
     AIC = -2.0 * MAP_log_likelihood + 2.0 * mc.ndim
-    AICc = AIC +  (2.0 + 2.0*mc.ndim) * mc.ndim / (mc.ndata - mc.ndim - 1.0)
+    AICc = AIC + (2.0 + 2.0 * mc.ndim) * mc.ndim / (mc.ndata - mc.ndim - 1.0)
     # AICc for small sample
 
     print()
@@ -185,7 +183,7 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
     MAP_log_posterior = MAP_log_likelihood + MAP_log_priors
     BIC = -2.0 * MAP_log_posterior + np.log(mc.ndata) * mc.ndim
     AIC = -2.0 * MAP_log_posterior + 2.0 * mc.ndim
-    AICc = AIC +  (2.0 + 2.0*mc.ndim) * mc.ndim / (mc.ndata - mc.ndim - 1.0)
+    AICc = AIC + (2.0 + 2.0 * mc.ndim) * mc.ndim / (mc.ndata - mc.ndim - 1.0)
 
     print()
     print(' MAP BIC  (using posterior)  = {}'.format(BIC))
@@ -228,7 +226,7 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
             plt.xlabel('$\ln \mathcal{L}$')
             plt.plot(sampler_lnprobability.T, '-', alpha=0.5)
             plt.axhline(lnprob_med[0])
-            plt.axvline(nburnin/nthin, c='r')
+            plt.axvline(nburnin / nthin, c='r')
             plt.savefig(dir_output + 'LNprob_chain.png', bbox_inches='tight', dpi=300)
             plt.close(fig)
         else:
@@ -236,7 +234,7 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
             plt.xlabel('$\ln \mathcal{L}$')
             plt.plot(sampler_lnprobability, '-', alpha=0.5)
             plt.axhline(lnprob_med[0])
-            plt.axvline(nburnin/nthin, c='r')
+            plt.axvline(nburnin / nthin, c='r')
             plt.savefig(dir_output + 'LNprob_chain.png', bbox_inches='tight', dpi=300)
             plt.close(fig)
 
@@ -247,16 +245,17 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
     if plot_dictionary['full_correlation']:
 
         corner_plot = {
-            'samples': np.zeros([np.size(flat_chain, axis=0), np.size(flat_chain, axis=1)+1]),
+            'samples': np.zeros([np.size(flat_chain, axis=0), np.size(flat_chain, axis=1) + 1]),
             'labels': [],
             'truths': []
         }
 
+        i_corner = 0
         for var, var_dict in theta_dictionary.items():
-            corner_plot['samples'][:, var_dict] = flat_chain[:, var_dict]
+            corner_plot['samples'][:, i_corner] = flat_chain[:, var_dict]
             corner_plot['labels'].append(re.sub('_', '-', var))
             corner_plot['truths'].append(chain_med[var_dict, 0])
-
+            i_corner += 1
 
         corner_plot['samples'][:, -1] = flat_lnprob[:]
         corner_plot['labels'].append('ln-prob')
@@ -264,25 +263,29 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
 
         if plot_dictionary['use_getdist']:
             print(' Plotting full_correlation plot with GetDist')
-            print(' Ignore the no burn in error warning from getdist, since burn in has been already removed from the chains')
+            print()
+            print(' Ignore the no burn in error warning from getdist')
+            print(' since burn in has been already removed from the chains')
 
             plt.rc('text', usetex=False)
 
-            samples = MCSamples(samples=corner_plot['samples'], names=corner_plot['labels'], labels=corner_plot['labels'])
+            samples = MCSamples(samples=corner_plot['samples'], names=corner_plot['labels'],
+                                labels=corner_plot['labels'])
 
             g = plots.getSubplotPlotter()
             g.settings.num_plot_contours = 6
             g.triangle_plot(samples, filled=True)
             g.export(dir_output + "all_internal_variables_corner_getdist.pdf")
 
+            print()
+
         else:
             # plotting mega-corner plot
             print('Plotting full_correlation plot with Corner')
             plt.rc('text', usetex=False)
 
-            fig = corner.corner(np.asarray(corner_plot['samples']).T,
-                                labels=corner_plot['labels'], truths=corner_plot['truths'])
-            fig.savefig(dir_output + "all_internal_variables_corner_test.pdf", bbox_inches='tight', dpi=300)
+            fig = corner.corner(corner_plot['samples'], labels=corner_plot['labels'], truths=corner_plot['truths'])
+            fig.savefig(dir_output + "all_internal_variables_corner_dfm.pdf", bbox_inches='tight', dpi=300)
             plt.close(fig)
             plt.rc('text', usetex=use_tex)
 
@@ -299,7 +302,7 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
             file_name = dir_output + 'chains/' + repr(ii) + '_' + theta_name + '.png'
             fig = plt.figure(figsize=(12, 12))
             plt.plot(sampler_chain[:, :, ii].T, '-', alpha=0.5)
-            plt.axvline(nburnin/nthin, c='r')
+            plt.axvline(nburnin / nthin, c='r')
             plt.savefig(file_name, bbox_inches='tight', dpi=300)
             plt.close(fig)
 
@@ -317,7 +320,7 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
         """
         os.system('mkdir -p ' + dir_output + 'gr_traces')
 
-        step_sampling = np.arange(nburnin/nthin, nsteps/nthin, 1, dtype=int)
+        step_sampling = np.arange(nburnin / nthin, nsteps / nthin, 1, dtype=int)
 
         for theta_name, th in theta_dictionary.items():
             rhat = np.array([GelmanRubin_v2(sampler_chain[:, :steps, th]) for steps in step_sampling])
@@ -360,7 +363,7 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
             """
             for var in variable_values.keys():
                 if np.size(variable_values[var]) == 1:
-                        variable_values[var] = variable_values[var] * np.ones(n_samplings)
+                    variable_values[var] = variable_values[var] * np.ones(n_samplings)
                 else:
                     corner_plot['var_list'].append(var)
 
@@ -375,8 +378,8 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
             """ Check if the semi-amplitude K is among the parameters that have been fitted. 
                 If so, it computes the correpsing planetary mass with uncertainty """
 
-
-            fig = corner.corner(np.asarray(corner_plot['samples']).T, labels=corner_plot['labels'], truths=corner_plot['truths'])
+            fig = corner.corner(np.asarray(corner_plot['samples']).T, labels=corner_plot['labels'],
+                                truths=corner_plot['truths'])
             fig.savefig(dir_output + common_name + "_corners.pdf", bbox_inches='tight', dpi=300)
             plt.close(fig)
 
@@ -417,7 +420,7 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
                 fig.savefig(dir_output + dataset_name + '_' + model_name + "_corners.pdf", bbox_inches='tight', dpi=300)
                 plt.close(fig)
 
-                print('     Dataset: ', dataset_name , '    model: ', model_name, ' corner plot  done ')
+                print('     Dataset: ', dataset_name, '    model: ', model_name, ' corner plot  done ')
 
         print()
         print('****************************************************************************************************')
@@ -444,7 +447,6 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
         #     chain_med[:, 0]
         #     variable_MAP = common_model.convert(chain_MAP)
 
-
         kinds = {}
         for dataset_name, dataset in mc.dataset_dict.items():
             if dataset.kind in kinds.keys():
@@ -453,63 +455,66 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
                 kinds[dataset.kind] = [dataset_name]
 
             bjd_plot[dataset_name] = {
-                'start': np.amin(dataset.x0),
-                'end': np.amax(dataset.x0),
-                'range': np.amax(dataset.x0)-np.amin(dataset.x0),
+                'start': np.amin(dataset.x),
+                'end': np.amax(dataset.x),
+                'range': np.amax(dataset.x) - np.amin(dataset.x),
             }
 
-            if bjd_plot[dataset_name]['range'] < 0.1 : bjd_plot[dataset_name]['range'] = 0.1
+            if bjd_plot[dataset_name]['range'] < 0.1: bjd_plot[dataset_name]['range'] = 0.1
 
             bjd_plot[dataset_name]['start'] -= bjd_plot[dataset_name]['range'] * 0.10
             bjd_plot[dataset_name]['end'] += bjd_plot[dataset_name]['range'] * 0.10
 
             if dataset.kind == 'Phot':
-                step_size = np.min(bjd_plot[dataset_name]['range']/dataset.n/20.)
+                step_size = np.min(bjd_plot[dataset_name]['range'] / dataset.n / 20.)
             else:
                 step_size = 0.10
 
-            bjd_plot[dataset_name]['x0_plot'] = \
+            bjd_plot[dataset_name]['x_plot'] = \
                 np.arange(bjd_plot[dataset_name]['start'], bjd_plot[dataset_name]['end'], step_size)
 
             if bjd_plot['full']['range']:
-                bjd_plot['full']['start'] = min(bjd_plot['full']['start'], np.amin(dataset.x0))
-                bjd_plot['full']['end'] = max(bjd_plot['full']['end'], np.amax(dataset.x0))
-                bjd_plot['full']['range'] = bjd_plot['full']['end']-bjd_plot['full']['start']
+                bjd_plot['full']['start'] = min(bjd_plot['full']['start'], np.amin(dataset.x))
+                bjd_plot['full']['end'] = max(bjd_plot['full']['end'], np.amax(dataset.x))
+                bjd_plot['full']['range'] = bjd_plot['full']['end'] - bjd_plot['full']['start']
             else:
-                bjd_plot['full']['start'] = np.amin(dataset.x0)
-                bjd_plot['full']['end'] = np.amax(dataset.x0)
-                bjd_plot['full']['range'] = bjd_plot['full']['end']-bjd_plot['full']['start']
+                bjd_plot['full']['start'] = np.amin(dataset.x)
+                bjd_plot['full']['end'] = np.amax(dataset.x)
+                bjd_plot['full']['range'] = bjd_plot['full']['end'] - bjd_plot['full']['start']
 
-        bjd_plot['full']['start'] -= bjd_plot['full']['range']*0.10
-        bjd_plot['full']['end'] += bjd_plot['full']['range']*0.10
-        bjd_plot['full']['x0_plot'] = np.arange(bjd_plot['full']['start'], bjd_plot['full']['end'],0.1)
+        bjd_plot['full']['start'] -= bjd_plot['full']['range'] * 0.10
+        bjd_plot['full']['end'] += bjd_plot['full']['range'] * 0.10
+        bjd_plot['full']['x_plot'] = np.arange(bjd_plot['full']['start'], bjd_plot['full']['end'], 0.1)
 
         for dataset_name, dataset in mc.dataset_dict.items():
-            if dataset.kind =='RV':
+            if dataset.kind == 'RV':
                 bjd_plot[dataset_name] = bjd_plot['full']
 
-        bjd_plot['model_out'], bjd_plot['model_x0'] = results_analysis.get_model(mc, chain_med[:, 0], bjd_plot)
-        bjd_plot['MAP_model_out'], bjd_plot['MAP_model_x0'] = results_analysis.get_model(mc, chain_MAP, bjd_plot)
+        bjd_plot['model_out'], bjd_plot['model_x'] = results_analysis.get_model(mc, chain_med[:, 0], bjd_plot)
+        bjd_plot['MAP_model_out'], bjd_plot['MAP_model_x'] = results_analysis.get_model(mc, chain_MAP, bjd_plot)
 
         if plot_dictionary['plot_models']:
 
             for kind_name, kind in kinds.items():
                 for dataset_name in kind:
                     fig = plt.figure(figsize=(12, 12))
-                    plt.errorbar(mc.dataset_dict[dataset_name].x0,
+                    plt.errorbar(mc.dataset_dict[dataset_name].x,
                                  mc.dataset_dict[dataset_name].y - bjd_plot['model_out'][dataset_name]['systematics'],
-                                 yerr=mc.dataset_dict[dataset_name]. e,
+                                 yerr=mc.dataset_dict[dataset_name].e,
                                  fmt='o', zorder=2, alpha=0.5)
-                    plt.plot(bjd_plot[dataset_name]['x0_plot'], bjd_plot['model_x0'][dataset_name]['complete'], zorder=4, c='b')
-                    plt.plot(bjd_plot[dataset_name]['x0_plot'], bjd_plot['MAP_model_x0'][dataset_name]['complete'], zorder=3, c='r')
+                    plt.plot(bjd_plot[dataset_name]['x_plot'] + mc.Tref, bjd_plot['model_x'][dataset_name]['complete'],
+                             zorder=4, c='b')
+                    plt.plot(bjd_plot[dataset_name]['x_plot'] + mc.Tref,
+                             bjd_plot['MAP_model_x'][dataset_name]['complete'], zorder=3, c='r')
 
-                    plt.savefig(dir_output + 'model_' + kind_name + '_' + dataset_name + '.png', bbox_inches='tight', dpi=300)
+                    plt.savefig(dir_output + 'model_' + kind_name + '_' + dataset_name + '.png', bbox_inches='tight',
+                                dpi=300)
                     plt.close(fig)
 
         if plot_dictionary['write_models']:
             for prepend_keyword in ['', 'MAP_']:
                 plot_out_keyword = prepend_keyword + 'model_out'
-                plot_x0_keyword = prepend_keyword + 'model_x0'
+                plot_x_keyword = prepend_keyword + 'model_x'
                 file_keyword = prepend_keyword + 'model_files'
 
                 if prepend_keyword == '':
@@ -530,8 +535,30 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
                         phase = dataset.x0 * 0.00
                         for common_ref in mc.models[model_name].common_ref:
                             if common_ref in planet_vars:
-                                phase = (dataset.x0 / planet_vars[common_ref]['P']) % 1
-                                continue
+                                if 'P' in planet_vars[common_ref]:
+                                    phase = (dataset.x0 / planet_vars[common_ref]['P']) % 1
+                                    phase_plot = ((bjd_plot[dataset_name]['x_plot'] - mc.Tref) /
+                                                  planet_vars[common_ref]['P']) % 1
+                                    if 'Tc' in planet_vars[common_ref]:
+                                        tc_folded = (dataset.x - planet_vars[common_ref]['Tc']
+                                                     + planet_vars[common_ref]['P'] / 2.) \
+                                                    % planet_vars[common_ref]['P'] \
+                                                    - planet_vars[common_ref]['P'] / 2.
+                                        tc_folded_plot = (bjd_plot[dataset_name]['x_plot'] - planet_vars[common_ref][
+                                            'Tc']
+                                                          + planet_vars[common_ref]['P'] / 2.) \
+                                                         % planet_vars[common_ref]['P'] \
+                                                         - planet_vars[common_ref]['P'] / 2.
+                                    else:
+                                        tc_folded = dataset.x0 % planet_vars[common_ref]['P']
+                                        tc_folded_plot = (bjd_plot[dataset_name]['x_plot'] - mc.Tref) % \
+                                                         planet_vars[common_ref]['P']
+
+                                else:
+                                    phase = np.zeros(dataset.n)
+                                    tc_folded = np.zeros(dataset.n)
+                                    phase_plot = np.zeros(np.size(bjd_plot[dataset_name]['x_plot']))
+                                    tc_folded_plot = np.zeros(np.size(bjd_plot[dataset_name]['x_plot']))
 
                         fileout.write('descriptor BJD BJD0 pha val,+- sys mod full val_compare,+- res,+- \n')
 
@@ -541,68 +568,69 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
                             bjd_plot[plot_out_keyword][dataset_name][model_name] = \
                                 bjd_plot[plot_out_keyword][dataset_name][model_name] * np.ones(dataset.n)
 
-                            bjd_plot[plot_x0_keyword][dataset_name][model_name] = \
-                                bjd_plot[plot_x0_keyword][dataset_name][model_name] * np.ones(dataset.n)
+                            bjd_plot[plot_x_keyword][dataset_name][model_name] = \
+                                bjd_plot[plot_x_keyword][dataset_name][model_name] * np.ones(dataset.n)
 
-                        for x, x0, pha, y, e, sys, mod, com, obs_mod, res in zip(
-                            dataset.x, dataset.x0, phase, dataset.y, dataset.e,
+                        for x, tcf, pha, y, e, sys, mod, com, obs_mod, res in zip(
+                                dataset.x, tc_folded, phase, dataset.y, dataset.e,
                                 bjd_plot[plot_out_keyword][dataset_name]['systematics'],
                                 bjd_plot[plot_out_keyword][dataset_name][model_name],
                                 bjd_plot[plot_out_keyword][dataset_name]['complete'],
                                 dataset.y - bjd_plot[plot_out_keyword][dataset_name]['complete'] +
-                                        bjd_plot[plot_out_keyword][dataset_name][model_name],
+                                bjd_plot[plot_out_keyword][dataset_name][model_name],
                                 dataset.y - bjd_plot[plot_out_keyword][dataset_name]['complete']):
-
                             fileout.write('{0:f} {1:f} {2:f} {3:f} {4:f} {5:f} {6:1f} {7:f} {8:f} {9:f} {10:f} {11:f}'
-                                          '\n'.format(x, x0, pha, y, e, sys, mod, com, obs_mod, e, res, e))
+                                          '\n'.format(x, tcf, pha, y, e, sys, mod, com, obs_mod, e, res, e))
                         fileout.close()
 
                         fileout = open(dir_models + dataset_name + '_' + model_name + '_full.dat', 'w')
 
-                        if model_name+'_std' in bjd_plot[plot_x0_keyword][dataset_name]:
+                        if model_name + '_std' in bjd_plot[plot_x_keyword][dataset_name]:
                             fileout.write('descriptor BJD BJD0 mod,+- \n')
-                            for x0, mod, std in zip(bjd_plot[dataset_name]['x0_plot'],
-                                               bjd_plot[plot_x0_keyword][dataset_name][model_name],
-                                               bjd_plot[plot_x0_keyword][dataset_name][model_name+'_std']):
-
-                                fileout.write('{0:f} {1:f} {2:f} {3:f} \n'.format(x0+mc.Tref, x0, mod, std))
+                            for x, tfc, pha, mod, std in zip(
+                                    bjd_plot[dataset_name]['x_plot'],
+                                    bjd_plot[plot_x_keyword][dataset_name][model_name],
+                                    bjd_plot[plot_x_keyword][dataset_name][model_name + '_std']):
+                                fileout.write('{0:f} {1:f} {2:f} {3:f} \n'.format(x, x - mc.Tref, mod, std))
                             fileout.close()
                         else:
                             fileout.write('descriptor BJD BJD0 mod \n')
-                            for x0, mod in zip(bjd_plot[dataset_name]['x0_plot'],
-                                               bjd_plot[plot_x0_keyword][dataset_name][model_name]):
-                                fileout.write('{0:f} {1:f} {2:f} \n'.format(x0+mc.Tref, x0, mod))
+                            for x, tcf, pha, mod in zip(bjd_plot[dataset_name]['x0_plot'],
+                                                        tc_folded_plot,
+                                                        phase_plot,
+                                                        bjd_plot[plot_x_keyword][dataset_name][model_name]):
+                                fileout.write('{0:f} {1:f} {2:f} {3:f}\n'.format(x, tcf, pha, mod))
                             fileout.close()
 
                     fileout = open(dir_models + dataset_name + '_full.dat', 'w')
                     fileout.write('descriptor BJD BJD0 mod \n')
-                    for x0, mod in zip(bjd_plot[dataset_name]['x0_plot'],
-                                       bjd_plot[plot_x0_keyword][dataset_name]['complete']):
-                        fileout.write('{0:f} {1:f} {2:f} \n'.format(x0+mc.Tref, x0, mod))
+                    for x, mod in zip(bjd_plot[dataset_name]['x_plot'],
+                                                bjd_plot[plot_x_keyword][dataset_name]['complete']):
+                        fileout.write('{0:f} {1:f} \n'.format(x, mod))
                     fileout.close()
 
                 for model in planet_vars:
 
                     try:
-                        RV_out =  kepler_exo.kepler_RV_T0P(bjd_plot['full']['x0_plot'],
-                                                           planet_vars[model]['f'],
-                                                           planet_vars[model]['P'],
-                                                           planet_vars[model]['K'],
-                                                           planet_vars[model]['e'],
-                                                           planet_vars[model]['o'])
+                        RV_out = kepler_exo.kepler_RV_T0P(bjd_plot['full']['x_plot']-mc.Tref,
+                                                          planet_vars[model]['f'],
+                                                          planet_vars[model]['P'],
+                                                          planet_vars[model]['K'],
+                                                          planet_vars[model]['e'],
+                                                          planet_vars[model]['o'])
                         fileout = open(dir_models + 'RV_planet_' + model + '_kep.dat', 'w')
-                        fileout.write('descriptor x_range x_range0 m_kepler \n')
-                        for x, y in zip(bjd_plot['full']['x0_plot'], RV_out):
-                            fileout.write('{0:f} {1:f} {2:f} \n'.format(x+mc.Tref, x, y))
+                        fileout.write('descriptor x_range  m_kepler \n')
+                        for x, y in zip(bjd_plot['full']['x_plot'], RV_out):
+                            fileout.write('{0:f} {2:f} \n'.format(x, y))
                         fileout.close()
 
                         x_range = np.arange(-0.50, 1.50, 0.001)
-                        RV_out = kepler_exo.kepler_RV_T0P(x_range*planet_vars[model]['P'],
-                                                           planet_vars[model]['f'],
-                                                           planet_vars[model]['P'],
-                                                           planet_vars[model]['K'],
-                                                           planet_vars[model]['e'],
-                                                           planet_vars[model]['o'])
+                        RV_out = kepler_exo.kepler_RV_T0P(x_range * planet_vars[model]['P'],
+                                                          planet_vars[model]['f'],
+                                                          planet_vars[model]['P'],
+                                                          planet_vars[model]['K'],
+                                                          planet_vars[model]['e'],
+                                                          planet_vars[model]['o'])
                         fileout = open(dir_models + 'RV_planet_' + model + '_pha.dat', 'w')
                         fileout.write('descriptor x_phase m_phase \n')
                         for x, y in zip(x_range, RV_out):
@@ -610,6 +638,7 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
                         fileout.close()
                     except:
                         pass
+
 
 
         print()
@@ -731,7 +760,6 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
                 y_edges = data_edg[jj, :]
 
                 if ii != jj:
-
                     hist2d = np.histogram2d(x_data, y_data, bins=[x_edges, y_edges], density=True)
                     hist1d_y = np.histogram(y_data, bins=y_edges, density=True)
 
@@ -741,14 +769,14 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
                     sm = np.cumsum(Hflat)
                     sm /= sm[-1]
 
-                    x_edges_1d = (x_edges[1:] + x_edges[:-1])/2
-                    y_edges_1d = (y_edges[1:] + y_edges[:-1])/2
+                    x_edges_1d = (x_edges[1:] + x_edges[:-1]) / 2
+                    y_edges_1d = (y_edges[1:] + y_edges[:-1]) / 2
                     h2d_out = np.zeros([n_bins, n_bins])
                     h2d_out[0, 1:] = x_edges_1d
                     h2d_out[1:, 0] = y_edges_1d
-                    h2d_out[1:, 1:] = hist2d[0].T *1. / np.amax(hist2d[0])
+                    h2d_out[1:, 1:] = hist2d[0].T * 1. / np.amax(hist2d[0])
 
-                    h2d_list =  h2d_out.tolist()
+                    h2d_list = h2d_out.tolist()
                     h2d_list[0][0] = ''
                     csvfile = veusz_dir + '_hist2d___' + output_names[ii] + '___' + output_names[jj] + '.csv'
                     with open(csvfile, "w") as output:
@@ -756,18 +784,19 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
                         writer.writerows(h2d_list)
 
             hist1d = np.histogram(x_data, bins=x_edges)
-            hist1d_norm = hist1d[0]*1. / n_samplings
-            x_edges_1d = (x_edges[1:]+ x_edges[:-1])/2
-            data_grp.create_dataset(output_names[ii]+'_x', data=x_edges_1d, compression="gzip")
-            data_grp.create_dataset(output_names[ii]+'_y', data=hist1d_norm, compression="gzip")
+            hist1d_norm = hist1d[0] * 1. / n_samplings
+            x_edges_1d = (x_edges[1:] + x_edges[:-1]) / 2
+            data_grp.create_dataset(output_names[ii] + '_x', data=x_edges_1d, compression="gzip")
+            data_grp.create_dataset(output_names[ii] + '_y', data=hist1d_norm, compression="gzip")
 
-            #data_grp.create_dataset(output_names[ii]+'_val', data=median_vals[ii])
-            #data_grp.create_dataset(output_names[ii]+'_val_-', data=sigma_minus[ii])
-            #data_grp.create_dataset(output_names[ii]+'_val_+', data=sigma_plus[ii])
-            #data_grp.attrs[output_names[ii]+'_val'] = median_vals[ii]
+            # data_grp.create_dataset(output_names[ii]+'_val', data=median_vals[ii])
+            # data_grp.create_dataset(output_names[ii]+'_val_-', data=sigma_minus[ii])
+            # data_grp.create_dataset(output_names[ii]+'_val_+', data=sigma_plus[ii])
+            # data_grp.attrs[output_names[ii]+'_val'] = median_vals[ii]
 
             veusz_workaround_descriptor += ' ' + output_names[ii] + ',+,-'
-            veusz_workaround_values += ' ' + repr(median_vals[ii]) + ' ' + repr(sigma_plus[ii]) + ' ' + repr(sigma_minus[ii])
+            veusz_workaround_values += ' ' + repr(median_vals[ii]) + ' ' + repr(sigma_plus[ii]) + ' ' + repr(
+                sigma_minus[ii])
 
         text_file = open(veusz_dir + "veusz_median_sigmas.txt", "w")
         text_file.write('%s \n' % veusz_workaround_descriptor)

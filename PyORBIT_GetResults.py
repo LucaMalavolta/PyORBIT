@@ -57,6 +57,7 @@ if __name__ == '__main__':
         plot_dictionary['veuz_corner_files'] = True
     if args.dfm_corner is not False :
         plot_dictionary['use_getdist'] = False
+        plot_dictionary['full_correlation'] = True
 
     if args.all is not False:
         plot_dictionary['plot_models'] = True
