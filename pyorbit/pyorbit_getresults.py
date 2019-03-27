@@ -652,6 +652,7 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
                 for model in planet_vars:
 
                     try:
+
                         RV_out = kepler_exo.kepler_RV_T0P(bjd_plot['full']['x_plot']-mc.Tref,
                                                           planet_vars[model]['f'],
                                                           planet_vars[model]['P'],
@@ -661,7 +662,7 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
                         fileout = open(dir_models + 'RV_planet_' + model + '_kep.dat', 'w')
                         fileout.write('descriptor x_range  m_kepler \n')
                         for x, y in zip(bjd_plot['full']['x_plot'], RV_out):
-                            fileout.write('{0:f} {2:f} \n'.format(x, y))
+                            fileout.write('{0:f} {1:f} \n'.format(x, y))
                         fileout.close()
 
                         x_range = np.arange(-0.50, 1.50, 0.001)
@@ -678,9 +679,6 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
                         fileout.close()
                     except:
                         pass
-
-
-
 
 
         print()
