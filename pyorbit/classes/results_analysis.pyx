@@ -5,7 +5,7 @@ import pyorbit.classes.kepler_exo as kepler_exo
 
 
 __all__ = ["results_resumen", "results_derived", "get_planet_variables", "get_theta_dictionary", "get_model",
-           "print_theta_bounds", "print_dictionary"]
+           "print_theta_bounds", "print_dictionary", "get_stellar_parameters"]
 
 
 def results_resumen(mc, theta, skip_theta=False, compute_lnprob=False, chain_med=False):
@@ -160,7 +160,6 @@ def get_stellar_parameters(mc, theta):
             else:
                 print(' *** Please provide a prior either on stellar Mass or stellar Radius *** ')
                 print()
-
 
     return stellar_values
 

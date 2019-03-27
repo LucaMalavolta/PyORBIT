@@ -438,7 +438,10 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
 
         # Computation of all the planetary variables
         planet_variables = results_analysis.get_planet_variables(mc, chain_med[:, 0])
+        star_variables = results_analysis.get_stellar_parameters(mc, chain_med[:, 0])
+
         planet_variables_MAP = results_analysis.get_planet_variables(mc, chain_MAP)
+        star_variables_MAP = results_analysis.get_stellar_parameters(mc, chain_MAP)
 
         #     """ in this variable we store the physical variables of """
         #     planet_variables = {}
@@ -468,7 +471,7 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
             bjd_plot[dataset_name]['end'] += bjd_plot[dataset_name]['range'] * 0.10
 
             if dataset.kind == 'Phot':
-                step_size = np.min(bjd_plot[dataset_name]['range'] / dataset.n / 20.)
+                step_size = np.min(bjd_plot[dataset_name]['range'] / dataset.n / 10.)
             else:
                 step_size = 0.10
 
@@ -526,8 +529,12 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
 
                 if prepend_keyword == '':
                     planet_vars = planet_variables
+                    star_vars = star_variables
+                    chain_ref = chain_med[:, 0]
                 elif prepend_keyword == 'MAP_':
                     planet_vars = planet_variables_MAP
+                    star_vars = star_variables_MAP
+                    chain_ref = chain_MAP
 
                 dir_models = dir_output + file_keyword + '/'
                 os.system('mkdir -p ' + dir_models)
@@ -617,12 +624,18 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
                             with the planetary RVs, but here we must keep into account the differences  between datasets
                             due to limb darkening, exposure times, etc.
                             """
+
+                            variable_values = {}
+                            for common_ref in mc.models[model_name].common_ref:
+                                variable_values.update(mc.common_models[common_ref].convert(chain_ref))
+                            variable_values.update(mc.models[model_name].convert(chain_ref, dataset_name))
+
                             fileout = open(dir_models + dataset_name + '_' + model_name + '_transit.dat', 'w')
 
-                            x_range = np.arange(-planet_vars[model_name]['P']/2., planet_vars[model_name]['P']/2., 0.01)
-                            delta_T = planet_vars[model_name]['Tc']-dataset.Tref
+                            x_range = np.arange(-variable_values['P']/2., variable_values['P']/2., 0.01)
+                            delta_T = variable_values['Tc']-dataset.Tref
 
-                            y_plot  = mc.models[model_name].compute(planet_vars[model_name], dataset, x_range+delta_T)
+                            y_plot = mc.models[model_name].compute(variable_values, dataset, x_range+delta_T)
 
                             fileout.write('descriptor Tc_folded  mod \n')
                             for x, mod in zip(x_range, y_plot):
