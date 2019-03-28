@@ -283,11 +283,12 @@ def get_planet_variables(mc, theta, verbose=False):
                 derived_variables['R_Re'] = True
 
             if 'M' in variable_values.keys() and 'mass' in stellar_values.keys():
-                variable_values['M_Mj'] = variable_values['M'] * constants.Msjup * stellar_values['mass']
+                variable_values['M_Mj'] = variable_values['M'] * constants.Msjup
                 derived_variables['M_Mj'] = True
 
-                variable_values['M_Me'] = variable_values['M'] * constants.Msear * stellar_values['mass']
+                variable_values['M_Me'] = variable_values['M'] * constants.Msear
                 derived_variables['M_Me'] = True
+
 
             if remove_i:
                 del variable_values['i']
