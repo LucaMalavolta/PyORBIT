@@ -508,9 +508,9 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
                                  mc.dataset_dict[dataset_name].y - bjd_plot['model_out'][dataset_name]['systematics'],
                                  yerr=mc.dataset_dict[dataset_name].e,
                                  fmt='o', zorder=2, alpha=0.5)
-                    plt.plot(bjd_plot[dataset_name]['x_plot'] + mc.Tref, bjd_plot['model_x'][dataset_name]['complete'],
+                    plt.plot(bjd_plot[dataset_name]['x_plot'], bjd_plot['model_x'][dataset_name]['complete'],
                              zorder=4, c='b')
-                    plt.plot(bjd_plot[dataset_name]['x_plot'] + mc.Tref,
+                    plt.plot(bjd_plot[dataset_name]['x_plot'],
                              bjd_plot['MAP_model_x'][dataset_name]['complete'], zorder=3, c='r')
 
                     plt.savefig(dir_output + 'model_' + kind_name + '_' + dataset_name + '.png', bbox_inches='tight',
@@ -529,11 +529,11 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
 
                 if prepend_keyword == '':
                     planet_vars = planet_variables
-                    star_vars = star_variables
+                    # star_vars = star_variables # leaving here, it could be useful for the future
                     chain_ref = chain_med[:, 0]
                 elif prepend_keyword == 'MAP_':
                     planet_vars = planet_variables_MAP
-                    star_vars = star_variables_MAP
+                    # star_vars = star_variables_MAP
                     chain_ref = chain_MAP
 
                 dir_models = dir_output + file_keyword + '/'
