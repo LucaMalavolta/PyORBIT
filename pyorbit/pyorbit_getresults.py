@@ -665,7 +665,7 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
                             fileout.write('{0:f} {1:f} \n'.format(x, y))
                         fileout.close()
 
-                        x_range = np.arange(-0.50, 1.50, 0.001)
+                        x_range = np.arange(-1.50, 1.50, 0.001)
                         RV_out = kepler_exo.kepler_RV_T0P(x_range * planet_vars[model]['P'],
                                                           planet_vars[model]['f'],
                                                           planet_vars[model]['P'],
