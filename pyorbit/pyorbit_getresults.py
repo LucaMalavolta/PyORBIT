@@ -81,12 +81,28 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
         n_samplings, n_pams = np.shape(flat_chain)
 
         print()
+        print('emcee version: ', emcee.__version__)
+        if mc.emcee_parameters['version'] == '2':
+            print('WARNING: upgrading to version 3 is strongly advised')
+        print()
         print('Reference Time Tref: {}'.format(mc.Tref))
         print()
         print('Dimensions = {}'.format(mc.ndim))
         print('Nwalkers = {}'.format(mc.emcee_parameters['nwalkers']))
         print()
         print('Steps: {}'.format(nsteps))
+        print()
+        if mc.emcee_parameters['version'] == '3':
+            print('Computing the autocorrelation time of the chains')
+            print('Reference thinning used in the analysis:', nthin)
+            print()
+            print('sample variable      ACF        ACF * nthin')
+            integrate_ACF = emcee.autocorr.integrated_time(sampler_chain)
+            for key_name, key_val in theta_dictionary.items():
+                print('{0:20s} {1:5.3f}   {2:7.1f}'.format(key_name,
+                                                           integrate_ACF[key_val],
+                                                           integrate_ACF[key_val]*nthin))
+
         print()
 
     if sampler in sample_keyword['multinest']:

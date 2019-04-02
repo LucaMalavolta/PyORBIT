@@ -30,7 +30,7 @@ if __name__ == '__main__':
         'dataset_corner': False,
         'common_corner': False,
         'use_getdist': True,
-        'veuz_corner_files': True
+        'veuz_corner_files': False
     }
 
     args = parser.parse_args()

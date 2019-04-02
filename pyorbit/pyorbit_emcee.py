@@ -112,11 +112,10 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
     if not os.path.exists(mc.emcee_dir_output):
         os.makedirs(mc.emcee_dir_output)
 
-
-
-
-    emcee_version = mc.emcee_parameters['version'][0]
-
+    print()
+    print('emcee version: ', emcee.__version__)
+    if mc.emcee_parameters['version'] == '2':
+        print('WARNING: upgrading to version 3 is strongly advised')
     print()
     print('Include priors: ', mc.include_priors)
     print()
@@ -146,8 +145,10 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
             population[:, theta_i] = population_legacy[:, theta_dict_legacy[theta_name]]
             mc.bounds[theta_i] = previous_boundaries[theta_dict_legacy[theta_name]]
 
+        starting_point = np.median(population, axis=0)
         print('Using previous population as starting point')
         sys.stdout.flush()
+        print()
 
     else:
 
@@ -195,7 +196,7 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
     results_analysis.results_resumen(mc, starting_point, compute_lnprob=True)
 
     if mc.use_threading_pool:
-        if emcee_version =='2':
+        if mc.emcee_parameters['version'] == '2':
             threads_pool = emcee.interruptible_pool.InterruptiblePool(mc.emcee_parameters['nwalkers'])
         else:
             from multiprocessing.pool import Pool as InterruptiblePool
@@ -255,6 +256,19 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
             results_analysis.results_resumen(mc, flatchain)
 
             print(sampled, '  steps completed, average lnprob:, ', np.median(prob))
+            if mc.emcee_parameters['version'] == '3':
+                print()
+                print('Computing the autocorrelation time of the chains')
+                print('Reference thinning used in the analysis:', mc.emcee_parameters['thin'])
+                print()
+                print('sample variable      ACF        ACF * nthin')
+                integrate_ACF = emcee.autocorr.integrated_time(sampler.chain)
+                for key_name, key_val in theta_dict.items():
+                    print('{0:20s} {1:5.3f}   {2:7.1f}'.format(key_name,
+                                                               integrate_ACF[key_val],
+                                                               integrate_ACF[key_val] * mc.emcee_parameters['thin']))
+
+            print()
             sys.stdout.flush()
 
     else:
@@ -265,6 +279,20 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
 
         flatchain = emcee_flatchain(sampler.chain, mc.emcee_parameters['nburn'], mc.emcee_parameters['thin'])
         results_analysis.results_resumen(mc, flatchain)
+
+        if mc.emcee_parameters['version'] == '3':
+            print()
+            print('Computing the autocorrelation time of the chains')
+            print('Reference thinning used in the analysis:', mc.emcee_parameters['thin'])
+            print()
+            print('sample variable      ACF        ACF * nthin')
+            integrate_ACF = emcee.autocorr.integrated_time(sampler.chain)
+            for key_name, key_val in theta_dict.items():
+                print('{0:20s} {1:5.3f}   {2:7.1f}'.format(key_name,
+                                                           integrate_ACF[key_val],
+                                                           integrate_ACF[key_val] * mc.emcee_parameters['thin']))
+
+        print()
 
     print('emcee completed')
 
