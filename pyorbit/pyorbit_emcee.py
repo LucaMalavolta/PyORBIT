@@ -54,6 +54,7 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
         flatchain = emcee_flatchain(sampler_chain, mc.emcee_parameters['nburn'], mc.emcee_parameters['thin'])
         mc.model_setup()
         mc.initialize_logchi2()
+        results_analysis.print_integrated_ACF(sampler_chain, theta_dict, mc.emcee_parameters['thin'])
         results_analysis.results_resumen(mc, flatchain)
 
         if return_output:
@@ -229,6 +230,7 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
         emcee_save_to_cpickle(mc, starting_point, population, prob, state, sampler, theta_dict, prefix='MR')
 
         flatchain = emcee_flatchain(sampler.chain, mc.emcee_parameters['nburn'], mc.emcee_parameters['thin'])
+        results_analysis.print_integrated_ACF(sampler.chain, theta_dict, mc.emcee_parameters['thin'])
         results_analysis.results_resumen(mc, flatchain)
 
         print('emcee exploratory runs completed')
@@ -272,9 +274,10 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
         flatchain = emcee_flatchain(sampler.chain, mc.emcee_parameters['nburn'], mc.emcee_parameters['thin'])
         results_analysis.print_integrated_ACF(sampler.chain, theta_dict, mc.emcee_parameters['thin'])
         results_analysis.results_resumen(mc, flatchain)
-
     print()
     print('emcee completed')
+
+
 
     if mc.use_threading_pool:
         # close the pool of threads

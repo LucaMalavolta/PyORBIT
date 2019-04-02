@@ -199,7 +199,6 @@ def get_planet_variables(mc, theta, verbose=False):
             checking the size of their distribution
             """
 
-            var_index = np.arange(0, n_samplings, dtype=int)
             for var in variable_values.keys():
                 if np.size(variable_values[var]) == 1:
                     variable_values[var] = variable_values[var] * np.ones(n_samplings)
@@ -214,7 +213,8 @@ def get_planet_variables(mc, theta, verbose=False):
                 if 'i' in common_model.fix_list:
 
                     if verbose:
-                        print('Inclination randomized to ', common_model.fix_list['i'])
+                        print('Inclination randomized to {0:3.2f} +- {1:3.2f} deg'.format(
+                              common_model.fix_list['i'][0], common_model.fix_list['i'][1]))
                     variable_values['i'] = np.random.normal(common_model.fix_list['i'][0],
                                                             common_model.fix_list['i'][1],
                                                             size=n_samplings)
@@ -224,56 +224,41 @@ def get_planet_variables(mc, theta, verbose=False):
                                                           variable_values['o'],
                                                           variable_values['a'])
                 else:
+                    print('Inclination fixed to 90 deg!')
                     variable_values['i'] = 90.00 * np.ones(n_samplings)
                     remove_i = True
 
             if 'K' in variable_values.keys() and 'mass' in stellar_values.keys():
-                variable_values['M'] = np.empty(n_samplings)
                 derived_variables['M'] = True
-
-                for P, K, e, i, star, ii in zip(
-                        variable_values['P'],
-                        variable_values['K'],
-                        variable_values['e'],
-                        variable_values['i'],
-                        stellar_values['mass'],
-                        var_index):
-                    variable_values['M'][ii] = kepler_exo.get_planet_mass(P, K, e, star, Minit=0.0065) \
-                                               / np.sin(np.radians(i))
+                variable_values['M'] = kepler_exo.get_planet_mass(variable_values['P'],
+                                                                  variable_values['K'],
+                                                                  variable_values['e'],
+                                                                  stellar_values['mass']) \
+                                               / np.sin(np.radians(variable_values['i']))
 
             elif 'M' in variable_values.keys() and 'mass' in stellar_values.keys():
-                variable_values['K'] = np.empty(n_samplings)
                 derived_variables['K'] = True
-                for star, M, P, i, e, ii in zip(stellar_values['mass'],
-                                                variable_values['M'],
-                                                variable_values['P'],
-                                                variable_values['i'],
-                                                variable_values['e']):
-                    derived_variables['K'][ii] = kepler_exo.kepler_K1(star, M / constants.Msear, P, i, e)
+                derived_variables['K'] = kepler_exo.kepler_K1(stellar_values['mass'],
+                                                              variable_values['M'] / constants.Msear,
+                                                              variable_values['P'],
+                                                              variable_values['i'],
+                                                              variable_values['e'])
 
             if 'Tc' in variable_values.keys():
-                variable_values['f'] = np.empty(n_samplings)
                 derived_variables['f'] = True
+                variable_values['f'] = kepler_exo.kepler_Tc2phase_Tref(variable_values['P'],
+                                                                       variable_values['Tc'] - mc.Tref,
+                                                                       variable_values['e'],
+                                                                       variable_values['o'])
 
-                for P, Tc, e, o, ii in zip(
-                        variable_values['P'],
-                        variable_values['Tc'],
-                        variable_values['e'],
-                        variable_values['o'],
-                        var_index):
-                    variable_values['f'][ii] = kepler_exo.kepler_Tc2phase_Tref(P, Tc - mc.Tref, e, o)
-
-            elif 'f' in variable_values.keys():
-                variable_values['Tc'] = np.empty(n_samplings)
                 derived_variables['Tc'] = True
 
-                for P, f, e, o, ii in zip(
-                        variable_values['P'],
-                        variable_values['f'],
-                        variable_values['e'],
-                        variable_values['o'],
-                        var_index):
-                    variable_values['Tc'][ii] = mc.Tref + kepler_exo.kepler_phase2Tc_Tref(P, f, e, o)
+            elif 'f' in variable_values.keys():
+                derived_variables['Tc'] = True
+                variable_values['Tc'] = mc.Tref + kepler_exo.kepler_phase2Tc_Tref(variable_values['P'],
+                                                                                  variable_values['f'],
+                                                                                  variable_values['e'],
+                                                                                  variable_values['o'])
 
             if 'R' in variable_values.keys() and 'radius' in stellar_values.keys():
                 variable_values['R_Rj'] = variable_values['R'] * constants.Rsjup * stellar_values['radius']
@@ -289,16 +274,13 @@ def get_planet_variables(mc, theta, verbose=False):
                 variable_values['M_Me'] = variable_values['M'] * constants.Msear
                 derived_variables['M_Me'] = True
 
-
             if remove_i:
                 del variable_values['i']
 
-            #if 'b' in variable_values.keys():
-            # Too many variables to check...
             try:
                 k = variable_values['R']
 
-                variable_values['T_41'] =  variable_values['P'] / np.pi \
+                variable_values['T_41'] = variable_values['P'] / np.pi \
                                           * np.arcsin(1./variable_values['a'] *
                                                       np.sqrt((1. + k)**2 - variable_values['b']**2)
                                                       / np.sin(variable_values['i']*constants.deg2rad))
@@ -309,6 +291,7 @@ def get_planet_variables(mc, theta, verbose=False):
                                                       np.sqrt((1. - k)**2 - variable_values['b']**2)
                                                       / np.sin(variable_values['i']*constants.deg2rad))
                 derived_variables['T_32'] = True
+
             except:
                 pass
 
@@ -572,7 +555,8 @@ def print_integrated_ACF(sampler_chain, theta_dict, nthin):
     print(' Reference thinning used in the analysis:', nthin)
     print()
     print('          sample variable      ACF        ACF * nthin')
-    integrate_ACF = emcee.autocorr.integrated_time(sampler_chain)
+
+    integrate_ACF = emcee.autocorr.integrated_time(np.swapaxes(sampler_chain,1,0), quiet=True)
     for key_name, key_val in theta_dict.items():
         print('          {0:20s} {1:5.3f}   {2:7.1f}'.format(key_name,
                                                    integrate_ACF[key_val],

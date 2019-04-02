@@ -141,6 +141,16 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, shutdown_
                         for var in fixed_conf:
                             mc.common_models[planet_name].fix_list[var] = get_2darray_from_val(fixed_conf[var])
 
+            if model_name == 'star_parameters':
+                bounds_space_priors_starts_fixed(mc, mc.common_models[model_name], model_conf)
+
+            if model_name == 'star':
+                try:
+                    star_conf = model_conf['star_parameters']
+                    bounds_space_priors_starts_fixed(mc, mc.common_models['star_parameters'], star_conf)
+                except:
+                    print()
+                    print(" Error in reading the priors from stellar parameters ")
 
         return
 

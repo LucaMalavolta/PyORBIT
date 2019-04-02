@@ -240,7 +240,37 @@ def f_get_mass(m_star2, m_star1, period, e0, k1):
               * period ** (-1. / 3.)
               * (m_star2 * (m_star1 + m_star2) ** (-2. / 3.)))
 
+def get_approximate_mass(m_star1, period, e0, k1):
+    """ Return the approximate mass of the planet in Solar mass units, in the assumption that M_planet << M_star
 
-def get_planet_mass(P, K, e, Mstar, Minit=0.0065):
-    # Return planet mass in solar units
-    return fsolve(f_get_mass, Minit, args=(Mstar, P, e, K))
+    :param m_star1: mass of the primary, in Solar mass units
+    :param period: orbital period of star2, in [d]
+    :param i: orbital inclination of star2 wrt the observer (0=face on), in [deg]
+    :param e0: orbital eccentricity of star2
+    :param k1: observed RV semi-amplitude of the primary
+    :return: mass of the planet, in Solar mass units
+    """
+    return k1 / ((2. * np.pi * constants.Gsi * constants.Msun / 86400.0) ** (1. / 3.)
+         * (1. / np.sqrt(1. - e0 ** 2.))
+         * period ** (-1. / 3.)
+         * (m_star1 ** (-2. / 3.)))
+
+
+def get_planet_mass(P, K, e, Mstar, approximation_limit=30.):
+
+    n = np.size(K)
+    if n == 1:
+        M_approx = min(get_approximate_mass(P, K, e, Mstar), 2*constants.Msear)
+        return fsolve(f_get_mass, M_approx, args=(Mstar, P, e, K))
+
+    M_approx = get_approximate_mass(P, K, e, Mstar)
+
+    if np.average(M_approx) > approximation_limit/constants.Msear:
+        print('Computing exact mass of the planet (average approximate mass larger than {0:3.1f} Me)'.format(approximation_limit))
+        M_init = np.average(M_approx)
+        for i in range(0, n):
+            M_approx[i] = fsolve(f_get_mass, np.average(M_init), args=(Mstar[i], P[i], e[i], K[i]))
+    else:
+        print('Computing planetary mass under the approximation M_planet << M_star (threshold at {0:3.1f} Me)'.format(approximation_limit))
+
+    return M_approx
