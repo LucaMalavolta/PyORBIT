@@ -234,7 +234,8 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
         print('emcee exploratory runs completed')
         sys.stdout.flush()
 
-    print('emcee')
+    print()
+    print('Running emcee')
     state = None
 
     if mc.use_threading_pool:
@@ -243,6 +244,7 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
         sampler = emcee.EnsembleSampler(mc.emcee_parameters['nwalkers'], mc.ndim, mc)
 
     if mc.emcee_parameters['nsave'] > 0:
+        print()
         print(' Saving temporary steps')
         niter = int(mc.emcee_parameters['nsteps']/mc.emcee_parameters['nsave'])
         sampled = 0
@@ -253,22 +255,12 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
             emcee_save_to_cpickle(mc, starting_point, population, prob, state, sampler, theta_dict, samples=sampled)
 
             flatchain = emcee_flatchain(sampler.chain, mc.emcee_parameters['nburn'], mc.emcee_parameters['thin'])
+            results_analysis.print_integrated_ACF(sampler.chain, theta_dict, mc.emcee_parameters['thin'])
             results_analysis.results_resumen(mc, flatchain)
 
-            print(sampled, '  steps completed, average lnprob:, ', np.median(prob))
-            if mc.emcee_parameters['version'] == '3':
-                print()
-                print('Computing the autocorrelation time of the chains')
-                print('Reference thinning used in the analysis:', mc.emcee_parameters['thin'])
-                print()
-                print('sample variable      ACF        ACF * nthin')
-                integrate_ACF = emcee.autocorr.integrated_time(sampler.chain)
-                for key_name, key_val in theta_dict.items():
-                    print('{0:20s} {1:5.3f}   {2:7.1f}'.format(key_name,
-                                                               integrate_ACF[key_val],
-                                                               integrate_ACF[key_val] * mc.emcee_parameters['thin']))
-
             print()
+            print(sampled, '  steps completed, average lnprob:, ', np.median(prob))
+
             sys.stdout.flush()
 
     else:
@@ -278,22 +270,10 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
         emcee_save_to_cpickle(mc, starting_point, population, prob, state, sampler, theta_dict)
 
         flatchain = emcee_flatchain(sampler.chain, mc.emcee_parameters['nburn'], mc.emcee_parameters['thin'])
+        results_analysis.print_integrated_ACF(sampler.chain, theta_dict, mc.emcee_parameters['thin'])
         results_analysis.results_resumen(mc, flatchain)
 
-        if mc.emcee_parameters['version'] == '3':
-            print()
-            print('Computing the autocorrelation time of the chains')
-            print('Reference thinning used in the analysis:', mc.emcee_parameters['thin'])
-            print()
-            print('sample variable      ACF        ACF * nthin')
-            integrate_ACF = emcee.autocorr.integrated_time(sampler.chain)
-            for key_name, key_val in theta_dict.items():
-                print('{0:20s} {1:5.3f}   {2:7.1f}'.format(key_name,
-                                                           integrate_ACF[key_val],
-                                                           integrate_ACF[key_val] * mc.emcee_parameters['thin']))
-
-        print()
-
+    print()
     print('emcee completed')
 
     if mc.use_threading_pool:

@@ -85,25 +85,14 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
         if mc.emcee_parameters['version'] == '2':
             print('WARNING: upgrading to version 3 is strongly advised')
         print()
-        print('Reference Time Tref: {}'.format(mc.Tref))
+        print(' Reference Time Tref: {}'.format(mc.Tref))
         print()
-        print('Dimensions = {}'.format(mc.ndim))
-        print('Nwalkers = {}'.format(mc.emcee_parameters['nwalkers']))
+        print(' Dimensions = {}'.format(mc.ndim))
+        print(' Nwalkers = {}'.format(mc.emcee_parameters['nwalkers']))
         print()
-        print('Steps: {}'.format(nsteps))
-        print()
-        if mc.emcee_parameters['version'] == '3':
-            print('Computing the autocorrelation time of the chains')
-            print('Reference thinning used in the analysis:', nthin)
-            print()
-            print('sample variable      ACF        ACF * nthin')
-            integrate_ACF = emcee.autocorr.integrated_time(sampler_chain)
-            for key_name, key_val in theta_dictionary.items():
-                print('{0:20s} {1:5.3f}   {2:7.1f}'.format(key_name,
-                                                           integrate_ACF[key_val],
-                                                           integrate_ACF[key_val]*nthin))
+        print(' Steps: {}'.format(nsteps))
 
-        print()
+        results_analysis.print_integrated_ACF(sampler_chain, theta_dictionary, nthin)
 
     if sampler in sample_keyword['multinest']:
         plot_dictionary['lnprob_chain'] = False
@@ -134,12 +123,11 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
         chain_MAP, lnprob_MAP = common.pick_MAP_parameters(flat_chain, flat_lnprob)
 
         print()
-        print('Reference Time Tref: {}'.format(mc.Tref))
+        print(' Reference Time Tref: {}'.format(mc.Tref))
         print()
-        print('Dimensions: {}'.format(mc.ndim))
+        print(' Dimensions: {}'.format(mc.ndim))
         print()
-        print('Samples: {}'.format(n_samplings))
-        print()
+        print(' Samples: {}'.format(n_samplings))
 
     if sampler in sample_keyword['polychord']:
         plot_dictionary['lnprob_chain'] = False
@@ -173,12 +161,11 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
         chain_MAP, lnprob_MAP = common.pick_MAP_parameters(flat_chain, flat_lnprob)
 
         print()
-        print('Reference Time Tref: {}'.format(mc.Tref))
+        print(' Reference Time Tref: {}'.format(mc.Tref))
         print()
-        print('Dimensions: {}'.format(mc.ndim))
+        print(' Dimensions: {}'.format(mc.ndim))
         print()
-        print('Samples: {}'.format(n_samplings))
-        print()
+        print(' Samples: {}'.format(n_samplings))
 
     print()
     print(' LN posterior: {0:12f}   {1:12f} {2:12f} (15-84 p) '.format(lnprob_med[0], lnprob_med[2], lnprob_med[1]))

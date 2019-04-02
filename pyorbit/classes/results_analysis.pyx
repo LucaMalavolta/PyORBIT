@@ -5,7 +5,7 @@ import pyorbit.classes.kepler_exo as kepler_exo
 
 
 __all__ = ["results_resumen", "results_derived", "get_planet_variables", "get_theta_dictionary", "get_model",
-           "print_theta_bounds", "print_dictionary", "get_stellar_parameters"]
+           "print_theta_bounds", "print_dictionary", "get_stellar_parameters", "print_integrated_ACF"]
 
 
 def results_resumen(mc, theta, skip_theta=False, compute_lnprob=False, chain_med=False):
@@ -560,3 +560,22 @@ def print_dictionary(variable_values, recenter=[]):
                 print(format_string.format(var_names, var_vals))
 
     print()
+
+
+def print_integrated_ACF(sampler_chain, theta_dict, nthin):
+
+    import emcee
+    if not emcee.__version__[0] == '3': return
+
+    print()
+    print(' Computing the autocorrelation time of the chains')
+    print(' Reference thinning used in the analysis:', nthin)
+    print()
+    print('          sample variable      ACF        ACF * nthin')
+    integrate_ACF = emcee.autocorr.integrated_time(sampler_chain)
+    for key_name, key_val in theta_dict.items():
+        print('          {0:20s} {1:5.3f}   {2:7.1f}'.format(key_name,
+                                                   integrate_ACF[key_val],
+                                                   integrate_ACF[key_val] *nthin))
+
+
