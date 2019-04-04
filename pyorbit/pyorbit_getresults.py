@@ -455,6 +455,9 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
 
         kinds = {}
 
+        P_minimum = 2.0 # this temporal range will be divided in 20 subsets
+        for key_name, key_val in planet_variables.items():
+            P_minimum = min(key_val.get('P', 2.0), P_minimum)
 
         for dataset_name, dataset in mc.dataset_dict.items():
             if dataset.kind in kinds.keys():
@@ -476,7 +479,7 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
             if dataset.kind == 'Phot':
                 step_size = np.min(bjd_plot[dataset_name]['range'] / dataset.n / 10.)
             else:
-                step_size = 0.10
+                step_size = P_minimum / 20.
 
             bjd_plot[dataset_name]['x_plot'] = \
                 np.arange(bjd_plot[dataset_name]['start'], bjd_plot[dataset_name]['end'], step_size)
@@ -492,7 +495,7 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
 
         bjd_plot['full']['start'] -= bjd_plot['full']['range'] * 0.10
         bjd_plot['full']['end'] += bjd_plot['full']['range'] * 0.10
-        bjd_plot['full']['x_plot'] = np.arange(bjd_plot['full']['start'], bjd_plot['full']['end'], 0.1)
+        bjd_plot['full']['x_plot'] = np.arange(bjd_plot['full']['start'], bjd_plot['full']['end'], P_minimum / 20.)
 
         for dataset_name, dataset in mc.dataset_dict.items():
             if dataset.kind == 'RV':
