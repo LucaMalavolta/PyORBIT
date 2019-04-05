@@ -152,6 +152,8 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, shutdown_
                     print()
                     print(" Error in reading the priors from stellar parameters ")
 
+
+
         return
 
     for dataset_name, dataset_conf in conf_inputs.items():
@@ -570,7 +572,6 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, shutdown_
                 mc.models[model_name].model_conf.update(model_conf)
             except:
                 mc.models[model_name].model_conf = model_conf.copy()
-
 
     if 'Tref' in conf_parameters:
         mc.Tref = np.asarray(conf_parameters['Tref'])

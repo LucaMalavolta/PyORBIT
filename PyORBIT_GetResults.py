@@ -9,6 +9,7 @@ if __name__ == '__main__':
     parser.add_argument('config_file', type=str, nargs=1, help='config file')
     parser.add_argument('-p', type=str, nargs='?', default=False, help='Plot model files')
     parser.add_argument('-w', type=str, nargs='?', default=False, help='Write model files')
+    parser.add_argument('-wp', type=str, nargs='?', default=False, help='Write samples for orbital parameters')
     parser.add_argument('-c', type=str, nargs='?', default=False, help='Save chains plots')
     parser.add_argument('-ln', type=str, nargs='?', default=False, help='Save ln_prob chain plot')
     parser.add_argument('-t', type=str, nargs='?', default=False, help='Compute and save Gelman-Rubin traces')
@@ -23,6 +24,7 @@ if __name__ == '__main__':
     plot_dictionary = {
         'plot_models': False,
         'write_models': False,
+        'write_planet_samples': False,
         'chains': False,
         'traces': False,
         'lnprob_chain': False,
@@ -41,6 +43,8 @@ if __name__ == '__main__':
         plot_dictionary['plot_models'] = True
     if args.w is not False:
         plot_dictionary['write_models'] = True
+    if args.wp is not False:
+        plot_dictionary['write_planet_samples'] = True
     if args.c is not False :
         plot_dictionary['chains'] = True
     if args.t is not False:
@@ -69,6 +73,7 @@ if __name__ == '__main__':
         plot_dictionary['common_corner'] = True
         plot_dictionary['dataset_corner'] = True
         plot_dictionary['veuz_corner_files'] = True
+        plot_dictionary['write_planet_samples'] = True
 
     if args.all_corners is not False:
         plot_dictionary['full_correlation'] = True

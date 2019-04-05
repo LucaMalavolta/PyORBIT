@@ -8,7 +8,7 @@ __all__ = ["results_resumen", "results_derived", "get_planet_variables", "get_th
            "print_theta_bounds", "print_dictionary", "get_stellar_parameters", "print_integrated_ACF"]
 
 
-def results_resumen(mc, theta, skip_theta=False, compute_lnprob=False, chain_med=False):
+def results_resumen(mc, theta, skip_theta=False, compute_lnprob=False, chain_med=False, return_samples=False):
     # Function with two goals:
     # * Unfold and print out the output from theta
     # * give back a parameter name associated to each value in the result array
@@ -74,7 +74,7 @@ def results_resumen(mc, theta, skip_theta=False, compute_lnprob=False, chain_med
     print('====================================================================================================')
     print()
 
-    _ = get_planet_variables(mc, theta, verbose=True)
+    returned_samples = get_planet_variables(mc, theta, verbose=True)
 
     if compute_lnprob:
         print()
@@ -99,6 +99,9 @@ def results_resumen(mc, theta, skip_theta=False, compute_lnprob=False, chain_med
     print('====================================================================================================')
     print()
     print()
+
+    if return_samples:
+        return returned_samples
 
 
 def get_stellar_parameters(mc, theta):

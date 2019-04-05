@@ -13,6 +13,8 @@ import sys
 
 mpl.use('Agg')
 from matplotlib import pyplot as plt
+import matplotlib.gridspec as gridspec
+from matplotlib.ticker import AutoMinorLocator
 import corner
 import pyorbit.classes.kepler_exo as kepler_exo
 import pyorbit.classes.common as common
@@ -29,6 +31,9 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
         use_tex = config_in['parameters']['use_tex']
     except:
         use_tex = True
+
+    if use_tex is False:
+        print(' LaTeX disabled')
 
     if plot_dictionary['use_getdist']:
         from getdist import plots, MCSamples
@@ -206,7 +211,7 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
     print()
     print(' Confidence intervals (median value, 34.135th percentile from the median on the left and right side)')
 
-    results_analysis.results_resumen(mc, flat_chain, chain_med=chain_MAP)
+    planet_variables = results_analysis.results_resumen(mc, flat_chain, chain_med=chain_MAP, return_samples=True)
 
     print()
     print('****************************************************************************************************')
@@ -219,6 +224,13 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
     print()
     print('****************************************************************************************************')
     print()
+
+    # Computation of all the planetary variables
+    planet_variables_med = results_analysis.get_planet_variables(mc, chain_med[:, 0])
+    star_variables = results_analysis.get_stellar_parameters(mc, chain_med[:, 0])
+
+    planet_variables_MAP = results_analysis.get_planet_variables(mc, chain_MAP)
+    star_variables_MAP = results_analysis.get_stellar_parameters(mc, chain_MAP)
 
     if plot_dictionary['lnprob_chain'] or plot_dictionary['chains']:
 
@@ -429,6 +441,45 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
         print('****************************************************************************************************')
         print()
 
+    if plot_dictionary['write_planet_samples']:
+
+        print(' Saving the planet variable samplings to files (with plots)')
+
+        samples_dir = dir_output + '/planet_samples/'
+        os.system('mkdir -p ' + samples_dir)
+
+        for common_ref, variable_values in planet_variables.items():
+            for variable_name, variable in variable_values.items():
+
+                rad_filename = samples_dir + common_ref + '_' + variable_name
+                fileout = open(rad_filename + '.dat', 'w')
+                for val in variable:
+                    fileout.write('{0:f}'.format(val))
+                fileout.close()
+
+                fig = plt.figure(figsize=(10, 10))
+                plt.hist(variable, bins=50, color='C0', alpha=0.75, zorder=0)
+
+                perc0, perc1, perc2 = np.percentile(variable, [15.865, 50, 84.135], axis=0)
+
+                plt.axvline(planet_variables_med[common_ref][variable_name], color='C1', zorder=1,
+                            label='Median-corresponding value')
+                plt.axvline(planet_variables_MAP[common_ref][variable_name], color='C2', zorder=1,
+                            label='MAP-corresponding value')
+                plt.axvline(perc1, color='C3', zorder=2, label='Median of the distribution')
+                plt.axvline(perc0, color='C4', zorder=2, label='15.865th and 84.135th percentile')
+                plt.axvline(perc2, color='C4', zorder=2)
+                plt.xlabel(re.sub('_', '-', variable_name + '_' + common_ref))
+                plt.legend()
+                plt.ticklabel_format(useOffset=False)
+                plt.savefig(rad_filename + '.png', bbox_inches='tight', dpi=300)
+                plt.close(fig)
+
+
+        print()
+        print('****************************************************************************************************')
+        print()
+
     if plot_dictionary['plot_models'] or plot_dictionary['write_models']:
 
         print(' Computing the models for plot/data writing ')
@@ -439,24 +490,10 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
             }
         }
 
-        # Computation of all the planetary variables
-        planet_variables = results_analysis.get_planet_variables(mc, chain_med[:, 0])
-        star_variables = results_analysis.get_stellar_parameters(mc, chain_med[:, 0])
-
-        planet_variables_MAP = results_analysis.get_planet_variables(mc, chain_MAP)
-        star_variables_MAP = results_analysis.get_stellar_parameters(mc, chain_MAP)
-
-        #     """ in this variable we store the physical variables of """
-        #     planet_variables = {}
-        #     planet_variables_MAP = {}
-        #
-        #     chain_med[:, 0]
-        #     variable_MAP = common_model.convert(chain_MAP)
-
         kinds = {}
 
         P_minimum = 2.0 # this temporal range will be divided in 20 subsets
-        for key_name, key_val in planet_variables.items():
+        for key_name, key_val in planet_variables_med.items():
             P_minimum = min(key_val.get('P', 2.0), P_minimum)
 
         for dataset_name, dataset in mc.dataset_dict.items():
@@ -509,15 +546,55 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
 
             for kind_name, kind in kinds.items():
                 for dataset_name in kind:
+
                     fig = plt.figure(figsize=(12, 12))
-                    plt.errorbar(mc.dataset_dict[dataset_name].x,
+
+                    # Partially taken from here:
+                    # http://www.sc.eso.org/~bdias/pycoffee/codes/20160407/gridspec_demo.html
+                    gs = gridspec.GridSpec(2, 1, height_ratios=[3.0, 1.0])
+                    # Also make sure the margins and spacing are apropriate
+                    gs.update(left=0.3, right=0.95, bottom=0.08, top=0.93, wspace=0.15, hspace=0.05)
+
+                    ax_0 = plt.subplot(gs[0])
+                    ax_1 = plt.subplot(gs[1], sharex=ax_0)
+
+                    # Adding minor ticks only to x axis
+                    minorLocator = AutoMinorLocator()
+                    ax_0.xaxis.set_minor_locator(minorLocator)
+                    ax_1.xaxis.set_minor_locator(minorLocator)
+
+                    # Disabling the offset on top of the plot
+                    ax_0.ticklabel_format(useOffset=False)
+                    ax_1.ticklabel_format(useOffset=False)
+
+                    ax_0.scatter(mc.dataset_dict[dataset_name].x,
                                  mc.dataset_dict[dataset_name].y - bjd_plot['model_out'][dataset_name]['systematics'],
+                                 color='C0', zorder=4, s=16)
+                    ax_0.errorbar(mc.dataset_dict[dataset_name].x,
+                                  mc.dataset_dict[dataset_name].y - bjd_plot['model_out'][dataset_name]['systematics'],
+                                  yerr=mc.dataset_dict[dataset_name].e,
+                                  color='C0', fmt='o', ms=0, zorder=3, alpha=0.5)
+                    ax_0.plot(bjd_plot[dataset_name]['x_plot'], bjd_plot['model_x'][dataset_name]['complete'],
+                              label='Median-corresponding model',
+                              color='C1', zorder=2)
+                    ax_0.plot(bjd_plot[dataset_name]['x_plot'], bjd_plot['MAP_model_x'][dataset_name]['complete'],
+                              label='MAP-corresponding model',
+                              color='C2', zorder=1)
+
+                    ax_0.set_ylabel('Same as input data')
+                    ax_0.legend()
+
+                    ax_1.scatter(mc.dataset_dict[dataset_name].x,
+                                 mc.dataset_dict[dataset_name].y - bjd_plot['model_out'][dataset_name]['complete'],
+                                 color='C0', zorder=4, s=16)
+                    ax_1.errorbar(mc.dataset_dict[dataset_name].x,
+                                 mc.dataset_dict[dataset_name].y - bjd_plot['model_out'][dataset_name]['complete'],
                                  yerr=mc.dataset_dict[dataset_name].e,
-                                 fmt='o', zorder=2, alpha=0.5)
-                    plt.plot(bjd_plot[dataset_name]['x_plot'], bjd_plot['model_x'][dataset_name]['complete'],
-                             zorder=4, c='b')
-                    plt.plot(bjd_plot[dataset_name]['x_plot'],
-                             bjd_plot['MAP_model_x'][dataset_name]['complete'], zorder=3, c='r')
+                                 color='C0', fmt='o', ms=0, zorder=3, alpha=0.5)
+                    ax_1.axhline(0.0, color='k', alpha=0.5, zorder=0)
+
+                    ax_1.set_xlabel('Time [d] (offset as the input data)')
+                    ax_1.set_ylabel('Residuals (wrt median model)')
 
                     plt.savefig(dir_output + 'model_' + kind_name + '_' + dataset_name + '.png', bbox_inches='tight',
                                 dpi=300)
@@ -534,7 +611,7 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
                 file_keyword = prepend_keyword + 'model_files'
 
                 if prepend_keyword == '':
-                    planet_vars = planet_variables
+                    planet_vars = planet_variables_med
                     # star_vars = star_variables # leaving here, it could be useful for the future
                     chain_ref = chain_med[:, 0]
                 elif prepend_keyword == 'MAP_':
@@ -728,8 +805,7 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
                     variable_with_offset[model.common_ref + '_' + variable_name] = offset
                     all_variables_list[model.common_ref + '_' + variable_name] -= offset
 
-        derived_variables = results_analysis.get_planet_variables(mc, flat_chain)
-        for common_ref, variable_values in derived_variables.items():
+        for common_ref, variable_values in planet_variables.items():
             for variable_name, variable in variable_values.items():
 
                 # Skipping the variables that have been already included in all_variables_list
