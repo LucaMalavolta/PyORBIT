@@ -19,6 +19,11 @@ class CommonActivity(AbstractCommon):
         'cel_a',  # celerite term A
         'cel_b',  # celerite term B
         'cel_c',  # celerite term C
+        'Vc',  # GP framework parameter
+        'Vr',  # GP framework parameter
+        'Lc',  # GP framework parameter
+        'Bc',  # GP framework parameter
+        'Br',  # GP framework parameter
     }
 
     """These default boundaries are used when the user does not define them in the yaml file"""
@@ -33,6 +38,11 @@ class CommonActivity(AbstractCommon):
         'f': [0.0, 2 * np.pi],
         'cel_B': [0.0000000001, 1.0],
         'cel_C': [0.00001, 100000.0],
+        'Vc': [-500.0, 500.0],  # Test boundaries
+        'Vr': [-500.0, 500.0],  # Test boundaries
+        'Lc': [-500.0, 500.0],  # Test boundaries
+        'Bc': [-500.0, 500.0],  # Test boundaries
+        'Br': [-500.0, 500.0],  # Test boundaries
     }
 
     """ These default priors are used when the user does not define them in the yaml file
@@ -50,6 +60,11 @@ class CommonActivity(AbstractCommon):
         'f': ['Uniform', []],
         'cel_B': ['Uniform', []],
         'cel_C': ['Uniform', []],
+        'Vc': ['Uniform', []],
+        'Vr': ['Uniform', []],
+        'Lc': ['Uniform', []],
+        'Bc': ['Uniform', []],
+        'Br': ['Uniform', []],
     }
 
     default_spaces = {
@@ -64,6 +79,11 @@ class CommonActivity(AbstractCommon):
         'cel_factor': 'Linear',
         'cel_B': 'Logarithmic',  # celerite term B
         'cel_C': 'Logarithmic',  # celerite term C
+        'Vc': 'Linear',
+        'Vr': 'Linear',
+        'Lc': 'Linear',
+        'Bc': 'Linear',
+        'Br': 'Linear',
     }
 
     default_fixed = {}
