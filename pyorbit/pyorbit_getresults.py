@@ -454,7 +454,7 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
                 rad_filename = samples_dir + common_ref + '_' + variable_name
                 fileout = open(rad_filename + '.dat', 'w')
                 for val in variable:
-                    fileout.write('{0:f}'.format(val))
+                    fileout.write('{0:f} \n'.format(val))
                 fileout.close()
 
                 fig = plt.figure(figsize=(10, 10))
