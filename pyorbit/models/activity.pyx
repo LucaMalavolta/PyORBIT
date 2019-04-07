@@ -31,8 +31,8 @@ class CommonActivity(AbstractCommon):
         'P': [0.4, 100000.0],
         'K': [0.5, 2000.0],
         'f': [0.0, 2 * np.pi],
-        'cel_B': [0.0000000001, 1.0],
-        'cel_C': [0.00001, 100000.0],
+        'cel_B': [0.00000001, 1000000.0],
+        'cel_C': [0.00000001, 1000000.0],
     }
 
     """ These default priors are used when the user does not define them in the yaml file

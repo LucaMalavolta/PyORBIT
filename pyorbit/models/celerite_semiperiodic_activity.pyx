@@ -3,35 +3,6 @@ from pyorbit.models.abstract_common import *
 from pyorbit.models.abstract_model import *
 
 
-""" Straight copy from Celerite exmple"""
-class Celerite_SemiPeriodic_Term(celerite.terms.Term):
-    """
-
-    """
-
-    # from Foreman-Mackey+2017, but keeping the notation of the semi-periodic goerge kernel used in PyORBIT
-    # differently from the example provided in the paper, here the terms are passed in the linear space already. It will
-    # the job of the sampler to convert from Logarithmic to Linear space for those variables that the user has decided
-    # to explore in logarithmic space
-    parameter_names = ("Hamp", "Pdec", "Prot", "cel_factor")
-    #parameter_names = ("Hamp", "cel_b", "cel_c", "Prot")
-
-    def get_real_coefficients(self, params):
-        B, Pdec, Prot, C = params
-        return (
-            B * (1.0 + C) / (2.0 + C), 1./Pdec,
-        )
-
-    def get_complex_coefficients(self, params):
-        B, Pdec, Prot, C = params
-        return (
-            B / (2.0 + C),
-            0.0,
-            1. / Pdec,
-            2 * np.pi / Prot,
-        )
-
-
 class Celerite_QuasiPeriodicActivity(AbstractModel):
 
     internal_likelihood = True
@@ -50,16 +21,7 @@ class Celerite_QuasiPeriodicActivity(AbstractModel):
 
     recenter_pams_dataset = {}
 
-    n_pams = 4
-
-    """ Indexing is determined by the way the kernel is constructed, so it is specific of the Model and not of the 
-    Common class"""
-    gp_pams_index = {
-        'cel_B': 0,
-        'Pdec': 1,
-        'Prot': 2,
-        'cel_C': 3
-    }
+    n_pams = 5
 
     def __init__(self, *args, **kwargs):
         super(Celerite_QuasiPeriodicActivity, self).__init__(*args, **kwargs)
@@ -73,33 +35,25 @@ class Celerite_QuasiPeriodicActivity(AbstractModel):
         create a new Class with different transformations if you are planning of using a different
         kernel combination
         """
+
         output_pams = np.zeros(self.n_pams, dtype=np.double)
 
-        """ You must check _george_ documentation (and possibily do a lot of testing) to know how to convert physical 
+        """ You must check _celerite_ documentation (and possibily do a lot of testing) to know how to convert physical 
         values to the parameter vector accepted by celerite.set_parameter_vector() function. Note: these values may be 
         different from ones accepted by the kernel
         """
-        output_pams[self.gp_pams_index['cel_B']] = input_pams['cel_B']
-        output_pams[self.gp_pams_index['Pdec']] = input_pams['Pdec']
-        output_pams[self.gp_pams_index['Prot']] = input_pams['Prot']
-        output_pams[self.gp_pams_index['cel_C']] = input_pams['cel_C']
+        B = input_pams['cel_B']
+        Pdec = input_pams['Pdec']
+        Prot = input_pams['Prot']
+        C = input_pams['cel_C']
+
+        output_pams[0] = np.log(B*(1+C)/(2+C))
+        output_pams[1] = np.log(1/Pdec)
+        output_pams[2] = np.log(B/(2+C))
+        output_pams[3] = np.log(1/Pdec)
+        output_pams[4] = np.log(2*np.pi/Prot)
 
         return output_pams
-
-    def convert_gp2val(self, input_pams):
-        """
-        :param input_pam: array with the parameters to be fed to 'george'
-        :return: dictonary with the 'physically meaningful' parameters of the GP kernel
-        WARNING: this subroutine is HIGHLY specific of your choice of the kernel! I reccomend to
-        create a new Class with different transformations if you are planning of using a different
-        kernel combination
-        """
-        return {
-            'cel_B': input_pams[self.gp_pams_index['cel_B']],
-            'Pdec': input_pams[self.gp_pams_index['Pdec']],
-            'Prot': input_pams[self.gp_pams_index['Prot']],
-            'cel_C': input_pams[self.gp_pams_index['cel_C']]
-        }
 
     def setup_dataset(self, dataset, **kwargs):
         self.define_kernel(dataset)
@@ -107,7 +61,17 @@ class Celerite_QuasiPeriodicActivity(AbstractModel):
 
     def define_kernel(self, dataset):
         gp_pams = np.ones(self.n_pams)
-        kernel = Celerite_SemiPeriodic_Term(Hamp=gp_pams[0], Pdec=gp_pams[1], Prot=gp_pams[2], cel_factor=gp_pams[3])
+
+        kernel = celerite.terms.RealTerm(
+            log_a=gp_pams[0],
+            log_c=gp_pams[1]
+        )
+
+        kernel += celerite.terms.ComplexTerm(
+            log_a=gp_pams[2],
+            log_c=gp_pams[3],
+            log_d=gp_pams[4]
+        )
 
         self.gp[dataset.name_ref] = celerite.GP(kernel)
 
@@ -124,6 +88,7 @@ class Celerite_QuasiPeriodicActivity(AbstractModel):
            2) physical values must be converted to {\tt george} input parameters
         """
         gp_pams = self.convert_val2gp(variable_value)
+
         env = np.sqrt(dataset.e ** 2.0 + dataset.jitter ** 2.0)
         self.gp[dataset.name_ref].set_parameter_vector(gp_pams)
         self.gp[dataset.name_ref].compute(dataset.x0, env)
