@@ -78,7 +78,7 @@ star_properties_list = ['limb_darkening', 'dilution_factor']
 
 def yaml_parser(file_conf):
     stream = open(file_conf, 'r')
-    config_in = yaml.load(stream)
+    config_in = yaml.load(stream, Loader=yaml.FullLoader)
 
     if 'output' not in config_in:
 
