@@ -152,8 +152,6 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, shutdown_
                     print()
                     print(" Error in reading the priors from stellar parameters ")
 
-
-
         return
 
     for dataset_name, dataset_conf in conf_inputs.items():
