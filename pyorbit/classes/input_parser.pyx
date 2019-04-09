@@ -25,7 +25,6 @@ from ..models.batman_limb_darkening import Batman_LimbDarkening_Linear, Batman_L
 from ..models.dilution_factor import CommonDilutionFactor, DilutionFactor
 from ..models.normalization_factor import CommonNormalizationFactor, NormalizationFactor
 from ..models.star_parameters import CommonStarParameters
-from ..models.gp_framework_semiperiod_activity import GP_Framework_Semiperiod_Activity
 
 __all__ = ["pars_input", "yaml_parser"]
 
@@ -70,7 +69,6 @@ define_type_to_class = {
     'sinusoid_common_period': SinusoidCommonPeriod,
     'dilution_factor': DilutionFactor,
     'normalization_factor': NormalizationFactor,
-    'gp_framework_semiperiod_activity': GP_Framework_Semiperiod_Activity
 }
 
 accepted_extensions = ['.yaml', '.yml', '.conf', '.config', '.input', ]
