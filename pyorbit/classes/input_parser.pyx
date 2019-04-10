@@ -78,7 +78,15 @@ star_properties_list = ['limb_darkening', 'dilution_factor']
 
 def yaml_parser(file_conf):
     stream = open(file_conf, 'r')
-    config_in = yaml.load(stream, Loader=yaml.FullLoader)
+
+    try:
+        config_in = yaml.load(stream, Loader=yaml.FullLoader)
+    except AttributeError:
+        config_in = yaml.load(stream)
+        print(' Consider updating YAML')
+    except:
+        print(' Some error happened while reading the configuration file')
+        quit()
 
     if 'output' not in config_in:
 
