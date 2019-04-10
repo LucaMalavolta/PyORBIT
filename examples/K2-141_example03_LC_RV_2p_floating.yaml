@@ -1,0 +1,77 @@
+inputs:
+  LCdata:
+    file: K2-141_dataset/K2-141_detrended.dat
+    kind: Phot
+    models:
+      - lc_model
+      - normalization_factor
+  RVdata:
+    file: K2-141_dataset/K2-141_RV_HARPN_floatingoff.dat
+    kind: RV
+    models:
+      - radial_velocities
+common:
+  planets:
+    b:
+      orbit: circular
+      parametrization: Eastman2013_Tcent
+      boundaries:
+        P: [0.25, 0.31]
+        K: [0.01, 100.0]
+        Tc: [7744.06, 7744.08]
+      spaces:
+        P: Linear
+    c:
+      orbit: circular
+      parametrization: Eastman2013_Tcent
+      boundaries:
+        P: [7.70, 7.80]
+        K: [0.01, 100.0]
+        Tc: [7751.10, 7751.20]
+      spaces:
+        P: Linear
+  star:
+    star_parameters:
+      priors:
+        radius: ['Gaussian', 0.681, 0.018]
+        mass: ['Gaussian', 0.708, 0.028]
+        rho: ['Gaussian', 2.244, 0.161]
+    limb_darkening:
+      type: batman_ld_quadratic
+      parametrization: Kipping
+      boundaries:
+        ld_c1: [0.00, 1.00]
+        ld_c2: [0.00, 1.00]
+  normalization_factor:
+    type: normalization_factor
+models:
+  radial_velocities:
+    planets:
+      - b
+      - c
+  lc_model:
+    kind: batman_transit
+    nthreads: 64
+    planets:
+      - b
+      - c
+    LCdata:
+      supersample_factor: 10
+      exposure_time: 1764.944
+parameters:
+  Tref: 7800.0
+solver:
+  pyde:
+    ngen: 4000
+    npop_mult: 8
+  emcee:
+    npop_mult: 8
+    nsteps: 20000
+    nburn: 5000
+    thin: 100
+  nested_sampling:
+    nlive: 1000
+    num_repeats_mult: 5
+    sampling_efficiency: 0.30
+    shutdown_jitter: True
+  recenter_bounds: True
