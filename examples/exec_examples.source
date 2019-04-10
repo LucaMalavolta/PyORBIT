@@ -1,14 +1,14 @@
 nice -19 python ~/CODE/PyORBIT_development/PyORBIT_Run.py emcee K2-141_example01_LC_1p.yaml > K2-141_example01_LC_1p_emcee.log
-python ~/CODE/PyORBIT_development/PyORBIT_GetResults.py emcee K2-141_example01_LC_1p.yaml > K2-141_example01_LC_1p_emcee_getresults.log
+python ~/CODE/PyORBIT_development/PyORBIT_GetResults.py emcee K2-141_example01_LC_1p.yaml -all > K2-141_example01_LC_1p_emcee_getresults.log
 
 nice -19 python ~/CODE/PyORBIT_development/PyORBIT_Run.py emcee K2-141_example02_LC_2p.yaml > K2-141_example02_LC_2p_emcee.log
-python ~/CODE/PyORBIT_development/PyORBIT_GetResults.py emcee K2-141_example02_LC_2p.yaml > K2-141_example02_LC_2p_emcee_getresults.log
+python ~/CODE/PyORBIT_development/PyORBIT_GetResults.py emcee K2-141_example02_LC_2p.yaml -all > K2-141_example02_LC_2p_emcee_getresults.log
 
 nice -19 python ~/CODE/PyORBIT_development/PyORBIT_Run.py emcee K2-141_example03_LC_RV_2p_floating.yaml > K2-141_example03_LC_RV_2p_floating_emcee.log
-python ~/CODE/PyORBIT_development/PyORBIT_GetResults.py emcee K2-141_example03_LC_RV_2p_floating.yaml > K2-141_example03_LC_RV_2p_floating_emcee_getresults.log
+python ~/CODE/PyORBIT_development/PyORBIT_GetResults.py emcee K2-141_example03_LC_RV_2p_floating.yaml -all > K2-141_example03_LC_RV_2p_floating_emcee_getresults.log
 
 nice -19 python ~/CODE/PyORBIT_development/PyORBIT_Run.py emcee K2-141_example04_LC_RV_2p_GP.yaml > K2-141_example04_LC_RV_2p_GP_emcee.log
-python ~/CODE/PyORBIT_development/PyORBIT_GetResults.py emcee K2-141_example04_LC_RV_2p_GP.yaml > K2-141_example04_LC_RV_2p_GP_emcee_getresults.log
+python ~/CODE/PyORBIT_development/PyORBIT_GetResults.py emcee K2-141_example04_LC_RV_2p_GP.yaml -all > K2-141_example04_LC_RV_2p_GP_emcee_getresults.log
 
 nice -19 python ~/CODE/PyORBIT_development/PyORBIT_Run.py emcee K2-141_example05_RV_2p_GP.yaml > K2-141_example05_RV_2p_GP_emcee.log
-python ~/CODE/PyORBIT_development/PyORBIT_GetResults.py emcee K2-141_example05_RV_2p_GP.yaml > K2-141_example05_RV_2p_GP_emcee_getresults.log
+python ~/CODE/PyORBIT_development/PyORBIT_GetResults.py emcee K2-141_example05_RV_2p_GP.yaml  -all > K2-141_example05_RV_2p_GP_emcee_getresults.log
