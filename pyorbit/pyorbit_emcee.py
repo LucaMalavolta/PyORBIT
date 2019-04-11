@@ -16,9 +16,11 @@ __all__ = ["pyorbit_emcee", "yaml_parser"]
 
 def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
 
+    optimize_dir_output = './' + config_in['output'] + '/optimize/'
     pyde_dir_output = './' + config_in['output'] + '/pyde/'
     emcee_dir_output = './' + config_in['output'] + '/emcee/'
 
+    reloaded_optimize = False
     reloaded_pyde = False
     reloaded_emcee_multirun = False
     reloaded_emcee = False
@@ -44,7 +46,14 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
     except:
         pass
 
+    try:
+        starting_point, previous_boundaries, theta_dict = starting_point_load_from_cpickle(optimize_dir_output)
+        reloaded_optimize = True
+    except:
+        pass
+
     print()
+    print('reloaded_optimize: ', reloaded_pyde)
     print('reloaded_pyde: ', reloaded_pyde)
     print('reloaded_emcee_multirun: ', reloaded_emcee_multirun)
     print('reloaded_emcee: ', reloaded_emcee)
@@ -66,7 +75,6 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
     if reloaded_mc:
         previous_boundaries = mc.bounds
 
-    #if not reloaded_mc:
     mc = ModelContainerEmcee()
 
     pars_input(config_in, mc, input_datasets)
@@ -89,26 +97,6 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
 
     mc.emcee_parameters['nwalkers'] = mc.ndim * mc.emcee_parameters['npop_mult']
     if mc.emcee_parameters['nwalkers']%2 == 1: mc.emcee_parameters['nwalkers'] += 1
-
-    #if mc.dynamical_model is not None:
-    #    mc.dynamical_model.prepare(mc)
-
-
-
-
-    #else:
-
-    #    mc.pyde_dir_output = pyde_dir_output
-    #    mc.emcee_dir_output = emcee_dir_output
-
-    #    """ reload nsteps, burnin and other parameters for emcee"""
-    #    pars_input(config_in, mc, input_datasets, reload_emcee=True)
-
-
-    #    mc.model_setup()
-    #    mc.create_variables_bounds()
-
-    #    mc.initialize_logchi2()
 
     if not os.path.exists(mc.emcee_dir_output):
         os.makedirs(mc.emcee_dir_output)
@@ -147,21 +135,31 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
             mc.bounds[theta_i] = previous_boundaries[theta_dict_legacy[theta_name]]
 
         starting_point = np.median(population, axis=0)
-        print('Using previous population as starting point')
+        print('Using previous population as starting point. ')
         sys.stdout.flush()
         print()
 
     else:
 
-        if mc.starting_point_flag:
-            mc.create_starting_point()
-            starting_point = mc.starting_point
+        if mc.starting_point_flag or reloaded_optimize:
+
+            if reloaded_optimize:
+                print('Using the output from a previous optimize run as starting point')
+                theta_dict_legacy = theta_dict.copy()
+                starting_point_legacy = starting_point.copy()
+                theta_dict = results_analysis.get_theta_dictionary(mc)
+                for theta_name, theta_i in theta_dict.items():
+                    starting_point[theta_i] = starting_point_legacy[theta_dict_legacy[theta_name]]
+            else:
+                print('Using user-defined starting point from YAML file')
+                mc.create_starting_point()
+                starting_point = mc.starting_point
 
             population = np.zeros([mc.emcee_parameters['nwalkers'], mc.ndim], dtype=np.double)
             for ii in range(0, mc.emcee_parameters['nwalkers']):
                 population[ii, :] = np.random.normal(starting_point, 0.0000001)
 
-            print('Using user-defined starting point')
+            print('to create a synthetic population extremely close to the starting values.')
             sys.stdout.flush()
 
         else:
@@ -194,7 +192,7 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
             print('PyDE completed')
             sys.stdout.flush()
 
-    results_analysis.results_resumen(mc, starting_point, compute_lnprob=True)
+    results_analysis.results_resumen(mc, starting_point, compute_lnprob=True, is_starting_point=True)
 
     if mc.use_threading_pool:
         if mc.emcee_parameters['version'] == '2':
@@ -276,7 +274,6 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
         results_analysis.results_resumen(mc, flatchain)
     print()
     print('emcee completed')
-
 
 
     if mc.use_threading_pool:

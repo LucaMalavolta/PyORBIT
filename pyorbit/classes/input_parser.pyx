@@ -646,6 +646,12 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, shutdown_
         if 'include_priors' in conf:
             mc.include_priors = np.asarray(conf['include_priors'], dtype=bool)
 
+    if 'optimize' in conf_solver and hasattr(mc, 'optimize_parameters'):
+        conf = conf_solver['optimize']
+
+        for key_name, key_value in conf.items():
+            mc.optimize_parameters[key_name] = key_value
+
     if 'recenter_bounds' in conf_solver:
         """
         required to avoid a small bug in the code

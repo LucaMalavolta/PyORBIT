@@ -21,7 +21,8 @@ if __name__ == '__main__':
         'multinest':['multinest', 'MultiNest', 'multi'],
         'polychord':['polychord', 'PolyChord', 'polychrod', 'poly'],
         'emcee': ['emcee', 'MCMC', 'Emcee'],
-        'dynesty': ['dynesty', 'DyNesty', 'Dynesty', 'DYNESTY']
+        'dynesty': ['dynesty', 'DyNesty', 'Dynesty', 'DYNESTY'],
+        'optimize': ['optimize', 'scipy', 'Optimize', 'OPTIMIZE'],
     }
 
     if sampler in sampler_keyword['emcee']:
@@ -36,6 +37,8 @@ if __name__ == '__main__':
     if sampler in sampler_keyword['dynesty']:
         pyorbit.pyorbit_dynesty(config_in)
 
+    if sampler in sampler_keyword['optimize']:
+        pyorbit.pyorbit_optimize(config_in)
 
 # This line was used to check if imprtation was working
 # else:

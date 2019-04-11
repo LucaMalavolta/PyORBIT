@@ -8,7 +8,12 @@ __all__ = ["results_resumen", "results_derived", "get_planet_variables", "get_th
            "print_theta_bounds", "print_dictionary", "get_stellar_parameters", "print_integrated_ACF"]
 
 
-def results_resumen(mc, theta, skip_theta=False, compute_lnprob=False, chain_med=False, return_samples=False):
+def results_resumen(mc, theta,
+                    skip_theta=False,
+                    compute_lnprob=False,
+                    chain_med=False,
+                    return_samples=False,
+                    is_starting_point=False):
     # Function with two goals:
     # * Unfold and print out the output from theta
     # * give back a parameter name associated to each value in the result array
@@ -17,6 +22,8 @@ def results_resumen(mc, theta, skip_theta=False, compute_lnprob=False, chain_med
     print('====================================================================================================')
     if skip_theta:
         print('     Boundaries of the sampler variables     ')
+    elif is_starting_point:
+        print('     Starting point of the sample/optimization routines    ')
     else:
         print('     Statistics on the posterior of the sampler variables     ')
 
@@ -38,7 +45,10 @@ def results_resumen(mc, theta, skip_theta=False, compute_lnprob=False, chain_med
         return
 
     print('====================================================================================================')
-    print('     Statistics on the physical parameters obtained from the posteriors samples     ')
+    if is_starting_point:
+        print('     Starting point projected onto the physical space     ')
+    else:
+        print('     Statistics on the physical parameters obtained from the posteriors samples     ')
     print('====================================================================================================')
     print()
 
@@ -70,7 +80,10 @@ def results_resumen(mc, theta, skip_theta=False, compute_lnprob=False, chain_med
             print_dictionary(variable_values)
 
     print('====================================================================================================')
-    print('     Statistics on the derived parameters obtained from the posteriors samples     ')
+    if is_starting_point:
+        print('     Derived parameters obtained from starting point     ')
+    else:
+        print('     Statistics on the derived parameters obtained from the posteriors samples     ')
     print('====================================================================================================')
     print()
 

@@ -78,11 +78,12 @@ def emcee_load_from_cpickle(emcee_dir_output, prefix=''):
             sampler_chain, sampler_lnprobability, sampler_acceptance_fraction, theta_dict
 
 
-def starting_point_save_to_cpickle(dir_output, starting_point, theta_dict, prefix=None):
+def starting_point_save_to_cpickle(dir_output, starting_point, bounds, theta_dict, prefix=None):
 
     add_prefix = (prefix + '_' if prefix else '')
     pickle.dump(theta_dict, open(dir_output + add_prefix + "theta_dictionary.p", "wb"))
     pickle.dump(starting_point, open(dir_output + add_prefix + "starting_point.p", "wb"))
+    pickle.dump(bounds, open(dir_output + add_prefix + "boundaries.p", "wb"))
 
 
 def starting_point_load_from_cpickle(dir_output, prefix=None):
@@ -90,7 +91,8 @@ def starting_point_load_from_cpickle(dir_output, prefix=None):
     add_prefix = (prefix + '_' if prefix else '')
     theta_dict = pickle.load(open(dir_output + add_prefix + "theta_dictionary.p", "rb"))
     starting_point = pickle.load(open(dir_output + add_prefix + "starting_point.p", "rb"))
-    return starting_point, theta_dict
+    bounds = pickle.load(open(dir_output + add_prefix + "boundaries.p", "rb"))
+    return starting_point, bounds, theta_dict
 
 
 def nested_sampling_create_dummy_file(mc, prefix=''):

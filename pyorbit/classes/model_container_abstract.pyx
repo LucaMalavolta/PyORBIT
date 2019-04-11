@@ -41,8 +41,6 @@ class ModelContainer(object):
         self.range = None
         self.ndim = 0
         self.pam_names = ''
-        self.star_mass = [1.0000, 0.1000]
-        self.star_radius = [1.0000, 0.1000]
 
         self.Tref = None
 
