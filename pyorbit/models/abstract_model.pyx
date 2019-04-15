@@ -77,7 +77,6 @@ class AbstractModel(object):
             self.spaces[dataset_name] = {}
 
         for var in self.list_pams_dataset:
-
             ndim, output_lists, applied = self.define_special_variable_properties(ndim, output_lists, dataset_name, var)
             if applied:
                 continue
@@ -89,12 +88,14 @@ class AbstractModel(object):
                 self.spaces[dataset_name][var] = self.default_spaces[var]
 
             if var in self.fix_list[dataset_name]:
+
                 self.transformation[dataset_name][var] = get_fix_val
                 self.variable_index[dataset_name][var] = self.nfix
                 self.prior_kind[dataset_name][var] = 'None'
                 self.prior_pams[dataset_name][var] = []
 
-                if self.fix_list[dataset_name][var] == 'default' and var in self.default_fixed:
+                # Workaround to preserve compatibility with Python 2.x
+                if isinstance(self.fix_list[dataset_name][var], type('string')) and var in self.default_fixed:
                     self.fixed.append(get_2darray_from_val(self.default_fixed[var])[0])
                 else:
                     self.fixed.append(self.fix_list[dataset_name][var][0])

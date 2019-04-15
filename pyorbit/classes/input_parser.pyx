@@ -11,7 +11,8 @@ from ..models.gp_semiperiodic_activity_shared import GaussianProcess_QuasiPeriod
 if 'celerite' in sys.modules:
   from ..models.celerite_semiperiodic_activity import Celerite_QuasiPeriodicActivity
 
-from ..models.correlations import Correlation_SingleDataset
+from ..models.correlations import LocalCorrelation
+from ..models.correlated_jitter import LocalCorrelatedJitter
 from ..models.polynomial_trend import CommonPolynomialTrend, PolynomialTrend, LocalPolynomialTrend
 from ..models.common_offset import CommonOffset, Offset
 from ..models.common_jitter import CommonJitter, Jitter
@@ -61,7 +62,7 @@ define_type_to_class = {
     'gp_quasiperiodic_common': GaussianProcess_QuasiPeriodicActivity_Common,
     'gp_quasiperiodic_shared': GaussianProcess_QuasiPeriodicActivity_Shared,
     'celerite_quasiperiodic': Celerite_QuasiPeriodicActivity,
-    'correlation_singledataset': Correlation_SingleDataset,
+    'local_correlation': LocalCorrelation,
     'polynomial_trend': PolynomialTrend,
     'local_polynomial_trend': LocalPolynomialTrend,
     'common_offset': Offset,
@@ -69,6 +70,7 @@ define_type_to_class = {
     'sinusoid_common_period': SinusoidCommonPeriod,
     'dilution_factor': DilutionFactor,
     'normalization_factor': NormalizationFactor,
+    'local_correlated_jitter': LocalCorrelatedJitter,
 }
 
 accepted_extensions = ['.yaml', '.yml', '.conf', '.config', '.input', ]

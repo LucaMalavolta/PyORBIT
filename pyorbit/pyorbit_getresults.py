@@ -547,6 +547,12 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
             for kind_name, kind in kinds.items():
                 for dataset_name in kind:
 
+                    try:
+                        error_bars = np.sqrt(mc.dataset_dict[dataset_name].e**2
+                                             + bjd_plot['model_out'][dataset_name]['jitter']**2)
+                    except ValueError:
+                        error_bars = mc.dataset_dict[dataset_name].e
+
                     fig = plt.figure(figsize=(12, 12))
 
                     # Partially taken from here:
@@ -568,11 +574,15 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
                     ax_1.ticklabel_format(useOffset=False)
 
                     ax_0.scatter(mc.dataset_dict[dataset_name].x,
-                                 mc.dataset_dict[dataset_name].y - bjd_plot['model_out'][dataset_name]['systematics'],
+                                 mc.dataset_dict[dataset_name].y
+                                 - bjd_plot['model_out'][dataset_name]['systematics']
+                                 - bjd_plot['model_out'][dataset_name]['time_independent'],
                                  color='C0', zorder=4, s=16)
                     ax_0.errorbar(mc.dataset_dict[dataset_name].x,
-                                  mc.dataset_dict[dataset_name].y - bjd_plot['model_out'][dataset_name]['systematics'],
-                                  yerr=mc.dataset_dict[dataset_name].e,
+                                  mc.dataset_dict[dataset_name].y
+                                  - bjd_plot['model_out'][dataset_name]['systematics']
+                                  - bjd_plot['model_out'][dataset_name]['time_independent'],
+                                  yerr=error_bars,
                                   color='C0', fmt='o', ms=0, zorder=3, alpha=0.5)
                     ax_0.plot(bjd_plot[dataset_name]['x_plot'], bjd_plot['model_x'][dataset_name]['complete'],
                               label='Median-corresponding model',
@@ -589,7 +599,7 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
                                  color='C0', zorder=4, s=16)
                     ax_1.errorbar(mc.dataset_dict[dataset_name].x,
                                  mc.dataset_dict[dataset_name].y - bjd_plot['model_out'][dataset_name]['complete'],
-                                 yerr=mc.dataset_dict[dataset_name].e,
+                                 yerr=error_bars,
                                  color='C0', fmt='o', ms=0, zorder=3, alpha=0.5)
                     ax_1.axhline(0.0, color='k', alpha=0.5, zorder=0)
 
@@ -656,7 +666,7 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
                                         tc_folded_plot = (bjd_plot[dataset_name]['x_plot'] - mc.Tref) % \
                                                          planet_vars[common_ref]['P']
 
-                        fileout.write('descriptor BJD Tc_folded pha val,+- sys mod full val_compare,+- res,+- \n')
+                        fileout.write('descriptor BJD Tc_folded pha val,+- sys mod full val_compare,+- res,+- jit \n')
 
                         try:
                             len(bjd_plot[plot_out_keyword][dataset_name][model_name])
@@ -667,17 +677,24 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
                             bjd_plot[plot_x_keyword][dataset_name][model_name] = \
                                 bjd_plot[plot_x_keyword][dataset_name][model_name] * np.ones(dataset.n)
 
-                        for x, tcf, pha, y, e, sys, mod, com, obs_mod, res in zip(
+                        for x, tcf, pha, y, e, sys, mod, com, obs_mod, res, jit in zip(
                                 dataset.x, tc_folded, phase, dataset.y, dataset.e,
                                 bjd_plot[plot_out_keyword][dataset_name]['systematics'],
                                 bjd_plot[plot_out_keyword][dataset_name][model_name],
                                 bjd_plot[plot_out_keyword][dataset_name]['complete'],
                                 dataset.y - bjd_plot[plot_out_keyword][dataset_name]['complete'] +
                                 bjd_plot[plot_out_keyword][dataset_name][model_name],
-                                dataset.y - bjd_plot[plot_out_keyword][dataset_name]['complete']):
-                            fileout.write('{0:f} {1:f} {2:f} {3:f} {4:f} {5:f} {6:1f} {7:f} {8:f} {9:f} {10:f} {11:f}'
-                                          '\n'.format(x, tcf, pha, y, e, sys, mod, com, obs_mod, e, res, e))
+                                dataset.y - bjd_plot[plot_out_keyword][dataset_name]['complete'],
+                                bjd_plot[plot_out_keyword][dataset_name]['jitter']):
+                            fileout.write('{0:f} {1:f} {2:f} {3:f} {4:f} {5:f} {6:1f} {7:f} {8:f} {9:f} {10:f} {11:f} {12:f}'
+                                          '\n'.format(x, tcf, pha, y, e, sys, mod, com, obs_mod, e, res, e, jit))
                         fileout.close()
+
+                        if getattr(mc.models[model_name], 'systematic_model', False):
+                            continue
+
+                        if getattr(mc.models[model_name], 'jitter_model', False):
+                            continue
 
                         fileout = open(dir_models + dataset_name + '_' + model_name + '_full.dat', 'w')
 

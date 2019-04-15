@@ -218,7 +218,6 @@ def f_get_mass(m_star2, m_star1, period, e0, k1):
     :param m_star2: mass of the secondary/planet, in Solar mass units
     :param m_star1: mass of the primary, in Solar mass units
     :param period: orbital period of star2, in [d]
-    :param i: orbital inclination of star2 wrt the observer (0=face on), in [deg]
     :param e0: orbital eccentricity of star2
     :param k1: observed RV semi-amplitude of the primary
     :return: the difference between the observed and theoretical RV semi-amplitude of the primary, in [m s^-1]
@@ -240,14 +239,13 @@ def f_get_mass(m_star2, m_star1, period, e0, k1):
               * period ** (-1. / 3.)
               * (m_star2 * (m_star1 + m_star2) ** (-2. / 3.)))
 
-def get_approximate_mass(m_star1, period, e0, k1):
+def get_approximate_mass(period, k1, e0, m_star1):
     """ Return the approximate mass of the planet in Solar mass units, in the assumption that M_planet << M_star
 
-    :param m_star1: mass of the primary, in Solar mass units
     :param period: orbital period of star2, in [d]
-    :param i: orbital inclination of star2 wrt the observer (0=face on), in [deg]
-    :param e0: orbital eccentricity of star2
     :param k1: observed RV semi-amplitude of the primary
+    :param e0: orbital eccentricity of star2
+    :param m_star1: mass of the primary, in Solar mass units
     :return: mass of the planet, in Solar mass units
     """
     return k1 / ((2. * np.pi * constants.Gsi * constants.Msun / 86400.0) ** (1. / 3.)

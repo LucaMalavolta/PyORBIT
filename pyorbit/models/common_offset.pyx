@@ -6,19 +6,16 @@ class CommonOffset(AbstractCommon):
     '''
 
     model_class = 'common_offset'
+    systematic_model = True
 
     list_pams = {
         'offset'  # order 1
     }
 
     default_bounds = {}
-
     default_spaces = {'offset': 'Linear'}
-
     default_priors = { 'offset': ['Uniform', []]}
-
     default_fixed = {}
-
     recenter_pams = {}
 
     def common_initialization_with_dataset(self, dataset):

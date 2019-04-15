@@ -267,8 +267,6 @@ def get_planet_variables(mc, theta, verbose=False):
                                                                        variable_values['e'],
                                                                        variable_values['o'])
 
-                derived_variables['Tc'] = True
-
             elif 'f' in variable_values.keys():
                 derived_variables['Tc'] = True
                 variable_values['Tc'] = mc.Tref + kepler_exo.kepler_phase2Tc_Tref(variable_values['P'],
@@ -389,8 +387,8 @@ def get_model(mc, theta, bjd_dict):
             #    continue
             variable_values.update(mc.models[model_name].convert(theta, dataset_name))
 
-            if getattr(mc.models[model_name], 'model_class', None) is 'common_jitter':
-                dataset.jitter = mc.models[model_name].compute(variable_values, dataset)
+            if getattr(mc.models[model_name], 'jitter_model', False):
+                dataset.jitter += mc.models[model_name].compute(variable_values, dataset)
                 continue
 
             if getattr(mc.models[model_name], 'systematic_model', False):
@@ -398,7 +396,8 @@ def get_model(mc, theta, bjd_dict):
 
         model_out[dataset_name]['systematics'] = dataset.additive_model.copy()
         model_out[dataset_name]['jitter'] = dataset.jitter.copy()
-        model_out[dataset_name]['complete'] = np.zeros(dataset.n, dtype=np.double)  # dataset.additive_model.copy()
+        model_out[dataset_name]['complete'] = np.zeros(dataset.n, dtype=np.double)
+        model_out[dataset_name]['time_independent'] = np.zeros(dataset.n, dtype=np.double)
 
         model_x0[dataset_name]['complete'] = np.zeros(n_input, dtype=np.double)
 
@@ -420,9 +419,6 @@ def get_model(mc, theta, bjd_dict):
                 logchi2_gp_model = model_name
                 continue
 
-            if getattr(mc.models[model_name], 'systematic_model', False):
-                continue
-
             if getattr(dataset, 'dynamical', False):
                 dataset.external_model = dynamical_output[dataset_name]
                 external_model = dynamical_output_x0[dataset_name].copy()
@@ -431,8 +427,15 @@ def get_model(mc, theta, bjd_dict):
 
             model_out[dataset_name][model_name] = mc.models[model_name].compute(variable_values, dataset)
 
+            if getattr(mc.models[model_name], 'systematic_model', False):
+                continue
+
+            if getattr(mc.models[model_name], 'jitter_model', False):
+                continue
+
             if getattr(mc.models[model_name], 'time_independent_model', False):
                 model_x0[dataset_name][model_name] = np.zeros(np.size(x0_plot), dtype=np.double)
+                model_out[dataset_name]['time_independent'] += mc.models[model_name].compute(variable_values, dataset)
             else:
                 model_x0[dataset_name][model_name] = mc.models[model_name].compute(variable_values, dataset, x0_plot)
 

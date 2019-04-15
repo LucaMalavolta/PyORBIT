@@ -59,10 +59,13 @@ class AbstractCommon(object):
             if var in self.fix_list:
                 if var not in self.transformation:
                     self.transformation[var] = get_fix_val
-                    if self.fix_list[var] is 'default' and var in self.default_fixed:
-                            self.fixed.append(get_2darray_from_val(self.default_fixed[var])[0])
+
+                    # Workaround to preserve compatibility with Python 2.x
+                    if isinstance(self.fix_list[var], type('string')) and var in self.default_fixed:
+                        self.fixed.append(get_2darray_from_val(self.default_fixed[var])[0])
                     else:
                         self.fixed.append(self.fix_list[var][0])
+
                     self.variable_index[var] = self.nfix
                     self.nfix += 1
                     self.prior_kind[var] = 'None'

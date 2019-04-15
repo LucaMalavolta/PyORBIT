@@ -233,8 +233,9 @@ class ModelContainer(object):
                     logchi2_gp_model = model_name
                     continue
 
-                if getattr(self.models[model_name], 'model_class', None) is 'common_jitter':
-                    dataset.jitter = self.models[model_name].compute(variable_values, dataset)
+                #if getattr(self.models[model_name], 'model_class', None) is 'common_jitter':
+                if getattr(self.models[model_name], 'jitter_model', False):
+                    dataset.jitter += self.models[model_name].compute(variable_values, dataset)
                     continue
 
                 if getattr(dataset, 'dynamical', False):
