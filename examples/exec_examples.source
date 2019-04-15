@@ -12,3 +12,7 @@ python ~/CODE/PyORBIT_development/PyORBIT_GetResults.py emcee K2-141_example04_L
 
 nice -19 python ~/CODE/PyORBIT_development/PyORBIT_Run.py emcee K2-141_example05_RV_2p_GP.yaml > K2-141_example05_RV_2p_GP_emcee.log
 python ~/CODE/PyORBIT_development/PyORBIT_GetResults.py emcee K2-141_example05_RV_2p_GP.yaml  -all > K2-141_example05_RV_2p_GP_emcee_getresults.log
+
+python ~/CODE/PyORBIT_development/PyORBIT_Run.py optimize K2-141_example06_RV_2p_GP_starting_point.yaml > K2-141_example06_RV_2p_GP_starting_point_optimize.log
+nice -19 python ~/CODE/PyORBIT_development/PyORBIT_Run.py emcee K2-141_example06_RV_2p_GP_starting_point.yaml > K2-141_example06_RV_2p_GP_starting_point_emcee.log
+python ~/CODE/PyORBIT_development/PyORBIT_GetResults.py emcee K2-141_example06_RV_2p_GP_starting_point.yaml  -all > K2-141_example06_RV_2p_GP_starting_point_emcee_getresults.log

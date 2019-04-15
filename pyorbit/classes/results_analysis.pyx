@@ -427,17 +427,17 @@ def get_model(mc, theta, bjd_dict):
 
             model_out[dataset_name][model_name] = mc.models[model_name].compute(variable_values, dataset)
 
-            if getattr(mc.models[model_name], 'systematic_model', False):
-                continue
-
-            if getattr(mc.models[model_name], 'jitter_model', False):
-                continue
-
             if getattr(mc.models[model_name], 'time_independent_model', False):
                 model_x0[dataset_name][model_name] = np.zeros(np.size(x0_plot), dtype=np.double)
                 model_out[dataset_name]['time_independent'] += mc.models[model_name].compute(variable_values, dataset)
             else:
                 model_x0[dataset_name][model_name] = mc.models[model_name].compute(variable_values, dataset, x0_plot)
+
+            if getattr(mc.models[model_name], 'systematic_model', False):
+                continue
+
+            if getattr(mc.models[model_name], 'jitter_model', False):
+                continue
 
             if getattr(mc.models[model_name], 'unitary_model', False):
                 dataset.unitary_model += model_out[dataset_name][model_name]

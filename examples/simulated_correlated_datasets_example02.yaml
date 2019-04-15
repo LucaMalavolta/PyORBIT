@@ -1,0 +1,47 @@
+inputs:
+  RVdata:
+      file: simuated_dataset/YZ_dataset.dat
+      kind:
+        - RV
+        - BIS
+      models:
+        - radial_velocities
+        - correlation
+common:
+  planets:
+    b:
+      orbit: circular
+      parametrization: Eastman2013_Tcent
+      boundaries:
+        P: [4.3678, 4.7678]
+        Tc: [ -0.1, 0.1]
+        K: [20.0, 30.0]
+  star:
+    star_parameters:
+      priors:
+        mass: ['Gaussian', 1.00, 0.02]
+        radius: ['Gaussian', 1.00, 0.02]
+models:
+  radial_velocities:
+    planets: b
+  correlation:
+    type: local_correlation
+    reference: RVdata
+    associated: BISdata
+    order: 1
+parameters:
+  Tref: 0.00
+solver:
+  pyde:
+    ngen: 16000
+    npop_mult: 8
+  emcee:
+    npop_mult: 8
+    nsteps: 10000
+    nburn: 5000
+    thin: 1
+  nested_sampling:
+    nlive: 1000
+    num_repeats_mult: 5
+    sampling_efficiency: 0.30
+  recenter_bounds: True
