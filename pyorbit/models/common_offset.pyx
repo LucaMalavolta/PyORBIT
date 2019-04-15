@@ -6,8 +6,6 @@ class CommonOffset(AbstractCommon):
     '''
 
     model_class = 'common_offset'
-    systematic_model = True
-
     list_pams = {
         'offset'  # order 1
     }
@@ -33,11 +31,12 @@ class CommonOffset(AbstractCommon):
 class Offset(AbstractModel):
 
     model_class = 'common_offset'
+    systematic_model = True
+
     list_pams_common = {'offset': 'U'}
     list_pams_dataset = {}
 
     recenter_pams_dataset = {}
-    systematic_model = True
 
     def compute(self, variable_value, dataset, x0_input=None):
         return variable_value['offset']
