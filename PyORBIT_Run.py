@@ -5,7 +5,12 @@ import os
 import sys
 
 if __name__ == '__main__':
-    print('This program is being run by itself')
+
+    print('PyORBIT v8.x')
+    print()
+    print('Python version in use:')
+    print(sys.version)
+    print()
 
     parser = argparse.ArgumentParser(prog='PyORBIT_run.py', description='PyORBIT runner')
     parser.add_argument('sampler', type=str, nargs=1, help='sampler (emcee or polychord)')

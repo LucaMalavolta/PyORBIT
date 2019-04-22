@@ -26,7 +26,7 @@ def pyorbit_multinest(config_in, input_datasets=None, return_output=None):
     pars_input(config_in, mc, input_datasets)
 
     if mc.nested_sampling_parameters['shutdown_jitter']:
-        for dataset in mc.dataset_dict.itervalues():
+        for dataset_name, dataset in mc.dataset_dict.items():
             dataset.shutdown_jitter()
 
     mc.model_setup()
