@@ -30,11 +30,17 @@ if 'celerite' not in sys.modules:
         print('WARNING! Imported pyorbit.classes.dummy celerite, models relying on this package will not work')
     
     try:
-        import PyPolyChord
-        from PyPolyChord.settings import PolyChordSettings
-    except:
-        from pyorbit.classes.dummy import PyPolyChord
-        print('WARNING! Imported pyorbit.classes.dummy PyPolyChord, models relying on this package will not work')
+        import pypolychord
+        from pypolychord.settings import PolyChordSettings
+    except ImportError:
+
+        try:
+            import PyPolyChord
+            from PyPolyChord.settings import PolyChordSettings
+            print('Consider updating to newer version of PolyChord: https://github.com/PolyChord/PolyChordLite ')
+        except ImportError:
+            from pyorbit.classes.dummy import PyPolyChord
+            print('WARNING! Imported pyorbit.classes.dummy PyPolyChord, models relying on this package will not work')
 
     try:
         if os.path.isdir('/Users/malavolta/Astro/CODE/'):

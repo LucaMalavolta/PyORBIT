@@ -110,9 +110,6 @@ def pyorbit_multinest(config_in, input_datasets=None, return_output=None):
     print('evidence: %(logZ).1f +- %(logZerr).1f' % result)
     print(result['logZ']//np.log(10.00), result['logZerr']//np.log(10.00))
 
-    #""" A dummy file is created to let the cpulimit script to proceed with the next step"""
-    #nested_sampling_create_dummy_file(mc)
-
     if return_output:
         return mc
     else:

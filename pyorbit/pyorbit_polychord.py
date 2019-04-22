@@ -2,7 +2,8 @@ from __future__ import print_function
 from pyorbit.classes.common import *
 from pyorbit.classes.model_container_polychord import ModelContainerPolyChord
 from pyorbit.classes.input_parser import yaml_parser, pars_input
-from pyorbit.classes.io_subroutines import nested_sampling_save_to_cpickle, nested_sampling_load_from_cpickle, nested_sampling_create_dummy_file
+from pyorbit.classes.io_subroutines import nested_sampling_save_to_cpickle, nested_sampling_load_from_cpickle, \
+    nested_sampling_create_dummy_file
 import pyorbit.classes.results_analysis as results_analysis
 import os
 import sys
@@ -18,8 +19,13 @@ def show(filepath):
 """
 
 
-def pyorbit_polychord(config_in, input_datasets=None, return_output=None):
+# | Optional dumper function giving run-time read access to
+# | the live points, dead points, weights and evidences
+def dumper(live, dead, logweights, logZ, logZerr):
+    print("Last dead point:", dead[-1])
 
+
+def pyorbit_polychord(config_in, input_datasets=None, return_output=None):
     output_directory = './' + config_in['output'] + '/polychord/'
 
     mc = ModelContainerPolyChord()
@@ -39,17 +45,14 @@ def pyorbit_polychord(config_in, input_datasets=None, return_output=None):
 
     mc.output_directory = output_directory
 
-
-
-    #os.system("mkdir -p " + output_directory + "/clusters")
-    #os.system("mkdir -p " +output_directory + "chains/clusters")
+    # os.system("mkdir -p " + output_directory + "/clusters")
+    # os.system("mkdir -p " +output_directory + "chains/clusters")
 
     print()
     print('Reference Time Tref: ', mc.Tref)
     print()
     print('*************************************************************')
     print()
-
 
     settings = PolyChordSettings(nDims=mc.ndim, nDerived=0)
 
@@ -70,8 +73,8 @@ def pyorbit_polychord(config_in, input_datasets=None, return_output=None):
     if 'include_priors' in mc.nested_sampling_parameters:
         mc.include_priors = mc.nested_sampling_parameters['include_priors']
 
-    output = PyPolyChord.run_polychord(mc.polychord_call, nDims=mc.ndim, nDerived=0, settings=settings,
-                                       prior=mc.polychord_priors)
+    output = pypolychord.run_polychord(mc.polychord_call, nDims=mc.ndim, nDerived=0, settings=settings,
+                                       prior=mc.polychord_priors, dumper=dumper)
 
     paramnames = [('p%i' % i, r'\theta_%i' % i) for i in range(mc.ndim)]
     paramnames += [('r*', 'r')]
