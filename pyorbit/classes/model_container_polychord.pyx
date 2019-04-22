@@ -27,7 +27,6 @@ class ModelContainerPolyChord(ModelContainer):
         theta = [theta1[i] for i in range(0, self.ndim)]
         phi = [0.0] * 0
         chi_out = self(theta, self.include_priors)
-        print(chi_out, phi)
         if chi_out < -0.5e8:
             return -0.5e8, phi
         return chi_out, phi
