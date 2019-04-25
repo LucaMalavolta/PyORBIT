@@ -20,17 +20,6 @@ class CommonJitter(AbstractCommon):
 
     recenter_pams = {}
 
-    def common_initialization_with_dataset(self, dataset):
-        if not self.default_bounds:
-            min_jitter = np.min(dataset.e) / 100.
-            max_jitter = np.max(dataset.e) * 100.
-        else:
-            min_jitter = min(self.default_bounds['jitter'][0], np.min(dataset.e) / 100.)
-            max_jitter = max(self.default_bounds['jitter'][1], np.max(dataset.e) * 100.)
-        self.default_bounds['jitter']= [min_jitter, max_jitter]
-        dataset.shutdown_jitter()
-        return
-
 
 class Jitter(AbstractModel):
 
@@ -41,6 +30,32 @@ class Jitter(AbstractModel):
     list_pams_dataset = {}
 
     recenter_pams_dataset = {}
+
+    def __init__(self, *args, **kwargs):
+        super(Jitter, self).__init__(*args, **kwargs)
+
+        self.common_jitter_ref = None
+
+    def initialize_model(self, mc, **kwargs):
+
+        for common_ref in self.common_ref:
+            if mc.common_models[common_ref].model_class == 'common_jitter':
+                self.common_jitter_ref = common_ref
+                break
+
+    def setup_dataset(self, mc, dataset, **kwargs):
+
+        if not mc.common_models[self.common_jitter_ref].default_bounds:
+            min_jitter = np.min(dataset.e) / 100.
+            max_jitter = np.max(dataset.e) * 100.
+        else:
+            min_jitter = min(mc.common_models[self.common_jitter_ref].default_bounds['jitter'][0],
+                             np.min(dataset.e) / 100.)
+            max_jitter = max(mc.common_models[self.common_jitter_ref].default_bounds['jitter'][1],
+                             np.max(dataset.e) * 100.)
+        mc.common_models[self.common_jitter_ref].default_bounds['jitter'] = [min_jitter, max_jitter]
+        dataset.shutdown_jitter()
+        return
 
     def compute(self, variable_value, dataset, x0_input=None):
         return variable_value['jitter']

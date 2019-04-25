@@ -16,17 +16,6 @@ class CommonOffset(AbstractCommon):
     default_fixed = {}
     recenter_pams = {}
 
-    def common_initialization_with_dataset(self, dataset):
-        if not self.default_bounds:
-            min_offset = np.min(dataset.y) - 100
-            max_offset = np.max(dataset.y) + 100.
-        else:
-            min_offset = min(self.default_bounds['offset'][0], np.min(dataset.y) - 100.)
-            max_offset = max(self.default_bounds['offset'][1], np.max(dataset.y) + 100.)
-        self.default_bounds['offset'] = [min_offset, max_offset]
-        dataset.shutdown_offset()
-        return
-
 
 class Offset(AbstractModel):
 
@@ -37,6 +26,32 @@ class Offset(AbstractModel):
     list_pams_dataset = {}
 
     recenter_pams_dataset = {}
+
+    def __init__(self, *args, **kwargs):
+        super(Offset, self).__init__(*args, **kwargs)
+
+        self.common_offset_ref = None
+
+    def initialize_model(self, mc, **kwargs):
+
+        for common_ref in self.common_ref:
+            if mc.common_models[common_ref].model_class == 'common_offset':
+                self.common_offset_ref = common_ref
+                break
+
+    def setup_dataset(self, mc, dataset, **kwargs):
+
+        if not mc.common_models[self.common_offset_ref].default_bounds:
+            min_offset = np.min(dataset.y) - 100.
+            max_offset = np.max(dataset.y) + 100.
+        else:
+            min_offset = min(mc.common_models[self.common_offset_ref].default_bounds['jitter'][0],
+                             np.min(dataset.y) - 100.)
+            max_offset = max(mc.common_models[self.common_offset_ref].default_bounds['jitter'][1],
+                             np.max(dataset.y) + 100.)
+        mc.common_models[self.common_offset_ref].default_bounds['jitter'] = [min_offset, max_offset]
+        dataset.shutdown_offset()
+        return
 
     def compute(self, variable_value, dataset, x0_input=None):
         return variable_value['offset']

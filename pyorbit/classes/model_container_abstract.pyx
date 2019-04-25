@@ -59,16 +59,6 @@ class ModelContainer(object):
             for dataset_name in list(set(model_conf) & set(self.dataset_dict)):
                 model.setup_dataset(self, self.dataset_dict[dataset_name], **model_conf)
 
-        # TODO check if this can be dropped
-        for dataset_name, dataset in self.dataset_dict.items():
-            for model_name in dataset.models:
-                self.models[model_name].common_initialization_with_dataset(dataset)
-                try:
-                    for common_model in self.models[model_name].common_ref:
-                        self.common_models[common_model].common_initialization_with_dataset(dataset)
-                except:
-                    pass
-
         if self.dynamical_model:
             self.dynamical_model.prepare(self)
 

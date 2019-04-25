@@ -53,10 +53,6 @@ class AbstractModel(object):
     def setup_dataset(self, mc, dataset, **kwargs):
         pass
 
-    def common_initialization_with_dataset(self, dataset):
-        """ Initialization with dataset even if no dataset-specific parameter is present"""
-        pass
-
     def define_special_variable_properties(self, ndim, output_lists, dataset_name, var):
         return ndim, output_lists, False
 
