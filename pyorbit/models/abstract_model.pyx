@@ -50,7 +50,7 @@ class AbstractModel(object):
     def initialize_model(self, mc, **kwargs):
         pass
 
-    def setup_dataset(self, dataset, **kwargs):
+    def setup_dataset(self, mc, dataset, **kwargs):
         pass
 
     def common_initialization_with_dataset(self, dataset):

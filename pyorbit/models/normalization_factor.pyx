@@ -43,7 +43,7 @@ class NormalizationFactor(AbstractModel):
 
     list_pams_common = {
         'n_factor',  # Diluition factor, expressed as all_other_stars / star_A ratio of flux
-    }
+        }
     list_pams_dataset = {}
 
     default_bounds = {}
@@ -51,10 +51,6 @@ class NormalizationFactor(AbstractModel):
     default_priors = {}
 
     recenter_pams_dataset = {}
-
-
-    #def setup_dataset(self, dataset, **kwargs):
-    #    self.unitary_array[dataset.name_ref] = np.ones(dataset.n, dtype=np.double)
 
     def compute(self, variable_value, dataset, x0_input=None):
 

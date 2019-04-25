@@ -5,14 +5,12 @@ import numpy.polynomial.polynomial
 
 
 class CommonPolynomialTrend(AbstractCommon):
-    ''' This class must be created for each planet in the system
-            model_name is the way the planet is identified
-    '''
 
     model_class = 'polynomial_trend'
 
     "polynomial trend up to 10th order"
     list_pams = {
+        'x_zero',
         'poly_c0',  # order 0
         'poly_c1',  # order 1
         'poly_c2',  # order 2
@@ -27,6 +25,7 @@ class CommonPolynomialTrend(AbstractCommon):
 
     """These default boundaries are used when the user does not define them in the yaml file"""
     default_bounds = {
+        'x_zero': [-10 ** 5, 10 ** 5],
         'poly_c0': [-1.0, 1.0],
         'poly_c1': [-1.0, 1.0],
         'poly_c2': [-1.0, 1.0],
@@ -40,6 +39,7 @@ class CommonPolynomialTrend(AbstractCommon):
     }
 
     default_spaces = {
+        'x_zero': 'Linear',
         'poly_c0': 'Linear',  # order 1
         'poly_c1': 'Linear',  # order 1
         'poly_c2': 'Linear',  # order 2
@@ -53,8 +53,9 @@ class CommonPolynomialTrend(AbstractCommon):
     }
 
     default_priors = {
-        'poly_c0': ['Uniform', []], # 10 m/s/day would be already an unbelievable value
-        'poly_c1': ['Uniform', []], # 10 m/s/day would be already an unbelievable value
+        'x_zero': ['Uniform', []],
+        'poly_c0': ['Uniform', []],
+        'poly_c1': ['Uniform', []],
         'poly_c2': ['Uniform', []],
         'poly_c3': ['Uniform', []],
         'poly_c4': ['Uniform', []],
@@ -77,19 +78,29 @@ class PolynomialTrend(AbstractModel):
     def __init__(self, *args, **kwargs):
         super(PolynomialTrend, self).__init__(*args, **kwargs)
 
-        self.list_pams_common = {}
+        self.list_pams_common = {'x_zero': None}
+
+        """ in this model x_zero will be common to all the models, however it is treated
+            as a specific
+        """
         self.list_pams_dataset = {}
+
 
         self.recenter_pams_dataset = {}
 
         self.order = 1
         self.starting_order = 1
 
-    def initialize_model(self, mc, **kwargs):
-        """ A special kind of initialization is required for this module, since it has to take a second dataset
-        and check the correspondence with the points
-
         """
+        The x-intercept must be defined within the interval of at least one dataset, 
+        otherwise there will be a degeneracy between the offset parameter and the coefficients
+        of the polynomial
+        """
+        self.x_zero = None
+        self.common_poly_ref = None
+
+    def initialize_model(self, mc, **kwargs):
+
         if 'order' in kwargs:
             self.order = kwargs['order']
 
@@ -108,6 +119,22 @@ class PolynomialTrend(AbstractModel):
             var = 'poly_c'+repr(i_order)
             self.list_pams_common.update({var: None})
 
+        for common_ref in self.common_ref:
+            if mc.common_models[common_ref].model_class == 'polynomial_trend':
+                self.common_poly_ref = common_ref
+                break
+
+    def setup_dataset(self, mc, dataset, **kwargs):
+
+        try:
+            mc.common_models[self.common_poly_ref].fix_list['x_zero'] = np.asarray([kwargs['x_zero'], 0.0000], dtype=np.double)
+        except (KeyError, ValueError):
+            if np.amin(dataset.x) < mc.Tref < np.amax(dataset.x):
+                self.x_zero = mc.Tref
+            elif not self.x_zero:
+                self.x_zero = np.average(dataset.x)
+            mc.common_models[self.common_poly_ref].fix_list['x_zero'] = np.asarray([self.x_zero, 0.0000])
+
     def compute(self, variable_value, dataset, x0_input=None):
 
         coeff = np.zeros(self.order+1)
@@ -119,28 +146,39 @@ class PolynomialTrend(AbstractModel):
         Numpy Polinomials requires the inverse order (from high to small) as input"""
 
         if x0_input is None:
-            return numpy.polynomial.polynomial.polyval(dataset.x0, coeff)
+            return numpy.polynomial.polynomial.polyval(dataset.x-variable_value['x_zero'], coeff)
         else:
-            return numpy.polynomial.polynomial.polyval(x0_input, coeff)
+            return numpy.polynomial.polynomial.polyval(x0_input+dataset.Tref-variable_value['x_zero'], coeff)
 
 
 class LocalPolynomialTrend(AbstractModel):
 
     model_class = 'local_polynomial_trend'
-    list_pams_common = {}
-    list_pams_dataset = {}
 
-    recenter_pams_dataset = {}
+    def __init__(self, *args, **kwargs):
+        super(LocalPolynomialTrend, self).__init__(*args, **kwargs)
 
-    order = 1
-    starting_order = 1
-    x_zero = {}
+        self.list_pams_common = {}
 
-    def initialize_model(self, mc, **kwargs):
-        """ A special kind of initialization is required for this module, since it has to take a second dataset
-        and check the correspondence with the points
+        self.list_pams_dataset = {'x_zero': None}
+        self.default_bounds = {'x_zero': [-10**5, 10**5]}
+        self.default_spaces = {'x_zero': 'Linear'}
+        self.default_priors = {'x_zero': ['Uniform', []]}
+
+        self.recenter_pams_dataset = {}
+
+        self.order = 1
+        self.starting_order = 1
 
         """
+        The x-intercept must be defined within the interval of at least one dataset, 
+        otherwise there will be a degeneracy between the offset parameter and the coefficients
+        of the polynomial
+        """
+        self.x_zero = {}
+
+    def initialize_model(self, mc, **kwargs):
+
         if 'order' in kwargs:
             self.order = kwargs['order']
 
@@ -159,12 +197,16 @@ class LocalPolynomialTrend(AbstractModel):
             var = 'poly_c'+repr(i_order)
             self.list_pams_dataset.update({var: None})
 
-    def setup_dataset(self, dataset, **kwargs):
+    def setup_dataset(self, mc, dataset, **kwargs):
 
-        if 'x_zero' in kwargs:
-            self.x_zero[dataset.name_ref] = kwargs['x_zero']
-        else:
-            self.x_zero[dataset.name_ref] = np.median(dataset.x0)
+        try:
+            self.fix_list[dataset.name_ref]['x_zero'] = np.asarray([kwargs['x_zero'], 0.0000], dtype=np.double)
+        except (KeyError, ValueError):
+            if np.amin(dataset.x) < dataset.Tref < np.amax(dataset.x):
+                self.x_zero[dataset.name_ref] = dataset.Tref
+            else:
+                self.x_zero[dataset.name_ref] = np.average(dataset.x)
+            self.fix_list[dataset.name_ref]['x_zero'] = np.asarray([self.x_zero[dataset.name_ref], 0.0000])
 
     def compute(self, variable_value, dataset, x0_input=None):
 
@@ -177,6 +219,6 @@ class LocalPolynomialTrend(AbstractModel):
         Numpy Polinomials requires the inverse order (from high to small) as input"""
 
         if x0_input is None:
-            return numpy.polynomial.polynomial.polyval(dataset.x0-self.x_zero[dataset.name_ref], coeff)
+            return numpy.polynomial.polynomial.polyval(dataset.x0-variable_value['x_zero'], coeff)
         else:
-            return numpy.polynomial.polynomial.polyval(x0_input-self.x_zero[dataset.name_ref], coeff)
+            return numpy.polynomial.polynomial.polyval(x0_input+dataset.Tref-variable_value['x_zero'], coeff)

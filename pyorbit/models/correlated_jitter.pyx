@@ -59,11 +59,10 @@ class LocalCorrelatedJitter(AbstractModel):
         print('Associated dataset: ', kwargs['associated'])
         print('Cross-match between datasets: {0:d} out of {1:d} '.format(int(np.sum(self.x_mask)), dataset_ref.n))
 
-        if 'x_zero' in kwargs:
-            if not isinstance(kwargs['x_zero'], type('string')):
-                self.fix_list[dataset_ref.name_ref]['x_zero'] = np.asarray([kwargs['x_zero'], 0.0000], dtype=np.double)
-        else:
-            self.fix_list[dataset_ref.name_ref]['x_zero'] = np.asarray([np.amin(self.x_vals[self.x_mask]), 0.0000], dtype=np.double)
+        try:
+            self.fix_list[dataset_asc.name_ref]['x_zero'] = np.asarray([kwargs['x_zero'], 0.0000], dtype=np.double)
+        except (KeyError, ValueError):
+            self.fix_list[dataset_asc.name_ref]['x_zero'] = np.asarray([np.amin(self.x_vals[self.x_mask]), 0.0000], dtype=np.double)
 
         for i_order in range(1, self.order+1):
             var = 'c'+repr(i_order)

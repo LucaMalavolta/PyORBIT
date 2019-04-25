@@ -55,7 +55,7 @@ class Celerite_QuasiPeriodicActivity(AbstractModel):
 
         return output_pams
 
-    def setup_dataset(self, dataset, **kwargs):
+    def setup_dataset(self, mc, dataset, **kwargs):
         self.define_kernel(dataset)
         return
 

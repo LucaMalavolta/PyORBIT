@@ -12,7 +12,7 @@ class CommonOffset(AbstractCommon):
 
     default_bounds = {}
     default_spaces = {'offset': 'Linear'}
-    default_priors = { 'offset': ['Uniform', []]}
+    default_priors = {'offset': ['Uniform', []]}
     default_fixed = {}
     recenter_pams = {}
 

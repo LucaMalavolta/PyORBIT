@@ -574,7 +574,6 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, shutdown_
                                                        dataset_1=dataset_name)
             except:
                 pass
-                #mc.models[model_name].setup_dataset(mc.dataset_dict[dataset_name])
 
             try:
                 mc.models[model_name].model_conf.update(model_conf)
