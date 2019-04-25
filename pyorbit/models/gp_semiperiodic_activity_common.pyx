@@ -82,12 +82,12 @@ class GaussianProcess_QuasiPeriodicActivity_Common(AbstractModel):
             'Prot': np.exp(input_pams[self.gp_pams_index['Prot']])
         }
 
-    def initialize_model(self, mc,  **kwargs):
+    def initialize_model(self, mc, **kwargs):
 
         if 'use_HODLR' in kwargs:
             self.use_HODLR = kwargs['use_HODLR']
 
-    def common_initialization_with_dataset(self, dataset):
+    def setup_dataset(self, mc, dataset, **kwargs):
         self.define_kernel(dataset)
         return
 

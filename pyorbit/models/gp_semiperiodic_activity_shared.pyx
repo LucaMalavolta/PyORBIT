@@ -88,7 +88,7 @@ class GaussianProcess_QuasiPeriodicActivity_Shared(AbstractModel):
         if 'use_HODLR' in kwargs:
             self.use_HODLR = kwargs['use_HODLR']
 
-    def common_initialization_with_dataset(self, dataset):
+    def setup_dataset(self, mc, dataset, **kwargs):
         self.define_kernel(dataset)
         return
 
