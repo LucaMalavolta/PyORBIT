@@ -42,7 +42,7 @@ class GaussianProcess_QuasiPeriodicActivity_Common(AbstractModel):
         super(GaussianProcess_QuasiPeriodicActivity_Common, self).__init__(*args, **kwargs)
 
         self.gp = {}
-        self.nternal_dataset = {'x0': [], 'yr': [], 'ej': []}
+        self.internal_dataset = {'x0': [], 'yr': [], 'ej': []}
         self.internal_gp_pams = None
         self.use_HODLR = False
 

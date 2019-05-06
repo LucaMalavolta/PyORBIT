@@ -44,6 +44,8 @@ class ModelContainer(object):
 
         self.Tref = None
 
+        self.ordered_planets = {}
+
     def model_setup(self):
         # First step: setting up the correct associations between models and dataset
 
@@ -128,26 +130,43 @@ class ModelContainer(object):
                 return False
 
         period_storage = []
+        period_storage_ordered = np.zeros(len(self.ordered_planets))
+
+
         for model_name, model in self.common_models.items():
 
             if model.model_class == 'planet':
 
-                """ Step 1: save the all planet periods into a list"""
-                period_storage.extend(
-                    [model.transformation['P'](theta, model.fixed,
-                                               model.variable_index['P'])])
+                """ Step 1: retrieve the planet period"""
+                period = model.transformation['P'](theta, model.fixed,
+                                               model.variable_index['P'])
 
-                """ Step 2: check if the eccentricity is within the given range"""
+                """ Step 2: save the all planet periods into a list"""
+                period_storage.extend([period])
+
+                """ Step 3: save the period of the planet in the ordered list"""
+                if model_name in self.ordered_planets:
+                    period_storage_ordered[self.ordered_planets[model_name]] = period
+
+                """ Step 4: check if the eccentricity is within the given range"""
                 e = model.transformation['e'](theta,
                                               model.fixed,
                                               model.variable_index['e'])
+
                 if not model.bounds['e'][0] <= e < model.bounds['e'][1]:
                     return False
 
-        """ Step 4 check ofr overlapping periods (within 2.5% arbitrarily chosen)"""
+        """ Step 5 check for overlapping periods (within 2.5% arbitrarily chosen)"""
         for i_n, i_v in enumerate(period_storage):
             if i_n == len(period_storage) - 1: break
             if np.amin(np.abs(period_storage[i_n + 1:] - i_v)) / i_v < 0.025:
+                return False
+
+        """ Step 6 check if the planet are ordered"""
+        for i_n, i_v in enumerate(period_storage_ordered):
+
+            if i_n == len(period_storage_ordered) - 1: break
+            if np.amin(period_storage_ordered[i_n + 1:] - i_v) < 0.0:
                 return False
 
         return True

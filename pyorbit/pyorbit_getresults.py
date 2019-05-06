@@ -163,6 +163,7 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
 
         lnprob_med = common.compute_value_sigma(flat_lnprob)
         chain_med = common.compute_value_sigma(flat_chain)
+
         chain_MAP, lnprob_MAP = common.pick_MAP_parameters(flat_chain, flat_lnprob)
 
         print()

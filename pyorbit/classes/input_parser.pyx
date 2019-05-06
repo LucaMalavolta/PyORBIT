@@ -647,6 +647,9 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, shutdown_
         if 'include_priors' in conf:
             mc.include_priors = np.asarray(conf['include_priors'], dtype=bool)
 
+        if 'ordered_planets' in conf:
+            mc.ordered_planets = conf['ordered_planets']
+
     if 'optimize' in conf_solver and hasattr(mc, 'optimize_parameters'):
         conf = conf_solver['optimize']
 
