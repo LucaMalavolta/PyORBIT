@@ -1,6 +1,6 @@
 inputs:
   RVdata:
-      file: simuated_dataset/Y_dataset.dat
+      file: simulated_dataset/Y_dataset.dat
       kind: RV
       models:
         - radial_velocities

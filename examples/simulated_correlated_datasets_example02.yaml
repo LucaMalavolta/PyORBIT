@@ -1,6 +1,6 @@
 inputs:
   RVdata:
-      file: simuated_dataset/YZ_dataset.dat
+      file: simulated_dataset/YZ_dataset.dat
       kind:
         - RV
         - BIS

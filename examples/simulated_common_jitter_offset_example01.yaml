@@ -1,6 +1,6 @@
 inputs:
   RVdata1:
-      file: simuated_dataset/Y_common_jitter_offset.dat
+      file: simulated_datasetsimulated_dataset/Y_common_jitter_offset.dat
       kind: RV
       models:
         - radial_velocities
