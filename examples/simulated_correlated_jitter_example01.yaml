@@ -8,7 +8,7 @@ inputs:
       boundaries:
         jitter: [0.01, 20.00]
   BISdata:
-      file: simuated_dataset/Z_jitter_dataset.dat
+      file: simulated_dataset/Z_jitter_dataset.dat
       kind: BIS
       models: []
 common:

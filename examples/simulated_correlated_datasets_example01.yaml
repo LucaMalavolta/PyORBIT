@@ -6,7 +6,7 @@ inputs:
         - radial_velocities
         - correlation
   BISdata:
-      file: simuated_dataset/Z_dataset.dat
+      file: simulated_dataset/Z_dataset.dat
       kind: BIS
       models: []
 common:
