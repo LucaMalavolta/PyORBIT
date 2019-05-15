@@ -59,4 +59,5 @@ class ModelContainerMultiNest(ModelContainer):
 
         if chi_out < -0.5e10:
             return -0.5e10
+
         return chi_out

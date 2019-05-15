@@ -11,24 +11,23 @@ class CommonDilutionFactor(AbstractCommon):
     unitary_model = True
 
     list_pams = {
-        'd_factor',  # diluition factor
+        'd_factor',  # dilution factor
     }
 
     default_bounds = {
-        'd_factor': [0.0000, 1.0000]
+        'd_factor': [0.0000, 1.0000] # default boundaries for the parameter
     }
 
-    """ Must be the same parameters as in list_pams, because priors are applied only to _physical_ parameters """
     default_priors = {
-        'd_factor': ['Uniform', []]
+        'd_factor': ['Uniform', []] # Uniform prior (within the boundaries)
     }
 
     default_spaces = {
-        'd_factor': 'Linear'
+        'd_factor': 'Linear' # parameters is sampled in the linear spaced (i.e. not  Logarithmic)
     }
 
     default_fixed = {
-        'd_factor': 0.0000
+        'd_factor': 0.0000 # default value when the variable is set to fixed
     }
 
     recenter_pams = {}

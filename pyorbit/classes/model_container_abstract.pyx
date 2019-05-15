@@ -47,6 +47,11 @@ class ModelContainer(object):
         self.ordered_planets = {}
 
     def model_setup(self):
+
+        # Fixing back-compatibility issues within  v8 sub-versions
+        if not hasattr(self, 'ordered_planets'):
+            self.ordered_planets = {}
+
         # First step: setting up the correct associations between models and dataset
 
         for model_name, model in self.models.items():
@@ -132,7 +137,6 @@ class ModelContainer(object):
         period_storage = []
         period_storage_ordered = np.zeros(len(self.ordered_planets))
 
-
         for model_name, model in self.common_models.items():
 
             if model.model_class == 'planet':
@@ -147,6 +151,7 @@ class ModelContainer(object):
                 """ Step 3: save the period of the planet in the ordered list"""
                 if model_name in self.ordered_planets:
                     period_storage_ordered[self.ordered_planets[model_name]] = period
+                    # print('    ', model_name, self.ordered_planets[model_name], period_storage_ordered)
 
                 """ Step 4: check if the eccentricity is within the given range"""
                 e = model.transformation['e'](theta,
@@ -154,12 +159,16 @@ class ModelContainer(object):
                                               model.variable_index['e'])
 
                 if not model.bounds['e'][0] <= e < model.bounds['e'][1]:
+                    # print('eccentricity>1')
+                    # print()
                     return False
 
         """ Step 5 check for overlapping periods (within 2.5% arbitrarily chosen)"""
         for i_n, i_v in enumerate(period_storage):
             if i_n == len(period_storage) - 1: break
             if np.amin(np.abs(period_storage[i_n + 1:] - i_v)) / i_v < 0.025:
+                # print('overlapping periods  detected')
+                # print()
                 return False
 
         """ Step 6 check if the planet are ordered"""
@@ -167,6 +176,8 @@ class ModelContainer(object):
 
             if i_n == len(period_storage_ordered) - 1: break
             if np.amin(period_storage_ordered[i_n + 1:] - i_v) < 0.0:
+                # print('inverted order detected')
+                # print()
                 return False
 
         return True

@@ -580,6 +580,9 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, shutdown_
             except:
                 mc.models[model_name].model_conf = model_conf.copy()
 
+    if 'ordered_planets' in conf_parameters:
+        mc.ordered_planets = conf_parameters['ordered_planets']
+
     if 'Tref' in conf_parameters:
         mc.Tref = np.asarray(conf_parameters['Tref'])
         for dataset_name in mc.dataset_dict:
