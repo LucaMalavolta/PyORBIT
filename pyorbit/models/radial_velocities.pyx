@@ -124,8 +124,8 @@ class RVdynamical(AbstractModel):
         else:
             self.list_pams_common.update({'f': None})
 
-    def compute(self, variable_value, dataset, x0_input=None):
-        return dataset.external_model
+    #def compute(self, variable_value, dataset, x0_input=None):
+    #    return dataset.external_model
 
 class TransitTimeKeplerian(AbstractModel):
     model_class = 'transit_time_keplerian'
