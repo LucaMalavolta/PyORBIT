@@ -59,15 +59,15 @@ class ModelContainer(object):
             if not model.model_conf:
                 model_conf = {}
             else:
-                model_conf =model.model_conf
+                model_conf = model.model_conf
 
             model.initialize_model(self, **model_conf)
 
             for dataset_name in list(set(model_conf) & set(self.dataset_dict)):
                 model.setup_dataset(self, self.dataset_dict[dataset_name], **model_conf)
 
-        if self.dynamical_model:
-            self.dynamical_model.prepare(self)
+        #if self.dynamical_model:
+        #    self.dynamical_model.prepare(self)
 
     def create_variables_bounds(self):
         # This routine creates the boundary array and at the same time

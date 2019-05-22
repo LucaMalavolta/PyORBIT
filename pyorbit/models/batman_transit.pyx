@@ -3,6 +3,7 @@ import pyorbit.classes.constants as constants
 import pyorbit.classes.kepler_exo as kepler_exo
 from pyorbit.models.abstract_model import *
 
+
 class Batman_Transit(AbstractModel):
     model_class = 'transit'
     unitary_model = True

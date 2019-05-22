@@ -268,8 +268,11 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, shutdown_
                     mc.common_models[planet_name].use_inclination = planet_conf['use_inclination']
                     print('Inclination will be included as free parameter: ', planet_conf['use_inclination'])
                 except:
-                    # False by default
-                    pass
+                    for key in ['boundaries', 'spaces', 'priors', 'starts', 'fixed']:
+                        if key in planet_conf and 'i' in planet_conf[key]:
+                            mc.common_models[planet_name].use_inclination = True
+                            print('Inclination will be included as free parameter: ', True)
+                    # False by default, unless the user has specified some of its properties
 
                 try:
                     mc.common_models[planet_name].use_semimajor_axis = planet_conf['use_semimajor_axis']
@@ -590,8 +593,11 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, shutdown_
 
     if 'star_mass' in conf_parameters:
         mc.star_mass = np.asarray(conf_parameters['star_mass'][:], dtype=np.double)
-    if 'star_radius' in config_in:
+    if 'star_radius' in conf_parameters:
         mc.star_radius = np.asarray(conf_parameters['star_radius'][:], dtype=np.double)
+
+    if 'dynamical_integrator' in conf_parameters:
+        mc.dynamical_model.dynamical_integrator = conf_parameters['dynamical_integrator']
 
     if 'dynamical_integrator' in conf_solver:
         mc.dynamical_model.dynamical_integrator = conf_solver['dynamical_integrator']

@@ -3,6 +3,7 @@ from pyorbit.classes.common import *
 from pyorbit.models.abstract_common import *
 from pyorbit.models.abstract_model import *
 import pyorbit.classes.kepler_exo as kepler_exo
+from pyorbit.classes.results_analysis import get_stellar_parameters
 
 """
 New changes:
@@ -94,11 +95,10 @@ class RVdynamical(AbstractModel):
         self.list_pams_common = {
             'P',  # Period in days
             'M',  # Mass in Earth masses
-            'i',  # inclination in degrees
             'lN',  # longitude of ascending node
             'e',  # eccentricity, uniform prior - to be fixed
-            'R',  # planet radius (in units of stellar radii)
-            'o'}  # argument of pericenter
+            'o',  # argument of pericenter
+            'mass'} #mass of the star (needed for proper dynamical computation and for reversibility)
 
         self.list_pams_dataset = {}
         self.recenter_pams_dataset = {}
@@ -172,8 +172,6 @@ class TransitTimeKeplerian(AbstractModel):
 class TransitTimeDynamical(AbstractModel):
     model_class = 'transit_time_dynamical'
 
-
-
     def __init__(self, *args, **kwargs):
         super(TransitTimeDynamical, self).__init__(*args, **kwargs)
 
@@ -227,6 +225,7 @@ class DynamicalIntegrator:
         self.dynamical_integrator = 'TRADES'
         self.dynamical_set = {}
         self.n_max_t0 = 0
+        self.to_be_initialized = True
 
     def prepare(self, mc):
         """
@@ -395,6 +394,7 @@ class DynamicalIntegrator:
         """ When the object is copied, data on RV and other properties are somehow lost
             but the object is still initialized - somehow """
 
+        self.to_be_initialized = False
         print('TRADES parameters', self.dynamical_set['trades'])
         print()
 
@@ -408,6 +408,9 @@ class DynamicalIntegrator:
         """ setting up the dictionaries with the orbital parameters required by TRADES,
         """
 
+        if self.to_be_initialized:
+            self.prepare_trades(mc)
+
         self.dynamical_set['pams'] = {
             'M': np.zeros(self.dynamical_set['trades']['n_body'], dtype=np.float64),
             'R': np.zeros(self.dynamical_set['trades']['n_body'], dtype=np.float64),
@@ -420,14 +423,15 @@ class DynamicalIntegrator:
         }
 
         """ Adding star parameters"""
-        self.dynamical_set['pams']['M'][0] = mc.star_mass[0]
-        self.dynamical_set['pams']['R'][0] = mc.star_radius[0]
+        star_pams = get_stellar_parameters(mc, theta)
+
+        self.dynamical_set['pams']['M'][0] = star_pams['mass']
+        self.dynamical_set['pams']['R'][0] = star_pams['radius']
 
         for planet_name in mc.dynamical_dict:
             n_plan = self.dynamical_set['data']['plan_ref'][planet_name]
 
-            dict_pams = mc.common_models['star_parameters'].convert(theta)
-            dict_pams.update(mc.common_models[planet_name].convert(theta))
+            dict_pams = mc.common_models[planet_name].convert(theta)
 
             if mc.common_models[planet_name].use_inclination:
                 self.dynamical_set['pams']['i'][n_plan] = dict_pams['i']
@@ -439,7 +443,7 @@ class DynamicalIntegrator:
                                        dict_pams['o'],
                                        dict_pams['a'])
                 else:
-                    a_temp = convert_rho_to_a(dict_pams['P'], dict_pams['rho'])
+                    a_temp = convert_rho_to_a(dict_pams['P'], star_pams['rho'])
                     self.dynamical_set['pams']['i'][n_plan] = \
                         convert_b_to_i(dict_pams['b'],
                                        dict_pams['e'],
@@ -452,8 +456,14 @@ class DynamicalIntegrator:
                                                                  dict_pams['e'],
                                                                  dict_pams['o'])
 
+            if 'R' in dict_pams:
+                """ Converting the radius from Stellar units to Solar units"""
+                self.dynamical_set['pams']['R'][n_plan] = dict_pams['R'] * star_pams['radius']
+            else:
+                """ Default value: slightly more than 1 Earth radii in Solar units"""
+                self.dynamical_set['pams']['R'][n_plan] = 0.02
+
             self.dynamical_set['pams']['M'][n_plan] = dict_pams['M'] / constants.Msear
-            self.dynamical_set['pams']['R'][n_plan] = dict_pams['R'] / constants.Msear
             self.dynamical_set['pams']['P'][n_plan] = dict_pams['P']
             self.dynamical_set['pams']['e'][n_plan] = dict_pams['e']
             self.dynamical_set['pams']['o'][n_plan] = dict_pams['o'] * (180. / np.pi)
@@ -603,12 +613,17 @@ class DynamicalIntegrator:
             RV and TTV epochs start after Tref """
             self.dynamical_set['ttvfast']['t_beg'] = 0.0000
 
-            ####printself.dynamical_set['ttvfast']['t_beg']
+        self.to_be_initialized = False
+
 
     def compute_ttvfast(self, mc, theta, x0_input=None):
         """ This function compute the expected TTV and RVs for dynamically interacting planets.
             The user can specify which planets are subject to interactions, e.g. long-period planets can be approximated
             with a Keplerian function"""
+
+        if self.to_be_initialized:
+            self.prepare_ttvfast(mc)
+
 
         input_flag = 0
         n_plan = 0
@@ -618,15 +633,18 @@ class DynamicalIntegrator:
         plan_ref = {}
         # Gravitational constant in G [AU^3/Msun/d^2], stellar mass in Solar units
         # FIXME: still using the old star_mass definition
-        params = [constants.Giau, mc.star_mass[0]]
+        star_pams = get_stellar_parameters(mc, theta)
+        params = [constants.Giau, star_pams['mass']]
 
         for planet_name in mc.dynamical_dict:
             plan_ref[planet_name] = n_plan
 
             dict_pams = mc.common_models[planet_name].convert(theta)
 
-            mA = (dict_pams['mL'] - dict_pams['o']) * (180. / np.pi) + \
+            mA = (dict_pams['f'] - dict_pams['o']) * (180. / np.pi) + \
                  self.dynamical_set['ttvfast']['t_beg'] / dict_pams['P'] * 360.0000000000
+            #mA = (dict_pams['mL'] - dict_pams['o']) * (180. / np.pi) + \
+            #     self.dynamical_set['ttvfast']['t_beg'] / dict_pams['P'] * 360.0000000000
 
             if mc.common_models[planet_name].use_inclination:
                 i_temp = dict_pams['i']
@@ -638,7 +656,7 @@ class DynamicalIntegrator:
                                        dict_pams['o'],
                                        dict_pams['a'])
                 else:
-                    a_temp = convert_rho_to_a(dict_pams['P'], dict_pams['rho'])
+                    a_temp = convert_rho_to_a(dict_pams['P'], star_pams['rho'])
                     i_temp = \
                         convert_b_to_i(dict_pams['b'],
                                        dict_pams['e'],

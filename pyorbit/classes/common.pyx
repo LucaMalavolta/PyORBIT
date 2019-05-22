@@ -43,10 +43,10 @@ if 'celerite' not in sys.modules:
             print('WARNING! Imported pyorbit.classes.dummy PyPolyChord, models relying on this package will not work')
 
     try:
-        if os.path.isdir('/Users/malavolta/Astro/CODE/'):
-            sys.path.insert(0, '/Users/malavolta/Astro/CODE/trades/pytrades/')
+        if os.path.isdir('/Users/malavolta/Astro/CODE/others/'):
+            sys.path.insert(0, '/Users/malavolta/Astro/CODE/others/trades/pytrades/')
         else:
-            sys.path.insert(0, '/home/malavolta/CODE/trades/pytrades/')
+            sys.path.insert(0, '/home/malavolta/CODE/others/trades/pytrades/')
         from pytrades_lib import pytrades
     except:
         from pyorbit.classes.dummy import pytrades

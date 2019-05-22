@@ -252,6 +252,12 @@ def get_planet_variables(mc, theta, verbose=False):
                                                                   stellar_values['mass']) \
                                                / np.sin(np.radians(variable_values['i']))
 
+                variable_values['M_Mj'] = variable_values['M'] * constants.Msjup
+                derived_variables['M_Mj'] = True
+
+                variable_values['M_Me'] = variable_values['M'] * constants.Msear
+                derived_variables['M_Me'] = True
+
             elif 'M' in variable_values.keys() and 'mass' in stellar_values.keys():
                 derived_variables['K'] = True
                 derived_variables['K'] = kepler_exo.kepler_K1(stellar_values['mass'],
@@ -259,6 +265,12 @@ def get_planet_variables(mc, theta, verbose=False):
                                                               variable_values['P'],
                                                               variable_values['i'],
                                                               variable_values['e'])
+
+                variable_values['M_Mj'] = variable_values['M'] * (constants.Msjup/constants.Msear)
+                derived_variables['M_Mj'] = True
+
+                variable_values['M_Me'] = variable_values['M']
+                derived_variables['M_Me'] = True
 
             if 'Tc' in variable_values.keys():
                 derived_variables['f'] = True
@@ -280,13 +292,6 @@ def get_planet_variables(mc, theta, verbose=False):
 
                 variable_values['R_Re'] = variable_values['R'] * constants.Rsear * stellar_values['radius']
                 derived_variables['R_Re'] = True
-
-            if 'M' in variable_values.keys() and 'mass' in stellar_values.keys():
-                variable_values['M_Mj'] = variable_values['M'] * constants.Msjup
-                derived_variables['M_Mj'] = True
-
-                variable_values['M_Me'] = variable_values['M'] * constants.Msear
-                derived_variables['M_Me'] = True
 
             if remove_i:
                 del variable_values['i']
