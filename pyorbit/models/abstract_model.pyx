@@ -184,4 +184,4 @@ class AbstractModel(object):
         return population
 
     def compute(self, variable_value, dataset, x0_input=None):
-        return np.zeros(dataset.n, dtype=np.double)
+        return 0.00

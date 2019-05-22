@@ -247,6 +247,7 @@ class DynamicalIntegrator:
         :param mc:
         :return:
         """
+
         if self.dynamical_integrator == 'TRADES':
             output = self.compute_trades(mc, *args, **kwargs)
         if self.dynamical_integrator == 'ttvfast':
