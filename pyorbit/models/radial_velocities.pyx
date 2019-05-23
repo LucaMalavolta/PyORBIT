@@ -401,7 +401,7 @@ class DynamicalIntegrator:
 
         return
 
-    def compute_trades(self, mc, theta, x0_input=None):
+    def compute_trades(self, mc, theta, x_input=None):
         """ This function compute the expected TTV and RVs for dynamically interacting planets.
             The user can specify which planets are subject to interactions, e.g. long-period planets can be approximated
             with a Keplerian function"""
@@ -517,7 +517,7 @@ class DynamicalIntegrator:
 
         """
 
-        if x0_input is None:
+        if x_input is None:
             rv_sim, t0_sim = pytrades.kelements_to_data(
                 self.dynamical_set['trades']['ti_beg'],
                 self.dynamical_set['trades']['ti_ref'],
@@ -547,21 +547,19 @@ class DynamicalIntegrator:
                 self.dynamical_set['pams']['mA'],
                 self.dynamical_set['pams']['i'],
                 self.dynamical_set['pams']['lN'],
-                x0_input,
+                x_input,
                 self.dynamical_set['data']['t0_flg'], self.n_max_t0)
 
         output = {}
-        # print 'T0_sim: ', t0_sim
-        # print 'RV_sim: ', rv_sim
-        # t0_sim -= mc.Tref
+
         for dataset_name, dataset in mc.dataset_dict.items():
             if dataset.dynamical is False: continue
             if dataset.kind == 'RV':
-                if x0_input is None:
+                if x_input is None:
                     output[dataset_name] = rv_sim[self.dynamical_set['data']['selection'][dataset_name]]
                 else:
                     output[dataset_name] = rv_sim
-            # print 'RV out', output[dataset.name_ref]
+                    print(rv_sim)
             elif dataset.kind == 'Tcent' and dataset.planet_name in mc.dynamical_dict:
                 n_plan = self.dynamical_set['data']['plan_ref'][dataset.planet_name]
                 # print ' T0_sim selected: ', t0_sim[:self.dynamical_set['data']['t0_tot'][n_plan], n_plan]
@@ -616,8 +614,7 @@ class DynamicalIntegrator:
 
         self.to_be_initialized = False
 
-
-    def compute_ttvfast(self, mc, theta, x0_input=None):
+    def compute_ttvfast(self, mc, theta, x_input=None):
         """ This function compute the expected TTV and RVs for dynamically interacting planets.
             The user can specify which planets are subject to interactions, e.g. long-period planets can be approximated
             with a Keplerian function"""
@@ -680,7 +677,7 @@ class DynamicalIntegrator:
                 P_min = np.min(np.asarray([P_min, dict_pams['P']]))
 
         t_step = P_min / 20.
-        if x0_input is None:
+        if x_input is None:
             pos, rv = ttvfast._ttvfast._ttvfast(params,
                                                 t_step,
                                                 self.dynamical_set['ttvfast']['t_beg'],
@@ -694,7 +691,7 @@ class DynamicalIntegrator:
                                                 self.dynamical_set['ttvfast']['t_beg'],
                                                 self.dynamical_set['ttvfast']['t_end'],
                                                 n_plan, input_flag,
-                                                len(x0_input), x0_input.tolist())
+                                                len(x_input), x_input.tolist()-mc.Tref)
 
         positions = np.asarray(pos)
         rv_meas = np.asarray(rv) * constants.AU / constants.d2s
@@ -703,14 +700,14 @@ class DynamicalIntegrator:
         # print self.dynamical_set['len_rv'], rv_meas[:10]
         # print 't_beg', self.dynamical_set['ttvfast']['t_beg']
         # print 't_end', self.dynamical_set['ttvfast']['t_end']
-        # print 'Full orbit flag: ', x0_input
-        # print 'Full orbit flag: ', x0_input
+        # print 'Full orbit flag: ', x_input
+        # print 'Full orbit flag: ', x_input
         # print positions[:10,:]
 
         for dataset_name, dataset in mc.dataset_dict.items():
             if dataset.dynamical is False: continue
             if dataset.kind == 'RV':
-                if x0_input is None:
+                if x_input is None:
                     output[dataset_name] = rv_meas[self.dynamical_set['data_selection'][dataset_name]]
                 else:
                     output[dataset_name] = rv_meas

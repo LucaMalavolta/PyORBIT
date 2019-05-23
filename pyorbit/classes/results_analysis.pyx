@@ -360,7 +360,7 @@ def get_model(mc, theta, bjd_dict):
     if mc.dynamical_model is not None:
         """ check if any keyword ahas get the output model from the dynamical tool
         we must do it here because all the planet are involved"""
-        dynamical_output_x0 = mc.dynamical_model.compute(mc, theta, bjd_dict['full']['x_plot']-mc.Tref)
+        dynamical_output_x0 = mc.dynamical_model.compute(mc, theta, bjd_dict['full']['x_plot'])
         dynamical_output = mc.dynamical_model.compute(mc, theta)
 
     for dataset_name, dataset in mc.dataset_dict.items():
@@ -430,6 +430,8 @@ def get_model(mc, theta, bjd_dict):
                 model_out[dataset_name]['dynamical'] = dynamical_output[dataset_name].copy()
                 model_x0[dataset_name]['dynamical'] = dynamical_output_x0[dataset_name].copy()
 
+                print(dataset.external_model[0:10])
+                print(external_model[0:10])
             model_out[dataset_name][model_name] = mc.models[model_name].compute(variable_values, dataset)
 
             if getattr(mc.models[model_name], 'time_independent_model', False):
