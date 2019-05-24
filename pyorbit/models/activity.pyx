@@ -11,6 +11,7 @@ class CommonActivity(AbstractCommon):
         'Pdec',  # Decay timescale of activity
         'Oamp',  # Granulation of activity
         'Hamp',  # Amplitude of the signal in the covariance matrix
+        'Camo',  # Amplitude of the derivative of the kernel
         'Hamp_factor',
         'P',  # Period
         'K',  # Sinusoid semi-amplitude
@@ -32,6 +33,7 @@ class CommonActivity(AbstractCommon):
         'Pdec': [1.0, 10000.0],
         'Oamp': [0.0001, 2.0],
         'Hamp': [0.00000001, 1000000.0],
+        'Camp': [0.00000001, 1000000.0],
         'Hamp_factor': [0.01, 10.0],
         'P': [0.4, 100000.0],
         'K': [0.5, 2000.0],
@@ -54,6 +56,7 @@ class CommonActivity(AbstractCommon):
         'Pdec': ['Uniform', []],
         'Oamp': ['Uniform', []],
         'Hamp': ['Uniform', []],
+        'Camp': ['Uniform', []],
         'Hamp_factor': ['Uniform', []],
         'P': ['Uniform', []],
         'K': ['Uniform', []],
@@ -72,6 +75,7 @@ class CommonActivity(AbstractCommon):
         'Pdec': 'Linear',  # Decay timescale of activity
         'Oamp': 'Logarithmic',  # Granulation of activity
         'Hamp': 'Linear',  # Amplitude of the signal in the covariance matrix
+        'Camp': 'Linear',  # Amplitude of the signal in the covariance matrix
         'Hamp_factor': 'Linear',
         'P': 'Logarithmic',  # Period, log-uniform prior
         'K': 'Logarithmic',  # RV semi-amplitude, log-uniform prior
