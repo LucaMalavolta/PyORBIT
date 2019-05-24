@@ -559,10 +559,8 @@ class DynamicalIntegrator:
                     output[dataset_name] = rv_sim[self.dynamical_set['data']['selection'][dataset_name]]
                 else:
                     output[dataset_name] = rv_sim
-                    print(rv_sim)
             elif dataset.kind == 'Tcent' and dataset.planet_name in mc.dynamical_dict:
                 n_plan = self.dynamical_set['data']['plan_ref'][dataset.planet_name]
-                # print ' T0_sim selected: ', t0_sim[:self.dynamical_set['data']['t0_tot'][n_plan], n_plan]
                 output[dataset_name] = t0_sim[:self.dynamical_set['data']['t0_tot'][n_plan], n_plan]
 
         return output
@@ -575,6 +573,8 @@ class DynamicalIntegrator:
         dataset_rv = 0
         int_buffer = dict(rv_times=[], t0_times=[], rv_ref=[], t0_ref=[], key_ref={})
 
+        delta_t = 1000.0
+
         for dataset_name, dataset in mc.dataset_dict.items():
             if dataset.dynamical is False: continue
             if dataset.kind == 'RV':
@@ -585,8 +585,10 @@ class DynamicalIntegrator:
             elif dataset.kind == 'Tcent':
                 int_buffer['t0_times'].extend(dataset.x0.tolist())
 
+            delta_t = min(delta_t, np.amin(np.abs(dataset.x0[1:]-dataset.x0[:-1])))
+
         if np.size(int_buffer['t0_times']) == 0:
-            int_buffer['t0_times'] = int_buffer['rv_times']
+            int_buffer['t0_times'] = int_buffer['rv_times'].copy()
 
         for dataset_name, dataset in mc.dataset_dict.items():
             if dataset.dynamical is False: continue
@@ -599,6 +601,8 @@ class DynamicalIntegrator:
         if self.dynamical_set['len_rv'] == 0:
             self.dynamical_set['rv_times'] = None
             int_buffer['rv_times'] = int_buffer['t0_times']
+
+        self.dynamical_set['min_deltat'] = delta_t
 
         rv_minmax = [np.amin(int_buffer['rv_times']), np.amax(int_buffer['rv_times'])]
         t0_minmax = [np.amin(int_buffer['t0_times']), np.amax(int_buffer['t0_times'])]
@@ -622,27 +626,22 @@ class DynamicalIntegrator:
         if self.to_be_initialized:
             self.prepare_ttvfast(mc)
 
-
         input_flag = 0
         n_plan = 0
 
         P_min = None
 
         plan_ref = {}
-        # Gravitational constant in G [AU^3/Msun/d^2], stellar mass in Solar units
-        # FIXME: still using the old star_mass definition
+
         star_pams = get_stellar_parameters(mc, theta)
+
+        # Gravitational constant in G [AU^3/Msun/d^2], stellar mass in Solar units
         params = [constants.Giau, star_pams['mass']]
 
         for planet_name in mc.dynamical_dict:
             plan_ref[planet_name] = n_plan
 
             dict_pams = mc.common_models[planet_name].convert(theta)
-
-            mA = (dict_pams['f'] - dict_pams['o']) * (180. / np.pi) + \
-                 self.dynamical_set['ttvfast']['t_beg'] / dict_pams['P'] * 360.0000000000
-            #mA = (dict_pams['mL'] - dict_pams['o']) * (180. / np.pi) + \
-            #     self.dynamical_set['ttvfast']['t_beg'] / dict_pams['P'] * 360.0000000000
 
             if mc.common_models[planet_name].use_inclination:
                 i_temp = dict_pams['i']
@@ -661,6 +660,15 @@ class DynamicalIntegrator:
                                        dict_pams['o'],
                                        a_temp)
 
+            if mc.common_models[planet_name].use_time_of_transit:
+                dict_pams['f'] = kepler_exo.kepler_Tc2phase_Tref(dict_pams['P'],
+                                                                 dict_pams['Tc'] - mc.Tref,
+                                                                 dict_pams['e'],
+                                                                 dict_pams['o'])
+
+            mA = (dict_pams['f'] - dict_pams['o']) * (180. / np.pi) \
+                 + self.dynamical_set['ttvfast']['t_beg'] / dict_pams['P'] * 360.0000000000
+
             params.extend([
                 dict_pams['M'] / constants.Msear,  # mass in Solar unit
                 dict_pams['P'],
@@ -676,8 +684,8 @@ class DynamicalIntegrator:
             else:
                 P_min = np.min(np.asarray([P_min, dict_pams['P']]))
 
-        t_step = P_min / 20.
         if x_input is None:
+            t_step = min(P_min / 20., self.dynamical_set['min_deltat'])
             pos, rv = ttvfast._ttvfast._ttvfast(params,
                                                 t_step,
                                                 self.dynamical_set['ttvfast']['t_beg'],
@@ -686,23 +694,17 @@ class DynamicalIntegrator:
                                                 self.dynamical_set['len_rv'],
                                                 self.dynamical_set['rv_times'])
         else:
+            t_step = min(P_min / 20., np.min(np.abs(x_input[1:]-x_input[:-1])))
             pos, rv = ttvfast._ttvfast._ttvfast(params,
                                                 t_step,
                                                 self.dynamical_set['ttvfast']['t_beg'],
                                                 self.dynamical_set['ttvfast']['t_end'],
                                                 n_plan, input_flag,
-                                                len(x_input), x_input.tolist()-mc.Tref)
+                                                len(x_input), (x_input - mc.Tref).tolist())
 
         positions = np.asarray(pos)
         rv_meas = np.asarray(rv) * constants.AU / constants.d2s
         output = {}
-        # print 'RV  ------->  ', rv[:10]
-        # print self.dynamical_set['len_rv'], rv_meas[:10]
-        # print 't_beg', self.dynamical_set['ttvfast']['t_beg']
-        # print 't_end', self.dynamical_set['ttvfast']['t_end']
-        # print 'Full orbit flag: ', x_input
-        # print 'Full orbit flag: ', x_input
-        # print positions[:10,:]
 
         for dataset_name, dataset in mc.dataset_dict.items():
             if dataset.dynamical is False: continue
@@ -723,7 +725,6 @@ class DynamicalIntegrator:
                         the 0th transit in our dataset"""
                 min_idx = np.argmin(np.abs(t0_mod - dataset.x0[0]))
                 ref_idf = nn_mod[min_idx]
-                # print ref_idf,  np.sum(t0_sel), len(t0_mod), t0_mod
 
                 if np.sum(t0_sel) > np.max(dataset.n_transit) + ref_idf:
                     output[dataset_name] = t0_mod[dataset.n_transit + ref_idf]
@@ -732,5 +733,4 @@ class DynamicalIntegrator:
                     """The output vector contains less T0s than supposed: collision between planets?? """
                     output[dataset_name] = dataset.n_transit * 0.0000
 
-        # print rv_meas[:3], self.dynamical_set['rv_times'][:3]
         return output

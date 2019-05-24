@@ -430,8 +430,6 @@ def get_model(mc, theta, bjd_dict):
                 model_out[dataset_name]['dynamical'] = dynamical_output[dataset_name].copy()
                 model_x0[dataset_name]['dynamical'] = dynamical_output_x0[dataset_name].copy()
 
-                print(dataset.external_model[0:10])
-                print(external_model[0:10])
             model_out[dataset_name][model_name] = mc.models[model_name].compute(variable_values, dataset)
 
             if getattr(mc.models[model_name], 'time_independent_model', False):
