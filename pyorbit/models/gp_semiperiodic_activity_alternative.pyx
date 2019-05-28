@@ -45,7 +45,7 @@ class GaussianProcess_QuasiPeriodicActivity_Alternative(AbstractModel):
     def _compute_distance(self, bjd0, bjd1):
         X0 = np.array([bjd0]).T
         X1 = np.array([bjd1]).T
-        return spatial.distance.cdist(X0, X1, 'euclidean'), \
+        return spatial.distance.cdist(X0, X1, lambda u, v: u-v), \
                spatial.distance.cdist(X0, X1, 'sqeuclidean')
 
     def _compute_cov_matrix(self, variable_value, dist_t1, dist_t2, diagonal_env=None):
