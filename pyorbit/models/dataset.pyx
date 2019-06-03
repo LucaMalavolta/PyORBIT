@@ -1,7 +1,7 @@
 from pyorbit.classes.common import *
 from pyorbit.models.abstract_common import *
 
-
+# Trying to guess all the possible mistakes....
 kind_definition = {
     'RV': ['RV', 'RVs', 'rv', 'rvs'],
     'Tcent': ['Tcent', 'TCent', 'Tc', 'TC', 'T0', 'TT'],
@@ -9,8 +9,10 @@ kind_definition = {
     'Phot': ['P', 'Ph', 'p', 'ph', 'PHOT', 'Phot', 'phot', 'Photometry', 'photometry'],
     'FWHM': ['FWHM', 'fwhm'],
     'BIS': ['BIS', 'bis'],
-    'Ca_HK': ['Ca_HK', 'logR'],
-    'S_index': ['S', 'S_index']
+    'Ca_HK': ['Ca', 'Cahk', 'CaHK', 'Ca_hk', 'Ca_HK',
+              'logR', 'logRhk', 'logRHK', 'logR_hk', 'logR_HK',
+              'log(R)', 'log(Rhk)', 'log(RHK)', 'log(R_hk)', 'log(R_HK)' ],
+    'S_index': ['S', 'S_index', 'Shk', 'SHK', 'S_HK', 'S_hk']
 }
 
 
