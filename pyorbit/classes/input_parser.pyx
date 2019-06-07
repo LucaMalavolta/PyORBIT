@@ -3,7 +3,11 @@ from ..models.dataset import *
 from ..models.planets import CommonPlanets
 from ..models.activity import CommonActivity
 from ..models.radial_velocities import RVkeplerian, RVdynamical, TransitTimeKeplerian, TransitTimeDynamical, DynamicalIntegrator
+
 from ..models.batman_transit import Batman_Transit
+from ..models.batman_transit_with_ttv import Batman_Transit_With_TTV
+
+
 from ..models.gp_semiperiodic_activity import GaussianProcess_QuasiPeriodicActivity
 from ..models.gp_semiperiodic_activity_common import GaussianProcess_QuasiPeriodicActivity_Common
 from ..models.gp_semiperiodic_activity_shared import GaussianProcess_QuasiPeriodicActivity_Shared
@@ -32,6 +36,9 @@ from ..models.normalization_factor import CommonNormalizationFactor, Normalizati
 from ..models.star_parameters import CommonStarParameters
 
 __all__ = ["pars_input", "yaml_parser"]
+
+
+model_requires_planet = ['radial_velocities', 'rv_planets', 'batman_transit', 'batman_transit_with_ttv' ]
 
 define_common_type_to_class = {
     'planets': CommonPlanets,
@@ -62,6 +69,7 @@ define_type_to_class = {
                      'keplerian': TransitTimeKeplerian,
                      'dynamical': TransitTimeDynamical},
     'batman_transit': Batman_Transit,
+    'batman_transit_with_ttv': Batman_Transit_With_TTV,
     'gp_quasiperiodic': GaussianProcess_QuasiPeriodicActivity,
     'gp_quasiperiodic_common': GaussianProcess_QuasiPeriodicActivity_Common,
     'gp_quasiperiodic_shared': GaussianProcess_QuasiPeriodicActivity_Shared,
@@ -411,10 +419,10 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, shutdown_
         else:
             model_type = model_name
 
-        if model_type == 'radial_velocities' or model_type == 'rv_planets' or model_type == 'batman_transit':
+        if model_type in model_requires_planet:
 
             """ radial_velocities and transits are just wrappers for the planets to be actually included in the model, so we
-                substitue it with the individual planets in the list"""
+                substitute it with the individual planets in the list"""
 
             try:
                 planet_list = np.atleast_1d(model_conf['planets']).tolist()
@@ -491,13 +499,17 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, shutdown_
                 except:
                     pass
 
-
                 mc.models[model_name_exp].common_ref.append('star_parameters')
 
                 ## Not sure if this line of code is supposed to work
-                for dataset_name in list(set(model_name_exp) & set(mc.dataset_dict)):
-                    bounds_space_priors_starts_fixed(mc, mc.models[model_name_exp], model_conf[dataset_name],
-                                                   dataset_1=dataset_name)
+                #for dataset_name in list(set(model_name_exp) & set(mc.dataset_dict)):
+                #    bounds_space_priors_starts_fixed(mc, mc.models[model_name_exp], model_conf[dataset_name],
+                #                                   dataset_1=dataset_name)
+
+                for dataset_name, dataset in mc.dataset_dict.items():
+                    if model_name_exp in dataset.models:
+                        bounds_space_priors_starts_fixed(mc, mc.models[model_name_exp], model_conf[dataset_name],
+                                                       dataset_1=dataset_name)
 
         elif model_type == 'transit_time':
             """ Only one planet for each file with transit times... mixing them would cause HELL"""
