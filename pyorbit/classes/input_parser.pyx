@@ -508,6 +508,11 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, shutdown_
 
                 for dataset_name, dataset in mc.dataset_dict.items():
                     if model_name_exp in dataset.models:
+
+
+                        if dataset_name not in model_conf:
+                            model_conf[dataset_name] = {}
+
                         bounds_space_priors_starts_fixed(mc, mc.models[model_name_exp], model_conf[dataset_name],
                                                        dataset_1=dataset_name)
 
