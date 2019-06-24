@@ -167,13 +167,28 @@ def get_2darray_from_val(val):
 def giveback_priors(kind, bounds, pams, val):
 
     """ The code is supposed to give -np.inf log-likelihood when the parameters are outside the boundaries,
-    so this case is not emcopassed in the definition of the priors """
+    so this case is not encompassed in the definition of the priors """
 
     if kind == 'None':
         return 0.00
 
     if kind == 'Gaussian':
-        return -(val - pams[0]) ** 2 / (2 * pams[1] ** 2)
+        #return np.log(stats.norm.pdf(val, loc=pams[0], scale=pams[1]))
+        return -(val - pams[0]) ** 2 / (2 * pams[1] ** 2) - 0.5 * np.log(2*np.pi) - np.log(pams[1])
+
+    if kind == 'HalfGaussian' or kind=='PositiveHalfGaussian':
+        #return -(val - pams[0]) ** 2 / (2 * pams[1] ** 2)
+        if val >= pams[0]:
+            return np.log(2*stats.norm.pdf(val, loc=pams[0], scale=pams[1]))
+        else:
+            return -np.inf
+
+    if kind == 'NegativeHalfGaussian':
+        #return -(val - pams[0]) ** 2 / (2 * pams[1] ** 2)
+        if val <= pams[0]:
+            return np.log(2*stats.norm.pdf(val, loc=pams[0], scale=pams[1]))
+        else:
+            return -np.inf
 
     if kind == 'Uniform':
         return np.log(1./(bounds[1]-bounds[0]))
@@ -188,7 +203,7 @@ def giveback_priors(kind, bounds, pams, val):
         """
         return np.log(1./(pams[0]*(1. + val/pams[0])) * 1./np.log(1.+bounds[1]/pams[0]))
 
-    if kind == "TruncatedRayleigh":
+    if kind == 'TruncatedRayleigh':
         """ bounds[1] = e_max
             pams[0] = sigma_2 (suggested 0.2)
         """
@@ -200,7 +215,7 @@ def giveback_priors(kind, bounds, pams, val):
         """
         return np.log(1./(pams[0]*(1.0 + val/pams[0])) * 1.0/np.log(1.0+bounds[1]/pams[0]))
 
-    if kind == "BetaDistribution":
+    if kind == 'BetaDistribution' or kind=='Beta':
         return np.log(stats.beta.pdf((val-bounds[0])/(bounds[1]-bounds[0]), pams[0], pams[1]))
 
 
