@@ -521,6 +521,7 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
 
             bjd_plot[dataset_name]['x_plot'] = \
                 np.arange(bjd_plot[dataset_name]['start'], bjd_plot[dataset_name]['end'], step_size)
+            bjd_plot[dataset_name]['x0_plot'] = bjd_plot[dataset_name]['x_plot'] - mc.Tref
 
             if bjd_plot['full']['range']:
                 bjd_plot['full']['start'] = min(bjd_plot['full']['start'], np.amin(dataset.x))
@@ -534,10 +535,15 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
         bjd_plot['full']['start'] -= bjd_plot['full']['range'] * 0.10
         bjd_plot['full']['end'] += bjd_plot['full']['range'] * 0.10
         bjd_plot['full']['x_plot'] = np.arange(bjd_plot['full']['start'], bjd_plot['full']['end'], P_minimum / 20.)
+        bjd_plot['full']['x0_plot'] = bjd_plot['full']['x_plot'] - mc.Tref
 
+        # Special cases
         for dataset_name, dataset in mc.dataset_dict.items():
             if dataset.kind == 'RV':
                 bjd_plot[dataset_name] = bjd_plot['full']
+            if dataset.kind == 'Tcent':
+                bjd_plot[dataset_name]['x_plot'] = dataset.x
+                bjd_plot[dataset_name]['x0_plot'] = dataset.x
 
         bjd_plot['model_out'], bjd_plot['model_x'] = results_analysis.get_model(mc, chain_med[:, 0], bjd_plot)
         bjd_plot['MAP_model_out'], bjd_plot['MAP_model_x'] = results_analysis.get_model(mc, chain_MAP, bjd_plot)

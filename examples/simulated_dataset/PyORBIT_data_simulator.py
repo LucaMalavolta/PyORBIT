@@ -125,7 +125,7 @@ for i_Tc, v_Tc in enumerate(Tcent_b):
     fileout.write('{0:d}  {1:.4f}  {2:.4f}  {3:d}\n'.format(i_Tc, v_Tc, instrument['T0_precision'], 0))
 fileout.close()
 
-fileout = open('simulated_2p_TC_c.dat', 'w')
+fileout = open('simulated_2p_Tc_c.dat', 'w')
 for i_Tc, v_Tc in enumerate(Tcent_c):
     fileout.write('{0:d}  {1:.4f}  {2:.4f}  {3:d}\n'.format(i_Tc, v_Tc, instrument['T0_precision'], 0))
 fileout.close()

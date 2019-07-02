@@ -177,12 +177,13 @@ class TransitTimeDynamical(AbstractModel):
 
         ''' Orbital parameters to be used in the dynamical fit '''
         self.list_pams_common = {
-            'P': 'LU',  # Period in days
-            'M': 'LU',  # Mass in Earth masses
-            'lN': 'U',  # longitude of ascending node
-            'e': 'U',  # eccentricity, uniform prior - to be fixed
-            'R': 'U',  # planet radius (in units of stellar radii)
-            'o': 'U'}  # argument of pericenter
+            'P',    # Period in days
+            'M',    # Mass in Earth masses
+            'lN',   # longitude of ascending node
+            'e',    # eccentricity, uniform prior - to be fixed
+            'R',    # planet radius (in units of stellar radii)
+            'o',    # argument of pericenter
+            'mass'} # mass of the star (needed for proper dynamical computation and for reversibility)
 
         self.list_pams_dataset = {}
 
@@ -424,7 +425,8 @@ class DynamicalIntegrator:
         }
 
         """ Adding star parameters"""
-        star_pams = get_stellar_parameters(mc, theta)
+        star_pams = get_stellar_parameters(mc, theta, warnings=False)
+        #star_pams = mc.common_models['star_parameters'].convert(theta)
 
         self.dynamical_set['pams']['M'][0] = star_pams['mass']
         self.dynamical_set['pams']['R'][0] = star_pams['radius']
@@ -587,8 +589,12 @@ class DynamicalIntegrator:
 
             delta_t = min(delta_t, np.amin(np.abs(dataset.x0[1:]-dataset.x0[:-1])))
 
-        if np.size(int_buffer['t0_times']) == 0:
+        if np.size(int_buffer['t0_times']) == 0 and np.size(int_buffer['rv_times']) == 0:
+            raise ValueError("Error with TTVFAST input: either RVs or Tc arrays must be non-empty")
+        elif np.size(int_buffer['t0_times']) == 0:
             int_buffer['t0_times'] = int_buffer['rv_times'].copy()
+        elif np.size(int_buffer['rv_times']) == 0:
+            int_buffer['rv_times'] = int_buffer['t0_times'].copy()
 
         for dataset_name, dataset in mc.dataset_dict.items():
             if dataset.dynamical is False: continue
@@ -598,9 +604,6 @@ class DynamicalIntegrator:
 
         self.dynamical_set['rv_times'] = int_buffer['rv_times']
         self.dynamical_set['len_rv'] = np.size(self.dynamical_set['rv_times'])
-        if self.dynamical_set['len_rv'] == 0:
-            self.dynamical_set['rv_times'] = None
-            int_buffer['rv_times'] = int_buffer['t0_times']
 
         self.dynamical_set['min_deltat'] = delta_t
 
@@ -633,7 +636,8 @@ class DynamicalIntegrator:
 
         plan_ref = {}
 
-        star_pams = get_stellar_parameters(mc, theta)
+        star_pams = get_stellar_parameters(mc, theta, warnings=False)
+        #star_pams = mc.common_models['star_parameters'].convert(theta)
 
         # Gravitational constant in G [AU^3/Msun/d^2], stellar mass in Solar units
         params = [constants.Giau, star_pams['mass']]
@@ -714,20 +718,26 @@ class DynamicalIntegrator:
                 else:
                     output[dataset_name] = rv_meas
 
+
             elif dataset.kind == 'Tcent':
                 t0_sel = (positions[0][:] == plan_ref[dataset.planet_name])
                 t0_mod = positions[2][t0_sel]  # T0 of the transit
                 nn_mod = np.asarray(positions[1][t0_sel], dtype=np.int16)  # Number of transit as stored by TTVfast
 
+                if np.size(t0_mod) == 0:
+                    output[dataset_name] = dataset.n_transit * 0.0000
+                    continue
                 """TTVfast transit numbering precedes the one of our dataset by construction, so
                         we need to add an offset to the transit reference number in order to have the
                         right association. We do that by identifying the first TTVfast T0 corresponding to
                         the 0th transit in our dataset"""
+
                 min_idx = np.argmin(np.abs(t0_mod - dataset.x0[0]))
                 ref_idf = nn_mod[min_idx]
 
                 if np.sum(t0_sel) > np.max(dataset.n_transit) + ref_idf:
-                    output[dataset_name] = t0_mod[dataset.n_transit + ref_idf]
+                    output[dataset_name] = t0_mod[dataset.n_transit + ref_idf] + mc.Tref
+
                     """With this approach, missing T0s in the input dataset are automatically skipped """
                 else:
                     """The output vector contains less T0s than supposed: collision between planets?? """

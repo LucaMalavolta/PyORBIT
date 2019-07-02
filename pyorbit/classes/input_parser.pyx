@@ -37,8 +37,14 @@ from ..models.star_parameters import CommonStarParameters
 
 __all__ = ["pars_input", "yaml_parser"]
 
+"""
+ model_requires_planets: all those models that requires AT LEAST one of the planets in the system must be listed here
+    this is the case for dataset that contains the signature of multiple planets, e.g., RVs or transit light curve 
+ single_planet_model: the model is associated to a specific planet, e.g., time of transits 
+"""
 
-model_requires_planet = ['radial_velocities', 'rv_planets', 'batman_transit', 'batman_transit_with_ttv' ]
+model_requires_planets = ['radial_velocities', 'rv_planets', 'batman_transit', 'batman_transit_with_ttv' ]
+single_planet_model =  ['Tc_planets', 'transit_times']
 
 define_common_type_to_class = {
     'planets': CommonPlanets,
@@ -65,7 +71,10 @@ define_type_to_class = {
     'rv_planets': {'circular': RVkeplerian,
                    'keplerian': RVkeplerian,
                    'dynamical': RVdynamical},
-    'transit_time': {'circular': TransitTimeKeplerian,
+    'Tc_planets': {'circular': TransitTimeKeplerian,
+                     'keplerian': TransitTimeKeplerian,
+                     'dynamical': TransitTimeDynamical},
+    'transit_times': {'circular': TransitTimeKeplerian,
                      'keplerian': TransitTimeKeplerian,
                      'dynamical': TransitTimeDynamical},
     'batman_transit': Batman_Transit,
@@ -336,7 +345,6 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, shutdown_
                     dict_copy = {conf_name: model_conf[conf_name].copy()}
 
                 for key_name, key_vals in dict_copy.items():
-
                     mc.common_models[key_name] = define_common_type_to_class[model_type](key_name)
                     bounds_space_priors_starts_fixed(mc, mc.common_models[key_name], key_vals)
 
@@ -419,35 +427,57 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, shutdown_
         else:
             model_type = model_name
 
-        if model_type in model_requires_planet:
+        if model_type in model_requires_planets or model_type in single_planet_model:
 
             """ radial_velocities and transits are just wrappers for the planets to be actually included in the model, so we
                 substitute it with the individual planets in the list"""
 
-            try:
-                planet_list = np.atleast_1d(model_conf['planets']).tolist()
-            except:
-                planet_list = np.atleast_1d(model_conf['common']).tolist()
+            #try:
+            #    planet_list = np.atleast_1d(model_conf['planets']).tolist()
+            #except:
+            #    planet_list = np.atleast_1d(model_conf['common']).tolist()
 
-            model_name_expanded = [model_name + '_' + pl_name for pl_name in planet_list]
+
+            try:
+                model_name_expanded = []
+                planet_list = []
+                for key, val in model_conf['models'].items():
+                    model_name_expanded.append(key)
+                    planet_list.append(val)
+
+            except:
+                try:
+                    planet_list = np.atleast_1d(model_conf['planets']).tolist()
+                except:
+                    planet_list = np.atleast_1d(model_conf['common']).tolist()
+                model_name_expanded = [model_name + '_' + pl_name for pl_name in planet_list]
+
+
             """ Let's avoid some dumb user using the planet names to name the models"""
 
-            for dataset_name, dataset in mc.dataset_dict.items():
-                if model_name in dataset.models:
-                    dataset.models.remove(model_name)
-                    dataset.models.extend(model_name_expanded)
+            if model_type in model_requires_planets:
+                """ For each dataset we check if the current model is included in the list of models.
+                    We then remove the generic model name  and include all the planet-specific  model names
+                """
+                for dataset_name, dataset in mc.dataset_dict.items():
+                    if model_name in dataset.models:
+                        dataset.models.remove(model_name)
+                        dataset.models.extend(model_name_expanded)
 
-                    if len(list(set(planet_list) & set(mc.dynamical_dict))) and not keplerian_approximation:
-                        dataset.dynamical = True
+                        if len(list(set(planet_list) & set(mc.dynamical_dict))) and not keplerian_approximation:
+                            dataset.dynamical = True
+
 
             for model_name_exp, planet_name in zip(model_name_expanded, planet_list):
 
-                """ This snippet will work only for RV class"""
                 try:
                     mc.models[model_name_exp] = \
                             define_type_to_class[model_type][mc.common_models[planet_name].orbit](model_name_exp, planet_name)
 
                     if keplerian_approximation:
+                        """ override default model from input file, to apply keplerian approximation """
+                        mc.models[model_name_exp] = \
+                        define_type_to_class[model_type]['keplerian'](model_name_exp, planet_name)
                         mc.common_models[planet_name].use_mass_for_planets = True
                         print('Using planetary mass instead of RV semiamplitude: ', planet_conf['use_mass_for_planets'])
 
@@ -456,6 +486,15 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, shutdown_
                             define_type_to_class[model_type](model_name_exp, planet_name)
 
                     mc.models[model_name_exp].model_conf = model_conf.copy()
+
+                if model_type == 'transit_times' or 'Tc_planets':
+                    for dataset_name, dataset in mc.dataset_dict.items():
+                        if planet_name in mc.dynamical_dict and \
+                                model_name_exp in dataset.models and \
+                                not keplerian_approximation:
+                            dataset.planet_name = planet_name
+                            dataset.dynamical = True
+                            mc.dynamical_t0_dict[planet_name] = dataset_name
 
                 """ This snippet will work only for transit class"""
                 try:
@@ -473,42 +512,13 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, shutdown_
 
                     mc.models[model_name_exp].common_ref.append(common_name)
 
-                    #for dataset_name in list(set(model_conf) & set(mc.dataset_dict)):
-                    #
-                    #    print mc.models[model_name_exp].model_conf
-                    #
-
-                    #    """ adding the limb darkening model"""
-                    #    try:
-                    #        common_name = mc.models[model_name_exp].model_conf['limb_darkening']
-                    #    except:
-                    #        common_name = 'limb_darkening'
-
-                    #    """ Limb darkening common model is appended to the list of common models"""
-                    ##   mc.models[model_name_exp].common_ref.append(common_name)
-                    #
-                    #   """ Some keywords of the LD common model are attached to the configuration
-                    #   dictionary of the dataset-specific model, in in order to assist the creation of the class
-                    #   """
-                    #   mc.models[model_name_exp].model_conf[dataset_name]['limb_darkening_model'] = \
-                    #       mc.common_models[common_name].ld_type
-                    #   mc.models[model_name_exp].model_conf[dataset_name]['limb_darkening_ncoeff'] = \
-                    #       mc.common_models[common_name].ld_ncoeff
-                    #   mc.models[model_name_exp].model_conf[dataset_name]['limb_darkening_parametrization'] = \
-                    #       mc.common_models[common_name].parametrization
                 except:
                     pass
 
                 mc.models[model_name_exp].common_ref.append('star_parameters')
 
-                ## Not sure if this line of code is supposed to work
-                #for dataset_name in list(set(model_name_exp) & set(mc.dataset_dict)):
-                #    bounds_space_priors_starts_fixed(mc, mc.models[model_name_exp], model_conf[dataset_name],
-                #                                   dataset_1=dataset_name)
-
                 for dataset_name, dataset in mc.dataset_dict.items():
                     if model_name_exp in dataset.models:
-
 
                         if dataset_name not in model_conf:
                             model_conf[dataset_name] = {}
@@ -516,36 +526,36 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, shutdown_
                         bounds_space_priors_starts_fixed(mc, mc.models[model_name_exp], model_conf[dataset_name],
                                                        dataset_1=dataset_name)
 
-        elif model_type == 'transit_time':
-            """ Only one planet for each file with transit times... mixing them would cause HELL"""
 
-            try:
-                planet_name = np.atleast_1d(model_conf['planet']).tolist()[0]
-            except:
-                planet_name = np.atleast_1d(model_conf['common']).tolist()[0]
+        #elif model_type == 'transit_times':
+        #    """ Only one planet for each file with transit times... mixing them would cause HELL"""
 
-            if keplerian_approximation:
-                """ override default model from input file, to apply keplerian approximation """
-                mc.models[model_name] = \
-                    define_type_to_class[model_type]['keplerian'](model_name_exp, planet_name)
-            else:
-                mc.models[model_name] = \
-                    define_type_to_class[model_type][mc.common_models[planet_name].orbit](model_name, planet_name)
+        #    try:
+        #        planet_name = np.atleast_1d(model_conf['planet']).tolist()[0]
+        #    except:
+        #        planet_name = np.atleast_1d(model_conf['common']).tolist()[0]
+
+        #    if keplerian_approximation:
+        #        """ override default model from input file, to apply keplerian approximation """
+        #        mc.models[model_name] = \
+        #            define_type_to_class[model_type]['keplerian'](model_name, planet_name)
+        #    else:
+        #        mc.models[model_name] = \
+        #           define_type_to_class[model_type][mc.common_models[planet_name].orbit](model_name, planet_name)
 
             #mc.models[model_name] = \
             #        define_type_to_class[model_type][mc.planet_dict[planet_name]](model_name, planet_name)
 
-            """  CHECK THIS!!!!
-            bounds_space_priors_starts_fixed(mc, mc.models[model_name], model_conf)
-            """
 
-            for dataset_name, dataset in mc.dataset_dict.items():
-                if planet_name in mc.dynamical_dict and model_name in dataset.models and not keplerian_approximation:
-                    dataset.planet_name = planet_name
-                    dataset.dynamical = True
-                    mc.dynamical_t0_dict[planet_name] = dataset_name
 
-            mc.models[model_name].common_ref.append('star_parameters')
+        #    for dataset_name, dataset in mc.dataset_dict.items():
+        #        if planet_name in mc.dynamical_dict and model_name in dataset.models and not keplerian_approximation:
+        #            dataset.planet_name = planet_name
+        #            dataset.dynamical = True
+        #            mc.dynamical_t0_dict[planet_name] = dataset_name
+
+        #    mc.models[model_name].common_ref.append('star_parameters')
+
 
         elif model_type == 'correlation_singledataset':
             mc.models[model_name] = \
@@ -621,10 +631,16 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, shutdown_
         mc.star_radius = np.asarray(conf_parameters['star_radius'][:], dtype=np.double)
 
     if 'dynamical_integrator' in conf_parameters:
-        mc.dynamical_model.dynamical_integrator = conf_parameters['dynamical_integrator']
+        try:
+            mc.dynamical_model.dynamical_integrator = conf_parameters['dynamical_integrator']
+        except:
+            pass
 
     if 'dynamical_integrator' in conf_solver:
-        mc.dynamical_model.dynamical_integrator = conf_solver['dynamical_integrator']
+        try:
+            mc.dynamical_model.dynamical_integrator = conf_solver['dynamical_integrator']
+        except:
+            pass
 
     if 'pyde' in conf_solver and hasattr(mc, 'pyde_parameters'):
         conf = conf_solver['pyde']

@@ -117,7 +117,7 @@ def results_resumen(mc, theta,
         return returned_samples
 
 
-def get_stellar_parameters(mc, theta):
+def get_stellar_parameters(mc, theta, warnings=True):
     try:
         n_samplings, n_pams = np.shape(theta)
     except:
@@ -137,8 +137,9 @@ def get_stellar_parameters(mc, theta):
                                                                 stellar_model.prior_pams['radius'][1],
                                                                 size=n_samplings)
             except:
-                print(' *** Please provide a prior on stellar Radius *** ')
-                print()
+                if warnings:
+                    print(' *** Please provide a prior on stellar Radius *** ')
+                    print()
 
         if 'mass' not in stellar_values:
             try:
@@ -147,8 +148,9 @@ def get_stellar_parameters(mc, theta):
                                                               stellar_model.prior_pams['mass'][1],
                                                               size=n_samplings)
             except:
-                print(' *** Please provide a prior on stellar Mass *** ')
-                print()
+                if warnings:
+                    print(' *** Please provide a prior on stellar Mass *** ')
+                    print()
 
         if 'mass' in stellar_values.keys() and 'radius' in stellar_values.keys():
             stellar_values['rho'] = stellar_values['mass'] / stellar_values['radius'] ** 3
@@ -174,8 +176,9 @@ def get_stellar_parameters(mc, theta):
                                                                 size=n_samplings)
                     stellar_values['mass'] = stellar_values['radius'] ** 3. * stellar_values['rho']
             else:
-                print(' *** Please provide a prior either on stellar Mass or stellar Radius *** ')
-                print()
+                if warnings:
+                    print(' *** Please provide a prior either on stellar Mass or stellar Radius *** ')
+                    print()
 
     return stellar_values
 
@@ -273,11 +276,13 @@ def get_planet_variables(mc, theta, verbose=False):
                 derived_variables['M_Me'] = True
 
             if 'Tc' in variable_values.keys():
-                derived_variables['f'] = True
-                variable_values['f'] = kepler_exo.kepler_Tc2phase_Tref(variable_values['P'],
-                                                                       variable_values['Tc'] - mc.Tref,
-                                                                       variable_values['e'],
-                                                                       variable_values['o'])
+                if 'e' in variable_values:
+                    derived_variables['f'] = True
+                    variable_values['f'] = kepler_exo.kepler_Tc2phase_Tref(variable_values['P'],
+                                                                           variable_values['Tc'] - mc.Tref,
+                                                                           variable_values['e'],
+                                                                           variable_values['o'])
+
 
             elif 'f' in variable_values.keys():
                 derived_variables['Tc'] = True
@@ -365,7 +370,8 @@ def get_model(mc, theta, bjd_dict):
 
     for dataset_name, dataset in mc.dataset_dict.items():
 
-        x0_plot = bjd_dict[dataset_name]['x_plot']-mc.Tref
+        x0_plot = bjd_dict[dataset_name]['x0_plot']
+
         n_input = np.size(x0_plot)
         model_out[dataset_name] = {}
         model_x0[dataset_name] = {}

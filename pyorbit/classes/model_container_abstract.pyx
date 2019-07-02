@@ -85,7 +85,6 @@ class ModelContainer(object):
 
         for model_name, model in self.models.items():
             if len(model.common_ref) > 0:
-
                 for common_ref in model.common_ref:
                     model.default_bounds.update(self.common_models[common_ref].default_bounds)
                     model.default_spaces.update(self.common_models[common_ref].default_spaces)
@@ -156,14 +155,15 @@ class ModelContainer(object):
                     # print('    ', model_name, self.ordered_planets[model_name], period_storage_ordered)
 
                 """ Step 4: check if the eccentricity is within the given range"""
-                e = model.transformation['e'](theta,
-                                              model.fixed,
-                                              model.variable_index['e'])
+                if 'e' in model.variable_index:
+                    e = model.transformation['e'](theta,
+                                                  model.fixed,
+                                                  model.variable_index['e'])
 
-                if not model.bounds['e'][0] <= e < model.bounds['e'][1]:
-                    # print('eccentricity>1')
-                    # print()
-                    return False
+                    if not model.bounds['e'][0] <= e < model.bounds['e'][1]:
+                        # print('eccentricity>1')
+                        # print()
+                        return False
 
         """ Step 5 check for overlapping periods (within 2.5% arbitrarily chosen)"""
         for i_n, i_v in enumerate(period_storage):
