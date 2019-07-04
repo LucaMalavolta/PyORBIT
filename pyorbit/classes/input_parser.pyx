@@ -45,6 +45,7 @@ __all__ = ["pars_input", "yaml_parser"]
 
 model_requires_planets = ['radial_velocities', 'rv_planets', 'batman_transit', 'batman_transit_with_ttv' ]
 single_planet_model =  ['Tc_planets', 'transit_times']
+transit_time_model =  ['Tc_planets', 'transit_times']
 
 define_common_type_to_class = {
     'planets': CommonPlanets,
@@ -487,7 +488,8 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, shutdown_
 
                     mc.models[model_name_exp].model_conf = model_conf.copy()
 
-                if model_type == 'transit_times' or 'Tc_planets':
+                if model_type in transit_time_model:
+
                     for dataset_name, dataset in mc.dataset_dict.items():
                         if planet_name in mc.dynamical_dict and \
                                 model_name_exp in dataset.models and \
