@@ -644,6 +644,13 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, shutdown_
         except:
             pass
 
+    shutdown_jitter = False
+    if 'shutdown_jitter' in conf_parameters:
+        shutdown_jitter = conf_parameters['shutdown_jitter']
+
+    if 'shutdown_jitter' in conf_solver:
+        shutdown_jitter = conf_solver['shutdown_jitter']
+
     if 'pyde' in conf_solver and hasattr(mc, 'pyde_parameters'):
         conf = conf_solver['pyde']
 
@@ -655,6 +662,8 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, shutdown_
 
         if 'shutdown_jitter' in conf:
             mc.pyde_parameters['shutdown_jitter'] = np.asarray(conf['shutdown_jitter'], dtype=bool)
+        elif shutdown_jitter:
+            mc.pyde_parameters['shutdown_jitter'] = shutdown_jitter
 
         if 'include_priors' in conf:
             mc.include_priors = np.asarray(conf['include_priors'], dtype=bool)
@@ -685,6 +694,8 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, shutdown_
 
         if 'shutdown_jitter' in conf:
             mc.emcee_parameters['shutdown_jitter'] = np.asarray(conf['shutdown_jitter'], dtype=bool)
+        elif shutdown_jitter:
+            mc.emcee_parameters['shutdown_jitter'] = shutdown_jitter
 
         if 'include_priors' in conf:
             mc.include_priors = np.asarray(conf['include_priors'], dtype=bool)
