@@ -237,6 +237,7 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, shutdown_
 
     for model_name, model_conf in conf_common.items():
 
+        """ Accept names starting with numbers (but why you should do that?"""
         if not isinstance(model_name, str):
             model_name = repr(model_name)
 
@@ -321,7 +322,7 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, shutdown_
 
                 print()
 
-        elif model_name == 'star':
+        elif model_type == 'star':
 
             for conf_name, star_conf in model_conf.items():
                 if 'type' in star_conf:
@@ -362,6 +363,11 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, shutdown_
                         continue
 
         else:
+
+            """ 
+                If the object type/kind has been specified, than the section name is treated just as a label.
+                Otherwise, it is assumed that the section name correspond to the object name  
+            """
             if 'type' in model_conf:
                 model_type = model_conf['type']
             elif 'kind' in model_conf:

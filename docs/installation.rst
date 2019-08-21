@@ -89,37 +89,6 @@ In principle PyORBIT_GetResults should be able to recognize if the output files 
   import emcee
   emcee.__version__
 
-Cythonizing your code
-+++++++++++++++++++++
-
-You can improve the performance of the code by compiling it with ``Cython`` and ``distutils``. To compile the code, just execute
-
-.. code:: bash
-
-  ./compile.sh
-
-in the main directory of the source code of ``PyORBIT``. Note that you have to run the command every time you change a file in the code,
- otherwise the compiled version will stay behind.
-
-.. code:: bash
-
-  ./compile.sh
-
-To clean the repository fro the compiled version, .i.e. if frequent changes are made to the code and you want to avoid recompiling each time, simply run:
-
-.. code:: bash
-
-  ./clean_compile.sh
-
-Note that in order to allow cythonization, the ``.py`` files in the ``pyorbit/classes`` and ``pyorbit/models``
-directory are actually symbolic links to the ``.pyx`` files in the same directory.
-
-More information on `Cython`_ and `distutils`_ can be found at their respective web pages.
-
-.. _Cython: http://cython.org/
-.. _distutils: https://docs.python.org/2/extending/building.html
-
-
 
 Additional codes
 ++++++++++++++++
@@ -143,8 +112,8 @@ So be worried only if you want to do some of the things listed here :ref:`requir
 
 The following codes may be required to do some specific kind of analysis.
 
-``george``
-----------
+george
+------
 
 Please refer to the `george installation page`_ for detailed instruction on your preferred method of installation.
 At the time of writing this guide, using conda installed version 0.3.1 of the package.
@@ -163,8 +132,8 @@ Please check that your installed version is equal or higher than ``0.3``:
 
 .. _george installation page: http://george.readthedocs.io/en/latest/user/quickstart/#installation
 
-``celerite``
-------------
+celerite
+--------
 
 On some systems, importing ``george`` and ``celerite`` during the same Python session may cause a segmentation fault. The only workaround I found is to install ``celerite`` using conda-forge instead of pip.
 If you are not planning to use celerite, you may proceed with the standard installation through conda-forge:
@@ -180,8 +149,8 @@ If you plan to use celerite, you may be interested in compiling from source in o
 
 
 
-``PolyChord``
--------------
+PolyChord
+---------
 
 Download the code at `PolyChord home page`_ .
 ``pypolychord``, the Python interface of ``PolyChord``, has been revamped starting from version ``1.12`` and then renamed after its transformation to ``PolyChordLite``. Earlier versions will likely not work with ``PyORBIT``.
@@ -218,8 +187,40 @@ Finally, to use the MPI functionalities, prepend the MPI command before the pyth
 
 If you already ran the command without the MPI instruction or with a different number of CPU, remember to delete the ``chains`` directory or the execution will fail.
 
+
+Cythonizing your code
++++++++++++++++++++++
+
+You can improve the performance of the code by compiling it with ``Cython`` and ``distutils``. To compile the code, just execute
+
+.. code:: bash
+
+  ./compile.sh
+
+in the main directory of the source code of ``PyORBIT``. Note that you have to run the command every time you change a file in the code,
+ otherwise the compiled version will stay behind.
+
+.. code:: bash
+
+  ./compile.sh
+
+To clean the repository fro the compiled version, .i.e. if frequent changes are made to the code and you want to avoid recompiling each time, simply run:
+
+.. code:: bash
+
+  ./clean_compile.sh
+
+Note that in order to allow cythonization, the ``.py`` files in the ``pyorbit/classes`` and ``pyorbit/models``
+directory are actually symbolic links to the ``.pyx`` files in the same directory.
+
+More information on `Cython`_ and `distutils`_ can be found at their respective web pages.
+
+.. _Cython: http://cython.org/
+.. _distutils: https://docs.python.org/2/extending/building.html
+
+
 PolyChord on Mac troubleshooting
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+++++++++++++++++++++++++++++++++
 **These instructions are not being updated since a while, use them at your own risk!**
 
 I run my code a Linux Box, but if I need to do a quick test or debug and I’m not in the office I do it on my Mac. Unfortunately some things are not as straightforward as they should be.

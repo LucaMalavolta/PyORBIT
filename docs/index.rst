@@ -4,7 +4,7 @@
    contain the root `toctree` directive.
 
 PyORBIT: the ultimate tool for exoplanet characterization!
-===================================
+==========================================================
 
 ``PyORBIT`` is a robust, versatile framework for the characterization of planetary systems.
 With ``PyORBIT`` you can model light curves, radial velocities, activity indexes and transit time variations.
@@ -23,14 +23,19 @@ Alternatively, for easy automatization, PyORBIT can be called as a Python functi
   hyper-parameters, just by using different labels for the abstract class.
   Alternatively, for your Gaussian process regression you can use "celerite" on
   your light curve and "george " on your radial velocities, by having them sharing
-  the same hyperparameters.
+  the same hyper-parameters.
 
 ``PyORBIT`` started in 2015 as an exercise to learn Python (2) and because at
 the time the only publicly available code for the Bayesian analysis of RVs was
 written in IDL, for which I didn't have a license. Since then I've been added new options
 every time I needed so, and I kept updating the code while improving my Python skills.
+
 ``PyORBIT`` has been now converted and tested for Python 3, but it should still
- be back-compatible with Python 2 (at your own risk).
+be back-compatible with Python 2 (at your own risk).
+
+If you are wondering what ``PyORBIT`` stands for: I am bad at acronym creation so
+I decided to write it with capitol *ORBIT* just because I liked how it looked.
+Feel free to submit your retrofitting acronym!  
 
 .. toctree::
    :maxdepth: 2

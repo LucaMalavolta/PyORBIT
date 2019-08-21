@@ -19,18 +19,14 @@ common:
         Tc: ['Gaussian', 7744.07160, 0.00022]
       spaces:
         P: Linear
+      fixed:
+        i: [86.3, 3.00]
     c:
-      orbit: circular
-      parametrization: Eastman2013_Tcent
+      orbit: keplerian
       boundaries:
-        P: [7.70, 7.80]
+        P: [1.0, 1000.0]
         K: [0.01, 100.0]
-        Tc: [7751.10, 7751.20]
-      priors:
-        P: ['Gaussian', 7.74850, 0.00022]
-        Tc: ['Gaussian', 7751.1546, 0.0010]
-      spaces:
-        P: Linear
+        e: [0.00, 0.95]
   activity:
     boundaries:
       Prot: [5.00, 16.00]
