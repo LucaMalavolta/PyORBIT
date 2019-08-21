@@ -18,14 +18,19 @@ Setting-up a configuration file and running the analysis is super easy, barely a
 Alternatively, for easy automatization, PyORBIT can be called as a Python function by passing a dictionary instead of a configuration file.
 
 ..
-  One of the main strength of PyORBIT is in the abstraction of the models. For 
+  One of the main strength of PyORBIT is in the abstraction of the models. For
   example,  you can use more than one Gaussian process, with independent
   hyper-parameters, just by using different labels for the abstract class.
   Alternatively, for your Gaussian process regression you can use "celerite" on
   your light curve and "george " on your radial velocities, by having them sharing
   the same hyperparameters.
 
-``PyORBIT`` is written and tested for Python 3, but is back-compatible with Python 2 (at your own risk)
+``PyORBIT`` started in 2015 as an exercise to learn Python (2) and because at
+the time the only publicly available code for the Bayesian analysis of RVs was
+written in IDL, for which I didn't have a license. Since then I've been added new options
+every time I needed so, and I kept updating the code while improving my Python skills.
+``PyORBIT`` has been now converted and tested for Python 3, but it should still
+ be back-compatible with Python 2 (at your own risk).
 
 .. toctree::
    :maxdepth: 2
