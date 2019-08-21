@@ -1,0 +1,75 @@
+inputs:
+  RVdata:
+    file: K2-141_dataset/K2-141_RV_HARPN.dat
+    kind: RV
+    models:
+      - radial_velocities
+      - gp_quasiperiodic
+common:
+  planets:
+    b:
+      orbit: circular
+      parametrization: Eastman2013_Tcent
+      boundaries:
+        P: [0.25, 0.31]
+        K: [0.01, 100.0]
+        Tc: [7744.06, 7744.08]
+      priors:
+        P: ['Gaussian', 0.2803244, 0.0000015]
+        Tc: ['Gaussian', 7744.07160, 0.00022]
+      spaces:
+        P: Linear
+    c:
+      orbit: circular
+      parametrization: Eastman2013_Tcent
+      boundaries:
+        P: [7.70, 7.80]
+        K: [0.01, 100.0]
+        Tc: [7751.10, 7751.20]
+      priors:
+        P: ['Gaussian', 7.74850, 0.00022]
+        Tc: ['Gaussian', 7751.1546, 0.0010]
+      spaces:
+        P: Linear
+  activity:
+    boundaries:
+      Prot: [5.00, 16.00]
+      Pdec: [10.0, 2000.00]
+      Oamp: [0.01, 0.60]
+    priors:
+      Prot: ['Gaussian',13.941613, 0.66]
+      Pdec: ['Gaussian',12.203273, 3.21]
+      Oamp: ['Gaussian',0.342221, 0.054]
+  star:
+    star_parameters:
+      priors:
+        radius: ['Gaussian', 0.681, 0.018]
+        mass: ['Gaussian', 0.708, 0.028]
+        rho: ['Gaussian', 2.244, 0.161]
+models:
+  radial_velocities:
+    planets:
+      - b
+      - c
+  gp_quasiperiodic:
+    common: activity
+    RVdata:
+      boundaries:
+        Hamp: [0.01, 100.00]
+parameters:
+  Tref: 7800.0
+solver:
+  pyde:
+    ngen: 4000
+    npop_mult: 8
+  emcee:
+    npop_mult: 8
+    nsteps: 20000
+    nburn: 5000
+    thin: 100
+  nested_sampling:
+    nlive: 1000
+    num_repeats_mult: 5
+    sampling_efficiency: 0.30
+    shutdown_jitter: True
+  recenter_bounds: True

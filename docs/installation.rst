@@ -3,6 +3,8 @@
 Installation
 ============
 
+.. _requirements-label:
+
 Requirements
 ++++++++++++
 
@@ -11,12 +13,14 @@ This is the list of packages required by PyORBIT to work out-of-the-box:
 - ``numpy``, ``scipy``, ``matplotlib``: pretty standard
 - ``argparse``: required to pass terminal keywords
 - ``pyyaml``: YAML is the language used for the configuration file
-- ``pyDE``: global optimization package (`PyDE home page`_)
-- ``emcee``: ensemble sampling toolkit for affine-invariant MCMC (`emcee home page`_)
 - ``corner``: to make corner plots (`corner.py home page`_)
 - ``h5py``: HDF5 for Python (`h5py home page`_)
 
-The ``PyDE`` + ``emcee`` combination is the easiest to install and set up, but it is possible to specify the starting point of ``emcee`` instead of using the outcome of ``PyDE``.
+Basic analysis can be performed using the ``scipy.optimize`` package, however to fully unwind the power of ``PyORBIT`` I strongly recommend these two packages:
+- ``pyDE``: global optimization package (`PyDE home page`_)
+- ``emcee``: ensemble sampling toolkit for affine-invariant MCMC (`emcee home page`_)
+
+Simply speaking, ``PyDE`` searches for the best global solution and passes it to ``emcee``, ensuring that the MCMC will not be stuck around a local minimum of the chi-square. The ``PyDE`` + ``emcee`` combination is the easiest to install and set up, but it is possible to specify the starting point of ``emcee`` instead of using the outcome of ``PyDE``.
 It is possible to use other samplers as well, such as:
 
 - ``MultiNEST``
@@ -30,6 +34,8 @@ Additional packages may be required to perform certain types of analysis:
 - ``TRADES`` : dynamical simulation of exoplanetary systems (`TRADES home page`_)
 - ``TTVfast`` : transit times for and radial velocities for n-planet systems (`TTVfast home page`_)
 - ``cython`` : C extension for Python (`Cython home page`_)
+- ``getdist``: For the analysis of MCMC chains (`getdist home page`_)
+
 
 .. _BATMAN home page: https://www.cfa.harvard.edu/~lkreidberg/batman/
 .. _Cython home page: http://cython.org/
@@ -41,6 +47,9 @@ Additional packages may be required to perform certain types of analysis:
 .. _emcee home page: https://github.com/dfm/emcee
 .. _corner.py home page: https://github.com/dfm/corner.py
 .. _h5py home page: http://docs.h5py.org/en/stable
+.. _getdist home page: https://github.com/cmbant/getdist
+
+If you are using any of those packages listed above, please be sure to cite the proper references, as stated in their web page
 
 Instructions
 ++++++++++++
@@ -48,7 +57,7 @@ Instructions
 ``pyDE``
 --------
 
-Installing from pip results in an error, so you have to install from source using the following commands:
+Installing from pip will results in an error, so you have to install the most up-to-date version from source using the following commands:
 
 .. code:: bash
 
@@ -73,7 +82,7 @@ I’m currently using the latest version of emcee (Version 3.0 at the moment of 
 
 (from here: http://emcee.readthedocs.io/en/stable/user/install.html#from-source)
 
-In principle PyORBIT_GetResults should be able to recognize if the output files have been produced by version ``3.x`` or ``3.x``. To save you some trouble, however, I suggest you to check that you have actually installed version ``3.x``:
+In principle PyORBIT_GetResults should be able to recognize if the output files have been produced by version ``2.x`` or ``3.x``. To save you some trouble, however, I suggest you to check that you have actually installed version ``3.x``:
 
 ::
 
@@ -89,7 +98,8 @@ You can improve the performance of the code by compiling it with ``Cython`` and 
 
   ./compile.sh
 
-in the main directory of the source code of ``PyORBIT``. Note that you have to run the command everytime you change a file in the code, otherwise the compiled version will stay behind.
+in the main directory of the source code of ``PyORBIT``. Note that you have to run the command every time you change a file in the code,
+ otherwise the compiled version will stay behind.
 
 .. code:: bash
 
@@ -101,7 +111,8 @@ To clean the repository fro the compiled version, .i.e. if frequent changes are 
 
   ./clean_compile.sh
 
-Note that in order to allow cythonization, the ``.py`` files in the ``pyorbit/classes`` and ``pyorbit/models`` directory are actually symbolic links to the ``.pyx`` files in the same directory.
+Note that in order to allow cythonization, the ``.py`` files in the ``pyorbit/classes`` and ``pyorbit/models``
+directory are actually symbolic links to the ``.pyx`` files in the same directory.
 
 More information on `Cython`_ and `distutils`_ can be found at their respective web pages.
 
@@ -123,8 +134,12 @@ When running PyORBIT you may get one of the following warnings:
   WARNING! Imported dummy TRADES, models relying on this package will not work
   WARNING! Imported dummy TTVFAST, models relying on this package will not work
   WARNING! Imported dummy george, models relying on this package will not work
+  WARNING! Imported pyorbit.classes.dummy batman, models relying on this package will not work
 
-*Simple* RV fit and analysis will still work, but if you want to use one of these packages and you are getting one of these error, the code will fail miserabily. You will still have some of these warnings because the relative module is loaded anyway even if you are not actually using it.
+*Simple* RV fit and analysis will still work, but if you want to use one of these packages and you
+are getting one of these error, the code will fail miserably. You will still have some of these
+warnings because ``PyORBIT`` will try to load the relative module even if you are not actually using it.
+So be worried only if you want to do some of the things listed here :ref:`requirements-label` and the appropriate package is not installed (the code will crash anyway).
 
 The following codes may be required to do some specific kind of analysis.
 
@@ -169,17 +184,22 @@ If you plan to use celerite, you may be interested in compiling from source in o
 -------------
 
 Download the code at `PolyChord home page`_ .
-``PyPolyChord`` interface has been revamped starting from version ``1.12``, earlier versions will likely not work with ``PyPolyChord``.
+``pypolychord``, the Python interface of ``PolyChord``, has been revamped starting from version ``1.12`` and then renamed after its transformation to ``PolyChordLite``. Earlier versions will likely not work with ``PyORBIT``.
 
 .. code:: bash
 
-  tar -xvf PolyChord_v1.14.tar.gz
-  cd PolyChord/
+  git clone https://github.com/PolyChord/PolyChordLite.git
+  cd PolyChordLite/
 
-Change the Makefile appropriately if you are using weird C/Fortran compilers or Linux distributions. With ``anaconda2`` on ``Ubuntu 16.04 LTS`` and ``Ubuntu 18.04 LTS`` I didn't have to change any setting.
-``MPI`` is disabled by default when installing on ``macOS``, I didn't manage to make MPI and PolyChord work together on my laptop so I suggest to leave it that way.
+Change the Makefile appropriately if you are using weird C/Fortran compilers or Linux distributions. With ``anaconda`` on ``Ubuntu 16.04 LTS`` and ``Ubuntu 18.04 LTS`` I didn't have to change any setting.
+In the past, ``MPI`` was disabled by default when installing on ``macOS``, I didn't manage to make MPI and PolyChord work together on my laptop so decided to leave it that way. Right now I'm not sure what is the situation.
 
-When you have finished modifying the Makefile,  run ``make`` to build the code.
+When you have finished modifying the Makefile, to build the code run
+
+.. code:: bash
+
+  make pypolychord
+  python setup.py install --user
 
 The next step is to configure your ``LD_LIBRARY_PATH`` to point to your PolyChord installation, and your ``LD_PRELOAD`` to point to your mpi installation. PolyChord will tell you the exact line to be added to your ``~\.bashrc`` file by executing:
 
@@ -200,13 +220,14 @@ If you already ran the command without the MPI instruction or with a different n
 
 PolyChord on Mac troubleshooting
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+**These instructions are not being updated since a while, use them at your own risk!**
+
 I run my code a Linux Box, but if I need to do a quick test or debug and I’m not in the office I do it on my Mac. Unfortunately some things are not as straightforward as they should be.
 
 
 
 symbol(s) not found for architecture x86_64
 """""""""""""""""""""""""""""""""""""""""""
-
 Installing ``PolyChord 1.12`` on ``macOS 10.13`` with ``brew``, you may get this long list of error at the time of compiling the library:
 
 .. code:: bash
@@ -405,5 +426,5 @@ Is quite simple: use a lower number after ``-np``. If `HyperThreading`_ is activ
 
 
 .. _OpenMPI: https://www.open-mpi.org/
-.. _PolyChord home page: https://ccpforge.cse.rl.ac.uk/gf/project/polychord/
+.. _PolyChord home page (now PolyChordLite): https://github.com/PolyChord/PolyChordLite
 .. _Hyperthreading: https://superuser.com/questions/96001/why-does-my-intel-i7-920-display-8-cores-instead-of-4-cores
