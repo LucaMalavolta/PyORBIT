@@ -135,6 +135,9 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
             mc.bounds[theta_i] = previous_boundaries[theta_dict_legacy[theta_name]]
 
         starting_point = np.median(population, axis=0)
+        #print(starting_point)
+        #print(population)
+
         print('Using previous population as starting point. ')
         sys.stdout.flush()
         print()

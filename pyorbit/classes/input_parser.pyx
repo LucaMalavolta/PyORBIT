@@ -322,7 +322,7 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, shutdown_
 
                 print()
 
-        elif model_type == 'star':
+        elif model_name == 'star':
 
             for conf_name, star_conf in model_conf.items():
                 if 'type' in star_conf:
