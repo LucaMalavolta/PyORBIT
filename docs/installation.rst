@@ -23,8 +23,9 @@ Basic analysis can be performed using the ``scipy.optimize`` package, however to
 Simply speaking, ``PyDE`` searches for the best global solution and passes it to ``emcee``, ensuring that the MCMC will not be stuck around a local minimum of the chi-square. The ``PyDE`` + ``emcee`` combination is the easiest to install and set up, but it is possible to specify the starting point of ``emcee`` instead of using the outcome of ``PyDE``.
 It is possible to use other samplers as well, such as:
 
-- ``MultiNEST``
-- ``PolyChord``
+- ``MultiNEST`` (`MultiNest home page`_)
+- ``PolyChordLite``, previously known as just ``PolyChord`` (`PolyChordLite home page`_)
+- ``dynesty`` (`dynesty home page`_)
 
 Additional packages may be required to perform certain types of analysis:
 
@@ -48,6 +49,9 @@ Additional packages may be required to perform certain types of analysis:
 .. _corner.py home page: https://github.com/dfm/corner.py
 .. _h5py home page: http://docs.h5py.org/en/stable
 .. _getdist home page: https://github.com/cmbant/getdist
+.. _MultiNest home page: https://github.com/farhanferoz/MultiNest
+.. _PolyChordLite home page: https://github.com/PolyChord/PolyChordLite
+.. _dynesty home page: https://github.com/joshspeagle/dynesty
 
 If you are using any of those packages listed above, please be sure to cite the proper references, as stated in their web page
 
@@ -149,10 +153,10 @@ If you plan to use celerite, you may be interested in compiling from source in o
 
 
 
-PolyChord
----------
+PolyChordLite
+-------------
 
-Download the code at `PolyChord home page`_ .
+Download the code at `PolyChordLite home page`_ .
 ``pypolychord``, the Python interface of ``PolyChord``, has been revamped starting from version ``1.12`` and then renamed after its transformation to ``PolyChordLite``. Earlier versions will likely not work with ``PyORBIT``.
 
 .. code:: bash
@@ -427,5 +431,4 @@ Is quite simple: use a lower number after ``-np``. If `HyperThreading`_ is activ
 
 
 .. _OpenMPI: https://www.open-mpi.org/
-.. _PolyChord home page (now PolyChordLite): https://github.com/PolyChord/PolyChordLite
 .. _Hyperthreading: https://superuser.com/questions/96001/why-does-my-intel-i7-920-display-8-cores-instead-of-4-cores

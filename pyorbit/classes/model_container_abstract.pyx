@@ -186,7 +186,7 @@ class ModelContainer(object):
 
     def __call__(self, theta, include_priors=True):
         log_priors, log_likelihood = self.log_priors_likelihood(theta)
-
+        
         if self.include_priors and include_priors:
             return log_priors + log_likelihood
         else:
@@ -306,6 +306,11 @@ class ModelContainer(object):
         """ In case there is more than one GP model"""
         for logchi2_gp_model in delayed_lnlk_computation:
             log_likelihood += self.models[logchi2_gp_model].lnlk_compute()
+
+        """ check for finite log_priors and log_likelihood"""
+        if np.isnan(log_priors) or np.isnan(log_likelihood):
+            log_likelihood = -np.inf
+            log_priors = -np.inf
 
         if return_priors is False:
             return log_likelihood
