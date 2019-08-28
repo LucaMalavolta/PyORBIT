@@ -178,18 +178,20 @@ The next step is to configure your ``LD_LIBRARY_PATH`` to point to your PolyChor
 
 .. code:: bash
 
-  python run_PyPolyChord.py
+  python run_pypolychord.py
 
 Remeber to load the modified ``~\.bashrc`` file by running ``source ~\.bashrc`` in a terminal.
 
 
-Finally, to use the MPI functionalities, prepend the MPI command before the python one, specyfying the number of processor you want to use after ``-np`` (20 in the example).
+Finally, to use the MPI functionalities, prepend the MPI command before the python one, specifying the number of processor you want to use after ``-np`` (20 in the example).
 
 .. code:: bash
 
-  mpirun -np 20 python run_PyPolyChord.py
+  mpirun -np 20 python run_pypolychord.py
 
 If you already ran the command without the MPI instruction or with a different number of CPU, remember to delete the ``chains`` directory or the execution will fail.
+
+** Compilation tricks for Mac users **
 
 
 Cythonizing your code
@@ -224,15 +226,24 @@ More information on `Cython`_ and `distutils`_ can be found at their respective 
 
 
 Mac Troubleshooting
-++++++++++++++++++++++++++++++++
++++++++++++++++++++
 
 I run my code a Linux Box, but if I need to do a quick test or debug and I’m not in the office I do it on my Mac. Unfortunately some things are not as straightforward as they should be.
+Until now the most problematic external code has been PolyChord, particularly if you try to install it with the MPI support.
 Below you can find a collection of errors I found along the way and how I fix them.
+
+In the following, I assume you have installed the Command Line Tools with the command ``xcode-select --install`` and the package manager for macOS `brew`_. If you are using macOS 10.14 (Mojave), follow this additional instructions here: `Fixing missing headers for homebrew in Mac OS X Mojave (from The caffeinated engineer)`_. Note that I had to download again the Command Line Tools from the Apple Developer website in order to have the  macOS SDK headers appearing in the correct folder.
+
 **I'm not a IT expert, use these advices at your own risk!**
 
+.. _Fixing missing headers for homebrew in Mac OS X Mojave (from The caffeinated engineer): https://silvae86.github.io/sysadmin/mac/osx/mojave/beta/libxml2/2018/07/05/fixing-missing-headers-for-homebrew-in-mac-osx-mojave/
+.. _brew: https://brew.sh
 
-(Mac + PolyChord) gfortran-8: No such file or directory
--------------------------------------------------------
+
+PolyChord - check gcc/gfortran/g++ versions
+-------------------------------------------
+
+**Note:** This error may show up if PolyChord is being compiled without MPI support, which is disabled by default.
 
 I have ``gfortran`` installed through ``brew`` on my ``macOS 10.14``, but when I run ``make pypolychord`` it keeps asking for ``gfortran-8`` when installing ``PolyChord 1.16``. The offending lines are from 11 to 13 of the ``Makefile_gnu`` file, in the main directory:
 
@@ -274,13 +285,49 @@ Finally, modify the ``Makefile_gnu`` accordingly:
 
 Run ``make pypolychord``, ignore the warnings, and then execute the command suggested at the end (if compilation was successful), in my case ``CC=gcc-9 CXX=g++-9 python setup.py install --user``
 
+PolyChord + MPI - check gcc/gfortran/g++ versions
+-------------------------------------------------
+
+``PolyChord`` installation with ``MPI`` activated will make use of ``mpicc``, ``mpicxx`` and  ``mpif90``, instead of ``gcc`` and co.. Has done for ``gcc``
 
 
-Segmentation fault
-------------------
+``./configure CC=/usr/local/bin/gcc-9 FC=/usr/local/bin/gfortran-9 CXX=/usr/local/bin/g++-9``
+
+
+PolyChord + MPI - symbol(s) not found for architecture x86_64
+-------------------------------------------------------------
+
+**Note:** This error is showing up only when PolyChord is being compiled with MPI support.
+When installing ``PolyChord`` with ``MPI`` support, you may get this long list of error at the time of compiling the library:
+
+.. code:: bash
+
+  gfortran -shared abort.o array_utils.o calculate.o chordal_sampling.o clustering.o feedback.o generate.o ini.o interfaces.o mpi_utils.o nested_sampling.o params.o priors.o random_utils.o read_write.o run_time_info.o settings.o utils.o c_interface.o -o /Users/malavolta/Astro/CODE/others/PolyChord/lib/libchord.so
+  Undefined symbols for architecture x86_64:
+    "std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >::_M_create(unsigned long&, unsigned long)", referenced from:
+        run_polychord(double (*)(double*, int, double*, int), void (*)(int, int, int, double*, double*, double*, double, double), Settings) in c_interface.o
+        run_polychord(double (*)(double*, int, double*, int), void (*)(double*, double*, int), Settings) in c_interface.o
+        run_polychord(double (*)(double*, int, double*, int), Settings) in c_interface.o
+    ... [cut] ...
+    "___gxx_personality_v0", referenced from:
+        Dwarf Exception Unwind Info (__eh_frame) in c_interface.o
+  ld: symbol(s) not found for architecture x86_64
+  collect2: error: ld returned 1 exit status
+  make[1]: *** [/Users/malavolta/Astro/CODE/others/PolyChord/lib/libchord.so] Error 1
+  make: *** [/Users/malavolta/Astro/CODE/others/PolyChord/lib/libchord.so] Error 2
+
+Change directory to ``src/polychord/``, copy the full command starting with ``gfortran -shared .. `` and add the end ``-lstdc++ -lc++``
+
+.. code:: bash
+
+  gfortran -shared abort.o array_utils.o calculate.o chordal_sampling.o clustering.o feedback.o generate.o ini.o interfaces.o mpi_utils.o nested_sampling.o params.o priors.o random_utils.o read_write.o run_time_info.o settings.o utils.o c_interface.o -o /Users/malavolta/Astro/CODE/others/PolyChord/lib/libchord.so -lstdc++ -lc++
+
+Go back to the main directory and execute again ``make pypolychord``.
 
 
 
+PolyChord - Segmentation fault
+------------------------------
 
 If you get this error using Conda/Anaconda and running ``python run_pypolychord.py``:
 
@@ -306,9 +353,8 @@ My guess is that ``lib/libchord.so`` has been compiled with different system lib
   /usr/bin/python pypolychord.py
 
 
-MPI: Crash after a few iterations
----------------------------------
-
+MPI - Crash after a few iterations
+----------------------------------
 
 If you have an error similar to this one:
 
@@ -331,8 +377,8 @@ OSX:      ulimit -s hard
 and resume your job.
 The slice sampling & clustering steps use a recursive procedure. The default memory allocated to recursive procedures is embarrassingly small (to guard against memory leaks).
 
-MPI: No available slot*
------------------------
+MPI - No available slots
+------------------------
 
 The solution to this error:
 
@@ -356,35 +402,6 @@ Magically fixed problems
 ------------------------
 
 Here I list some problems that I encountered in the past while installing some code, but that dind't appear anymore when a tried a new installation on more recent computers.
-
-*symbol(s) not found for architecture x86_64*
-
-
-Installing ``PolyChord 1.12`` on ``macOS 10.13`` with ``brew``, you may get this long list of error at the time of compiling the library:
-
-.. code:: bash
-
-  gfortran -shared abort.o array_utils.o calculate.o chordal_sampling.o clustering.o feedback.o generate.o ini.o interfaces.o mpi_utils.o nested_sampling.o params.o priors.o random_utils.o read_write.o run_time_info.o settings.o utils.o c_interface.o -o /Users/malavolta/Astro/CODE/others/PolyChord/lib/libchord.so
-  Undefined symbols for architecture x86_64:
-    "std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >::_M_create(unsigned long&, unsigned long)", referenced from:
-        run_polychord(double (*)(double*, int, double*, int), void (*)(int, int, int, double*, double*, double*, double, double), Settings) in c_interface.o
-        run_polychord(double (*)(double*, int, double*, int), void (*)(double*, double*, int), Settings) in c_interface.o
-        run_polychord(double (*)(double*, int, double*, int), Settings) in c_interface.o
-    ... [cut] ...
-    "___gxx_personality_v0", referenced from:
-        Dwarf Exception Unwind Info (__eh_frame) in c_interface.o
-  ld: symbol(s) not found for architecture x86_64
-  collect2: error: ld returned 1 exit status
-  make[1]: *** [/Users/malavolta/Astro/CODE/others/PolyChord/lib/libchord.so] Error 1
-  make: *** [/Users/malavolta/Astro/CODE/others/PolyChord/lib/libchord.so] Error 2
-
-Change directory to ``src/polychord/``, copy the full command starting with ``gfortran -shared .. `` and add the end ``-lstdc++ -lc++``
-
-.. code:: bash
-
-  gfortran -shared abort.o array_utils.o calculate.o chordal_sampling.o clustering.o feedback.o generate.o ini.o interfaces.o mpi_utils.o nested_sampling.o params.o priors.o random_utils.o read_write.o run_time_info.o settings.o utils.o c_interface.o -o /Users/malavolta/Astro/CODE/others/PolyChord/lib/libchord.so -lstdc++ -lc++
-
-Go back to the main directory and execute again ``make pypolychord``.
 
 *ldd: command not found*
 
