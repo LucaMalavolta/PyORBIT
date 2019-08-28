@@ -223,16 +223,58 @@ More information on `Cython`_ and `distutils`_ can be found at their respective 
 .. _distutils: https://docs.python.org/2/extending/building.html
 
 
-PolyChord on Mac troubleshooting
+Mac Troubleshooting
 ++++++++++++++++++++++++++++++++
-**These instructions are not being updated since a while, use them at your own risk!**
 
 I run my code a Linux Box, but if I need to do a quick test or debug and I’m not in the office I do it on my Mac. Unfortunately some things are not as straightforward as they should be.
+Below you can find a collection of errors I found along the way and how I fix them.
+**I'm not a IT expert, use these advices at your own risk!**
 
 
+(Mac + PolyChord) gfortran-8: No such file or directory
+"""""""""""""""""""""""""""""""""""""""""""""""""""""""
+I have ``gfortran`` installed through ``brew`` on my ``macOS 10.14``, but when I run ``make pypolychord`` it keeps asking for ``gfortran-8`` when installing ``PolyChord 1.16``. The offending lines are from 11 to 13 of the ``Makefile_gnu`` file, in the main directory:
 
-symbol(s) not found for architecture x86_64
-"""""""""""""""""""""""""""""""""""""""""""
+.. code:: bash
+  FC = gfortran-8
+  CC = gcc-8
+  CXX = g++-8
+
+To fix this, first check the version of your fortran compiler with ``gfortran -v``:
+
+.. code:: bash
+  $ gfortran -v
+    Using built-in specs.
+    COLLECT_GCC=gfortran
+    COLLECT_LTO_WRAPPER=/usr/local/Cellar/gcc/9.1.0/libexec/gcc/x86_64-apple-darwin18/9.1.0/lto-wrapper
+    Target: x86_64-apple-darwin18
+    Configured with: .... [cut]
+    Thread model: posix
+    gcc version 9.1.0 (Homebrew GCC 9.1.0)
+
+From the last line I can see that my ``gfortran`` is part of version 9 of the ``gcc`` compiler provided by ``brew``. However, a version check of ``gcc`` gives a different answer:
+
+.. code:: bash
+  $ gcc -v
+    Configured with: ...[cut]
+    Apple clang version 11.0.0 (clang-1100.0.20.17)
+    Target: x86_64-apple-darwin18.6.0
+    Thread model: posix
+    InstalledDir: /Library/Developer/CommandLineTools/usr/bin
+
+In other words, the command ``gcc`` will call the version provided by Apple, while ``gfortran`` comes with the ``brew`` version of ``gcc`` (and apparently it's not provided by Apple at all). To avoid conflicts with libraries, be sure to use to identify the correct commands to call ``gcc``, ``gfortran`` and ``g++`` from the same installation. Most of the time, you just have to append the version number at the end, i.e. ``gcc-9``, ``gfortran-9``, and ``g++-9``.
+
+Finally, modify the ``Makefile_gnu`` accordingly:
+
+.. code:: bash
+  FC = gfortran-9
+  CC = gcc-9
+  CXX = g++-9
+
+Run ``make pypolychord``, ignore the warnings, and then execute the command suggested at the end (if compilation was successful), in my case ``CC=gcc-9 CXX=g++-9 python setup.py install --user``
+
+(Mac + PolyChord) symbol(s) not found for architecture x86_64
+"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 Installing ``PolyChord 1.12`` on ``macOS 10.13`` with ``brew``, you may get this long list of error at the time of compiling the library:
 
 .. code:: bash
@@ -257,12 +299,12 @@ Change directory to ``src/polychord/``, copy the full command starting with ``gf
 
   gfortran -shared abort.o array_utils.o calculate.o chordal_sampling.o clustering.o feedback.o generate.o ini.o interfaces.o mpi_utils.o nested_sampling.o params.o priors.o random_utils.o read_write.o run_time_info.o settings.o utils.o c_interface.o -o /Users/malavolta/Astro/CODE/others/PolyChord/lib/libchord.so -lstdc++ -lc++
 
-Go back to the main directory and execute again ``make PyPolyChord``.
+Go back to the main directory and execute again ``make pypolychord``.
 
 Segmentation fault
 """"""""""""""""""
 
-If you are using Conda/Anaconda and running ``python run_PyPolyChord.py``:
+If you are using Conda/Anaconda and running ``python pypolychord.py``:
 
 .. code:: bash
 
@@ -283,7 +325,7 @@ My guess is that ``lib/libchord.so`` has been compiled with different system lib
 
 .. code:: bash
 
-  /usr/bin/python run_PyPolyChord.py
+  /usr/bin/python pypolychord.py
 
 
 ldd: command not found
