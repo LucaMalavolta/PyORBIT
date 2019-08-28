@@ -279,7 +279,10 @@ Run ``make pypolychord``, ignore the warnings, and then execute the command sugg
 Segmentation fault
 ------------------
 
-If you are using Conda/Anaconda and running ``python pypolychord.py``:
+
+
+
+If you get this error using Conda/Anaconda and running ``python run_pypolychord.py``:
 
 .. code:: bash
 
