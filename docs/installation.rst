@@ -232,7 +232,8 @@ Below you can find a collection of errors I found along the way and how I fix th
 
 
 (Mac + PolyChord) gfortran-8: No such file or directory
-"""""""""""""""""""""""""""""""""""""""""""""""""""""""
+-------------------------------------------------------
+
 I have ``gfortran`` installed through ``brew`` on my ``macOS 10.14``, but when I run ``make pypolychord`` it keeps asking for ``gfortran-8`` when installing ``PolyChord 1.16``. The offending lines are from 11 to 13 of the ``Makefile_gnu`` file, in the main directory:
 
 .. code:: bash
@@ -273,8 +274,89 @@ Finally, modify the ``Makefile_gnu`` accordingly:
 
 Run ``make pypolychord``, ignore the warnings, and then execute the command suggested at the end (if compilation was successful), in my case ``CC=gcc-9 CXX=g++-9 python setup.py install --user``
 
-(Mac + PolyChord) symbol(s) not found for architecture x86_64
-"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+
+
+Segmentation fault
+------------------
+
+If you are using Conda/Anaconda and running ``python pypolychord.py``:
+
+.. code:: bash
+
+  *** Process received signal ***
+  Signal: Segmentation fault: 11 (11)
+  Signal code: Address not mapped (1)
+  Failing at address: 0x2000000020
+  [ 0] 0   libsystem_platform.dylib            0x00007fff7991cf5a _sigtramp + 26
+  [ 1] 0   ???                                 0x000000005a21bf38 0x0 + 1512161080
+  [ 2] 0   libsystem_c.dylib                   0x00007fff7972fc3d __vfprintf + 4711
+  [ 3] 0   libsystem_c.dylib                   0x00007fff79757091 __v2printf + 473
+  [ 4] 0   libsystem_c.dylib                   0x00007fff7973c4af _vsnprintf + 415
+  [ 5] 0   libsystem_c.dylib                   0x00007fff7973c562 vsnprintf + 80
+  [ 6] 0   libgfortran.3.dylib                 0x000000010e8b5d9b _gfortran_convert_char4_to_char1 + 3963
+  *** End of error message ***
+
+My guess is that ``lib/libchord.so`` has been compiled with different system libraries than those called by Conda. I don't have a solution for this problem, but using the system python seems the easiest workaround:
+
+.. code:: bash
+
+  /usr/bin/python pypolychord.py
+
+
+MPI: Crash after a few iterations
+---------------------------------
+
+
+If you have an error similar to this one:
+
+.. code:: bash
+
+  -------------------------------------------------------
+  Primary job  terminated normally, but 1 process returned
+  a non-zero exit code. Per user-direction, the job has been aborted.
+  -------------------------------------------------------
+
+  --------------------------------------------------------------------------
+  mpirun noticed that process rank 0 with PID 0 on node ghoul exited on signal 11 (Segmentation fault).
+  --------------------------------------------------------------------------
+
+You are experiencing a problem already reported in the README file of th ePolyChord source:
+
+Try increasing the stack size:
+Linux:    ulimit -s unlimited
+OSX:      ulimit -s hard
+and resume your job.
+The slice sampling & clustering steps use a recursive procedure. The default memory allocated to recursive procedures is embarrassingly small (to guard against memory leaks).
+
+MPI: No available slot*
+-----------------------
+
+The solution to this error:
+
+.. code:: bash
+
+  mpirun -np 8 python run_PyPolyChord.py
+
+  --------------------------------------------------------------------------
+  There are not enough slots available in the system to satisfy the 8 slots
+  that were requested by the application:
+    /usr/bin/python
+
+  Either request fewer slots for your application, or make more slots available
+  for use.
+  --------------------------------------------------------------------------
+
+Is quite simple: use a lower number after ``-np``. If `HyperThreading`_ is activated, the number of cores you see in your favorite task manager (or just ``htop``) is the number of _logical_ processor, while MPI cannot go further than the real number of cores in your machine.
+
+
+Magically fixed problems
+------------------------
+
+Here I list some problems that I encountered in the past while installing some code, but that dind't appear anymore when a tried a new installation on more recent computers.
+
+*symbol(s) not found for architecture x86_64*
+
+
 Installing ``PolyChord 1.12`` on ``macOS 10.13`` with ``brew``, you may get this long list of error at the time of compiling the library:
 
 .. code:: bash
@@ -301,35 +383,7 @@ Change directory to ``src/polychord/``, copy the full command starting with ``gf
 
 Go back to the main directory and execute again ``make pypolychord``.
 
-Segmentation fault
-""""""""""""""""""
-
-If you are using Conda/Anaconda and running ``python pypolychord.py``:
-
-.. code:: bash
-
-  *** Process received signal ***
-  Signal: Segmentation fault: 11 (11)
-  Signal code: Address not mapped (1)
-  Failing at address: 0x2000000020
-  [ 0] 0   libsystem_platform.dylib            0x00007fff7991cf5a _sigtramp + 26
-  [ 1] 0   ???                                 0x000000005a21bf38 0x0 + 1512161080
-  [ 2] 0   libsystem_c.dylib                   0x00007fff7972fc3d __vfprintf + 4711
-  [ 3] 0   libsystem_c.dylib                   0x00007fff79757091 __v2printf + 473
-  [ 4] 0   libsystem_c.dylib                   0x00007fff7973c4af _vsnprintf + 415
-  [ 5] 0   libsystem_c.dylib                   0x00007fff7973c562 vsnprintf + 80
-  [ 6] 0   libgfortran.3.dylib                 0x000000010e8b5d9b _gfortran_convert_char4_to_char1 + 3963
-  *** End of error message ***
-
-My guess is that ``lib/libchord.so`` has been compiled with different system libraries than those called by Conda. I don't have a solution for this problem, but using the system python seems the easiest workaround:
-
-.. code:: bash
-
-  /usr/bin/python pypolychord.py
-
-
-ldd: command not found
-""""""""""""""""""""""
+*ldd: command not found*
 
 This error seems to be fixed in ``PolyChord v1.14``, but I'll leave it here for reference.
 
@@ -358,14 +412,13 @@ Executing ``make clean`` will not delete the library files created in the ``lib`
   make
 
 
-PolyChord+MPI troubleshooting
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Magically fixed MPI problems
+----------------------------
 
-Here I report the three errors I encountered so far when I try to install or run PolyChord in MPI mode. For other errors, please refer to the README that comes with the source code.
-*Update* I had all these problems using ``PolyChord 1.12`` on ``Ubuntu 16.04 LTS``. Intalling and running ``PolyChord 1.14`` on ``Ubuntu 18.04 LTS`` didn't result in any of these errors. MAGIC!
+Here I report errors I encountered so far when I try to install or run PolyChord in MPI mode. I had all these problems using ``PolyChord 1.12`` on ``Ubuntu 16.04 LTS``. Intalling and running ``PolyChord 1.14`` on ``Ubuntu 18.04 LTS`` didn't result in any of these errors. MAGIC!
+For other errors, please refer to the README that comes with the source code.
 
-Broken  MPI
-"""""""""""
+*Broken MPI*
 
 If you get the following errors when executing ``run_PyPolyChord.py`` , your MPI/OpenMPI installation is likely broken and you have to re-install it. You need to have a working MPI installation even when you are using PolyChord in single-CPU mode!
 
@@ -429,47 +482,6 @@ If your ``mpirun`` is not coming from the same installation directory of your MP
 
   export PATH=/home/malavolta/CODE/others/openmpi_dir/bin:$PATH
 
-*Crash after a few iterations*
-
-If you have an error similar to this one:
-
-.. code:: bash
-
-  -------------------------------------------------------
-  Primary job  terminated normally, but 1 process returned
-  a non-zero exit code. Per user-direction, the job has been aborted.
-  -------------------------------------------------------
-
-  --------------------------------------------------------------------------
-  mpirun noticed that process rank 0 with PID 0 on node ghoul exited on signal 11 (Segmentation fault).
-  --------------------------------------------------------------------------
-
-You are experiencing a problem already reported in the README file of th ePolyChord source:
-
-Try increasing the stack size:
-Linux:    ulimit -s unlimited
-OSX:      ulimit -s hard
-and resume your job.
-The slice sampling & clustering steps use a recursive procedure. The default memory allocated to recursive procedures is embarassingly small (to guard against memory leaks).
-
-*No available slot*
-
-The solution to this error:
-
-.. code:: bash
-
-  mpirun -np 8 python run_PyPolyChord.py
-
-  --------------------------------------------------------------------------
-  There are not enough slots available in the system to satisfy the 8 slots
-  that were requested by the application:
-    /usr/bin/python
-
-  Either request fewer slots for your application, or make more slots available
-  for use.
-  --------------------------------------------------------------------------
-
-Is quite simple: use a lower number after ``-np``. If `HyperThreading`_ is activated, the number of cores you see in your favorite task manager (or just ``htop``) is the number of _logical_ processor, while MPI cannot go further than the real number of cores in your machine.
 
 
 .. _OpenMPI: https://www.open-mpi.org/
