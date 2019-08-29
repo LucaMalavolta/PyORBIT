@@ -23,7 +23,7 @@ Basic analysis can be performed using the ``scipy.optimize`` package, however to
 Simply speaking, ``PyDE`` searches for the best global solution and passes it to ``emcee``, ensuring that the MCMC will not be stuck around a local minimum of the chi-square. The ``PyDE`` + ``emcee`` combination is the easiest to install and set up, but it is possible to specify the starting point of ``emcee`` instead of using the outcome of ``PyDE``.
 It is possible to use other samplers as well, such as:
 
-- ``MultiNEST`` (`MultiNest home page`_)
+- ``MultiNEST`` (`MultiNest home page`_ and `PyMultiNest home page`_)
 - ``PolyChordLite``, previously known as just ``PolyChord`` (`PolyChordLite home page`_)
 - ``dynesty`` (`dynesty home page`_)
 
@@ -52,6 +52,7 @@ Additional packages may be required to perform certain types of analysis:
 .. _MultiNest home page: https://github.com/farhanferoz/MultiNest
 .. _PolyChordLite home page: https://github.com/PolyChord/PolyChordLite
 .. _dynesty home page: https://github.com/joshspeagle/dynesty
+.. _PyMultiNest home page: https://github.com/JohannesBuchner/PyMultiNest
 
 If you are using any of those packages listed above, please be sure to cite the proper references, as stated in their web page
 
@@ -152,11 +153,45 @@ If you plan to use celerite, you may be interested in compiling from source in o
 .. _celerite installation page: http://celerite.readthedocs.io/en/stable/python/install/
 
 
+MultiNest
+---------
+
+This Nested Sampling algorithm is available at `MultiNest home page`_. To work with ``PyORBIT``, the Python interface `_PyMultiNest`_ is required.
+
+First of all, make sure ``cmake`` is installed on your computer, then download the ``MultiNest`` repository and install compile the code following this procedure:
+
+.. code:: bash
+
+  git clone https://github.com/farhanferoz/MultiNest.git
+  cd MultiNest/MultiNest_v3.11_CMake/multinest/
+  cmake .
+  make
+  make install
+
+You'll get an error complaining the lack of administrative privileges to create a directory, you can ignore it the installation procedure has gone beyond ``-- Installing: /usr/local/lib/libmultinest.a ``  (or something similar) without problems. Alternatively, you can skip the last passage and add the path of the multinest library to your ``.bashrc`` code in this way:
+
+.. code:: bash
+
+  export LD_LIBRARY_PATH=/path/to/MultiNest_v3.11_CMake/multinest/lib/:$LD_LIBRARY_PATH
+
+After installing ``MultiNest``, you can proceed with ``PyMultiNest``
+
+.. code:: bash
+
+  git clone https://github.com/JohannesBuchner/PyMultiNest.git
+  cd PyMultiNest
+  python setup.py install
+
+Please check `PyMultiNest documentation`_ for anydoubt
+
+.. _PyMultiNest documentation: http://johannesbuchner.github.io/PyMultiNest/
+.. _PyMultiNest: https://github.com/JohannesBuchner/PyMultiNest
+
 
 PolyChordLite
 -------------
 
-Download the code at `PolyChordLite home page`_ .
+This Nested Sampling algorithm is available at `PolyChordLite home page`_ .
 ``pypolychord``, the Python interface of ``PolyChord``, has been revamped starting from version ``1.12`` and then renamed after its transformation to ``PolyChordLite``. Earlier versions will likely not work with ``PyORBIT``.
 
 .. code:: bash
@@ -191,8 +226,7 @@ Finally, to use the MPI functionalities, prepend the MPI command before the pyth
 
 If you already ran the command without the MPI instruction or with a different number of CPU, remember to delete the ``chains`` directory or the execution will fail.
 
-** Compilation tricks for Mac users **
-
+**NOTE:** I have encountered too many problems when trying to use ``PolyChord`` with ``MPI`` on a ``Mac``, so I decided to remove the help pages and use ``MPI`` only on Linux machines.
 
 Cythonizing your code
 +++++++++++++++++++++
@@ -225,11 +259,10 @@ More information on `Cython`_ and `distutils`_ can be found at their respective 
 .. _distutils: https://docs.python.org/2/extending/building.html
 
 
-Mac Troubleshooting
-+++++++++++++++++++
+Troubleshooting
++++++++++++++++
 
 I run my code a Linux Box, but if I need to do a quick test or debug and I’m not in the office I do it on my Mac. Unfortunately some things are not as straightforward as they should be.
-Until now the most problematic external code has been PolyChord, particularly if you try to install it with the MPI support.
 Below you can find a collection of errors I found along the way and how I fix them.
 
 In the following, I assume you have installed the Command Line Tools with the command ``xcode-select --install`` and the package manager for macOS `brew`_. If you are using macOS 10.14 (Mojave), follow this additional instructions here: `Fixing missing headers for homebrew in Mac OS X Mojave (from The caffeinated engineer)`_. Note that I had to download again the Command Line Tools from the Apple Developer website in order to have the  macOS SDK headers appearing in the correct folder.
@@ -239,122 +272,10 @@ In the following, I assume you have installed the Command Line Tools with the co
 .. _Fixing missing headers for homebrew in Mac OS X Mojave (from The caffeinated engineer): https://silvae86.github.io/sysadmin/mac/osx/mojave/beta/libxml2/2018/07/05/fixing-missing-headers-for-homebrew-in-mac-osx-mojave/
 .. _brew: https://brew.sh
 
+.. _gcc/gfortran/g++ versions-label:
 
-PolyChord - check gcc/gfortran/g++ versions
--------------------------------------------
-
-**Note:** This error may show up if PolyChord is being compiled without MPI support, which is disabled by default.
-
-I have ``gfortran`` installed through ``brew`` on my ``macOS 10.14``, but when I run ``make pypolychord`` it keeps asking for ``gfortran-8`` when installing ``PolyChord 1.16``. The offending lines are from 11 to 13 of the ``Makefile_gnu`` file, in the main directory:
-
-.. code:: bash
-  FC = gfortran-8
-  CC = gcc-8
-  CXX = g++-8
-
-To fix this, first check the version of your fortran compiler with ``gfortran -v``:
-
-.. code:: bash
-  $ gfortran -v
-    Using built-in specs.
-    COLLECT_GCC=gfortran
-    COLLECT_LTO_WRAPPER=/usr/local/Cellar/gcc/9.1.0/libexec/gcc/x86_64-apple-darwin18/9.1.0/lto-wrapper
-    Target: x86_64-apple-darwin18
-    Configured with: .... [cut]
-    Thread model: posix
-    gcc version 9.1.0 (Homebrew GCC 9.1.0)
-
-From the last line I can see that my ``gfortran`` is part of version 9 of the ``gcc`` compiler provided by ``brew``. However, a version check of ``gcc`` gives a different answer:
-
-.. code:: bash
-  $ gcc -v
-    Configured with: ...[cut]
-    Apple clang version 11.0.0 (clang-1100.0.20.17)
-    Target: x86_64-apple-darwin18.6.0
-    Thread model: posix
-    InstalledDir: /Library/Developer/CommandLineTools/usr/bin
-
-In other words, the command ``gcc`` will call the version provided by Apple, while ``gfortran`` comes with the ``brew`` version of ``gcc`` (and apparently it's not provided by Apple at all). To avoid conflicts with libraries, be sure to use to identify the correct commands to call ``gcc``, ``gfortran`` and ``g++`` from the same installation. Most of the time, you just have to append the version number at the end, i.e. ``gcc-9``, ``gfortran-9``, and ``g++-9``.
-
-Finally, modify the ``Makefile_gnu`` accordingly:
-
-.. code:: bash
-  FC = gfortran-9
-  CC = gcc-9
-  CXX = g++-9
-
-Run ``make pypolychord``, ignore the warnings, and then execute the command suggested at the end (if compilation was successful), in my case ``CC=gcc-9 CXX=g++-9 python setup.py install --user``
-
-PolyChord + MPI - check gcc/gfortran/g++ versions
--------------------------------------------------
-
-``PolyChord`` installation with ``MPI`` activated will make use of ``mpicc``, ``mpicxx`` and  ``mpif90``, instead of ``gcc`` and co.. Has done for ``gcc``
-
-
-``./configure CC=/usr/local/bin/gcc-9 FC=/usr/local/bin/gfortran-9 CXX=/usr/local/bin/g++-9``
-
-
-PolyChord + MPI - symbol(s) not found for architecture x86_64
--------------------------------------------------------------
-
-**Note:** This error is showing up only when PolyChord is being compiled with MPI support.
-When installing ``PolyChord`` with ``MPI`` support, you may get this long list of error at the time of compiling the library:
-
-.. code:: bash
-
-  gfortran -shared abort.o array_utils.o calculate.o chordal_sampling.o clustering.o feedback.o generate.o ini.o interfaces.o mpi_utils.o nested_sampling.o params.o priors.o random_utils.o read_write.o run_time_info.o settings.o utils.o c_interface.o -o /Users/malavolta/Astro/CODE/others/PolyChord/lib/libchord.so
-  Undefined symbols for architecture x86_64:
-    "std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >::_M_create(unsigned long&, unsigned long)", referenced from:
-        run_polychord(double (*)(double*, int, double*, int), void (*)(int, int, int, double*, double*, double*, double, double), Settings) in c_interface.o
-        run_polychord(double (*)(double*, int, double*, int), void (*)(double*, double*, int), Settings) in c_interface.o
-        run_polychord(double (*)(double*, int, double*, int), Settings) in c_interface.o
-    ... [cut] ...
-    "___gxx_personality_v0", referenced from:
-        Dwarf Exception Unwind Info (__eh_frame) in c_interface.o
-  ld: symbol(s) not found for architecture x86_64
-  collect2: error: ld returned 1 exit status
-  make[1]: *** [/Users/malavolta/Astro/CODE/others/PolyChord/lib/libchord.so] Error 1
-  make: *** [/Users/malavolta/Astro/CODE/others/PolyChord/lib/libchord.so] Error 2
-
-Change directory to ``src/polychord/``, copy the full command starting with ``gfortran -shared .. `` and add the end ``-lstdc++ -lc++``
-
-.. code:: bash
-
-  gfortran -shared abort.o array_utils.o calculate.o chordal_sampling.o clustering.o feedback.o generate.o ini.o interfaces.o mpi_utils.o nested_sampling.o params.o priors.o random_utils.o read_write.o run_time_info.o settings.o utils.o c_interface.o -o /Users/malavolta/Astro/CODE/others/PolyChord/lib/libchord.so -lstdc++ -lc++
-
-Go back to the main directory and execute again ``make pypolychord``.
-
-
-
-PolyChord - Segmentation fault
-------------------------------
-
-If you get this error using Conda/Anaconda and running ``python run_pypolychord.py``:
-
-.. code:: bash
-
-  *** Process received signal ***
-  Signal: Segmentation fault: 11 (11)
-  Signal code: Address not mapped (1)
-  Failing at address: 0x2000000020
-  [ 0] 0   libsystem_platform.dylib            0x00007fff7991cf5a _sigtramp + 26
-  [ 1] 0   ???                                 0x000000005a21bf38 0x0 + 1512161080
-  [ 2] 0   libsystem_c.dylib                   0x00007fff7972fc3d __vfprintf + 4711
-  [ 3] 0   libsystem_c.dylib                   0x00007fff79757091 __v2printf + 473
-  [ 4] 0   libsystem_c.dylib                   0x00007fff7973c4af _vsnprintf + 415
-  [ 5] 0   libsystem_c.dylib                   0x00007fff7973c562 vsnprintf + 80
-  [ 6] 0   libgfortran.3.dylib                 0x000000010e8b5d9b _gfortran_convert_char4_to_char1 + 3963
-  *** End of error message ***
-
-My guess is that ``lib/libchord.so`` has been compiled with different system libraries than those called by Conda. I don't have a solution for this problem, but using the system python seems the easiest workaround:
-
-.. code:: bash
-
-  /usr/bin/python pypolychord.py
-
-
-MPI - Crash after a few iterations
-----------------------------------
+MPI (all systems) - Crash after a few iterations
+-----------------------------------------------
 
 If you have an error similar to this one:
 
@@ -377,8 +298,9 @@ OSX:      ulimit -s hard
 and resume your job.
 The slice sampling & clustering steps use a recursive procedure. The default memory allocated to recursive procedures is embarrassingly small (to guard against memory leaks).
 
-MPI - No available slots
-------------------------
+
+MPI (all systems) - No available slots
+--------------------------------------
 
 The solution to this error:
 
@@ -396,6 +318,54 @@ The solution to this error:
   --------------------------------------------------------------------------
 
 Is quite simple: use a lower number after ``-np``. If `HyperThreading`_ is activated, the number of cores you see in your favorite task manager (or just ``htop``) is the number of _logical_ processor, while MPI cannot go further than the real number of cores in your machine.
+
+
+PolyChord (Mac) - check gcc/gfortran/g++ versions
+-------------------------------------------------
+
+I have ``gfortran`` installed through ``brew`` on my ``macOS 10.14``, but when I run ``make pypolychord`` it keeps asking for ``gfortran-8`` when installing ``PolyChord 1.16``. The offending lines are from 11 to 13 of the ``Makefile_gnu`` file, in the main directory:
+
+.. code:: bash
+
+  FC = gfortran-8
+  CC = gcc-8
+  CXX = g++-8
+
+To fix this, first check the version of your fortran compiler with ``gfortran -v``:
+
+.. code:: bash
+
+  $ gfortran -v
+    Using built-in specs.
+    COLLECT_GCC=gfortran
+    COLLECT_LTO_WRAPPER=/usr/local/Cellar/gcc/9.1.0/libexec/gcc/x86_64-apple-darwin18/9.1.0/lto-wrapper
+    Target: x86_64-apple-darwin18
+    Configured with: .... [cut]
+    Thread model: posix
+    gcc version 9.1.0 (Homebrew GCC 9.1.0)
+
+From the last line I can see that my ``gfortran`` is part of version 9 of the ``gcc`` compiler provided by ``brew``. However, a version check of ``gcc`` gives a different answer:
+
+.. code:: bash
+
+  $ gcc -v
+    Configured with: ...[cut]
+    Apple clang version 11.0.0 (clang-1100.0.20.17)
+    Target: x86_64-apple-darwin18.6.0
+    Thread model: posix
+    InstalledDir: /Library/Developer/CommandLineTools/usr/bin
+
+In other words, the command ``gcc`` will call the version provided by Apple, while ``gfortran`` comes with the ``brew`` version of ``gcc`` (and apparently it's not provided by Apple at all). To avoid conflicts with libraries, be sure to use to identify the correct commands to call ``gcc``, ``gfortran`` and ``g++`` from the same installation. Most of the time, you just have to append the version number at the end, i.e. ``gcc-9``, ``gfortran-9``, and ``g++-9``.
+
+Finally, modify the ``Makefile_gnu`` accordingly:
+
+.. code:: bash
+
+  FC = gfortran-9
+  CC = gcc-9
+  CXX = g++-9
+
+Run ``make pypolychord``, ignore the warnings, and then execute the command suggested at the end (if compilation was successful), in my case ``CC=gcc-9 CXX=g++-9 python setup.py install --user``
 
 
 Magically fixed problems
@@ -435,12 +405,12 @@ Executing ``make clean`` will not delete the library files created in the ``lib`
 Magically fixed MPI problems
 ----------------------------
 
-Here I report errors I encountered so far when I try to install or run PolyChord in MPI mode. I had all these problems using ``PolyChord 1.12`` on ``Ubuntu 16.04 LTS``. Intalling and running ``PolyChord 1.14`` on ``Ubuntu 18.04 LTS`` didn't result in any of these errors. MAGIC!
+Here I report errors I encountered so far when I try to install or run PolyChord in MPI mode. I had all these problems using ``PolyChord 1.12`` on ``Ubuntu 16.04 LTS``. Installing and running ``PolyChord 1.14`` on ``Ubuntu 18.04 LTS`` didn't result in any of these errors. MAGIC!
 For other errors, please refer to the README that comes with the source code.
 
 *Broken MPI*
 
-If you get the following errors when executing ``run_PyPolyChord.py`` , your MPI/OpenMPI installation is likely broken and you have to re-install it. You need to have a working MPI installation even when you are using PolyChord in single-CPU mode!
+If you get the following errors when executing ``run_pyploychord.py`` , your MPI/OpenMPI installation is likely broken and you have to re-install it. You need to have a working MPI installation even when you are using PolyChord in single-CPU mode!
 
 .. code:: bash
 
