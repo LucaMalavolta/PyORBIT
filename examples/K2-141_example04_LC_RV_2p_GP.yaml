@@ -23,7 +23,7 @@ common:
       spaces:
         P: Linear
     c:
-      orbit: circular
+      orbit: keplerian
       parametrization: Eastman2013_Tcent
       boundaries:
         P: [7.70, 7.80]
