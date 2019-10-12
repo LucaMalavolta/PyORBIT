@@ -108,34 +108,39 @@ def nested_sampling_load_from_cpickle(output_directory, prefix=''):
     return mc
 
 
-def emcee_flatchain(chain, nburnin, nthin):
-    """flattening of the emcee chains with removal of burn-in"""
-    _, d, _ = np.shape(chain)
+def emcee_burnin_check(chain, nburnin, nthin, is_lnprob=False, emcee_version='3'):
     nburn = int(nburnin / nthin)
+    modified = False
+
+    if is_lnprob is False:
+        _, d, _ = np.shape(chain)
+    else:
+        if emcee_version == '3':
+            d, _ = np.shape(chain)
+        else:
+            _, d = np.shape(chain)
+
     if nburn >= d * 0.9:
         nburn = int(d / 4)
+        modified = True
 
+    return nburn, modified
+
+
+def emcee_flatchain(chain, nburnin, nthin):
+    """flattening of the emcee chains with removal of burn-in"""
+    nburn, _ = emcee_burnin_check(chain, nburnin, nthin)
     s = chain[:, nburn:, :].shape
     return chain[:, nburn:, :].reshape(s[0] * s[1], s[2])
 
-
 def emcee_flatlnprob(lnprob, nburnin, nthin, emcee_version):
-    if emcee_version == '3':
-        """flattening of the emcee chains with removal of burn-in"""
-        d, _ = np.shape(lnprob)
-        nburn = int(nburnin / nthin)
-        if nburn >= d * 0.9:
-            nburn = int(d / 4)
 
+    if emcee_version == '3':
+        nburn, _  = emcee_burnin_check(lnprob, nburnin, nthin, is_lnprob=True)
         s = lnprob[nburn:, :].shape
         return lnprob[nburn:, :].reshape(s[0] * s[1])
     else:
-        """flattening of the emcee chains with removal of burn-in"""
-        _, d = np.shape(lnprob)
-        nburn = int(nburnin / nthin)
-        if nburn >= d * 0.9:
-            nburn = int(d / 4)
-
+        nburn, _  = emcee_burnin_check(lnprob, nburnin, nthin, is_lnprob=True, emcee_version='2')
         s = lnprob[:, nburn:].shape
         return lnprob[:, nburn:].reshape(s[0] * s[1])
 

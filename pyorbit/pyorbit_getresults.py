@@ -74,6 +74,14 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
         nthin = int(mc.emcee_parameters['thin'])
         nsteps = int(sampler_chain.shape[1] * nthin)
 
+        """ Computing a new burn-in if the computation has been interrupted suddenly"""
+        nburn, modified = emcee_burnin_check(sampler_chain, nburnin, nthin)
+
+        if modified:
+            print()
+            print('WARNING: burn-in value is larger than the length of the chains, resized to 1/4 of the chain length')
+            print('new burn-in will be used for statistical analysis, but kept in the plots as a reminder of your mistake')
+
         flat_chain = emcee_flatchain(sampler_chain, nburnin, nthin)
         flat_lnprob = emcee_flatlnprob(sampler_lnprobability, nburnin, nthin, emcee_version)
 
@@ -336,7 +344,7 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
         """
         os.system('mkdir -p ' + dir_output + 'gr_traces')
 
-        step_sampling = np.arange(nburnin / nthin, nsteps / nthin, 1, dtype=int)
+        step_sampling = np.arange(nburn, nsteps / nthin, 1, dtype=int)
 
         for theta_name, th in theta_dictionary.items():
             rhat = np.array([GelmanRubin_v2(sampler_chain[:, :steps, th]) for steps in step_sampling])
