@@ -5,5 +5,5 @@ setup(
     name="pyorbit",
     author="Luca Malavolta",
     ext_modules = cythonize("./pyorbit/*/*.pyx"),
-    language_level = "3"
+    language_level="3"
 )
