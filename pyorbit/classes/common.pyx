@@ -28,7 +28,7 @@ if 'celerite' not in sys.modules:
         import numpy as np
         from pyorbit.classes.dummy import Celerite_QuasiPeriodicActivity
         print('WARNING! Imported pyorbit.classes.dummy celerite, models relying on this package will not work')
-    
+
     try:
         import pypolychord
         from pypolychord.settings import PolyChordSettings
@@ -43,8 +43,10 @@ if 'celerite' not in sys.modules:
             print('WARNING! Imported pyorbit.classes.dummy PyPolyChord, models relying on this package will not work')
 
     try:
-        if os.path.isdir('/Users/malavolta/Astro/CODE/others/'):
+        if os.path.isdir('/Users/malavolta/Astro/CODE/others/trades'):
             sys.path.insert(0, '/Users/malavolta/Astro/CODE/others/trades/pytrades/')
+        elif os.path.isdir('/Users/malavolta/Astro/CODE/trades'):
+            sys.path.insert(0, '/Users/malavolta/Astro/CODE/trades/pytrades/')
         else:
             sys.path.insert(0, '/home/malavolta/CODE/others/trades/pytrades/')
         from pytrades_lib import pytrades
@@ -221,7 +223,7 @@ def giveback_priors(kind, bounds, pams, val):
 
 """
 DEPRECATED
-Special subroutine to transform MultiNest/PolyChord priors, i.e., trasnform the datacube from [0:1] to physical 
+Special subroutine to transform MultiNest/PolyChord priors, i.e., trasnform the datacube from [0:1] to physical
 values while taking into account the priors
 
 def nested_sampling_prior_transformation(kind, bounds, pams):
@@ -250,7 +252,7 @@ def nested_sampling_prior_prepare(kind, bounds, pams, space):
     :param pams: parameters relative to the prior probability function
     :return:
     """
-    
+
     if kind == 'Uniform':
         return bounds
 
@@ -361,5 +363,3 @@ def convert_b_to_i(b,e,o,a):
         arccos_argument = [-1. if b < -1. else b for b in arccos_argument]
 
     return np.arccos(arccos_argument)*180./np.pi
-
-
