@@ -186,7 +186,7 @@ class ModelContainer(object):
 
     def __call__(self, theta, include_priors=True):
         log_priors, log_likelihood = self.log_priors_likelihood(theta)
-        
+
         if self.include_priors and include_priors:
             return log_priors + log_likelihood
         else:
