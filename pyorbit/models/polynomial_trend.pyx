@@ -145,8 +145,7 @@ class PolynomialTrend(AbstractModel):
         """ In our array, coefficient are sorted from the lowest degree to the higher
         Numpy Polynomials requires the inverse order (from high to small) as input"""
 
-        #print(coeff)
-
+        print(variable_value['x_zero'])
         if x0_input is None:
             return numpy.polynomial.polynomial.polyval(dataset.x-variable_value['x_zero'], coeff)
         else:
@@ -221,6 +220,6 @@ class LocalPolynomialTrend(AbstractModel):
         Numpy Polinomials requires the inverse order (from high to small) as input"""
 
         if x0_input is None:
-            return numpy.polynomial.polynomial.polyval(dataset.x0-variable_value['x_zero'], coeff)
+            return numpy.polynomial.polynomial.polyval(dataset.x-variable_value['x_zero'], coeff)
         else:
             return numpy.polynomial.polynomial.polyval(x0_input+dataset.Tref-variable_value['x_zero'], coeff)

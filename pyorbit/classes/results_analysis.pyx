@@ -586,10 +586,10 @@ def print_integrated_ACF(sampler_chain, theta_dict, nthin):
     print()
     print('          sample variable      ACF        ACF * nthin')
 
-    integrate_ACF = emcee.autocorr.integrated_time(np.swapaxes(sampler_chain,1,0), quiet=True)
+    integrate_ACF = emcee.autocorr.integrated_time(np.swapaxes(sampler_chain, 1, 0), quiet=True)
     for key_name, key_val in theta_dict.items():
         print('          {0:20s} {1:5.3f}   {2:7.1f}'.format(key_name,
                                                    integrate_ACF[key_val],
-                                                   integrate_ACF[key_val] *nthin))
+                                                   integrate_ACF[key_val] * nthin))
 
 
