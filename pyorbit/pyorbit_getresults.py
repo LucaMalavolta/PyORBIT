@@ -466,24 +466,66 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
                     fileout.write('{0:f} \n'.format(val))
                 fileout.close()
 
+                try:
+                    fig = plt.figure(figsize=(10, 10))
+                    plt.hist(variable, bins=50, color='C0', alpha=0.75, zorder=0)
+
+                    perc0, perc1, perc2 = np.percentile(variable, [15.865, 50, 84.135], axis=0)
+
+                    plt.axvline(planet_variables_med[common_ref][variable_name], color='C1', zorder=1,
+                                label='Median-corresponding value')
+                    plt.axvline(planet_variables_MAP[common_ref][variable_name], color='C2', zorder=1,
+                                label='MAP-corresponding value')
+                    plt.axvline(perc1, color='C3', zorder=2, label='Median of the distribution')
+                    plt.axvline(perc0, color='C4', zorder=2, label='15.865th and 84.135th percentile')
+                    plt.axvline(perc2, color='C4', zorder=2)
+                    plt.xlabel(re.sub('_', '-', variable_name + '_' + common_ref))
+                    plt.legend()
+                    plt.ticklabel_format(useOffset=False)
+                    plt.savefig(rad_filename + '.png', bbox_inches='tight', dpi=300)
+                    plt.close(fig)
+                except:
+                    print('   Error while producing the histogram plot for variable ', variable_name)
+
+        print()
+        print('****************************************************************************************************')
+        print()
+
+    if plot_dictionary['write_all_samples']:
+
+        print(' Saving all the variable samplings to files (with plots)')
+
+        samples_dir = dir_output + '/all_samples/'
+        os.system('mkdir -p ' + samples_dir)
+
+        for theta_name, th in theta_dictionary.items():
+
+            rad_filename = samples_dir + repr(th) + '_' + theta_name + '.png'
+            fileout = open(rad_filename + '.dat', 'w')
+            for val in flat_chain[:, th]:
+                fileout.write('{0:f} \n'.format(val))
+            fileout.close()
+
+            try:
                 fig = plt.figure(figsize=(10, 10))
-                plt.hist(variable, bins=50, color='C0', alpha=0.75, zorder=0)
+                plt.hist(flat_chain[:, th], bins=50, color='C0', alpha=0.75, zorder=0)
 
-                perc0, perc1, perc2 = np.percentile(variable, [15.865, 50, 84.135], axis=0)
+                perc0, perc1, perc2 = np.percentile(flat_chain[:, th], [15.865, 50, 84.135], axis=0)
 
-                plt.axvline(planet_variables_med[common_ref][variable_name], color='C1', zorder=1,
+                plt.axvline(chain_med[th], color='C1', zorder=1,
                             label='Median-corresponding value')
-                plt.axvline(planet_variables_MAP[common_ref][variable_name], color='C2', zorder=1,
+                plt.axvline(chain_MAP[th], color='C2', zorder=1,
                             label='MAP-corresponding value')
                 plt.axvline(perc1, color='C3', zorder=2, label='Median of the distribution')
                 plt.axvline(perc0, color='C4', zorder=2, label='15.865th and 84.135th percentile')
                 plt.axvline(perc2, color='C4', zorder=2)
-                plt.xlabel(re.sub('_', '-', variable_name + '_' + common_ref))
+                plt.xlabel(re.sub('_', '-', 'theta: ' + repr(th) + ' variable: ' + theta_name))
                 plt.legend()
                 plt.ticklabel_format(useOffset=False)
                 plt.savefig(rad_filename + '.png', bbox_inches='tight', dpi=300)
                 plt.close(fig)
-
+            except:
+                print('   Error while producing the histogram plot for sample variable {0:d} (id: {1:5.0f})'.format(theta_name, th))
 
         print()
         print('****************************************************************************************************')
