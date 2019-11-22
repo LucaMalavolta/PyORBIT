@@ -283,6 +283,7 @@ class ModelContainer(object):
             """ Gaussian Process check MUST be the last one or the program will fail
              that's because for the GP to work we need to know the _deterministic_ part of the model 
              (i.e. the theoretical values you get when you feed your model with the parameter values) """
+
             if logchi2_gp_model:
 
                 variable_values = {}
@@ -303,7 +304,8 @@ class ModelContainer(object):
             else:
                 log_likelihood += dataset.model_logchi2()
 
-        """ In case there is more than one GP model"""
+        """ In case there is more than one GP model """
+
         for logchi2_gp_model in delayed_lnlk_computation:
             log_likelihood += self.models[logchi2_gp_model].lnlk_compute()
 
