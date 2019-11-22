@@ -525,7 +525,7 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
                 plt.savefig(rad_filename + '.png', bbox_inches='tight', dpi=300)
                 plt.close(fig)
             except:
-                print('   Error while producing the histogram plot for sample variable {0:d} (id: {1:5.0f})'.format(theta_name, th))
+                print('   Error while producing the histogram plot for sample variable {0:s} (id: {1:5.0f})'.format(theta_name, th))
 
         print()
         print('****************************************************************************************************')
@@ -927,7 +927,11 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
             sigma5_selection = (output_plan[:, ii] > median_vals[ii] - 5 * sigma_minus[ii]) & \
                                (output_plan[:, ii] < median_vals[ii] + 5 * sigma_plus[ii])
 
-            data_lim[ii, :] = [np.amin(output_plan[sigma5_selection, ii]), np.amax(output_plan[sigma5_selection, ii])]
+            try:
+                data_lim[ii, :] = [np.amin(output_plan[sigma5_selection, ii]), np.amax(output_plan[sigma5_selection, ii])]
+            except:
+                continue
+
             if data_lim[ii, 0] == data_lim[ii, 1]:
                 data_lim[ii, :] = [np.amin(output_plan[:, ii]), np.amax(output_plan[:, ii])]
             if data_lim[ii, 0] == data_lim[ii, 1]:
