@@ -1,0 +1,2 @@
+git fetch upstream
+git push upstream master
