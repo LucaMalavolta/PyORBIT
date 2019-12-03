@@ -512,7 +512,7 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
 
                 perc0, perc1, perc2 = np.percentile(flat_chain[:, th], [15.865, 50, 84.135], axis=0)
 
-                plt.axvline(chain_med[th], color='C1', zorder=1,
+                plt.axvline(chain_med[th, 0], color='C1', zorder=1,
                             label='Median-corresponding value')
                 plt.axvline(chain_MAP[th], color='C2', zorder=1,
                             label='MAP-corresponding value')
