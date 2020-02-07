@@ -871,7 +871,7 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
             for variable_name, variable in variable_values.items():
 
                 all_variables_list[model.common_ref + '_' + variable_name] = variable
-
+                #print(variable_name, variable)
                 # Special treatment for transit time, since ti can be very long but yet very precise, making
                 # the axis of corner plot quite messy
                 if variable_name == 'Tc':
@@ -879,18 +879,33 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
                     variable_with_offset[model.common_ref + '_' + variable_name] = offset
                     all_variables_list[model.common_ref + '_' + variable_name] -= offset
 
+                # Let's save omega in degrees, in the range 0-360
+                if variable_name == 'o':
+                    odeg = variable * 180 / np.pi
+                    sel = (odeg < 0.000)
+                    odeg[sel] += 360.00
+                    all_variables_list[model.common_ref + '_' + variable_name + 'deg'] = odeg
+
         for common_ref, variable_values in planet_variables.items():
             for variable_name, variable in variable_values.items():
 
                 # Skipping the variables that have been already included in all_variables_list
                 if common_ref + '_' + variable_name in all_variables_list:
                     continue
+
                 all_variables_list[common_ref + '_' + variable_name] = variable
 
                 if variable_name == 'Tc':
                     offset = np.median(variable)
                     variable_with_offset[common_ref + '_' + variable_name] = offset
                     all_variables_list[common_ref + '_' + variable_name] -= offset
+
+                if variable_name == 'o':
+                    odeg = variable * 180 / np.pi
+                    sel = (odeg < 0.000)
+                    odeg[sel] += 360.00
+                    all_variables_list[common_ref + '_' + variable_name + 'deg'] = odeg
+
 
         text_file = open(veusz_dir + "veusz_offsets.txt", "w")
         for variable_name, offset_value in variable_with_offset.items():
