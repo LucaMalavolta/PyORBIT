@@ -882,8 +882,11 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
                 # Let's save omega in degrees, in the range 0-360
                 if variable_name == 'o':
                     odeg = variable * 180 / np.pi
-                    sel = (odeg < 0.000)
-                    odeg[sel] += 360.00
+                    try:
+                        sel = (odeg < 0.000)
+                        odeg[sel] += 360.00
+                    except TypeError:
+                        if odeg < 0.000: odeg += 360.00
                     all_variables_list[model.common_ref + '_' + variable_name + 'deg'] = odeg
 
         for common_ref, variable_values in planet_variables.items():
