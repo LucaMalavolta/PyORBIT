@@ -73,6 +73,7 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
         nburnin = int(mc.emcee_parameters['nburn'])
         nthin = int(mc.emcee_parameters['thin'])
         nsteps = int(sampler_chain.shape[1] * nthin)
+        nwalkers = mc.emcee_parameters['nwalkers']
 
         """ Computing a new burn-in if the computation has been interrupted suddenly"""
         nburn, modified = emcee_burnin_check(sampler_chain, nburnin, nthin)
@@ -83,7 +84,7 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
             print('new burn-in will be used for statistical analysis, but kept in the plots as a reminder of your mistake')
 
         flat_chain = emcee_flatchain(sampler_chain, nburnin, nthin)
-        flat_lnprob = emcee_flatlnprob(sampler_lnprobability, nburnin, nthin, emcee_version)
+        flat_lnprob = emcee_flatlnprob(sampler_lnprobability, nburnin, nthin, population, nwalkers)
 
         flat_BiC = -2 * flat_lnprob + mc.ndim * np.log(mc.ndata)
 
