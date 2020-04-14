@@ -53,7 +53,7 @@ if __name__ == '__main__':
         plot_dictionary['chains'] = True
     if args.t is not False:
         plot_dictionary['traces'] = True
-    if args.fc is not False:
+    if args.ln is not False:
         plot_dictionary['lnprob_chain'] = True
     if args.fc is not False:
         plot_dictionary['full_correlation'] = True

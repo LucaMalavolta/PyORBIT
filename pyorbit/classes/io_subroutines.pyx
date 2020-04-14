@@ -140,10 +140,10 @@ def emcee_flatlnprob(lnprob, nburnin, nthin, population, nwalkers):
     v1, v2 = np.shape(lnprob)
     if v1 == nwalkers:
         s = lnprob[:, nburn:].shape
-        return lnprob[:, nburn:].reshape(s[0] * s[1])
+        return lnprob[:, nburn:].reshape(s[0] * s[1]), lnprob.T
     else:
         s = lnprob[nburn:, :].shape
-        return lnprob[nburn:, :].reshape(s[0] * s[1])
+        return lnprob[nburn:, :].reshape(s[0] * s[1]), lnprob
 
 def GelmanRubin(chains_T):
     # Courtesy of Luca "Sbuffo" Borsato

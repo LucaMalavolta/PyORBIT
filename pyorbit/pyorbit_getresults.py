@@ -84,7 +84,7 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
             print('new burn-in will be used for statistical analysis, but kept in the plots as a reminder of your mistake')
 
         flat_chain = emcee_flatchain(sampler_chain, nburnin, nthin)
-        flat_lnprob = emcee_flatlnprob(sampler_lnprobability, nburnin, nthin, population, nwalkers)
+        flat_lnprob, sampler_lnprob = emcee_flatlnprob(sampler_lnprobability, nburnin, nthin, population, nwalkers)
 
         flat_BiC = -2 * flat_lnprob + mc.ndim * np.log(mc.ndata)
 
@@ -246,22 +246,13 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
 
         print(' Plot FLAT chain ')
 
-        if emcee_version == '2':
-            fig = plt.figure(figsize=(12, 12))
-            plt.xlabel('$\ln \mathcal{L}$')
-            plt.plot(sampler_lnprobability.T, '-', alpha=0.5)
-            plt.axhline(lnprob_med[0])
-            plt.axvline(nburnin / nthin, c='r')
-            plt.savefig(dir_output + 'LNprob_chain.png', bbox_inches='tight', dpi=300)
-            plt.close(fig)
-        else:
-            fig = plt.figure(figsize=(12, 12))
-            plt.xlabel('$\ln \mathcal{L}$')
-            plt.plot(sampler_lnprobability, '-', alpha=0.5)
-            plt.axhline(lnprob_med[0])
-            plt.axvline(nburnin / nthin, c='r')
-            plt.savefig(dir_output + 'LNprob_chain.png', bbox_inches='tight', dpi=300)
-            plt.close(fig)
+        fig = plt.figure(figsize=(12, 12))
+        plt.xlabel('$\ln \mathcal{L}$')
+        plt.plot(sampler_lnprob, '-', alpha=0.5)
+        plt.axhline(lnprob_med[0])
+        plt.axvline(nburnin / nthin, c='r')
+        plt.savefig(dir_output + 'LNprob_chain.png', bbox_inches='tight', dpi=300)
+        plt.close(fig)
 
         print()
         print('****************************************************************************************************')
