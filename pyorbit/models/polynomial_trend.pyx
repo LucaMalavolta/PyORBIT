@@ -25,17 +25,17 @@ class CommonPolynomialTrend(AbstractCommon):
 
     """These default boundaries are used when the user does not define them in the yaml file"""
     default_bounds = {
-        'x_zero': [-10 ** 5, 10 ** 5],
-        'poly_c0': [-1.0, 1.0],
-        'poly_c1': [-1.0, 1.0],
-        'poly_c2': [-1.0, 1.0],
-        'poly_c3': [-1.0, 1.0],
-        'poly_c4': [-1.0, 1.0],
-        'poly_c5': [-1.0, 1.0],
-        'poly_c6': [-1.0, 1.0],
-        'poly_c7': [-1.0, 1.0],
-        'poly_c8': [-1.0, 1.0],
-        'poly_c9': [-1.0, 1.0]
+        'x_zero': [-10 ** 6, 10 ** 6],
+        'poly_c0': [-10 ** 5, 10 ** 6],
+        'poly_c1': [-10 ** 5, 10 ** 6],
+        'poly_c2': [-10 ** 6, 10 ** 6],
+        'poly_c3': [-10 ** 6, 10 ** 6],
+        'poly_c4': [-10 ** 6, 10 ** 6],
+        'poly_c5': [-10 ** 6, 10 ** 6],
+        'poly_c6': [-10 ** 6, 10 ** 6],
+        'poly_c7': [-10 ** 6, 10 ** 6],
+        'poly_c8': [-10 ** 6, 10 ** 6],
+        'poly_c9': [-10 ** 6, 10 ** 6]
     }
 
     default_spaces = {
