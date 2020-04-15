@@ -172,7 +172,7 @@ class LocalPolynomialTrend(AbstractModel):
         self.list_pams_common = {}
 
         self.list_pams_dataset = {'x_zero': None}
-        self.default_bounds = {'x_zero': [-10**5, 10**5]}
+        self.default_bounds = {'x_zero': [-10**6, 10**6]}
         self.default_spaces = {'x_zero': 'Linear'}
         self.default_priors = {'x_zero': ['Uniform', []]}
 
