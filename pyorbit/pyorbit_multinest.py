@@ -83,7 +83,7 @@ def pyorbit_multinest(config_in, input_datasets=None, return_output=None):
 
     print('Including priors to log-likelihood calculation (must be False):', mc.include_priors)
 
-    pymultinest.run(LogLikelihood= mc.multinest_call, Prior=mc.multinest_priors, n_dims=mc.ndim, **mnest_kwargs)
+    pymultinest.run(LogLikelihood=mc.multinest_call, Prior=mc.multinest_priors, n_dims=mc.ndim, **mnest_kwargs)
 
     nested_sampling_save_to_cpickle(mc)
 

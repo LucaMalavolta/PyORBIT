@@ -99,6 +99,8 @@ class PolynomialTrend(AbstractModel):
         self.x_zero = None
         self.common_poly_ref = None
 
+        self.time_interval = 1.000000000
+
     def initialize_model(self, mc, **kwargs):
 
         if 'order' in kwargs:
@@ -108,6 +110,15 @@ class PolynomialTrend(AbstractModel):
         try:
             if kwargs['include_zero_point']:
                 self.starting_order = 0
+        except:
+            pass
+
+        """ The user may decide to compute the polynomial parameters over a different time interval
+            useful for leng-term with very slow variations over a single day
+        """
+        try:
+            if kwargs['over_1000_days']:
+                self.time_interval = kwargs['over_1000_days']
         except:
             pass
 
@@ -146,9 +157,9 @@ class PolynomialTrend(AbstractModel):
         Numpy Polynomials requires the inverse order (from high to small) as input"""
 
         if x0_input is None:
-            return numpy.polynomial.polynomial.polyval(dataset.x-variable_value['x_zero'], coeff)
+            return numpy.polynomial.polynomial.polyval((dataset.x-variable_value['x_zero'])/self.time_interval, coeff)
         else:
-            return numpy.polynomial.polynomial.polyval(x0_input+dataset.Tref-variable_value['x_zero'], coeff)
+            return numpy.polynomial.polynomial.polyval((x0_input+dataset.Tref-variable_value['x_zero'])/self.time_interval, coeff)
 
 
 class LocalPolynomialTrend(AbstractModel):
@@ -177,6 +188,8 @@ class LocalPolynomialTrend(AbstractModel):
         """
         self.x_zero = {}
 
+        self.time_interval = 1.000000000
+
     def initialize_model(self, mc, **kwargs):
 
         if 'order' in kwargs:
@@ -186,6 +199,15 @@ class LocalPolynomialTrend(AbstractModel):
         try:
             if kwargs['include_zero_point']:
                 self.starting_order = 0
+        except:
+            pass
+
+        """ The user may decide to compute the polynomial parameters over a different time interval
+            useful for leng-term with very slow variations over a single day
+        """
+        try:
+            if kwargs['over_1000_days']:
+                self.time_interval = kwargs['over_1000_days']
         except:
             pass
 
@@ -219,6 +241,6 @@ class LocalPolynomialTrend(AbstractModel):
         Numpy Polynomials requires the inverse order (from high to small) as input"""
 
         if x0_input is None:
-            return numpy.polynomial.polynomial.polyval(dataset.x-variable_value['x_zero'], coeff)
+            return numpy.polynomial.polynomial.polyval((dataset.x-variable_value['x_zero'])/self.time_interval, coeff)
         else:
-            return numpy.polynomial.polynomial.polyval(x0_input+dataset.Tref-variable_value['x_zero'], coeff)
+            return numpy.polynomial.polynomial.polyval((x0_input+dataset.Tref-variable_value['x_zero'])/self.time_interval, coeff)
