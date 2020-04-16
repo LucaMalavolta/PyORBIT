@@ -110,17 +110,19 @@ class PolynomialTrend(AbstractModel):
         try:
             if kwargs['include_zero_point']:
                 self.starting_order = 0
+            self.starting_order
         except:
-            pass
+            self.starting_order = 1
 
         """ The user may decide to compute the polynomial parameters over a different time interval
             useful for leng-term with very slow variations over a single day
         """
         try:
-            if kwargs['over_1000_days']:
-                self.time_interval = kwargs['over_1000_days']
+            if kwargs['time_interval']:
+                self.time_interval = kwargs['time_interval']
+            self.time_interval
         except:
-            pass
+            self.time_interval = 1.
 
         """ If the polynomial is used as normalization factor, the first order must be included"""
         if self.normalization_model:
@@ -199,17 +201,19 @@ class LocalPolynomialTrend(AbstractModel):
         try:
             if kwargs['include_zero_point']:
                 self.starting_order = 0
+            self.starting_order
         except:
-            pass
+            self.starting_order = 1
 
         """ The user may decide to compute the polynomial parameters over a different time interval
             useful for leng-term with very slow variations over a single day
         """
         try:
-            if kwargs['over_1000_days']:
-                self.time_interval = kwargs['over_1000_days']
+            if kwargs['time_interval']:
+                self.time_interval = kwargs['time_interval']
+            self.time_interval
         except:
-            pass
+            self.time_interval = 1.
 
         """ If the polynomial is used as normalization factor, the first order must be included"""
         if self.normalization_model:
