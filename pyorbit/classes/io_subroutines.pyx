@@ -4,6 +4,10 @@ except:
     import pickle
 import numpy as np
 
+try:
+    FileNotFoundError
+except NameError:
+    FileNotFoundError = IOError
 
 def pyde_create_dummy_file(mc, prefix=''):
     add_prefix = (prefix + '_' if prefix else '')
