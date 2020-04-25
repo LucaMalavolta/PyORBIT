@@ -574,8 +574,8 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
                 bjd_plot['full']['end'] = np.amax(dataset.x)
                 bjd_plot['full']['range'] = bjd_plot['full']['end'] - bjd_plot['full']['start']
 
-        bjd_plot['full']['start'] -= bjd_plot['full']['range'] * 0.10
-        bjd_plot['full']['end'] += bjd_plot['full']['range'] * 0.10
+        bjd_plot['full']['start'] -= bjd_plot['full']['range'] * 0.50
+        bjd_plot['full']['end'] += bjd_plot['full']['range'] * 0.50
         bjd_plot['full']['x_plot'] = np.arange(bjd_plot['full']['start'], bjd_plot['full']['end'], P_minimum / 20.)
         bjd_plot['full']['x0_plot'] = bjd_plot['full']['x_plot'] - mc.Tref
 
@@ -799,7 +799,6 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
                     fileout.close()
 
                 for model in planet_vars:
-
                     try:
 
                         RV_out = kepler_exo.kepler_RV_T0P(bjd_plot['full']['x_plot']-mc.Tref,
@@ -826,8 +825,26 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
                         for x, y in zip(x_range, RV_out):
                             fileout.write('{0:f} {1:f} \n'.format(x, y))
                         fileout.close()
+
+                        x_range = np.arange(-1.50, 1.50, 0.001)
+                        if 'Tc' in planet_vars[model]:
+                            Tc_range = x_range * planet_vars[model]['P'] + planet_vars[model]['Tc'] - mc.Tref
+                            RV_out = kepler_exo.kepler_RV_T0P(Tc_range,
+                                                              planet_vars[model]['f'],
+                                                              planet_vars[model]['P'],
+                                                              planet_vars[model]['K'],
+                                                              planet_vars[model]['e'],
+                                                              planet_vars[model]['o'])
+                            fileout = open(dir_models + 'RV_planet_' + model + '_Tcf.dat', 'w')
+                            fileout.write('descriptor Tc_phase m_phase \n')
+                            for x, y in zip(x_range, RV_out):
+                                fileout.write('{0:f} {1:f} \n'.format(x, y))
+                            fileout.close()
+
                     except:
+                        print('** ERROR **')
                         pass
+
 
 
         print()
