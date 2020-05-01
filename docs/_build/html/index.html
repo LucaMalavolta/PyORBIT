@@ -1,0 +1,152 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>PyORBIT: the ultimate tool for exoplanet characterization! &#8212; PyORBIT 8.0 documentation</title>
+    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
+    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Installation" href="installation.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="installation.html" title="Installation"
+             accesskey="N">next</a> |</li>
+        <li class="nav-item nav-item-0"><a href="#">PyORBIT 8.0 documentation</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="pyorbit-the-ultimate-tool-for-exoplanet-characterization">
+<h1>PyORBIT: the ultimate tool for exoplanet characterization!<a class="headerlink" href="#pyorbit-the-ultimate-tool-for-exoplanet-characterization" title="Permalink to this headline">¶</a></h1>
+<p><code class="docutils literal notranslate"><span class="pre">PyORBIT</span></code> is a robust, versatile framework for the characterization of planetary systems.
+With <code class="docutils literal notranslate"><span class="pre">PyORBIT</span></code> you can model light curves, radial velocities, activity indexes and transit time variations.
+In addition to the exoplanet signature, you can add to your model instrumental systematics and stellar activity,
+including Gaussian processes regression, among other things. Different parametrization can be used for orbital
+parameters, and orbits can be computed using dynamical integration or just non-interacting Keplerians.
+For every parameter in the model, it is possible to set a prior, explore it in linear or logarithmic space,
+or keep it fixed if necessary. Thanks to abstraction, it is virtually possible to implement any physical model you can think of.</p>
+<p>Setting-up a configuration file and running the analysis is super easy, barely an inconvenience, even if you have never wrote a line of Python (or any language at all) in your life, thanks to the versatility of YAML.
+Alternatively, for easy automatization, PyORBIT can be called as a Python function by passing a dictionary instead of a configuration file.</p>
+<p><code class="docutils literal notranslate"><span class="pre">PyORBIT</span></code> started in 2015 as an exercise to learn Python (2) and because at
+the time the only publicly available code for the Bayesian analysis of RVs was
+written in IDL, for which I didn’t have a license. Since then I’ve been added new options
+every time I needed so, and I kept updating the code while improving my Python skills.</p>
+<p><code class="docutils literal notranslate"><span class="pre">PyORBIT</span></code> has been now converted and tested for Python 3, but it should still
+be back-compatible with Python 2 (at your own risk).</p>
+<p>If you are wondering what <code class="docutils literal notranslate"><span class="pre">PyORBIT</span></code> stands for: I am bad at acronym creation so
+I decided to write it with capitol <em>ORBIT</em> just because I liked how it looked.
+Feel free to submit your retrofitting acronym!</p>
+<div class="toctree-wrapper compound">
+<p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#requirements">Requirements</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#instructions">Instructions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#additional-codes">Additional codes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#cythonizing-your-code">Cythonizing your code</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#mac-troubleshooting">Mac Troubleshooting</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="prepare_datasets.html">Prepare the dataset</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="prepare_datasets.html#generic-dataset">Generic dataset</a></li>
+<li class="toctree-l2"><a class="reference internal" href="prepare_datasets.html#central-transit-times">Central transit times</a></li>
+<li class="toctree-l2"><a class="reference internal" href="prepare_datasets.html#jitter-offset-and-linear-flags">Jitter, offset and linear flags</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="prepare_yaml.html">Prepare a configuration file</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="prepare_yaml.html#file-structure">File structure</a></li>
+<li class="toctree-l2"><a class="reference internal" href="prepare_yaml.html#adding-a-dataset">Adding a dataset</a></li>
+<li class="toctree-l2"><a class="reference internal" href="prepare_yaml.html#include-common-parameters">Include common parameters</a></li>
+<li class="toctree-l2"><a class="reference internal" href="prepare_yaml.html#include-the-models">Include the models</a></li>
+<li class="toctree-l2"><a class="reference internal" href="prepare_yaml.html#additional-parameters">Additional parameters</a></li>
+<li class="toctree-l2"><a class="reference internal" href="prepare_yaml.html#sampler-parameters">Sampler parameters</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="api.html">API</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="modules_abstract_common.html">Abstract Common Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules_abstract_model.html">Abstract Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules_planets.html">Planets Common Model</a></li>
+</ul>
+</li>
+</ul>
+</div>
+<p>Following <a class="reference external" href="https://www.python.org/dev/peps/pep-0008/">PEP 8 Style Guide for Python Code</a>  ,
+<a class="reference external" href="https://www.python.org/dev/peps/pep-0257/">PEP 257 Docstring Conventions</a> and <a class="reference external" href="http://google.github.io/styleguide/pyguide.html">Google Python Style Guide</a></p>
+</div>
+<div class="section" id="indices-and-tables">
+<h1>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Permalink to this headline">¶</a></h1>
+<ul class="simple">
+<li><p><a class="reference internal" href="genindex.html"><span class="std std-ref">Index</span></a></p></li>
+<li><p><a class="reference internal" href="py-modindex.html"><span class="std std-ref">Module Index</span></a></p></li>
+<li><p><a class="reference internal" href="search.html"><span class="std std-ref">Search Page</span></a></p></li>
+</ul>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h4>Next topic</h4>
+  <p class="topless"><a href="installation.html"
+                        title="next chapter">Installation</a></p>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="installation.html" title="Installation"
+             >next</a> |</li>
+        <li class="nav-item nav-item-0"><a href="#">PyORBIT 8.0 documentation</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2016, Luca Malavolta.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.1.2.
+    </div>
+  </body>
+</html>

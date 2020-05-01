@@ -1,0 +1,212 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>Prepare the dataset &#8212; PyORBIT 8.0 documentation</title>
+    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
+    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Prepare a configuration file" href="prepare_yaml.html" />
+    <link rel="prev" title="Installation" href="installation.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="prepare_yaml.html" title="Prepare a configuration file"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="installation.html" title="Installation"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">PyORBIT 8.0 documentation</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="prepare-the-dataset">
+<span id="prepare-datasets"></span><h1>Prepare the dataset<a class="headerlink" href="#prepare-the-dataset" title="Permalink to this headline">¶</a></h1>
+<p>Sometimes your instrument may be affected by some weird systematics (e.g. offsets
+between measurement taken at different epochs, trends with time), these can be
+easily encoded in the dataset file without burden the configuration file with extra parameters,
+or even worse by splitting the data into several files.</p>
+<div class="section" id="generic-dataset">
+<h2>Generic dataset<a class="headerlink" href="#generic-dataset" title="Permalink to this headline">¶</a></h2>
+<p>Generic input data file must have this structure:</p>
+<ul class="simple">
+<li><p>1st column: epoch of the observation</p></li>
+<li><p>2nd column: independent measurement</p></li>
+<li><p>3rd column: error associated to the measurement</p></li>
+<li><p>4th column: flag to activate the jitter parameter(s)</p></li>
+<li><p>5th column: flag to activate the offset parameter(s)</p></li>
+<li><p>6th column: flag to activate the linear trend parameter(s)</p></li>
+</ul>
+<p>In the case of central time of transits, the first column identify the number
+of the transit (to keep into account missing T0s), skip to <a class="reference internal" href="#central-transit-times">Central transit times</a>
+for more information .</p>
+<p>The flags of the last three columns must be expressed as integers. Jitter,
+offset and linear parameters cannot be shared between datasets. For linear
+trends of physical origin, a model that can be shared between datasets is
+available. Check the <a class="reference internal" href="#jitter-offset-and-linear-flags">Jitter, offset and linear flags</a> subsection for more
+information.</p>
+<p>This is an extract from the file <code class="docutils literal notranslate"><span class="pre">TestCase01_RV.dat</span></code>, in the example folder,
+with epochs expressed as BJD_{TDB}-2450000.0 Julian days:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="mf">6000.010493</span>  <span class="mf">4764.73</span>  <span class="mf">1.00</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="o">-</span><span class="mi">1</span>
+<span class="mf">6000.719975</span>  <span class="mf">4766.58</span>  <span class="mf">1.00</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="o">-</span><span class="mi">1</span>
+<span class="mf">6001.967132</span>  <span class="mf">4779.52</span>  <span class="mf">1.00</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="o">-</span><span class="mi">1</span>
+<span class="o">.........</span>   <span class="o">........</span>  <span class="o">....</span>  <span class="o">.</span>  <span class="o">.</span>  <span class="o">..</span>
+</pre></div>
+</div>
+<p>The choice of the time standard is arbitrary, just pay attention to always be
+self-consistent.</p>
+<p>When provided to the <code class="docutils literal notranslate"><span class="pre">pyorbit_emcee()</span></code> subroutine instead of being read from
+a file, the input_dataset must be a dictionary
+where each keyword corresponds to the label of the dataset. For each keyword, a
+[n,6] <code class="docutils literal notranslate"><span class="pre">numpy</span></code> array must be
+provided, where <em>n</em> is the number of observations.  If the keyword for a dataset is present, it will have priority on the dataset file unless the keyword is empty.</p>
+<p>For example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">input_dataset</span><span class="p">{</span><span class="s1">&#39;RV&#39;</span><span class="p">}</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">([</span><span class="n">n</span><span class="p">,</span><span class="mi">6</span><span class="p">])</span>
+<span class="n">input_dataset</span><span class="p">{</span><span class="s1">&#39;RV&#39;</span><span class="p">}[:,</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">epochs</span> <span class="n">of</span> <span class="n">the</span> <span class="n">observations</span>
+<span class="n">input_dataset</span><span class="p">{</span><span class="s1">&#39;RV&#39;</span><span class="p">}[:,</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">values</span> <span class="n">of</span> <span class="n">the</span> <span class="n">observations</span>
+<span class="n">input_dataset</span><span class="p">{</span><span class="s1">&#39;RV&#39;</span><span class="p">}[:,</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="n">associated</span> <span class="n">errors</span>
+<span class="n">input_dataset</span><span class="p">{</span><span class="s1">&#39;RV&#39;</span><span class="p">}[:,</span><span class="mi">3</span><span class="p">]</span> <span class="o">=</span> <span class="n">jitter</span> <span class="n">flag</span>
+<span class="n">input_dataset</span><span class="p">{</span><span class="s1">&#39;RV&#39;</span><span class="p">}[:,</span><span class="mi">4</span><span class="p">]</span> <span class="o">=</span> <span class="n">offset</span> <span class="n">flag</span>
+<span class="n">input_dataset</span><span class="p">{</span><span class="s1">&#39;RV&#39;</span><span class="p">}[:,</span><span class="mi">5</span><span class="p">]</span> <span class="o">=</span> <span class="n">linear</span> <span class="n">trend</span> <span class="n">flag</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="central-transit-times">
+<h2>Central transit times<a class="headerlink" href="#central-transit-times" title="Permalink to this headline">¶</a></h2>
+<p>For central time of transit (<cite>Tcent</cite>) file data, the structure is slightly
+different, since the first column denote the number of the transit.
+This number will help in identifying missing transits (but honestly I don’t
+remember right now what happens if you start from a random number…)</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="mi">0</span>   <span class="mf">4959.70736</span>   <span class="mf">0.00145</span>   <span class="mi">0</span>   <span class="o">-</span><span class="mi">1</span>   <span class="o">-</span><span class="mi">1</span>
+<span class="mi">1</span>   <span class="mf">4968.99347</span>   <span class="mf">0.00225</span>   <span class="mi">0</span>   <span class="o">-</span><span class="mi">1</span>   <span class="o">-</span><span class="mi">1</span>
+<span class="mi">2</span>   <span class="mf">4978.28014</span>   <span class="mf">0.00202</span>   <span class="mi">0</span>   <span class="o">-</span><span class="mi">1</span>   <span class="o">-</span><span class="mi">1</span>
+<span class="o">.</span>   <span class="o">..........</span>   <span class="o">.......</span>   <span class="o">.</span>   <span class="o">..</span>   <span class="o">..</span>
+</pre></div>
+</div>
+<p><strong>IMPORTANT</strong> always set the 5th (offset) and 6th column to <code class="docutils literal notranslate"><span class="pre">-1</span></code> (or don’t include
+them at all) to avoid unphysical solution (drift and jumps in time are not allowed)</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">input_dataset</span><span class="p">{</span><span class="s1">&#39;Tcent_b&#39;</span><span class="p">}</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">([</span><span class="n">n</span><span class="p">,</span><span class="mi">6</span><span class="p">])</span>
+<span class="n">input_dataset</span><span class="p">{</span><span class="s1">&#39;Tcent_b&#39;</span><span class="p">}[:,</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">number</span> <span class="n">of</span> <span class="n">transit</span> <span class="p">(</span><span class="n">e</span><span class="o">.</span><span class="n">g</span><span class="o">.</span> <span class="k">if</span> <span class="n">some</span> <span class="n">transit</span> <span class="ow">is</span> <span class="n">missing</span><span class="p">)</span>
+<span class="n">input_dataset</span><span class="p">{</span><span class="s1">&#39;Tcent_b&#39;</span><span class="p">}[:,</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">transit</span> <span class="n">time</span>
+<span class="n">input_dataset</span><span class="p">{</span><span class="s1">&#39;Tcent_b&#39;</span><span class="p">}[:,</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="n">associated</span> <span class="n">error</span>
+<span class="n">input_dataset</span><span class="p">{</span><span class="s1">&#39;Tcent_b&#39;</span><span class="p">}[:,</span><span class="mi">3</span><span class="p">]</span> <span class="o">=</span> <span class="n">jitter</span> <span class="n">flag</span>
+<span class="n">input_dataset</span><span class="p">{</span><span class="s1">&#39;Tcent_b&#39;</span><span class="p">}[:,</span><span class="mi">4</span><span class="p">]</span> <span class="o">=</span> <span class="n">should</span> <span class="n">be</span> <span class="nb">set</span> <span class="n">to</span> <span class="o">-</span><span class="mi">1</span> <span class="n">to</span> <span class="n">avoid</span> <span class="n">unphysical</span> <span class="n">solution</span>
+<span class="n">input_dataset</span><span class="p">{</span><span class="s1">&#39;Tcent_b&#39;</span><span class="p">}[:,</span><span class="mi">5</span><span class="p">]</span> <span class="o">=</span> <span class="n">should</span> <span class="n">be</span> <span class="nb">set</span> <span class="n">to</span> <span class="o">-</span><span class="mi">1</span> <span class="n">to</span> <span class="n">avoid</span> <span class="n">unphysical</span> <span class="n">solution</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="jitter-offset-and-linear-flags">
+<h2>Jitter, offset and linear flags<a class="headerlink" href="#jitter-offset-and-linear-flags" title="Permalink to this headline">¶</a></h2>
+<p>Jitter, offset and linear parameters cannot be shared between datasets. For linear trends of physical origin, a model that can be shared between datasets is avaialble.</p>
+<p>Activating the jitter flag will introduce a new parameter which will be added in quadrature to the error bars of the measurement for which the flag has been activated.
+The offset flag will add a constant offset (or zero-point) to all the measurement for which the flag has been activated.
+The linear flag will include a linear trend in the dataset. Note that this flag will add only the slope as additional parameter, while the intercept of the linear trend must be set using the offset flat. Only a linear trend is supported, higher order terms have not been implemented simply because I never encpuntered such an extreme case, but on request it may be included as additional columns in the file.</p>
+<p>The flags of the last three columns must be expressed as integers. The value of a flag must be set <code class="docutils literal notranslate"><span class="pre">-1</span></code> if you don’t want to include the corresponding parameter in the model, otherwise to increasing number starting from <code class="docutils literal notranslate"><span class="pre">0</span></code>.
+The flags can be used to divide the dataset in groups where different parameters are used for a specific model. For example, it is possible to use different offset parameters for data taken before and after a given epoch (for example, if the instrument has been modified in some way). To do so, set to <code class="docutils literal notranslate"><span class="pre">0</span></code> the offset flag of the data taken before the chosen epoch, and to <code class="docutils literal notranslate"><span class="pre">1</span></code> the data taken after that epoch. Just increase by another unit if you want to add an additional offset parameter.</p>
+<p>The code will assume that the number of parameters is equal to the maximum value of the flag plus one, so pay attention in increasing the flag sequentially and without jumps.</p>
+<p>For a given kind of flag:</p>
+<ul class="simple">
+<li><p>Flags must be given in consecutive order starting from zero (Python notation).</p></li>
+<li><p>Inactive flag must be set to -1.</p></li>
+<li><p>All the parameters that share the same flag value will have that parameter in common.</p></li>
+<li><p>Different parameters will be used for measurements with different value of flag.</p></li>
+<li><p>Flags in different columns are independent.</p></li>
+</ul>
+<p>Let’s look at the following example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">epoch_00</span>  <span class="n">meas_00</span>  <span class="n">err_00</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="o">-</span><span class="mi">1</span>
+<span class="n">epoch_01</span>  <span class="n">meas_01</span>  <span class="n">err_01</span>  <span class="mi">0</span>  <span class="mi">0</span>  <span class="o">-</span><span class="mi">1</span>
+<span class="n">epoch_02</span>  <span class="n">meas_02</span>  <span class="n">err_02</span>  <span class="mi">1</span>  <span class="mi">0</span>  <span class="o">-</span><span class="mi">1</span>
+<span class="n">epoch_03</span>  <span class="n">meas_03</span>  <span class="n">err_03</span>  <span class="mi">1</span>  <span class="mi">1</span>  <span class="o">-</span><span class="mi">1</span>
+<span class="n">epoch_04</span>  <span class="n">meas_04</span>  <span class="n">err_04</span>  <span class="mi">1</span>  <span class="mi">1</span>   <span class="mi">0</span>
+<span class="n">epoch_05</span>  <span class="n">meas_05</span>  <span class="n">err_05</span>  <span class="mi">2</span>  <span class="mi">1</span>   <span class="mi">0</span>
+<span class="n">epoch_06</span>  <span class="n">meas_06</span>  <span class="n">err_06</span>  <span class="mi">2</span>  <span class="mi">0</span>   <span class="mi">0</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p><cite>epoch_00</cite> and <cite>epoch_01</cite> share the same jitter term, so they do <cite>(epoch_02, epoch_03, epoch_04)</cite> and <cite>(epoch_05, epoch_06)</cite>, for a total of 3 jitter parameters.</p></li>
+<li><p><cite>epoch_00</cite>, <cite>epoch_01</cite>, <cite>epoch_02</cite> and <cite>epoch_06</cite> share the same offset. <cite>epoch_03</cite>, <cite>epoch_04</cite>, <cite>epoch_05</cite> share a different offset parameter.</p></li>
+<li><p><cite>epoch_04</cite>, <cite>epoch_05</cite>, <cite>epoch_06</cite> are modeled using a linear trend. <cite>epoch_00</cite>, <cite>epoch_01</cite>, <cite>epoch_02</cite> and <cite>epoch_03</cite> are not.</p></li>
+</ul>
+<p>What’s the point of using the flags instead of creating different datasets? Here a few examples:</p>
+<ul class="simple">
+<li><p>Suppose your instrument undergoes some slight modifications, and the zero point of the RV is shifted but the overall instrument is the same: you can account for this zero-point difference while sharing the same jitter parameter.</p></li>
+<li><p>Again your instrument undergoes major changes and both the zero-point and jitter are affected. However, observational parameters that depend on the characteristics of the instrument will be the same (e.g. the amplitude of stellar activity signals observed at optical wavelength), so you want to use only one parameter for this dataset and a different one for another dataset (e.g. observations gathered in the infrared).</p></li>
+</ul>
+<p>Shortly, the flags represent a way to separate instrumental issues from the physical problems.</p>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="installation.html"
+                        title="previous chapter">Installation</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="prepare_yaml.html"
+                        title="next chapter">Prepare a configuration file</a></p>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="prepare_yaml.html" title="Prepare a configuration file"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="installation.html" title="Installation"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">PyORBIT 8.0 documentation</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2016, Luca Malavolta.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.1.2.
+    </div>
+  </body>
+</html>

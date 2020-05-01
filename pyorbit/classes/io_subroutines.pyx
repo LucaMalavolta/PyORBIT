@@ -1,6 +1,6 @@
 try:
     import cPickle as pickle
-except:
+except ModuleNotFoundError:
     import pickle
 import numpy as np
 
@@ -8,6 +8,11 @@ try:
     FileNotFoundError
 except NameError:
     FileNotFoundError = IOError
+
+
+def funcname(self,  parameter_list):
+    pass
+
 
 def pyde_create_dummy_file(mc, prefix=''):
     add_prefix = (prefix + '_' if prefix else '')
@@ -17,19 +22,27 @@ def pyde_create_dummy_file(mc, prefix=''):
 
 def pyde_save_to_pickle(mc, population, starting_point, theta_dict, prefix=''):
     add_prefix = (prefix + '_' if prefix else '')
-    pickle.dump(mc, open(mc.pyde_dir_output + add_prefix + "model_container.p", "wb"))
-    pickle.dump(population, open(mc.pyde_dir_output + add_prefix + "population.p", "wb"))
-    pickle.dump(starting_point, open(mc.pyde_dir_output + add_prefix + "starting_point.p", "wb"))
-    pickle.dump(theta_dict, open(mc.pyde_dir_output + add_prefix + "theta_dictionary.p", "wb"))
+    pickle.dump(mc,
+        open(mc.pyde_dir_output + add_prefix + "model_container.p", "wb"))
+    pickle.dump(population,
+        open(mc.pyde_dir_output + add_prefix + "population.p", "wb"))
+    pickle.dump(starting_point,
+        open(mc.pyde_dir_output + add_prefix + "starting_point.p", "wb"))
+    pickle.dump(theta_dict,
+        open(mc.pyde_dir_output + add_prefix + "theta_dictionary.p", "wb"))
 
 
 def pyde_load_from_cpickle(pyde_dir_output, prefix=''):
     add_prefix = (prefix + '_' if prefix else '')
 
-    mc = pickle.load(open(pyde_dir_output + add_prefix + "model_container.p", "rb"))
-    population = pickle.load(open(pyde_dir_output + add_prefix + "population.p", "rb"))
-    starting_point = pickle.load(open(pyde_dir_output + add_prefix + "starting_point.p", "rb"))
-    theta_dict = pickle.load(open(pyde_dir_output + add_prefix + "theta_dictionary.p", "rb"))
+    mc = pickle.load(
+        open(pyde_dir_output + add_prefix + "model_container.p", "rb"))
+    population = pickle.load(
+        open(pyde_dir_output + add_prefix + "population.p", "rb"))
+    starting_point = pickle.load(
+        open(pyde_dir_output + add_prefix + "starting_point.p", "rb"))
+    theta_dict = pickle.load(
+        open(pyde_dir_output + add_prefix + "theta_dictionary.p", "rb"))
 
     return mc, population, starting_point, theta_dict
 
@@ -77,20 +90,22 @@ def emcee_load_from_cpickle(emcee_dir_output, prefix=''):
         open(emcee_dir_output + add_prefix + "sampler_acceptance_fraction.p", "rb"))
 
     return mc, starting_point, population, prob, state, \
-           sampler_chain, sampler_lnprobability, sampler_acceptance_fraction, theta_dict
+        sampler_chain, sampler_lnprobability, sampler_acceptance_fraction, theta_dict
 
 
 def starting_point_save_to_cpickle(dir_output, starting_point, bounds, theta_dict, prefix=None):
     add_prefix = (prefix + '_' if prefix else '')
     pickle.dump(theta_dict, open(dir_output + add_prefix + "theta_dictionary.p", "wb"))
-    pickle.dump(starting_point, open(dir_output + add_prefix + "starting_point.p", "wb"))
+    pickle.dump(starting_point,
+                open(dir_output + add_prefix + "starting_point.p", "wb"))
     pickle.dump(bounds, open(dir_output + add_prefix + "boundaries.p", "wb"))
 
 
 def starting_point_load_from_cpickle(dir_output, prefix=None):
     add_prefix = (prefix + '_' if prefix else '')
     theta_dict = pickle.load(open(dir_output + add_prefix + "theta_dictionary.p", "rb"))
-    starting_point = pickle.load(open(dir_output + add_prefix + "starting_point.p", "rb"))
+    starting_point = pickle.load(
+        open(dir_output + add_prefix + "starting_point.p", "rb"))
     bounds = pickle.load(open(dir_output + add_prefix + "boundaries.p", "rb"))
     return starting_point, bounds, theta_dict
 
@@ -131,11 +146,13 @@ def emcee_burnin_check(chain, nburnin, nthin, nwalkers=False):
 
     return nburn, modified
 
+
 def emcee_flatchain(chain, nburnin, nthin):
     """flattening of the emcee chains with removal of burn-in"""
     nburn, _ = emcee_burnin_check(chain, nburnin, nthin)
     s = chain[:, nburn:, :].shape
     return chain[:, nburn:, :].reshape(s[0] * s[1], s[2])
+
 
 def emcee_flatlnprob(lnprob, nburnin, nthin, population, nwalkers):
 
@@ -148,6 +165,7 @@ def emcee_flatlnprob(lnprob, nburnin, nthin, population, nwalkers):
     else:
         s = lnprob[nburn:, :].shape
         return lnprob[nburn:, :].reshape(s[0] * s[1]), lnprob
+
 
 def GelmanRubin(chains_T):
     # Courtesy of Luca "Sbuffo" Borsato

@@ -1,0 +1,360 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>Prepare a configuration file &#8212; PyORBIT 8.0 documentation</title>
+    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
+    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="API" href="api.html" />
+    <link rel="prev" title="Prepare the dataset" href="prepare_datasets.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="api.html" title="API"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="prepare_datasets.html" title="Prepare the dataset"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">PyORBIT 8.0 documentation</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="prepare-a-configuration-file">
+<span id="prepare-yaml"></span><h1>Prepare a configuration file<a class="headerlink" href="#prepare-a-configuration-file" title="Permalink to this headline">¶</a></h1>
+<p>The configuration file is the most important part of your analysis, because it will contain the specifics of your model, the priors you want to assign to the parameters, and the way you want to analyze your data. Thanks to the readability of the YAML language, it will also serve as a useful memento at a glance for the set-up of your model.</p>
+<div class="section" id="file-structure">
+<h2>File structure<a class="headerlink" href="#file-structure" title="Permalink to this headline">¶</a></h2>
+<p>The file is divided in several sections, each one with a clear purpose:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">inputs</span></code>: here you list the files containing the datasets</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">common</span></code>: the physical parameters of your planetary system that are going to be shared between the models (and are independent from them): orbital parameters of the planets, mass and radius of the star, rotational period and decay timescale of the active regions…</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">models</span></code>: this is where you specific how the physical elements of the system in the <em>common</em> section are going to influence your data: which planets include in the radial velocity computation, what kind of model/kernel you want to use to model the activity…</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">parameters</span></code>: values that are not system parameters per se, but are required for the correctness of the analysis</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">solver</span></code>: the parameters required by PyDE, emcee, or MultiNest are all listed here</p></li>
+</ul>
+<p>To have a glance at how a configuration file looks like, check the .. _documentation_example.yaml: <a class="reference external" href="http://cnn.com/">http://cnn.com/</a>:</p>
+</div>
+<div class="section" id="adding-a-dataset">
+<h2>Adding a dataset<a class="headerlink" href="#adding-a-dataset" title="Permalink to this headline">¶</a></h2>
+<p>Datasets are grouped under the input section:</p>
+<div class="highlight-yaml notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre>1
+2
+3
+4
+5
+6
+7</pre></div></td><td class="code"><div class="highlight"><pre><span></span><span class="nt">inputs</span><span class="p">:</span>
+  <span class="nt">RVdata</span><span class="p">:</span>
+    <span class="nt">file</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">K2-141_dataset/K2-141_RV_HARPN.dat</span>
+    <span class="nt">kind</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">RV</span>
+    <span class="nt">models</span><span class="p">:</span>
+      <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">rv_model</span>
+      <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">gp_regression</span>
+</pre></div>
+</td></tr></table></div>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">RVdata</span></code>: the label to identify the dataset. The same label must be used later in the file if we need to specify a property of the dataset.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">file</span></code>: the file including the dataset.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">kind</span></code>: the kind of dataset provided. This label is used only by specific models that requires a special treatment with respect to standard datasets, i.e. central times of transits must be tagged with the <code class="docutils literal notranslate"><span class="pre">Tcent</span></code> data type.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">models</span></code>: list of models’ labels to be used to analyze the dataset. If only one model is specified, it can be written on the same line without the <code class="docutils literal notranslate"><span class="pre">-</span></code> sign.</p></li>
+</ul>
+<div class="section" id="dataset-kinds">
+<h3>Dataset kinds<a class="headerlink" href="#dataset-kinds" title="Permalink to this headline">¶</a></h3>
+<p>The following datasets are recognized by the code. In the majority of the cases, the way the dataset is treated depends on the specified models. A list of aliases is defined to circumvent the most common typos (and to avoid checking the documentation every time…).</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">RV</span></code>: radial velocities. Aliases: <code class="docutils literal notranslate"><span class="pre">RV</span></code>, <code class="docutils literal notranslate"><span class="pre">RVs</span></code>, <code class="docutils literal notranslate"><span class="pre">rv</span></code>, <code class="docutils literal notranslate"><span class="pre">rvs</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Phot</span></code>: photometry. Aliases: <code class="docutils literal notranslate"><span class="pre">P</span></code>, <code class="docutils literal notranslate"><span class="pre">Ph</span></code>, <code class="docutils literal notranslate"><span class="pre">p</span></code>, <code class="docutils literal notranslate"><span class="pre">ph</span></code>, <code class="docutils literal notranslate"><span class="pre">PHOT</span></code>, <code class="docutils literal notranslate"><span class="pre">Phot</span></code>, <code class="docutils literal notranslate"><span class="pre">phot</span></code>, <code class="docutils literal notranslate"><span class="pre">Photometry</span></code>, <code class="docutils literal notranslate"><span class="pre">photometry</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Tcent</span></code>: central times of transits. Aliases: <code class="docutils literal notranslate"><span class="pre">Tcent</span></code>, <code class="docutils literal notranslate"><span class="pre">TCent</span></code>, <code class="docutils literal notranslate"><span class="pre">Tc</span></code>, <code class="docutils literal notranslate"><span class="pre">TC</span></code>, <code class="docutils literal notranslate"><span class="pre">T0</span></code>, <code class="docutils literal notranslate"><span class="pre">TT</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">FWHM</span></code>: Full Width Half Maximum of the Cross-Correlation Function (CCF). Aliases: <code class="docutils literal notranslate"><span class="pre">FWHM</span></code>, <code class="docutils literal notranslate"><span class="pre">fwhm</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">BIS</span></code>: Bisector Inverse Span of the CCF. Aliases: <code class="docutils literal notranslate"><span class="pre">BIS</span></code>, <code class="docutils literal notranslate"><span class="pre">bis</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">H-alpha</span></code>: measurements of the emission in the core of the H-alpha line. Aliases: <code class="docutils literal notranslate"><span class="pre">H</span></code>, <code class="docutils literal notranslate"><span class="pre">HA</span></code>, <code class="docutils literal notranslate"><span class="pre">h</span></code>, <code class="docutils literal notranslate"><span class="pre">ha</span></code>, <code class="docutils literal notranslate"><span class="pre">Halpha</span></code>, <code class="docutils literal notranslate"><span class="pre">H-alpha</span></code>, <code class="docutils literal notranslate"><span class="pre">halpha</span></code>, <code class="docutils literal notranslate"><span class="pre">h-alpha</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">S_index</span></code>: (uncalibrated) measurements of the emission in the core of the CA H&amp;K  lines. Aliases: <code class="docutils literal notranslate"><span class="pre">S</span></code>, <code class="docutils literal notranslate"><span class="pre">S_index</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Ca_HK</span></code>: as for the S index, but with the photometric contribution removed. Aliases: <code class="docutils literal notranslate"><span class="pre">Ca_HK</span></code>, <code class="docutils literal notranslate"><span class="pre">logR</span></code>.</p></li>
+</ul>
+</div>
+</div>
+<div class="section" id="include-common-parameters">
+<span id="common-label"></span><h2>Include common parameters<a class="headerlink" href="#include-common-parameters" title="Permalink to this headline">¶</a></h2>
+<p>The physical <em>objects</em> of your system must be included in the <code class="docutils literal notranslate"><span class="pre">common</span></code> section. The name of the section derives from the fact each specific model required to model a given dataset will rely on physical parameters of planets and star (and more…) that are shared with all the other models eventually employed. For example, a simultaneous fit of a radial velocity curve and a transit light curve will be characterized by a single period for the planet of interest.</p>
+<p>Let’s have a look at this example where we have included a transiting planet in a circular orbit (<em>b</em>), a non-transiting planet (<em>c</em>), some properties for the stellar activity, and of of course the stellar parameters.</p>
+<div class="highlight-yaml notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
+ 2
+ 3
+ 4
+ 5
+ 6
+ 7
+ 8
+ 9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35
+36
+37
+38</pre></div></td><td class="code"><div class="highlight"><pre><span></span><span class="nt">common</span><span class="p">:</span>
+  <span class="nt">planets</span><span class="p">:</span>
+    <span class="nt">b</span><span class="p">:</span>
+      <span class="nt">orbit</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">circular</span>
+      <span class="nt">parametrization</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">Eastman2013_Tcent</span>
+      <span class="nt">boundaries</span><span class="p">:</span>
+        <span class="nt">P</span><span class="p">:</span> <span class="p p-Indicator">[</span><span class="nv">0.25</span><span class="p p-Indicator">,</span> <span class="nv">0.31</span><span class="p p-Indicator">]</span>
+        <span class="nt">K</span><span class="p">:</span> <span class="p p-Indicator">[</span><span class="nv">0.01</span><span class="p p-Indicator">,</span> <span class="nv">100.0</span><span class="p p-Indicator">]</span>
+        <span class="nt">Tc</span><span class="p">:</span> <span class="p p-Indicator">[</span><span class="nv">7744.06</span><span class="p p-Indicator">,</span> <span class="nv">7744.08</span><span class="p p-Indicator">]</span>
+      <span class="nt">priors</span><span class="p">:</span>
+        <span class="nt">P</span><span class="p">:</span> <span class="p p-Indicator">[</span><span class="s">&#39;Gaussian&#39;</span><span class="p p-Indicator">,</span> <span class="nv">0.2803244</span><span class="p p-Indicator">,</span> <span class="nv">0.0000015</span><span class="p p-Indicator">]</span>
+        <span class="nt">Tc</span><span class="p">:</span> <span class="p p-Indicator">[</span><span class="s">&#39;Gaussian&#39;</span><span class="p p-Indicator">,</span> <span class="nv">7744.07160</span><span class="p p-Indicator">,</span> <span class="nv">0.00022</span><span class="p p-Indicator">]</span>
+      <span class="nt">spaces</span><span class="p">:</span>
+        <span class="nt">P</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">Linear</span>
+      <span class="nt">fixed</span><span class="p">:</span>
+        <span class="nt">i</span><span class="p">:</span> <span class="p p-Indicator">[</span><span class="nv">86.3</span><span class="p p-Indicator">,</span> <span class="nv">3.00</span><span class="p p-Indicator">]</span>
+    <span class="nt">c</span><span class="p">:</span>
+      <span class="nt">orbit</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">keplerian</span>
+      <span class="nt">boundaries</span><span class="p">:</span>
+        <span class="nt">P</span><span class="p">:</span> <span class="p p-Indicator">[</span><span class="nv">1.0</span><span class="p p-Indicator">,</span> <span class="nv">1000.0</span><span class="p p-Indicator">]</span>
+        <span class="nt">K</span><span class="p">:</span> <span class="p p-Indicator">[</span><span class="nv">0.01</span><span class="p p-Indicator">,</span> <span class="nv">100.0</span><span class="p p-Indicator">]</span>
+        <span class="nt">e</span><span class="p">:</span> <span class="p p-Indicator">[</span><span class="nv">0.00</span><span class="p p-Indicator">,</span> <span class="nv">0.95</span><span class="p p-Indicator">]</span>
+  <span class="nt">stellar_activity</span><span class="p">:</span>
+    <span class="nt">kind</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">activity</span>
+    <span class="nt">boundaries</span><span class="p">:</span>
+      <span class="nt">Prot</span><span class="p">:</span> <span class="p p-Indicator">[</span><span class="nv">5.00</span><span class="p p-Indicator">,</span> <span class="nv">16.00</span><span class="p p-Indicator">]</span>
+      <span class="nt">Pdec</span><span class="p">:</span> <span class="p p-Indicator">[</span><span class="nv">10.0</span><span class="p p-Indicator">,</span> <span class="nv">2000.00</span><span class="p p-Indicator">]</span>
+      <span class="nt">Oamp</span><span class="p">:</span> <span class="p p-Indicator">[</span><span class="nv">0.01</span><span class="p p-Indicator">,</span> <span class="nv">0.60</span><span class="p p-Indicator">]</span>
+    <span class="nt">priors</span><span class="p">:</span>
+      <span class="nt">Prot</span><span class="p">:</span> <span class="p p-Indicator">[</span><span class="s">&#39;Gaussian&#39;</span><span class="p p-Indicator">,</span><span class="nv">13.941613</span><span class="p p-Indicator">,</span> <span class="nv">0.66</span><span class="p p-Indicator">]</span>
+      <span class="nt">Pdec</span><span class="p">:</span> <span class="p p-Indicator">[</span><span class="s">&#39;Gaussian&#39;</span><span class="p p-Indicator">,</span><span class="nv">12.203273</span><span class="p p-Indicator">,</span> <span class="nv">3.21</span><span class="p p-Indicator">]</span>
+      <span class="nt">Oamp</span><span class="p">:</span> <span class="p p-Indicator">[</span><span class="s">&#39;Gaussian&#39;</span><span class="p p-Indicator">,</span><span class="nv">0.342221</span><span class="p p-Indicator">,</span> <span class="nv">0.054</span><span class="p p-Indicator">]</span>
+  <span class="nt">star</span><span class="p">:</span>
+    <span class="nt">star_parameters</span><span class="p">:</span>
+      <span class="nt">priors</span><span class="p">:</span>
+        <span class="nt">radius</span><span class="p">:</span> <span class="p p-Indicator">[</span><span class="s">&#39;Gaussian&#39;</span><span class="p p-Indicator">,</span> <span class="nv">0.681</span><span class="p p-Indicator">,</span> <span class="nv">0.018</span><span class="p p-Indicator">]</span>
+        <span class="nt">mass</span><span class="p">:</span> <span class="p p-Indicator">[</span><span class="s">&#39;Gaussian&#39;</span><span class="p p-Indicator">,</span> <span class="nv">0.708</span><span class="p p-Indicator">,</span> <span class="nv">0.028</span><span class="p p-Indicator">]</span>
+        <span class="nt">rho</span><span class="p">:</span> <span class="p p-Indicator">[</span><span class="s">&#39;Gaussian&#39;</span><span class="p p-Indicator">,</span> <span class="nv">2.244</span><span class="p p-Indicator">,</span> <span class="nv">0.161</span><span class="p p-Indicator">]</span>
+</pre></div>
+</td></tr></table></div>
+<p>Quite a lot to process, right? Let’s start with the main sections. <code class="docutils literal notranslate"><span class="pre">planets</span></code> and <code class="docutils literal notranslate"><span class="pre">star</span></code> are kind special because the section names are also the reference name of the objects, i.e., these names are hard coded and if you try to put planet or star parameters in sections with different names you will break everything. The reason is that <code class="docutils literal notranslate"><span class="pre">planets</span></code>  and <code class="docutils literal notranslate"><span class="pre">star</span></code> are actually containers for the true objects, which are <code class="docutils literal notranslate"><span class="pre">b</span></code>, <code class="docutils literal notranslate"><span class="pre">c</span></code> (see the relative documentation for more details). <code class="docutils literal notranslate"><span class="pre">stellar_activity</span></code> instead is a label for the object with reference names <code class="docutils literal notranslate"><span class="pre">activity</span></code>, e.g., if you want to know more you have to look for the object named <code class="docutils literal notranslate"><span class="pre">activity</span></code> in the documentation  and for the file <code class="docutils literal notranslate"><span class="pre">activity.py</span></code> in the source code. Note that if you are including just a single object of a kind, you can use its reference name as label and omit the <code class="docutils literal notranslate"><span class="pre">type</span></code> keyword, as in actual example file in the repository.</p>
+<div class="highlight-yaml notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
+ 2
+ 3
+ 4
+ 5
+ 6
+ 7
+ 8
+ 9
+10
+11</pre></div></td><td class="code"><div class="highlight"><pre><span></span><span class="nt">common</span><span class="p">:</span>
+  <span class="l l-Scalar l-Scalar-Plain">...</span>
+  <span class="l l-Scalar l-Scalar-Plain">activity</span><span class="p p-Indicator">:</span>
+    <span class="nt">boundaries</span><span class="p">:</span>
+      <span class="nt">Prot</span><span class="p">:</span> <span class="p p-Indicator">[</span><span class="nv">5.00</span><span class="p p-Indicator">,</span> <span class="nv">16.00</span><span class="p p-Indicator">]</span>
+      <span class="nt">Pdec</span><span class="p">:</span> <span class="p p-Indicator">[</span><span class="nv">10.0</span><span class="p p-Indicator">,</span> <span class="nv">2000.00</span><span class="p p-Indicator">]</span>
+      <span class="nt">Oamp</span><span class="p">:</span> <span class="p p-Indicator">[</span><span class="nv">0.01</span><span class="p p-Indicator">,</span> <span class="nv">0.60</span><span class="p p-Indicator">]</span>
+    <span class="nt">priors</span><span class="p">:</span>
+      <span class="nt">Prot</span><span class="p">:</span> <span class="p p-Indicator">[</span><span class="s">&#39;Gaussian&#39;</span><span class="p p-Indicator">,</span><span class="nv">13.941613</span><span class="p p-Indicator">,</span> <span class="nv">0.66</span><span class="p p-Indicator">]</span>
+      <span class="nt">Pdec</span><span class="p">:</span> <span class="p p-Indicator">[</span><span class="s">&#39;Gaussian&#39;</span><span class="p p-Indicator">,</span><span class="nv">12.203273</span><span class="p p-Indicator">,</span> <span class="nv">3.21</span><span class="p p-Indicator">]</span>
+      <span class="nt">Oamp</span><span class="p">:</span> <span class="p p-Indicator">[</span><span class="s">&#39;Gaussian&#39;</span><span class="p p-Indicator">,</span><span class="nv">0.342221</span><span class="p p-Indicator">,</span> <span class="nv">0.054</span><span class="p p-Indicator">]</span>
+</pre></div>
+</td></tr></table></div>
+<p>Note that also <code class="docutils literal notranslate"><span class="pre">b</span></code> and <code class="docutils literal notranslate"><span class="pre">c</span></code> are labels, i.e., you can give the planets any random name, but in their case it’s not necessary to specify what kind of object they are because it’s implicitly assumed for being inside the <code class="docutils literal notranslate"><span class="pre">planet</span></code> section (<strong>Note:</strong> this is true only for the planets! ). The use of labels will be clear when dealing with multi-band photometry.</p>
+<p>Let’s focus on planet <code class="docutils literal notranslate"><span class="pre">b</span></code> as an example of the properties of an object. There are some keywords that are specific of the planet model, such as <code class="docutils literal notranslate"><span class="pre">orbit</span></code> and <code class="docutils literal notranslate"><span class="pre">parametrization</span></code>. Check the documentation of each model to know more about the specific keywords. Then there are four sections that every model must possess:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">boundaries</span></code>: all the Bayesian samplers implemented in <code class="docutils literal notranslate"><span class="pre">PyORBIT</span></code> require the definition of lower and upper boundaries. If not specified, very broad boundaries will be set by default according to the source code.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">priors</span></code>: is it a Bayesian analysis if you don’t specify at least one prior? When not included, the prior is assumed to be Uniform over the range specified in <code class="docutils literal notranslate"><span class="pre">boundaries</span></code> (or the one assumed by default)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">spaces</span></code>: the choice here is between <code class="docutils literal notranslate"><span class="pre">Linear</span></code> and <code class="docutils literal notranslate"><span class="pre">Logarithmic</span></code>. Note that the logarithmic space is in <em>base 2</em>. Once again, the default choice is listed in the source code.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">fixed</span></code>: You listed here every parameter you want to keep fixed. The value must be accompanied by his errors, because in some cases it will be used in the computation of the derived parameters, e.g., the real mass of a transiting planet.</p></li>
+</ul>
+<p>Under this section you need to list only the parameters that will be actually used by the models in <code class="docutils literal notranslate"><span class="pre">models</span></code> section. For example, a circular orbit does not require boundaries or priors for the eccentricity.</p>
+<p>The default choices for each possible parameter and for each section listed above are declared in the source file of the object.</p>
+</div>
+<div class="section" id="include-the-models">
+<h2>Include the models<a class="headerlink" href="#include-the-models" title="Permalink to this headline">¶</a></h2>
+<p>In this section of the configuration file, called <code class="docutils literal notranslate"><span class="pre">models</span></code>, we specify the properties of the models that we want to employ to analyze the data.</p>
+<div class="highlight-yaml notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
+ 2
+ 3
+ 4
+ 5
+ 6
+ 7
+ 8
+ 9
+10
+11
+12</pre></div></td><td class="code"><div class="highlight"><pre><span></span><span class="nt">models</span><span class="p">:</span>
+  <span class="nt">rv_model</span><span class="p">:</span>
+    <span class="nt">kind</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">radial_velocities</span>
+    <span class="nt">planets</span><span class="p">:</span>
+      <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">b</span>
+      <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">c</span>
+  <span class="nt">gp_regression</span><span class="p">:</span>
+    <span class="nt">kind</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">gp_quasiperiodic</span>
+    <span class="nt">common</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">stellar_activity</span>
+    <span class="nt">RVdata</span><span class="p">:</span>
+      <span class="nt">boundaries</span><span class="p">:</span>
+        <span class="nt">Hamp</span><span class="p">:</span> <span class="p p-Indicator">[</span><span class="nv">0.01</span><span class="p p-Indicator">,</span> <span class="nv">100.00</span><span class="p p-Indicator">]</span>
+</pre></div>
+</td></tr></table></div>
+<p>In this example, our complete model comprises a <code class="docutils literal notranslate"><span class="pre">radial_velocities</span></code> model to model the orbital motion of the star due to the presence of planets <code class="docutils literal notranslate"><span class="pre">b</span></code> and <code class="docutils literal notranslate"><span class="pre">c</span></code>, and a <code class="docutils literal notranslate"><span class="pre">gp_quasiperiodic</span></code> to model the stellar activity with Gaussian process regression and a quasi-periodic kernel. Note that <code class="docutils literal notranslate"><span class="pre">rv_model</span></code> and <code class="docutils literal notranslate"><span class="pre">gp_regression</span></code> are the labels assigned to the two models, and they are the string that has to be referenced in the <code class="docutils literal notranslate"><span class="pre">models</span></code> section under each <code class="docutils literal notranslate"><span class="pre">dataset</span></code>.</p>
+<p>There are two main sections:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">kind</span></code>: the model you want to employ, e.g., how the physical parameters are converted into theoretical predictions for the observations.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">common</span></code>: the list of labels referring to the common objects you want to be used in the model. For RVs and TTVs the keyword <code class="docutils literal notranslate"><span class="pre">planet</span></code> can be used as well.</p></li>
+</ul>
+<p>In the following sections, e.g. <code class="docutils literal notranslate"><span class="pre">RVdata</span></code> in this example, the properties of parameters that depend specifically on the dataset are listed. The properties are <code class="docutils literal notranslate"><span class="pre">boundaries</span></code>, <code class="docutils literal notranslate"><span class="pre">priors</span></code>, <code class="docutils literal notranslate"><span class="pre">spaces</span></code>, and <code class="docutils literal notranslate"><span class="pre">fixed</span></code>, similarly as in <a class="reference internal" href="#common-label"><span class="std std-ref">Include common parameters</span></a>. Here for example we are specifying the boundaries of the amplitude of the covariance matrix in the GP regression when applied to the radial velocity data.</p>
+<p>Additional keywords may be present depending on the model, see the documentation for more details.</p>
+<p><strong>Note:</strong>: the <code class="docutils literal notranslate"><span class="pre">star_parameters</span></code> object is included by default whenever needed, so you don’t need to list it in the common section.</p>
+</div>
+<div class="section" id="additional-parameters">
+<h2>Additional parameters<a class="headerlink" href="#additional-parameters" title="Permalink to this headline">¶</a></h2>
+<p>System-wide parameters that did not find place in any other section below are included in the <code class="docutils literal notranslate"><span class="pre">parameters</span></code> section.</p>
+<div class="highlight-yaml notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre>1
+2</pre></div></td><td class="code"><div class="highlight"><pre><span></span><span class="nt">parameters</span><span class="p">:</span>
+  <span class="nt">Tref</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">7800.0</span>
+</pre></div>
+</td></tr></table></div>
+<p>In this example, <code class="docutils literal notranslate"><span class="pre">Tref</span></code> is the epoch of reference, one of the most neglected orbital elements ever. For non-transiting planets, the argument of periapsis and the mean anomaly will be referred to this value. When not explicitly stated, it will be computed internally as the average of all the observational epochs.</p>
+</div>
+<div class="section" id="sampler-parameters">
+<h2>Sampler parameters<a class="headerlink" href="#sampler-parameters" title="Permalink to this headline">¶</a></h2>
+<p>Each sampler comes with its set of parameters, which fine-tuning depends on both the size of the datasets and the complexity of the model, among other things. These parameters can be specified in the configuration file under the <code class="docutils literal notranslate"><span class="pre">solver</span></code> section.</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">solver</span><span class="p">:</span>
+  <span class="nt">pyde</span><span class="p">:</span>
+    <span class="nt">ngen</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">4000</span>
+    <span class="nt">npop_mult</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">8</span>
+  <span class="nt">emcee</span><span class="p">:</span>
+    <span class="nt">npop_mult</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">8</span>
+    <span class="nt">nsteps</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">20000</span>
+    <span class="nt">nburn</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">5000</span>
+    <span class="nt">thin</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">100</span>
+    <span class="nt">nsave</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">10000</span>
+  <span class="nt">nested_sampling</span><span class="p">:</span>
+    <span class="nt">nlive</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">1000</span>
+    <span class="nt">num_repeats_mult</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">5</span>
+    <span class="nt">sampling_efficiency</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">0.30</span>
+    <span class="nt">shutdown_jitter</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">True</span>
+  <span class="nt">recenter_bounds</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">True</span>
+</pre></div>
+</div>
+<p>This is a brief explanation of the parameters associated to each keyword, please refer to the sampler documentation for their proper usage.
+- <code class="docutils literal notranslate"><span class="pre">pyde</span></code>: parameters for the global optimization code <a class="reference external" href="https://github.com/hpparvi/PyDE">PyDE</a>.</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">ngen</span></code>: number of generations.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">npop_mult</span></code>: the size of the parameter vector population is given by the dimensionality of the problem multiplied by this number</p></li>
+</ul>
+</div></blockquote>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">emcee</span></code>: parameters for the ensemble sampling toolkit for affine-invariant MCMC <a class="reference external" href="https://github.com/dfm/emcee">emcee</a>).
+- <code class="docutils literal notranslate"><span class="pre">npop_mult</span></code>: the number of walkers in the ensemble is given by the dimensionality of the problem multiplied by this number. If PyDE and emcee are used sequentially, this keyword must have the same value in both sections (they are named in the same way a s a reminder).
+- <code class="docutils literal notranslate"><span class="pre">nsteps</span></code>: number of steps of each chain.
+- <code class="docutils literal notranslate"><span class="pre">nburn</span></code>: number of ‘burn-in’ steps.
+- <code class="docutils literal notranslate"><span class="pre">thin</span></code>: thinning factor, should be at least equal to the autocorrelation time (before thinning). <strong>Note:</strong>: the chains will be saved with the thinning factor already applied
+- <code class="docutils literal notranslate"><span class="pre">nsave</span></code>: results are saved every (unthinned) <code class="docutils literal notranslate"><span class="pre">nsave</span></code> steps, so that it is possible to perform a preliminary analysis while the code is still running</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">nested_sampling</span></code>: these parameters are shared between all the implemented nested sampling algorithms, which are <a class="reference external" href="https://github.com/farhanferoz/MultiNest">MultiNest</a>,  <a class="reference external" href="https://github.com/PolyChord/PolyChordLite">PolyChordLite</a>, and <a class="reference external" href="https://github.com/joshspeagle/dynesty">dynesty</a>.
+- <code class="docutils literal notranslate"><span class="pre">nlive</span></code>: total number of live points.
+- <code class="docutils literal notranslate"><span class="pre">num_repeats_mult</span></code>: The number of slice slice-sampling steps to generate a new point  (PolyChord only).
+- <code class="docutils literal notranslate"><span class="pre">sampling_efficiency</span></code>: sampling efficiency (MultiNest only)
+- <code class="docutils literal notranslate"><span class="pre">shutdown_jitter</span></code>: if True (default value), the jitter parameters are removed from the model (even if the flag in the dataset is active).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">recenter_bounds</span></code>: after the first run with (global) optimization, the boundaries of circular parameters (e.g. angles) will be recenter around the most likely value, in order to avoid border effects associated with some samplers.</p></li>
+</ul>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="prepare_datasets.html"
+                        title="previous chapter">Prepare the dataset</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="api.html"
+                        title="next chapter">API</a></p>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="api.html" title="API"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="prepare_datasets.html" title="Prepare the dataset"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">PyORBIT 8.0 documentation</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2016, Luca Malavolta.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.1.2.
+    </div>
+  </body>
+</html>

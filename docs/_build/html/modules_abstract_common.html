@@ -1,0 +1,133 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>Abstract Common Model &#8212; PyORBIT 8.0 documentation</title>
+    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
+    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Abstract Model" href="modules_abstract_model.html" />
+    <link rel="prev" title="API" href="api.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="modules_abstract_model.html" title="Abstract Model"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="api.html" title="API"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">PyORBIT 8.0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="api.html" accesskey="U">API</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="abstract-common-model">
+<span id="modules-abstract-common"></span><h1>Abstract Common Model<a class="headerlink" href="#abstract-common-model" title="Permalink to this headline">¶</a></h1>
+<p>This is the common model class</p>
+<span class="target" id="module-pyorbit.models.abstract_common"></span><p>Some stuff here</p>
+<span class="target" id="module-pyorbit.models.abstract_common"></span><dl class="class">
+<dt id="pyorbit.models.abstract_common.AbstractCommon">
+<em class="property">class </em><code class="sig-prename descclassname">pyorbit.models.abstract_common.</code><code class="sig-name descname">AbstractCommon</code><span class="sig-paren">(</span><em class="sig-param">common_ref</em><span class="sig-paren">)</span><a class="headerlink" href="#pyorbit.models.abstract_common.AbstractCommon" title="Permalink to this definition">¶</a></dt>
+<dd><p>Comments to be updated</p>
+<dl class="method">
+<dt id="pyorbit.models.abstract_common.AbstractCommon.define_variable_properties">
+<code class="sig-name descname">define_variable_properties</code><span class="sig-paren">(</span><em class="sig-param">ndim</em>, <em class="sig-param">output_lists</em>, <em class="sig-param">variable_list</em><span class="sig-paren">)</span><a class="headerlink" href="#pyorbit.models.abstract_common.AbstractCommon.define_variable_properties" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bounds are defined in this class, where all the Planet-related variables are stored
+Bounds and parameter index CANNOT be defined in the Common class: we don’t know a priori which parameters
+will be actually used in the complete model.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyorbit.models.abstract_common.AbstractCommon.return_priors">
+<code class="sig-name descname">return_priors</code><span class="sig-paren">(</span><em class="sig-param">theta</em><span class="sig-paren">)</span><a class="headerlink" href="#pyorbit.models.abstract_common.AbstractCommon.return_priors" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute the prior probability for a given set of input parameters</p>
+<p>return_priors is defined in the common models because, differently from other functions that can be executed
+more than once on the same variable, the prior for a given parameter should be computed and added to the
+log_chi2 only once</p>
+<dl class="simple">
+<dt>Args:</dt><dd><p>theta: the set of parameters created by the solver</p>
+</dd>
+<dt>Returns:</dt><dd><p>prior_out: prior probability, to be added to the posterior probability</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="api.html"
+                        title="previous chapter">API</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="modules_abstract_model.html"
+                        title="next chapter">Abstract Model</a></p>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="modules_abstract_model.html" title="Abstract Model"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="api.html" title="API"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">PyORBIT 8.0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="api.html" >API</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2016, Luca Malavolta.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.1.2.
+    </div>
+  </body>
+</html>

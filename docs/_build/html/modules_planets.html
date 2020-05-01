@@ -1,0 +1,192 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>Planets Common Model &#8212; PyORBIT 8.0 documentation</title>
+    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
+    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="Abstract Model" href="modules_abstract_model.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="modules_abstract_model.html" title="Abstract Model"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">PyORBIT 8.0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="api.html" accesskey="U">API</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="planets-common-model">
+<span id="modules-planets"></span><h1>Planets Common Model<a class="headerlink" href="#planets-common-model" title="Permalink to this headline">¶</a></h1>
+<p>Can I haz planetz?</p>
+<span class="target" id="module-pyorbit.models.planets"></span><p>Some planet stuff here</p>
+<span class="target" id="module-pyorbit.models.planets"></span><dl class="class">
+<dt id="pyorbit.models.planets.CommonPlanets">
+<em class="property">class </em><code class="sig-prename descclassname">pyorbit.models.planets.</code><code class="sig-name descname">CommonPlanets</code><span class="sig-paren">(</span><em class="sig-param">*args</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#pyorbit.models.planets.CommonPlanets" title="Permalink to this definition">¶</a></dt>
+<dd><p>Inherited class from AbstractCommon</p>
+<p>For computational reason it is better to fit <span class="math notranslate nohighlight">\(\sqrt{e}\sin{\omega}\)</span> and <span class="math notranslate nohighlight">\(\sqrt{e}\cos{\omega}\)</span>.
+<a class="reference internal" href="#pyorbit.models.planets.CommonPlanets.define_special_variable_properties" title="pyorbit.models.planets.CommonPlanets.define_special_variable_properties"><code class="xref py py-func docutils literal notranslate"><span class="pre">define_special_variable_properties()</span></code></a> and <a class="reference internal" href="#pyorbit.models.planets.CommonPlanets.define_special_starting_point" title="pyorbit.models.planets.CommonPlanets.define_special_starting_point"><code class="xref py py-func docutils literal notranslate"><span class="pre">define_special_starting_point()</span></code></a> must be redefined</p>
+<dl class="simple">
+<dt>Attributes:</dt><dd><dl class="field-list simple">
+<dt class="field-odd">model_class (string)</dt>
+<dd class="field-odd"><p>identify the kind of class</p>
+</dd>
+<dt class="field-even">list_pams</dt>
+<dd class="field-even"><p>all the possible parameters that can be assigned to a planet are listed here</p>
+</dd>
+<dt class="field-odd">default_bounds</dt>
+<dd class="field-odd"><p>these default boundaries are used when the user does not define them in the yaml file</p>
+</dd>
+<dt class="field-even">recenter_pams</dt>
+<dd class="field-even"><p>circular parameters that may need a recentering around the most likely value after the global
+optimization run</p>
+</dd>
+<dt class="field-odd">period_average</dt>
+<dd class="field-odd"><p>variable used only by TRADES</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<dl class="attribute">
+<dt id="pyorbit.models.planets.CommonPlanets.default_bounds">
+<code class="sig-name descname">default_bounds</code><em class="property"> = {'K': [0.5, 2000.0], 'M': [0.5, 1000.0], 'P': [0.4, 100000.0], 'R': [1e-05, 0.5], 'Tc': [0.0, 1000.0], 'a': [1e-05, 500.0], 'b': [0.0, 1.0], 'e': [0.0, 1.0], 'e_coso': [-1.0, 1.0], 'e_sino': [-1.0, 1.0], 'f': [0.0, 6.283185307179586], 'i': [0.0, 180.0], 'lN': [0.0, 6.283185307179586], 'o': [0.0, 6.283185307179586], 'sre_coso': [-1.0, 1.0], 'sre_sino': [-1.0, 1.0]}</em><a class="headerlink" href="#pyorbit.models.planets.CommonPlanets.default_bounds" title="Permalink to this definition">¶</a></dt>
+<dd><p>Must be the same parameters as in list_pams, because priors are applied only to _physical_ parameters</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyorbit.models.planets.CommonPlanets.define_special_starting_point">
+<code class="sig-name descname">define_special_starting_point</code><span class="sig-paren">(</span><em class="sig-param">starting_point</em>, <em class="sig-param">var_sampler</em><span class="sig-paren">)</span><a class="headerlink" href="#pyorbit.models.planets.CommonPlanets.define_special_starting_point" title="Permalink to this definition">¶</a></dt>
+<dd><p>Eccentricity and argument of pericenter require a special treatment</p>
+<p>since they can be provided as fixed individual values or may need to be combined
+in <span class="math notranslate nohighlight">\(\sqrt{e}\sin{\omega}\)</span> and <span class="math notranslate nohighlight">\(\sqrt{e}\cos{\omega}\)</span> if are both free variables</p>
+<dl class="simple">
+<dt>Args:</dt><dd><dl class="field-list simple">
+<dt class="field-odd">starting_point</dt>
+<dd class="field-odd"><p></p></dd>
+<dt class="field-even">var_sampler</dt>
+<dd class="field-even"><p></p></dd>
+</dl>
+</dd>
+<dt>Returns:</dt><dd><dl class="field-list simple">
+<dt class="field-odd">bool</dt>
+<dd class="field-odd"><p></p></dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyorbit.models.planets.CommonPlanets.define_special_variable_properties">
+<code class="sig-name descname">define_special_variable_properties</code><span class="sig-paren">(</span><em class="sig-param">ndim</em>, <em class="sig-param">output_lists</em>, <em class="sig-param">var</em><span class="sig-paren">)</span><a class="headerlink" href="#pyorbit.models.planets.CommonPlanets.define_special_variable_properties" title="Permalink to this definition">¶</a></dt>
+<dd><p>Boundaries definition for eccentricity <span class="math notranslate nohighlight">\(e\)</span> and argument of pericenter <span class="math notranslate nohighlight">\(\omega\)</span></p>
+<p>The internal variable to be fitted are <span class="math notranslate nohighlight">\(\sqrt{e}\sin{\omega}\)</span> and <span class="math notranslate nohighlight">\(\sqrt{e}\cos{\omega}\)</span>.
+With this parametrization it is not possible to naturally put a boundary to <span class="math notranslate nohighlight">\(e\)</span> without affecting the
+<span class="math notranslate nohighlight">\(\omega\)</span>.
+Additionally the subroutine will check if either <span class="math notranslate nohighlight">\(e\)</span> or <span class="math notranslate nohighlight">\(\omega\)</span> have been provided as fixed values.
+If true, the parametrization will consist of <span class="math notranslate nohighlight">\(e\)</span> or <span class="math notranslate nohighlight">\(\omega\)</span>  instead of
+<span class="math notranslate nohighlight">\(\sqrt{e}\sin{\omega}\)</span> and <span class="math notranslate nohighlight">\(\sqrt{e}\cos{\omega}\)</span></p>
+<dl class="simple">
+<dt>Args:</dt><dd><dl class="field-list simple">
+<dt class="field-odd">ndim</dt>
+<dd class="field-odd"><p>number of parameters already processed by other models</p>
+</dd>
+<dt class="field-even">var</dt>
+<dd class="field-even"><p>input variable, either <span class="math notranslate nohighlight">\(e\)</span> or <span class="math notranslate nohighlight">\(\omega\)</span></p>
+</dd>
+</dl>
+</dd>
+<dt>Returns:</dt><dd><dl class="field-list simple">
+<dt class="field-odd">ndim</dt>
+<dd class="field-odd"><p>updated dimensionality of the problem</p>
+</dd>
+<dt class="field-even">bounds_list</dt>
+<dd class="field-even"><p>additional boundaries to be added to the original list</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="pyorbit.models.planets.CommonPlanets.model_class">
+<code class="sig-name descname">model_class</code><em class="property"> = 'planet'</em><a class="headerlink" href="#pyorbit.models.planets.CommonPlanets.model_class" title="Permalink to this definition">¶</a></dt>
+<dd><p>choice to parametrize the eccentricity and argument of pericenter:
+Standard: $e$ and $omega$
+Ford2006: $e cos{omega }$ and $e sin{omega}$
+Eastman2013: $sqrt{e} cos{omega }$ and $sqrt{e} sin{omega}$</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="modules_abstract_model.html"
+                        title="previous chapter">Abstract Model</a></p>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="modules_abstract_model.html" title="Abstract Model"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">PyORBIT 8.0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="api.html" >API</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2016, Luca Malavolta.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.1.2.
+    </div>
+  </body>
+</html>
