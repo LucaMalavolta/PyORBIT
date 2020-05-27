@@ -38,3 +38,8 @@ ehthumbs.db
 Thumbs.db
 build/
 test_compare
+__pycache__
+.idea
+.vscode
+_build
+docs/_build

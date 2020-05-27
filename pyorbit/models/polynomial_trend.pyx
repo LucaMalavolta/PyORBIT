@@ -100,6 +100,7 @@ class PolynomialTrend(AbstractModel):
         self.common_poly_ref = None
 
         self.time_interval = 1.000000000
+        
 
     def initialize_model(self, mc, **kwargs):
 
@@ -110,7 +111,6 @@ class PolynomialTrend(AbstractModel):
         try:
             if kwargs['include_zero_point']:
                 self.starting_order = 0
-            self.starting_order
         except:
             self.starting_order = 1
 
@@ -120,7 +120,7 @@ class PolynomialTrend(AbstractModel):
         try:
             if kwargs['time_interval']:
                 self.time_interval = kwargs['time_interval']
-            self.time_interval
+            print('TIME INTERVAL: ', self.time_interval)
         except:
             self.time_interval = 1.
 

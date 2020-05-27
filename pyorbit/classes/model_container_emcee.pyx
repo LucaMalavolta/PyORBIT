@@ -12,16 +12,15 @@ class ModelContainerEmcee(ModelContainer):
         self.emcee_dir_output = None
 
         self.emcee_parameters = {'nsave': 0,
-                            'npop_mult': 4,
-                            'thin': 1,
-                            'nburn':0,
-                            'multirun': None,
-                            'multirun_iter': 20,
-                            'shutdown_jitter': False
-                            }
+                                 'npop_mult': 4,
+                                 'thin': 1,
+                                 'nburn': 0,
+                                 'multirun': None,
+                                 'multirun_iter': 20,
+                                 'shutdown_jitter': False
+                                }
 
         self.pyde_parameters = {'ngen': 8000,
-                           'npop_mult': 4,
-                           'shutdown_jitter': False
-                           }
-
+                                'npop_mult': 4,
+                                'shutdown_jitter': False
+                                }

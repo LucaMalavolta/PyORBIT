@@ -110,8 +110,8 @@ def yaml_parser(file_conf):
     except AttributeError:
         config_in = yaml.load(stream)
         print(' Consider updating YAML')
-    except:
-        print(' Some error happened while reading the configuration file')
+    except OSError:
+        print(' OSError while reading the configuration file')
         quit()
 
     if 'output' not in config_in:
@@ -565,7 +565,7 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, shutdown_
         #    mc.models[model_name].common_ref.append('star_parameters')
 
 
-        elif model_type == 'correlation_singledataset':
+        elif model_type == 'local_correlation':
             mc.models[model_name] = \
                     define_type_to_class[model_type](model_name, None)
             mc.models[model_name].model_conf = model_conf.copy()
