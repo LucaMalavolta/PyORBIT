@@ -565,7 +565,7 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, shutdown_
         #    mc.models[model_name].common_ref.append('star_parameters')
 
 
-        elif model_type == 'local_correlation':
+        elif model_type == 'local_correlation' or model_type == 'correlation':
             mc.models[model_name] = \
                     define_type_to_class[model_type](model_name, None)
             mc.models[model_name].model_conf = model_conf.copy()
