@@ -108,7 +108,7 @@ class Dataset(AbstractCommon):
                 self.Tref = np.mean(self.x, dtype=np.double)
 
             """Default boundaries are defined according to the characteristic of the dataset"""
-            self.generic_default_bounds = {'offset': [np.min(self.y) - 1000., np.max(self.y) + 100.],
+            self.generic_default_bounds = {'offset': [np.min(self.y) - 1000., np.max(self.y) + 1000.],
                                            'jitter': [np.min(self.e)/100., 100 * np.max(self.e)],
                                            'linear': [-1., 1.]}
 
