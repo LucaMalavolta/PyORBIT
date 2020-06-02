@@ -17,7 +17,7 @@ from ..models.gp_semiperiodic_activity_alternative import GaussianProcess_QuasiP
 from ..models.gp_semiperiodic_activity_derivative import GaussianProcess_QuasiPeriodicActivity_Derivative
 
 if 'celerite' in sys.modules:
-  from ..models.celerite_semiperiodic_activity import Celerite_QuasiPeriodicActivity
+  from ..models.celerite_rotation import Celerite_Rotation
 
 from ..models.correlations import LocalCorrelation
 from ..models.correlated_jitter import LocalCorrelatedJitter

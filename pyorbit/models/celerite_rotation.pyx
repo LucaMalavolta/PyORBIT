@@ -1,7 +1,8 @@
 from pyorbit.classes.common import *
-from pyorbit.models.abstract_common import *
-from pyorbit.models.abstract_model import *
+from pyorbit.models.abstract_common import AbstractCommon
+from pyorbit.models.abstract_model import AbstractModel
 from celerite.terms import SHOTerm, TermSum
+
 
 class Celerite_Rotation_Term(TermSum):
     """
@@ -75,18 +76,21 @@ class Celerite_Rotation(AbstractModel):
 
     def convert_val2gp(self, input_pams):
         """
-        :param input_pams: dictionary with the 'physically meaningful' parameters of the GP kernel
+        :param input_pams: dictionary with the 'physically meaningful'
+                           parameters of the GP kernel
         :return: array with the parameters to be fed to 'celerite'
-        WARNING: this subroutine is HIGHLY specific of your choice of the kernel! I recommend to
-        create a new Class with different transformations if you are planning of using a different
-        kernel combination
+
+        WARNING: this subroutine is HIGHLY specific of your choice of the
+        kernel! I recommend to create a new Class with different
+        transformations if you are planning of using a different kernel
         """
 
         output_pams = np.zeros(self.n_pams, dtype=np.double)
 
-        """ You must check _celerite_ documentation (and possibily do a lot of testing) to know how to convert physical 
-        values to the parameter vector accepted by celerite.set_parameter_vector() function. Note: these values may be 
-        different from ones accepted by the kernel
+        """ You must check _celerite_ documentation (and possibily do a lot of
+            testing) to know how to convert physical values to the parameter
+            vector accepted by celerite.set_parameter_vector() function. Note:
+            these values may be different from ones accepted by the kernel
         """
 
         output_pams[0] = input_pams['Prot']

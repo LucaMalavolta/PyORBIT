@@ -1,4 +1,5 @@
-from pyorbit.classes.common import *
+from pyorbit.classes.common import np, get_var_val, get_fix_val, get_var_exp, \
+    get_2darray_from_val, nested_sampling_prior_prepare, giveback_priors
 
 
 class AbstractModel(object):
@@ -19,7 +20,7 @@ class AbstractModel(object):
                 self.common_ref = np.atleast_1d(common_ref).tolist()
             else:
                 self.common_ref = []
-        except:
+        except NameError:
             self.common_ref = []
 
         self.planet_ref = common_ref
@@ -53,12 +54,17 @@ class AbstractModel(object):
     def setup_dataset(self, mc, dataset, **kwargs):
         pass
 
-    def define_special_variable_properties(self, ndim, output_lists, dataset_name, var):
+    def define_special_variable_properties(self,
+                                           ndim,
+                                           output_lists,
+                                           dataset_name,
+                                           var):
         return ndim, output_lists, False
 
     def define_variable_properties(self, ndim, output_lists, dataset_name):
-        """ Bounds are defined in this class, where all the Planet-related variables are stored
-            Bounds and parameter index CANNOT be defined in the Common class: we don't know a priori which parameters
+        """ Bounds are defined in this class, where all the Planet-related
+            variables are stored. Bounds and parameter index CANNOT be defined
+            in the Common class: we don't know a priori which parameters
             will be actually used in the complete model.
         """
 
@@ -73,7 +79,9 @@ class AbstractModel(object):
             self.spaces[dataset_name] = {}
 
         for var in self.list_pams_dataset:
-            ndim, output_lists, applied = self.define_special_variable_properties(ndim, output_lists, dataset_name, var)
+            ndim, output_lists, applied = \
+                self.define_special_variable_properties(
+                    ndim, output_lists, dataset_name, var)
             if applied:
                 continue
 
@@ -91,8 +99,11 @@ class AbstractModel(object):
                 self.prior_pams[dataset_name][var] = []
 
                 # Workaround to preserve compatibility with Python 2.x
-                if isinstance(self.fix_list[dataset_name][var], type('string')) and var in self.default_fixed:
-                    self.fixed.append(get_2darray_from_val(self.default_fixed[var])[0])
+                if isinstance(self.fix_list[dataset_name][var],
+                              type('string')) \
+                        and var in self.default_fixed:
+                    self.fixed.append(
+                        get_2darray_from_val(self.default_fixed[var])[0])
                 else:
                     self.fixed.append(self.fix_list[dataset_name][var][0])
 
@@ -100,25 +111,32 @@ class AbstractModel(object):
             else:
                 if self.spaces[dataset_name][var] == 'Linear':
                     self.transformation[dataset_name][var] = get_var_val
-                    output_lists['bounds'].append(self.bounds[dataset_name][var])
+                    output_lists['bounds'].append(
+                        self.bounds[dataset_name][var])
 
                 if self.spaces[dataset_name][var] == 'Logarithmic':
                     self.transformation[dataset_name][var] = get_var_exp
-                    output_lists['bounds'].append(np.log2(self.bounds[dataset_name][var]))
+                    output_lists['bounds'].append(
+                        np.log2(self.bounds[dataset_name][var]))
 
                 if var not in self.prior_pams[dataset_name]:
-                    self.prior_kind[dataset_name][var] = self.default_priors[var][0]
-                    self.prior_pams[dataset_name][var] = self.default_priors[var][1]
+                    self.prior_kind[dataset_name][var] = \
+                        self.default_priors[var][0]
+                    self.prior_pams[dataset_name][var] = \
+                        self.default_priors[var][1]
 
-                nested_coeff =  nested_sampling_prior_prepare(self.prior_kind[dataset_name][var],
-                                                              output_lists['bounds'][-1],
-                                                              self.prior_pams[dataset_name][var],
-                                                              self.spaces[dataset_name][var])
+                nested_coeff = \
+                    nested_sampling_prior_prepare(
+                        self.prior_kind[dataset_name][var],
+                        output_lists['bounds'][-1],
+                        self.prior_pams[dataset_name][var],
+                        self.spaces[dataset_name][var])
 
                 output_lists['spaces'].append(self.spaces[dataset_name][var])
-                output_lists['priors'].append([self.prior_kind[dataset_name][var],
-                                               self.prior_pams[dataset_name][var],
-                                               nested_coeff])
+                output_lists['priors'].append(
+                    [self.prior_kind[dataset_name][var],
+                     self.prior_pams[dataset_name][var],
+                     nested_coeff])
 
                 self.variable_index[dataset_name][var] = ndim
                 self.variable_sampler[dataset_name][var] = ndim
@@ -130,21 +148,26 @@ class AbstractModel(object):
         return False
 
     def define_starting_point(self, starting_point, dataset_name):
-        if not bool(self.starts): return
+        if not bool(self.starts):
+            return
 
         for var in self.starts[dataset_name]:
 
-            if self.define_special_starting_point(starting_point, dataset_name, var): continue
+            if self.define_special_starting_point(
+                    starting_point, dataset_name, var):
+                continue
 
             if self.spaces[dataset_name][var] == 'Linear':
                 start_converted = self.starts[dataset_name][var]
             if self.spaces[dataset_name][var] == 'Logarithmic':
                 start_converted = np.log2(self.starts[dataset_name][var])
-            starting_point[self.variable_sampler[dataset_name][var]] = start_converted
+            starting_point[self.variable_sampler[dataset_name]
+                           [var]] = start_converted
 
     def convert(self, theta, dataset_name):
         variable_value = {}
-        # If we need the parameters for the prior, we are not providing any name for the dataset
+        # If we need the parameters for the prior, we are not providing any
+        # name for the dataset
 
         for var in self.list_pams_dataset:
             variable_value[var] = self.transformation[dataset_name][var](
@@ -156,12 +179,14 @@ class AbstractModel(object):
         variable_value = self.convert(theta, dataset_name)
 
         for var in self.list_pams_dataset:
-            prior_out += giveback_priors(self.prior_kind[dataset_name][var],
-                                         self.bounds[dataset_name][var],
-                                         self.prior_pams[dataset_name][var],
-                                         variable_value[var])
+            prior_out += giveback_priors(
+                self.prior_kind[dataset_name][var],
+                self.bounds[dataset_name][var],
+                self.prior_pams[dataset_name][var],
+                variable_value[var])
         """
-        for var in list(set(self.list_pams_dataset) and set(self.prior_pams[dataset_name])):
+        for var in list(set(self.list_pams_dataset) and \
+         set(self.prior_pams[dataset_name])):
 
             prior_out += giveback_priors(self.prior_kind[dataset_name][var],
                                          self.bounds[dataset_name][var],
@@ -172,8 +197,9 @@ class AbstractModel(object):
 
     def index_recenter_bounds(self, dataset_name):
         ind_list = []
-        for var in list(set(self.recenter_pams_dataset) & set(self.variable_sampler[dataset_name])):
-                ind_list.append(self.variable_sampler[dataset_name][var])
+        for var in list(set(self.recenter_pams_dataset)
+                        & set(self.variable_sampler[dataset_name])):
+            ind_list.append(self.variable_sampler[dataset_name][var])
 
         return ind_list
 

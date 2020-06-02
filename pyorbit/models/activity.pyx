@@ -11,8 +11,12 @@ class CommonActivity(AbstractCommon):
         'Pdec',  # Decay timescale of activity
         'Oamp',  # Granulation of activity
         'Hamp',  # Amplitude of the signal in the covariance matrix
-        'Camo',  # Amplitude of the derivative of the kernel
+        'Camp',  # Amplitude of the derivative of the kernel
         'Hamp_factor',
+        'Q0',  # celerite rotation term parameter
+        'deltaQ', # celerite rotation term parameter
+        'mix', # celerite rotation term parameter
+        'amp', # celerite rotation term parameter
         'P',  # Period
         'K',  # Sinusoid semi-amplitude
         'f',  # Sinusoid curve phase
@@ -35,6 +39,10 @@ class CommonActivity(AbstractCommon):
         'Hamp': [0.00000001, 1000000.0],
         'Camp': [0.00000001, 1000000.0],
         'Hamp_factor': [0.01, 10.0],
+        'Q0': [0.001, 1000.000],
+        'deltaQ': [0.001, 1000.000],
+        'mix': [0.001, 1000.000],
+        'amp': [0.0001, 1000.0],
         'P': [0.4, 100000.0],
         'K': [0.5, 2000.0],
         'f': [0.0, 2 * np.pi],
@@ -58,6 +66,10 @@ class CommonActivity(AbstractCommon):
         'Hamp': ['Uniform', []],
         'Camp': ['Uniform', []],
         'Hamp_factor': ['Uniform', []],
+        'Q0': ['Uniform', []],
+        'deltaQ': ['Uniform', []],
+        'mix': ['Uniform', []],
+        'amp': ['Uniform', []],
         'P': ['Uniform', []],
         'K': ['Uniform', []],
         'f': ['Uniform', []],
@@ -77,6 +89,10 @@ class CommonActivity(AbstractCommon):
         'Hamp': 'Linear',  # Amplitude of the signal in the covariance matrix
         'Camp': 'Linear',  # Amplitude of the signal in the covariance matrix
         'Hamp_factor': 'Linear',
+        'Q0': 'Logarithmic',  # celerite terms, explored in logarithmic space
+        'deltaQ': 'Logarithmic',  # celerite terms, explored in logarithmic space
+        'mix': 'Logarithmic',  # celerite terms, explored in logarithmic space
+        'amp': 'Logarithmic',  # celerite terms, explored in logarithmic space
         'P': 'Logarithmic',  # Period, log-uniform prior
         'K': 'Logarithmic',  # RV semi-amplitude, log-uniform prior
         'f': 'Linear',  # RV curve phase, log-uniform
