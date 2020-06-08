@@ -3,6 +3,12 @@
 Installation
 ============
 
+Before proceeding with the installation, I suggest to create an environment dedicated to ``PyORBIT``. With conda/anaconda:
+
+.. code:: bash
+
+  conda create --name pyrbit python=3
+
 .. _requirements-label:
 
 Requirements
@@ -78,11 +84,28 @@ From the `pyDE source repository`_
 ---------
 
 I’m currently using the latest version of emcee (Version 3.0 at the moment of writing), installed from the source repository:
+* UPDATE * There is a bug concerning the version numbering of emcee that must be fixed before installation 
 
 .. code:: bash
 
   git clone https://github.com/dfm/emcee.git
   cd emcee
+
+From here got to the directory ``./src/emcee/`` and open the file ``__init__.py`` with your favourite text editor, then edit line 22 from this:
+
+.. code:: python
+  from .emcee_version import __version__  # isort:skip
+
+to this:
+
+.. code:: python
+  
+  #from .emcee_version import __version__  # isort:skip
+  __version__ = '3.0.0'
+
+Save the file and got back to the main ``emcee`` directory (i.e., by doing ``cd ../../``) and then execute the usual script to install the file:
+
+.. code:: bash
   python setup.py install
 
 (from here: http://emcee.readthedocs.io/en/stable/user/install.html#from-source)
