@@ -9,6 +9,22 @@ Before proceeding with the installation, I suggest to create an environment dedi
 
   conda create --name pyrbit python=3
 
+To list the available environment do:
+
+.. code:: bash
+
+  conda env list
+
+The active environment will be marked with a *
+
+To activate the ``pyorbit`` environment:
+
+.. code:: bash
+
+  WINDOWS: activate pyorbit
+  LINUX, macOS: source activate pyorbit
+
+
 .. _requirements-label:
 
 Requirements
