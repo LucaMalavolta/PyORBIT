@@ -1,0 +1,297 @@
+WARNING! Imported pyorbit.classes.dummy dynesty, models relying on this package will not work
+WARNING! Imported pyorbit.classes.dummy celerite, models relying on this package will not work
+WARNING! Imported pyorbit.classes.dummy PyPolyChord, models relying on this package will not work
+
+emcee version:  3.0rc2
+
+ Reference Time Tref: 6000.0
+
+ Dimensions = 12
+ Nwalkers = 48
+
+ Steps: 20000
+
+ Computing the autocorrelation time of the chains
+ Reference thinning used in the analysis: 100
+
+          sample variable      ACF        ACF * nthin
+          RVdata1_offset_0     1.682     168.2
+          RVdata1_jitter_0     1.946     194.6
+          b_sre_coso           1.679     167.9
+          b_sre_sino           1.737     173.7
+          b_K                  1.690     169.0
+          b_f                  1.816     181.6
+          b_P                  1.712     171.2
+          c_sre_coso           1.707     170.7
+          c_sre_sino           1.625     162.5
+          c_K                  1.560     156.0
+          c_f                  1.786     178.6
+          c_P                  1.781     178.1
+
+ LN posterior:  -179.478967      -2.837386     2.183177 (15-84 p) 
+
+ MAP log_priors     = -33.76524359603328
+ MAP log_likelihood = -141.61768694715133
+ MAP BIC  (using likelihood) = 338.49741612615975
+ MAP AIC  (using likelihood) = 307.23537389430265
+ MAP AICc (using likelihood) = 310.8215807908544
+
+ MAP BIC  (using posterior)  = 406.0279033182263
+ MAP AIC  (using posterior)  = 374.7658610863692
+ MAP AICc (using posterior)  = 378.35206798292097
+
+ AICc suggested over AIC because NDATA (   100.000000 ) < 40 * NDIM (    12.000000 )
+
+****************************************************************************************************
+****************************************************************************************************
+
+ Confidence intervals (median value, 34.135th percentile from the median on the left and right side)
+
+====================================================================================================
+     Statistics on the posterior of the sampler variables     
+====================================================================================================
+
+----- dataset:  RVdata1
+offset_0      10   4779.511299      -0.105199      0.103864 (15-84 p) ([3753.920000, 5810.730000])
+jitter_0      11      0.295332      -0.192329      0.200659 (15-84 p) ([ 0.010000, 100.000000])
+
+----------  RVdata1      ----- model:  radial_velocities_b
+
+----------  RVdata1      ----- model:  radial_velocities_c
+
+----- common model:  b
+sre_coso       0      0.366554      -0.020795      0.019615 (15-84 p) ([-1.000000,  1.000000])
+sre_sino       1      0.266360      -0.030315      0.028725 (15-84 p) ([-1.000000,  1.000000])
+K              2      3.570609      -0.020314      0.020103 (15-84 p) ([-6.643856,  5.643856])
+f              3      3.114349      -0.025803      0.026437 (15-84 p) ([-0.027928,  6.255257])
+P              4      3.840885      -0.001462      0.001448 (15-84 p) ([ 1.000000,  5.643856])
+
+----- common model:  c
+sre_coso       5      0.255629      -0.020471      0.018366 (15-84 p) ([-1.000000,  1.000000])
+sre_sino       6      0.018831      -0.037476      0.037036 (15-84 p) ([-1.000000,  1.000000])
+K              7      3.981007      -0.014099      0.014164 (15-84 p) ([-6.643856,  5.643856])
+f              8      5.338179      -0.022893      0.023326 (15-84 p) ([ 2.198344,  8.481529])
+P              9      2.750601      -0.000638      0.000659 (15-84 p) ([ 1.000000,  5.643856])
+
+----- common model:  star_parameters
+
+====================================================================================================
+     Statistics on the physical parameters obtained from the posteriors samples     
+====================================================================================================
+
+----- dataset:  RVdata1
+offset_0         4779.511299         -0.105199         0.103864 (15-84 p)
+jitter_0            0.295332         -0.192329         0.200659 (15-84 p)
+
+
+----------  RVdata1      ----- model:  radial_velocities_b
+
+----------  RVdata1      ----- model:  radial_velocities_c
+
+----- common model:  b
+e                   0.205842         -0.014831         0.014489 (15-84 p)
+o                   0.627659         -0.071036         0.070272 (15-84 p)
+K                  11.881202         -0.166125         0.166716 (15-84 p)
+f                   3.114349         -0.025803         0.026437 (15-84 p)
+P                  14.329193         -0.014516         0.014385 (15-84 p)
+
+----- common model:  c
+e                   0.067052         -0.009938         0.009591 (15-84 p)
+o                   0.073055         -0.145695         0.143894 (15-84 p)
+K                  15.790736         -0.153570         0.155796 (15-84 p)
+f                   5.338179         -0.022893         0.023326 (15-84 p)
+P                   6.729975         -0.002975         0.003073 (15-84 p)
+
+----- common model:  star_parameters
+
+====================================================================================================
+     Statistics on the derived parameters obtained from the posteriors samples     
+====================================================================================================
+
+----- common model:  b
+Inclination randomized to 86.20 +- 3.00 deg
+Computing exact mass of the planet (average approximate mass larger than 30.0 Me)
+a                  24.818500         -0.525004         0.545572 (15-84 p)
+i                  86.212525         -2.984654         3.009163 (15-84 p)
+M                   0.000133         -0.000003         0.000003 (15-84 p)
+M_Mj                0.139389         -0.002641         0.002684 (15-84 p)
+M_Me               44.311029         -0.839603         0.853306 (15-84 p)
+Tc               6010.118110         -0.069062         0.068485 (15-84 p)
+
+----- common model:  c
+Inclination randomized to 85.30 +- 3.00 deg
+Computing exact mass of the planet (average approximate mass larger than 30.0 Me)
+a                  14.996047         -0.316344         0.326298 (15-84 p)
+i                  85.200792         -2.951042         3.083210 (15-84 p)
+M                   0.000140         -0.000002         0.000002 (15-84 p)
+M_Mj                0.146994         -0.002522         0.002522 (15-84 p)
+M_Me               46.728612         -0.801672         0.801660 (15-84 p)
+Tc               6002.554121         -0.033449         0.031894 (15-84 p)
+
+
+====================================================================================================
+     ------------------------------------------------------------------------------------------     
+====================================================================================================
+
+
+
+****************************************************************************************************
+
+ Parameters corresponding to the Maximum a Posteriori probability ( -174.3155662967152 )
+
+
+====================================================================================================
+     Statistics on the posterior of the sampler variables     
+====================================================================================================
+
+----- dataset:  RVdata1
+offset_0      10   4779.515410 ([3753.920000, 5810.730000])
+jitter_0      11      0.071132 ([  0.010000, 100.000000])
+
+----------  RVdata1      ----- model:  radial_velocities_b
+
+----------  RVdata1      ----- model:  radial_velocities_c
+
+----- common model:  b
+sre_coso       0      0.365209 ([ -1.000000,   1.000000])
+sre_sino       1      0.274632 ([ -1.000000,   1.000000])
+K              2      3.562069 ([ -6.643856,   5.643856])
+f              3      3.094729 ([ -0.027928,   6.255257])
+P              4      3.839284 ([  1.000000,   5.643856])
+
+----- common model:  c
+sre_coso       5      0.251115 ([ -1.000000,   1.000000])
+sre_sino       6      0.031110 ([ -1.000000,   1.000000])
+K              7      3.977845 ([ -6.643856,   5.643856])
+f              8      5.344726 ([  2.198344,   8.481529])
+P              9      2.750471 ([  1.000000,   5.643856])
+
+----- common model:  star_parameters
+
+====================================================================================================
+     Statistics on the physical parameters obtained from the posteriors samples     
+====================================================================================================
+
+----- dataset:  RVdata1
+offset_0         4779.515410 
+jitter_0            0.071132 
+
+
+----------  RVdata1      ----- model:  radial_velocities_b
+
+----------  RVdata1      ----- model:  radial_velocities_c
+
+----- common model:  b
+e                   0.208800 
+o                   0.644771 
+K                  11.811081 
+f                   3.094729 
+P                  14.313296 
+
+----- common model:  c
+e                   0.064027 
+o                   0.123258 
+K                  15.756167 
+f                   5.344726 
+P                   6.729369 
+
+----- common model:  star_parameters
+
+====================================================================================================
+     Statistics on the derived parameters obtained from the posteriors samples     
+====================================================================================================
+
+----- common model:  b
+Inclination randomized to 86.20 +- 3.00 deg
+a                  25.214541 
+i                  89.061340 
+M                   0.000133 
+M_Mj                0.139773 
+M_Me               44.432933 
+Tc               6010.150695 
+
+----- common model:  c
+Inclination randomized to 85.30 +- 3.00 deg
+a                  15.245471 
+i                  86.020988 
+M                   0.000142 
+M_Mj                0.148289 
+M_Me               47.140094 
+Tc               6002.552227 
+
+
+====================================================================================================
+     ------------------------------------------------------------------------------------------     
+====================================================================================================
+
+
+
+****************************************************************************************************
+
+ Plot FLAT chain 
+
+****************************************************************************************************
+
+ Plotting full_correlation plot with GetDist
+
+ Ignore the no burn in error warning from getdist
+ since burn in has been already removed from the chains
+Removed no burn in
+
+
+****************************************************************************************************
+
+ Plotting the chains... 
+
+****************************************************************************************************
+
+ Plotting the Gelman-Rubin traces... 
+
+     Gelman-Rubin:    10     1.001506 RVdata1_offset_0 
+     Gelman-Rubin:    11     1.000518 RVdata1_jitter_0 
+     Gelman-Rubin:     0     1.002067 b_sre_coso 
+     Gelman-Rubin:     1     0.999964 b_sre_sino 
+     Gelman-Rubin:     2     1.001365 b_K 
+     Gelman-Rubin:     3     1.004544 b_f 
+     Gelman-Rubin:     4     1.004128 b_P 
+     Gelman-Rubin:     5     1.001609 c_sre_coso 
+     Gelman-Rubin:     6     1.003025 c_sre_sino 
+     Gelman-Rubin:     7     1.004075 c_K 
+     Gelman-Rubin:     8     1.000718 c_f 
+     Gelman-Rubin:     9     1.000818 c_P 
+
+****************************************************************************************************
+
+ Plotting the common models corner plots
+     Common model:  b
+     Common model:  c
+     Common model:  star_parameters
+
+****************************************************************************************************
+
+ Dataset + models corner plots 
+
+     Dataset:  RVdata1     model:  radial_velocities_b  corner plot  done 
+     Dataset:  RVdata1     model:  radial_velocities_c  corner plot  done 
+
+****************************************************************************************************
+
+ Saving the planet variable samplings to files (with plots)
+
+****************************************************************************************************
+
+ Saving all the variable samplings to files (with plots)
+
+****************************************************************************************************
+
+ Computing the models for plot/data writing 
+ Writing the plots 
+ Writing the   data files 
+ Writing the  MAP_ data files 
+
+****************************************************************************************************
+
+ Writing Veusz-compatible files for personalized corner plots
+
+****************************************************************************************************
+

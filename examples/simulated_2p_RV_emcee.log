@@ -1,0 +1,272 @@
+WARNING! Imported pyorbit.classes.dummy dynesty, models relying on this package will not work
+WARNING! Imported pyorbit.classes.dummy celerite, models relying on this package will not work
+WARNING! Imported pyorbit.classes.dummy PyPolyChord, models relying on this package will not work
+PyORBIT v8.x
+
+Python version in use:
+3.7.3 (default, Mar 27 2019, 16:54:48) 
+[Clang 4.0.1 (tags/RELEASE_401/final)]
+
+
+reloaded_optimize:  False
+reloaded_pyde:  False
+reloaded_emcee_multirun:  False
+reloaded_emcee:  False
+Opening:  RVdata1
+Adding common model of planet:  b
+Using orbital model:  keplerian
+Using default orbital parametrization:  Eastman2013
+Inclination will be included as free parameter:  True
+
+Adding common model of planet:  c
+Using orbital model:  keplerian
+Using default orbital parametrization:  Eastman2013
+Inclination will be included as free parameter:  True
+
+
+====================================================================================================
+     Boundaries of the sampler variables     
+====================================================================================================
+
+----- dataset:  RVdata1
+offset_0      10  ([3753.920000, 5810.730000])
+jitter_0      11  ([  0.010000, 100.000000])
+
+----------  RVdata1      ----- model:  radial_velocities_b
+
+----------  RVdata1      ----- model:  radial_velocities_c
+
+----- common model:  b
+sre_coso       0  ([ -1.000000,   1.000000])
+sre_sino       1  ([ -1.000000,   1.000000])
+K              2  ([ -6.643856,   5.643856])
+f              3  ([  0.000000,   6.283185])
+P              4  ([  1.000000,   5.643856])
+
+----- common model:  c
+sre_coso       5  ([ -1.000000,   1.000000])
+sre_sino       6  ([ -1.000000,   1.000000])
+K              7  ([ -6.643856,   5.643856])
+f              8  ([  0.000000,   6.283185])
+P              9  ([  1.000000,   5.643856])
+
+----- common model:  star_parameters
+
+
+emcee version:  3.0rc2
+
+Include priors:  True
+
+Reference Time Tref:  6000.0
+
+Dimensions =  12
+Nwalkers =  48
+
+Using threading pool: True
+
+*************************************************************
+
+PyDE running
+Boundaries redefined after PyDE output
+PyDE completed
+
+====================================================================================================
+     Starting point of the sample/optimization routines    
+====================================================================================================
+
+----- dataset:  RVdata1
+offset_0      10   4779.509187 ([3753.920000, 5810.730000])
+jitter_0      11      0.023356 ([  0.010000, 100.000000])
+
+----------  RVdata1      ----- model:  radial_velocities_b
+
+----------  RVdata1      ----- model:  radial_velocities_c
+
+----- common model:  b
+sre_coso       0      0.367390 ([ -1.000000,   1.000000])
+sre_sino       1      0.268137 ([ -1.000000,   1.000000])
+K              2      3.570860 ([ -6.643856,   5.643856])
+f              3      3.113665 ([ -0.027928,   6.255257])
+P              4      3.840856 ([  1.000000,   5.643856])
+
+----- common model:  c
+sre_coso       5      0.259780 ([ -1.000000,   1.000000])
+sre_sino       6      0.019130 ([ -1.000000,   1.000000])
+K              7      3.981724 ([ -6.643856,   5.643856])
+f              8      5.339937 ([  2.198344,   8.481529])
+P              9      2.750663 ([  1.000000,   5.643856])
+
+----- common model:  star_parameters
+
+====================================================================================================
+     Starting point projected onto the physical space     
+====================================================================================================
+
+----- dataset:  RVdata1
+offset_0         4779.509187 
+jitter_0            0.023356 
+
+
+----------  RVdata1      ----- model:  radial_velocities_b
+
+----------  RVdata1      ----- model:  radial_velocities_c
+
+----- common model:  b
+e                   0.206873 
+o                   0.630475 
+K                  11.883267 
+f                   3.113665 
+P                  14.328896 
+
+----- common model:  c
+e                   0.067851 
+o                   0.073508 
+K                  15.798593 
+f                   5.339937 
+P                   6.730265 
+
+----- common model:  star_parameters
+
+====================================================================================================
+     Derived parameters obtained from starting point     
+====================================================================================================
+
+----- common model:  b
+Inclination randomized to 86.20 +- 3.00 deg
+a                  25.041937 
+i                  83.247848 
+M                   0.000132 
+M_Mj                0.138339 
+M_Me               43.977302 
+Tc               6010.115945 
+
+----- common model:  c
+Inclination randomized to 85.30 +- 3.00 deg
+a                  15.131462 
+i                  79.854026 
+M                   0.000140 
+M_Mj                0.147081 
+M_Me               46.756062 
+Tc               6002.548616 
+
+
+====================================================================================================
+     Statistics on the log-likelihood     
+====================================================================================================
+
+ LN probability:  -173.543812 
+
+====================================================================================================
+     ------------------------------------------------------------------------------------------     
+====================================================================================================
+
+
+
+Running emcee
+
+ Computing the autocorrelation time of the chains
+ Reference thinning used in the analysis: 100
+
+          sample variable      ACF        ACF * nthin
+          RVdata1_offset_0     1.682     168.2
+          RVdata1_jitter_0     1.946     194.6
+          b_sre_coso           1.679     167.9
+          b_sre_sino           1.737     173.7
+          b_K                  1.690     169.0
+          b_f                  1.816     181.6
+          b_P                  1.712     171.2
+          c_sre_coso           1.707     170.7
+          c_sre_sino           1.625     162.5
+          c_K                  1.560     156.0
+          c_f                  1.786     178.6
+          c_P                  1.781     178.1
+
+====================================================================================================
+     Statistics on the posterior of the sampler variables     
+====================================================================================================
+
+----- dataset:  RVdata1
+offset_0      10   4779.511299      -0.105199      0.103864 (15-84 p) ([3753.920000, 5810.730000])
+jitter_0      11      0.295332      -0.192329      0.200659 (15-84 p) ([ 0.010000, 100.000000])
+
+----------  RVdata1      ----- model:  radial_velocities_b
+
+----------  RVdata1      ----- model:  radial_velocities_c
+
+----- common model:  b
+sre_coso       0      0.366554      -0.020795      0.019615 (15-84 p) ([-1.000000,  1.000000])
+sre_sino       1      0.266360      -0.030315      0.028725 (15-84 p) ([-1.000000,  1.000000])
+K              2      3.570609      -0.020314      0.020103 (15-84 p) ([-6.643856,  5.643856])
+f              3      3.114349      -0.025803      0.026437 (15-84 p) ([-0.027928,  6.255257])
+P              4      3.840885      -0.001462      0.001448 (15-84 p) ([ 1.000000,  5.643856])
+
+----- common model:  c
+sre_coso       5      0.255629      -0.020471      0.018366 (15-84 p) ([-1.000000,  1.000000])
+sre_sino       6      0.018831      -0.037476      0.037036 (15-84 p) ([-1.000000,  1.000000])
+K              7      3.981007      -0.014099      0.014164 (15-84 p) ([-6.643856,  5.643856])
+f              8      5.338179      -0.022893      0.023326 (15-84 p) ([ 2.198344,  8.481529])
+P              9      2.750601      -0.000638      0.000659 (15-84 p) ([ 1.000000,  5.643856])
+
+----- common model:  star_parameters
+
+====================================================================================================
+     Statistics on the physical parameters obtained from the posteriors samples     
+====================================================================================================
+
+----- dataset:  RVdata1
+offset_0         4779.511299         -0.105199         0.103864 (15-84 p)
+jitter_0            0.295332         -0.192329         0.200659 (15-84 p)
+
+
+----------  RVdata1      ----- model:  radial_velocities_b
+
+----------  RVdata1      ----- model:  radial_velocities_c
+
+----- common model:  b
+e                   0.205842         -0.014831         0.014489 (15-84 p)
+o                   0.627659         -0.071036         0.070272 (15-84 p)
+K                  11.881202         -0.166125         0.166716 (15-84 p)
+f                   3.114349         -0.025803         0.026437 (15-84 p)
+P                  14.329193         -0.014516         0.014385 (15-84 p)
+
+----- common model:  c
+e                   0.067052         -0.009938         0.009591 (15-84 p)
+o                   0.073055         -0.145695         0.143894 (15-84 p)
+K                  15.790736         -0.153570         0.155796 (15-84 p)
+f                   5.338179         -0.022893         0.023326 (15-84 p)
+P                   6.729975         -0.002975         0.003073 (15-84 p)
+
+----- common model:  star_parameters
+
+====================================================================================================
+     Statistics on the derived parameters obtained from the posteriors samples     
+====================================================================================================
+
+----- common model:  b
+Inclination randomized to 86.20 +- 3.00 deg
+Computing exact mass of the planet (average approximate mass larger than 30.0 Me)
+a                  24.812241         -0.511239         0.526772 (15-84 p)
+i                  86.201324         -3.066390         2.944325 (15-84 p)
+M                   0.000133         -0.000003         0.000003 (15-84 p)
+M_Mj                0.139362         -0.002647         0.002749 (15-84 p)
+M_Me               44.302264         -0.841348         0.873949 (15-84 p)
+Tc               6010.118110         -0.069062         0.068485 (15-84 p)
+
+----- common model:  c
+Inclination randomized to 85.30 +- 3.00 deg
+Computing exact mass of the planet (average approximate mass larger than 30.0 Me)
+a                  14.992146         -0.307183         0.314680 (15-84 p)
+i                  85.364434         -3.065787         3.022374 (15-84 p)
+M                   0.000140         -0.000002         0.000002 (15-84 p)
+M_Mj                0.147011         -0.002569         0.002565 (15-84 p)
+M_Me               46.734073         -0.816773         0.815246 (15-84 p)
+Tc               6002.554121         -0.033449         0.031894 (15-84 p)
+
+
+====================================================================================================
+     ------------------------------------------------------------------------------------------     
+====================================================================================================
+
+
+
+emcee completed
