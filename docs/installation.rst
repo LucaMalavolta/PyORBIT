@@ -1,7 +1,7 @@
 .. _installation:
 
-Installation
-============
+Downloading  PyORBIT
+====================
 
 Before proceeding with the installation, I suggest to create an environment dedicated to ``PyORBIT``. With conda/anaconda:
 
@@ -24,6 +24,15 @@ To activate the ``pyorbit`` environment:
   WINDOWS: activate pyorbit
   LINUX, macOS: source activate pyorbit
 
+
+To download ``PyORBIT`` from the repository:
+
+.. code:: bash
+
+  git clone https://github.com/LucaMalavolta/PyORBIT.git
+
+Right now the code is not installable, so ``python setup.py install`` will not work.
+Software requirements can be satisfied after downloading the code from the repository.
 
 .. _requirements-label:
 
