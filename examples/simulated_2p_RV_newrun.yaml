@@ -1,0 +1,49 @@
+inputs:
+  RVdata1:
+      file: simulated_dataset/simulated_2p_RV.dat
+      kind: RV
+      models:
+        - radial_velocities
+common:
+  planets:
+    b:
+      orbit: keplerian #circular #dynamical
+      boundaries:
+        P: [2.0, 50.0]
+        e: [0.0, 0.5]
+        K: [0.01, 50.0]
+      fixed:
+        i: [86.2, 3.0]
+    c:
+      orbit: keplerian
+      boundaries:
+        P: [2.0, 50.0]
+        e: [0.0, 0.5]
+        K: [0.01, 50.0]
+      fixed:
+        i: [85.3, 3.0]
+  star_parameters:
+    priors:
+      mass: ['Gaussian', 1.00, 0.02]
+      radius: ['Gaussian', 1.00, 0.02]
+models:
+  radial_velocities:
+    planets:
+      - b
+      - c
+parameters:
+  Tref: 6000.0000
+solver:
+  pyde:
+    ngen: 4000
+    npop_mult: 4
+  emcee:
+    npop_mult: 4
+    nsteps: 20000
+    nburn: 5000
+    thin: 100
+  nested_sampling:
+    nlive: 1000
+    num_repeats_mult: 5
+    sampling_efficiency: 0.30
+  recenter_bounds: True
