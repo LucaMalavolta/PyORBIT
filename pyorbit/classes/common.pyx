@@ -4,10 +4,30 @@ import sys
 from scipy import stats
 from scipy.interpolate import splrep, splev
 import pyorbit.classes.constants as constants
-import yaml
-import gc
 
-if 'celerite' not in sys.modules:
+"""
+from pyorbit.classes.common import np
+from pyorbit.classes.common import get_var_log
+from pyorbit.classes.common import get_var_exp
+from pyorbit.classes.common import get_var_val
+from pyorbit.classes.common import get_fix_val
+from pyorbit.classes.common import get_2var_sre
+from pyorbit.classes.common import get_2var_e
+from pyorbit.classes.common import get_2var_o
+from pyorbit.classes.common import get_2var_c1
+from pyorbit.classes.common import get_2var_c2
+from pyorbit.classes.common import get_2darray_from_val
+from pyorbit.classes.common import giveback_priors
+from pyorbit.classes.common import nested_sampling_prior_prepare
+from pyorbit.classes.common import nested_sampling_prior_compute
+from pyorbit.classes.common import compute_value_sigma
+from pyorbit.classes.common import pick_MAP_parameters
+from pyorbit.classes.common import convert_rho_to_a
+from pyorbit.classes.common import convert_b_to_i
+"""
+
+
+if 'DiffEvol' not in sys.modules:
 
     try:
         import dynesty
@@ -263,7 +283,7 @@ def nested_sampling_prior_prepare(kind, bounds, pams, space):
         return pams
 
     """ All the following priors are defined only if the variable is sampled in the Natural space"""
-    if space is not 'Linear':
+    if space != 'Linear':
         print()
         print(' *** ERROR in the YAML file ***')
         print(' You are using a prior that is not supported in a not-Linear sampling space')

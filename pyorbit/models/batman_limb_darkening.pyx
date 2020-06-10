@@ -1,5 +1,10 @@
-from pyorbit.models.abstract_common import *
-from pyorbit.models.abstract_model import *
+from pyorbit.classes.common import \
+  get_2var_c1,\
+  get_2var_c2,\
+  nested_sampling_prior_prepare
+
+from pyorbit.models.abstract_common import AbstractCommon
+
 
 class LimbDarkening_1Pam(AbstractCommon):
     ''' This class must be created for each planet in the system

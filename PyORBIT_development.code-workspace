@@ -3,5 +3,8 @@
 		{
 			"path": "."
 		}
-	]
+	],
+	"settings": {
+		"python.pythonPath": "/anaconda3/envs/pyorbit/bin/python"
+	}
 }

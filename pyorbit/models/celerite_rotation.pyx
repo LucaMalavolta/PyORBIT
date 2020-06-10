@@ -1,5 +1,4 @@
-from pyorbit.classes.common import *
-from pyorbit.models.abstract_common import AbstractCommon
+from pyorbit.classes.common import np
 from pyorbit.models.abstract_model import AbstractModel
 from celerite.terms import SHOTerm, TermSum
 
@@ -32,6 +31,7 @@ class Celerite_Rotation_Term(TermSum):
     # to explore in logarithmic space
 
     parameter_names = ("period", "Q0", "deltaQ", "mix", "amp")
+
     def __init__(self, **kwargs):
         super(Celerite_Rotation_Term, self).__init__(**kwargs)
 
