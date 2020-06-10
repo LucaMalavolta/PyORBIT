@@ -7,7 +7,7 @@ inputs:
 common:
   planets:
     b:
-      orbit: dynamical #circular #dynamical
+      orbit: keplerian #circular #dynamical
       boundaries:
         P: [2.0, 50.0]
         e: [0.0, 0.5]

@@ -42,13 +42,13 @@ parameters:
   Tref: 7800.0
 solver:
   pyde:
-    ngen: 500
+    ngen: 4000
     npop_mult: 8
   emcee:
     npop_mult: 8
-    nsteps: 5000
-    nburn: 1000
-    thin: 1
+    nsteps: 20000
+    nburn: 5000
+    thin: 100
   nested_sampling:
     nlive: 1000
     num_repeats_mult: 5
