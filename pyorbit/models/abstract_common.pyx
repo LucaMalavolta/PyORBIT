@@ -1,5 +1,23 @@
-from pyorbit.classes.common import np, get_var_val, get_var_exp, get_fix_val,\
-    get_2darray_from_val, nested_sampling_prior_prepare, giveback_priors
+from pyorbit.classes.common import \
+  np,\
+  get_var_log,\
+  get_var_exp,\
+  get_var_val,\
+  get_fix_val,\
+  get_2var_sre,\
+  get_2var_sre,\
+  get_2var_o,\
+  get_2var_c1,\
+  get_2var_c2,\
+  get_2darray_from_val,\
+  giveback_priors,\
+  nested_sampling_prior_transformation,\
+  nested_sampling_prior_prepare,\
+  nested_sampling_prior_compute,\
+  compute_value_sigma,\
+  pick_MAP_parameters,\
+  convert_rho_to_a,\
+  convert_b_to_i
 
 
 class AbstractCommon(object):
