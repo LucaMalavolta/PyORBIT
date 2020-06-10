@@ -26,7 +26,7 @@ def dynesty():
     pass
 
 ## absurd workaround to fix the lack of celerite in the system
-def Celerite_QuasiPeriodicActivity():
+def Celerite_Rotation():
     pass
 
 

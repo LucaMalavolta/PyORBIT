@@ -26,7 +26,7 @@ if 'celerite' not in sys.modules:
         import autograd.numpy as np
     except:
         import numpy as np
-        from pyorbit.classes.dummy import Celerite_QuasiPeriodicActivity
+        from pyorbit.classes.dummy import Celerite_Rotation
         print('WARNING! Imported pyorbit.classes.dummy celerite, models relying on this package will not work')
 
     try:

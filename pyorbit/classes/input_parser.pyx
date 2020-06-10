@@ -85,7 +85,7 @@ define_type_to_class = {
     'gp_quasiperiodic_shared': GaussianProcess_QuasiPeriodicActivity_Shared,
     'gp_quasiperiodic_alternative': GaussianProcess_QuasiPeriodicActivity_Alternative,
     'gp_quasiperiodic_derivative': GaussianProcess_QuasiPeriodicActivity_Derivative,
-    'celerite_quasiperiodic': Celerite_QuasiPeriodicActivity,
+    'celerite_rotation': Celerite_Rotation,
     'local_correlation': LocalCorrelation,
     'polynomial_trend': PolynomialTrend,
     'local_polynomial_trend': LocalPolynomialTrend,

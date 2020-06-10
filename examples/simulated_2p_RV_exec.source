@@ -1,2 +1,0 @@
-python ../PyORBIT_Run.py emcee simulated_2p_RV.yaml > simulated_2p_RV_emcee.log 
-python ../PyORBIT_GetResults.py emcee simulated_2p_RV.yaml -all > simulated_2p_RV_emcee_getresults.log
