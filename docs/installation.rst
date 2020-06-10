@@ -1,7 +1,7 @@
 .. _installation:
 
-Downloading  PyORBIT
-====================
+Installing PyORBIT
+==================
 
 Before proceeding with the installation, I suggest to create an environment dedicated to ``PyORBIT``. With conda/anaconda:
 
