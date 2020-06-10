@@ -7,7 +7,7 @@ Before proceeding with the installation, I suggest to create an environment dedi
 
 .. code:: bash
 
-  conda create --name pyrbit python=3
+  conda create --name pyorbit python=3
 
 To list the available environment do:
 
@@ -108,8 +108,14 @@ From the `pyDE source repository`_
 ``emcee``
 ---------
 
-I’m currently using the latest version of emcee (Version 3.0 at the moment of writing), installed from the source repository:
-* UPDATE * There is a bug concerning the version numbering of emcee that must be fixed before installation 
+I’m currently using the latest version of emcee (Version 3.0 at the moment of writing), which can be installed with pip:
+
+.. code:: bash
+
+  pip install emcee
+
+
+If you want to install from the source repository, there is a bug concerning the version numbering of emcee that must be fixed before installation:
 
 .. code:: bash
 

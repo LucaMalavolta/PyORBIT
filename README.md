@@ -3,7 +3,7 @@
 ## `PyORBIT` version 8.0 by Luca Malavolta - February 2019
 
 **News** 
-PyORBIT is now fully compatible with both Python2 and Pyton3! 
+PyORBIT is now fully compatible with both Python2 and Python3! 
 Starting with Version 7 it is now possible to fit planetary transits!
 
 **Warnings**
