@@ -5,6 +5,16 @@ from pyorbit.models.abstract_model import *
 import pyorbit.classes.kepler_exo as kepler_exo
 from pyorbit.classes.results_analysis import get_stellar_parameters
 
+try:
+    import ttvfast
+except ImportError:
+    pass
+
+try:
+    from pytrades_lib import pytrades
+except ImportError:
+    pass
+
 """
 New changes:
     mc.variables  is now called  mc.transformation
@@ -237,8 +247,21 @@ class DynamicalIntegrator:
         """
 
         if self.dynamical_integrator == 'TRADES':
+            try:
+                from pytrades_lib import pytrades
+            except ImportError:
+                print("ERROR: TRADES not installed, this will not work")
+                quit()
+            
             self.prepare_trades(mc)
+
         if self.dynamical_integrator == 'ttvfast':
+            try:
+                import ttvfast
+            except ImportError:
+                print("ERROR: ttvfast not installed, this will not work")
+                quit()
+            
             self.prepare_ttvfast(mc)
         return
 

@@ -37,8 +37,7 @@ class GaussianProcess_QuasiPeriodicActivity_Alternative(AbstractModel):
 
     def __init__(self, *args, **kwargs):
         super(GaussianProcess_QuasiPeriodicActivity_Alternative, self).__init__(*args, **kwargs)
-
-
+        
         self._dist_t1 = {}
         self._dist_t2 = {}
 
@@ -70,7 +69,7 @@ class GaussianProcess_QuasiPeriodicActivity_Alternative(AbstractModel):
     def lnlk_compute(self, variable_value, dataset):
         """ 2 steps:
            1) theta parameters must be converted in physical units (e.g. from logarithmic to linear spaces)
-           2) physical values must be converted to {\tt george} input parameters
+           2) physical values must be converted to GP input parameters
         """
 
         env = dataset.e ** 2.0 + dataset.jitter ** 2.0

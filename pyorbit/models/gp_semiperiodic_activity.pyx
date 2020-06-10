@@ -2,6 +2,10 @@ from pyorbit.classes.common import *
 from pyorbit.models.abstract_common import *
 from pyorbit.models.abstract_model import *
 
+try:
+    import george
+except:
+    pass
 
 class GaussianProcess_QuasiPeriodicActivity(AbstractModel):
     ''' Three parameters out of four are the same for all the datasets, since they are related to
@@ -41,6 +45,12 @@ class GaussianProcess_QuasiPeriodicActivity(AbstractModel):
 
     def __init__(self, *args, **kwargs):
         super(GaussianProcess_QuasiPeriodicActivity, self).__init__(*args, **kwargs)
+
+        try:
+            import george
+        except ImportError:
+            print("ERROR: george not installed, this will not work")
+            quit()
 
         self.gp = {}
         self.use_HODLR = False

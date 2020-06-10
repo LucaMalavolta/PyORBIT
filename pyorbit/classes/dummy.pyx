@@ -1,17 +1,13 @@
+import sys
+
+class celerite(object):
+    pyorbit_dummy = True
+
 def pytrades():
     pass
 
-def DiffEvol():
-    pass
-
-def PyPolyChord():
-    pass
-
-def PolyChord():
-    pass
-
-def celerite():
-    pass
+#def celerite():
+#    pass
 
 def ttvfast():
     pass
@@ -19,11 +15,9 @@ def ttvfast():
 def george():
     pass
 
-def batman():
-    pass
 
-def dynesty():
-    pass
+class batman(object):
+    pyorbit_dummy = True
 
 ## absurd workaround to fix the lack of celerite in the system
 def Celerite_Rotation():

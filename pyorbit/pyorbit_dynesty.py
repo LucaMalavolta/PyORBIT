@@ -1,8 +1,9 @@
 from __future__ import print_function
-from pyorbit.classes.common import *
+#from pyorbit.classes.common import *
 from pyorbit.classes.model_container_dynesty import ModelContainerDynesty
 from pyorbit.classes.input_parser import yaml_parser, pars_input
-from pyorbit.classes.io_subroutines import nested_sampling_save_to_cpickle, nested_sampling_load_from_cpickle, nested_sampling_create_dummy_file
+from pyorbit.classes.io_subroutines import nested_sampling_save_to_cpickle, \
+    nested_sampling_load_from_cpickle, nested_sampling_create_dummy_file
 import pyorbit.classes.results_analysis as results_analysis
 import os
 import sys
@@ -17,9 +18,7 @@ def show(filepath):
     elif os.name == 'nt': os.startfile(filepath)
 """
 
-
 def pyorbit_dynesty(config_in, input_datasets=None, return_output=None):
-
 
     output_directory = './' + config_in['output'] + '/dynesty/'
 
@@ -46,8 +45,12 @@ def pyorbit_dynesty(config_in, input_datasets=None, return_output=None):
     print('*************************************************************')
     print()
 
-    import dynesty
-
+    try:
+        import dynesty
+    except ImportError:
+        print("ERROR: dynesty not installed, this will not work")
+        quit()
+    
     # "Standard" nested sampling.
     sampler = dynesty.NestedSampler(mc.dynesty_call, mc.dynesty_priors, mc.ndim)
     sampler.run_nested()

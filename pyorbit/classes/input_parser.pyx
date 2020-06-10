@@ -1,9 +1,9 @@
 from __future__ import print_function
 from pyorbit.models.dataset import Dataset
 import sys
-import yaml 
+import yaml
 
-from pyorbit.classes.common import np
+from pyorbit.classes.common import np, get_2darray_from_val
 
 from pyorbit.models.planets import CommonPlanets
 from pyorbit.models.activity import CommonActivity
@@ -21,35 +21,32 @@ from pyorbit.models.gp_semiperiodic_activity_common import \
 from pyorbit.models.gp_semiperiodic_activity_shared import \
     GaussianProcess_QuasiPeriodicActivity_Shared
 
-from ..models.gp_semiperiodic_activity_alternative import \
+from pyorbit.models.gp_semiperiodic_activity_alternative import \
     GaussianProcess_QuasiPeriodicActivity_Alternative
 
-from ..models.gp_semiperiodic_activity_derivative import \
+from pyorbit.models.gp_semiperiodic_activity_derivative import \
     GaussianProcess_QuasiPeriodicActivity_Derivative
 
-if 'celerite' in sys.modules:
-    from ..models.celerite_rotation import Celerite_Rotation
-else:
-    from pyorbit.classes.common import Celerite_Rotation
+from pyorbit.models.celerite_rotation import Celerite_Rotation
 
-from ..models.correlations import LocalCorrelation
-from ..models.correlated_jitter import LocalCorrelatedJitter
-from ..models.polynomial_trend import CommonPolynomialTrend, PolynomialTrend, \
-    LocalPolynomialTrend
-from ..models.common_offset import CommonOffset, Offset
-from ..models.common_jitter import CommonJitter, Jitter
-from ..models.sinusoid_common_period import SinusoidCommonPeriod
+from pyorbit.models.correlations import LocalCorrelation
+from pyorbit.models.correlated_jitter import LocalCorrelatedJitter
+from pyorbit.models.polynomial_trend import CommonPolynomialTrend, \
+    PolynomialTrend, LocalPolynomialTrend
+from pyorbit.models.common_offset import CommonOffset, Offset
+from pyorbit.models.common_jitter import CommonJitter, Jitter
+from pyorbit.models.sinusoid_common_period import SinusoidCommonPeriod
 
-from ..models.batman_limb_darkening import Batman_LimbDarkening_Linear, \
+from pyorbit.models.batman_limb_darkening import Batman_LimbDarkening_Linear, \
     Batman_LimbDarkening_Quadratic, \
     Batman_LimbDarkening_SquareRoot, Batman_LimbDarkening_Logarithmic, \
     Batman_LimbDarkening_Exponential, Batman_LimbDarkening_Power2, \
     Batman_LimbDarkening_NonLinear
 
-from ..models.dilution_factor import CommonDilutionFactor, DilutionFactor
-from ..models.normalization_factor import CommonNormalizationFactor, \
+from pyorbit.models.dilution_factor import CommonDilutionFactor, DilutionFactor
+from pyorbit.models.normalization_factor import CommonNormalizationFactor, \
     NormalizationFactor
-from ..models.star_parameters import CommonStarParameters
+from pyorbit.models.star_parameters import CommonStarParameters
 
 __all__ = ["pars_input", "yaml_parser"]
 

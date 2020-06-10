@@ -1,4 +1,4 @@
-from pyorbit.classes.common import *
+from pyorbit.classes.common import np, nested_sampling_prior_compute
 from pyorbit.classes.model_container_abstract import ModelContainer
 
 
@@ -10,7 +10,7 @@ class ModelContainerDynesty(ModelContainer):
         # Default values, taken from the PyPolyChord wrapper in PolyChord official distribution, V1.9
         self.include_priors = False
         self.nested_sampling_parameters = {'shutdown_jitter': False,
-                                     'include_priors': False}
+                                    'include_priors': False}
 
         self.output_directory = None
 

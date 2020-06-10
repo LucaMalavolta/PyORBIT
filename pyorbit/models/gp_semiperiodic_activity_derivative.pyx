@@ -2,6 +2,10 @@ from pyorbit.classes.common import *
 from pyorbit.models.abstract_common import *
 from pyorbit.models.abstract_model import *
 
+try:
+    import george
+except:
+    pass
 from scipy.linalg import cho_factor, cho_solve, LinAlgError
 from scipy import spatial
 
@@ -35,6 +39,11 @@ class GaussianProcess_QuasiPeriodicActivity_Derivative(AbstractModel):
     def __init__(self, *args, **kwargs):
         super(GaussianProcess_QuasiPeriodicActivity_Derivative, self).__init__(*args, **kwargs)
 
+        try:
+            import george
+        except ImportError:
+            print("ERROR: george not installed, this will not work")
+            quit()
 
         self._dist_t1 = {}
         self._dist_t2 = {}

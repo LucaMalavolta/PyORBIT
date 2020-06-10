@@ -1,8 +1,12 @@
-from pyorbit.classes.common import *
+from pyorbit.classes.common import np, convert_rho_to_a, convert_b_to_i
 import pyorbit.classes.constants as constants
 import pyorbit.classes.kepler_exo as kepler_exo
-from pyorbit.models.abstract_model import *
+from pyorbit.models.abstract_model import AbstractModel
 
+try:
+    import batman
+except ImportError:
+    pass
 
 class Batman_Transit_With_TTV(AbstractModel):
     model_class = 'transit'
@@ -12,6 +16,12 @@ class Batman_Transit_With_TTV(AbstractModel):
 
     def __init__(self, *args, **kwargs):
         super(Batman_Transit_With_TTV, self).__init__(*args, **kwargs)
+
+        try:
+            import batman
+        except ImportError:
+            print("ERROR: batman not installed, this will not work")
+            quit()
 
         # Must be moved here because it will updated depending on the selected limb darkening
         self.list_pams_common = {

@@ -1,7 +1,8 @@
 from pyorbit.classes.common import \
-  get_2var_c1,\
-  get_2var_c2,\
-  nested_sampling_prior_prepare
+    get_var_val,\
+    get_2var_c1,\
+    get_2var_c2,\
+    nested_sampling_prior_prepare
 
 from pyorbit.models.abstract_common import AbstractCommon
 
@@ -16,7 +17,8 @@ class LimbDarkening_1Pam(AbstractCommon):
         'ld_c1'
     }
 
-    """These default boundaries are used when the user does not define them in the yaml file"""
+    """These default boundaries are used when the user does not define them
+    in the yaml file"""
     default_bounds = {
         'ld_c1': [0.00, 1.00]
 
@@ -49,7 +51,8 @@ class LimbDarkening_2Pam(AbstractCommon):
         'ld_q2'
     }
 
-    """These default boundaries are used when the user does not define them in the yaml file"""
+    """These default boundaries are used when the user does not define them
+    in the yaml file"""
     default_bounds = {
         'ld_c1': [0.00, 1.00],
         'ld_c2': [0.00, 1.00],
@@ -126,12 +129,13 @@ class LimbDarkening_2Pam(AbstractCommon):
                 self.prior_pams[var] = self.default_priors[var][1]
 
             nested_coeff = nested_sampling_prior_prepare(self.prior_kind[var],
-                                                          output_lists['bounds'][-1],
-                                                          self.prior_pams[var],
-                                                          self.spaces[var])
+                                                         output_lists['bounds'][-1],
+                                                         self.prior_pams[var],
+                                                         self.spaces[var])
 
             output_lists['spaces'].append(self.spaces[var])
-            output_lists['priors'].append([self.prior_kind[var], self.prior_pams[var], nested_coeff])
+            output_lists['priors'].append(
+                [self.prior_kind[var], self.prior_pams[var], nested_coeff])
 
             self.variable_sampler[var] = ndim
             ndim += 1
@@ -153,13 +157,14 @@ class LimbDarkening_2Pam(AbstractCommon):
         return ndim, output_lists, True
 
     def define_special_starting_point(self, starting_point, var_sampler):
-        if var_sampler == 'ld_q1' or var_sampler=='ld_q2':
+        if var_sampler == 'ld_q1' or var_sampler == 'ld_q2':
 
             if 'ld_c1' in self.starts and 'ld_c2' in self.starts:
                 starting_point[self.variable_sampler['ld_q1']] = \
                     self.starts['ld_c1']**2 + self.starts['ld_c2']**2
                 starting_point[self.variable_sampler['ld_q2']] = \
-                    self.starts['ld_c1']/(self.starts['ld_c1'] + self.starts['ld_c2'])/2.0
+                    self.starts['ld_c1'] / \
+                    (self.starts['ld_c1'] + self.starts['ld_c2'])/2.0
 
             return True
         return False
@@ -178,7 +183,8 @@ class LimbDarkening_4Pam(AbstractCommon):
         'ld_c4'
     }
 
-    """These default boundaries are used when the user does not define them in the yaml file"""
+    """These default boundaries are used when the user does not define them
+    in the yaml file"""
     default_bounds = {
         'ld_c1': [0.00, 1.00],
         'ld_c2': [0.00, 1.00],
@@ -239,4 +245,3 @@ class Batman_LimbDarkening_Power2(LimbDarkening_1Pam):
 class Batman_LimbDarkening_NonLinear(LimbDarkening_4Pam):
     model_class = 'batman_ld_nonlinear'
     ld_type = 'nonlinear'
-

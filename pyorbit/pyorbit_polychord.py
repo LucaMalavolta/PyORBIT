@@ -54,6 +54,19 @@ def pyorbit_polychord(config_in, input_datasets=None, return_output=None):
     print('*************************************************************')
     print()
 
+    try:
+        import pypolychord
+        from pypolychord.settings import PolyChordSettings
+    except ImportError:
+        try:
+            import PyPolyChord
+            from PyPolyChord.settings import PolyChordSettings
+            print('Consider updating to newer version of PolyChord: https://github.com/PolyChord/PolyChordLite ')
+        except ImportError:
+            from pyorbit.classes.dummy import PyPolyChord
+            print('ERROR: pypolychord not installed, this will not work')
+            quit()
+
     settings = PolyChordSettings(nDims=mc.ndim, nDerived=0)
 
     settings.file_root = 'pyorbit'

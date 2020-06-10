@@ -1,5 +1,5 @@
-from pyorbit.classes.common import *
-from pyorbit.models.abstract_common import *
+from pyorbit.classes.common import np
+from pyorbit.models.abstract_common import AbstractCommon
 
 # Trying to guess all the possible mistakes....
 kind_definition = {
@@ -11,7 +11,7 @@ kind_definition = {
     'BIS': ['BIS', 'bis'],
     'Ca_HK': ['Ca', 'Cahk', 'CaHK', 'Ca_hk', 'Ca_HK',
               'logR', 'logRhk', 'logRHK', 'logR_hk', 'logR_HK',
-              'log(R)', 'log(Rhk)', 'log(RHK)', 'log(R_hk)', 'log(R_HK)' ],
+              'log(R)', 'log(Rhk)', 'log(RHK)', 'log(R_hk)', 'log(R_HK)'],
     'S_index': ['S', 'S_index', 'Shk', 'SHK', 'S_HK', 'S_hk']
 }
 
@@ -62,10 +62,11 @@ class Dataset(AbstractCommon):
         self.recenter_pams = {}
 
         self.Tref = None
-        self.residuals= None
+        self.residuals = None
         self.residuals_for_regression = None
         self.model = None
-        self.external_model = None # this model is compute externally and passed to the compute subroutine of the model
+        # this model is compute externally and passed to the compute subroutine of the model
+        self.external_model = None
         self.additive_model = None
         self.unitary_model = None
         self.normalization_model = None
@@ -79,7 +80,8 @@ class Dataset(AbstractCommon):
         data_input[:, :np.size(data, axis=1)] = data[:, :]
         return data_input
 
-    def define_dataset_base(self, data_input, update=False, flag_shutdown_jitter=False):
+    def define_dataset_base(self, data_input, update=False,
+                            flag_shutdown_jitter=False):
         # Add a flag to save internally the input dataset
 
         if flag_shutdown_jitter:
@@ -113,7 +115,8 @@ class Dataset(AbstractCommon):
                                            'linear': [-1., 1.]}
 
             if self.kind == 'Phot':
-                self.generic_default_bounds['offset'][0] = -1000.0 * np.max(self.e)
+                self.generic_default_bounds['offset'][0] = - \
+                    1000.0 * np.max(self.e)
 
             self.create_systematic_dictionaries('jitter', data_input[:, 3])
             self.create_systematic_dictionaries('offset', data_input[:, 4])
@@ -146,7 +149,8 @@ class Dataset(AbstractCommon):
             self.mask[var][(abs(dataset_vals - ii) < 0.1)] = True
 
     def delete_systematic_dictionaries_mask(self, var_generic):
-        if var_generic not in self.variable_compressed: return
+        if var_generic not in self.variable_compressed:
+            return
         for var in self.variable_compressed[var_generic]:
             self.list_pams.pop(var, None)
             self.default_bounds.pop(var, None)
@@ -192,8 +196,8 @@ class Dataset(AbstractCommon):
             self.model = self.additive_model + self.external_model
         else:
             self.model = self.additive_model + \
-                         self.external_model + \
-                         (1. + self.unitary_model)*self.normalization_model
+                self.external_model + \
+                (1. + self.unitary_model)*self.normalization_model
 
     def compute_model_from_arbitrary_datasets(self, additive_model, unitary_model, normalization_model, external_model):
         if normalization_model is None or unitary_model is None:

@@ -24,73 +24,37 @@ from pyorbit.classes.common import compute_value_sigma
 from pyorbit.classes.common import pick_MAP_parameters
 from pyorbit.classes.common import convert_rho_to_a
 from pyorbit.classes.common import convert_b_to_i
+from pyorbit.classes.common import celerite, pytrades, ttvfast, george, batman
+
 """
 
+class dummy_import(object):
+    pyorbit_dummy = True
+    def __init__(self):
+        pass
 
-if 'DiffEvol' not in sys.modules:
+class dummy_import_4args(object):
+    pyorbit_dummy = True
+    def __init__(self, a, b, c):
+        pass
 
-    try:
-        import dynesty
-    except:
-        from pyorbit.classes.dummy import dynesty
-        print('WARNING! Imported pyorbit.classes.dummy dynesty, models relying on this package will not work')
+try:
+    import celerite
+    import autograd.numpy as np
+except ImportError:
+    import numpy as np
 
-    try:
-        from pyde.de import DiffEvol
-    except:
-        from pyorbit.classes.dummy import DiffEvol
-        print('WARNING! Imported pyorbit.classes.dummy pyde, nothing will work')
+try:
+    if os.path.isdir('/Users/malavolta/Astro/CODE/others/trades'):
+        sys.path.insert(0, '/Users/malavolta/Astro/CODE/others/trades/pytrades/')
+    elif os.path.isdir('/Users/malavolta/Astro/CODE/trades'):
+        sys.path.insert(0, '/Users/malavolta/Astro/CODE/trades/pytrades/')
+    else:
+        sys.path.insert(0, '/home/malavolta/CODE/others/trades/pytrades/')
+    #from pytrades_lib import pytrades
+except:
+    pass
 
-    try:
-        import celerite
-        import autograd.numpy as np
-    except:
-        import numpy as np
-        from pyorbit.classes.dummy import Celerite_Rotation
-        print('WARNING! Imported pyorbit.classes.dummy celerite, models relying on this package will not work')
-
-    try:
-        import pypolychord
-        from pypolychord.settings import PolyChordSettings
-    except ImportError:
-
-        try:
-            import PyPolyChord
-            from PyPolyChord.settings import PolyChordSettings
-            print('Consider updating to newer version of PolyChord: https://github.com/PolyChord/PolyChordLite ')
-        except ImportError:
-            from pyorbit.classes.dummy import PyPolyChord
-            print('WARNING! Imported pyorbit.classes.dummy PyPolyChord, models relying on this package will not work')
-
-    try:
-        if os.path.isdir('/Users/malavolta/Astro/CODE/others/trades'):
-            sys.path.insert(0, '/Users/malavolta/Astro/CODE/others/trades/pytrades/')
-        elif os.path.isdir('/Users/malavolta/Astro/CODE/trades'):
-            sys.path.insert(0, '/Users/malavolta/Astro/CODE/trades/pytrades/')
-        else:
-            sys.path.insert(0, '/home/malavolta/CODE/others/trades/pytrades/')
-        from pytrades_lib import pytrades
-    except:
-        from pyorbit.classes.dummy import pytrades
-        print('WARNING! Imported pyorbit.classes.dummy TRADES, models relying on this package will not work')
-
-    try:
-        import ttvfast
-    except:
-        from pyorbit.classes.dummy import ttvfast
-        print('WARNING! Imported pyorbit.classes.dummy TTVFAST, models relying on this package will not work')
-
-    try:
-        import george
-    except:
-        from pyorbit.classes.dummy import george
-        print('WARNING! Imported pyorbit.classes.dummy george, models relying on this package will not work')
-
-    try:
-        import batman
-    except:
-        from pyorbit.classes.dummy import batman
-        print('WARNING! Imported pyorbit.classes.dummy batman, models relying on this package will not work')
 
 def get_var_log(var, fix, i):
     if len(np.shape(var)) == 1:

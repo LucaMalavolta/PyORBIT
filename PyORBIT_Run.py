@@ -6,11 +6,14 @@ import sys
 
 if __name__ == '__main__':
 
+    print()
     print('PyORBIT v8.x')
     print()
     print('Python version in use:')
     print(sys.version)
-    print()
+    #if sys.version_info[0] == 3 and sys.version_info[1] > 7:
+    #    print('WARNING MESSAGES SUPPRESSED!')
+    #print()
 
     parser = argparse.ArgumentParser(prog='PyORBIT_run.py', description='PyORBIT runner')
     parser.add_argument('sampler', type=str, nargs=1, help='sampler (emcee or polychord)')

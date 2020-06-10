@@ -1,7 +1,13 @@
-from pyorbit.classes.common import np
+from pyorbit.classes.common import np, dummy_import_4args
 from pyorbit.models.abstract_model import AbstractModel
-from celerite.terms import SHOTerm, TermSum
 
+try:
+    import celerite
+    import autograd.numpy as np
+    from celerite.terms import SHOTerm, TermSum
+except:
+    import numpy as np
+    TermSum = dummy_import_4args(0, 0, 0)
 
 class Celerite_Rotation_Term(TermSum):
     """
@@ -73,6 +79,12 @@ class Celerite_Rotation(AbstractModel):
     def __init__(self, *args, **kwargs):
         super(Celerite_Rotation, self).__init__(*args, **kwargs)
         self.gp = {}
+
+        try:
+            import celerite
+        except:
+            print("ERROR: celerite not installed, this will not work")
+            quit()
 
     def convert_val2gp(self, input_pams):
         """

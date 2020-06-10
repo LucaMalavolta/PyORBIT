@@ -1,4 +1,4 @@
-import numpy as np
+from pyorbit.classes.common import np
 from scipy.optimize import fsolve
 import pyorbit.classes.constants as constants
 
