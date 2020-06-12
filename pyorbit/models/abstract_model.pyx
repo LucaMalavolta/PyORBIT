@@ -26,7 +26,7 @@ class AbstractModel(object):
                 self.common_ref = np.atleast_1d(common_ref).tolist()
             else:
                 self.common_ref = []
-        except NameError:
+        except (NameError, TypeError):
             self.common_ref = []
 
         self.planet_ref = common_ref

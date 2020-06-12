@@ -18,6 +18,8 @@ common:
         P: [4.3678, 4.7678]
         Tc: [ -0.1, 0.1]
         K: [20.0, 30.0]
+      priors:
+        P: ['Gaussian', 4.5678, 0.0100]
   star:
     star_parameters:
       priors:
@@ -31,11 +33,12 @@ models:
     reference: RVdata
     associated: BISdata
     order: 1
+    x_zero: -200.0
 parameters:
   Tref: 0.00
 solver:
   pyde:
-    ngen: 16000
+    ngen: 4000
     npop_mult: 8
   emcee:
     npop_mult: 8

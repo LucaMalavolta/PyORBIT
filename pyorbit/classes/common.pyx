@@ -28,13 +28,17 @@ from pyorbit.classes.common import celerite, pytrades, ttvfast, george, batman
 
 """
 
+
 class dummy_import(object):
     pyorbit_dummy = True
+
     def __init__(self):
         pass
 
+
 class dummy_import_4args(object):
     pyorbit_dummy = True
+
     def __init__(self, a, b, c):
         pass
 

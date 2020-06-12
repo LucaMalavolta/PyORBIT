@@ -316,8 +316,11 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, shutdown_
                     mc.common_models[planet_name].use_semimajor_axis = planet_conf['use_semimajor_axis']
                     print('Semi-major axis will be included as free parameter: {}'.format(planet_conf['use_inclination']))
                 except:
-                    # False by default
-                    pass
+                    for key in ['boundaries', 'spaces', 'priors', 'starts', 'fixed']:
+                        if key in planet_conf and 'a' in planet_conf[key]:
+                            mc.common_models[planet_name].use_semimajor_axis = True
+                            print('Semi-major axis will be included as free parameter: ', True)
+                    # False by default, unless the user has specified some of its properties
 
                 try:
                     mc.common_models[planet_name].use_time_of_transit = planet_conf['use_time_of_transit']

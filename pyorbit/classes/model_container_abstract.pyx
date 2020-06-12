@@ -233,7 +233,6 @@ class ModelContainer(object):
                 continue
 
             for model_name in dataset.models:
-
                 log_priors += self.models[model_name].return_priors(theta, dataset_name)
 
                 variable_values = {}
