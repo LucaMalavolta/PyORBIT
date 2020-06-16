@@ -1,0 +1,151 @@
+inputs:
+  LCdata_transit01:
+    file: LCdata_transit01.dat
+    kind: Phot
+    models:
+      - lc_model_VIS
+      - dilution_factor_VIS
+      - local_polynomial_trend
+  LCdata_transit02:
+    file: LCdata_transit02.dat
+    kind: Phot
+    models:
+      - lc_model_VIS
+      - dilution_factor_VIS
+      - local_polynomial_trend
+  LCdata_transit03:
+    file: LCdata_transit03.dat
+    kind: Phot
+    models:
+      - lc_model_NIR
+      - dilution_factor_NIR
+      - local_polynomial_trend
+  LCdata_transit04:
+    file: LCdata_transit04.dat
+    kind: Phot
+    models:
+      - lc_model_NIR
+      - dilution_factor_NIR
+      - local_polynomial_trend
+common:
+  planets:
+    b:
+      orbit: keplerian
+      parametrization: Eastman2013_Tcent
+      boundaries:
+        P: [4.3, 4.5]
+        e: [0.00, 0.95]
+        Tc: [8441.40, 8441.70]
+      spaces:
+        P: Linear
+    c:
+      orbit: keplerian
+      parametrization: Eastman2013_Tcent
+      boundaries:
+        P: [10.0, 10.3]
+        e: [0.00, 0.95]
+        Tc: [8446.90, 8447.20]
+      spaces:
+        P: Linear
+  star:
+    star_parameters:
+      priors:
+        mass: ['Gaussian', 1.00, 0.02]
+        radius: ['Gaussian', 1.00, 0.02]
+        rho: ['Gaussian', 1.00, 0.06]
+    limb_darkening_VIS:
+      kind: limb_darkening
+      type: batman_ld_quadratic
+      parametrization: Kipping
+      priors:
+        ld_c1: ['Gaussian', 0.60, 0.05] # random values used as example
+        ld_c2: ['Gaussian', 0.30, 0.05]
+      boundaries:
+        ld_c1: [0.00, 1.00]
+        ld_c2: [0.00, 1.00]
+    limb_darkening_NIR:
+      kind: limb_darkening
+      type: batman_ld_quadratic
+      parametrization: Kipping
+      priors:
+        ld_c1: ['Gaussian', 0.50, 0.05] # random values used as example
+        ld_c2: ['Gaussian', 0.10, 0.05]
+  dilution_factor_VIS:
+    type: dilution_factor
+    priors:
+      d_factor: ['Gaussian', 0.320, 0.014]
+  dilution_factor_NIR:
+    type: dilution_factor
+    priors:
+      d_factor: ['Gaussian', 0.160, 0.014]
+  polynomial_trend:
+    type: polynomial_trend
+models:
+  lc_model_VIS:
+    kind: batman_transit
+    nthreads: 64
+    planets:
+      - b
+      - c
+    limb_darkening: limb_darkening_VIS
+    LCdata_transit01:
+      supersample_factor: 10
+      exposure_time: 1764.944
+    LCdata_transit02:
+      supersample_factor: 10
+      exposure_time: 1764.944
+  lc_model_NIR:
+    kind: batman_transit
+    nthreads: 64
+    planets:
+      - b
+      - c
+    limb_darkening: limb_darkening_NIR
+    LCdata_transit03:
+      supersample_factor: 10
+      exposure_time: 1764.944
+    LCdata_transit04:
+      supersample_factor: 10
+      exposure_time: 1764.944
+  local_polynomial_trend:
+    common: polynomial_trend
+    normalization_model: True
+    order: 2
+    LCdata_transit01:
+      boundaries:
+          poly_c0: [-2.0, 2.0]
+          poly_c1: [-1.0, 1.0]
+          poly_c2: [-1.0, 1.0]
+    LCdata_transit02:
+      boundaries:
+          poly_c0: [-2.0, 2.0]
+          poly_c1: [-1.0, 1.0]
+          poly_c2: [-1.0, 1.0]
+    LCdata_transit03:
+      boundaries:
+          poly_c0: [-2.0, 2.0]
+          poly_c1: [-1.0, 1.0]
+          poly_c2: [-1.0, 1.0]
+    LCdata_transit04:
+      boundaries:
+          poly_c0: [-2.0, 2.0]
+          poly_c1: [-1.0, 1.0]
+          poly_c2: [-1.0, 1.0]
+parameters:
+  Tref: 8440.00
+solver:
+  pyde:
+    ngen: 4000
+    npop_mult: 4
+  emcee:
+    npop_mult: 4
+    nsteps: 50000
+    nburn: 15000
+    nsave: 10000
+    thin: 100
+  nested_sampling:
+    nlive: 1000
+    num_repeats_mult: 5
+    sampling_efficiency: 0.30
+    shutdown_jitter: True
+  recenter_bounds: True

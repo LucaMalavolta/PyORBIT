@@ -1,0 +1,86 @@
+inputs:
+  RVdata_set01:
+    file: RVdata_set01.dat
+    kind: RV
+    models:
+      - radial_velocities
+  RVdata_set02:
+    file: RVdata_set02.dat
+    kind: RV
+    models:
+      - radial_velocities
+common:
+  planets:
+    b:
+      orbit: circular
+      parametrization: Eastman2013_Tcent
+      boundaries:
+        P: [0.82, 0.84]
+        K: [0.001, 100.0]
+        Tc: [5034.05,  5034.10]
+      priors:
+        P: ['Gaussian', 0.8374907, 0.000001]
+        Tc: ['Gaussian', 5034.08687, 0.00018]
+      spaces:
+        P: Linear
+      fixed:
+        i: [89.6, 0.1]
+    c:
+      orbit: dynamical
+      parametrization: Eastman2013_Tcent
+      boundaries:
+        P: [45.2, 45.4]
+        M: [0.01, 100.0]
+        Tc: [5062.2, 5062.3]
+        i: [80., 100.]
+        e: [0.00, 0.50]
+      priors:
+        P: ['Gaussian', 45.294301, 0.0001] # ['Gaussian', 45.294301, 0.000048]
+        Tc: ['Gaussian', 5062.26648, 0.00081] # ['Gaussian', 5062.26648, 0.00081]
+        e: ['HalfGaussian', 0.00, 0.083]
+      spaces:
+        P: Linear
+      fixed:
+        i: [89.6, 0.1]
+        lN: [0.000, 0.001]
+        R: [0.02019, 0.00081]
+    d:
+      orbit: keplerian
+      boundaries:
+        P: [50.0, 5000.0]
+        K: [0.01, 100.0]
+        e: [0.00, 0.50]
+      priors:
+        e: ['HalfGaussian', 0.00, 0.098]
+  star:
+    star_parameters:
+      priors:
+        radius: ['Gaussian', 1.00, 0.01]
+        mass: ['Gaussian', 0.900, 0.02]
+        rho: ['Gaussian', 0.900, 0.02]
+      starts:
+        mass: 0.913842
+models:
+  radial_velocities:
+    planets:
+      - b
+      - c
+      - d
+parameters:
+  Tref: 5500.0
+solver:
+  pyde:
+    ngen: 8000
+    npop_mult: 8
+  emcee:
+    npop_mult: 8
+    nsteps: 100000
+    nsave: 20000
+    nburn: 30000
+    thin: 100
+  nested_sampling:
+    nlive: 1000
+    num_repeats_mult: 5
+    sampling_efficiency: 0.30
+    shutdown_jitter: False
+  recenter_bounds: True

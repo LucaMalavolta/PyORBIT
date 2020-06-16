@@ -527,6 +527,7 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, shutdown_
                         common_name = mc.models[model_name_exp].model_conf['limb_darkening']
                     except:
                         common_name = 'limb_darkening'
+                    print('  LC model: {0:s} is using {1:s} LD parameters'.format(model_name_exp, common_name))
 
                     mc.models[model_name_exp].model_conf['limb_darkening_model'] = \
                         mc.common_models[common_name].ld_type
