@@ -38,8 +38,6 @@ common:
         radius: ['Gaussian', 1.00, 0.01]
         mass: ['Gaussian', 0.900, 0.02]
         rho: ['Gaussian', 0.900, 0.02]
-      starts:
-        mass: 0.913842
 models:
   radial_velocities:
     planets:
