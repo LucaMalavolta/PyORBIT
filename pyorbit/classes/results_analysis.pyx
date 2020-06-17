@@ -171,8 +171,8 @@ def get_stellar_parameters(mc, theta, warnings=True):
             elif 'radius' in stellar_model.prior_pams:
 
                 if stellar_model.prior_kind['radius'] == 'Gaussian':
-                    stellar_values['radius'] = np.random.normal(stellar_model.prior_pams['mass'][0],
-                                                                stellar_model.prior_pams['mass'][1],
+                    stellar_values['radius'] = np.random.normal(stellar_model.prior_pams['radius'][0],
+                                                                stellar_model.prior_pams['radius'][1],
                                                                 size=n_samplings)
                     stellar_values['mass'] = stellar_values['radius'] ** 3. * stellar_values['rho']
             else:
