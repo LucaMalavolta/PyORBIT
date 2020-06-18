@@ -198,7 +198,8 @@ class Dataset(AbstractCommon):
             elif self.variable_expanded[var] == 'offset':
                 self.additive_model[self.mask[var]] += variable_value[var]
             elif self.variable_expanded[var] == 'linear':
-                self.additive_model[self.mask[var]] += variable_value[var] * self.x0
+                self.additive_model[self.mask[var]] += \
+                    variable_value[var] * self.x0[self.mask[var]]
 
     def compute_model(self):
         if self.normalization_model is None:
