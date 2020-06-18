@@ -319,6 +319,23 @@ def get_planet_variables(mc, theta, verbose=False):
             except:
                 pass
 
+            try:
+                derived_variables['a_AU_(M)'] = True
+                variable_values['a_AU_(M)'] = convert_PMsMp_to_a(
+                    variable_values['P'],
+                    stellar_values['mass'], 
+                    variable_values['M'])
+            except (KeyError,ValueError):
+                pass 
+        
+            try:
+                derived_variables['a_AU_(rho,R)'] = True
+                variable_values['a_AU_(rho,R)'] = convert_ars_to_a(
+                    variable_values['a'],
+                    stellar_values['radius'])
+            except (KeyError,ValueError):
+                pass 
+
             planet_variables[common_name] = variable_values.copy()
 
             for var in planet_variables[common_name].keys():
@@ -530,9 +547,9 @@ def get_model(mc, theta, bjd_dict):
 
 
 def print_theta_bounds(i_dict, theta, bounds, skip_theta=False):
-    format_string = '{0:10s}  {1:4d}  {2:12f} ([{3:10f}, {4:10f}])'
-    format_string_long = '{0:10s}  {1:4d}  {2:12f}   {3:12f}  {4:12f} (15-84 p) ([{5:9f}, {6:9f}])'
-    format_string_notheta = '{0:10s}  {1:4d}  ([{2:10f}, {3:10f}])'
+    format_string = '{0:12s}  {1:4d}  {2:12f} ([{3:10f}, {4:10f}])'
+    format_string_long = '{0:12s}  {1:4d}  {2:12f}   {3:12f}  {4:12f} (15-84 p) ([{5:9f}, {6:9f}])'
+    format_string_notheta = '{0:12s}  {1:4d}  ([{2:10f}, {3:10f}])'
 
     for var, i in i_dict.items():
 
@@ -549,8 +566,11 @@ def print_theta_bounds(i_dict, theta, bounds, skip_theta=False):
 
 
 def print_dictionary(variable_values, recenter=[]):
-    format_string = '{0:10s}   {1:15f} '
-    format_string_long = '{0:10s}   {1:15f}   {2:15f}  {3:15f} (15-84 p)'
+    format_string = '{0:12s}   {1:15f} '
+    format_string_long = '{0:12s}   {1:15f}   {2:15f}  {3:15f} (15-84 p)'
+    format_string_exp = '{0:12s}   {1:15e} '
+    format_string_long_exp = '{0:12s}   {1:15e}   {2:15e}  {3:15e} (15-84 p)'
+    format_boundary = 0.000010
 
     for var_names, var_vals in variable_values.items():
         if np.size(var_vals) > 1:
@@ -565,12 +585,25 @@ def print_dictionary(variable_values, recenter=[]):
             else:
                 perc0, perc1, perc2 = np.percentile(var_vals, [15.865, 50, 84.135], axis=0)
 
-            print(format_string_long.format(var_names, perc1, perc0 - perc1, perc2 - perc1))
+            if np.abs(perc1)<format_boundary or \
+                np.abs(perc0 - perc1) < format_boundary or \
+                np.abs(perc2 - perc1) < format_boundary : 
+                print(format_string_long_exp.format(var_names, perc1, perc0 - perc1, perc2 - perc1))
+            else:
+                print(format_string_long.format(var_names, perc1, perc0 - perc1, perc2 - perc1))
+
         else:
             try:
-                print(format_string.format(var_names, var_vals[0]))
+                if np.abs(var_vals[0]) < format_boundary:
+                    print(format_string_exp.format(var_names, var_vals[0]))
+                else:
+                    print(format_string.format(var_names, var_vals[0]))
+
             except:
-                print(format_string.format(var_names, var_vals))
+                if np.abs(var_vals) < format_boundary:
+                    print(format_string_exp.format(var_names, var_vals))
+                else:
+                    print(format_string.format(var_names, var_vals))
 
     print()
 

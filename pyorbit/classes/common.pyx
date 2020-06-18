@@ -337,6 +337,15 @@ def convert_rho_to_a(P, rho):
     return np.power(constants.Gsi * (constants.d2s * constants.d2s) * (P**2)
                     * rho * constants.rho_Sun / (3. * np.pi), 1./3.)
 
+def convert_ars_to_a(a, Rs):
+    return a * Rs * constants.RsunAU
+
+def convert_PMsMp_to_a(P, Ms, Mp):
+    # planet mass in solar masses
+    # output in Astronomical Units
+    return np.power(P**2 * constants.Giau * (Ms + Mp) / (2 * np.pi)**2., 1./3.)
+
+
 
 def convert_b_to_i(b,e,o,a):
 

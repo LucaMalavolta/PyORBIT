@@ -109,10 +109,17 @@ class Dataset(AbstractCommon):
             if self.Tref is None:
                 self.Tref = np.mean(self.x, dtype=np.double)
 
-            """Default boundaries are defined according to the characteristic of the dataset"""
-            self.generic_default_bounds = {'offset': [np.min(self.y) - 1000., np.max(self.y) + 1000.],
+            """Default boundaries are defined according to the characteristic
+               of the dataset. They must be large enough to allow formost of
+               the anomalous situations
+            """
+            x_range = np.max(self.x) - np.min(self.x)
+            y_range = np.max(self.y) - np.min(self.y)
+            y_trend = np.abs(y_range/x_range) 
+            y_diff = np.abs(np.mean(self.x)-self.Tref) * y_trend + 1000.
+            self.generic_default_bounds = {'offset': [np.min(self.y) - 10.*y_diff, np.max(self.y) + 10.*y_diff],
                                            'jitter': [np.min(self.e)/100., 100 * np.max(self.e)],
-                                           'linear': [-1., 1.]}
+                                           'linear': [-10.*y_trend, 10.*y_trend]}
 
             if self.kind == 'Phot':
                 self.generic_default_bounds['offset'][0] = - \
@@ -188,8 +195,10 @@ class Dataset(AbstractCommon):
         for var in self.list_pams:
             if self.variable_expanded[var] == 'jitter':
                 self.jitter[self.mask[var]] += variable_value[var]
-            else:
+            elif self.variable_expanded[var] == 'offset':
                 self.additive_model[self.mask[var]] += variable_value[var]
+            elif self.variable_expanded[var] == 'linear':
+                self.additive_model[self.mask[var]] += variable_value[var] * self.x0
 
     def compute_model(self):
         if self.normalization_model is None:
