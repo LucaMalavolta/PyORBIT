@@ -1,0 +1,81 @@
+inputs:
+  LCdata_transit01:
+    file: LCdata_transit01.dat
+    kind: Phot
+    models:
+      - lc_model
+      - polynomial_trend
+      - dilution_factor
+common:
+  planets:
+    b:
+      orbit: keplerian
+      parametrization: Eastman2013_Tcent
+      boundaries:
+        P: [4.3, 4.5]
+        e: [0.00, 0.95]
+        Tc: [8441.40, 8441.70]
+      spaces:
+        P: Linear
+    c:
+      orbit: keplerian
+      parametrization: Eastman2013_Tcent
+      boundaries:
+        P: [10.0, 10.3]
+        e: [0.00, 0.95]
+        Tc: [8446.90, 8447.20]
+      spaces:
+        P: Linear
+  polynomial_trend:
+    normalization_model: True
+    order: 2
+    boundaries:
+        poly_c0: [-2.0, 2.0]
+        poly_c1: [-1.0, 1.0]
+        poly_c2: [-1.0, 1.0]
+  dilution_factor:
+    priors:
+      d_factor: ['Gaussian', 0.160, 0.014]
+  star:
+    star_parameters:
+      priors:
+        mass: ['Gaussian', 1.00, 0.02]
+        radius: ['Gaussian', 1.00, 0.02]
+        rho: ['Gaussian', 1.00, 0.06]
+    limb_darkening:
+      type: batman_ld_quadratic
+      parametrization: Kipping
+      boundaries:
+        ld_c1: [0.00, 1.00]
+        ld_c2: [0.00, 1.00]
+      priors:
+        ld_c1: ['Gaussian', 0.40, 0.10]
+        ld_c2: ['Gaussian', 0.20, 0.10]
+models:
+  lc_model:
+    kind: batman_transit
+    nthreads: 64
+    planets:
+      - b
+      - c
+    LCdata_transit01:
+      supersample_factor: 10
+      exposure_time: 1764.944
+parameters:
+  Tref: 8440.00
+solver:
+  pyde:
+    ngen: 4000
+    npop_mult: 4
+  emcee:
+    npop_mult: 4
+    nsteps: 50000
+    nburn: 15000
+    nsave: 10000
+    thin: 100
+  nested_sampling:
+    nlive: 1000
+    num_repeats_mult: 5
+    sampling_efficiency: 0.30
+    shutdown_jitter: True
+  recenter_bounds: True

@@ -4,29 +4,8 @@ inputs:
     kind: Phot
     models:
       - lc_model
+      - polynomial_trend
       - dilution_factor
-      - local_polynomial_trend
-  LCdata_transit02:
-    file: LCdata_transit02.dat
-    kind: Phot
-    models:
-      - lc_model
-      - dilution_factor
-      - local_polynomial_trend
-  LCdata_transit03:
-    file: LCdata_transit03.dat
-    kind: Phot
-    models:
-      - lc_model
-      - dilution_factor
-      - local_polynomial_trend
-  LCdata_transit04:
-    file: LCdata_transit04.dat
-    kind: Phot
-    models:
-      - lc_model
-      - dilution_factor
-      - local_polynomial_trend
 common:
   planets:
     b:
@@ -38,6 +17,8 @@ common:
         Tc: [8441.40, 8441.70]
       spaces:
         P: Linear
+      use_semimajor_axis: True
+      use_inclination: True
     c:
       orbit: keplerian
       parametrization: Eastman2013_Tcent
@@ -48,7 +29,15 @@ common:
       spaces:
         P: Linear
   polynomial_trend:
-    type: polynomial_trend
+    normalization_model: True
+    order: 2
+    boundaries:
+        poly_c0: [-2.0, 2.0]
+        poly_c1: [-1.0, 1.0]
+        poly_c2: [-1.0, 1.0]
+  dilution_factor:
+    priors:
+      d_factor: ['Gaussian', 0.160, 0.014]
   star:
     star_parameters:
       priors:
@@ -61,9 +50,9 @@ common:
       boundaries:
         ld_c1: [0.00, 1.00]
         ld_c2: [0.00, 1.00]
-  dilution_factor:
-    priors:
-      d_factor: ['Gaussian', 0.160, 0.014]
+      priors:
+        ld_c1: ['Gaussian', 0.40, 0.10]
+        ld_c2: ['Gaussian', 0.20, 0.10]
 models:
   lc_model:
     kind: batman_transit
@@ -83,30 +72,6 @@ models:
     LCdata_transit04:
       supersample_factor: 10
       exposure_time: 1764.944
-  local_polynomial_trend:
-    common: polynomial_trend
-    normalization_model: True
-    order: 2
-    LCdata_transit01:
-      boundaries:
-          poly_c0: [-2.0, 2.0]
-          poly_c1: [-1.0, 1.0]
-          poly_c2: [-1.0, 1.0]
-    LCdata_transit02:
-      boundaries:
-          poly_c0: [-2.0, 2.0]
-          poly_c1: [-1.0, 1.0]
-          poly_c2: [-1.0, 1.0]
-    LCdata_transit03:
-      boundaries:
-          poly_c0: [-2.0, 2.0]
-          poly_c1: [-1.0, 1.0]
-          poly_c2: [-1.0, 1.0]
-    LCdata_transit04:
-      boundaries:
-          poly_c0: [-2.0, 2.0]
-          poly_c1: [-1.0, 1.0]
-          poly_c2: [-1.0, 1.0]
 parameters:
   Tref: 8440.00
 solver:

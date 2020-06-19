@@ -5,28 +5,28 @@ inputs:
     models:
       - lc_model_VIS
       - dilution_factor_VIS
-      - local_polynomial_trend
+      - local_polynomial_trend_VIS
   LCdata_transit02:
     file: LCdata_transit02.dat
     kind: Phot
     models:
       - lc_model_VIS
       - dilution_factor_VIS
-      - local_polynomial_trend
+      - local_polynomial_trend_VIS
   LCdata_transit03:
     file: LCdata_transit03.dat
     kind: Phot
     models:
       - lc_model_NIR
       - dilution_factor_NIR
-      - local_polynomial_trend
+      - local_polynomial_trend_NIR
   LCdata_transit04:
     file: LCdata_transit04.dat
     kind: Phot
     models:
       - lc_model_NIR
       - dilution_factor_NIR
-      - local_polynomial_trend
+      - local_polynomial_trend_NIR
 common:
   planets:
     b:
@@ -78,7 +78,9 @@ common:
     type: dilution_factor
     priors:
       d_factor: ['Gaussian', 0.160, 0.014]
-  polynomial_trend:
+  polynomial_trend_VIS:
+    type: polynomial_trend
+  polynomial_trend_NIR:
     type: polynomial_trend
 models:
   lc_model_VIS:
@@ -107,8 +109,8 @@ models:
     LCdata_transit04:
       supersample_factor: 10
       exposure_time: 1764.944
-  local_polynomial_trend:
-    common: polynomial_trend
+  local_polynomial_trend_VIS:
+    common: polynomial_trend_VIS
     normalization_model: True
     order: 2
     LCdata_transit01:
@@ -121,16 +123,21 @@ models:
           poly_c0: [-2.0, 2.0]
           poly_c1: [-1.0, 1.0]
           poly_c2: [-1.0, 1.0]
+  local_polynomial_trend_NIR:
+    common: polynomial_trend_NIR
+    order: 3
     LCdata_transit03:
       boundaries:
           poly_c0: [-2.0, 2.0]
           poly_c1: [-1.0, 1.0]
           poly_c2: [-1.0, 1.0]
+          poly_c3: [-1.0, 1.0]
     LCdata_transit04:
       boundaries:
           poly_c0: [-2.0, 2.0]
           poly_c1: [-1.0, 1.0]
           poly_c2: [-1.0, 1.0]
+          poly_c3: [-1.0, 1.0]
 parameters:
   Tref: 8440.00
 solver:
