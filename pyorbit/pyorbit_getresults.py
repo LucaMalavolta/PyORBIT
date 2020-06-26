@@ -47,7 +47,7 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
         'polychord': ['polychord', 'PolyChord', 'polychrod', 'poly'],
         'emcee': ['emcee', 'MCMC', 'Emcee']
     }
-
+    
     if sampler in sample_keyword['emcee']:
 
         dir_input = './' + config_in['output'] + '/emcee/'

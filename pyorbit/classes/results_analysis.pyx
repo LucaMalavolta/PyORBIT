@@ -607,22 +607,113 @@ def print_dictionary(variable_values, recenter=[]):
 
     print()
 
-
 def print_integrated_ACF(sampler_chain, theta_dict, nthin):
 
-    import emcee
-    if not emcee.__version__[0] == '3': return
+    from emcee.autocorr import integrated_time, function_1d, AutocorrError, auto_window
+    #if not emcee.__version__[0] == '3': return
 
-    print()
-    print(' Computing the autocorrelation time of the chains')
-    print(' Reference thinning used in the analysis:', nthin)
-    print()
-    print('          sample variable      ACF        ACF * nthin')
+    swapped_chains = np.swapaxes(sampler_chain, 1, 0)
 
-    integrate_ACF = emcee.autocorr.integrated_time(np.swapaxes(sampler_chain, 1, 0), quiet=True)
-    for key_name, key_val in theta_dict.items():
-        print('          {0:20s} {1:5.3f}   {2:7.1f}'.format(key_name,
-                                                   integrate_ACF[key_val],
-                                                   integrate_ACF[key_val] * nthin))
+    try:
+        integrate_ACF = integrated_time(swapped_chains, tol=50, quiet=False)
+    except (AutocorrError):
+        print('The integratedautocorrelation time cannot be reliably estimated')
+        print('likely the chains are too short')
+        print()
+        return
+    except (NameError, TypeError):
+        print('Old version of emcee, this function is not implemented')
+        print()
+        return 
+    
+
+
+    """ computing the autocorrelation time every 1000 steps, skipping the first 5000 """ 
+
+    n_sam = swapped_chains.shape[0]
+    n_cha = swapped_chains.shape[1]
+    n_dim = swapped_chains.shape[2]
+    acf_len = 1000//nthin
+    c=5
+    
+    if n_sam > acf_len*3:
+        
+        acf_previous = np.zeros(n_dim)
+        acf_current = np.zeros(n_dim)
+        acf_converged_at = np.zeros(n_dim, dtype=np.int16) - 1
+        
+        for i_sam in range(acf_len*3, n_sam, acf_len):
+
+            acf_previous = 1.*acf_current
+            integrated_part = np.zeros(i_sam)
+
+            for i_dim in range(0, n_dim):
+                integrated_part *= 0.
+                for i_cha in range(0, n_cha):
+                    integrated_part += function_1d(swapped_chains[:i_sam,i_cha,i_dim])
+
+                c=5
+                integrated_part /= (1.*n_cha)
+                taus = 2.0 * np.cumsum(integrated_part) - 1.0
+                window = auto_window(taus, c)
+                acf_current[i_dim] = taus[window]
+
+            sel = (np.abs(acf_current-acf_previous)/acf_current < 0.01) & (acf_converged_at<0.)
+            acf_converged_at[sel] = i_sam * nthin
+
+            if np.sum((acf_converged_at>0), dtype=np.int16) == n_dim:
+                break
+
+        
+        how_many_ACT  = (n_sam - acf_converged_at/nthin)/integrate_ACF
+        how_many_ACT[(acf_converged_at<0)] = -1
+
+        still_required = (50 - how_many_ACT)*nthin
+        
+        
+        print()
+        print('Computing the autocorrelation time of the chains')
+        print('Reference thinning used in the analysis:', nthin)
+        print('Convergence criteria: less than 1% variation in ACF after 1000 (unthinned) steps')
+        print('At least 50*ACF after convergence, 100*acf would be ideal')
+        print('Negative values: not converged yet')
+        print()
+        print('          sample variable      |    ACF   | ACF*nthin | converged at | nteps/ACF ')
+        print('                               |          |           |              |           ')
+        
+        for key_name, key_val in theta_dict.items():
+            print('          {0:20s} | {1:7.3f}  | {2:8.1f}  |  {3:7.0f}     |  {4:7.1f}   '.format(key_name,
+                                                    integrate_ACF[key_val],
+                                                    integrate_ACF[key_val] * nthin,
+                                                    acf_converged_at[key_val],
+                                                    how_many_ACT[key_val]))
+
+        print()
+
+        
+
+        if np.sum((acf_converged_at>0), dtype=np.int16) == n_dim:
+            if np.sum(how_many_ACT>100, dtype=np.int16)==n_dim:
+                print('All the chains are longer than 100*ACF ')
+            elif (np.sum(how_many_ACT>50, dtype=np.int16)==n_dim):
+                print('All the chains are longer than 50*ACF, but some are shorter than 100*ACF ')
+            else:
+                print("""All the chains have converged, but they should keep running 
+                for at least {0:7.0} more steps""".format(np.amax(still_required)))
+
+            print('Suggested value for burnin: ',np.amax(acf_converged_at))
+
+        else:
+            print(' {0:5.0f} chains have not converged yet, keep going '.format(
+                np.sum((acf_converged_at>0), dtype=np.int16)))
+
+        print()
+
+    else:
+        print("Chains too shoort to apply convergence criteria")
+        print("They should be at least {0:d}*nthin = {1:d}".format(3*acf_len,3*acf_len*nthin))
+        print()
+
+
 
 
