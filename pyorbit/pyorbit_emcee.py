@@ -279,6 +279,7 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
 
     if reloaded_emcee:
         print('Using reloaded sampler')
+        print()
     
     elif mc.use_threading_pool:
         sampler = emcee.EnsembleSampler(
@@ -288,7 +289,6 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
             mc.emcee_parameters['nwalkers'], mc.ndim, mc)
 
     if mc.emcee_parameters['nsave'] > 0:
-        print()
         print('Saving temporary steps')
         print()
         niter = int(np.ceil(nsteps_todo/mc.emcee_parameters['nsave']))
@@ -313,7 +313,7 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
 
             print()
             print(sampled, '  steps completed, average lnprob:, ', np.median(prob))
-
+            print()
             sys.stdout.flush()
 
     else:
@@ -339,6 +339,7 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
     
     print()
     print('emcee completed')
+    print()
 
     if mc.use_threading_pool:
         # close the pool of threads
