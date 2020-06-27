@@ -41,14 +41,14 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
         pass
 
     try:
-        mc, starting_point, population, _, _, sampler_chain, _, _, theta_dict = \
+        mc, starting_point, population, _, _, sampler_chain, _, _, theta_dict, _ = \
             emcee_load_from_cpickle(emcee_dir_output, prefix='MR')
         reloaded_emcee_multirun = True
     except:
         pass
 
     try:
-        mc, starting_point, population, _, _, sampler_chain, sampler_lnprobability, _, theta_dict = \
+        mc, starting_point, population, _, _, sampler_chain, sampler_lnprobability, _, theta_dict, _ = \
             emcee_load_from_cpickle(emcee_dir_output)
         reloaded_emcee = True
     except:
@@ -278,6 +278,7 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
     print()
     print('Running emcee')
     state = None
+
 
     if mc.use_threading_pool:
         sampler = emcee.EnsembleSampler(

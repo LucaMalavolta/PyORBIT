@@ -1,8 +1,5 @@
-import sys
-sys.path.insert(0, '/Users/malavolta/Astro/CODE/PyORBIT/')
-
 from pyorbit.classes.common import np
-from scipy.optimize import fsolve, newton
+from scipy.optimize import fsolve
 import pyorbit.classes.constants as constants
 
 # +
@@ -20,95 +17,106 @@ import pyorbit.classes.constants as constants
 __all__ = ["kepler_K1", "kepler_RV", "kepler_Tc2phase_Tref", "kepler_phase2Tc_Tref", "get_planet_mass"]
 
 
-def f0_keplerE(ecan_tmp, ecc, mx):
-        return (ecan_tmp - ecc * np.sin(ecan_tmp) - mx) % (2 * np.pi)
+def kepler_E(M_in, ec):
+    E = 0.0
+    E0 = 0.0
+    M = np.atleast_1d(M_in)
+    ecc = np.asarray(ec, dtype=np.double)
+    eccanom = np.zeros(np.size(M), dtype=np.double)
 
-def f1_keplerE(ecan_tmp, ecc, mx):
-        ## f' = 1-e*cosE
-        return (1. - ecc * np.cos(ecan_tmp)) % (2 * np.pi)
+    for ii in range(0, np.size(M)):
+        # -np.pi < M < np.pi
+        mx = M[ii]
+        if mx > np.pi:
+            mx = mx % (2. * np.pi)
+            if mx > np.pi:
+                mx = mx - (2. * np.pi)
+        if mx <= -np.pi:
+            mx = mx % (2. * np.pi)
+            if mx < -np.pi:
+                mx += (2. * np.pi)
 
-def kepler_E(M_in, ecc):
+        if ecc < 1e-10:
+            eccanom[ii] = mx
+        else:
 
-    mx = np.atleast_1d(M_in) % (2. * np.pi)
-    eccanom = np.zeros(np.size(mx), dtype=np.double)
+            # equation 9a
+            aux = 4.0 * ecc + 0.50
+            alpha = (1.0 - ecc) / aux
+            beta = mx / (2.0 * aux)
 
-    """
-    #if ecc < 1e-10:
-    #    return mx
+            # equation 9b
+            ## the actual equation 9b is much much slower, but gives the same
+            ## answer (probably because more refinement necessary)
+            aux = np.sqrt(beta * beta + alpha * alpha * alpha)
+            z = beta + aux
+            if z < 0.:
+                z = beta - aux
+            z = z ** (1. / 3.)
 
-    # equation 9a
-    aux = 4.0 * ecc + 0.50
-    alpha = (1.0 - ecc) / aux
-    beta = mx / (2.0 * aux)
+            if abs(z) < 1e-8:
+                s0 = 0.
+            else:
+                s0 = z - alpha / z
 
-    # equation 9b
-    ## the actual equation 9b is much much slower, but gives the same
-    ## answer (probably because more refinement necessary)
-    aux = np.sqrt(beta * beta + alpha * alpha * alpha)
-    z = beta + aux
-    sel_z = (z < 0.)
+            s1 = s0 - (0.078 * s0 ** 5) / ((1.) + ecc)
+            e0 = mx + ecc * (3. * s1 - 4. * s1 ** 3.)
 
-    z[sel_z] = beta[sel_z] + aux[sel_z]
+            se0 = np.sin(e0)
+            ce0 = np.cos(e0)
 
-    z = z ** (1. / 3.)
+            f = e0 - ecc * se0 - mx
+            f1 = (1.0) - ecc * ce0
+            f2 = ecc * se0
+            f3 = ecc * ce0
+            u1 = -f / f1
+            u2 = -f / (f1 + 0.5 * f2 * u1)
+            u3 = -f / (f1 + 0.5 * f2 * u2 + (1. / 6.) * f3 * u2 ** 2.)
+            u4 = -f / (f1 + 0.5 * f2 * u3 + (1. / 6.) * f3 * u3 ** 2 - (1. / 24.) * f2 * u3 ** 3)
 
-    s0 = mx * 0.
-    sel_z = (abs(z) > 1e-8)
-    s0[sel_z] = z - alpha / z
+            ecan_tmp = e0 + u4
 
-    s1 = s0 - (0.078 * s0 ** 5) / ((1.) + ecc)
+            if ecan_tmp >= 2. * np.pi:
+                ecan_tmp = ecan_tmp - 2. * np.pi
 
-    # first guess of e0
-    e0 = mx + ecc * (3. * s1 - 4. * s1 ** 3.)
+            if ecan_tmp < 0.:
+                ecan_tmp = ecan_tmp + 2. * np.pi
 
-    # difference from first estimate of E
-    e0_diff = e0 - ecc * np.sin(e0) - mx
+            ## Now get more precise solution using Newton Raphson method
+            ## for those times when the Kepler equation is not yet solved
+            ## to better than 1e-10
+            ## (modification J. Wilms)
 
-    """
+            if mx < 0.:
+                mx = mx + 2. * np.pi
 
-    # Using Fulton scheme
-    k = 0.85
+            ## calculate the differences
+            diff = abs(ecan_tmp - ecc * np.sin(ecan_tmp) - mx)
+            if diff > abs(diff - 2 * np.pi):
+                diff = abs(diff - 2 * np.pi)
 
-    e0 = mx + np.sign(np.sin(mx)) * k * ecc  # first guess at E
-    # fiarr should go to zero when converges
-    e0_diff = ( e0 - ecc * np.sin(e0) - mx)
+            thresh1 = 1e-8
+            thresh2 = 10000
+            countt = 0
 
+            while (diff > thresh1 and countt < thresh2):
+                ## E-e sinE-M
+                fe = (ecan_tmp - ecc * np.sin(ecan_tmp) - mx) % (2 * np.pi)
+                ## f' = 1-e*cosE
+                fs = (1. - ecc * np.cos(ecan_tmp)) % (2 * np.pi)
+                oldval = ecan_tmp
+                ecan_tmp = (oldval - fe / fs)
+                diff = abs(oldval - ecan_tmp)
+                countt += 1
+            ## range reduction
+            if ecan_tmp >= 2. * np.pi:
+                ecan_tmp = ecan_tmp % 2. * np.pi
+            if ecan_tmp < 0.:
+                ecan_tmp = ecan_tmp % 2. * np.pi + 2. * np.pi
 
-    conv = 1.0e-12  # convergence criterion
-    convd = np.where(np.abs(e0_diff) > conv)[0]  # which indices have not converged
-    nd = len(convd)  # number of unconverged elements
-    count = 0
+            eccanom[ii] = ecan_tmp
 
-    while nd > 0:  # while unconverged elements exist
-        count += 1
-
-        e0_conv = e0[convd]# just the unconverged elements ...
-
-        se0 = np.sin(e0_conv)
-        ce0 = np.cos(e0_conv)
-
-        f = e0_conv - ecc * se0 - mx[convd]
-        f1 = 1. - ecc * ce0
-        f2 = ecc * se0
-        f3 = ecc * ce0
-        u1 = -f / f1
-        u2 = -f / (f1 + 0.5 * f2 * u1)
-        u3 = -f / (f1 + 0.5 * f2 * u2 + (1. / 6.) * f3 * u2 ** 2.)
-        u4 = -f / (f1 + 0.5 * f2 * u3 + (1. / 6.) * f3 * u3 ** 2 - (1. / 24.) * f2 * u3 ** 3)
-
-        e0_conv += u4
-
-        e0[convd] = e0_conv
-        e0_diff = e0 - ecc * np.sin( e0 ) - mx
-        convd = np.abs(e0_diff) > conv  # test for convergence
-        nd = np.sum(convd is True)
-
-
-        #ecan_tmp = newton(f0_keplerE, ecan_tmp, fprime=f1_keplerE, args=(ecc, mx))
-        #ecan_tmp = ecan_tmp % (2. * np.pi)
-    ecan_tmp = e0 % (2. * np.pi)
-
-    return ecan_tmp
+    return eccanom
 
 
 def kepler_K1(m_star1, m_star2, period, i, e0):

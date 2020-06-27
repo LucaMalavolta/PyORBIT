@@ -7,7 +7,7 @@ import sys
 if __name__ == '__main__':
 
     print()
-    print('PyORBIT v8.x')
+    print('PyORBIT v{0}'.format(pyorbit.__version__))
     print()
     print('Python version in use:')
     print(sys.version)
@@ -29,16 +29,12 @@ if __name__ == '__main__':
         'multinest':['multinest', 'MultiNest', 'multi'],
         'polychord':['polychord', 'PolyChord', 'polychrod', 'poly'],
         'emcee': ['emcee', 'MCMC', 'Emcee'],
-        'emcee_test': ['emcee_test', 'MCMC_test', 'Emcee_test'],
         'dynesty': ['dynesty', 'DyNesty', 'Dynesty', 'DYNESTY'],
         'optimize': ['optimize', 'scipy', 'Optimize', 'OPTIMIZE'],
     }
 
     if sampler in sampler_keyword['emcee']:
         pyorbit.pyorbit_emcee(config_in)
-
-    if sampler in sampler_keyword['emcee_test']:
-        pyorbit.pyorbit_emcee_test(config_in)
 
     if sampler in sampler_keyword['multinest']:
         pyorbit.pyorbit_multinest(config_in)

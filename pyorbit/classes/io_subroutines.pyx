@@ -64,6 +64,7 @@ def emcee_save_to_cpickle(mc, starting_point, population, prob, state, sampler, 
     pickle.dump(population, open(mc.emcee_dir_output + add_prefix + "starting_population.p", "wb"))
     pickle.dump(prob, open(mc.emcee_dir_output + add_prefix + "prob.p", "wb"))
     pickle.dump(state, open(mc.emcee_dir_output + add_prefix + "state.p", "wb"))
+    pickle.dump(sampler, open(mc.emcee_dir_output + add_prefix + "sampler.p", "wb"))
     pickle.dump(sampler.chain, open(mc.emcee_dir_output + add_prefix + "sampler_chain.p", "wb"))
     pickle.dump(sampler.lnprobability, open(mc.emcee_dir_output + add_prefix + "sampler_lnprobability.p", "wb"))
     pickle.dump(sampler.acceptance_fraction,
@@ -72,7 +73,6 @@ def emcee_save_to_cpickle(mc, starting_point, population, prob, state, sampler, 
 
 def emcee_load_from_cpickle(emcee_dir_output, prefix=''):
     add_prefix = (prefix + '_' if prefix else '')
-
     # For backward compatibility
     try:
         theta_dict = pickle.load(open(emcee_dir_output + add_prefix + "theta_dict.p", "rb"))
@@ -88,9 +88,14 @@ def emcee_load_from_cpickle(emcee_dir_output, prefix=''):
     sampler_lnprobability = pickle.load(open(emcee_dir_output + add_prefix + "sampler_lnprobability.p", "rb"))
     sampler_acceptance_fraction = pickle.load(
         open(emcee_dir_output + add_prefix + "sampler_acceptance_fraction.p", "rb"))
-
+    
+    try:
+        sampler = pickle.load(open(emcee_dir_output + add_prefix + "sampler.p", "rb"))
+    except FileNotFoundError:
+        sampler = None
+    
     return mc, starting_point, population, prob, state, \
-        sampler_chain, sampler_lnprobability, sampler_acceptance_fraction, theta_dict
+        sampler_chain, sampler_lnprobability, sampler_acceptance_fraction, theta_dict, sampler
 
 
 def starting_point_save_to_cpickle(dir_output, starting_point, bounds, theta_dict, prefix=None):

@@ -11,10 +11,10 @@ import os
 import sys
 
 
-__all__ = ["pyorbit_emcee_test", "yaml_parser"]
+__all__ = ["pyorbit_emcee", "yaml_parser"]
 
 
-def pyorbit_emcee_test(config_in, input_datasets=None, return_output=None):
+def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
 
     try:
         import emcee
@@ -31,33 +31,32 @@ def pyorbit_emcee_test(config_in, input_datasets=None, return_output=None):
 
     reloaded_optimize = False
     reloaded_pyde = False
-    reloaded_emcee_multirun = False
     reloaded_emcee = False
 
     try:
         mc, population, starting_point, theta_dict = pyde_load_from_cpickle(
             pyde_dir_output, prefix='')
         reloaded_pyde = True
-    except:
+    except FileNotFoundError:
         pass
 
-    #first change: prob, state reloaded
     try:
-        mc, starting_point, population, prob, state, sampler_chain, sampler_lnprobability, _, theta_dict = \
-            emcee_load_from_cpickle(emcee_dir_output)
+        mc, starting_point, population, prob, state, sampler_chain, \
+            sampler_lnprobability, _, theta_dict, sampler = \
+            emcee_load_from_cpickle(emcee_dir_output) 
         reloaded_emcee = True
-    except:
+    except FileNotFoundError:
         pass
 
     try:
         starting_point, previous_boundaries, theta_dict = starting_point_load_from_cpickle(
             optimize_dir_output)
         reloaded_optimize = True
-    except:
+    except FileNotFoundError:
         pass
 
     print()
-    print('reloaded_optimize: ', reloaded_pyde)
+    print('reloaded_optimize: ', reloaded_optimize)
     print('reloaded_pyde: ', reloaded_pyde)
     print('reloaded_emcee: ', reloaded_emcee)
     print()
@@ -66,10 +65,11 @@ def pyorbit_emcee_test(config_in, input_datasets=None, return_output=None):
         previous_boundaries = mc.bounds
 
     if reloaded_emcee:
-        print('Initial Steps:', mc.emcee_parameters['nsteps'])
-
-        if 'completed_nsteps' not in mc.emcee_parameters:
-            mc.emcee_parameters['completed_nsteps'] = mc.emcee_parameters['nsteps']
+        print('Requested steps:', mc.emcee_parameters['nsteps'])
+        
+        mc.emcee_parameters['completed_nsteps'] = \
+            int(sampler_chain.shape[1] * mc.emcee_parameters['thin'])
+        
         print('Completed:', mc.emcee_parameters['completed_nsteps'] )
         pars_input(config_in, mc, input_datasets, reload_emcee=True)
         print('Total:', mc.emcee_parameters['nsteps'])
@@ -86,7 +86,7 @@ def pyorbit_emcee_test(config_in, input_datasets=None, return_output=None):
         """ In case the current startin point comes from a previous analysis """
         mc.emcee_dir_output = emcee_dir_output
 
-        if mc.emcee_parameters['nsteps'] == mc.emcee_parameters['completed_nsteps']:
+        if mc.emcee_parameters['nsteps'] <= mc.emcee_parameters['completed_nsteps']:
             
             print('Reference Time Tref: ', mc.Tref)
             print()
@@ -102,9 +102,27 @@ def pyorbit_emcee_test(config_in, input_datasets=None, return_output=None):
             else:
                 return
 
-    if not reloaded_emcee:
-        mc = ModelContainerEmcee()
+        elif not sampler:
+            print('Sampler file is missing - only analysis performed with PyORBIT >8.1 cn be resumed')
+            if return_output:
+                return mc, sampler_chain, sampler_lnprobability
+            else:
+                return
 
+    if reloaded_emcee:
+        sampled = mc.emcee_parameters['completed_nsteps']
+        nsteps_todo = mc.emcee_parameters['nsteps'] \
+            - mc.emcee_parameters['completed_nsteps'] 
+
+        print('Resuming from a previous run:')
+        print('Performed steps = ', mc.emcee_parameters['completed_nsteps'])
+        print('Final # of steps = ', mc.emcee_parameters['nsteps'])
+        print('Steps to be performed = ', nsteps_todo)
+        print()
+
+    else:
+
+        mc = ModelContainerEmcee()
         pars_input(config_in, mc, input_datasets)
 
         if mc.pyde_parameters['shutdown_jitter'] or mc.emcee_parameters['shutdown_jitter']:
@@ -113,7 +131,6 @@ def pyorbit_emcee_test(config_in, input_datasets=None, return_output=None):
 
         # keep track of which version has been used to perform emcee computations
         mc.emcee_parameters['version'] = emcee.__version__[0]
-
 
         mc.model_setup()
         mc.create_variables_bounds()
@@ -132,10 +149,10 @@ def pyorbit_emcee_test(config_in, input_datasets=None, return_output=None):
         if not os.path.exists(mc.emcee_dir_output):
             os.makedirs(mc.emcee_dir_output)
 
-    print('emcee version: ', emcee.__version__)
-    if mc.emcee_parameters['version'] == '2':
-        print('WARNING: upgrading to version 3 is strongly advised')
-    print()
+        state = None
+        sampled = 0
+        nsteps_todo = mc.emcee_parameters['nsteps']
+
     print('Include priors: ', mc.include_priors)
     print()
     print('Reference Time Tref: ', mc.Tref)
@@ -143,20 +160,10 @@ def pyorbit_emcee_test(config_in, input_datasets=None, return_output=None):
     print('Dimensions = ', mc.ndim)
     print('Nwalkers = ', mc.emcee_parameters['nwalkers'])
     print()
-    if reloaded_emcee:
-        print('Resuming from a previous run:')
-        print('Performed steps = ', mc.emcee_parameters['completed_nsteps'])
-        print('Final # of steps = ', mc.emcee_parameters['nsteps'])
-        print()
 
     if not getattr(mc, 'use_threading_pool', False):
         mc.use_threading_pool = False
-
-    print('Using threading pool:', mc.use_threading_pool)
-    print()
-    print('*************************************************************')
-    print()
-
+    
     if reloaded_emcee:
         sys.stdout.flush()
         pass
@@ -260,18 +267,20 @@ def pyorbit_emcee_test(config_in, input_datasets=None, return_output=None):
             threads_pool = InterruptiblePool(mc.emcee_parameters['nwalkers'])
 
     print()
+    print('*************************************************************')
+    print()
     print('Running emcee')
+    print()
+    print('emcee version: ', emcee.__version__)
+    if mc.emcee_parameters['version'] == '2':
+        print('WARNING: upgrading to version 3 is strongly advised')
+    print('Using threading pool:', mc.use_threading_pool)
+    print()
 
     if reloaded_emcee:
-        sampled = mc.emcee_parameters['completed_nsteps']
-        nsteps_todo = mc.emcee_parameters['nsteps'] \
-            - mc.emcee_parameters['completed_nsteps'] 
-    else:
-        state = None
-        sampled = 0
-        nsteps_todo = mc.emcee_parameters['nsteps']
-
-    if mc.use_threading_pool:
+        print('Using reloaded sampler')
+    
+    elif mc.use_threading_pool:
         sampler = emcee.EnsembleSampler(
             mc.emcee_parameters['nwalkers'], mc.ndim, mc, pool=threads_pool)
     else:
@@ -280,8 +289,9 @@ def pyorbit_emcee_test(config_in, input_datasets=None, return_output=None):
 
     if mc.emcee_parameters['nsave'] > 0:
         print()
-        print(' Saving temporary steps')
-        niter = int(nsteps_todo/mc.emcee_parameters['nsave'])
+        print('Saving temporary steps')
+        print()
+        niter = int(np.ceil(nsteps_todo/mc.emcee_parameters['nsave']))
 
         for i in range(0, niter):
             population, prob, state = sampler.run_mcmc(
@@ -315,10 +325,11 @@ def pyorbit_emcee_test(config_in, input_datasets=None, return_output=None):
             progress=True)
         
         sampled += nsteps_todo
-        print(sampled)
+
         theta_dict = results_analysis.get_theta_dictionary(mc)
         emcee_save_to_cpickle(mc, starting_point, population,
-                              prob, state, sampler, theta_dict, samples=sampled)
+                              prob, state, sampler, theta_dict, 
+                              samples=sampled)
 
         flatchain = emcee_flatchain(
             sampler.chain, mc.emcee_parameters['nburn'], mc.emcee_parameters['thin'])

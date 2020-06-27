@@ -1,5 +1,6 @@
 import pyorbit
 import argparse
+import sys
 
 if __name__ == '__main__':
     # print 'This program is being run by itself'
@@ -84,6 +85,12 @@ if __name__ == '__main__':
         plot_dictionary['full_correlation'] = True
         plot_dictionary['common_corner'] = True
         plot_dictionary['dataset_corner'] = True
+
+    print()
+    print('PyORBIT v{0}'.format(pyorbit.__version__))
+    print()
+    print('Python version in use:')
+    print(sys.version)
 
     config_in = pyorbit.yaml_parser(file_conf)
 

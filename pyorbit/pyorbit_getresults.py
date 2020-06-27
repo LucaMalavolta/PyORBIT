@@ -55,7 +55,7 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
         os.system('mkdir -p ' + dir_output)
 
         mc, starting_point, population, prob, state, \
-        sampler_chain, sampler_lnprobability, sampler_acceptance_fraction, _ = \
+        sampler_chain, sampler_lnprobability, sampler_acceptance_fraction, _, _ = \
             emcee_load_from_cpickle(dir_input)
 
         pars_input(config_in, mc, reload_emcee=True)
