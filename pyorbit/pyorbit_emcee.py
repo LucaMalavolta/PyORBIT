@@ -163,7 +163,14 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
 
     if not getattr(mc, 'use_threading_pool', False):
         mc.use_threading_pool = False
-    
+    else:
+        if mc.emcee_parameters['version'] == '2':
+            threads_pool = emcee.interruptible_pool.InterruptiblePool(
+                mc.emcee_parameters['nwalkers'])
+        else:
+            from multiprocessing.pool import Pool as InterruptiblePool
+            threads_pool = InterruptiblePool(mc.emcee_parameters['nwalkers'])
+
     if reloaded_emcee:
         sys.stdout.flush()
         pass
@@ -228,8 +235,20 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
         print('PyDE running')
         sys.stdout.flush()
 
-        de = DiffEvol(
-            mc, mc.bounds, mc.emcee_parameters['nwalkers'], maximize=True)
+        if mc.use_threading_pool:
+            de = DiffEvol(
+                mc, 
+                mc.bounds, 
+                mc.emcee_parameters['nwalkers'], 
+                maximize=True, 
+                pool=threads_pool)
+        else:
+            de = DiffEvol(
+                mc, 
+                mc.bounds, 
+                mc.emcee_parameters['nwalkers'], 
+                maximize=True)
+        
         de.optimize(int(mc.pyde_parameters['ngen']))
 
         population = de.population
