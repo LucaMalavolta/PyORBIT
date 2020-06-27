@@ -617,11 +617,13 @@ def print_integrated_ACF(sampler_chain, theta_dict, nthin):
     try:
         integrate_ACF = integrated_time(swapped_chains, tol=50, quiet=False)
     except (AutocorrError):
-        print('The integratedautocorrelation time cannot be reliably estimated')
+        print()
+        print('The integrated autocorrelation time cannot be reliably estimated')
         print('likely the chains are too short')
         print()
         return
     except (NameError, TypeError):
+        print()
         print('Old version of emcee, this function is not implemented')
         print()
         return 
