@@ -5,58 +5,35 @@ try:
     import celerite
     import autograd.numpy as np
     from celerite.terms import Term
-except ImportError:
+except:
     import numpy as np
     Term = dummy_import_4args
 
+# This class was written by Daniel Foreman-Mackey for his paper:
+# https://github.com/dfm/celerite/blob/master/paper/figures/rotation/rotation.ipynb
 
-class SHOTerm(Term):
-    r"""
-    A term representing a stochastically-driven, damped harmonic oscillator
-    As in celertie, but accpeting the physical parameters instead of their
-    logarithm
 
-    The PSD of this term is
-    .. math::
-        S(\omega) = \sqrt{\frac{2}{\pi}} \frac{S_0\,\omega_0^4}
-        {(\omega^2-{\omega_0}^2)^2 + {\omega_0}^2\,\omega^2/Q^2}
-    with the parameters ``log_S0``, ``log_Q``, and ``log_omega0``.
-    Args:
-        S0 (float): parameter :math:`S_0`.
-        Q (float): parameter :math:`Q`.
-        omega0 (float): parameter :math:`\omega_0`.
-    """
-
-    parameter_names = ("S0", "Q", "w0")
-
-    def __repr__(self):
-        return "SHOTerm({0.S0}, {0.Q}, {0.w0})".format(self)
+class RotationTerm(Term):
+    parameter_names = ("period", "timescale", "factor", "amp")
 
     def get_real_coefficients(self, params):
-        S0, Q, w0 = params
-        if Q >= 0.5:
-            return np.empty(0), np.empty(0)
-
-        f = np.sqrt(1.0 - 4.0 * Q**2)
+        period, timescale, factor, amp = params
         return (
-            0.5*S0*w0*Q*np.array([1.0+1.0/f, 1.0-1.0/f]),
-            0.5*w0/Q*np.array([1.0-f, 1.0+f])
+            amp * (1.0 + factor) / (2.0 + factor),
+            1./timescale,
         )
 
     def get_complex_coefficients(self, params):
-        S0, Q, w0 = params
-        if Q < 0.5:
-            return np.empty(0), np.empty(0), np.empty(0), np.empty(0)
-        
-        f = np.sqrt(4.0 * Q**2-1)
+        period, timescale, factor, amp = params
         return (
-            S0 * w0 * Q,
-            S0 * w0 * Q / f,
-            0.5 * w0 / Q,
-            0.5 * w0 / Q * f,
+            amp / (2.0 + factor),
+            0.0,
+            1./timescale,
+            2 * np.pi * 1./timescale,
         )
 
-class Celerite_Rotation(AbstractModel):
+
+class Celerite_Rotation_Legacy(AbstractModel):
 
     r"""A mixture of two SHO terms that can be used to model stellar rotation
     This term has two modes in Fourier space: one at ``period`` and one at
@@ -82,25 +59,24 @@ class Celerite_Rotation(AbstractModel):
 
     internal_likelihood = True
 
-    model_class = 'celerite_rotation'
+    model_class = 'celerite_rotation_legacy'
 
     list_pams_common = {
         'Prot',  # Rotational period of the star
-        'Q0',
-        'deltaQ',
-        'mix'
+        'Pdec',
+        'cel_factor',
     }
 
     list_pams_dataset = {
-        'amp',
+        'Hamp',
     }
 
     recenter_pams_dataset = {}
 
-    n_pams = 6
+    n_pams = 4
 
     def __init__(self, *args, **kwargs):
-        super(Celerite_Rotation, self).__init__(*args, **kwargs)
+        super(Celerite_Rotation_Legacy, self).__init__(*args, **kwargs)
         self.gp = {}
 
         try:
@@ -128,18 +104,10 @@ class Celerite_Rotation(AbstractModel):
             these values may be different from ones accepted by the kernel
         """
         # S0, Q, w0 = output_pams[:3] for SHOterm 1
-        output_pams[1] = 0.5 + input_pams['Q0'] + input_pams['deltaQ']
-        output_pams[2] = 4 * np.pi * output_pams[1] \
-            / (input_pams['Prot'] * np.sqrt(4 * output_pams[1] ** 2 - 1))
-        output_pams[0] = input_pams['amp'] \
-            / (output_pams[2] * output_pams[1]) 
-
-        # Another term at half the period
-        output_pams[4] = 0.5 + input_pams['Q0']
-        output_pams[5] = 8 * np.pi * output_pams[4] \
-            / (input_pams['Prot'] * np.sqrt(4 * output_pams[4] ** 2 - 1))
-        output_pams[3] = input_pams['mix'] * input_pams['amp'] \
-            / (output_pams[5] * output_pams[4])
+        output_pams[0] = input_pams['Prot']
+        output_pams[1] = input_pams['Pdec']
+        output_pams[2] = input_pams['cel_factor']
+        output_pams[3] = input_pams['Hamp']
 
         return output_pams
 
@@ -150,15 +118,16 @@ class Celerite_Rotation(AbstractModel):
     def define_kernel(self, dataset):
         input_pams = {
             'Prot': 10.0,
-            'Q0': 1.0, 
-            'deltaQ':0.5,
-            'mix': 0.5,
-            'amp': 10.0
+            'Pdec': 1000.,
+            'cel_factor': 0.5,
+            'Hamp': 10.
         }
         gp_pams = self.convert_val2gp(input_pams)
 
-        kernel = SHOTerm(S0=gp_pams[0], Q=gp_pams[1], w0=gp_pams[2]) \
-            + SHOTerm(S0=gp_pams[3], Q=gp_pams[4], w0=gp_pams[5])
+        kernel = RotationTerm(period=gp_pams[0],
+                              timescale=gp_pams[1], 
+                              factor=gp_pams[2], 
+                              amp=gp_pams[3])
         self.gp[dataset.name_ref] = celerite.GP(kernel)
 
         """ I've decided to add the jitter in quadrature instead of using a constant kernel to allow the use of 

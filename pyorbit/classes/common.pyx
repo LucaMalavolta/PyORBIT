@@ -156,7 +156,8 @@ def get_2darray_from_val(val):
 
 def giveback_priors(kind, bounds, pams, val):
 
-    """ The code is supposed to give -np.inf log-likelihood when the parameters are outside the boundaries,
+    """ The code is supposed to give -np.inf log-likelihood when the 
+    parameters are outside the boundaries,
     so this case is not encompassed in the definition of the priors """
 
     if kind == 'None':
@@ -241,13 +242,7 @@ def nested_sampling_prior_prepare(kind, bounds, pams, space):
     :return:
     """
 
-    if kind == 'Uniform':
-        return bounds
-
-    if kind == 'Gaussian':
-        return pams
-
-    if kind == 'beta':
+    if kind in ['Uniform', 'Gaussian', 'BetaDistribution', 'Beta', 'beta']:
         return pams
 
     """ All the following priors are defined only if the variable is sampled in the Natural space"""
@@ -293,7 +288,19 @@ def nested_sampling_prior_compute(val, kind, coeff, space):
         else:
             return stats.norm.isf(val, coeff[0], coeff[1])
 
-    elif kind == 'beta':
+    #if kind == 'HalfGaussian' or kind=='PositiveHalfGaussian':
+    #    if space == 'Logarithmic':
+    #        return np.log2(stats.truncnorm.isf(val, 0, 20*coeff[1], coeff[0], coeff[1]))
+    #    else:
+    #        return stats.norm.isf(val, 0, 20*coeff[1], coeff[0], coeff[1])
+
+    #if kind == 'NegativeHalfGaussian':
+    #    if space == 'Logarithmic':
+    #        return np.log2(stats.truncnorm.isf(val, -20*coeff[1], 0, coeff[0], coeff[1]))
+    #    else:
+    #        return stats.norm.isf(val, 20*coeff[1], 0, coeff[0], coeff[1])
+
+    elif kind in ['BetaDistribution', 'Beta', 'beta']:
         if space == 'Logarithmic':
             return np.log2(stats.norm.isf(stats.beta.isf(val, coeff[0], coeff[1])))
         else:

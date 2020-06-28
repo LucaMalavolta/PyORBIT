@@ -46,6 +46,7 @@ class CommonActivity(AbstractCommon):
         'P': [0.4, 100000.0],
         'K': [0.5, 2000.0],
         'f': [0.0, 2 * np.pi],
+        'cel_factor': [0.00000001, 1000000.0],
         'cel_B': [0.00000001, 1000000.0],
         'cel_C': [0.00000001, 1000000.0],
         'Vc': [-500.0, 500.0],  # Test boundaries
@@ -73,6 +74,7 @@ class CommonActivity(AbstractCommon):
         'P': ['Uniform', []],
         'K': ['Uniform', []],
         'f': ['Uniform', []],
+        'cel_factor': ['Uniform', []],
         'cel_B': ['Uniform', []],
         'cel_C': ['Uniform', []],
         'Vc': ['Uniform', []],
