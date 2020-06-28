@@ -56,29 +56,50 @@ class SHOTerm(Term):
             0.5 * w0 / Q * f,
         )
 
-class Celerite_Rotation(AbstractModel):
 
+class Celerite_Rotation_Term(TermSum):
     r"""A mixture of two SHO terms that can be used to model stellar rotation
     This term has two modes in Fourier space: one at ``period`` and one at
     ``0.5 * period``. This can be a good descriptive model for a wide range of
     stochastic variability in stellar time series from rotation to pulsations.
-    from Foreman-Mackey+2017 and exoplanet, but keeping the notation of 
-    the semi-periodic goerge kernel used in PyORBIT
-    differently from the example provided in the paper, here the terms are passed in the linear space already. It will
-    the job of the sampler to convert from Logarithmic to Linear space for those variables that the user has decided
-    to explore in logarithmic space
-
     Args:
         amp: The amplitude of the variability.
-        period: The primary period of variability.
-        Q0: The quality factor (or really the quality factor
+        tensor perio: The primary period of variability.
+        tensor Q0 or log_Q0: The quality factor (or really the quality factor
             minus one half) for the secondary oscillation.
-        deltaQ: The difference between the quality factors of the first
-            and the second modes. This parameterization (if ``deltaQ > 0``)
-            ensures that the primary mode alway has higher quality.
+        tensor deltaQ or log_deltaQ: The difference between the quality factors
+            of the first and the second modes. This parameterization (if
+            ``deltaQ > 0``) ensures that the primary mode alway has higher
+            quality.
         mix: The fractional amplitude of the secondary mode compared to the
             primary. This should probably always be ``0 < mix < 1``.
     """
+
+    # from Foreman-Mackey+2017 and exoplanet, but keeping the notation of the semi-periodic goerge kernel used in PyORBIT
+    # differently from the example provided in the paper, here the terms are passed in the linear space already. It will
+    # the job of the sampler to convert from Logarithmic to Linear space for those variables that the user has decided
+    # to explore in logarithmic space
+
+    parameter_names = ("period", "Q0", "deltaQ", "mix", "amp")
+
+    def __init__(self, **kwargs):
+        super(Celerite_Rotation_Term, self).__init__(**kwargs)
+
+        # One term at one period
+        Q1 = 0.5 + self.Q0 + self.deltaQ
+        w1 = 4 * np.pi * Q1 / (self.period * np.sqrt(4 * Q1 ** 2 - 1))
+        S1 = self.amp / (w1 * Q1)
+
+        # Another term at half the period
+        Q2 = 0.5 + self.Q0
+        w2 = 8 * np.pi * Q2 / (self.period * np.sqrt(4 * Q2 ** 2 - 1))
+        S2 = self.mix * self.amp / (w2 * Q2)
+
+        self.terms = (SHOTerm(S0=S1, w0=w1, Q=Q1), SHOTerm(S0=S2, w0=w2, Q=Q2))
+        self.coefficients = self.get_coefficients()
+
+
+class Celerite_Rotation(AbstractModel):
 
     internal_likelihood = True
 
@@ -97,7 +118,7 @@ class Celerite_Rotation(AbstractModel):
 
     recenter_pams_dataset = {}
 
-    n_pams = 6
+    n_pams = 5
 
     def __init__(self, *args, **kwargs):
         super(Celerite_Rotation, self).__init__(*args, **kwargs)
@@ -127,19 +148,12 @@ class Celerite_Rotation(AbstractModel):
             vector accepted by celerite.set_parameter_vector() function. Note:
             these values may be different from ones accepted by the kernel
         """
-        # S0, Q, w0 = output_pams[:3] for SHOterm 1
-        output_pams[1] = 0.5 + input_pams['Q0'] + input_pams['deltaQ']
-        output_pams[2] = 4 * np.pi * output_pams[1] \
-            / (input_pams['Prot'] * np.sqrt(4 * output_pams[1] ** 2 - 1))
-        output_pams[0] = input_pams['amp'] \
-            / (output_pams[2] * output_pams[1]) 
 
-        # Another term at half the period
-        output_pams[4] = 0.5 + input_pams['Q0']
-        output_pams[5] = 8 * np.pi * output_pams[4] \
-            / (input_pams['Prot'] * np.sqrt(4 * output_pams[4] ** 2 - 1))
-        output_pams[3] = input_pams['mix'] * input_pams['amp'] \
-            / (output_pams[5] * output_pams[4])
+        output_pams[0] = input_pams['Prot']
+        output_pams[1] = input_pams['Q0']
+        output_pams[2] = input_pams['deltaQ']
+        output_pams[3] = input_pams['mix']
+        output_pams[4] = input_pams['amp']
 
         return output_pams
 
@@ -148,17 +162,8 @@ class Celerite_Rotation(AbstractModel):
         return
 
     def define_kernel(self, dataset):
-        input_pams = {
-            'Prot': 10.0,
-            'Q0': 1.0, 
-            'deltaQ':0.5,
-            'mix': 0.5,
-            'amp': 10.0
-        }
-        gp_pams = self.convert_val2gp(input_pams)
 
-        kernel = SHOTerm(S0=gp_pams[0], Q=gp_pams[1], w0=gp_pams[2]) \
-            + SHOTerm(S0=gp_pams[3], Q=gp_pams[4], w0=gp_pams[5])
+        kernel = Celerite_Rotation_Term(period=10.0, Q0=1.0, deltaQ=0.5, mix=0.5, amp=1.0)
         self.gp[dataset.name_ref] = celerite.GP(kernel)
 
         """ I've decided to add the jitter in quadrature instead of using a constant kernel to allow the use of 
