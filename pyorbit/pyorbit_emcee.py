@@ -277,13 +277,13 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
         results_analysis.results_resumen(
             mc, starting_point, compute_lnprob=True, is_starting_point=True)
 
-    if mc.use_threading_pool:
-        if mc.emcee_parameters['version'] == '2':
-            threads_pool = emcee.interruptible_pool.InterruptiblePool(
-                mc.emcee_parameters['nwalkers'])
-        else:
-            from multiprocessing.pool import Pool as InterruptiblePool
-            threads_pool = InterruptiblePool(mc.emcee_parameters['nwalkers'])
+    #if mc.use_threading_pool:
+    #    if mc.emcee_parameters['version'] == '2':
+    #        threads_pool = emcee.interruptible_pool.InterruptiblePool(
+    #            mc.emcee_parameters['nwalkers'])
+    #    else:
+    #        from multiprocessing.pool import Pool as InterruptiblePool
+    #        threads_pool = InterruptiblePool(mc.emcee_parameters['nwalkers'])
 
     print()
     print('*************************************************************')
