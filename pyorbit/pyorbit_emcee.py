@@ -163,6 +163,7 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
 
     if not getattr(mc, 'use_threading_pool', False):
         mc.use_threading_pool = False
+        threads_pool = None
     else:
         if mc.emcee_parameters['version'] == '2':
             threads_pool = emcee.interruptible_pool.InterruptiblePool(
@@ -170,6 +171,7 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
         else:
             from multiprocessing.pool import Pool as InterruptiblePool
             threads_pool = InterruptiblePool(mc.emcee_parameters['nwalkers'])
+
 
     if reloaded_emcee:
         sys.stdout.flush()
@@ -235,19 +237,12 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
         print('PyDE running')
         sys.stdout.flush()
 
-        if mc.use_threading_pool:
-            de = DiffEvol(
-                mc, 
-                mc.bounds, 
-                mc.emcee_parameters['nwalkers'], 
-                maximize=True, 
-                pool=threads_pool)
-        else:
-            de = DiffEvol(
-                mc, 
-                mc.bounds, 
-                mc.emcee_parameters['nwalkers'], 
-                maximize=True)
+        de = DiffEvol(
+            mc, 
+            mc.bounds, 
+            mc.emcee_parameters['nwalkers'], 
+            maximize=True, 
+            pool=threads_pool)
         
         de.optimize(int(mc.pyde_parameters['ngen']))
 
@@ -299,13 +294,11 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
     if reloaded_emcee:
         print('Using reloaded sampler')
         print()
-    
-    elif mc.use_threading_pool:
-        sampler = emcee.EnsembleSampler(
-            mc.emcee_parameters['nwalkers'], mc.ndim, mc, pool=threads_pool)
+        sampler.pool = threads_pool
+
     else:
         sampler = emcee.EnsembleSampler(
-            mc.emcee_parameters['nwalkers'], mc.ndim, mc)
+            mc.emcee_parameters['nwalkers'], mc.ndim, mc, pool=threads_pool)
 
     if mc.emcee_parameters['nsave'] > 0:
         print('Saving temporary steps')
