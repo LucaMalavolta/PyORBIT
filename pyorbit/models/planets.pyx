@@ -67,13 +67,15 @@ class CommonPlanets(AbstractCommon):
         'b': [0.0, 1.0]
     }
 
-    """ Must be the same parameters as in list_pams, because priors are applied only to _physical_ parameters """
+    """ Must be the same parameters as in list_pams, because priors are 
+    applied only to _physical_ parameters """
     default_priors = {
         'P': ['Uniform', []],
         'K': ['Uniform', []],
         'Tc': ['Uniform', []],
         'f': ['Uniform', []],
-        'e': ['BetaDistribution', [0.71, 2.57]],
+        #'e': ['BetaDistribution', [0.71, 2.57]],
+        'e': ['Uniform', []],
         'e_coso': ['Uniform', []],
         'e_sino': ['Uniform', []],
         'sre_coso': ['Uniform', []],
