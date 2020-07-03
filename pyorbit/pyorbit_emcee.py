@@ -5,11 +5,11 @@ from pyorbit.classes.input_parser import yaml_parser, pars_input
 from pyorbit.classes.io_subroutines import pyde_save_to_pickle,\
     pyde_load_from_cpickle,\
     emcee_save_to_cpickle, emcee_load_from_cpickle, emcee_flatchain,\
-    emcee_create_dummy_file, starting_point_load_from_cpickle
+    emcee_create_dummy_file, starting_point_load_from_cpickle, emcee_simpler_load_from_cpickle
 import pyorbit.classes.results_analysis as results_analysis
 import os
 import sys
-
+from multiprocessing import Pool
 
 __all__ = ["pyorbit_emcee", "yaml_parser"]
 
@@ -161,18 +161,15 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
     print('Nwalkers = ', mc.emcee_parameters['nwalkers'])
     print()
 
+    if mc.emcee_parameters['version'] == '2':
+        mc.use_threading_pool = False
+
     if not getattr(mc, 'use_threading_pool', False):
         mc.use_threading_pool = False
         threads_pool = None
     else:
-        if mc.emcee_parameters['version'] == '2':
-            threads_pool = emcee.interruptible_pool.InterruptiblePool(
-                mc.emcee_parameters['nwalkers'])
-        else:
-            from multiprocessing.pool import Pool as InterruptiblePool
-            #threads_pool = InterruptiblePool(mc.emcee_parameters['nwalkers'])
-            threads_pool = InterruptiblePool()
-
+        #threads_pool = Pool(mc.emcee_parameters['nwalkers'])
+        threads_pool = Pool()
 
     if reloaded_emcee:
         sys.stdout.flush()
@@ -244,7 +241,7 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
             mc.emcee_parameters['nwalkers'], 
             maximize=True, 
             pool=threads_pool)
-        
+
         de.optimize(int(mc.pyde_parameters['ngen']))
 
         population = de.population
@@ -273,16 +270,13 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
         results_analysis.results_resumen(
             mc, starting_point, compute_lnprob=True, is_starting_point=True)
 
-    #if mc.use_threading_pool:
-    #    if mc.emcee_parameters['version'] == '2':
-    #        threads_pool = emcee.interruptible_pool.InterruptiblePool(
-    #            mc.emcee_parameters['nwalkers'])
-    #    else:
-    #        from multiprocessing.pool import Pool as InterruptiblePool
-    #        threads_pool = InterruptiblePool(mc.emcee_parameters['nwalkers'])
+    if mc.use_threading_pool:
+        # close the pool of threads
+        #threads_pool.close()
+        #threads_pool.terminate()
+        #threads_pool.join()
+        threads_pool = Pool()
 
-    #threads_pool = None
-    
     print()
     print('*************************************************************')
     print()
@@ -309,21 +303,30 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
         niter = int(np.ceil(nsteps_todo/mc.emcee_parameters['nsave']))
 
         for i in range(0, niter):
+
             population, prob, state = sampler.run_mcmc(
-                population, mc.emcee_parameters['nsave'], 
-                thin=mc.emcee_parameters['thin'], 
+                population,
+                mc.emcee_parameters['nsave'],
+                thin=mc.emcee_parameters['thin'],
                 rstate0=state,
                 progress=True)
 
             sampled += mc.emcee_parameters['nsave']
             theta_dict = results_analysis.get_theta_dictionary(mc)
             emcee_save_to_cpickle(mc, starting_point, population,
-                                  prob, state, sampler, theta_dict, samples=sampled)
+                                  prob, state, sampler, theta_dict, 
+                                  samples=sampled)
 
             flatchain = emcee_flatchain(
-                sampler.chain, mc.emcee_parameters['nburn'], mc.emcee_parameters['thin'])
+                sampler.chain,
+                mc.emcee_parameters['nburn'],
+                mc.emcee_parameters['thin'])
+
             results_analysis.print_integrated_ACF(
-                sampler.chain, theta_dict, mc.emcee_parameters['thin'])
+                sampler.chain,
+                theta_dict,
+                mc.emcee_parameters['thin'])
+
             results_analysis.results_resumen(mc, flatchain)
 
             print()
@@ -331,14 +334,20 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
             print()
             sys.stdout.flush()
 
+            # It turns out that reloading the sampler from the file will
+            # result in faster parallelization...
+            state, sampler = emcee_simpler_load_from_cpickle(emcee_dir_output)
+            if mc.use_threading_pool:
+                sampler.pool = Pool()
+
     else:
         population, prob, state = sampler.run_mcmc(
-            population, 
-            nsteps_todo, 
+            population,
+            nsteps_todo,
             thin=mc.emcee_parameters['thin'],
             rstate0=state,
             progress=True)
-        
+
         sampled += nsteps_todo
 
         theta_dict = results_analysis.get_theta_dictionary(mc)
@@ -347,11 +356,17 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
                               samples=sampled)
 
         flatchain = emcee_flatchain(
-            sampler.chain, mc.emcee_parameters['nburn'], mc.emcee_parameters['thin'])
+            sampler.chain,
+            mc.emcee_parameters['nburn'],
+            mc.emcee_parameters['thin'])
+
         results_analysis.print_integrated_ACF(
-            sampler.chain, theta_dict, mc.emcee_parameters['thin'])
+            sampler.chain,
+            theta_dict,
+            mc.emcee_parameters['thin'])
+
         results_analysis.results_resumen(mc, flatchain)
-    
+
     print()
     print('emcee completed')
     print()

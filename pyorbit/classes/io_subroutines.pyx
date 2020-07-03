@@ -61,7 +61,8 @@ def emcee_save_to_cpickle(mc, starting_point, population, prob, state, sampler, 
     pickle.dump(theta_dict, open(mc.emcee_dir_output + add_prefix + "theta_dict.p", "wb"))
     pickle.dump(mc, open(mc.emcee_dir_output + add_prefix + "model_container.p", "wb"))
     pickle.dump(starting_point, open(mc.emcee_dir_output + add_prefix + "starting_point.p", "wb"))
-    pickle.dump(population, open(mc.emcee_dir_output + add_prefix + "starting_population.p", "wb"))
+    #pickle.dump(population, open(mc.emcee_dir_output + add_prefix + "starting_population.p", "wb"))
+    pickle.dump(population, open(mc.emcee_dir_output + add_prefix + "population.p", "wb"))
     pickle.dump(prob, open(mc.emcee_dir_output + add_prefix + "prob.p", "wb"))
     pickle.dump(state, open(mc.emcee_dir_output + add_prefix + "state.p", "wb"))
     pickle.dump(sampler, open(mc.emcee_dir_output + add_prefix + "sampler.p", "wb"))
@@ -81,7 +82,13 @@ def emcee_load_from_cpickle(emcee_dir_output, prefix=''):
 
     mc = pickle.load(open(emcee_dir_output + add_prefix + "model_container.p", "rb"))
     starting_point = pickle.load(open(emcee_dir_output + add_prefix + "starting_point.p", "rb"))
-    population = pickle.load(open(emcee_dir_output + add_prefix + "starting_population.p", "rb"))
+    
+    # For backward compatibility after changing a confusing name
+    try:
+        population = pickle.load(open(emcee_dir_output + add_prefix + "population.p", "rb"))
+    except FileNotFoundError:
+        population = pickle.load(open(emcee_dir_output + add_prefix + "starting_population.p", "rb"))
+    
     prob = pickle.load(open(mc.emcee_dir_output + add_prefix + "prob.p", "rb"))
     state = pickle.load(open(mc.emcee_dir_output + add_prefix + "state.p", "rb"))
     sampler_chain = pickle.load(open(emcee_dir_output + add_prefix + "sampler_chain.p", "rb"))
@@ -97,6 +104,12 @@ def emcee_load_from_cpickle(emcee_dir_output, prefix=''):
     return mc, starting_point, population, prob, state, \
         sampler_chain, sampler_lnprobability, sampler_acceptance_fraction, theta_dict, sampler
 
+def emcee_simpler_load_from_cpickle(emcee_dir_output, prefix=''):
+    add_prefix = (prefix + '_' if prefix else '')
+    state = pickle.load(open(emcee_dir_output + add_prefix + "state.p", "rb"))
+    sampler = pickle.load(open(emcee_dir_output + add_prefix + "sampler.p", "rb"))
+
+    return state, sampler
 
 def starting_point_save_to_cpickle(dir_output, starting_point, bounds, theta_dict, prefix=None):
     add_prefix = (prefix + '_' if prefix else '')
