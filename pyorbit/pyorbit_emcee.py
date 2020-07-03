@@ -170,7 +170,8 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
                 mc.emcee_parameters['nwalkers'])
         else:
             from multiprocessing.pool import Pool as InterruptiblePool
-            threads_pool = InterruptiblePool(mc.emcee_parameters['nwalkers'])
+            #threads_pool = InterruptiblePool(mc.emcee_parameters['nwalkers'])
+            threads_pool = InterruptiblePool()
 
 
     if reloaded_emcee:
@@ -280,7 +281,7 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
     #        from multiprocessing.pool import Pool as InterruptiblePool
     #        threads_pool = InterruptiblePool(mc.emcee_parameters['nwalkers'])
 
-    threads_pool = None
+    #threads_pool = None
     
     print()
     print('*************************************************************')
