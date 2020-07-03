@@ -53,7 +53,7 @@ class AbstractModel(object):
         self.default_priors = {}
 
         self.model_conf = None
-
+        
     def initialize_model(self, mc, **kwargs):
         pass
 

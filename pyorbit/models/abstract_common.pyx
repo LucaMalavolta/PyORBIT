@@ -32,7 +32,7 @@ class AbstractCommon(object):
 
         self.prior_kind = {}
         self.prior_pams = {}
-
+        
     def define_special_variable_properties(self, ndim, output_lists, var):
         return ndim, output_lists, False
 
@@ -157,6 +157,10 @@ class AbstractCommon(object):
 
         prior_out = 0.00
         variable_value = self.convert(theta)
+
+        """ The first time this subroutine is called, the KDE is computed
+            for those variables where a 
+        """
 
         for var in variable_value:
             prior_out += giveback_priors(self.prior_kind[var],

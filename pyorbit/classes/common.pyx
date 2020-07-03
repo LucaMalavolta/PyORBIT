@@ -160,6 +160,10 @@ def giveback_priors(kind, bounds, pams, val):
     parameters are outside the boundaries,
     so this case is not encompassed in the definition of the priors """
 
+    if kind == 'File':
+        """ Special case where 'pams' is actually a KDE """
+        return np.log(pams.pdf(val))
+    
     if kind == 'None':
         return 0.00
 

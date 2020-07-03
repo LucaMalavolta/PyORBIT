@@ -2,6 +2,8 @@ from __future__ import print_function
 from pyorbit.models.dataset import Dataset
 import sys
 import yaml
+import copy
+from scipy.stats import gaussian_kde
 
 from pyorbit.classes.common import np, get_2darray_from_val
 
@@ -57,9 +59,10 @@ __all__ = ["pars_input", "yaml_parser"]
  single_planet_model: the model is associated to a specific planet, e.g., time of transits 
 """
 
-model_requires_planets = ['radial_velocities', 'rv_planets', 'batman_transit', 'batman_transit_with_ttv' ]
-single_planet_model =  ['Tc_planets', 'transit_times']
-transit_time_model =  ['Tc_planets', 'transit_times']
+model_requires_planets = ['radial_velocities',
+                          'rv_planets', 'batman_transit', 'batman_transit_with_ttv']
+single_planet_model = ['Tc_planets', 'transit_times']
+transit_time_model = ['Tc_planets', 'transit_times']
 
 define_common_type_to_class = {
     'planets': CommonPlanets,
@@ -87,11 +90,11 @@ define_type_to_class = {
                    'keplerian': RVkeplerian,
                    'dynamical': RVdynamical},
     'Tc_planets': {'circular': TransitTimeKeplerian,
-                     'keplerian': TransitTimeKeplerian,
-                     'dynamical': TransitTimeDynamical},
+                   'keplerian': TransitTimeKeplerian,
+                   'dynamical': TransitTimeDynamical},
     'transit_times': {'circular': TransitTimeKeplerian,
-                     'keplerian': TransitTimeKeplerian,
-                     'dynamical': TransitTimeDynamical},
+                      'keplerian': TransitTimeKeplerian,
+                      'dynamical': TransitTimeDynamical},
     'batman_transit': Batman_Transit,
     'batman_transit_with_ttv': Batman_Transit_With_TTV,
     'gp_quasiperiodic': GaussianProcess_QuasiPeriodicActivity,
@@ -159,22 +162,28 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, shutdown_
             conf = conf_solver['emcee']
 
             if 'multirun' in conf:
-                mc.emcee_parameters['multirun'] = np.asarray(conf['multirun'], dtype=np.int64)
+                mc.emcee_parameters['multirun'] = np.asarray(
+                    conf['multirun'], dtype=np.int64)
 
             if 'multirun_iter' in conf:
-                mc.emcee_parameters['multirun_iter'] = np.asarray(conf['multirun_iter'], dtype=np.int64)
+                mc.emcee_parameters['multirun_iter'] = np.asarray(
+                    conf['multirun_iter'], dtype=np.int64)
 
             if 'nsave' in conf:
-                mc.emcee_parameters['nsave'] = np.asarray(conf['nsave'], dtype=np.double)
+                mc.emcee_parameters['nsave'] = np.asarray(
+                    conf['nsave'], dtype=np.double)
 
             if 'nsteps' in conf:
-                mc.emcee_parameters['nsteps'] = np.asarray(conf['nsteps'], dtype=np.int64)
+                mc.emcee_parameters['nsteps'] = np.asarray(
+                    conf['nsteps'], dtype=np.int64)
 
             if 'nburn' in conf:
-                mc.emcee_parameters['nburn'] = np.asarray(conf['nburn'], dtype=np.int64)
+                mc.emcee_parameters['nburn'] = np.asarray(
+                    conf['nburn'], dtype=np.int64)
 
             if 'thin' in conf:
-                mc.emcee_parameters['thin'] = np.asarray(conf['thin'], dtype=np.int64)
+                mc.emcee_parameters['thin'] = np.asarray(
+                    conf['thin'], dtype=np.int64)
 
         # Check if inclination has been updated
         for model_name, model_conf in conf_common.items():
@@ -188,15 +197,18 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, shutdown_
                     if 'fixed' in planet_conf:
                         fixed_conf = planet_conf['fixed']
                         for var in fixed_conf:
-                            mc.common_models[planet_name].fix_list[var] = get_2darray_from_val(fixed_conf[var])
+                            mc.common_models[planet_name].fix_list[var] = get_2darray_from_val(
+                                fixed_conf[var])
 
             if model_name == 'star_parameters':
-                bounds_space_priors_starts_fixed(mc, mc.common_models[model_name], model_conf)
+                bounds_space_priors_starts_fixed(
+                    mc, mc.common_models[model_name], model_conf)
 
             if model_name == 'star':
                 try:
                     star_conf = model_conf['star_parameters']
-                    bounds_space_priors_starts_fixed(mc, mc.common_models['star_parameters'], star_conf)
+                    bounds_space_priors_starts_fixed(
+                        mc, mc.common_models['star_parameters'], star_conf)
                 except:
                     print()
                     print(" Error in reading the priors from stellar parameters ")
@@ -220,12 +232,14 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, shutdown_
             data_input = input_datasets[dataset_name]
         except:
             try:
-                data_input = mc.dataset_dict[dataset_name].convert_dataset_from_file(dataset_conf['file'])
+                data_input = mc.dataset_dict[dataset_name].convert_dataset_from_file(
+                    dataset_conf['file'])
             except:
                 print('Either a file or an input dataset must be provided')
                 quit()
 
-        mc.dataset_dict[dataset_name].define_dataset_base(data_input, False, shutdown_jitter)
+        mc.dataset_dict[dataset_name].define_dataset_base(
+            data_input, False, shutdown_jitter)
 
         if mc.Tref:
             mc.dataset_dict[dataset_name].common_Tref(mc.Tref)
@@ -235,7 +249,8 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, shutdown_
         if 'boundaries' in dataset_conf:
             bound_conf = dataset_conf['boundaries']
             for var in bound_conf:
-                mc.dataset_dict[dataset_name].bounds[var] = np.asarray(bound_conf[var], dtype=np.double)
+                mc.dataset_dict[dataset_name].bounds[var] = np.asarray(
+                    bound_conf[var], dtype=np.double)
 
         if 'spaces' in dataset_conf:
             space_conf = dataset_conf['spaces']
@@ -246,7 +261,8 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, shutdown_
             mc.starting_point_flag = True
             starts_conf = dataset_conf['starts']
             for var in starts_conf:
-                mc.dataset_dict[dataset_name].starts[var] = np.asarray(starts_conf[var], dtype=np.double)
+                mc.dataset_dict[dataset_name].starts[var] = np.asarray(
+                    starts_conf[var], dtype=np.double)
 
         mc.dataset_dict[dataset_name].update_bounds_spaces_priors_starts()
 
@@ -265,9 +281,11 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, shutdown_
                 if not isinstance(planet_name, str):
                     planet_name = repr(planet_name)
 
-                mc.common_models[planet_name] = define_common_type_to_class['planets'](planet_name)
+                mc.common_models[planet_name] = define_common_type_to_class['planets'](
+                    planet_name)
 
-                bounds_space_priors_starts_fixed(mc, mc.common_models[planet_name], planet_conf)
+                bounds_space_priors_starts_fixed(
+                    mc, mc.common_models[planet_name], planet_conf)
 
                 try:
                     if planet_conf['orbit'] in mc.common_models[planet_name].orbit_list:
@@ -275,26 +293,33 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, shutdown_
                         #mc.planet_dict[planet_name] = planet_conf['orbit']
                         mc.common_models[planet_name].orbit = planet_conf['orbit']
 
-                        print('Using orbital model: ', mc.common_models[planet_name].orbit)
+                        print('Using orbital model: ',
+                              mc.common_models[planet_name].orbit)
 
                         if planet_conf['orbit'] == 'circular':
-                            mc.common_models[planet_name].fix_list['e'] = np.asarray([0.000, 0.0000], dtype=np.double)
-                            mc.common_models[planet_name].fix_list['o'] = np.asarray([np.pi/2., 0.0000], dtype=np.double)
+                            mc.common_models[planet_name].fix_list['e'] = np.asarray(
+                                [0.000, 0.0000], dtype=np.double)
+                            mc.common_models[planet_name].fix_list['o'] = np.asarray(
+                                [np.pi/2., 0.0000], dtype=np.double)
                         if planet_conf['orbit'] == 'dynamical':
                             mc.dynamical_dict[planet_name] = True
                     else:
                         #mc.planet_dict[planet_name] = mc.common_models[planet_name].orbit
-                        print('Orbital model not recognized, switching to: ', mc.common_models[planet_name].orbit)
+                        print('Orbital model not recognized, switching to: ',
+                              mc.common_models[planet_name].orbit)
                 except:
                     #mc.planet_dict[planet_name] = mc.common_models[planet_name].orbit
-                    print('Using default orbital model: ', mc.common_models[planet_name].orbit)
+                    print('Using default orbital model: ',
+                          mc.common_models[planet_name].orbit)
 
                 try:
                     if planet_conf['parametrization'] in mc.common_models[planet_name].parametrization_list:
                         mc.common_models[planet_name].parametrization = planet_conf['parametrization']
-                        print('Using orbital parametrization: ', mc.common_models[planet_name].parametrization)
+                        print('Using orbital parametrization: ',
+                              mc.common_models[planet_name].parametrization)
                     else:
-                        print('Orbital parametrization not recognized, switching to: ', mc.common_models[planet_name].parametrization)
+                        print('Orbital parametrization not recognized, switching to: ',
+                              mc.common_models[planet_name].parametrization)
 
                     if mc.common_models[planet_name].parametrization[-5:] == 'Tcent' or \
                             mc.common_models[planet_name].parametrization[-5:] == 'Tc':
@@ -302,38 +327,45 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, shutdown_
                         mc.common_models[planet_name].use_time_of_transit = True
 
                 except:
-                    print('Using default orbital parametrization: ', mc.common_models[planet_name].parametrization)
+                    print('Using default orbital parametrization: ',
+                          mc.common_models[planet_name].parametrization)
 
                 try:
                     mc.common_models[planet_name].use_inclination = planet_conf['use_inclination']
-                    print('Inclination will be included as free parameter: ', planet_conf['use_inclination'])
+                    print('Inclination will be included as free parameter: ',
+                          planet_conf['use_inclination'])
                 except:
                     for key in ['boundaries', 'spaces', 'priors', 'starts', 'fixed']:
                         if key in planet_conf and 'i' in planet_conf[key]:
                             mc.common_models[planet_name].use_inclination = True
-                            print('Inclination will be included as free parameter: ', True)
+                            print(
+                                'Inclination will be included as free parameter: ', True)
                     # False by default, unless the user has specified some of its properties
 
                 try:
                     mc.common_models[planet_name].use_semimajor_axis = planet_conf['use_semimajor_axis']
-                    print('Semi-major axis will be included as free parameter: {}'.format(planet_conf['use_inclination']))
+                    print('Semi-major axis will be included as free parameter: {}'.format(
+                        planet_conf['use_inclination']))
                 except:
                     for key in ['boundaries', 'spaces', 'priors', 'starts', 'fixed']:
                         if key in planet_conf and 'a' in planet_conf[key]:
                             mc.common_models[planet_name].use_semimajor_axis = True
-                            print('Semi-major axis will be included as free parameter: ', True)
+                            print(
+                                'Semi-major axis will be included as free parameter: ', True)
                     # False by default, unless the user has specified some of its properties
 
                 try:
                     mc.common_models[planet_name].use_time_of_transit = planet_conf['use_time_of_transit']
-                    print('Using Central Time of Transit instead of phase: {}'.format(planet_conf['use_time_of_transit']))
+                    print('Using Central Time of Transit instead of phase: {}'.format(
+                        planet_conf['use_time_of_transit']))
                 except:
                     # False by default
                     pass
 
                 try:
                     mc.common_models[planet_name].use_mass_for_planets = planet_conf['use_mass_for_planets']
-                    print('Using planetary mass instead of RV semiamplitude: '.format(planet_conf['use_mass_for_planets']))
+                    print('Using planetary mass instead of RV semiamplitude: '.format(
+                        planet_conf['use_mass_for_planets']))
                 except:
                     # False by default
                     pass
@@ -359,14 +391,17 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, shutdown_
                 dict_copy = model_conf[conf_name].copy()
 
                 for key in ['type', 'kind', 'priors', 'spaces', 'boundaries', 'starts', 'fixed', 'parametrization']:
-                    if key in dict_copy: del dict_copy[key]
+                    if key in dict_copy:
+                        del dict_copy[key]
 
-                if len(dict_copy) == 0 :
+                if len(dict_copy) == 0:
                     dict_copy = {conf_name: model_conf[conf_name].copy()}
 
                 for key_name, key_vals in dict_copy.items():
-                    mc.common_models[key_name] = define_common_type_to_class[model_type](key_name)
-                    bounds_space_priors_starts_fixed(mc, mc.common_models[key_name], key_vals)
+                    mc.common_models[key_name] = define_common_type_to_class[model_type](
+                        key_name)
+                    bounds_space_priors_starts_fixed(
+                        mc, mc.common_models[key_name], key_vals)
 
                     """ Automatic detection of common models without dataset-specific parameters"""
                     for dataset_name, dataset in mc.dataset_dict.items():
@@ -376,7 +411,8 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, shutdown_
                     try:
                         if key_vals['parametrization'] in mc.common_models[key_name].parametrization_list:
                             mc.common_models[key_name].parametrization = key_vals['parametrization']
-                            print('Using limb darkening coefficient parametrization: ', mc.common_models[key_name].parametrization)
+                            print('Using limb darkening coefficient parametrization: ',
+                                  mc.common_models[key_name].parametrization)
                     except:
                         continue
 
@@ -393,8 +429,10 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, shutdown_
             else:
                 model_type = model_name
 
-            mc.common_models[model_name] = define_common_type_to_class[model_type](model_name)
-            bounds_space_priors_starts_fixed(mc, mc.common_models[model_name], model_conf)
+            mc.common_models[model_name] = define_common_type_to_class[model_type](
+                model_name)
+            bounds_space_priors_starts_fixed(
+                mc, mc.common_models[model_name], model_conf)
 
             """ Automatic detection of common models without dataset-specific parameters 
                 If the required parameters are included in the "model-specific section", 
@@ -404,8 +442,10 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, shutdown_
             for dataset_name, dataset in mc.dataset_dict.items():
 
                 if model_name in dataset.models and (model_name in conf_models):
-                    print('Common model: ', model_name, 'Data-specific model:', model_name)
-                    print('Using the same name for a common model and a data-specific model causes')
+                    print('Common model: ', model_name,
+                          'Data-specific model:', model_name)
+                    print(
+                        'Using the same name for a common model and a data-specific model causes')
                     print('the automatic assignment of the former to the latter')
                     print()
 
@@ -413,8 +453,10 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, shutdown_
                     conf_models[model_name]['common'] = model_name
 
                 if model_name in dataset.models and not (model_name in conf_models):
-                    print('Common model: ', model_name, 'used by dataset', dataset.name_ref)
-                    print('Common model will be used as data-specific model for this dataset')
+                    print('Common model: ', model_name,
+                          'used by dataset', dataset.name_ref)
+                    print(
+                        'Common model will be used as data-specific model for this dataset')
                     print()
 
                     try:
@@ -424,7 +466,8 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, shutdown_
                         conf_models[model_name] = {'common': model_name}
 
         if 'star_parameters' not in mc.common_models:
-            mc.common_models['star_parameters'] = define_common_type_to_class['star_parameters']('star_parameters')
+            mc.common_models['star_parameters'] = define_common_type_to_class['star_parameters'](
+                'star_parameters')
 
     """ Check if there is any planet that requires dynamical computations"""
     if mc.dynamical_dict:
@@ -457,11 +500,10 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, shutdown_
             """ radial_velocities and transits are just wrappers for the planets to be actually included in the model, so we
                 substitute it with the individual planets in the list"""
 
-            #try:
+            # try:
             #    planet_list = np.atleast_1d(model_conf['planets']).tolist()
-            #except:
+            # except:
             #    planet_list = np.atleast_1d(model_conf['common']).tolist()
-
 
             try:
                 model_name_expanded = []
@@ -475,8 +517,8 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, shutdown_
                     planet_list = np.atleast_1d(model_conf['planets']).tolist()
                 except:
                     planet_list = np.atleast_1d(model_conf['common']).tolist()
-                model_name_expanded = [model_name + '_' + pl_name for pl_name in planet_list]
-
+                model_name_expanded = [model_name +
+                                       '_' + pl_name for pl_name in planet_list]
 
             """ Let's avoid some dumb user using the planet names to name the models"""
 
@@ -492,23 +534,26 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, shutdown_
                         if len(list(set(planet_list) & set(mc.dynamical_dict))) and not keplerian_approximation:
                             dataset.dynamical = True
 
-
             for model_name_exp, planet_name in zip(model_name_expanded, planet_list):
 
                 try:
                     mc.models[model_name_exp] = \
-                            define_type_to_class[model_type][mc.common_models[planet_name].orbit](model_name_exp, planet_name)
+                        define_type_to_class[model_type][mc.common_models[planet_name].orbit](
+                            model_name_exp, planet_name)
 
                     if keplerian_approximation:
                         """ override default model from input file, to apply keplerian approximation """
                         mc.models[model_name_exp] = \
-                        define_type_to_class[model_type]['keplerian'](model_name_exp, planet_name)
+                            define_type_to_class[model_type]['keplerian'](
+                                model_name_exp, planet_name)
                         mc.common_models[planet_name].use_mass_for_planets = True
-                        print('Using planetary mass instead of RV semiamplitude: ', planet_conf['use_mass_for_planets'])
+                        print('Using planetary mass instead of RV semiamplitude: ',
+                              planet_conf['use_mass_for_planets'])
 
                 except:
                     mc.models[model_name_exp] = \
-                            define_type_to_class[model_type](model_name_exp, planet_name)
+                        define_type_to_class[model_type](
+                            model_name_exp, planet_name)
 
                     mc.models[model_name_exp].model_conf = model_conf.copy()
 
@@ -529,7 +574,8 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, shutdown_
                         common_name = mc.models[model_name_exp].model_conf['limb_darkening']
                     except:
                         common_name = 'limb_darkening'
-                    print('  LC model: {0:s} is using {1:s} LD parameters'.format(model_name_exp, common_name))
+                    print('  LC model: {0:s} is using {1:s} LD parameters'.format(
+                        model_name_exp, common_name))
 
                     mc.models[model_name_exp].model_conf['limb_darkening_model'] = \
                         mc.common_models[common_name].ld_type
@@ -551,61 +597,31 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, shutdown_
                             model_conf[dataset_name] = {}
 
                         bounds_space_priors_starts_fixed(mc, mc.models[model_name_exp], model_conf[dataset_name],
-                                                       dataset_1=dataset_name)
-
-
-        #elif model_type == 'transit_times':
-        #    """ Only one planet for each file with transit times... mixing them would cause HELL"""
-
-        #    try:
-        #        planet_name = np.atleast_1d(model_conf['planet']).tolist()[0]
-        #    except:
-        #        planet_name = np.atleast_1d(model_conf['common']).tolist()[0]
-
-        #    if keplerian_approximation:
-        #        """ override default model from input file, to apply keplerian approximation """
-        #        mc.models[model_name] = \
-        #            define_type_to_class[model_type]['keplerian'](model_name, planet_name)
-        #    else:
-        #        mc.models[model_name] = \
-        #           define_type_to_class[model_type][mc.common_models[planet_name].orbit](model_name, planet_name)
-
-            #mc.models[model_name] = \
-            #        define_type_to_class[model_type][mc.planet_dict[planet_name]](model_name, planet_name)
-
-
-
-        #    for dataset_name, dataset in mc.dataset_dict.items():
-        #        if planet_name in mc.dynamical_dict and model_name in dataset.models and not keplerian_approximation:
-        #            dataset.planet_name = planet_name
-        #            dataset.dynamical = True
-        #            mc.dynamical_t0_dict[planet_name] = dataset_name
-
-        #    mc.models[model_name].common_ref.append('star_parameters')
-
+                                                         dataset_1=dataset_name)
 
         elif model_type == 'local_correlation' or model_type == 'correlation':
             mc.models[model_name] = \
-                    define_type_to_class[model_type](model_name, None)
+                define_type_to_class[model_type](model_name, None)
             mc.models[model_name].model_conf = model_conf.copy()
-            bounds_space_priors_starts_fixed(mc, mc.models[model_name], model_conf, dataset_1=model_conf['reference'])
+            bounds_space_priors_starts_fixed(
+                mc, mc.models[model_name], model_conf, dataset_1=model_conf['reference'])
 
         else:
 
             try:
                 mc.models[model_name] = \
-                    define_type_to_class[model_type](model_name, model_conf['common'])
-            except:
+                    define_type_to_class[model_type](
+                        model_name, model_conf['common'])
+            except KeyError:
                 mc.models[model_name] = \
                     define_type_to_class[model_type](model_name, None)
-
 
             try:
                 if model_conf['normalization_model'] is True:
                     mc.models[model_name].normalization_model = True
                     mc.models[model_name].unitary_model = False
                     print('Model type: normalization')
-            except:
+            except KeyError:
                 pass
 
             try:
@@ -613,7 +629,7 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, shutdown_
                     mc.models[model_name].unitary_model = True
                     mc.models[model_name].normalization_model = False
                     print('Model type: unitary')
-            except:
+            except KeyError:
                 pass
 
             try:
@@ -621,11 +637,10 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, shutdown_
                     mc.models[model_name].unitary_model = False
                     mc.models[model_name].normalization_model = False
                     print('Model type: additive')
-            except:
+            except KeyError:
                 pass
 
             """ Using default boundaries if one dataset is missing"""
-
             try:
                 for dataset_name, dataset in mc.dataset_dict.items():
 
@@ -635,10 +650,10 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, shutdown_
                             model_conf[dataset_name] = {}
 
                         bounds_space_priors_starts_fixed(mc, mc.models[model_name], model_conf[dataset_name],
-                                                       dataset_1=dataset_name)
+                                                         dataset_1=dataset_name)
             except:
                 pass
-
+            
             try:
                 mc.models[model_name].model_conf.update(model_conf)
             except:
@@ -653,9 +668,11 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, shutdown_
             mc.dataset_dict[dataset_name].common_Tref(mc.Tref)
 
     if 'star_mass' in conf_parameters:
-        mc.star_mass = np.asarray(conf_parameters['star_mass'][:], dtype=np.double)
+        mc.star_mass = np.asarray(
+            conf_parameters['star_mass'][:], dtype=np.double)
     if 'star_radius' in conf_parameters:
-        mc.star_radius = np.asarray(conf_parameters['star_radius'][:], dtype=np.double)
+        mc.star_radius = np.asarray(
+            conf_parameters['star_radius'][:], dtype=np.double)
 
     if 'dynamical_integrator' in conf_parameters:
         try:
@@ -680,13 +697,16 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, shutdown_
         conf = conf_solver['pyde']
 
         if 'ngen' in conf:
-            mc.pyde_parameters['ngen'] = np.asarray(conf['ngen'], dtype=np.double)
+            mc.pyde_parameters['ngen'] = np.asarray(
+                conf['ngen'], dtype=np.double)
 
         if 'npop_mult' in conf:
-            mc.pyde_parameters['npop_mult'] = np.asarray(conf['npop_mult'], dtype=np.int64)
+            mc.pyde_parameters['npop_mult'] = np.asarray(
+                conf['npop_mult'], dtype=np.int64)
 
         if 'shutdown_jitter' in conf:
-            mc.pyde_parameters['shutdown_jitter'] = np.asarray(conf['shutdown_jitter'], dtype=bool)
+            mc.pyde_parameters['shutdown_jitter'] = np.asarray(
+                conf['shutdown_jitter'], dtype=bool)
         elif shutdown_jitter:
             mc.pyde_parameters['shutdown_jitter'] = shutdown_jitter
 
@@ -697,28 +717,36 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, shutdown_
         conf = conf_solver['emcee']
 
         if 'multirun' in conf:
-            mc.emcee_parameters['multirun'] = np.asarray(conf['multirun'], dtype=np.int64)
+            mc.emcee_parameters['multirun'] = np.asarray(
+                conf['multirun'], dtype=np.int64)
 
         if 'multirun_iter' in conf:
-            mc.emcee_parameters['multirun_iter'] = np.asarray(conf['multirun_iter'], dtype=np.int64)
+            mc.emcee_parameters['multirun_iter'] = np.asarray(
+                conf['multirun_iter'], dtype=np.int64)
 
         if 'nsave' in conf:
-            mc.emcee_parameters['nsave'] = np.asarray(conf['nsave'], dtype=np.double)
+            mc.emcee_parameters['nsave'] = np.asarray(
+                conf['nsave'], dtype=np.double)
 
         if 'nsteps' in conf:
-            mc.emcee_parameters['nsteps'] = np.asarray(conf['nsteps'], dtype=np.int64)
+            mc.emcee_parameters['nsteps'] = np.asarray(
+                conf['nsteps'], dtype=np.int64)
 
         if 'nburn' in conf:
-            mc.emcee_parameters['nburn'] = np.asarray(conf['nburn'], dtype=np.int64)
+            mc.emcee_parameters['nburn'] = np.asarray(
+                conf['nburn'], dtype=np.int64)
 
         if 'npop_mult' in conf:
-            mc.emcee_parameters['npop_mult'] = np.asarray(conf['npop_mult'], dtype=np.int64)
+            mc.emcee_parameters['npop_mult'] = np.asarray(
+                conf['npop_mult'], dtype=np.int64)
 
         if 'thin' in conf:
-            mc.emcee_parameters['thin'] = np.asarray(conf['thin'], dtype=np.int64)
+            mc.emcee_parameters['thin'] = np.asarray(
+                conf['thin'], dtype=np.int64)
 
         if 'shutdown_jitter' in conf:
-            mc.emcee_parameters['shutdown_jitter'] = np.asarray(conf['shutdown_jitter'], dtype=bool)
+            mc.emcee_parameters['shutdown_jitter'] = np.asarray(
+                conf['shutdown_jitter'], dtype=bool)
         elif shutdown_jitter:
             mc.emcee_parameters['shutdown_jitter'] = shutdown_jitter
 
@@ -752,46 +780,57 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, shutdown_
         mc.recenter_bounds_flag = conf_solver['recenter_bounds']
 
     if 'include_priors' in conf_solver:
-        mc.include_priors = np.asarray(conf_solver['include_priors'], dtype=bool)
+        mc.include_priors = np.asarray(
+            conf_solver['include_priors'], dtype=bool)
 
     if 'use_threading_pool' in conf_solver:
         mc.use_threading_pool = conf_solver['use_threading_pool']
 
 
-def bounds_space_priors_starts_fixed(mc, model_obj, conf, dataset_1=None, dataset_2=None, add_var_name =''):
+def bounds_space_priors_starts_fixed(mc, model_obj, conf, dataset_1=None, dataset_2=None, add_var_name=''):
     # type: (object, object, object, object, object, object) -> object
 
     if dataset_1 is None:
         if 'boundaries' in conf:
             bound_conf = conf['boundaries']
             for var in bound_conf:
-                model_obj.bounds[add_var_name+var] = np.asarray(bound_conf[var], dtype=np.double)
+                model_obj.bounds[add_var_name +
+                                 var] = np.asarray(bound_conf[var], dtype=np.double)
 
         if 'spaces' in conf:
             space_conf = conf['spaces']
             for var in space_conf:
-                model_obj.spaces[add_var_name+var] =space_conf[var]
+                model_obj.spaces[add_var_name+var] = space_conf[var]
 
         if 'priors' in conf:
             prior_conf = conf['priors']
             for var in prior_conf:
                 prior_pams = np.atleast_1d(prior_conf[var])
                 model_obj.prior_kind[add_var_name+var] = prior_pams[0]
-                if np.size(prior_pams) > 1:
-                    model_obj.prior_pams[add_var_name+var] = np.asarray(prior_pams[1:], dtype=np.double)
+
+                if prior_pams[0] == 'File':
+                    data_file = np.genfromtxt(prior_pams[1])
+                    model_obj.prior_pams[add_var_name + var] = \
+                        gaussian_kde(data_file)
+                elif np.size(prior_pams) > 1:
+                    model_obj.prior_pams[add_var_name + var] = \
+                        np.asarray(prior_pams[1:], dtype=np.double)
                 else:
-                    model_obj.prior_pams[add_var_name+var] = np.asarray([0.00], dtype=np.double)
+                    model_obj.prior_pams[add_var_name + var] = \
+                        np.asarray([0.00], dtype=np.double)
 
         if 'starts' in conf:
             mc.starting_point_flag = True
             starts_conf = conf['starts']
             for var in starts_conf:
-                model_obj.starts[add_var_name+var] = np.asarray(starts_conf[var], dtype=np.double)
+                model_obj.starts[add_var_name + var] = \
+                    np.asarray(starts_conf[var], dtype=np.double)
 
         if 'fixed' in conf:
             fixed_conf = conf['fixed']
             for var in fixed_conf:
-                model_obj.fix_list[add_var_name+var] = get_2darray_from_val(fixed_conf[var])
+                model_obj.fix_list[add_var_name + var] = \
+                    get_2darray_from_val(fixed_conf[var])
 
     elif dataset_2 is None:
         model_obj.bounds[dataset_1] = {}
@@ -804,29 +843,47 @@ def bounds_space_priors_starts_fixed(mc, model_obj, conf, dataset_1=None, datase
         if 'boundaries' in conf:
             bound_conf = conf['boundaries']
             for var in bound_conf:
-                model_obj.bounds[dataset_1][add_var_name+var] = np.asarray(bound_conf[var], dtype=np.double)
+                model_obj.bounds[dataset_1][add_var_name + var] = \
+                    np.asarray(bound_conf[var], dtype=np.double)
 
         if 'spaces' in conf:
             space_conf = conf['spaces']
             for var in space_conf:
-                model_obj.spaces[dataset_1][add_var_name+var] = space_conf[var]
+                model_obj.spaces[dataset_1][add_var_name + var] = \
+                    space_conf[var]
 
         if 'priors' in conf:
             prior_conf = conf['priors']
             for var in prior_conf:
-                model_obj.prior_kind[dataset_1][add_var_name+var] = prior_conf[var][0]
-                model_obj.prior_pams[dataset_1][add_var_name+var] = np.asarray(prior_conf[var][1:], dtype=np.double)
+                model_obj.prior_kind[dataset_1][add_var_name + var] = \
+                    prior_conf[var][0]
+
+                if prior_conf[var][0] == 'File':
+                    data_file = np.genfromtxt(prior_conf[var][1])
+                    model_obj.prior_pams[dataset_1][add_var_name + var] = \
+                        gaussian_kde(data_file)
+                elif np.size(prior_conf[var]) > 1:
+                    model_obj.prior_pams[dataset_1][add_var_name + var] = \
+                        np.asarray(prior_conf[var][1:], dtype=np.double)
+                else:
+                    model_obj.prior_pams[dataset_1][add_var_name + var] = \
+                        np.asarray([0.00], dtype=np.double)
+                
+                #model_obj.prior_pams[dataset_1][add_var_name +
+                #                                var] = np.asarray(prior_conf[var][1:], dtype=np.double)
 
         if 'starts' in conf:
             mc.starting_point_flag = True
             starts_conf = conf['starts']
             for var in starts_conf:
-                model_obj.starts[dataset_1][add_var_name+var] = np.asarray(starts_conf[var], dtype=np.double)
+                model_obj.starts[dataset_1][add_var_name + var] = \
+                    np.asarray(starts_conf[var], dtype=np.double)
 
         if 'fixed' in conf:
             fixed_conf = conf['fixed']
             for var in fixed_conf:
-                model_obj.fix_list[dataset_1][add_var_name+var] = get_2darray_from_val(fixed_conf[var])
+                model_obj.fix_list[dataset_1][add_var_name + var] = \
+                    get_2darray_from_val(fixed_conf[var])
 
     else:
 
@@ -839,14 +896,28 @@ def bounds_space_priors_starts_fixed(mc, model_obj, conf, dataset_1=None, datase
         if 'spaces' in conf:
             space_conf = conf['spaces']
             for var in space_conf:
-                model_obj.spaces[dataset_1][dataset_2][add_var_name + var] = space_conf[var]
+                model_obj.spaces[dataset_1][dataset_2][add_var_name + var] = \
+                    space_conf[var]
 
         if 'priors' in conf:
             prior_conf = conf['priors']
             for var in prior_conf:
-                model_obj.prior_kind[dataset_1][dataset_2][add_var_name + var] = prior_conf[var][0]
-                model_obj.prior_pams[dataset_1][dataset_2][add_var_name + var] = \
-                    np.asarray(prior_conf[var][1:], dtype=np.double)
+                model_obj.prior_kind[dataset_1][dataset_2][add_var_name + var] = \
+                    prior_conf[var][0]
+
+                if prior_conf[var][0] == 'File':
+                    data_file = np.genfromtxt(prior_conf[var][1])
+                    model_obj.prior_pams[dataset_1][dataset_2][add_var_name + var] = \
+                        gaussian_kde(data_file)
+                elif np.size(prior_conf[var]) > 1:
+                    model_obj.prior_pams[dataset_1][dataset_2][add_var_name + var] = \
+                        np.asarray(prior_conf[var][1:], dtype=np.double)
+                else:
+                    model_obj.prior_pams[dataset_1][dataset_2][add_var_name + var] = \
+                        np.asarray([0.00], dtype=np.double)
+
+                #model_obj.prior_pams[dataset_1][dataset_2][add_var_name + var] = \
+                #    np.asarray(prior_conf[var][1:], dtype=np.double)
 
         if 'starts' in conf:
             mc.starting_point_flag = True
@@ -858,5 +929,6 @@ def bounds_space_priors_starts_fixed(mc, model_obj, conf, dataset_1=None, datase
         if 'fixed' in conf:
             fixed_conf = conf['fixed']
             for var in fixed_conf:
-                model_obj.fix_list[dataset_1][dataset_2][add_var_name + var] = get_2darray_from_val(fixed_conf[var])
+                model_obj.fix_list[dataset_1][dataset_2][add_var_name + var] = \
+                    get_2darray_from_val(fixed_conf[var])
     return
