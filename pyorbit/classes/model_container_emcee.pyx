@@ -16,10 +16,12 @@ class ModelContainerEmcee(ModelContainer):
                                  'nburn': 0,
                                  'multirun': None,
                                  'multirun_iter': 20,
-                                 'shutdown_jitter': False
+                                 'shutdown_jitter': False, 
+                                 'use_threading_pool': True
                                 }
 
         self.pyde_parameters = {'ngen': 8000,
                                 'npop_mult': 4,
-                                'shutdown_jitter': False
+                                'shutdown_jitter': False,
+                                'use_threading_pool': True
                                 }

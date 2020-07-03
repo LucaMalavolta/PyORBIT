@@ -162,9 +162,9 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
     print()
 
     if mc.emcee_parameters['version'] == '2':
-        mc.use_threading_pool = False
+        mc.emcee_parameters['use_threading_pool'] = False
 
-    if not getattr(mc, 'use_threading_pool', False):
+    if not getattr(mc.pyde_parameters, 'use_threading_pool', False):
         mc.use_threading_pool = False
         threads_pool = None
     else:
@@ -228,18 +228,21 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
         except ImportError:
             print('ERROR! PyDE is not installed, run first with optimize instead of emcee')
             quit()
-        
+
         if not os.path.exists(mc.pyde_dir_output):
             os.makedirs(mc.pyde_dir_output)
+
+        print('Using threading pool for PyDE:',
+              getattr(mc.pyde_parameters, 'use_threading_pool', False))
 
         print('PyDE running')
         sys.stdout.flush()
 
         de = DiffEvol(
-            mc, 
-            mc.bounds, 
+            mc,
+            mc.bounds,
             mc.emcee_parameters['nwalkers'], 
-            maximize=True, 
+            maximize=True,
             pool=threads_pool)
 
         de.optimize(int(mc.pyde_parameters['ngen']))
@@ -270,7 +273,7 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
         results_analysis.results_resumen(
             mc, starting_point, compute_lnprob=True, is_starting_point=True)
 
-    if mc.use_threading_pool:
+    if getattr(mc.emcee_parameters, 'use_threading_pool', False):
         # close the pool of threads
         #threads_pool.close()
         #threads_pool.terminate()
@@ -285,7 +288,7 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
     print('emcee version: ', emcee.__version__)
     if mc.emcee_parameters['version'] == '2':
         print('WARNING: upgrading to version 3 is strongly advised')
-    print('Using threading pool:', mc.use_threading_pool)
+    print('Using threading pool for emcee:', getattr(mc.emcee_parameters, 'use_threading_pool', False))
     print()
 
     if reloaded_emcee:
@@ -337,7 +340,7 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
             # It turns out that reloading the sampler from the file will
             # result in faster parallelization...
             state, sampler = emcee_simpler_load_from_cpickle(emcee_dir_output)
-            if mc.use_threading_pool:
+            if getattr(mc.emcee_parameters, 'use_threading_pool', False):
                 sampler.pool = Pool()
 
     else:

@@ -713,6 +713,9 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, shutdown_
         if 'include_priors' in conf:
             mc.include_priors = np.asarray(conf['include_priors'], dtype=bool)
 
+        if 'use_threading_pool' in conf:
+            mc.pyde_parameters['use_threading_pool'] = np.asarray(conf['use_threading_pool'], dtype=bool)
+
     if 'emcee' in conf_solver and hasattr(mc, 'emcee_parameters'):
         conf = conf_solver['emcee']
 
@@ -753,6 +756,9 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, shutdown_
         if 'include_priors' in conf:
             mc.include_priors = np.asarray(conf['include_priors'], dtype=bool)
 
+        if 'use_threading_pool' in conf:
+            mc.emcee_parameters['use_threading_pool'] = np.asarray(conf['use_threading_pool'], dtype=bool)
+
     if 'nested_sampling' in conf_solver and hasattr(mc, 'nested_sampling_parameters'):
         conf = conf_solver['nested_sampling']
 
@@ -782,10 +788,6 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, shutdown_
     if 'include_priors' in conf_solver:
         mc.include_priors = np.asarray(
             conf_solver['include_priors'], dtype=bool)
-
-    if 'use_threading_pool' in conf_solver:
-        mc.use_threading_pool = conf_solver['use_threading_pool']
-
 
 def bounds_space_priors_starts_fixed(mc, model_obj, conf, dataset_1=None, dataset_2=None, add_var_name=''):
     # type: (object, object, object, object, object, object) -> object
