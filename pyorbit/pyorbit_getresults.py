@@ -492,7 +492,7 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
 
         for theta_name, th in theta_dictionary.items():
 
-            rad_filename = samples_dir + repr(th) + '_' + theta_name + '.png'
+            rad_filename = samples_dir + repr(th) + '_' + theta_name
             fileout = open(rad_filename + '.dat', 'w')
             for val in flat_chain[:, th]:
                 fileout.write('{0:f} \n'.format(val))
@@ -1033,3 +1033,22 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
         print()
         print('****************************************************************************************************')
         print()
+
+
+    if sampler in sample_keyword['multinest'] \
+       or sampler in sample_keyword['polychord']:
+
+        fig = plt.figure(figsize=(10, 10))
+
+        ii = 0
+        for common_ref, variable_values in planet_variables.items():
+            if 'P' in variable_values:
+
+                plt.scatter(variable_values['P'], flat_lnprob, s=2, c='C'+repr(ii))
+                ii += 1
+        
+        rad_filename = dir_output + 'lnprob_P'
+
+        plt.savefig(rad_filename + '.png', bbox_inches='tight', dpi=300)
+        plt.close(fig)
+

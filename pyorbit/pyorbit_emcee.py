@@ -164,8 +164,8 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
     if mc.emcee_parameters['version'] == '2':
         mc.emcee_parameters['use_threading_pool'] = False
 
-    if not getattr(mc.pyde_parameters, 'use_threading_pool', False):
-        mc.use_threading_pool = False
+    if not mc.pyde_parameters.get('use_threading_pool', False):
+        mc.pyde_parameters['use_threading_pool'] = False
         threads_pool = None
     else:
         #threads_pool = Pool(mc.emcee_parameters['nwalkers'])
@@ -233,7 +233,7 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
             os.makedirs(mc.pyde_dir_output)
 
         print('Using threading pool for PyDE:',
-              getattr(mc.pyde_parameters, 'use_threading_pool', False))
+              mc.pyde_parameters.get('use_threading_pool', False))
 
         print('PyDE running')
         sys.stdout.flush()
@@ -273,7 +273,7 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
         results_analysis.results_resumen(
             mc, starting_point, compute_lnprob=True, is_starting_point=True)
 
-    if getattr(mc.emcee_parameters, 'use_threading_pool', False):
+    if mc.emcee_parameters.get('use_threading_pool', False):
         # close the pool of threads
         #threads_pool.close()
         #threads_pool.terminate()
@@ -288,7 +288,7 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
     print('emcee version: ', emcee.__version__)
     if mc.emcee_parameters['version'] == '2':
         print('WARNING: upgrading to version 3 is strongly advised')
-    print('Using threading pool for emcee:', getattr(mc.emcee_parameters, 'use_threading_pool', False))
+    print('Using threading pool for emcee:', mc.emcee_parameters.get('use_threading_pool', False))
     print()
 
     if reloaded_emcee:
