@@ -272,6 +272,7 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
     if not reloaded_emcee:
         results_analysis.results_resumen(
             mc, starting_point, compute_lnprob=True, is_starting_point=True)
+        sys.stdout.flush()
 
     if mc.emcee_parameters.get('use_threading_pool', False):
         # close the pool of threads
@@ -373,7 +374,7 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
     print()
     print('emcee completed')
     print()
-    
+
     """ A dummy file is created to let the cpulimit script to proceed with the next step"""
     emcee_create_dummy_file(mc)
 
