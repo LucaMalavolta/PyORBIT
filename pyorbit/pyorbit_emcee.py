@@ -340,7 +340,7 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
             # It turns out that reloading the sampler from the file will
             # result in faster parallelization...
             state, sampler = emcee_simpler_load_from_cpickle(emcee_dir_output)
-            if getattr(mc.emcee_parameters, 'use_threading_pool', False):
+            if mc.emcee_parameters.get('use_threading_pool', False):
                 sampler.pool = Pool()
 
     else:
@@ -373,13 +373,7 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
     print()
     print('emcee completed')
     print()
-
-    if mc.use_threading_pool:
-        # close the pool of threads
-        threads_pool.close()
-        threads_pool.terminate()
-        threads_pool.join()
-
+    
     """ A dummy file is created to let the cpulimit script to proceed with the next step"""
     emcee_create_dummy_file(mc)
 
