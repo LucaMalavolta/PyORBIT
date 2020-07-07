@@ -37,6 +37,8 @@ def pyorbit_multinest(config_in, input_datasets=None, return_output=None):
 
     results_analysis.results_resumen(mc, None, skip_theta=True)
 
+    sys.stdout.flush()
+
     mc.output_directory = output_directory
 
     os.system("mkdir -p " + output_directory + mc.nested_sampling_parameters['base_dir'] + "/clusters")
@@ -83,6 +85,8 @@ def pyorbit_multinest(config_in, input_datasets=None, return_output=None):
 
     print('Including priors to log-likelihood calculation (must be False):', mc.include_priors)
 
+    sys.stdout.flush()
+
     pymultinest.run(LogLikelihood=mc.multinest_call, Prior=mc.multinest_priors, n_dims=mc.ndim, **mnest_kwargs)
 
     nested_sampling_save_to_cpickle(mc)
@@ -98,6 +102,7 @@ def pyorbit_multinest(config_in, input_datasets=None, return_output=None):
 
     nested_sampling_save_to_cpickle(mc, 'result')
 
+    sys.stdout.flush()
     print()
     print('MultiNest COMPLETED')
     print()
@@ -108,7 +113,7 @@ def pyorbit_multinest(config_in, input_datasets=None, return_output=None):
     #                           verbose=True, resume=True)
 
     print('evidence: %(logZ).1f +- %(logZerr).1f' % result)
-    print(result['logZ']//np.log(10.00), result['logZerr']//np.log(10.00))
+    print('evidenze in base-10 log: ',result['logZ']//np.log(10.00), result['logZerr']//np.log(10.00))
 
     if return_output:
         return mc
