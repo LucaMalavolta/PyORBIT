@@ -236,15 +236,20 @@ def nested_sampling_prior_transformation(kind, bounds, pams):
 
 def nested_sampling_prior_prepare(kind, bounds, pams, space):
     """
-    This subroutine computes the coefficient of the spline interpolation of the inverse cumulative function
-    In some special cases, ruterns the parameters required by the intrinsic function, e.g. scipi.stats.norm.icf
-    according to their implementation in nested_sampling_prior_compute()
+    This subroutine computes the coefficient of the spline interpolation of
+    the inverse cumulative function
+    In some special cases, it returns the parameters required by the intrinsic
+    function, e.g. scipi.stats.norm.icf according to their implementation in
+    nested_sampling_prior_compute()
 
     :param kind: type of prior
     :param bounds: list/array with lower and upper limits for parameter exploration
     :param pams: parameters relative to the prior probability function
     :return:
     """
+
+    if kind in ['Uniform']:
+        return bounds
 
     if kind in ['Uniform', 'Gaussian', 'BetaDistribution', 'Beta', 'beta']:
         return pams
