@@ -700,14 +700,12 @@ def print_integrated_ACF(sampler_chain, theta_dict, nthin):
                 print('All the chains are longer than 100*ACF ')
             elif (np.sum(how_many_ACT>50, dtype=np.int16)==n_dim):
                 print("""All the chains are longer than 50*ACF, but some are shorter than 100*ACF 
-                PyORBIT should keep running for at least {0:9.0f} more steps to reach 100*ACF
-                """.format(np.amax(still_required_100)))
+PyORBIT should keep running for at least {0:9.0f} more steps to reach 100*ACF""".format(np.amax(still_required_100)))
             else:
                 print("""All the chains have converged, but PyORBIT should keep running for at least:
-                 {0:9.0f} more steps to reach 50*ACF\n
-                 {1:9.0f} more steps to reach 100*ACF
-                 """.format(np.amax(still_required_050),np.amax(still_required_050)))
-            
+{0:9.0f} more steps to reach 50*ACF
+{1:9.0f} more steps to reach 100*ACF""".format(np.amax(still_required_050),np.amax(still_required_100)))
+
             print('Suggested value for burnin: ',np.amax(acf_converged_at))
 
         else:
