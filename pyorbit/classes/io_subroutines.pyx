@@ -98,9 +98,10 @@ def emcee_load_from_cpickle(emcee_dir_output, prefix=''):
     
     try:
         sampler = pickle.load(open(emcee_dir_output + add_prefix + "sampler.p", "rb"))
-    except FileNotFoundError:
+    except (FileNotFoundError, ModuleNotFoundError):
         sampler = None
     
+
     return mc, starting_point, population, prob, state, \
         sampler_chain, sampler_lnprobability, sampler_acceptance_fraction, theta_dict, sampler
 
