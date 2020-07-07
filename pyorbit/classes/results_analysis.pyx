@@ -670,14 +670,15 @@ def print_integrated_ACF(sampler_chain, theta_dict, nthin):
         how_many_ACT  = (n_sam - acf_converged_at/nthin)/integrate_ACF
         how_many_ACT[(acf_converged_at<0)] = -1
 
-        still_required = (50 - how_many_ACT)*nthin
+        still_required_050 = ( 50-how_many_ACT)*(nthin*integrate_ACF)
+        still_required_100 = (100-how_many_ACT)*(nthin*integrate_ACF)
         
         
         print()
         print('Computing the autocorrelation time of the chains')
         print('Reference thinning used in the analysis:', nthin)
         print('Convergence criteria: less than 1% variation in ACF after 1000 (unthinned) steps')
-        print('At least 50*ACF after convergence, 100*acf would be ideal')
+        print('At least 50*ACF after convergence, 100*ACF would be ideal')
         print('Negative values: not converged yet')
         print()
         print('          sample variable      |    ACF   | ACF*nthin | converged at | nteps/ACF ')
@@ -698,11 +699,15 @@ def print_integrated_ACF(sampler_chain, theta_dict, nthin):
             if np.sum(how_many_ACT>100, dtype=np.int16)==n_dim:
                 print('All the chains are longer than 100*ACF ')
             elif (np.sum(how_many_ACT>50, dtype=np.int16)==n_dim):
-                print('All the chains are longer than 50*ACF, but some are shorter than 100*ACF ')
+                print("""All the chains are longer than 50*ACF, but some are shorter than 100*ACF 
+                PyORBIT should keep running for at least {0:9.0f} more steps to reach 100*ACF
+                """.format(np.amax(still_required_100)))
             else:
-                print("""All the chains have converged, but they should keep running 
-                for at least {0:7.0} more steps""".format(np.amax(still_required)))
-
+                print("""All the chains have converged, but PyORBIT should keep running for at least:
+                 {0:9.0f} more steps to reach 50*ACF\n
+                 {1:9.0f} more steps to reach 100*ACF
+                 """.format(np.amax(still_required_050),np.amax(still_required_050)))
+            
             print('Suggested value for burnin: ',np.amax(acf_converged_at))
 
         else:
