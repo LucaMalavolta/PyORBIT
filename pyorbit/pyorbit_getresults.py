@@ -245,6 +245,7 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
     print()
     print('****************************************************************************************************')
     print()
+    sys.stdout.flush()
 
     # Computation of all the planetary variables
     planet_variables_med = results_analysis.get_planet_variables(
@@ -271,7 +272,8 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
         print()
         print('****************************************************************************************************')
         print()
-
+        sys.stdout.flush()
+    
     if plot_dictionary['full_correlation']:
 
         corner_plot = {
@@ -324,6 +326,7 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
         print()
         print('****************************************************************************************************')
         print()
+        sys.stdout.flush()
 
     if plot_dictionary['chains']:
 
@@ -342,6 +345,7 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
         print()
         print('****************************************************************************************************')
         print()
+        sys.stdout.flush()
 
     if plot_dictionary['traces']:
 
@@ -371,6 +375,7 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
         print()
         print('****************************************************************************************************')
         print()
+        sys.stdout.flush()
 
     if plot_dictionary['common_corner']:
 
@@ -424,6 +429,7 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
         print()
         print('****************************************************************************************************')
         print()
+        sys.stdout.flush()
 
     if plot_dictionary['dataset_corner']:
 
@@ -470,6 +476,7 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
         print()
         print('****************************************************************************************************')
         print()
+        sys.stdout.flush()
 
     if plot_dictionary['write_planet_samples']:
 
@@ -518,6 +525,7 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
         print()
         print('****************************************************************************************************')
         print()
+        sys.stdout.flush()
 
     if plot_dictionary['write_all_samples']:
 
@@ -565,6 +573,7 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
         print()
         print('****************************************************************************************************')
         print()
+        sys.stdout.flush()
 
     if plot_dictionary['plot_models'] or plot_dictionary['write_models']:
 
@@ -935,6 +944,7 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
         print()
         print('****************************************************************************************************')
         print()
+        sys.stdout.flush()
 
     if plot_dictionary['veuz_corner_files']:
 
