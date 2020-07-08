@@ -245,6 +245,7 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
     print()
     print('****************************************************************************************************')
     print()
+    
     sys.stdout.flush()
 
     # Computation of all the planetary variables
