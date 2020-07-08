@@ -29,6 +29,8 @@ __all__ = ["pyorbit_getresults"]
 
 
 def pyorbit_getresults(config_in, sampler, plot_dictionary):
+    import sys
+
     try:
         use_tex = config_in['parameters']['use_tex']
     except:
