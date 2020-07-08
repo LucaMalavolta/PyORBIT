@@ -29,8 +29,7 @@ __all__ = ["pyorbit_getresults"]
 
 
 def pyorbit_getresults(config_in, sampler, plot_dictionary):
-    import sys
-
+    
     try:
         use_tex = config_in['parameters']['use_tex']
     except:
@@ -802,7 +801,7 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
                                 bjd_plot[plot_x_keyword][dataset_name][model_name] * \
                                 np.ones(dataset.n)
 
-                        for x, tcf, pha, y, e, sys, mod, com, obs_mod, res, jit in zip(
+                        for x, tcf, pha, y, e, sys_val, mod, com, obs_mod, res, jit in zip(
                                 dataset.x, tc_folded, phase, dataset.y, dataset.e,
                                 bjd_plot[plot_out_keyword][dataset_name]['systematics'],
                                 bjd_plot[plot_out_keyword][dataset_name][model_name],
@@ -813,7 +812,7 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
                             bjd_plot[plot_out_keyword][dataset_name]['complete'],
                                 bjd_plot[plot_out_keyword][dataset_name]['jitter']):
                             fileout.write('{0:f} {1:f} {2:f} {3:f} {4:f} {5:f} {6:1f} {7:f} {8:f} {9:f} {10:f} {11:f} {12:f}'
-                                          '\n'.format(x, tcf, pha, y, e, sys, mod, com, obs_mod, e, res, e, jit))
+                                          '\n'.format(x, tcf, pha, y, e, sys_val, mod, com, obs_mod, e, res, e, jit))
                         fileout.close()
 
                         if getattr(mc.models[model_name], 'systematic_model', False):
