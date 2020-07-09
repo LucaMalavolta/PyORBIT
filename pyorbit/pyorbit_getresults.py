@@ -29,7 +29,7 @@ __all__ = ["pyorbit_getresults"]
 
 
 def pyorbit_getresults(config_in, sampler, plot_dictionary):
-    
+
     try:
         use_tex = config_in['parameters']['use_tex']
     except:
@@ -193,6 +193,30 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
     print()
     print(' LN posterior: {0:12f}   {1:12f} {2:12f} (15-84 p) '.format(
         lnprob_med[0], lnprob_med[2], lnprob_med[1]))
+
+    med_log_priors, med_log_likelihood = mc.log_priors_likelihood(chain_med[:,0])
+    BIC = -2.0 * med_log_likelihood + np.log(mc.ndata) * mc.ndim
+    AIC = -2.0 * med_log_likelihood + 2.0 * mc.ndim
+    AICc = AIC + (2.0 + 2.0 * mc.ndim) * mc.ndim / (mc.ndata - mc.ndim - 1.0)
+    # AICc for small sample
+
+    print()
+    print(' Median log_priors     = {}'.format(med_log_priors))
+    print(' Median log_likelihood = {}'.format(med_log_likelihood))
+    print(' Median BIC  (using likelihood) = {}'.format(BIC))
+    print(' Median AIC  (using likelihood) = {}'.format(AIC))
+    print(' Median AICc (using likelihood) = {}'.format(AICc))
+
+    med_log_posterior = med_log_likelihood + med_log_priors
+    BIC = -2.0 * med_log_posterior + np.log(mc.ndata) * mc.ndim
+    AIC = -2.0 * med_log_posterior + 2.0 * mc.ndim
+    AICc = AIC + (2.0 + 2.0 * mc.ndim) * mc.ndim / (mc.ndata - mc.ndim - 1.0)
+
+    print()
+    print(' Median BIC  (using posterior)  = {}'.format(BIC))
+    print(' Median AIC  (using posterior)  = {}'.format(AIC))
+    print(' Median AICc (using posterior)  = {}'.format(AICc))
+
 
     MAP_log_priors, MAP_log_likelihood = mc.log_priors_likelihood(chain_MAP)
     BIC = -2.0 * MAP_log_likelihood + np.log(mc.ndata) * mc.ndim

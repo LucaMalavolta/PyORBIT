@@ -96,6 +96,10 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
             print()
 
             results_analysis.results_resumen(mc, flatchain)
+            
+            print()
+            print('emcee completed')
+            print()
 
             if return_output:
                 return mc, sampler_chain, sampler_lnprobability
