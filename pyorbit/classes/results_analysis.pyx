@@ -619,9 +619,10 @@ def print_integrated_ACF(sampler_chain, theta_dict, nthin):
     except (AutocorrError):
         print()
         print('The integrated autocorrelation time cannot be reliably estimated')
-        print('likely the chains are too short')
-        print()
-        return
+        print('likely the chains are too short, and ACF analysis is not fully reliable')
+        print('emcee.autocorr.integrated_time tolerance lowered to 20')
+        print('If you still get a warning, you should drop these results entirely')
+        integrate_ACF = integrated_time(swapped_chains, tol=20, quiet=True)
     except (NameError, TypeError):
         print()
         print('Old version of emcee, this function is not implemented')
@@ -635,7 +636,7 @@ def print_integrated_ACF(sampler_chain, theta_dict, nthin):
     n_sam = swapped_chains.shape[0]
     n_cha = swapped_chains.shape[1]
     n_dim = swapped_chains.shape[2]
-    acf_len = 1000//nthin
+    acf_len = int(np.max(integrate_ACF)) # 1000//nthin
     c=5
     
     if n_sam > acf_len*3:
@@ -677,6 +678,7 @@ def print_integrated_ACF(sampler_chain, theta_dict, nthin):
         print()
         print('Computing the autocorrelation time of the chains')
         print('Reference thinning used in the analysis:', nthin)
+        print('Step length used in the analysis: {0:d}*nthin = {1:d}'.format(acf_len,acf_len*nthin))
         print('Convergence criteria: less than 1% variation in ACF after 1000 (unthinned) steps')
         print('At least 50*ACF after convergence, 100*ACF would be ideal')
         print('Negative values: not converged yet')
