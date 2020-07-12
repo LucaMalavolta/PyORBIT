@@ -77,7 +77,7 @@ if __name__ == '__main__':
         plot_dictionary['full_correlation'] = True
         plot_dictionary['common_corner'] = True
         plot_dictionary['dataset_corner'] = True
-        plot_dictionary['veuz_corner_files'] = True
+        #plot_dictionary['veuz_corner_files'] = True
         plot_dictionary['write_planet_samples'] = True
         plot_dictionary['write_all_samples'] = True
 
