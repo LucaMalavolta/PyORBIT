@@ -162,7 +162,7 @@ def giveback_priors(kind, bounds, pams, val):
 
     if kind == 'File':
         """ Special case where 'pams' is actually a KDE """
-        return np.log(pams.pdf(val))
+        return np.log(pams.pdf(val)[0])
     
     if kind == 'None':
         return 0.00

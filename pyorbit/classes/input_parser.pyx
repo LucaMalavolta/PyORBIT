@@ -568,12 +568,13 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, shutdown_
                             mc.dynamical_t0_dict[planet_name] = dataset_name
 
                 """ This snippet will work only for transit class"""
-                try:
+                if mc.models[model_name_exp].model_class == 'transit':
 
                     try:
                         common_name = mc.models[model_name_exp].model_conf['limb_darkening']
                     except:
                         common_name = 'limb_darkening'
+                    
                     print('  LC model: {0:s} is using {1:s} LD parameters'.format(
                         model_name_exp, common_name))
 
@@ -584,10 +585,7 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, shutdown_
                         mc.common_models[common_name].ld_ncoeff
 
                     mc.models[model_name_exp].common_ref.append(common_name)
-
-                except:
-                    pass
-
+                
                 mc.models[model_name_exp].common_ref.append('star_parameters')
 
                 for dataset_name, dataset in mc.dataset_dict.items():
