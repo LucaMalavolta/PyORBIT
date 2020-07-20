@@ -615,14 +615,19 @@ def print_integrated_ACF(sampler_chain, theta_dict, nthin):
     swapped_chains = np.swapaxes(sampler_chain, 1, 0)
 
     try:
-        integrate_ACF = integrated_time(swapped_chains, tol=50, quiet=False)
-    except (AutocorrError):
+        tolerance = 50
+        integrate_ACF = integrated_time(swapped_chains, tol=tolerance, quiet=False)
         print()
+        print('The chains are at least 50 times longer than the ACF, the estimate can be trusted')
+    except (AutocorrError):
+        tolerance = 20
+        print()
+        print('***** WARNING ******')
         print('The integrated autocorrelation time cannot be reliably estimated')
         print('likely the chains are too short, and ACF analysis is not fully reliable')
         print('emcee.autocorr.integrated_time tolerance lowered to 20')
         print('If you still get a warning, you should drop these results entirely')
-        integrate_ACF = integrated_time(swapped_chains, tol=20, quiet=True)
+        integrate_ACF = integrated_time(swapped_chains, tol=tolerance, quiet=True)
     except (NameError, TypeError):
         print()
         print('Old version of emcee, this function is not implemented')
@@ -639,7 +644,7 @@ def print_integrated_ACF(sampler_chain, theta_dict, nthin):
     acf_len = int(np.max(integrate_ACF)) # 1000//nthin
     c=5
     
-    if n_sam > acf_len*3:
+    if n_sam > acf_len*tolerance:
         
         acf_previous = np.zeros(n_dim)
         acf_current = np.zeros(n_dim)
@@ -661,7 +666,7 @@ def print_integrated_ACF(sampler_chain, theta_dict, nthin):
                 window = auto_window(taus, c)
                 acf_current[i_dim] = taus[window]
 
-            sel = (np.abs(acf_current-acf_previous)/acf_current < 0.01) & (acf_converged_at<0.)
+            sel = (i_sam > integrated_ACF*tolerance) & (np.abs(acf_current-acf_previous)/acf_current < 0.01) & (acf_converged_at<0.)
             acf_converged_at[sel] = i_sam * nthin
 
             if np.sum((acf_converged_at>0), dtype=np.int16) == n_dim:
@@ -679,7 +684,8 @@ def print_integrated_ACF(sampler_chain, theta_dict, nthin):
         print('Computing the autocorrelation time of the chains')
         print('Reference thinning used in the analysis:', nthin)
         print('Step length used in the analysis: {0:d}*nthin = {1:d}'.format(acf_len,acf_len*nthin))
-        print('Convergence criteria: less than 1% variation in ACF after 1000 (unthinned) steps')
+        print('Convergence criteria: less than 1% variation in ACF after {0:d} times the integrated ACF'.format(tolerance))
+        print()
         print('At least 50*ACF after convergence, 100*ACF would be ideal')
         print('Negative values: not converged yet')
         print()
@@ -718,7 +724,7 @@ PyORBIT should keep running for at least {0:9.0f} more steps to reach 100*ACF"""
 
     else:
         print("Chains too shoort to apply convergence criteria")
-        print("They should be at least {0:d}*nthin = {1:d}".format(3*acf_len,3*acf_len*nthin))
+        print("They should be at least {0:d}*nthin = {1:d}".format(50*acf_len,50*acf_len*nthin))
         print()
 
 
