@@ -1125,7 +1125,7 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
 
                 if ii != jj:
                     hist2d = np.histogram2d(x_data, y_data, bins=[x_edges, y_edges])
-                    %hist1d_y = np.histogram(y_data, bins=y_edges)
+                    #hist1d_y = np.histogram(y_data, bins=y_edges)
 
                     Hflat = hist2d[0].flatten()
                     inds = np.argsort(Hflat)[::-1]

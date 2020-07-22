@@ -257,7 +257,7 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
             de = DiffEvol(
                 mc,
                 mc.bounds,
-                mc.emcee_parameters['nwalkers'], 
+                mc.emcee_parameters['nwalkers'],
                 maximize=True)
 
             de.optimize(int(mc.pyde_parameters['ngen']))            
