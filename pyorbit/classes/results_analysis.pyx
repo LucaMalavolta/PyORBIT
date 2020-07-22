@@ -616,7 +616,7 @@ def print_integrated_ACF(sampler_chain, theta_dict, nthin):
 
     try:
         tolerance = 50
-        integrate_ACF = integrated_time(swapped_chains, tol=tolerance, quiet=False)
+        integrated_ACF = integrated_time(swapped_chains, tol=tolerance, quiet=False)
         print()
         print('The chains are at least 50 times longer than the ACF, the estimate can be trusted')
     except (AutocorrError):
@@ -627,7 +627,7 @@ def print_integrated_ACF(sampler_chain, theta_dict, nthin):
         print('likely the chains are too short, and ACF analysis is not fully reliable')
         print('emcee.autocorr.integrated_time tolerance lowered to 20')
         print('If you still get a warning, you should drop these results entirely')
-        integrate_ACF = integrated_time(swapped_chains, tol=tolerance, quiet=True)
+        integrated_ACF = integrated_time(swapped_chains, tol=tolerance, quiet=True)
     except (NameError, TypeError):
         print()
         print('Old version of emcee, this function is not implemented')
@@ -641,7 +641,7 @@ def print_integrated_ACF(sampler_chain, theta_dict, nthin):
     n_sam = swapped_chains.shape[0]
     n_cha = swapped_chains.shape[1]
     n_dim = swapped_chains.shape[2]
-    acf_len = int(np.max(integrate_ACF)) # 1000//nthin
+    acf_len = int(np.max(integrated_ACF)) # 1000//nthin
     c=5
     
     if n_sam > acf_len*tolerance:
@@ -673,11 +673,11 @@ def print_integrated_ACF(sampler_chain, theta_dict, nthin):
                 break
 
         
-        how_many_ACT  = (n_sam - acf_converged_at/nthin)/integrate_ACF
+        how_many_ACT  = (n_sam - acf_converged_at/nthin)/integrated_ACF
         how_many_ACT[(acf_converged_at<0)] = -1
 
-        still_required_050 = ( 50-how_many_ACT)*(nthin*integrate_ACF)
-        still_required_100 = (100-how_many_ACT)*(nthin*integrate_ACF)
+        still_required_050 = ( 50-how_many_ACT)*(nthin*integrated_ACF)
+        still_required_100 = (100-how_many_ACT)*(nthin*integrated_ACF)
         
         
         print()
@@ -694,8 +694,8 @@ def print_integrated_ACF(sampler_chain, theta_dict, nthin):
         
         for key_name, key_val in theta_dict.items():
             print('          {0:20s} | {1:7.3f}  | {2:8.1f}  |  {3:7.0f}     |  {4:7.1f}   '.format(key_name,
-                                                    integrate_ACF[key_val],
-                                                    integrate_ACF[key_val] * nthin,
+                                                    integrated_ACF[key_val],
+                                                    integrated_ACF[key_val] * nthin,
                                                     acf_converged_at[key_val],
                                                     how_many_ACT[key_val]))
 
