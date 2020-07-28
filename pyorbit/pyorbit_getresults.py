@@ -560,6 +560,12 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
         samples_dir = dir_output + '/all_samples/'
         os.system('mkdir -p ' + samples_dir)
 
+        rad_filename = samples_dir + 'log_likelihood'
+        fileout = open(rad_filename + '.dat', 'w')
+        for val in flat_lnprob:
+            fileout.write('{0:f} \n'.format(val))
+        fileout.close()
+
         for theta_name, th in theta_dictionary.items():
 
             rad_filename = samples_dir + repr(th) + '_' + theta_name

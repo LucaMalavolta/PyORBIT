@@ -94,6 +94,14 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
             print('Nwalkers = ', mc.emcee_parameters['nwalkers'])
             print('Steps = ', mc.emcee_parameters['nsteps'])
             print()
+            print('Original starting point of emcee:')
+            print()
+
+            results_analysis.results_resumen(
+                mc, starting_point, compute_lnprob=True, is_starting_point=True)
+
+            print('emcee results:')
+            print()
 
             results_analysis.results_resumen(mc, flatchain)
             
@@ -284,10 +292,13 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
         print()
         sys.stdout.flush()
 
-    if not reloaded_emcee:
-        results_analysis.results_resumen(
-            mc, starting_point, compute_lnprob=True, is_starting_point=True)
-        sys.stdout.flush()
+    if reloaded_emcee:
+        print('Original starting point of emcee:')
+        print()
+    
+    results_analysis.results_resumen(
+        mc, starting_point, compute_lnprob=True, is_starting_point=True)
+    sys.stdout.flush()
 
     print()
     print('*************************************************************')
