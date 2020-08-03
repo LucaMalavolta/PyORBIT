@@ -17,6 +17,7 @@ class RotationTerm(Term):
     parameter_names = ("period", "timescale", "factor", "amp")
 
     def get_real_coefficients(self, params):
+        # in DFM formulation: P, c, b, a
         period, timescale, factor, amp = params
         return (
             amp * (1.0 + factor) / (2.0 + factor),
@@ -29,7 +30,7 @@ class RotationTerm(Term):
             amp / (2.0 + factor),
             0.0,
             1./timescale,
-            2 * np.pi * 1./timescale,
+            2 * np.pi * 1./period,
         )
 
 
