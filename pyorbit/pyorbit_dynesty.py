@@ -8,6 +8,9 @@ import pyorbit.classes.results_analysis as results_analysis
 import os
 import sys
 import argparse
+import numpy as np
+import multiprocessing
+import matplotlib.pyplot as plt
 
 __all__ = ["pyorbit_dynesty", "yaml_parser"]
 
@@ -17,6 +20,7 @@ def show(filepath):
     if os.name == 'mac': subprocess.call(('open', filepath))
     elif os.name == 'nt': os.startfile(filepath)
 """
+
 
 def pyorbit_dynesty(config_in, input_datasets=None, return_output=None):
 
@@ -50,27 +54,54 @@ def pyorbit_dynesty(config_in, input_datasets=None, return_output=None):
     except ImportError:
         print("ERROR: dynesty not installed, this will not work")
         quit()
-    
+
     # "Standard" nested sampling.
-    sampler = dynesty.NestedSampler(mc.dynesty_call, mc.dynesty_priors, mc.ndim)
-    sampler.run_nested()
-    results = sampler.results
+    #print('Setting up the Standard Nested Sampling')
+    #sampler = dynesty.NestedSampler(mc.dynesty_call, mc.dynesty_priors, mc.ndim)
+    #print('Running Nested Sampling')
+    # sampler.run_nested()
+    #print('Getting the results')
+    #results = sampler.results
+    # print()
 
-    # "Dynamic" nested sampling.
-    dsampler = dynesty.DynamicNestedSampler(mc.dynesty_call, mc.dynesty_priors, mc.ndim)
-    dsampler.run_nested()
-    dresults = dsampler.results
+    with multiprocessing.Pool() as pool:
 
+        # "Dynamic" nested sampling.
+        print('Setting up the Dynamic Nested Sampling')
+        dsampler = dynesty.DynamicNestedSampler(mc.dynesty_call,
+                                                mc.dynesty_priors,
+                                                mc.ndim,
+                                                pool=pool,
+                                                queue_size=16,
+                                                use_pool={
+                                                    'prior_transform': False}
+                                                )
+        print('Running Dynamic Nested Sampling')
+        dsampler.run_nested()
+
+    print('Getting the results')
+    results = dsampler.results
+    print('Results: ', results)
+    print()
     from dynesty import plotting as dyplot
 
     # Plot a summary of the run.
+    print('Plot a summary of the run.')
     rfig, raxes = dyplot.runplot(results)
+    rfig.savefig('plot01.pdf', bbox_inches='tight', dpi=300)
+    plt.close(rfig)
 
     # Plot traces and 1-D marginalized posteriors.
+    print('Plot traces and 1-D marginalized posteriors.')
     tfig, taxes = dyplot.traceplot(results)
+    tfig.savefig('plot02.pdf', bbox_inches='tight', dpi=300)
+    plt.close(tfig)
 
     # Plot the 2-D marginalized posteriors.
+    print('Plot the 2-D marginalized posteriors.')
     cfig, caxes = dyplot.cornerplot(results)
+    cfig.savefig('plot03.pdf', bbox_inches='tight', dpi=300)
+    plt.close(cfig)
 
     from dynesty import utils as dyfunc
 
@@ -89,7 +120,6 @@ def pyorbit_dynesty(config_in, input_datasets=None, return_output=None):
 
     # Generate a new set of results with statistical+sampling uncertainties.
     results_sim = dyfunc.simulate_run(results)
-
 
     """ A dummy file is created to let the cpulimit script to proceed with the next step"""
     nested_sampling_create_dummy_file(mc)

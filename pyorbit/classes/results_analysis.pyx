@@ -702,8 +702,8 @@ def print_integrated_ACF(sampler_chain, theta_dict, nthin):
 
     if n_sam > acf_len*tolerance:
 
-        acf_previous = np.zeros(n_dim)
-        acf_current = np.zeros(n_dim)
+        acf_previous = np.ones(n_dim)
+        acf_current = np.ones(n_dim)
         acf_converged_at = np.zeros(n_dim, dtype=np.int16) - 1
 
         for i_sam in range(acf_len*3, n_sam, acf_len):
@@ -722,7 +722,8 @@ def print_integrated_ACF(sampler_chain, theta_dict, nthin):
                 taus = 2.0 * np.cumsum(integrated_part) - 1.0
                 window = auto_window(taus, c)
                 acf_current[i_dim] = taus[window]
-
+            
+            acf_current[acf_current < 0.1] = 0.1
             sel = (i_sam > integrated_ACF*tolerance) & (np.abs(acf_current -
                                                                acf_previous)/acf_current < 0.01) & (acf_converged_at < 0.)
             acf_converged_at[sel] = i_sam * nthin
