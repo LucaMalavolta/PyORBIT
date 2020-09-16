@@ -33,7 +33,7 @@ class ModelContainer(object):
         self.starting_point = None
         self.starting_point_flag = False
         self.recenter_bounds_flag = True
-        
+
         self.bounds = None
         self.spaces = None
         self.priors = None
@@ -63,12 +63,13 @@ class ModelContainer(object):
             model.initialize_model(self, **model_conf)
 
             for dataset_name in list(set(model_conf) & set(self.dataset_dict)):
-                model.setup_dataset(self, self.dataset_dict[dataset_name], **model_conf)
+                model.setup_dataset(
+                    self, self.dataset_dict[dataset_name], **model_conf)
 
         if self.dynamical_model:
             self.dynamical_model.to_be_initialized = True
 
-            #self.dynamical_model.prepare(self)
+            # self.dynamical_model.prepare(self)
 
     def create_variables_bounds(self):
         # This routine creates the boundary array and at the same time
@@ -85,9 +86,12 @@ class ModelContainer(object):
         for model_name, model in self.models.items():
             if len(model.common_ref) > 0:
                 for common_ref in model.common_ref:
-                    model.default_bounds.update(self.common_models[common_ref].default_bounds)
-                    model.default_spaces.update(self.common_models[common_ref].default_spaces)
-                    model.default_priors.update(self.common_models[common_ref].default_priors)
+                    model.default_bounds.update(
+                        self.common_models[common_ref].default_bounds)
+                    model.default_spaces.update(
+                        self.common_models[common_ref].default_spaces)
+                    model.default_priors.update(
+                        self.common_models[common_ref].default_priors)
                     self.ndim, output_lists = self.common_models[common_ref].define_variable_properties(
                         self.ndim, output_lists, model.list_pams_common)
 
@@ -95,10 +99,12 @@ class ModelContainer(object):
                 pass
 
         for dataset_name, dataset in self.dataset_dict.items():
-            self.ndim, output_lists = dataset.define_variable_properties(self.ndim, output_lists, dataset.list_pams)
+            self.ndim, output_lists = dataset.define_variable_properties(
+                self.ndim, output_lists, dataset.list_pams)
 
             for model_name in dataset.models:
-                self.ndim, output_lists = self.models[model_name].define_variable_properties(self.ndim, output_lists, dataset.name_ref)
+                self.ndim, output_lists = self.models[model_name].define_variable_properties(
+                    self.ndim, output_lists, dataset.name_ref)
 
         self.bounds = np.asarray(output_lists['bounds'])
         self.spaces = output_lists['spaces']
@@ -127,7 +133,8 @@ class ModelContainer(object):
             dataset.define_starting_point(self.starting_point)
 
             for model in dataset.models:
-                self.models[model].define_starting_point(self.starting_point, dataset_name)
+                self.models[model].define_starting_point(
+                    self.starting_point, dataset_name)
 
     def check_bounds(self, theta):
         for ii in range(0, self.ndim):
@@ -143,7 +150,7 @@ class ModelContainer(object):
 
                 """ Step 1: retrieve the planet period"""
                 period = model.transformation['P'](theta, model.fixed,
-                                               model.variable_index['P'])
+                                                   model.variable_index['P'])
 
                 """ Step 2: save the all planet periods into a list"""
                 period_storage.extend([period])
@@ -164,18 +171,31 @@ class ModelContainer(object):
                         # print()
                         return False
 
-        """ Step 5 check for overlapping periods (within 2.5% arbitrarily chosen)"""
+                """ Step 5: check if the impact parameter is below 1 + Rp/Rs """
+                if 'b' in model.variable_index and 'R' in model.variable_index:
+                    b = model.transformation['b'](theta,
+                                                  model.fixed,
+                                                  model.variable_index['b'])
+                    R = model.transformation['R'](theta,
+                                                  model.fixed,
+                                                  model.variable_index['R'])
+                    if not b <= 1 + R:
+                        return False
+
+        """ Step 6 check for overlapping periods (within 2.5% arbitrarily chosen)"""
         for i_n, i_v in enumerate(period_storage):
-            if i_n == len(period_storage) - 1: break
+            if i_n == len(period_storage) - 1:
+                break
             if np.amin(np.abs(period_storage[i_n + 1:] - i_v)) / i_v < 0.025:
                 # print('overlapping periods  detected')
                 # print()
                 return False
 
-        """ Step 6 check if the planet are ordered"""
+        """ Step 7 check if the planet are ordered"""
         for i_n, i_v in enumerate(period_storage_ordered):
 
-            if i_n == len(period_storage_ordered) - 1: break
+            if i_n == len(period_storage_ordered) - 1:
+                break
             if np.amin(period_storage_ordered[i_n + 1:] - i_v) < 0.0:
                 # print('inverted order detected')
                 # print()
@@ -232,21 +252,24 @@ class ModelContainer(object):
                 continue
 
             for model_name in dataset.models:
-                log_priors += self.models[model_name].return_priors(theta, dataset_name)
+                log_priors += self.models[model_name].return_priors(
+                    theta, dataset_name)
 
                 variable_values = {}
                 for common_ref in self.models[model_name].common_ref:
-                    variable_values.update(self.common_models[common_ref].convert(theta))
+                    variable_values.update(
+                        self.common_models[common_ref].convert(theta))
 
-                #try:
+                # try:
                 #    """ Taking the parameter values from the common models"""
                 #    for common_ref in self.models[model_name].common_ref:
                 #        variable_values.update(self.common_models[common_ref].convert(theta))
-                #except:
+                # except:
                 #    """ This model has no common model reference, i.e., it is strictly connected to the dataset"""
                 #    pass
 
-                variable_values.update(self.models[model_name].convert(theta, dataset_name))
+                variable_values.update(
+                    self.models[model_name].convert(theta, dataset_name))
 
                 """ residuals will be computed following the definition in Dataset class
                 """
@@ -255,25 +278,31 @@ class ModelContainer(object):
                     logchi2_gp_model = model_name
                     continue
 
-                #if getattr(self.models[model_name], 'model_class', None) is 'common_jitter':
+                # if getattr(self.models[model_name], 'model_class', None) is 'common_jitter':
                 if getattr(self.models[model_name], 'jitter_model', False):
-                    dataset.jitter += self.models[model_name].compute(variable_values, dataset)
+                    dataset.jitter += self.models[model_name].compute(
+                        variable_values, dataset)
                     continue
 
                 if getattr(dataset, 'dynamical', False):
                     dataset.external_model = dynamical_output[dataset_name]
 
                 if getattr(self.models[model_name], 'unitary_model', False):
-                    dataset.unitary_model += self.models[model_name].compute(variable_values, dataset)
+                    dataset.unitary_model += self.models[model_name].compute(
+                        variable_values, dataset)
                     if dataset.normalization_model is None:
-                        dataset.normalization_model = np.ones(dataset.n, dtype=np.double)
+                        dataset.normalization_model = np.ones(
+                            dataset.n, dtype=np.double)
 
                 elif getattr(self.models[model_name], 'normalization_model', False):
                     if dataset.normalization_model is None:
-                        dataset.normalization_model = np.ones(dataset.n, dtype=np.double)
-                    dataset.normalization_model *= self.models[model_name].compute(variable_values, dataset)
+                        dataset.normalization_model = np.ones(
+                            dataset.n, dtype=np.double)
+                    dataset.normalization_model *= self.models[model_name].compute(
+                        variable_values, dataset)
                 else:
-                    dataset.additive_model += self.models[model_name].compute(variable_values, dataset)
+                    dataset.additive_model += self.models[model_name].compute(
+                        variable_values, dataset)
 
             dataset.compute_model()
             dataset.compute_residuals()
@@ -286,19 +315,22 @@ class ModelContainer(object):
 
                 variable_values = {}
                 for common_ref in self.models[logchi2_gp_model].common_ref:
-                        variable_values.update(self.common_models[common_ref].convert(theta))
+                    variable_values.update(
+                        self.common_models[common_ref].convert(theta))
 
-                variable_values.update(self.models[logchi2_gp_model].convert(theta, dataset_name))
+                variable_values.update(
+                    self.models[logchi2_gp_model].convert(theta, dataset_name))
 
                 """ GP Log-likelihood is not computed now because a single matrix must be created with 
                 the joined dataset"""
                 if hasattr(self.models[logchi2_gp_model], 'delayed_lnlk_computation'):
 
                     self.models[logchi2_gp_model].add_internal_dataset(variable_values, dataset,
-                                                                   reset_status=delayed_lnlk_computation)
+                                                                       reset_status=delayed_lnlk_computation)
                     delayed_lnlk_computation.append(logchi2_gp_model)
                 else:
-                    log_likelihood += self.models[logchi2_gp_model].lnlk_compute(variable_values, dataset)
+                    log_likelihood += self.models[logchi2_gp_model].lnlk_compute(
+                        variable_values, dataset)
             else:
                 log_likelihood += dataset.model_logchi2()
 
@@ -329,8 +361,10 @@ class ModelContainer(object):
 
         for dataset_name, dataset in self.dataset_dict.items():
             for model in dataset.models:
-                ind_list.extend(self.models[model].special_index_recenter_bounds(dataset.name_ref))
-                ind_list.extend(self.models[model].index_recenter_bounds(dataset.name_ref))
+                ind_list.extend(
+                    self.models[model].special_index_recenter_bounds(dataset.name_ref))
+                ind_list.extend(
+                    self.models[model].index_recenter_bounds(dataset.name_ref))
 
         if not recenter:
             return ind_list
@@ -340,7 +374,7 @@ class ModelContainer(object):
             replace_bounds = np.zeros([self.ndim, 2])
             replace_bounds[:, 0] = pop_mean - tmp_range
             replace_bounds[:, 1] = pop_mean + tmp_range
-            self.bounds[ind_list, :] =  replace_bounds[ind_list, :]
+            self.bounds[ind_list, :] = replace_bounds[ind_list, :]
 
     def fix_population(self, pop_mean, population):
 
@@ -356,7 +390,7 @@ class ModelContainer(object):
         for ii in range(0, self.ndim):
             if np.amax(population[:, ii]) - np.amin(population[:, ii]) < 10e-14:
                 average_pops = np.average(population[:, ii])
-                population[:, ii] = np.random.normal(average_pops, 10e-12, n_pop)
+                population[:, ii] = np.random.normal(
+                    average_pops, 10e-12, n_pop)
 
         return population
-

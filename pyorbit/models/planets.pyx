@@ -64,7 +64,7 @@ class CommonPlanets(AbstractCommon):
         # Used by BATMAN
         'R': [0.00001, 0.5],  # Fix the unit
         'a': [0.00001, 500.],  # Fix the unit
-        'b': [0.0, 1.0]
+        'b': [0.0, 2.0]
     }
 
     """ Must be the same parameters as in list_pams, because priors are 
