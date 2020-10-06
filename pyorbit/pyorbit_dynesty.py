@@ -45,6 +45,8 @@ def pyorbit_dynesty(config_in, input_datasets=None, return_output=None):
     results_analysis.results_resumen(mc, None, skip_theta=True)
 
     mc.output_directory = output_directory
+    if not os.path.exists(mc.output_directory):
+        os.makedirs(mc.output_directory)
 
     if 'nlive' in mc.nested_sampling_parameters:
         nlive = mc.nested_sampling_parameters['nlive']
@@ -109,7 +111,7 @@ def pyorbit_dynesty(config_in, input_datasets=None, return_output=None):
 
     """ A dummy file is created to let the cpulimit script to proceed with the next step"""
     nested_sampling_create_dummy_file(mc)
-    nested_sampling_save_to_cpickle(results)
+    nested_sampling_save_to_cpickle(output_directory, results)
 
     if return_output:
         return mc

@@ -146,9 +146,9 @@ def nested_sampling_load_from_cpickle(output_directory, prefix=''):
     return mc
 
 
-def dynesty_results_save_to_cpickle(mc, prefix=None):
+def dynesty_results_save_to_cpickle(output_directory, results, prefix=None):
     add_prefix = (prefix + '_' if prefix else '')
-    pickle.dump(mc, open(mc.output_directory + add_prefix + "results.p", "wb"))
+    pickle.dump(results, open(output_directory + add_prefix + "results.p", "wb"))
 
 
 def dynesty_results_load_from_cpickle(output_directory, prefix=''):
