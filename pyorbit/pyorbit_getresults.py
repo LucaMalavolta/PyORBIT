@@ -48,7 +48,8 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
     sample_keyword = {
         'multinest': ['multinest', 'MultiNest', 'multi'],
         'polychord': ['polychord', 'PolyChord', 'polychrod', 'poly'],
-        'emcee': ['emcee', 'MCMC', 'Emcee']
+        'emcee': ['emcee', 'MCMC', 'Emcee'],
+        'dynesty': ['dynesty', 'DyNesty', 'Dynesty', 'DYNESTY'],
     }
 
     if sampler in sample_keyword['emcee']:
@@ -189,6 +190,82 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
         print(' Dimensions: {}'.format(mc.ndim))
         print()
         print(' Samples: {}'.format(n_samplings))
+
+    if sampler in sample_keyword['dynesty']:
+        plot_dictionary['lnprob_chain'] = False
+        plot_dictionary['chains'] = False
+        plot_dictionary['traces'] = False
+
+        dir_input = './' + config_in['output'] + '/dynesty/'
+        dir_output = './' + config_in['output'] + '/dynesty_plot/'
+        os.system('mkdir -p ' + dir_output)
+
+        mc = nested_sampling_load_from_cpickle(dir_input)
+
+        mc.model_setup()
+        mc.initialize_logchi2()
+        results_analysis.results_resumen(mc, None, skip_theta=True)
+
+        """ Required to create the right objects inside each class - if defined inside """
+        theta_dictionary = results_analysis.get_theta_dictionary(mc)
+
+        from dynesty import plotting as dyplot
+
+        # Plot a summary of the run.
+        print('Plot a summary of the run.')
+        rfig, raxes = dyplot.runplot(results)
+        rfig.savefig('plot01.pdf', bbox_inches='tight', dpi=300)
+        plt.close(rfig)
+
+        # Plot traces and 1-D marginalized posteriors.
+        print('Plot traces and 1-D marginalized posteriors.')
+        tfig, taxes = dyplot.traceplot(results)
+        tfig.savefig('plot02.pdf', bbox_inches='tight', dpi=300)
+        plt.close(tfig)
+
+        # Plot the 2-D marginalized posteriors.
+        print('Plot the 2-D marginalized posteriors.')
+        cfig, caxes = dyplot.cornerplot(results)
+        cfig.savefig('plot03.pdf', bbox_inches='tight', dpi=300)
+        plt.close(cfig)
+
+        from dynesty import utils as dyfunc
+
+        # Extract sampling results.
+        samples = results.samples  # samples
+        weights = np.exp(results.logwt - results.logz[-1])  # normalized weights
+
+        # Compute 5%-95% quantiles.
+        quantiles = dyfunc.quantile(samples, [0.05, 0.95], weights=weights)
+
+        # Compute weighted mean and covariance.
+        mean, cov = dyfunc.mean_and_cov(samples, weights)
+
+        # Resample weighted samples.
+        samples_equal = dyfunc.resample_equal(samples, weights)
+
+        # Generate a new set of results with statistical+sampling uncertainties.
+        results_sim = dyfunc.simulate_run(results)
+
+        #data_in = np.genfromtxt(dir_input + 'post_equal_weights.dat')
+        #flat_lnprob = data_in[:, -1]
+        #flat_chain = data_in[:, :-1]
+        # nsample = np.size(flat_lnprob)
+        #n_samplings, n_pams = np.shape(flat_chain)
+
+        #lnprob_med = common.compute_value_sigma(flat_lnprob)
+        #chain_med = common.compute_value_sigma(flat_chain)
+        #chain_MAP, lnprob_MAP = common.pick_MAP_parameters(
+        #    flat_chain, flat_lnprob)
+
+        print()
+        print(' Reference Time Tref: {}'.format(mc.Tref))
+        print()
+        print(' Dimensions: {}'.format(mc.ndim))
+        print()
+        print(' Samples: {}'.format(n_samplings))
+
+        quit()
 
     print()
     print(' LN posterior: {0:12f}   {1:12f} {2:12f} (15-84 p) '.format(

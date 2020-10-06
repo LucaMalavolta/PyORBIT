@@ -146,6 +146,16 @@ def nested_sampling_load_from_cpickle(output_directory, prefix=''):
     return mc
 
 
+def dynesty_results_save_to_cpickle(mc, prefix=None):
+    add_prefix = (prefix + '_' if prefix else '')
+    pickle.dump(mc, open(mc.output_directory + add_prefix + "results.p", "wb"))
+
+
+def dynesty_results_load_from_cpickle(output_directory, prefix=''):
+    add_prefix = (prefix + '_' if prefix else '')
+    mc = pickle.load(open(output_directory + add_prefix + "results.p", "rb"))
+    return mc
+
 def emcee_burnin_check(chain, nburnin, nthin, nwalkers=False):
     nburn = int(nburnin / nthin)
     modified = False
