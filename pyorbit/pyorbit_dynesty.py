@@ -25,8 +25,6 @@ def show(filepath):
 
 def pyorbit_dynesty(config_in, input_datasets=None, return_output=None):
 
-    output_directory = './' + config_in['output'] + '/dynesty/'
-
     mc = ModelContainerDynesty()
     pars_input(config_in, mc, input_datasets)
 
@@ -44,7 +42,7 @@ def pyorbit_dynesty(config_in, input_datasets=None, return_output=None):
 
     results_analysis.results_resumen(mc, None, skip_theta=True)
 
-    mc.output_directory = output_directory
+    mc.output_directory = './' + config_in['output'] + '/dynesty/'
     if not os.path.exists(mc.output_directory):
         os.makedirs(mc.output_directory)
 
@@ -80,6 +78,7 @@ def pyorbit_dynesty(config_in, input_datasets=None, return_output=None):
 
         # "Dynamic" nested sampling.
         print('Setting up the Dynamic Nested Sampling')
+        print()
         dsampler = dynesty.DynamicNestedSampler(mc.dynesty_call,
                                                 mc.dynesty_priors,
                                                 mc.ndim,
@@ -92,6 +91,8 @@ def pyorbit_dynesty(config_in, input_datasets=None, return_output=None):
                                                 )
         print('Running Dynamic Nested Sampling')
         dsampler.run_nested()
+        print()
+    print()
 
     print('Getting the results')
     results = dsampler.results
@@ -104,6 +105,7 @@ def pyorbit_dynesty(config_in, input_datasets=None, return_output=None):
             .format(results.niter, sum(results.ncall),
                     results.eff, results.logz[-1], results.logzerr[-1]))
 
+    print()
     print('Summary\n=======\n'+res)
 
     print()
@@ -111,7 +113,8 @@ def pyorbit_dynesty(config_in, input_datasets=None, return_output=None):
 
     """ A dummy file is created to let the cpulimit script to proceed with the next step"""
     nested_sampling_create_dummy_file(mc)
-    nested_sampling_save_to_cpickle(output_directory, results)
+    nested_sampling_save_to_cpickle(mc)
+    dynesty_results_save_to_cpickle(mc.output_directory, results)
 
     if return_output:
         return mc
