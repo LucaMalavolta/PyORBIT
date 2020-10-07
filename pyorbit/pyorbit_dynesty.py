@@ -46,12 +46,15 @@ def pyorbit_dynesty(config_in, input_datasets=None, return_output=None):
     if not os.path.exists(mc.output_directory):
         os.makedirs(mc.output_directory)
 
-    if 'nlive' in mc.nested_sampling_parameters:
-        nlive = mc.nested_sampling_parameters['nlive']
-    elif 'nlive_mult' in mc.nested_sampling_parameters:
+    nthreads = mc.nested_sampling_parameters['nthreads']
+
+    if 'nlive_mult' in mc.nested_sampling_parameters:
         nlive = mc.ndim * mc.nested_sampling_parameters['nlive_mult']
+    else:
+        nlive = mc.nested_sampling_parameters['nlive']
 
     print('Number of live points:', nlive) 
+    print('Number of threads:', nthreads) 
 
     print()
     print('Reference Time Tref: ', mc.Tref)
@@ -75,7 +78,7 @@ def pyorbit_dynesty(config_in, input_datasets=None, return_output=None):
     # print()
 
     with multiprocessing.Pool() as pool:
-
+        
         # "Dynamic" nested sampling.
         print('Setting up the Dynamic Nested Sampling')
         print()
@@ -84,7 +87,7 @@ def pyorbit_dynesty(config_in, input_datasets=None, return_output=None):
                                                 mc.ndim,
                                                 nlive=nlive,
                                                 pool=pool,
-                                                queue_size=16,
+                                                queue_size=nthreads,
                                                 use_pool={
                                                     'prior_transform': False},
                                                 wt_kwargs={'pfrac': 0.0}
