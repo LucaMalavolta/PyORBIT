@@ -1,5 +1,16 @@
 from __future__ import print_function
 
+from pyorbit.classes.common import *
+from matplotlib import pyplot as plt
+import matplotlib.gridspec as gridspec
+from matplotlib.ticker import AutoMinorLocator
+import corner
+import pyorbit.classes.kepler_exo as kepler_exo
+import pyorbit.classes.common as common
+import pyorbit.classes.results_analysis as results_analysis
+import h5py
+import csv
+import re
 from pyorbit.classes.model_container_multinest import ModelContainerMultiNest
 from pyorbit.classes.model_container_polychord import ModelContainerPolyChord
 from pyorbit.classes.model_container_emcee import ModelContainerEmcee
@@ -13,17 +24,6 @@ import sys
 
 mpl.use('Agg')
 
-import re
-import csv
-import h5py
-import pyorbit.classes.results_analysis as results_analysis
-import pyorbit.classes.common as common
-import pyorbit.classes.kepler_exo as kepler_exo
-import corner
-from matplotlib.ticker import AutoMinorLocator
-import matplotlib.gridspec as gridspec
-from matplotlib import pyplot as plt
-from pyorbit.classes.common import *
 
 __all__ = ["pyorbit_getresults"]
 
@@ -233,7 +233,8 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
 
         # Extract sampling results.
         samples = results.samples  # samples
-        weights = np.exp(results.logwt - results.logz[-1])  # normalized weights
+        # normalized weights
+        weights = np.exp(results.logwt - results.logz[-1])
 
         # Compute 5%-95% quantiles.
         quantiles = dyfunc.quantile(samples, [0.05, 0.95], weights=weights)
@@ -255,7 +256,7 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
 
         #lnprob_med = common.compute_value_sigma(flat_lnprob)
         #chain_med = common.compute_value_sigma(flat_chain)
-        #chain_MAP, lnprob_MAP = common.pick_MAP_parameters(
+        # chain_MAP, lnprob_MAP = common.pick_MAP_parameters(
         #    flat_chain, flat_lnprob)
 
         print()
@@ -271,7 +272,8 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
     print(' LN posterior: {0:12f}   {1:12f} {2:12f} (15-84 p) '.format(
         lnprob_med[0], lnprob_med[2], lnprob_med[1]))
 
-    med_log_priors, med_log_likelihood = mc.log_priors_likelihood(chain_med[:,0])
+    med_log_priors, med_log_likelihood = mc.log_priors_likelihood(
+        chain_med[:, 0])
     BIC = -2.0 * med_log_likelihood + np.log(mc.ndata) * mc.ndim
     AIC = -2.0 * med_log_likelihood + 2.0 * mc.ndim
     AICc = AIC + (2.0 + 2.0 * mc.ndim) * mc.ndim / (mc.ndata - mc.ndim - 1.0)
@@ -293,7 +295,6 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
     print(' Median BIC  (using posterior)  = {}'.format(BIC))
     print(' Median AIC  (using posterior)  = {}'.format(AIC))
     print(' Median AICc (using posterior)  = {}'.format(AICc))
-
 
     MAP_log_priors, MAP_log_likelihood = mc.log_priors_likelihood(chain_MAP)
     BIC = -2.0 * MAP_log_likelihood + np.log(mc.ndata) * mc.ndim
@@ -347,7 +348,7 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
     print()
     print('****************************************************************************************************')
     print()
-    
+
     sys.stdout.flush()
 
     # Computation of all the planetary variables
@@ -376,7 +377,7 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
         print('****************************************************************************************************')
         print()
         sys.stdout.flush()
-    
+
     if plot_dictionary['full_correlation']:
 
         corner_plot = {
@@ -520,14 +521,20 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
                 corner_plot['labels'].append(var)
                 corner_plot['truths'].append(variable_median[var])
 
-            """ Check if the semi-amplitude K is among the parameters that have been fitted. 
-                If so, it computes the correpsing planetary mass with uncertainty """
+            """ Check if the semi-amplitude K is among the parameters that
+                have been fitted. If so, it computes the corresponding
+                planetary mass with uncertainty """
 
-            fig = corner.corner(np.asarray(corner_plot['samples']).T, labels=corner_plot['labels'],
-                                truths=corner_plot['truths'])
-            fig.savefig(dir_output + common_name + "_corners.pdf",
-                        bbox_inches='tight', dpi=300)
-            plt.close(fig)
+            try:
+                fig = corner.corner(np.asarray(corner_plot['samples']).T,
+                                    labels=corner_plot['labels'],
+                                    truths=corner_plot['truths'])
+                fig.savefig(dir_output + common_name + "_corners.pdf",
+                            bbox_inches='tight', dpi=300)
+                plt.close(fig)
+            except AssertionError:
+                print('     Something went wrong, plot skipped ')
+                print()
 
         print()
         print('****************************************************************************************************')
@@ -1207,7 +1214,8 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
                 y_edges = data_edg[jj, :]
 
                 if ii != jj:
-                    hist2d = np.histogram2d(x_data, y_data, bins=[x_edges, y_edges])
+                    hist2d = np.histogram2d(
+                        x_data, y_data, bins=[x_edges, y_edges])
                     #hist1d_y = np.histogram(y_data, bins=y_edges)
 
                     Hflat = hist2d[0].flatten()
