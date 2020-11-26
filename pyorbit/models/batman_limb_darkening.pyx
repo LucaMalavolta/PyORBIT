@@ -54,8 +54,8 @@ class LimbDarkening_2Pam(AbstractCommon):
     """These default boundaries are used when the user does not define them
     in the yaml file"""
     default_bounds = {
-        'ld_c1': [0.00, 1.00],
-        'ld_c2': [0.00, 1.00],
+        'ld_c1': [0.00, 2.00],
+        'ld_c2': [-1.00, 1.00],
         'ld_q1': [0.00, 1.00],
         'ld_q2': [0.00, 1.00]
     }

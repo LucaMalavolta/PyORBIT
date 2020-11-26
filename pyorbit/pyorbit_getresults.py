@@ -601,7 +601,7 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
                 rad_filename = samples_dir + common_ref + '_' + variable_name
                 fileout = open(rad_filename + '.dat', 'w')
                 for val in variable:
-                    fileout.write('{0:f} \n'.format(val))
+                    fileout.write('{0:.12f} \n'.format(val))
                 fileout.close()
 
                 try:
@@ -647,7 +647,7 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
         rad_filename = samples_dir + 'log_likelihood'
         fileout = open(rad_filename + '.dat', 'w')
         for val in flat_lnprob:
-            fileout.write('{0:f} \n'.format(val))
+            fileout.write('{0:.12f} \n'.format(val))
         fileout.close()
 
         for theta_name, th in theta_dictionary.items():
@@ -655,7 +655,7 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
             rad_filename = samples_dir + repr(th) + '_' + theta_name
             fileout = open(rad_filename + '.dat', 'w')
             for val in flat_chain[:, th]:
-                fileout.write('{0:f} \n'.format(val))
+                fileout.write('{0:.12f} \n'.format(val))
             fileout.close()
 
             try:
