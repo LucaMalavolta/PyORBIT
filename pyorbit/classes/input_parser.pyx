@@ -507,8 +507,10 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, shutdown_
 
             try:
                 model_name_expanded = []
+                model_name_original = []
                 planet_list = []
                 for key, val in model_conf['models'].items():
+                    model_name_original.append(key)
                     model_name_expanded.append(key)
                     planet_list.append(val)
 
@@ -517,6 +519,7 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, shutdown_
                     planet_list = np.atleast_1d(model_conf['planets']).tolist()
                 except:
                     planet_list = np.atleast_1d(model_conf['common']).tolist()
+                model_name_original = [model_name for pl_name in planet_list]
                 model_name_expanded = [model_name +
                                        '_' + pl_name for pl_name in planet_list]
 
@@ -589,10 +592,12 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, shutdown_
                 mc.models[model_name_exp].common_ref.append('star_parameters')
 
                 for dataset_name, dataset in mc.dataset_dict.items():
+                    
                     if model_name_exp in dataset.models:
 
                         if dataset_name not in model_conf:
                             model_conf[dataset_name] = {}
+                            mc.models[model_name_exp].model_conf[dataset_name] = {}
 
                         bounds_space_priors_starts_fixed(mc, mc.models[model_name_exp], model_conf[dataset_name],
                                                          dataset_1=dataset_name)

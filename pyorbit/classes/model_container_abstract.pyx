@@ -65,7 +65,7 @@ class ModelContainer(object):
             for dataset_name in list(set(model_conf) & set(self.dataset_dict)):
                 model.setup_dataset(
                     self, self.dataset_dict[dataset_name], **model_conf)
-
+        
         if self.dynamical_model:
             self.dynamical_model.to_be_initialized = True
 
