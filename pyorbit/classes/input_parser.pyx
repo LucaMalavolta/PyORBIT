@@ -442,23 +442,16 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, shutdown_
             for dataset_name, dataset in mc.dataset_dict.items():
 
                 if model_name in dataset.models and (model_name in conf_models):
-                    print('Common model: ', model_name,
-                          'Data-specific model:', model_name)
-                    print(
-                        'Using the same name for a common model and a data-specific model causes')
-                    print('the automatic assignment of the former to the latter')
-                    print()
+                    """ Using the same name for a common model and a data-specific model causes
+                    the automatic assignment of the former to the latter 
+                    """
 
                     conf_models[model_name].update(model_conf)
                     conf_models[model_name]['common'] = model_name
 
                 if model_name in dataset.models and not (model_name in conf_models):
-                    print('Common model: ', model_name,
-                          'used by dataset', dataset.name_ref)
-                    print(
-                        'Common model will be used as data-specific model for this dataset')
-                    print()
-
+                    """ Common model will be used as data-specific model for this dataset"""
+                    
                     try:
                         conf_models[model_name] = model_conf
                         conf_models[model_name]['common'] = model_name
@@ -592,15 +585,16 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, shutdown_
                 mc.models[model_name_exp].common_ref.append('star_parameters')
 
                 for dataset_name, dataset in mc.dataset_dict.items():
-                    
                     if model_name_exp in dataset.models:
+                        try:
+                            if dataset_name not in model_conf:
+                                model_conf[dataset_name] = {}
+                                mc.models[model_name_exp].model_conf[dataset_name] = {}
 
-                        if dataset_name not in model_conf:
-                            model_conf[dataset_name] = {}
-                            mc.models[model_name_exp].model_conf[dataset_name] = {}
-
-                        bounds_space_priors_starts_fixed(mc, mc.models[model_name_exp], model_conf[dataset_name],
-                                                         dataset_1=dataset_name)
+                            bounds_space_priors_starts_fixed(mc, mc.models[model_name_exp], model_conf[dataset_name],
+                                                            dataset_1=dataset_name)
+                        except TypeError:
+                            continue
 
         elif model_type == 'local_correlation' or model_type == 'correlation':
             mc.models[model_name] = \
