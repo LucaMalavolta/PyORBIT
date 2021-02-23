@@ -192,6 +192,10 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
         print(' Samples: {}'.format(n_samplings))
 
     if sampler in sample_keyword['dynesty']:
+
+        from dynesty import utils as dyfunc
+        from dynesty import plotting as dyplot
+
         plot_dictionary['lnprob_chain'] = False
         plot_dictionary['chains'] = False
         plot_dictionary['traces'] = False
@@ -206,47 +210,87 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
         mc.initialize_logchi2()
         results_analysis.results_resumen(mc, None, skip_theta=True)
 
+        results = dynesty_results_load_from_cpickle(dir_input)
+
+        #taken from dynesty/dynesty/results.py  but without the nlive point causing an error
+        res = ("niter: {:d}\n"
+                "ncall: {:d}\n"
+                "eff(%): {:6.3f}\n"
+                "logz: {:6.3f} +/- {:6.3f}"
+                .format(results.niter, sum(results.ncall),
+                        results.eff, results.logz[-1], results.logzerr[-1]))
+
+        print()
+        print('Summary - \n=======\n'+res)
+
+        # Generate a new set of results with statistical+sampling uncertainties.
+        results_sim = dyfunc.simulate_run(results)
+        res = ("niter: {:d}\n"
+                "ncall: {:d}\n"
+                "eff(%): {:6.3f}\n"
+                "logz: {:6.3f} +/- {:6.3f}"
+                .format(results_sim.niter, sum(results_sim.ncall),
+                        results_sim.eff, results_sim.logz[-1], results_sim.logzerr[-1]))
+
+        print()
+        print('Summary - statistical+sampling errors - \n=======\n'+res)
+
+
         """ Required to create the right objects inside each class - if defined inside """
         theta_dictionary = results_analysis.get_theta_dictionary(mc)
 
-        from dynesty import plotting as dyplot
+        labels_array = [None] * len(theta_dictionary)
+        for key_name, key_value in theta_dictionary.items():
+            labels_array[key_value] = re.sub('_', '-', key_name)
 
         # Plot a summary of the run.
+        print()
         print('Plot a summary of the run.')
         rfig, raxes = dyplot.runplot(results)
-        rfig.savefig('plot01.pdf', bbox_inches='tight', dpi=300)
+        rfig.savefig(dir_output + 'results_summary.pdf', bbox_inches='tight', dpi=300)
         plt.close(rfig)
 
         # Plot traces and 1-D marginalized posteriors.
         print('Plot traces and 1-D marginalized posteriors.')
-        tfig, taxes = dyplot.traceplot(results)
-        tfig.savefig('plot02.pdf', bbox_inches='tight', dpi=300)
+        tfig, taxes = dyplot.traceplot(results, labels=labels_array)
+        tfig.savefig(dir_output + 'results_traceplot.pdf', bbox_inches='tight', dpi=300)
         plt.close(tfig)
 
         # Plot the 2-D marginalized posteriors.
         print('Plot the 2-D marginalized posteriors.')
-        cfig, caxes = dyplot.cornerplot(results)
-        cfig.savefig('plot03.pdf', bbox_inches='tight', dpi=300)
+        cfig, caxes = dyplot.cornerplot(results, labels=labels_array)
+        cfig.savefig(dir_output + 'results_cornerplot.pdf', bbox_inches='tight', dpi=300)
         plt.close(cfig)
+        
 
-        from dynesty import utils as dyfunc
 
         # Extract sampling results.
         samples = results.samples  # samples
+
         # normalized weights
         weights = np.exp(results.logwt - results.logz[-1])
 
         # Compute 5%-95% quantiles.
-        quantiles = dyfunc.quantile(samples, [0.05, 0.95], weights=weights)
+        quantiles = dyfunc.quantile(samples, [0.05, 0.95])
 
         # Compute weighted mean and covariance.
         mean, cov = dyfunc.mean_and_cov(samples, weights)
+        print()
+        print('Weighted mean and convariance from original samplings')
+        for key_name, key_value in theta_dictionary.items():
+            print(key_name, conv[key_value], cov[key_value])
+        print('From now on, all results are from weighted samples')
+
 
         # Resample weighted samples.
-        samples_equal = dyfunc.resample_equal(samples, weights)
+        flat_chain = dyfunc.resample_equal(samples, weights)
+        flat_lnprob = dyfunc.resample_equal(results.logl, weights)
 
-        # Generate a new set of results with statistical+sampling uncertainties.
-        results_sim = dyfunc.simulate_run(results)
+        n_samplings, n_pams = np.shape(flat_chain)
+
+        chain_MAP, lnprob_MAP = common.pick_MAP_parameters(
+            flat_chain, flat_lnprob)
+
 
         #data_in = np.genfromtxt(dir_input + 'post_equal_weights.dat')
         #flat_lnprob = data_in[:, -1]
