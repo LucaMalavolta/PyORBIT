@@ -278,7 +278,7 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
         print()
         print('Weighted mean and convariance from original samplings')
         for key_name, key_value in theta_dictionary.items():
-            print(key_name, conv[key_value], cov[key_value])
+            print(key_name, cov[key_value], cov[key_value])
         print('From now on, all results are from weighted samples')
 
 
