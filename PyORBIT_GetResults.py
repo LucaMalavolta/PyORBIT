@@ -45,10 +45,11 @@ if __name__ == '__main__':
         'polychord':['polychord', 'PolyChord', 'polychrod', 'poly'],
         'emcee': ['emcee', 'MCMC', 'Emcee'],
         'dynesty': ['dynesty', 'DyNesty', 'Dynesty', 'DYNESTY'],
+        'ultranest': ['ultranest', 'UltraNest', 'Ultranest', 'ULTRANEST', 'ultra','Unest'],
         #'optimize': ['optimize', 'scipy', 'Optimize', 'OPTIMIZE'],
     }
 
-    unchained_samplers = ['polychord', 'multinest', 'dynesty']
+    unchained_samplers = ['polychord', 'multinest', 'dynesty', 'ultranest']
 
     args = parser.parse_args()
     sampler = args.sampler[0]

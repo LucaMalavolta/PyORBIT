@@ -650,7 +650,7 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, shutdown_
                                                          dataset_1=dataset_name)
             except:
                 pass
-            
+
             try:
                 mc.models[model_name].model_conf.update(model_conf)
             except:

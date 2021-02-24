@@ -166,6 +166,17 @@ def dynesty_results_maxevidence_load_from_cpickle(output_directory, prefix=''):
     results = pickle.load(open(output_directory + add_prefix + "results_maxevidence.p", "rb"))
     return results
 
+
+def ultranest_sampler_save_to_cpickle(output_directory, sampler, prefix=None):
+    add_prefix = (prefix + '_' if prefix else '')
+    pickle.dump(sampler, open(output_directory + add_prefix + "sampler.p", "wb"))
+
+
+def ultranest_sampler_load_from_cpickle(output_directory, prefix=''):
+    add_prefix = (prefix + '_' if prefix else '')
+    sampler = pickle.load(open(output_directory + add_prefix + "sampler.p", "rb"))
+    return sampler
+
 def emcee_burnin_check(chain, nburnin, nthin, nwalkers=False):
     nburn = int(nburnin / nthin)
     modified = False

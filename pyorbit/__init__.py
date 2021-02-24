@@ -6,6 +6,7 @@ from .pyorbit_optimize import *
 from .pyorbit_polychord import *
 from .pyorbit_multinest import *
 from .pyorbit_dynesty import *
+from .pyorbit_ultranest import *
 from .pyorbit_getresults import *
 
 __version__ = "8.1"

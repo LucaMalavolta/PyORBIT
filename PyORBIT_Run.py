@@ -30,6 +30,7 @@ if __name__ == '__main__':
         'polychord':['polychord', 'PolyChord', 'polychrod', 'poly'],
         'emcee': ['emcee', 'MCMC', 'Emcee'],
         'dynesty': ['dynesty', 'DyNesty', 'Dynesty', 'DYNESTY'],
+        'ultranest': ['ultranest', 'UltraNest', 'Ultranest', 'ULTRANEST', 'ultra','Unest'],
         'optimize': ['optimize', 'scipy', 'Optimize', 'OPTIMIZE'],
     }
 
@@ -44,6 +45,9 @@ if __name__ == '__main__':
 
     if sampler in sampler_keyword['dynesty']:
         pyorbit.pyorbit_dynesty(config_in)
+
+    if sampler in sampler_keyword['ultranest']:
+        pyorbit.pyorbit_ultranest(config_in)
 
     if sampler in sampler_keyword['optimize']:
         pyorbit.pyorbit_optimize(config_in)

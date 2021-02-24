@@ -45,14 +45,7 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
     plt.rcParams["font.family"] = "Times New Roman"
     plt.rc('text', usetex=use_tex)
 
-    sample_keyword = {
-        'multinest': ['multinest', 'MultiNest', 'multi'],
-        'polychord': ['polychord', 'PolyChord', 'polychrod', 'poly'],
-        'emcee': ['emcee', 'MCMC', 'Emcee'],
-        'dynesty': ['dynesty', 'DyNesty', 'Dynesty', 'DYNESTY'],
-    }
-
-    if sampler_name in sample_keyword['emcee']:
+    if sampler_name == 'emcee':
 
         dir_input = './' + config_in['output'] + '/emcee/'
         dir_output = './' + config_in['output'] + '/emcee_plot/'
@@ -115,7 +108,7 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
         results_analysis.print_integrated_ACF(
             sampler_chain, theta_dictionary, nthin)
 
-    if sampler_name in sample_keyword['multinest']:
+    if sampler_name == 'multinest':
 
         dir_input = './' + config_in['output'] + '/multinest/'
         dir_output = './' + config_in['output'] + '/multinest_plot/'
@@ -148,7 +141,7 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
         print()
         print(' Samples: {}'.format(n_samplings))
 
-    if sampler_name in sample_keyword['polychord']:
+    if sampler_name == 'polychord':
 
         dir_input = './' + config_in['output'] + '/polychord/'
         dir_output = './' + config_in['output'] + '/polychord_plot/'
@@ -185,7 +178,7 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
         print()
         print(' Samples: {}'.format(n_samplings))
 
-    if sampler_name in sample_keyword['dynesty']:
+    if sampler_name == 'dynesty':
 
         from dynesty import utils as dyfunc
         from dynesty import plotting as dyplot
@@ -237,9 +230,6 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
 
         except:
             results = dynesty_results_load_from_cpickle(dir_input)
-            print('aaa')
-
-
 
 
         #taken from dynesty/dynesty/results.py  but without the nlive point causing an error
@@ -339,6 +329,101 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
         print(' Dimensions: {}'.format(mc.ndim))
         print()
         print(' Samples: {}'.format(n_samplings))
+
+
+    if sampler_name == 'ultranest':
+
+        import json
+
+
+        dir_input = './' + config_in['output'] + '/ultranest/'
+        dir_output = './' + config_in['output'] + '/ultranest_plot/'
+        os.system('mkdir -p ' + dir_output)
+
+
+
+        mc = nested_sampling_load_from_cpickle(dir_input)
+
+        mc.model_setup()
+        mc.initialize_logchi2()
+        results_analysis.results_resumen(mc, None, skip_theta=True)
+
+        with open(dir_input + 'info/results.json') as f:
+            results = json.load(f)
+
+        """ Required to create the right objects inside each class - if defined inside """
+        theta_dictionary = results_analysis.get_theta_dictionary(mc)
+
+        res = ("niter: {:d}\n"
+                "ncall: {:d}\n"
+                "logz: {:6.3f} +/- {:6.3f}"
+                .format(results['niter'], results['ncall'],
+                        results['logz'], results['logzerr']))
+
+        print()
+        print('Summary - \n=======\n'+res)
+
+        """ Copy the plots from default output directory of ultranest in
+        ultranest_plots"""
+        os.system(' cp '+ dir_input + 'plots/corner.pdf ' + dir_output + 'ultranest_corner.pdf')
+        os.system(' cp '+ dir_input + 'plots/run.pdf ' + dir_output + 'ultranest_run.pdf')
+        os.system(' cp '+ dir_input + 'plots/trace.pdf ' + dir_output + 'ultranest_trace.pdf')
+
+        #labels_array = [None] * len(theta_dictionary)
+        #for key_name, key_value in theta_dictionary.items():
+        #    labels_array[key_value] = re.sub('_', '-', key_name)
+
+
+        flat_chain = np.genfromtxt(dir_input + 'chains/equal_weighted_post.txt', skip_header=1)
+        n_samplings, n_pams = np.shape(flat_chain)
+
+        """ Filling the lnprob array the hard way """
+        flat_lnprob = np.empty(n_samplings)
+        for ii in range(0,n_samplings):
+            flat_lnprob[ii] = mc.ultranest_call(flat_chain[ii,:])
+
+
+        lnprob_med = common.compute_value_sigma(flat_lnprob)
+        chain_med = common.compute_value_sigma(flat_chain)
+
+        chain_MAP, lnprob_MAP = common.pick_MAP_parameters(
+            flat_chain, flat_lnprob)
+
+        un_lnprob_MAP = results['maximum_likelihood']['logl']
+        un_chain_MAP = results['maximum_likelihood']['point']
+
+        """ Weighted mean and standard deviation from original distribution """
+        print()
+        print('Weighted median, mean and convariance from original samplings, internal MAP and ultranest MAP')
+        for key_name, key_value in theta_dictionary.items():
+            print('  {0:15s} {1:15.6f}, {2:15.6f} +- {3:15.6f}, {4:15.6f} {5:15.6f} '.format(key_name,
+                                                           results['posterior']['median'][key_value],
+                                                           results['posterior']['mean'][key_value],
+                                                           results['posterior']['stdev'][key_value],
+                                                           chain_MAP[key_value],
+                                                           un_chain_MAP[key_value]))
+
+        print('From now on, all results are from weighted samples')
+
+
+        #data_in = np.genfromtxt(dir_input + 'post_equal_weights.dat')
+        #flat_lnprob = data_in[:, -1]
+        #flat_chain = data_in[:, :-1]
+        # nsample = np.size(flat_lnprob)
+        #n_samplings, n_pams = np.shape(flat_chain)
+
+        #lnprob_med = common.compute_value_sigma(flat_lnprob)
+        #chain_med = common.compute_value_sigma(flat_chain)
+        # chain_MAP, lnprob_MAP = common.pick_MAP_parameters(
+        #    flat_chain, flat_lnprob)
+
+        print()
+        print(' Reference Time Tref: {}'.format(mc.Tref))
+        print()
+        print(' Dimensions: {}'.format(mc.ndim))
+        print()
+        print(' Samples: {}'.format(n_samplings))
+
 
     print()
     print(' LN posterior: {0:12f}   {1:12f} {2:12f} (15-84 p) '.format(
