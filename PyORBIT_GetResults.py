@@ -35,12 +35,33 @@ if __name__ == '__main__':
         'dataset_corner': False,
         'common_corner': False,
         'use_getdist': True,
-        'veuz_corner_files': False
+        'veuz_corner_files': False,
+        'P_versus_lnprob': False
     }
+
+    # Moved here from pyorbit_getresults.py fro consistency with PyORBIT_run.py
+    sampler_keyword = {
+        'multinest':['multinest', 'MultiNest', 'multi'],
+        'polychord':['polychord', 'PolyChord', 'polychrod', 'poly'],
+        'emcee': ['emcee', 'MCMC', 'Emcee'],
+        'dynesty': ['dynesty', 'DyNesty', 'Dynesty', 'DYNESTY'],
+        #'optimize': ['optimize', 'scipy', 'Optimize', 'OPTIMIZE'],
+    }
+
+    unchained_samplers = ['polychord', 'multinest', 'dynesty']
 
     args = parser.parse_args()
     sampler = args.sampler[0]
     file_conf = args.config_file[0]
+
+    sampler_name = None
+    for sampler_key, sampler_value in sampler_keyword.items():
+        if sampler in sampler_value:
+            sampler_name = sampler_key
+
+    if not sampler_name:
+        print(' *** Sampler not suppoerted by GetResults, exiting *** ')
+        quit()
 
     if args.p is not False :
         plot_dictionary['plot_models'] = True
@@ -86,6 +107,14 @@ if __name__ == '__main__':
         plot_dictionary['common_corner'] = True
         plot_dictionary['dataset_corner'] = True
 
+
+    if sampler_name in unchained_samplers:
+        plot_dictionary['lnprob_chain'] = False
+        plot_dictionary['chains'] = False
+        plot_dictionary['traces'] = False
+        plot_dictionary['P_versus_lnprob'] = True
+
+
     print()
     print('PyORBIT v{0}'.format(pyorbit.__version__))
     print()
@@ -94,5 +123,5 @@ if __name__ == '__main__':
 
     config_in = pyorbit.yaml_parser(file_conf)
 
-    pyorbit.pyorbit_getresults(config_in, sampler, plot_dictionary)
+    pyorbit.pyorbit_getresults(config_in, sampler_name, plot_dictionary)
     #pyorbit.pyorbit_getresults_getdist(config_in, sampler, plot_dictionary)

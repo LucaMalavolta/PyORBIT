@@ -4,7 +4,9 @@ from pyorbit.classes.model_container_dynesty import ModelContainerDynesty
 from pyorbit.classes.input_parser import yaml_parser, pars_input
 from pyorbit.classes.io_subroutines import nested_sampling_save_to_cpickle, \
     nested_sampling_load_from_cpickle, nested_sampling_create_dummy_file, \
-    dynesty_results_save_to_cpickle, dynesty_results_load_from_cpickle
+    dynesty_results_save_to_cpickle, dynesty_results_load_from_cpickle, \
+    dynesty_results_maxevidence_save_to_cpickle, dynesty_results_maxevidence_load_from_cpickle
+
 import pyorbit.classes.results_analysis as results_analysis
 import os
 import sys
@@ -53,6 +55,7 @@ def pyorbit_dynesty(config_in, input_datasets=None, return_output=None):
     else:
         nlive = mc.nested_sampling_parameters['nlive']
 
+
     print('Number of live points:', nlive) 
     print('Number of threads:', nthreads) 
 
@@ -77,10 +80,59 @@ def pyorbit_dynesty(config_in, input_datasets=None, return_output=None):
     #results = sampler.results
     # print()
 
+    if mc.nested_sampling_parameters['pfrac'] > 1.0 or  mc.nested_sampling_parameters['pfrac'] < 0.0:
+        print('Double run with 0/100 posterior/evidence split; then 100/0 posterior/evidence split')
+        print()
+        pfrac = 0.00
+
+        with multiprocessing.Pool() as pool:
+
+            # "Dynamic" nested sampling.
+            print('Setting up the Dynamic Nested Sampling, posterior/evidence split = {0:4.3f}'.format(pfrac))
+            print()
+            dsampler_maxevidence = dynesty.DynamicNestedSampler(mc.dynesty_call,
+                                                    mc.dynesty_priors,
+                                                    mc.ndim,
+                                                    nlive=nlive,
+                                                    pool=pool,
+                                                    queue_size=nthreads,
+                                                    use_pool={
+                                                        'prior_transform': False},
+                                                    wt_kwargs={'pfrac': pfrac}
+                                                    )
+            print('Running Dynamic Nested Sampling')
+            dsampler_maxevidence.run_nested()
+            print()
+        print()
+
+        print('Getting the results')
+        results_maxevidence = dsampler_maxevidence.results
+
+        #taken from dynesty/dynesty/results.py  but without the nlive point causing an error
+        res = ("niter: {:d}\n"
+                "ncall: {:d}\n"
+                "eff(%): {:6.3f}\n"
+                "logz: {:6.3f} +/- {:6.3f}"
+                .format(results_maxevidence.niter, sum(results_maxevidence.ncall),
+                        results_maxevidence.eff, results_maxevidence.logz[-1], results_maxevidence.logzerr[-1]))
+
+        print()
+        print('Summary\n=======\n'+res)
+
+        print()
+        print()
+
+        """ A dummy file is created to let the cpulimit script to proceed with the next step"""
+        dynesty_results_maxevidence_save_to_cpickle(mc.output_directory, results_maxevidence)
+
+        pfrac = 1.00
+    else:
+        pfrac = mc.nested_sampling_parameters['pfrac']
+
     with multiprocessing.Pool() as pool:
-        
+
         # "Dynamic" nested sampling.
-        print('Setting up the Dynamic Nested Sampling')
+        print('Setting up the Dynamic Nested Sampling, posterior/evidence split = {0:4.3f}'.format(pfrac))
         print()
         dsampler = dynesty.DynamicNestedSampler(mc.dynesty_call,
                                                 mc.dynesty_priors,
@@ -90,7 +142,7 @@ def pyorbit_dynesty(config_in, input_datasets=None, return_output=None):
                                                 queue_size=nthreads,
                                                 use_pool={
                                                     'prior_transform': False},
-                                                wt_kwargs={'pfrac': 0.0}
+                                                wt_kwargs={'pfrac': pfrac}
                                                 )
         print('Running Dynamic Nested Sampling')
         dsampler.run_nested()
@@ -112,7 +164,7 @@ def pyorbit_dynesty(config_in, input_datasets=None, return_output=None):
     print('Summary\n=======\n'+res)
 
     print()
-    
+
 
     """ A dummy file is created to let the cpulimit script to proceed with the next step"""
     nested_sampling_create_dummy_file(mc)

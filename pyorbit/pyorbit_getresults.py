@@ -28,7 +28,7 @@ mpl.use('Agg')
 __all__ = ["pyorbit_getresults"]
 
 
-def pyorbit_getresults(config_in, sampler, plot_dictionary):
+def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
 
     try:
         use_tex = config_in['parameters']['use_tex']
@@ -52,7 +52,7 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
         'dynesty': ['dynesty', 'DyNesty', 'Dynesty', 'DYNESTY'],
     }
 
-    if sampler in sample_keyword['emcee']:
+    if sampler_name in sample_keyword['emcee']:
 
         dir_input = './' + config_in['output'] + '/emcee/'
         dir_output = './' + config_in['output'] + '/emcee_plot/'
@@ -115,10 +115,7 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
         results_analysis.print_integrated_ACF(
             sampler_chain, theta_dictionary, nthin)
 
-    if sampler in sample_keyword['multinest']:
-        plot_dictionary['lnprob_chain'] = False
-        plot_dictionary['chains'] = False
-        plot_dictionary['traces'] = False
+    if sampler_name in sample_keyword['multinest']:
 
         dir_input = './' + config_in['output'] + '/multinest/'
         dir_output = './' + config_in['output'] + '/multinest_plot/'
@@ -151,10 +148,7 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
         print()
         print(' Samples: {}'.format(n_samplings))
 
-    if sampler in sample_keyword['polychord']:
-        plot_dictionary['lnprob_chain'] = False
-        plot_dictionary['chains'] = False
-        plot_dictionary['traces'] = False
+    if sampler_name in sample_keyword['polychord']:
 
         dir_input = './' + config_in['output'] + '/polychord/'
         dir_output = './' + config_in['output'] + '/polychord_plot/'
@@ -191,14 +185,10 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
         print()
         print(' Samples: {}'.format(n_samplings))
 
-    if sampler in sample_keyword['dynesty']:
+    if sampler_name in sample_keyword['dynesty']:
 
         from dynesty import utils as dyfunc
         from dynesty import plotting as dyplot
-
-        plot_dictionary['lnprob_chain'] = False
-        plot_dictionary['chains'] = False
-        plot_dictionary['traces'] = False
 
         dir_input = './' + config_in['output'] + '/dynesty/'
         dir_output = './' + config_in['output'] + '/dynesty_plot/'
@@ -210,7 +200,47 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
         mc.initialize_logchi2()
         results_analysis.results_resumen(mc, None, skip_theta=True)
 
-        results = dynesty_results_load_from_cpickle(dir_input)
+        """ Required to create the right objects inside each class - if defined inside """
+        theta_dictionary = results_analysis.get_theta_dictionary(mc)
+
+        pfrac = mc.nested_sampling_parameters['pfrac']
+
+        try:
+            results = dynesty_results_maxevidence_load_from_cpickle(dir_input)
+            pfrac = 0.00
+            print('Model evidence from dynesty run with posterior/evidence split = {0:4.3f}'.format(pfrac))
+
+            labels_array = [None] * len(theta_dictionary)
+            for key_name, key_value in theta_dictionary.items():
+                labels_array[key_value] = re.sub('_', '-', key_name)
+
+            # Plot a summary of the run.
+            print()
+            print('Plot a summary of the run.')
+            rfig, raxes = dyplot.runplot(results)
+            rfig.savefig(dir_output + 'dynesty_results_maxevidence_summary.pdf', bbox_inches='tight', dpi=300)
+            plt.close(rfig)
+
+            # Plot traces and 1-D marginalized posteriors.
+            print('Plot traces and 1-D marginalized posteriors.')
+            tfig, taxes = dyplot.traceplot(results, labels=labels_array)
+            tfig.savefig(dir_output + 'dynesty_results_maxevidence_traceplot.pdf', bbox_inches='tight', dpi=300)
+            plt.close(tfig)
+
+            # Plot the 2-D marginalized posteriors.
+            print('Plot the 2-D marginalized posteriors.')
+            cfig, caxes = dyplot.cornerplot(results, labels=labels_array)
+            cfig.savefig(dir_output + 'dynesty_results_maxevidence_cornerplot.pdf', bbox_inches='tight', dpi=300)
+            plt.close(cfig)
+
+            pfrac = 1.00
+
+        except:
+            results = dynesty_results_load_from_cpickle(dir_input)
+            print('aaa')
+
+
+
 
         #taken from dynesty/dynesty/results.py  but without the nlive point causing an error
         res = ("niter: {:d}\n"
@@ -235,9 +265,8 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
         print()
         print('Summary - statistical+sampling errors - \n=======\n'+res)
 
-
-        """ Required to create the right objects inside each class - if defined inside """
-        theta_dictionary = results_analysis.get_theta_dictionary(mc)
+        results = dynesty_results_load_from_cpickle(dir_input)
+        print('Posteriors analysis from dynesty run with posterior/evidence split = {0:4.3f}'.format(pfrac))
 
         labels_array = [None] * len(theta_dictionary)
         for key_name, key_value in theta_dictionary.items():
@@ -247,21 +276,20 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
         print()
         print('Plot a summary of the run.')
         rfig, raxes = dyplot.runplot(results)
-        rfig.savefig(dir_output + 'results_summary.pdf', bbox_inches='tight', dpi=300)
+        rfig.savefig(dir_output + 'dynesty_results_summary.pdf', bbox_inches='tight', dpi=300)
         plt.close(rfig)
 
         # Plot traces and 1-D marginalized posteriors.
         print('Plot traces and 1-D marginalized posteriors.')
         tfig, taxes = dyplot.traceplot(results, labels=labels_array)
-        tfig.savefig(dir_output + 'results_traceplot.pdf', bbox_inches='tight', dpi=300)
+        tfig.savefig(dir_output + 'dynesty_results_traceplot.pdf', bbox_inches='tight', dpi=300)
         plt.close(tfig)
 
         # Plot the 2-D marginalized posteriors.
         print('Plot the 2-D marginalized posteriors.')
         cfig, caxes = dyplot.cornerplot(results, labels=labels_array)
-        cfig.savefig(dir_output + 'results_cornerplot.pdf', bbox_inches='tight', dpi=300)
+        cfig.savefig(dir_output + 'dynesty_results_cornerplot.pdf', bbox_inches='tight', dpi=300)
         plt.close(cfig)
-        
 
 
         # Extract sampling results.
@@ -278,7 +306,7 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
         print()
         print('Weighted mean and convariance from original samplings')
         for key_name, key_value in theta_dictionary.items():
-            print(key_name, cov[key_value], cov[key_value])
+            print('  {0:s}  {1:15.6f} +- {2:15.6f}'.format(key_name, mean[key_value], cov[key_value, key_value]))
         print('From now on, all results are from weighted samples')
 
 
@@ -288,9 +316,11 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
 
         n_samplings, n_pams = np.shape(flat_chain)
 
+        lnprob_med = common.compute_value_sigma(flat_lnprob)
+        chain_med = common.compute_value_sigma(flat_chain)
+
         chain_MAP, lnprob_MAP = common.pick_MAP_parameters(
             flat_chain, flat_lnprob)
-
 
         #data_in = np.genfromtxt(dir_input + 'post_equal_weights.dat')
         #flat_lnprob = data_in[:, -1]
@@ -309,8 +339,6 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
         print(' Dimensions: {}'.format(mc.ndim))
         print()
         print(' Samples: {}'.format(n_samplings))
-
-        quit()
 
     print()
     print(' LN posterior: {0:12f}   {1:12f} {2:12f} (15-84 p) '.format(
@@ -1309,8 +1337,7 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
         print('****************************************************************************************************')
         print()
 
-    if sampler in sample_keyword['multinest'] \
-       or sampler in sample_keyword['polychord']:
+    if plot_dictionary['P_versus_lnprob']:
 
         fig = plt.figure(figsize=(10, 10))
 
@@ -1322,7 +1349,7 @@ def pyorbit_getresults(config_in, sampler, plot_dictionary):
                             flat_lnprob, s=2, c='C'+repr(ii))
                 ii += 1
 
-        rad_filename = dir_output + 'lnprob_P'
+        rad_filename = dir_output + 'P_versus_lnprob'
 
         plt.savefig(rad_filename + '.png', bbox_inches='tight', dpi=300)
         plt.close(fig)

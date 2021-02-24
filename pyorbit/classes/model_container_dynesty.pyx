@@ -11,7 +11,8 @@ class ModelContainerDynesty(ModelContainer):
         self.include_priors = False
         self.nested_sampling_parameters = {'shutdown_jitter': False,
                                            'nthreads': 16,
-                                           'include_priors': False}
+                                           'include_priors': False,
+                                           'pfrac': 1.0}
 
         self.output_directory = None
 

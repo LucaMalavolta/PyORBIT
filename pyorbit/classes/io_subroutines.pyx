@@ -153,8 +153,18 @@ def dynesty_results_save_to_cpickle(output_directory, results, prefix=None):
 
 def dynesty_results_load_from_cpickle(output_directory, prefix=''):
     add_prefix = (prefix + '_' if prefix else '')
-    mc = pickle.load(open(output_directory + add_prefix + "results.p", "rb"))
-    return mc
+    results = pickle.load(open(output_directory + add_prefix + "results.p", "rb"))
+    return results
+
+def dynesty_results_maxevidence_save_to_cpickle(output_directory, results, prefix=None):
+    add_prefix = (prefix + '_' if prefix else '')
+    pickle.dump(results, open(output_directory + add_prefix + "results_maxevidence.p", "wb"))
+
+
+def dynesty_results_maxevidence_load_from_cpickle(output_directory, prefix=''):
+    add_prefix = (prefix + '_' if prefix else '')
+    results = pickle.load(open(output_directory + add_prefix + "results_maxevidence.p", "rb"))
+    return results
 
 def emcee_burnin_check(chain, nburnin, nthin, nwalkers=False):
     nburn = int(nburnin / nthin)
