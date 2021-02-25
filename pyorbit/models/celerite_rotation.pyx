@@ -47,7 +47,7 @@ class SHOTerm(Term):
         S0, Q, w0 = params
         if Q < 0.5:
             return np.empty(0), np.empty(0), np.empty(0), np.empty(0)
-        
+
         f = np.sqrt(4.0 * Q**2-1)
         return (
             S0 * w0 * Q,
