@@ -66,10 +66,10 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
 
     if reloaded_emcee:
         print('Requested steps:', mc.emcee_parameters['nsteps'])
-        
+
         mc.emcee_parameters['completed_nsteps'] = \
             int(sampler_chain.shape[1] * mc.emcee_parameters['thin'])
-        
+
         print('Completed:', mc.emcee_parameters['completed_nsteps'] )
         pars_input(config_in, mc, input_datasets, reload_emcee=True)
         print('Total:', mc.emcee_parameters['nsteps'])
@@ -87,7 +87,7 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
         mc.emcee_dir_output = emcee_dir_output
 
         if mc.emcee_parameters['nsteps'] <= mc.emcee_parameters['completed_nsteps']:
-            
+
             print('Reference Time Tref: ', mc.Tref)
             print()
             print('Dimensions = ', mc.ndim)
@@ -104,7 +104,7 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
             print()
 
             results_analysis.results_resumen(mc, flatchain)
-            
+
             print()
             print('emcee completed')
             print()
@@ -124,7 +124,7 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
     if reloaded_emcee:
         sampled = mc.emcee_parameters['completed_nsteps']
         nsteps_todo = mc.emcee_parameters['nsteps'] \
-            - mc.emcee_parameters['completed_nsteps'] 
+            - mc.emcee_parameters['completed_nsteps']
 
         print('Resuming from a previous run:')
         print('Performed steps = ', mc.emcee_parameters['completed_nsteps'])
@@ -256,7 +256,7 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
                 de = DiffEvol(
                     mc,
                     mc.bounds,
-                    mc.emcee_parameters['nwalkers'], 
+                    mc.emcee_parameters['nwalkers'],
                     maximize=True,
                     pool=pool)
 
@@ -268,7 +268,7 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
                 mc.emcee_parameters['nwalkers'],
                 maximize=True)
 
-            de.optimize(int(mc.pyde_parameters['ngen']))            
+            de.optimize(int(mc.pyde_parameters['ngen']))
 
         population = de.population
         starting_point = np.median(population, axis=0)
@@ -295,7 +295,7 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
     if reloaded_emcee:
         print('Original starting point of emcee:')
         print()
-    
+
     results_analysis.results_resumen(
         mc, starting_point, compute_lnprob=True, is_starting_point=True)
     sys.stdout.flush()
@@ -330,14 +330,14 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
                     sampler.pool = pool
                     population, prob, state = sampler.run_mcmc(
                         population,
-                        mc.emcee_parameters['nsave'],
+                        int(mc.emcee_parameters['nsave']),
                         thin=mc.emcee_parameters['thin'],
                         rstate0=state,
                         progress=True)
             else:
                 population, prob, state = sampler.run_mcmc(
                     population,
-                    mc.emcee_parameters['nsave'],
+                    int(mc.emcee_parameters['nsave']),
                     thin=mc.emcee_parameters['thin'],
                     rstate0=state,
                     progress=True)
