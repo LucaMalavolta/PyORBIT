@@ -5,6 +5,6 @@
 		}
 	],
 	"settings": {
-		"python.pythonPath": "/anaconda3/envs/pyorbit/bin/python"
+		"python.pythonPath": "/home/malavolta/anaconda3/bin/python"
 	}
 }

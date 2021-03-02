@@ -418,9 +418,9 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, shutdown_
 
         else:
 
-            """ 
+            """
                 If the object type/kind has been specified, than the section name is treated just as a label.
-                Otherwise, it is assumed that the section name correspond to the object name  
+                Otherwise, it is assumed that the section name correspond to the object name
             """
             if 'type' in model_conf:
                 model_type = model_conf['type']
@@ -434,33 +434,32 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, shutdown_
             bounds_space_priors_starts_fixed(
                 mc, mc.common_models[model_name], model_conf)
 
-            """ Automatic detection of common models without dataset-specific parameters 
-                If the required parameters are included in the "model-specific section", 
-                the relative dictionary is created and the keywords are copied there 
+            """ Automatic detection of common models without dataset-specific parameters
+                If the required parameters are included in the "model-specific section",
+                the relative dictionary is created and the keywords are copied there
             """
 
             for dataset_name, dataset in mc.dataset_dict.items():
-
                 if model_name in dataset.models and (model_name in conf_models):
                     """ Using the same name for a common model and a data-specific model causes
-                    the automatic assignment of the former to the latter 
+                    the automatic assignment of the former to the latter
                     """
-
                     conf_models[model_name].update(model_conf)
                     conf_models[model_name]['common'] = model_name
-
                 if model_name in dataset.models and not (model_name in conf_models):
                     """ Common model will be used as data-specific model for this dataset"""
-                    
+
                     try:
                         conf_models[model_name] = model_conf
                         conf_models[model_name]['common'] = model_name
                     except:
                         conf_models[model_name] = {'common': model_name}
 
+
         if 'star_parameters' not in mc.common_models:
             mc.common_models['star_parameters'] = define_common_type_to_class['star_parameters'](
                 'star_parameters')
+
 
     """ Check if there is any planet that requires dynamical computations"""
     if mc.dynamical_dict:
@@ -570,7 +569,7 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, shutdown_
                         common_name = mc.models[model_name_exp].model_conf['limb_darkening']
                     except:
                         common_name = 'limb_darkening'
-                    
+
                     print('  LC model: {0:s} is using {1:s} LD parameters'.format(
                         model_name_exp, common_name))
 
@@ -581,7 +580,7 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, shutdown_
                         mc.common_models[common_name].ld_ncoeff
 
                     mc.models[model_name_exp].common_ref.append(common_name)
-                
+
                 mc.models[model_name_exp].common_ref.append('star_parameters')
 
                 for dataset_name, dataset in mc.dataset_dict.items():
@@ -592,7 +591,7 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, shutdown_
                                 mc.models[model_name_exp].model_conf[dataset_name] = {}
 
                             bounds_space_priors_starts_fixed(mc, mc.models[model_name_exp], model_conf[dataset_name],
-                                                            dataset_1=dataset_name)
+                                                            dataset_1=dataset_name, backup_conf=model_conf)
                         except TypeError:
                             continue
 
@@ -646,8 +645,12 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, shutdown_
                         if dataset_name not in model_conf:
                             model_conf[dataset_name] = {}
 
-                        bounds_space_priors_starts_fixed(mc, mc.models[model_name], model_conf[dataset_name],
-                                                         dataset_1=dataset_name)
+                        bounds_space_priors_starts_fixed(mc,
+                                                         mc.models[model_name],
+                                                         model_conf[dataset_name],
+                                                         dataset_1=dataset_name,
+                                                         backup_conf=model_conf)
+
             except:
                 pass
 
@@ -786,8 +789,63 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, shutdown_
         mc.include_priors = np.asarray(
             conf_solver['include_priors'], dtype=bool)
 
-def bounds_space_priors_starts_fixed(mc, model_obj, conf, dataset_1=None, dataset_2=None, add_var_name=''):
+def bounds_space_priors_starts_fixed(mc,
+                                     model_obj,
+                                     input_conf,
+                                     dataset_1=None,
+                                     dataset_2=None,
+                                     add_var_name='',
+                                     backup_conf=None):
     # type: (object, object, object, object, object, object) -> object
+
+    conf = input_conf.copy()
+    key_list = ['boundaries', 'spaces', 'priors', 'starts', 'fixed']
+
+
+    """ Copy the missing keys from the backup configuration
+    Example: we have N+1 datasets, namely LCdata_transit00 ... LCdata_transitN,
+    all including a local_polynomial_trend model.
+    In the "models" section of the configuration file we can specify:
+
+    models:
+      ...
+      local_polynomial_trend:
+        common: polynomial_trend
+        normalization_model: True
+        order: 2
+        boundaries:
+          poly_c0: [-2.0, 2.0]
+          poly_c1: [-1.0, 1.0]
+          poly_c2: [-1.0, 1.0]
+        LCdata_transit00:
+          boundaries:
+            poly_c0: [-4.0, 4.0]
+            poly_c1: [-3.0, 3.0]
+            poly_c2: [-3.0, 3.0]
+    parameters:
+      ...
+
+    Datasets LCdata_transit00 will have boundaries poly_c0: [-4.0, 4.0],
+    poly_c1: [-3.0, 3.0], etc
+    All the other datasets will have bondaries poly_c0: [-2.0, 2.0],
+    poly_c1: [-1.0, 1.0], etc
+
+    This formatting applies to all the items in "key_list"
+
+    Code is super-utly, and probably a real coder will faint by looking at it :-(
+    """
+
+    for key_name in key_list:
+        if backup_conf is None:
+            continue
+        if key_name not in backup_conf:
+            continue
+        if key_name not in conf:
+            conf[key_name] = backup_conf[key_name]
+        else:
+            for var_name in backup_conf[key_name]:
+                if var_name not in  conf[key_name]:
+                    conf[key_name][var_name] = backup_conf[key_name][var_name]
 
     if dataset_1 is None:
         if 'boundaries' in conf:

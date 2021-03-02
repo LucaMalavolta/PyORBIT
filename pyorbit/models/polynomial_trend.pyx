@@ -92,7 +92,7 @@ class PolynomialTrend(AbstractModel):
         self.starting_order = 1
 
         """
-        The x-intercept must be defined within the interval of at least one dataset, 
+        The x-intercept must be defined within the interval of at least one dataset,
         otherwise there will be a degeneracy between the offset parameter and the coefficients
         of the polynomial
         """
@@ -100,7 +100,7 @@ class PolynomialTrend(AbstractModel):
         self.common_poly_ref = None
 
         self.time_interval = 1.000000000
-        
+
 
     def initialize_model(self, mc, **kwargs):
 
