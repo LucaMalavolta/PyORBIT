@@ -375,6 +375,8 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
                 sampler.pool = pool
                 population, prob, state = sampler.run_mcmc(
                     population,
+                    
+                    
                     nsteps_todo,
                     thin=mc.emcee_parameters['thin'],
                     rstate0=state,

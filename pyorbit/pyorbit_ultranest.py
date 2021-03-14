@@ -4,7 +4,7 @@ from pyorbit.classes.model_container_ultranest import ModelContainerUltranest
 from pyorbit.classes.input_parser import yaml_parser, pars_input
 from pyorbit.classes.io_subroutines import nested_sampling_save_to_cpickle, \
     nested_sampling_load_from_cpickle, nested_sampling_create_dummy_file, \
-    ultranest_sampler_save_to_cpickle
+    ultranest_sampler_save_to_cpickle, ultranest_sampler_load_from_cpickle
 
 import pyorbit.classes.results_analysis as results_analysis
 import os
@@ -30,6 +30,21 @@ def pyorbit_ultranest(config_in, input_datasets=None, return_output=None):
     mc = ModelContainerUltranest()
     pars_input(config_in, mc, input_datasets)
 
+    mc.output_directory = './' + config_in['output'] + '/ultranest/'
+
+    try:
+        results = ultranest_sampler_load_from_cpickle(mc.output_directory)
+        print('Dynesty results already saved in the respective directory, run PyORBIT_GetResults')
+        if return_output:
+            return mc
+        else:
+            return
+    except FileNotFoundError:
+        pass
+
+    if not os.path.exists(mc.output_directory):
+        os.makedirs(mc.output_directory)
+
     if mc.nested_sampling_parameters['shutdown_jitter']:
         'Jitter term not included for evidence calculation'
         print()
@@ -49,9 +64,7 @@ def pyorbit_ultranest(config_in, input_datasets=None, return_output=None):
     for key_name, key_value in theta_dictionary.items():
         labels_array[key_value] = re.sub('_', '-', key_name)
 
-    mc.output_directory = './' + config_in['output'] + '/ultranest/'
-    if not os.path.exists(mc.output_directory):
-        os.makedirs(mc.output_directory)
+
 
     if 'nlive_mult' in mc.nested_sampling_parameters:
         nlive = mc.ndim * mc.nested_sampling_parameters['nlive_mult']

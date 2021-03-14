@@ -18,7 +18,7 @@ class CommonStarParameters(AbstractCommon):
     default_bounds = {
         'radius': [0.0000, 2.0000],
         'mass': [0.0000, 2.0000],
-        'rho': [0.0000, 4.0000]
+        'rho': [0.0000, 5.0000]
     }
 
     """ Must be the same parameters as in list_pams, because priors are applied only to _physical_ parameters """

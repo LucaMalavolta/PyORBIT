@@ -30,6 +30,21 @@ def pyorbit_dynesty(config_in, input_datasets=None, return_output=None):
     mc = ModelContainerDynesty()
     pars_input(config_in, mc, input_datasets)
 
+    mc.output_directory = './' + config_in['output'] + '/dynesty/'
+
+    try:
+        results = dynesty_results_load_from_cpickle(mc.output_directory)
+        print('Dynesty results already saved in the respective directory, run PyORBIT_GetResults')
+        if return_output:
+            return mc
+        else:
+            return
+    except FileNotFoundError:
+        pass
+
+    if not os.path.exists(mc.output_directory):
+        os.makedirs(mc.output_directory)
+
     if mc.nested_sampling_parameters['shutdown_jitter']:
         'Jitter term not included for evidence calculation'
         print()
@@ -43,10 +58,6 @@ def pyorbit_dynesty(config_in, input_datasets=None, return_output=None):
     mc.create_starting_point()
 
     results_analysis.results_resumen(mc, None, skip_theta=True)
-
-    mc.output_directory = './' + config_in['output'] + '/dynesty/'
-    if not os.path.exists(mc.output_directory):
-        os.makedirs(mc.output_directory)
 
     nthreads = mc.nested_sampling_parameters['nthreads']
 
@@ -134,16 +145,28 @@ def pyorbit_dynesty(config_in, input_datasets=None, return_output=None):
         # "Dynamic" nested sampling.
         print('Setting up the Dynamic Nested Sampling, posterior/evidence split = {0:4.3f}'.format(pfrac))
         print()
+        #dsampler = dynesty.DynamicNestedSampler(mc.dynesty_call,
+        #                                        mc.dynesty_priors,
+        #                                        mc.ndim,
+        #                                        nlive=nlive,
+        #                                        pool=pool,
+        #                                        queue_size=nthreads,
+        #                                        use_pool={
+        #                                            'prior_transform': False},
+        #                                        wt_kwargs={'pfrac': pfrac}
+        #                                        )
         dsampler = dynesty.DynamicNestedSampler(mc.dynesty_call,
                                                 mc.dynesty_priors,
                                                 mc.ndim,
                                                 nlive=nlive,
                                                 pool=pool,
+                                                bounds='multi',
                                                 queue_size=nthreads,
                                                 use_pool={
                                                     'prior_transform': False},
                                                 wt_kwargs={'pfrac': pfrac}
                                                 )
+
         print('Running Dynamic Nested Sampling')
         dsampler.run_nested()
         print()

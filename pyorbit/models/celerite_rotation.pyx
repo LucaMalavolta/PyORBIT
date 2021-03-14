@@ -62,7 +62,7 @@ class Celerite_Rotation(AbstractModel):
     This term has two modes in Fourier space: one at ``period`` and one at
     ``0.5 * period``. This can be a good descriptive model for a wide range of
     stochastic variability in stellar time series from rotation to pulsations.
-    from Foreman-Mackey+2017 and exoplanet, but keeping the notation of 
+    from Foreman-Mackey+2017 and exoplanet, but keeping the notation of
     the semi-periodic goerge kernel used in PyORBIT
     differently from the example provided in the paper, here the terms are passed in the linear space already. It will
     the job of the sampler to convert from Logarithmic to Linear space for those variables that the user has decided
@@ -86,8 +86,8 @@ class Celerite_Rotation(AbstractModel):
 
     list_pams_common = {
         'Prot',  # Rotational period of the star
-        'Q0',
-        'deltaQ',
+        'ln_Q0',
+        'ln_deltaQ',
         'mix'
     }
 
@@ -128,14 +128,14 @@ class Celerite_Rotation(AbstractModel):
             these values may be different from ones accepted by the kernel
         """
         # S0, Q, w0 = output_pams[:3] for SHOterm 1
-        output_pams[1] = 0.5 + input_pams['Q0'] + input_pams['deltaQ']
+        output_pams[1] = 0.5 + np.exp(input_pams['ln_Q0']) + np.exp(input_pams['ln_deltaQ'])
         output_pams[2] = 4 * np.pi * output_pams[1] \
             / (input_pams['Prot'] * np.sqrt(4 * output_pams[1] ** 2 - 1))
         output_pams[0] = input_pams['amp'] \
             / (output_pams[2] * output_pams[1]) 
 
         # Another term at half the period
-        output_pams[4] = 0.5 + input_pams['Q0']
+        output_pams[4] = 0.5 + np.exp(input_pams['ln_Q0'])
         output_pams[5] = 8 * np.pi * output_pams[4] \
             / (input_pams['Prot'] * np.sqrt(4 * output_pams[4] ** 2 - 1))
         output_pams[3] = input_pams['mix'] * input_pams['amp'] \
@@ -150,8 +150,8 @@ class Celerite_Rotation(AbstractModel):
     def define_kernel(self, dataset):
         input_pams = {
             'Prot': 10.0,
-            'Q0': 1.0, 
-            'deltaQ':0.5,
+            'ln_Q0': 1.0,
+            'ln_deltaQ': 0.5,
             'mix': 0.5,
             'amp': 10.0
         }
@@ -161,7 +161,7 @@ class Celerite_Rotation(AbstractModel):
             + SHOTerm(S0=gp_pams[3], Q=gp_pams[4], w0=gp_pams[5])
         self.gp[dataset.name_ref] = celerite.GP(kernel)
 
-        """ I've decided to add the jitter in quadrature instead of using a constant kernel to allow the use of 
+        """ I've decided to add the jitter in quadrature instead of using a constant kernel to allow the use of
         different / selective jitter within the dataset
         """
         env = np.sqrt(dataset.e ** 2.0 + dataset.jitter ** 2.0)
