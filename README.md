@@ -12,7 +12,7 @@ Bayesian evidence estimation can now be performed with:
   repository)](https://github.com/JohannesBuchner/UltraNest/)
 
 Just substitute "emcee" with "dynesty" or "ultranest" to when running the code.
-*Please check the respective documentation to give proper credit to their work!*
+**Please check the respective documentation to give proper credit to their work!**
 
 - It is now possible to fit planetary transits through `batman` [(Kreidberg 2015)](https://ui.adsabs.harvard.edu/abs/2015PASP..127.1161K/abstract) 
 Have a look at [Benatti et al. (2019)](https://ui.adsabs.harvard.edu/abs/2019A%26A...630A..81B/abstract) for more details.
