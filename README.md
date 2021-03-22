@@ -4,10 +4,14 @@
 
 **News** 
 Bayesian evidence estimation can now be performed with:
-- `dynesty`
-- `UltraNest` by Johannes Buchner [(UltraNest
-  repository)](https://johannesbuchner.github.io/UltraNest/) \
-It is now possible to fit planetary transits through `batman` [(Kreidberg 2015)](https://ui.adsabs.harvard.edu/abs/2015PASP..127.1161K/abstract) \
+- `dynesty` by Josh Speagle [(dynesty
+  documentation, )](https://dynesty.readthedocs.io/en/latest/) [(code
+  repository)](https://github.com/joshspeagle/dynesty/) \
+- `UltraNest` by Johannes Buchner  [(UltraNest
+  documentation,)](https://johannesbuchner.github.io/UltraNest/) [(code
+  repository)](https://github.com/JohannesBuchner/UltraNest/) \
+
+- It is now possible to fit planetary transits through `batman` [(Kreidberg 2015)](https://ui.adsabs.harvard.edu/abs/2015PASP..127.1161K/abstract) 
 Have a look at [Benatti et al. (2019)](https://ui.adsabs.harvard.edu/abs/2019A%26A...630A..81B/abstract) for more details.
 
 Examples have been moved to a dedicated repository [PyORBIT_example](https://github.com/LucaMalavolta/PyORBIT_examples)
