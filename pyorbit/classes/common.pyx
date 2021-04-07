@@ -361,8 +361,6 @@ def convert_PMsMp_to_a(P, Ms, Mp):
     # output in Astronomical Units
     return np.power(P**2 * constants.Giau * (Ms + Mp) / (2 * np.pi)**2., 1./3.)
 
-
-
 def convert_b_to_i(b,e,o,a):
 
     rho_e = (1. - e ** 2) / (1. + e * np.sin(o))
