@@ -515,7 +515,7 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
         mc, chain_med[:, 0])
 
     planet_variables_MAP = results_analysis.get_planet_variables(mc, chain_MAP)
-    star_variables_MAP = results_analysis.get_stellar_parameters(mc, chain_MAP)
+    star_variables_MAP = results_analysis.get_stellar_parameters(mc, chain_MAP, warnings=False)
 
     if plot_dictionary['lnprob_chain'] or plot_dictionary['chains']:
 

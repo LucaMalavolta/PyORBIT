@@ -132,7 +132,7 @@ def get_stellar_parameters(mc, theta, warnings=True):
         n_samplings = 1
         n_pams = np.shape(theta)
 
-    "Stellar mass, radius and density are pre-oaded since they are are required by most of the common models"
+    "Stellar mass, radius and density are pre-loaded since they are are required by most of the common models"
     stellar_model = mc.common_models['star_parameters']
     stellar_values = stellar_model.convert(theta)
 
@@ -146,7 +146,7 @@ def get_stellar_parameters(mc, theta, warnings=True):
                                                                 size=n_samplings)
             except:
                 if warnings:
-                    print(' *** Please provide a prior on stellar Radius *** ')
+                    print(' *** Please provide a prior on stellar mass, radius or density *** ')
                     print()
 
         if 'mass' not in stellar_values:
@@ -157,28 +157,56 @@ def get_stellar_parameters(mc, theta, warnings=True):
                                                               size=n_samplings)
             except:
                 if warnings:
-                    print(' *** Please provide a prior on stellar Mass *** ')
+                    print(' *** Please provide a prior on stellar mass, radius, or density *** ')
                     print()
 
         if 'mass' in stellar_values.keys() and 'radius' in stellar_values.keys():
             stellar_values['rho'] = stellar_values['mass'] / \
                 stellar_values['radius'] ** 3
+            if warnings:
+                print('Note: stellar density derived from its mass and radius')
+                print()
 
     else:
-        if 'mass' in stellar_values:
+        if 'mass' in stellar_values and 'radius' in stellar_values:
+            if warnings:
+                print('Note: stellar mass, radius and density provided independently, no check for consistency is performed')
+                print()
+        elif 'mass' in stellar_values:
             stellar_values['radius'] = (
                 stellar_values['mass'] / stellar_values['rho']) ** (1. / 3.)
+            if warnings:
+                print('Note: stellar radius derived from its mass and density')
+                print()
         elif 'radius' in stellar_values:
-            stellar_values['mass'] = stellar_values['radius'] ** 3. * \
-                stellar_values['rho']
+            stellar_values['mass'] = stellar_values['radius'] ** 3. * stellar_values['rho']
+            if warnings:
+                print('Note: stellar mass derived from its radius and density')
+                print()
+
         else:
-            if 'mass' in stellar_model.prior_pams:
+            if 'mass' in stellar_model.prior_pams and 'radius' in stellar_model.prior_pams:
+                if warnings:
+                    print('Note: priors on stellar mass and radius provided independently from the measured density, no check for consistency is performed')
+                    print()
+                if stellar_model.prior_kind['mass'] == 'Gaussian':
+                        stellar_values['mass'] = np.random.normal(stellar_model.prior_pams['mass'][0],
+                                                                  stellar_model.prior_pams['mass'][1],
+                                                                  size=n_samplings)
+                if stellar_model.prior_kind['radius'] == 'Gaussian':
+                    stellar_values['radius'] = np.random.normal(stellar_model.prior_pams['radius'][0],
+                                                                stellar_model.prior_pams['radius'][1],
+                                                                size=n_samplings)
+            elif 'mass' in stellar_model.prior_pams:
                 if stellar_model.prior_kind['mass'] == 'Gaussian':
                     stellar_values['mass'] = np.random.normal(stellar_model.prior_pams['mass'][0],
                                                               stellar_model.prior_pams['mass'][1],
                                                               size=n_samplings)
                     stellar_values['radius'] = (
                         stellar_values['mass'] / stellar_values['rho']) ** (1. / 3.)
+                if warnings:
+                    print('Note: stellar radius derived from its measured density and its prior on mass')
+                    print()
 
             elif 'radius' in stellar_model.prior_pams:
 
@@ -188,6 +216,10 @@ def get_stellar_parameters(mc, theta, warnings=True):
                                                                 size=n_samplings)
                     stellar_values['mass'] = stellar_values['radius'] ** 3. * \
                         stellar_values['rho']
+                if warnings:
+                    print('Note: stellar radius derived from its measured density and its prior on mass')
+                    print()
+
             else:
                 if warnings:
                     print(
@@ -213,7 +245,7 @@ def get_planet_variables(mc, theta, verbose=False):
         n_samplings, n_pams = np.shape(theta)
     except:
         n_samplings = 1
-    stellar_values = get_stellar_parameters(mc, theta)
+    stellar_values = get_stellar_parameters(mc, theta, warnings=False)
 
     planet_variables = {}
 
