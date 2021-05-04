@@ -100,7 +100,7 @@ class Celerite_Rotation_Linear(AbstractModel):
     n_pams = 6
 
     def __init__(self, *args, **kwargs):
-        super(Celerite_Rotation, self).__init__(*args, **kwargs)
+        super(Celerite_Rotation_Linear, self).__init__(*args, **kwargs)
         self.gp = {}
 
         try:
