@@ -82,25 +82,25 @@ def emcee_load_from_cpickle(emcee_dir_output, prefix=''):
 
     mc = pickle.load(open(emcee_dir_output + add_prefix + "model_container.p", "rb"))
     starting_point = pickle.load(open(emcee_dir_output + add_prefix + "starting_point.p", "rb"))
-    
+
     # For backward compatibility after changing a confusing name
     try:
         population = pickle.load(open(emcee_dir_output + add_prefix + "population.p", "rb"))
     except FileNotFoundError:
         population = pickle.load(open(emcee_dir_output + add_prefix + "starting_population.p", "rb"))
-    
+
     prob = pickle.load(open(mc.emcee_dir_output + add_prefix + "prob.p", "rb"))
     state = pickle.load(open(mc.emcee_dir_output + add_prefix + "state.p", "rb"))
     sampler_chain = pickle.load(open(emcee_dir_output + add_prefix + "sampler_chain.p", "rb"))
     sampler_lnprobability = pickle.load(open(emcee_dir_output + add_prefix + "sampler_lnprobability.p", "rb"))
     sampler_acceptance_fraction = pickle.load(
         open(emcee_dir_output + add_prefix + "sampler_acceptance_fraction.p", "rb"))
-    
+
     try:
         sampler = pickle.load(open(emcee_dir_output + add_prefix + "sampler.p", "rb"))
     except (FileNotFoundError, ModuleNotFoundError):
         sampler = None
-    
+
 
     return mc, starting_point, population, prob, state, \
         sampler_chain, sampler_lnprobability, sampler_acceptance_fraction, theta_dict, sampler

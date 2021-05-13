@@ -117,7 +117,7 @@ class GaussianProcess_QuasiPeriodicActivity_Shared(AbstractModel):
            -> set_parameter_vector() accepts the natural logarithm of this value
          gp_pams[2] = Gamma =  1/ (2 omega**2) -> ExpSine2Kernel(gamma, ln_period)
          gp_pams[3] = ln_theta = ln_Period -> ExpSine2Kernel(gamma, ln_period)
-         
+
         """
         if self.use_HODLR:
             self.gp = george.GP(kernel, solver=george.HODLRSolver, mean=0.00)
@@ -162,15 +162,15 @@ class GaussianProcess_QuasiPeriodicActivity_Shared(AbstractModel):
 
         return self.gp.log_likelihood(self.internal_dataset['yr'], quiet=True)
 
-    def sample_predict(self, dataset, x0_input=None):
+    def sample_predict(self, dataset, x0_input=None, return_covariance=False, return_variance=False):
 
         self.gp.set_parameter_vector(self.internal_gp_pams)
         self.gp.compute(self.internal_dataset['x0'], self.internal_dataset['ej'])
 
         if x0_input is None:
-            return self.gp.predict(self.internal_dataset['yr'], dataset.x0, return_var=True)
+            return self.gp.predict(self.internal_dataset['yr'], dataset.x0, return_cov=return_covariance, return_var=return_variance)
         else:
-            return self.gp.predict(self.internal_dataset['yr'], x0_input, return_var=True)
+            return self.gp.predict(self.internal_dataset['yr'], x0_input, return_cov=return_covariance, return_var=return_variance)
 
     def sample_conditional(self, dataset, x0_input=None):
 

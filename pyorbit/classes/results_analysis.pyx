@@ -589,13 +589,13 @@ def get_model(mc, theta, bjd_dict):
 
             else:
                 model_out[dataset_name][logchi2_gp_model] = \
-                    mc.models[logchi2_gp_model].sample_conditional(
-                        variable_values, dataset)
+                    mc.models[logchi2_gp_model].sample_predict(variable_values, dataset)
+                    #mc.models[logchi2_gp_model].sample_conditional(variable_values, dataset)
                 model_out[dataset_name]['complete'] += model_out[dataset_name][logchi2_gp_model]
 
                 model_x0[dataset_name][logchi2_gp_model], var = \
                     mc.models[logchi2_gp_model].sample_predict(
-                        variable_values, dataset, x0_plot)
+                        variable_values, dataset, x0_plot, return_variance=True)
 
                 model_x0[dataset_name][logchi2_gp_model +
                                        '_std'] = np.sqrt(var)
@@ -603,14 +603,14 @@ def get_model(mc, theta, bjd_dict):
 
     for dataset_name, logchi2_gp_model in delayed_lnlk_computation.items():
         model_out[dataset_name][logchi2_gp_model] = \
-            mc.models[logchi2_gp_model].sample_conditional(
-                mc.dataset_dict[dataset_name])
+            mc.models[logchi2_gp_model].sample_predict(mc.dataset_dict[dataset_name])
+            #mc.models[logchi2_gp_model].sample_conditional(mc.dataset_dict[dataset_name])
 
         model_out[dataset_name]['complete'] += model_out[dataset_name][logchi2_gp_model]
 
         model_x0[dataset_name][logchi2_gp_model], var = \
             mc.models[logchi2_gp_model].sample_predict(
-                mc.dataset_dict[dataset_name], x0_plot)
+                mc.dataset_dict[dataset_name], x0_plot, return_variance=True)
 
         model_x0[dataset_name][logchi2_gp_model + '_std'] = np.sqrt(var)
         model_x0[dataset_name]['complete'] += model_x0[dataset_name][logchi2_gp_model]

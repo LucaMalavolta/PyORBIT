@@ -151,7 +151,7 @@ class Celerite_Rotation_Legacy(AbstractModel):
 
         return self.gp[dataset.name_ref].log_likelihood(dataset.residuals)
 
-    def sample_predict(self, variable_value, dataset, x0_input=None):
+    def sample_predict(self, variable_value, dataset, x0_input=None, return_covariance=False, return_variance=False):
 
         gp_pams = self.convert_val2gp(variable_value)
 
@@ -160,9 +160,9 @@ class Celerite_Rotation_Legacy(AbstractModel):
         self.gp[dataset.name_ref].compute(dataset.x0, env)
 
         if x0_input is None:
-            return self.gp[dataset.name_ref].predict(dataset.residuals, dataset.x0, return_var=True)
+            return self.gp[dataset.name_ref].predict(dataset.residuals, dataset.x0, return_cov=return_covariance, return_var=return_variance)
         else:
-            return self.gp[dataset.name_ref].predict(dataset.residuals, x0_input, return_var=True)
+            return self.gp[dataset.name_ref].predict(dataset.residuals, x0_input, return_cov=return_covariance, return_var=return_variance)
 
     def sample_conditional(self, variable_value, dataset,  x0_input=None):
 

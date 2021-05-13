@@ -303,7 +303,7 @@ class GP_Framework_Semiperiod_Activity(AbstractModel):
             return -np.inf
 
 
-    def sample_predict(self, dataset, x0_input=None):
+    def sample_predict(self, dataset, x0_input=None, return_covariance=False, return_variance=False):
 
         if x0_input is None:
             t_predict = self._3x0
@@ -328,16 +328,29 @@ class GP_Framework_Semiperiod_Activity(AbstractModel):
         B = cho_solve(cho_factor(cov_matrix), Ks.T)
         std = np.sqrt(np.array(np.diag(Kss - np.dot(Ks, B))).flatten())
 
+        if return_covariance:
+            print('Covariance matrix output not implemented - ERROR')
+            quit()
+
         if dataset.kind == 'RV':
-            return mu[:n_output], std[:n_output]
+            if return_variance:
+                return mu[:n_output], std[:n_output]
+            else:
+                return mu[:n_output]
 
         if dataset.kind == 'H-alpha' or \
                 dataset.kind == 'S_index' or \
                 dataset.kind == 'Ca_HK':
-            return mu[n_output:2*n_output], std[n_output:2*n_output]
+            if return_variance:
+                return mu[n_output:2*n_output], std[n_output:2*n_output]
+            else:
+                return mu[n_output:2*n_output]
 
         if dataset.kind == 'BIS':
-            return mu[2*n_output:], std[2*n_output:]
+            if return_variance:
+                return mu[2*n_output:], std[2*n_output:]
+            else:
+                return mu[2*n_output:]
 
     def sample_conditional(self, dataset, x0_input=None):
         val, std = self.sample_predict(dataset, x0_input)

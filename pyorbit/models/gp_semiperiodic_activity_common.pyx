@@ -159,15 +159,15 @@ class GaussianProcess_QuasiPeriodicActivity_Common(AbstractModel):
         self.gp.compute(self.internal_dataset['x0'], self.internal_dataset['ej'])
         return self.gp.log_likelihood(self.internal_dataset['yr'], quiet=True)
 
-    def sample_predict(self, dataset, x0_input=None):
+    def sample_predict(self, dataset, x0_input=None, return_covariance=False, return_variance=False):
 
         self.gp.set_parameter_vector(self.internal_gp_pams)
         self.gp.compute(self.internal_dataset['x0'], self.internal_dataset['ej'])
 
         if x0_input is None:
-            return self.gp.predict(self.internal_dataset['yr'], dataset.x0, return_var=True)
+            return self.gp.predict(self.internal_dataset['yr'], dataset.x0, return_cov=return_covariance, return_var=return_variance)
         else:
-            return self.gp.predict(self.internal_dataset['yr'], x0_input, return_var=True)
+            return self.gp.predict(self.internal_dataset['yr'], x0_input, return_cov=return_covariance, return_var=return_variance)
 
     def sample_conditional(self, dataset, x0_input=None):
 

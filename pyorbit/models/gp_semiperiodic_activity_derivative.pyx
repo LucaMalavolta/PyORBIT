@@ -105,7 +105,7 @@ class GaussianProcess_QuasiPeriodicActivity_Derivative(AbstractModel):
         except LinAlgError:
             return -np.inf
 
-    def sample_predict(self, variable_value, dataset, x0_input=None):
+    def sample_predict(self, variable_value, dataset, x0_input=None, return_covariance=False, return_variance=False):
 
         env = dataset.e ** 2.0 + dataset.jitter ** 2.0
         cov_matrix = self._compute_cov_matrix(variable_value,
@@ -132,7 +132,16 @@ class GaussianProcess_QuasiPeriodicActivity_Derivative(AbstractModel):
 
         B = cho_solve(cho_factor(cov_matrix), Ks.T)
         std = np.sqrt(np.array(np.diag(Kss - np.dot(Ks, B))).flatten())
-        return mu, std
+
+        if return_covariance:
+            print('Covariance matrix output not implemented - ERROR')
+            quit()
+
+        if return_variance:
+            return mu, std
+        else:
+            return mu
+
 
     def sample_conditional(self, variable_value, dataset, x0_input=None):
 
