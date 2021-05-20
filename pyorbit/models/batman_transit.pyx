@@ -142,7 +142,7 @@ class Batman_Transit(AbstractModel):
         :param x0_input:
         :return:
         """
-        t1_start = process_time()
+        #t1_start = process_time()
 
 
         if self.use_semimajor_axis:
@@ -189,7 +189,7 @@ class Batman_Transit(AbstractModel):
         for var, i_var in self.batman_ldvars.items():
             self.batman_params.u[i_var] = variable_value[var]
 
-        """ 
+        """
         From the batman manual:
         Reinitializing the model is by far the slowest component of batman,because it calculates the optimal step size
         for the integration starting from a very small value. 
