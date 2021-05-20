@@ -4,6 +4,8 @@ import pyorbit.classes.constants as constants
 import pyorbit.classes.kepler_exo as kepler_exo
 from pyorbit.models.abstract_model import AbstractModel
 
+#from time import process_time
+
 try:
     import batman
 except ImportError:
@@ -140,6 +142,8 @@ class Batman_Transit(AbstractModel):
         :param x0_input:
         :return:
         """
+        t1_start = process_time()
+
 
         if self.use_semimajor_axis:
             # semi-major axis (in units of stellar radii)
@@ -201,10 +205,19 @@ class Batman_Transit(AbstractModel):
                                     exp_time=self.batman_options[dataset.name_ref][
                                         'exp_time'],
                                     nthreads=self.nthreads)
+
         else:
             self.batman_options['initialization_counter'] += 1
 
+
+
+
         if x0_input is None:
+            ##model = self.batman_models[dataset.name_ref].light_curve(self.batman_params) - 1.
+            ##t1_stop = process_time()
+            ##
+            ##print("Elapsed time:", t1_stop-t1_start)
+            ##return model
             return self.batman_models[dataset.name_ref].light_curve(self.batman_params) - 1.
 
         else:
