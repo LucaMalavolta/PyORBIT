@@ -206,9 +206,9 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
             labels_array = [None] * len(theta_dictionary)
             for key_name, key_value in theta_dictionary.items():
                 labels_array[key_value] = re.sub('_', '-', key_name)
-
+            print(results)
             # Plot a summary of the run.
-            print()
+
             print('Plot a summary of the run.')
             rfig, raxes = dyplot.runplot(results)
             rfig.savefig(dir_output + 'dynesty_results_maxevidence_summary.pdf', bbox_inches='tight', dpi=300)
@@ -262,13 +262,17 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
         for key_name, key_value in theta_dictionary.items():
             labels_array[key_value] = re.sub('_', '-', key_name)
 
+        
         # Plot a summary of the run.
+        
         print()
         print('Plot a summary of the run.')
+        #span= [(0.0, 2100.0), (0.0, 1.05), (0.0, 0.10444691225380567), (0.0, 1000)]
+        #rfig, raxes = dyplot.runplot(results, span=span)
         rfig, raxes = dyplot.runplot(results)
         rfig.savefig(dir_output + 'dynesty_results_summary.pdf', bbox_inches='tight', dpi=300)
         plt.close(rfig)
-
+        
         # Plot traces and 1-D marginalized posteriors.
         print('Plot traces and 1-D marginalized posteriors.')
         tfig, taxes = dyplot.traceplot(results, labels=labels_array)
@@ -280,7 +284,7 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
         cfig, caxes = dyplot.cornerplot(results, labels=labels_array)
         cfig.savefig(dir_output + 'dynesty_results_cornerplot.pdf', bbox_inches='tight', dpi=300)
         plt.close(cfig)
-
+        
 
         # Extract sampling results.
         samples = results.samples  # samples
