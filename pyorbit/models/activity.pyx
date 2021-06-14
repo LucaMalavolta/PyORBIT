@@ -31,6 +31,8 @@ class CommonActivity(AbstractCommon):
         'Lc',  # GP framework parameter
         'Bc',  # GP framework parameter
         'Br',  # GP framework parameter
+        'matern32_log10_sigma', # Matern kernel,  sigma parameter
+        'matern32_log10_rho', # Matern kernel,  sigma parameter
     }
 
     """These default boundaries are used when the user does not define them in the yaml file"""
@@ -58,6 +60,8 @@ class CommonActivity(AbstractCommon):
         'Lc': [-500.0, 500.0],  # Test boundaries
         'Bc': [-500.0, 500.0],  # Test boundaries
         'Br': [-500.0, 500.0],  # Test boundaries
+        'matern32_log10_sigma': [-6.0, 6.0], # Matern kernel,  sigma parameter
+        'matern32_log10_rho': [-3.0, 3.0], # Matern kernel,  sigma parameter
     }
 
     """ These default priors are used when the user does not define them in the yaml file
@@ -88,6 +92,8 @@ class CommonActivity(AbstractCommon):
         'Lc': ['Uniform', []],
         'Bc': ['Uniform', []],
         'Br': ['Uniform', []],
+        'matern32_log10_sigma': ['Uniform', []],
+        'matern32_log10_rho': ['Uniform', []],
     }
 
     default_spaces = {
@@ -114,6 +120,8 @@ class CommonActivity(AbstractCommon):
         'Lc': 'Linear',
         'Bc': 'Linear',
         'Br': 'Linear',
+        'matern32_log10_sigma':'Linear',
+        'matern32_log10_rho': 'Linear',
     }
 
     default_fixed = {}
