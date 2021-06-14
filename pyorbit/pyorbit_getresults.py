@@ -887,8 +887,13 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
             bjd_plot[dataset_name]['end'] += bjd_plot[dataset_name]['range'] * 0.10
 
             if dataset.kind == 'Phot':
-                step_size = np.min(
-                    bjd_plot[dataset_name]['range'] / dataset.n / 10.)
+                
+                if bjd_plot[dataset_name]['range'] > P_minimum:
+                    # more than one transit:
+                    step_size = 5.  / (24 * 60) #five minute stepsize
+                else:
+                    step_size = np.min(
+                        bjd_plot[dataset_name]['range'] / dataset.n / 10.)
             else:
                 step_size = P_minimum / 20.
 
