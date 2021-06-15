@@ -33,6 +33,7 @@ from pyorbit.models.celerite_rotation import Celerite_Rotation
 from pyorbit.models.celerite_rotation_linear import Celerite_Rotation_Linear
 from pyorbit.models.celerite_rotation_legacy import Celerite_Rotation_Legacy
 from pyorbit.models.celerite_matern32 import Celerite_Matern32
+from pyorbit.models.celerite_matern32_common import Celerite_Matern32_Common
 
 from pyorbit.models.correlations import LocalCorrelation
 from pyorbit.models.correlated_jitter import LocalCorrelatedJitter
@@ -105,6 +106,7 @@ define_type_to_class = {
     'gp_quasiperiodic_alternative': GaussianProcess_QuasiPeriodicActivity_Alternative,
     'gp_quasiperiodic_derivative': GaussianProcess_QuasiPeriodicActivity_Derivative,
     'celerite_matern32': Celerite_Matern32,
+    'celerite_matern32_common': Celerite_Matern32_Common,
     'celerite_rotation': Celerite_Rotation,
     'celerite_rotation_linear': Celerite_Rotation_Linear,
     'celerite_rotation_legacy': Celerite_Rotation_Legacy,
