@@ -109,10 +109,9 @@ def pyorbit_dynesty(config_in, input_datasets=None, return_output=None):
                                                     queue_size=nthreads,
                                                     use_pool={
                                                         'prior_transform': False},
-                                                    wt_kwargs={'pfrac': pfrac}
                                                     )
             print('Running Dynamic Nested Sampling')
-            dsampler_maxevidence.run_nested()
+            dsampler_maxevidence.run_nested(wt_kwargs={'pfrac': pfrac})
             print()
         print()
 
@@ -164,11 +163,10 @@ def pyorbit_dynesty(config_in, input_datasets=None, return_output=None):
                                                 queue_size=nthreads,
                                                 use_pool={
                                                     'prior_transform': False},
-                                                wt_kwargs={'pfrac': pfrac}
                                                 )
 
         print('Running Dynamic Nested Sampling')
-        dsampler.run_nested()
+        dsampler.run_nested(wt_kwargs={'pfrac': pfrac})
         print()
     print()
 
