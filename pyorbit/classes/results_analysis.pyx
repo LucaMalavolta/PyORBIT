@@ -3,6 +3,7 @@ from pyorbit.classes.common import *
 import pyorbit.classes.constants as constants
 import pyorbit.classes.kepler_exo as kepler_exo
 
+from tqdm import tqdm
 
 __all__ = ["results_resumen", "results_derived", "get_planet_variables", "get_theta_dictionary", "get_model",
            "print_theta_bounds", "print_dictionary", "get_stellar_parameters", "print_integrated_ACF"]
@@ -588,31 +589,128 @@ def get_model(mc, theta, bjd_dict):
                 delayed_lnlk_computation[dataset.name_ref] = logchi2_gp_model
 
             else:
+
                 model_out[dataset_name][logchi2_gp_model] = \
                     mc.models[logchi2_gp_model].sample_predict(variable_values, dataset)
                     #mc.models[logchi2_gp_model].sample_conditional(variable_values, dataset)
                 model_out[dataset_name]['complete'] += model_out[dataset_name][logchi2_gp_model]
 
-                model_x0[dataset_name][logchi2_gp_model], var = \
+                """ Attempt to avoid RAM overflow
+                    A float64 takes 64 bits -> 8 kilobytes
+                    here we set it to take 0.5 Gb
+                """
+                ram_occupancy= (0.5 *  1024**3) / 8
+                x0_len = len(x0_plot)
+
+                if (x0_len * dataset.n) > ram_occupancy:
+
+                    print('     Splitting the plot array to allow GP prediction of extended datasets, it may take a while...')
+
+                    x0_out = np.empty(x0_len)
+                    x0_var = np.empty(x0_len)
+
+                    array_length = int(ram_occupancy / dataset.n)
+
+                    id_start = 0
+                    id_end = array_length
+
+                    max_iterations = x0_len//array_length + 1
+                    for i_gp in tqdm(range(max_iterations+1)):
+
+                        #print("{0:4.1f}%".format(100/max_iterations*i_gp), end = '')
+
+                        if (id_end+array_length >= x0_len):
+                            id_end = -1
+
+                        x0_temp = x0_plot[id_start:id_end]
+
+                        x0_out[id_start:id_end], x0_var[id_start:id_end] = \
+                            mc.models[logchi2_gp_model].sample_predict(
+                            variable_values, dataset, x0_temp, return_variance=True)
+
+                        if id_end < 0: break
+
+                        id_start += array_length
+                        id_end += array_length
+
+                    #print('   ...Done')
+                else:
+                    print('     comouting GP prediction for the whole temporal range, it may take a while...')
+
+                    x0_out, x0_var = \
                     mc.models[logchi2_gp_model].sample_predict(
                         variable_values, dataset, x0_plot, return_variance=True)
 
+                model_x0[dataset_name][logchi2_gp_model] = x0_plot
+
                 model_x0[dataset_name][logchi2_gp_model +
-                                       '_std'] = np.sqrt(var)
+                                       '_std'] = np.sqrt(x0_var)
                 model_x0[dataset_name]['complete'] += model_x0[dataset_name][logchi2_gp_model]
 
     for dataset_name, logchi2_gp_model in delayed_lnlk_computation.items():
+
+        """ variable_values is embedded in mc.dataset_dict[dataset_name]
+            dictionary
+        """
         model_out[dataset_name][logchi2_gp_model] = \
             mc.models[logchi2_gp_model].sample_predict(mc.dataset_dict[dataset_name])
-            #mc.models[logchi2_gp_model].sample_conditional(mc.dataset_dict[dataset_name])
 
         model_out[dataset_name]['complete'] += model_out[dataset_name][logchi2_gp_model]
 
-        model_x0[dataset_name][logchi2_gp_model], var = \
+        """ Attempt to avoid RAM overflow
+            A float64 takes 64 bits -> 8 kilobytes
+            here we set it to take 0.5 Gb
+        """
+        ram_occupancy= (0.5 *  1024**3) / 8
+        x0_len = len(x0_plot)
+
+        if (x0_len * dataset.n) > ram_occupancy:
+
+            print('     Splitting the plot array to allow GP prediction of extended datasets, it may take a while...')
+
+            x0_out = np.empty(x0_len)
+            x0_var = np.empty(x0_len)
+
+            array_length = int(ram_occupancy / dataset.n)
+
+            id_start = 0
+            id_end = array_length
+
+            max_iterations = x0_len//array_length + 1
+            for i_gp in tqdm(range(max_iterations+1)):
+
+                #print("{0:4.1f}%".format(100/max_iterations*i_gp), end = '')
+
+                if (id_end+array_length >= x0_len):
+                    id_end = -1
+
+                x0_temp = x0_plot[id_start:id_end]
+
+                x0_out[id_start:id_end], x0_var[id_start:id_end] = \
+                    mc.models[logchi2_gp_model].sample_predict(
+                    mc.dataset_dict[dataset_name], x0_temp, return_variance=True)
+
+                if id_end < 0: break
+
+                id_start += array_length
+                id_end += array_length
+
+            #print('   ...Done')
+        else:
+            print('     comouting GP prediction for the whole temporal range, it may take a while...')
+
+            x0_out, x0_var = \
             mc.models[logchi2_gp_model].sample_predict(
                 mc.dataset_dict[dataset_name], x0_plot, return_variance=True)
 
-        model_x0[dataset_name][logchi2_gp_model + '_std'] = np.sqrt(var)
+
+
+        #model_x0[dataset_name][logchi2_gp_model], var = \
+        #    mc.models[logchi2_gp_model].sample_predict(
+        #        mc.dataset_dict[dataset_name], x0_plot, return_variance=True)
+
+        model_x0[dataset_name][logchi2_gp_model] = x0_out
+        model_x0[dataset_name][logchi2_gp_model + '_std'] = np.sqrt(x0_var)
         model_x0[dataset_name]['complete'] += model_x0[dataset_name][logchi2_gp_model]
 
     # workaround to avoid memory leaks from GP module
