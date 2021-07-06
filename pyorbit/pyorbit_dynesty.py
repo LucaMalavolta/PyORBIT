@@ -160,7 +160,7 @@ def pyorbit_dynesty(config_in, input_datasets=None, return_output=None):
                                                 mc.ndim,
                                                 nlive=nlive,
                                                 pool=pool,
-                                                bounds='multi',
+                                                #bounds='multi',
                                                 queue_size=nthreads,
                                                 use_pool={
                                                     'prior_transform': False},
