@@ -61,7 +61,7 @@ class CommonActivity(AbstractCommon):
         'Bc': [-500.0, 500.0],  # Test boundaries
         'Br': [-500.0, 500.0],  # Test boundaries
         'matern32_log10_sigma': [-6.0, 6.0], # Matern kernel,  sigma parameter
-        'matern32_log10_rho': [-3.0, 3.0], # Matern kernel,  sigma parameter
+        'matern32_log10_rho': [-3.0, 3.0], # Matern kernel,  rho parameter
     }
 
     """ These default priors are used when the user does not define them in the yaml file
