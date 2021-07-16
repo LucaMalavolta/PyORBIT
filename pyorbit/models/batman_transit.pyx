@@ -116,16 +116,61 @@ class Batman_Transit(AbstractModel):
 
         self.batman_options[dataset.name_ref] = {}
 
-        try:
-            self.batman_options[dataset.name_ref]['sample_factor'] = kwargs[dataset.name_ref]['supersample_factor']
-        except:
-            self.batman_options[dataset.name_ref]['sample_factor'] = kwargs['supersample_factor']
+        supersample_names = ['supersample_factor',
+            'supersample',
+            'supersampling',
+            'oversample_factor',
+            'oversample',
+            'oversampling',
+            'sample_factor',
+            'sample',
+            'sampling'
+            'nsample_factor',
+            'nsample',
+            'nsampling'
+            ]
 
-        try:
-            self.batman_options[dataset.name_ref]['exp_time'] = kwargs[dataset.name_ref][
-                'exposure_time'] / constants.d2s
-        except:
-            self.batman_options[dataset.name_ref]['exp_time'] = kwargs['exposure_time'] / constants.d2s
+        sample_factor = 1
+        exposure_time = 30.
+
+        for dict_name in supersample_names:
+            if kwargs[dataset.name_ref].get(dict_name, False):
+                sample_factor = kwargs[dataset.name_ref][dict_name]
+            elif kwargs[dataset.name_ref].get(dict_name, False):
+                sample_factor = kwargs[dict_name]
+
+        exptime_names = ['exposure_time',
+            'exposure',
+            'exp_time',
+            'exptime',
+            'obs_duration',
+            'integration',
+        ]
+
+        for dict_name in exptime_names:
+            if kwargs[dataset.name_ref].get(dict_name, False):
+                exposure_time = kwargs[dataset.name_ref][dict_name]
+            elif kwargs[dataset.name_ref].get(dict_name, False):
+                exposure_time = kwargs[dict_name]
+        
+
+        self.batman_options[dataset.name_ref]['sample_factor'] = sample_factor
+        self.batman_options[dataset.name_ref]['exp_time'] = exposure_time / constants.d2s
+
+        
+        # # OLD code snippet 
+        #try:
+        #    self.batman_options[dataset.name_ref]['sample_factor'] = kwargs[dataset.name_ref]['supersample_factor']
+        #except:
+        #    self.batman_options[dataset.name_ref]['sample_factor'] = kwargs['supersample_factor']
+        #
+        #try:
+        #    self.batman_options[dataset.name_ref]['exp_time'] = kwargs[dataset.name_ref][
+        #        'exposure_time'] / constants.d2s
+        #except:
+        #    self.batman_options[dataset.name_ref]['exp_time'] = kwargs['exposure_time'] / constants.d2s
+        #
+
 
         self.batman_models[dataset.name_ref] = batman.TransitModel(self.batman_params,
                                                                    dataset.x0,
