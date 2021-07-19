@@ -71,6 +71,14 @@ class CommonPolynomialTrend(AbstractCommon):
     recenter_pams = {}
 
 
+def _polyval(p, x):
+    y = np.zeros(x.shape, dtype=float)
+    for i, v in enumerate(p):
+        y *= x
+        y += v
+    return y
+
+
 class PolynomialTrend(AbstractModel):
 
     model_class = 'polynomial_trend'
@@ -241,10 +249,27 @@ class LocalPolynomialTrend(AbstractModel):
             var = 'poly_c'+repr(i_order)
             coeff[i_order] = variable_value[var]
 
-        """ In our array, coefficient are sorted from the lowest degree to the highest
-        Numpy Polynomials requires the inverse order (from high to small) as input"""
+        """ In our array, coefficient are sorted from the lowest degree to the highest """
 
         if x0_input is None:
             return numpy.polynomial.polynomial.polyval((dataset.x-variable_value['x_zero'])/self.time_interval, coeff)
         else:
             return numpy.polynomial.polynomial.polyval((x0_input+dataset.Tref-variable_value['x_zero'])/self.time_interval, coeff)
+
+    def compute_alt(self, variable_value, dataset, x0_input=None):
+
+        coeff = np.zeros(self.order+1)
+        for i_order in range(self.starting_order, self.order+1):
+            var = 'poly_c'+repr(i_order)
+            coeff[-1-i_order] = variable_value[var]
+
+        """ In our array, coefficient are sorted from the lowest degree to the highest """
+
+        if x0_input is None:
+            return _polyval(coeff, (dataset.x-variable_value['x_zero'])/self.time_interval)
+        else:
+            return _polyval(coeff, (x0_input+dataset.Tref-variable_value['x_zero'])/self.time_interval)
+
+
+
+

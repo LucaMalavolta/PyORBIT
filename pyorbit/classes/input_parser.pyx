@@ -13,6 +13,9 @@ from pyorbit.models.radial_velocities import \
     RVkeplerian, RVdynamical, \
     TransitTimeKeplerian, TransitTimeDynamical, DynamicalIntegrator
 
+from pyorbit.models.pytransit_transit import PyTransit_Transit
+
+
 from pyorbit.models.batman_transit import Batman_Transit
 from pyorbit.models.batman_transit_with_ttv import Batman_Transit_With_TTV
 
@@ -43,6 +46,9 @@ from pyorbit.models.common_offset import CommonOffset, Offset
 from pyorbit.models.common_jitter import CommonJitter, Jitter
 from pyorbit.models.sinusoid_common_period import SinusoidCommonPeriod
 
+from pyorbit.models.pytransit_limb_darkening import PyTransit_LimbDarkening_Quadratic, \
+    PyTransit_LimbDarkening_Power2
+
 from pyorbit.models.batman_limb_darkening import Batman_LimbDarkening_Linear, \
     Batman_LimbDarkening_Quadratic, \
     Batman_LimbDarkening_SquareRoot, Batman_LimbDarkening_Logarithmic, \
@@ -63,7 +69,7 @@ __all__ = ["pars_input", "yaml_parser"]
 """
 
 model_requires_planets = ['radial_velocities',
-                          'rv_planets', 'batman_transit', 'batman_transit_with_ttv']
+                          'rv_planets', 'batman_transit', 'pytransit_transit', 'batman_transit_with_ttv']
 single_planet_model = ['Tc_planets', 'transit_times']
 transit_time_model = ['Tc_planets', 'transit_times']
 
@@ -73,6 +79,8 @@ define_common_type_to_class = {
     'polynomial_trend': CommonPolynomialTrend,
     'common_offset': CommonOffset,
     'common_jitter': CommonJitter,
+    'pytransit_ld_quadratic': PyTransit_LimbDarkening_Quadratic,
+    'pytransit_ld_power2': PyTransit_LimbDarkening_Power2,
     'batman_ld_linear': Batman_LimbDarkening_Linear,
     'batman_ld_quadratic': Batman_LimbDarkening_Quadratic,
     'batman_ld_square-root': Batman_LimbDarkening_SquareRoot,
@@ -98,6 +106,7 @@ define_type_to_class = {
     'transit_times': {'circular': TransitTimeKeplerian,
                       'keplerian': TransitTimeKeplerian,
                       'dynamical': TransitTimeDynamical},
+    'pytransit_transit': PyTransit_Transit,
     'batman_transit': Batman_Transit,
     'batman_transit_with_ttv': Batman_Transit_With_TTV,
     'gp_quasiperiodic': GaussianProcess_QuasiPeriodicActivity,

@@ -7,9 +7,10 @@ from pyorbit.models.abstract_model import AbstractModel
 #from time import process_time
 
 try:
-    import pytransit import QuadraticModel
+    from pytransit import QuadraticModel
 except ImportError:
     pass
+
 
 class PyTransit_Transit(AbstractModel):
     model_class = 'transit'
@@ -97,17 +98,16 @@ class PyTransit_Transit(AbstractModel):
         elif self.use_inclination:
             self.retrieve_ai = self._internal_transformation_mod01
         else:
-            self.retrieve_ai = self._internal_transformation_mod00 
+            self.retrieve_ai = self._internal_transformation_mod00
 
         if self.use_time_of_transit:
             self.retrieve_t0 = self._internal_transformation_mod04
         else:
             self.retrieve_t0 = self._internal_transformation_mod05
 
-
         """ Setting up the limb darkening calculation"""
 
-        self.limb_darkening_model = kwargs['limb_darkening_model'] 
+        self.limb_darkening_model = kwargs['limb_darkening_model']
         self.ld_vars = [0.00] * kwargs['limb_darkening_ncoeff']
         for i_coeff in range(1, kwargs['limb_darkening_ncoeff'] + 1):
             var = 'ld_c' + repr(i_coeff)
@@ -116,20 +116,19 @@ class PyTransit_Transit(AbstractModel):
 
     def setup_dataset(self, mc, dataset, **kwargs):
 
-        
         supersample_names = ['supersample_factor',
-            'supersample',
-            'supersampling',
-            'oversample_factor',
-            'oversample',
-            'oversampling',
-            'sample_factor',
-            'sample',
-            'sampling'
-            'nsample_factor',
-            'nsample',
-            'nsampling'
-            ]
+                             'supersample',
+                             'supersampling',
+                             'oversample_factor',
+                             'oversample',
+                             'oversampling',
+                             'sample_factor',
+                             'sample',
+                             'sampling'
+                             'nsample_factor',
+                             'nsample',
+                             'nsampling'
+                             ]
 
         sample_factor = 1
         exposure_time = 0.01
@@ -141,12 +140,12 @@ class PyTransit_Transit(AbstractModel):
                 sample_factor = kwargs[dict_name]
 
         exptime_names = ['exposure_time',
-            'exposure',
-            'exp_time',
-            'exptime',
-            'obs_duration',
-            'integration',
-        ]
+                         'exposure',
+                         'exp_time',
+                         'exptime',
+                         'obs_duration',
+                         'integration',
+                         ]
 
         for dict_name in exptime_names:
             if kwargs[dataset.name_ref].get(dict_name, False):
@@ -154,50 +153,24 @@ class PyTransit_Transit(AbstractModel):
             elif kwargs[dataset.name_ref].get(dict_name, False):
                 exposure_time = kwargs[dict_name]
 
-
         self.pytransit_options[dataset.name_ref] = {
             'sample_factor': sample_factor,
-            'exp_time':exposure_time,
-            }
-
+            'exp_time': exposure_time,
+        }
 
         if self.limb_darkening_model == 'quadratic':
             self.pytransit_models[dataset.name_ref] = QuadraticModel()
             self.pytransit_plot[dataset.name_ref] = QuadraticModel()
 
-        self.pytransit_models[dataset.name_ref].set_data(dataset.x0, exptimes=exposure_time, nsamples=sample_factor)
+        self.pytransit_models[dataset.name_ref].set_data(
+            dataset.x0, exptimes=exposure_time, nsamples=sample_factor)
 
-
-    def _internal_transformation_mod00(variable_value):
+    def _internal_transformation_mod00(self, variable_value):
         """ this function transforms b and rho to i and a  """
         a = convert_rho_to_a(variable_value['P'], variable_value['rho'])
-        i = convert_b_to_i(variable_value['b'],variable_value['e'],variable_value['o'], a)
+        i = convert_b_to_i(
+            variable_value['b'], variable_value['e'], variable_value['o'], a)
         return a, i
-
-    def _internal_transformation_mod01(variable_value):
-        """ this function transforms b to i"""
-        i = convert_b_to_i(variable_value['b'],variable_value['e'],variable_value['o'], variable_value ['a'])
-        return variable_value ['a'], i
-
-    def _internal_transformation_mod02(variable_value):
-        """ this function transforms rho to a  """
-        a = convert_rho_to_a(variable_value['P'], variable_value['rho'])
-        return a, variable_value['i']
-
-    def _internal_transformation_mod03(variable_value):
-        """ no transformation needed  """
-        return variable_value['a'], variable_value['i']
-
-    def _internal_transformation_mod04(variable_value, Tref):
-        """ this function transforms Tc into Tc- Tref t"""
-        return variable_value['Tc'] - Tref
-    
-    def _internal_transformation_mod05(variable_value, Tref):
-        """ this function transforms Tc into Tc- Tref t"""
-        return kepler_exo.kepler_phase2Tc_Tref(variable_value['P'],
-                                                variable_value['f'],
-                                                                    variable_value['e'],
-                                                                    variable_value['o'])
 
     def compute(self, variable_value, dataset, x0_input=None):
         """
@@ -208,19 +181,9 @@ class PyTransit_Transit(AbstractModel):
         """
         #t1_start = process_time()
 
-
         pams_a, pams_i = self.retrieve_ai(variable_value)
         pams_t0 = self.retrieve_t0(variable_value, dataset.Tref)
 
-
-        self.batman_params.per = variable_value['P']  # orbital period
-        # planet radius (in units of stellar radii)
-        self.batman_params.rp = variable_value['R']
-        self.batman_params.ecc = variable_value['e']  # eccentricity
-        # longitude of periastron (in degrees)
-        self.batman_params.w = variable_value['o'] * (180. / np.pi)
-
-        
         for var, i_var in self.pytransit_ldvars.items():
             self.ld_vars[i_var] = variable_value[var]
 
@@ -229,19 +192,46 @@ class PyTransit_Transit(AbstractModel):
             ##t1_stop = process_time()
             ##
             ##print("Elapsed time:", t1_stop-t1_start)
-            ##return model
+            # return model
             return self.pytransit_models[dataset.name_ref].evaluate_ps(
                 variable_value['R'],
                 self.ld_vars,
                 pams_t0, variable_value['P'], pams_a, pams_i, variable_value['e'], variable_value['o']) - 1.
 
-
         else:
-            self.pytransit_plot[dataset.name_ref].set_data(x0_input, 
-            exptimes=self.pytransit_options[dataset.name_ref]['exp_time'], 
-            nsamples=self.pytransit_options[dataset.name_ref]['sample_factor'])
+            self.pytransit_plot[dataset.name_ref].set_data(x0_input,
+                                                           exptimes=self.pytransit_options[dataset.name_ref]['exp_time'],
+                                                           nsamples=self.pytransit_options[dataset.name_ref]['sample_factor'])
 
             return self.pytransit_plot[dataset.name_ref].evaluate_ps(
                 variable_value['R'],
                 self.ld_vars,
                 pams_t0, variable_value['P'], pams_a, pams_i, variable_value['e'], variable_value['o']) - 1.
+
+
+    """ function for internal transformation of variables, to avoid if calls"""
+    def _internal_transformation_mod01(self, variable_value):
+        """ this function transforms b to i"""
+        i = convert_b_to_i(
+            variable_value['b'], variable_value['e'], variable_value['o'], variable_value['a'])
+        return variable_value['a'], i
+
+    def _internal_transformation_mod02(self, variable_value):
+        """ this function transforms rho to a  """
+        a = convert_rho_to_a(variable_value['P'], variable_value['rho'])
+        return a, variable_value['i']
+
+    def _internal_transformation_mod03(self, variable_value):
+        """ no transformation needed  """
+        return variable_value['a'], variable_value['i']
+
+    def _internal_transformation_mod04(self, variable_value, Tref):
+        """ this function transforms Tc into Tc- Tref t"""
+        return variable_value['Tc'] - Tref
+
+    def _internal_transformation_mod05(self, variable_value, Tref):
+        """ this function transforms Tc into Tc- Tref t"""
+        return kepler_exo.kepler_phase2Tc_Tref(variable_value['P'],
+                                               variable_value['f'],
+                                               variable_value['e'],
+                                               variable_value['o'])
