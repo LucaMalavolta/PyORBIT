@@ -12,32 +12,37 @@ class CommonStarParameters(AbstractCommon):
     list_pams = {
         'radius',  # radius of the star, in Solar radii
         'mass',  # mass of the star, in Solar masses
-        'rho'  # density of the star, in Solar density units
+        'rho',  # density of the star, in Solar density units
+        'teff' #effective temperature of the star, in K 
     }
 
     default_bounds = {
         'radius': [0.0000, 2.0000],
         'mass': [0.0000, 2.0000],
-        'rho': [0.0000, 5.0000]
+        'rho': [0.0000, 5.0000],
+        'teff': [3000., 11000.]
     }
 
     """ Must be the same parameters as in list_pams, because priors are applied only to _physical_ parameters """
     default_priors = {
         'radius': ['Uniform', []],
         'mass': ['Uniform', []],
-        'rho': ['Uniform', []]
+        'rho': ['Uniform', []],
+        'teff': ['Uniform', []]
     }
 
     default_spaces = {
         'radius': 'Linear',
         'mass': 'Linear',
-        'rho': 'Linear'
+        'rho': 'Linear',
+        'teff': 'Linear'
     }
 
     default_fixed = {
         'radius': 1.0000,
         'mass': 1.0000,
-        'rho': 1.0000
+        'rho': 1.0000,
+        'teff': 5777
     }
 
     recenter_pams = {}

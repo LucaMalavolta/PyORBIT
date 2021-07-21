@@ -136,7 +136,7 @@ class PyTransit_Transit(AbstractModel):
         for dict_name in supersample_names:
             if kwargs[dataset.name_ref].get(dict_name, False):
                 sample_factor = kwargs[dataset.name_ref][dict_name]
-            elif kwargs[dataset.name_ref].get(dict_name, False):
+            elif kwargs.get(dict_name, False):
                 sample_factor = kwargs[dict_name]
 
         exptime_names = ['exposure_time',
@@ -150,7 +150,7 @@ class PyTransit_Transit(AbstractModel):
         for dict_name in exptime_names:
             if kwargs[dataset.name_ref].get(dict_name, False):
                 exposure_time = kwargs[dataset.name_ref][dict_name]
-            elif kwargs[dataset.name_ref].get(dict_name, False):
+            elif kwargs.get(dict_name, False):
                 exposure_time = kwargs[dict_name]
 
         self.pytransit_options[dataset.name_ref] = {
