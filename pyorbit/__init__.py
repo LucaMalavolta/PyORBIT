@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 from .pyorbit_emcee import *
+from .pyorbit_zeus import *
 from .pyorbit_optimize import *
 from .pyorbit_polychord import *
 from .pyorbit_multinest import *

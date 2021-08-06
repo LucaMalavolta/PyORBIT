@@ -4,8 +4,6 @@ import pyorbit.classes.constants as constants
 import pyorbit.classes.kepler_exo as kepler_exo
 from pyorbit.models.abstract_model import AbstractModel
 
-#from time import process_time
-
 try:
     from pytransit import QuadraticModel
 except ImportError:
@@ -179,8 +177,6 @@ class PyTransit_Transit(AbstractModel):
         :param x0_input:
         :return:
         """
-        #t1_start = process_time()
-
         pams_a, pams_i = self.retrieve_ai(variable_value)
         pams_t0 = self.retrieve_t0(variable_value, dataset.Tref)
 
@@ -188,11 +184,6 @@ class PyTransit_Transit(AbstractModel):
             self.ld_vars[i_var] = variable_value[var]
 
         if x0_input is None:
-            ##model = self.batman_models[dataset.name_ref].light_curve(self.batman_params) - 1.
-            ##t1_stop = process_time()
-            ##
-            ##print("Elapsed time:", t1_stop-t1_start)
-            # return model
             return self.pytransit_models[dataset.name_ref].evaluate_ps(
                 variable_value['R'],
                 self.ld_vars,

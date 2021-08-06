@@ -14,6 +14,7 @@ import re
 from pyorbit.classes.model_container_multinest import ModelContainerMultiNest
 from pyorbit.classes.model_container_polychord import ModelContainerPolyChord
 from pyorbit.classes.model_container_emcee import ModelContainerEmcee
+from pyorbit.classes.model_container_zeus import ModelContainerZeus
 
 from pyorbit.classes.input_parser import pars_input
 from pyorbit.classes.io_subroutines import *
@@ -107,6 +108,68 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
 
         results_analysis.print_integrated_ACF(
             sampler_chain, theta_dictionary, nthin)
+
+    if sampler_name == 'zeus':
+
+        dir_input = './' + config_in['output'] + '/zeus/'
+        dir_output = './' + config_in['output'] + '/zeus_plot/'
+        os.system('mkdir -p ' + dir_output)
+
+        mc, starting_point, population, prob, state, \
+            sampler_chain, sampler_lnprobability, sampler_acceptance_fraction, _, _ = \
+            emcee_load_from_cpickle(dir_input)
+
+        pars_input(config_in, mc, reload_emcee=True)
+
+        if hasattr(mc.zeus_parameters, 'version'):
+            zeus_version = mc.zeus_parameters['version'][0]
+        else:
+            import zeus
+            zeus = zeus.__version__[0]
+
+        mc.model_setup()
+        """ Required to create the right objects inside each class - if defined inside """
+        theta_dictionary = results_analysis.get_theta_dictionary(mc)
+
+        nburnin = int(mc.emcee_parameters['nburn'])
+        nthin = int(mc.emcee_parameters['thin'])
+        nsteps = int(sampler_chain.shape[1] * nthin)
+        nwalkers = mc.emcee_parameters['nwalkers']
+
+        """ Computing a new burn-in if the computation has been interrupted suddenly"""
+        nburn, modified = emcee_burnin_check(sampler_chain, nburnin, nthin)
+
+        if modified:
+            print()
+            print('WARNING: burn-in value is larger than the length of the chains, resized to 1/4 of the chain length')
+            print('new burn-in will be used for statistical analysis, but kept in the plots as a reminder of your mistake')
+
+        flat_chain = emcee_flatchain(sampler_chain, nburnin, nthin)
+        flat_lnprob, sampler_lnprob = emcee_flatlnprob(
+            sampler_lnprobability, nburnin, nthin, population, nwalkers)
+
+        flat_BiC = -2 * flat_lnprob + mc.ndim * np.log(mc.ndata)
+
+        lnprob_med = common.compute_value_sigma(flat_lnprob)
+        chain_med = common.compute_value_sigma(flat_chain)
+        chain_MAP, lnprob_MAP = common.pick_MAP_parameters(
+            flat_chain, flat_lnprob)
+
+        n_samplings, n_pams = np.shape(flat_chain)
+
+        print()
+        print('zeus version: ', zeus.__version__)
+        print()
+        print(' Reference Time Tref: {}'.format(mc.Tref))
+        print()
+        print(' Dimensions = {}'.format(mc.ndim))
+        print(' Nwalkers = {}'.format(mc.emcee_parameters['nwalkers']))
+        print()
+        print(' Steps: {}'.format(nsteps))
+
+        results_analysis.print_integrated_ACF(
+            sampler_chain, theta_dictionary, nthin)
+
 
     if sampler_name == 'multinest':
 
@@ -235,7 +298,7 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
                 plt.close(cfig)
             except:
                 print('Unable to plot the 2-D marginalized posteriors using the internal dynesty routine - skipped')
-            
+
             pfrac = 1.00
 
         except:

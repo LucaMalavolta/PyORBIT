@@ -29,6 +29,7 @@ if __name__ == '__main__':
         'multinest':['multinest', 'MultiNest', 'multi'],
         'polychord':['polychord', 'PolyChord', 'polychrod', 'poly'],
         'emcee': ['emcee', 'MCMC', 'Emcee'],
+        'zeus': ['zeus', 'ZEUS', 'Zeus', 'zeus-mcmc'],
         'dynesty': ['dynesty', 'DyNesty', 'Dynesty', 'DYNESTY'],
         'ultranest': ['ultranest', 'UltraNest', 'Ultranest', 'ULTRANEST', 'ultra','Unest'],
         'optimize': ['optimize', 'scipy', 'Optimize', 'OPTIMIZE'],
@@ -36,6 +37,9 @@ if __name__ == '__main__':
 
     if sampler in sampler_keyword['emcee']:
         pyorbit.pyorbit_emcee(config_in)
+
+    if sampler in sampler_keyword['zeus']:
+        pyorbit.pyorbit_zeus(config_in)
 
     if sampler in sampler_keyword['multinest']:
         pyorbit.pyorbit_multinest(config_in)

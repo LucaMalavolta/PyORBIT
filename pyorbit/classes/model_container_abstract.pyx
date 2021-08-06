@@ -2,7 +2,6 @@ from pyorbit.classes.common import *
 
 __all__ = ["ModelContainer"]
 
-
 class ModelContainer(object):
     """
 
@@ -65,7 +64,7 @@ class ModelContainer(object):
             for dataset_name in list(set(model_conf) & set(self.dataset_dict)):
                 model.setup_dataset(
                     self, self.dataset_dict[dataset_name], **model_conf)
-        
+
         if self.dynamical_model:
             self.dynamical_model.to_be_initialized = True
 
@@ -137,6 +136,7 @@ class ModelContainer(object):
                     self.starting_point, dataset_name)
 
     def check_bounds(self, theta):
+
         for ii in range(0, self.ndim):
             if not (self.bounds[ii, 0] < theta[ii] < self.bounds[ii, 1]):
                 return False
@@ -204,6 +204,7 @@ class ModelContainer(object):
         return True
 
     def __call__(self, theta, include_priors=True):
+
         log_priors, log_likelihood = self.log_priors_likelihood(theta)
 
         if self.include_priors and include_priors:
@@ -216,10 +217,9 @@ class ModelContainer(object):
         log_priors = 0.00
         log_likelihood = 0.00
 
-        """ 
+        """
         Constant term added either by dataset.model_logchi2() or gp.log_likelihood()
         """
-
         if not self.check_bounds(theta):
             if return_priors is False:
                 return -np.inf
@@ -252,6 +252,7 @@ class ModelContainer(object):
                 continue
 
             for model_name in dataset.models:
+
                 log_priors += self.models[model_name].return_priors(
                     theta, dataset_name)
 
@@ -287,17 +288,14 @@ class ModelContainer(object):
                 if getattr(dataset, 'dynamical', False):
                     dataset.external_model = dynamical_output[dataset_name]
 
-                if getattr(self.models[model_name], 'unitary_model', False):
+                if dataset.normalization_model is None and (self.models[model_name].unitary_model or self.models[model_name].normalization_model):
+                    dataset.normalization_model = np.ones(dataset.n, dtype=np.double)
+
+                if self.models[model_name].unitary_model:
+                #if getattr(self.models[model_name], 'unitary_model', False):
                     dataset.unitary_model += self.models[model_name].compute(
                         variable_values, dataset)
-                    if dataset.normalization_model is None:
-                        dataset.normalization_model = np.ones(
-                            dataset.n, dtype=np.double)
-
-                elif getattr(self.models[model_name], 'normalization_model', False):
-                    if dataset.normalization_model is None:
-                        dataset.normalization_model = np.ones(
-                            dataset.n, dtype=np.double)
+                elif self.models[model_name].normalization_model:
                     dataset.normalization_model *= self.models[model_name].compute(
                         variable_values, dataset)
                 else:
