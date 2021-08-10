@@ -72,32 +72,58 @@ def emcee_save_to_cpickle(mc, starting_point, population, prob, state, sampler, 
                 open(mc.emcee_dir_output + add_prefix + "sampler_acceptance_fraction.p", "wb"))
 
 
-def emcee_load_from_cpickle(emcee_dir_output, prefix=''):
+def zeus_create_dummy_file(mc, prefix=''):
+    add_prefix = (prefix + '_' if prefix else '')
+    file_dummy = open(mc.zeus_dir_output + add_prefix + "dummy_file", "wb")
+    file_dummy.close()
+
+
+def zeus_save_to_cpickle(mc, starting_point, population, prob, state, sampler, theta_dict, samples=None, prefix=None):
+    if samples:
+        mc.zeus_parameters['nsteps'] = samples
+    add_prefix = (prefix + '_' if prefix else '')
+
+    pickle.dump(theta_dict, open(mc.zeus_dir_output + add_prefix + "theta_dict.p", "wb"))
+    pickle.dump(mc, open(mc.zeus_dir_output + add_prefix + "model_container.p", "wb"))
+    pickle.dump(starting_point, open(mc.zeus_dir_output + add_prefix + "starting_point.p", "wb"))
+    #pickle.dump(population, open(mc.zeus_dir_output + add_prefix + "starting_population.p", "wb"))
+    pickle.dump(population, open(mc.zeus_dir_output + add_prefix + "population.p", "wb"))
+    pickle.dump(prob, open(mc.zeus_dir_output + add_prefix + "prob.p", "wb"))
+    pickle.dump(state, open(mc.zeus_dir_output + add_prefix + "state.p", "wb"))
+    pickle.dump(sampler, open(mc.zeus_dir_output + add_prefix + "sampler.p", "wb"))
+    pickle.dump(sampler.chain, open(mc.zeus_dir_output + add_prefix + "sampler_chain.p", "wb"))
+    pickle.dump(sampler.lnprobability, open(mc.zeus_dir_output + add_prefix + "sampler_lnprobability.p", "wb"))
+    pickle.dump(sampler.acceptance_fraction,
+                open(mc.zeus_dir_output + add_prefix + "sampler_acceptance_fraction.p", "wb"))
+
+
+
+def affine_load_from_cpickle(dir_output, prefix=''):
     add_prefix = (prefix + '_' if prefix else '')
     # For backward compatibility
     try:
-        theta_dict = pickle.load(open(emcee_dir_output + add_prefix + "theta_dict.p", "rb"))
+        theta_dict = pickle.load(open(dir_output + add_prefix + "theta_dict.p", "rb"))
     except FileNotFoundError:
         theta_dict = None
 
-    mc = pickle.load(open(emcee_dir_output + add_prefix + "model_container.p", "rb"))
-    starting_point = pickle.load(open(emcee_dir_output + add_prefix + "starting_point.p", "rb"))
+    mc = pickle.load(open(dir_output + add_prefix + "model_container.p", "rb"))
+    starting_point = pickle.load(open(dir_output + add_prefix + "starting_point.p", "rb"))
 
     # For backward compatibility after changing a confusing name
     try:
-        population = pickle.load(open(emcee_dir_output + add_prefix + "population.p", "rb"))
+        population = pickle.load(open(dir_output + add_prefix + "population.p", "rb"))
     except FileNotFoundError:
-        population = pickle.load(open(emcee_dir_output + add_prefix + "starting_population.p", "rb"))
+        population = pickle.load(open(dir_output + add_prefix + "starting_population.p", "rb"))
 
-    prob = pickle.load(open(mc.emcee_dir_output + add_prefix + "prob.p", "rb"))
-    state = pickle.load(open(mc.emcee_dir_output + add_prefix + "state.p", "rb"))
-    sampler_chain = pickle.load(open(emcee_dir_output + add_prefix + "sampler_chain.p", "rb"))
-    sampler_lnprobability = pickle.load(open(emcee_dir_output + add_prefix + "sampler_lnprobability.p", "rb"))
+    prob = pickle.load(open(mc.dir_output + add_prefix + "prob.p", "rb"))
+    state = pickle.load(open(mc.dir_output + add_prefix + "state.p", "rb"))
+    sampler_chain = pickle.load(open(dir_output + add_prefix + "sampler_chain.p", "rb"))
+    sampler_lnprobability = pickle.load(open(dir_output + add_prefix + "sampler_lnprobability.p", "rb"))
     sampler_acceptance_fraction = pickle.load(
-        open(emcee_dir_output + add_prefix + "sampler_acceptance_fraction.p", "rb"))
+        open(dir_output + add_prefix + "sampler_acceptance_fraction.p", "rb"))
 
     try:
-        sampler = pickle.load(open(emcee_dir_output + add_prefix + "sampler.p", "rb"))
+        sampler = pickle.load(open(dir_output + add_prefix + "sampler.p", "rb"))
     except (FileNotFoundError, ModuleNotFoundError):
         sampler = None
 
@@ -105,12 +131,25 @@ def emcee_load_from_cpickle(emcee_dir_output, prefix=''):
     return mc, starting_point, population, prob, state, \
         sampler_chain, sampler_lnprobability, sampler_acceptance_fraction, theta_dict, sampler
 
-def emcee_simpler_load_from_cpickle(emcee_dir_output, prefix=''):
+def affine_simpler_load_from_cpickle(dir_output, prefix=''):
     add_prefix = (prefix + '_' if prefix else '')
-    state = pickle.load(open(emcee_dir_output + add_prefix + "state.p", "rb"))
-    sampler = pickle.load(open(emcee_dir_output + add_prefix + "sampler.p", "rb"))
+    state = pickle.load(open(dir_output + add_prefix + "state.p", "rb"))
+    sampler = pickle.load(open(dir_output + add_prefix + "sampler.p", "rb"))
 
     return state, sampler
+
+def emcee_load_from_cpickle(emcee_dir_output, prefix=''):
+    return affine_load_from_cpickle(emcee_dir_output, prefix)
+
+def zeus_simpler_load_from_cpickle(zeus_dir_output, prefix=''):
+    return affine_simpler_load_from_cpickle(zeus_dir_output, prefix)
+
+def zeus_load_from_cpickle(zeus_dir_output, prefix=''):
+    return affine_load_from_cpickle(zeus_dir_output, prefix)
+
+def emcee_simpler_load_from_cpickle(emcee_dir_output, prefix=''):
+    return affine_simpler_load_from_cpickle(emcee_dir_output, prefix)
+
 
 def starting_point_save_to_cpickle(dir_output, starting_point, bounds, theta_dict, prefix=None):
     add_prefix = (prefix + '_' if prefix else '')
@@ -177,7 +216,7 @@ def ultranest_sampler_load_from_cpickle(output_directory, prefix=''):
     sampler = pickle.load(open(output_directory + add_prefix + "sampler.p", "rb"))
     return sampler
 
-def emcee_burnin_check(chain, nburnin, nthin, nwalkers=False):
+def affine_burnin_check(chain, nburnin, nthin, nwalkers=False):
     nburn = int(nburnin / nthin)
     modified = False
 
@@ -197,16 +236,16 @@ def emcee_burnin_check(chain, nburnin, nthin, nwalkers=False):
     return nburn, modified
 
 
-def emcee_flatchain(chain, nburnin, nthin):
+def affine_flatchain(chain, nburnin, nthin):
     """flattening of the emcee chains with removal of burn-in"""
-    nburn, _ = emcee_burnin_check(chain, nburnin, nthin)
+    nburn, _ = affine_burnin_check(chain, nburnin, nthin)
     s = chain[:, nburn:, :].shape
     return chain[:, nburn:, :].reshape(s[0] * s[1], s[2])
 
 
-def emcee_flatlnprob(lnprob, nburnin, nthin, population, nwalkers):
+def affine_flatlnprob(lnprob, nburnin, nthin, population, nwalkers):
 
-    nburn, _  = emcee_burnin_check(lnprob, nburnin, nthin, nwalkers)
+    nburn, _  = affine_burnin_check(lnprob, nburnin, nthin, nwalkers)
 
     v1, v2 = np.shape(lnprob)
     if v1 == nwalkers:
@@ -215,6 +254,19 @@ def emcee_flatlnprob(lnprob, nburnin, nthin, population, nwalkers):
     else:
         s = lnprob[nburn:, :].shape
         return lnprob[nburn:, :].reshape(s[0] * s[1]), lnprob
+
+
+def emcee_flatchain(chain, nburnin, nthin):
+    return affine_flatchain(chain, nburnin, nthin)
+
+def emcee_flatlnprob(lnprob, nburnin, nthin, population, nwalkers):
+    return affine_flatlnprob(lnprob, nburnin, nthin, population, nwalkers)
+
+def zeus_flatchain(chain, nburnin, nthin):
+    return affine_flatchain(chain, nburnin, nthin)
+
+def zeus_flatlnprob(lnprob, nburnin, nthin, population, nwalkers):
+    return affine_flatlnprob(lnprob, nburnin, nthin, population, nwalkers)
 
 
 def GelmanRubin(chains_T):

@@ -117,9 +117,9 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
 
         mc, starting_point, population, prob, state, \
             sampler_chain, sampler_lnprobability, sampler_acceptance_fraction, _, _ = \
-            emcee_load_from_cpickle(dir_input)
+            zeus_load_from_cpickle(dir_input)
 
-        pars_input(config_in, mc, reload_emcee=True)
+        pars_input(config_in, mc, reload_zeus=True)
 
         if hasattr(mc.zeus_parameters, 'version'):
             zeus_version = mc.zeus_parameters['version'][0]
@@ -131,10 +131,10 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
         """ Required to create the right objects inside each class - if defined inside """
         theta_dictionary = results_analysis.get_theta_dictionary(mc)
 
-        nburnin = int(mc.emcee_parameters['nburn'])
-        nthin = int(mc.emcee_parameters['thin'])
+        nburnin = int(mc.zeus_parameters['nburn'])
+        nthin = int(mc.zeus_parameters['thin'])
         nsteps = int(sampler_chain.shape[1] * nthin)
-        nwalkers = mc.emcee_parameters['nwalkers']
+        nwalkers = mc.zeus_parameters['nwalkers']
 
         """ Computing a new burn-in if the computation has been interrupted suddenly"""
         nburn, modified = emcee_burnin_check(sampler_chain, nburnin, nthin)
@@ -163,7 +163,7 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
         print(' Reference Time Tref: {}'.format(mc.Tref))
         print()
         print(' Dimensions = {}'.format(mc.ndim))
-        print(' Nwalkers = {}'.format(mc.emcee_parameters['nwalkers']))
+        print(' Nwalkers = {}'.format(mc.zeus_parameters['nwalkers']))
         print()
         print(' Steps: {}'.format(nsteps))
 

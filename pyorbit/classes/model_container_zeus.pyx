@@ -10,7 +10,7 @@ class ModelContainerZeus(ModelContainer):
         self.pyde_dir_output = None
         self.zeus_dir_output = None
 
-        self.emcee_parameters = {'nsave': 0,
+        self.zeus_parameters = {'nsave': 0,
                                  'npop_mult': 4,
                                  'thin': 1,
                                  'nburn': 0,

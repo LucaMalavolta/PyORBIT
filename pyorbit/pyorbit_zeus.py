@@ -4,8 +4,8 @@ from pyorbit.classes.model_container_zeus import ModelContainerZeus
 from pyorbit.classes.input_parser import yaml_parser, pars_input
 from pyorbit.classes.io_subroutines import pyde_save_to_pickle,\
     pyde_load_from_cpickle,\
-    emcee_save_to_cpickle, emcee_load_from_cpickle, emcee_flatchain,\
-    emcee_create_dummy_file, starting_point_load_from_cpickle, emcee_simpler_load_from_cpickle
+    zeus_save_to_cpickle, zeus_load_from_cpickle, zeus_flatchain,\
+    zeus_create_dummy_file, starting_point_load_from_cpickle, zeus_simpler_load_from_cpickle
 import pyorbit.classes.results_analysis as results_analysis
 import os
 import sys
@@ -22,7 +22,7 @@ def pyorbit_zeus(config_in, input_datasets=None, return_output=None):
         print("ERROR: zeus not installed, this will not work")
         quit()
 
-    #os.environ["OMP_NUM_THREADS"] = "1"
+    os.environ["OMP_NUM_THREADS"] = "1"
 
     optimize_dir_output = './' + config_in['output'] + '/optimize/'
     pyde_dir_output = './' + config_in['output'] + '/pyde/'
@@ -43,7 +43,7 @@ def pyorbit_zeus(config_in, input_datasets=None, return_output=None):
     try:
         mc, starting_point, population, prob, state, sampler_chain, \
             sampler_lnprobability, _, theta_dict, sampler = \
-            emcee_load_from_cpickle(zeus_dir_output)
+            zeus_load_from_cpickle(zeus_dir_output)
         reloaded_zeus = True
     except FileNotFoundError:
         pass
@@ -65,34 +65,34 @@ def pyorbit_zeus(config_in, input_datasets=None, return_output=None):
         previous_boundaries = mc.bounds
 
     if reloaded_zeus:
-        print('Requested steps:', mc.emcee_parameters['nsteps'])
+        print('Requested steps:', mc.zeus_parameters['nsteps'])
 
-        mc.emcee_parameters['completed_nsteps'] = \
-            int(sampler_chain.shape[1] * mc.emcee_parameters['thin'])
+        mc.zeus_parameters['completed_nsteps'] = \
+            int(sampler_chain.shape[1] * mc.zeus_parameters['thin'])
 
-        print('Completed:', mc.emcee_parameters['completed_nsteps'] )
+        print('Completed:', mc.zeus_parameters['completed_nsteps'] )
         pars_input(config_in, mc, input_datasets, reload_zeus=True)
-        print('Total:', mc.emcee_parameters['nsteps'])
+        print('Total:', mc.zeus_parameters['nsteps'])
 
         """ There's no need to do anything"""
         flatchain = zeus_flatchain(
-            sampler_chain, mc.emcee_parameters['nburn'], mc.emcee_parameters['thin'])
+            sampler_chain, mc.zeus_parameters['nburn'], mc.zeus_parameters['thin'])
         mc.model_setup()
         mc.initialize_logchi2()
 
         results_analysis.print_integrated_ACF(
-            sampler_chain, theta_dict, mc.emcee_parameters['thin'])
+            sampler_chain, theta_dict, mc.zeus_parameters['thin'])
 
         """ In case the current startin point comes from a previous analysis """
         mc.zeus_dir_output = zeus_dir_output
 
-        if mc.emcee_parameters['nsteps'] <= mc.emcee_parameters['completed_nsteps']:
+        if mc.zeus_parameters['nsteps'] <= mc.zeus_parameters['completed_nsteps']:
 
             print('Reference Time Tref: ', mc.Tref)
             print()
             print('Dimensions = ', mc.ndim)
-            print('Nwalkers = ', mc.emcee_parameters['nwalkers'])
-            print('Steps = ', mc.emcee_parameters['nsteps'])
+            print('Nwalkers = ', mc.zeus_parameters['nwalkers'])
+            print('Steps = ', mc.zeus_parameters['nsteps'])
             print()
             print('Original starting point of zeus:')
             print()
@@ -122,13 +122,13 @@ def pyorbit_zeus(config_in, input_datasets=None, return_output=None):
                 return
 
     if reloaded_zeus:
-        sampled = mc.emcee_parameters['completed_nsteps']
-        nsteps_todo = mc.emcee_parameters['nsteps'] \
-            - mc.emcee_parameters['completed_nsteps']
+        sampled = mc.zeus_parameters['completed_nsteps']
+        nsteps_todo = mc.zeus_parameters['nsteps'] \
+            - mc.zeus_parameters['completed_nsteps']
 
         print('Resuming from a previous run:')
-        print('Performed steps = ', mc.emcee_parameters['completed_nsteps'])
-        print('Final # of steps = ', mc.emcee_parameters['nsteps'])
+        print('Performed steps = ', mc.zeus_parameters['completed_nsteps'])
+        print('Final # of steps = ', mc.zeus_parameters['nsteps'])
         print('Steps to be performed = ', nsteps_todo)
         print()
 
@@ -137,12 +137,12 @@ def pyorbit_zeus(config_in, input_datasets=None, return_output=None):
         mc = ModelContainerZeus()
         pars_input(config_in, mc, input_datasets)
 
-        if mc.pyde_parameters['shutdown_jitter'] or mc.emcee_parameters['shutdown_jitter']:
+        if mc.pyde_parameters['shutdown_jitter'] or mc.zeus_parameters['shutdown_jitter']:
             for dataset_name, dataset in mc.dataset_dict.items():
                 dataset.shutdown_jitter()
 
         # keep track of which version has been used to perform zeus computations
-        mc.emcee_parameters['version'] = zeus.__version__[0]
+        mc.zeus_parameters['version'] = zeus.__version__[0]
 
         mc.model_setup()
         mc.create_variables_bounds()
@@ -153,34 +153,34 @@ def pyorbit_zeus(config_in, input_datasets=None, return_output=None):
         mc.pyde_dir_output = pyde_dir_output
         mc.zeus_dir_output = zeus_dir_output
 
-        mc.emcee_parameters['nwalkers'] = mc.ndim * \
-            mc.emcee_parameters['npop_mult']
-        if mc.emcee_parameters['nwalkers'] % 2 == 1:
-            mc.emcee_parameters['nwalkers'] += 1
+        mc.zeus_parameters['nwalkers'] = mc.ndim * \
+            mc.zeus_parameters['npop_mult']
+        if mc.zeus_parameters['nwalkers'] % 2 == 1:
+            mc.zeus_parameters['nwalkers'] += 1
 
         if not os.path.exists(mc.zeus_dir_output):
             os.makedirs(mc.zeus_dir_output)
 
         state = None
         sampled = 0
-        nsteps_todo = mc.emcee_parameters['nsteps']
+        nsteps_todo = mc.zeus_parameters['nsteps']
 
     print('Include priors: ', mc.include_priors)
     print()
     print('Reference Time Tref: ', mc.Tref)
     print()
     print('Dimensions = ', mc.ndim)
-    print('Nwalkers = ', mc.emcee_parameters['nwalkers'])
+    print('Nwalkers = ', mc.zeus_parameters['nwalkers'])
     print()
 
-    if mc.emcee_parameters['version'] == '2':
-        mc.emcee_parameters['use_threading_pool'] = False
+    if mc.zeus_parameters['version'] == '2':
+        mc.zeus_parameters['use_threading_pool'] = False
 
     if not mc.pyde_parameters.get('use_threading_pool', False):
         mc.pyde_parameters['use_threading_pool'] = False
 
-    if not mc.emcee_parameters.get('use_threading_pool', False):
-        mc.emcee_parameters['use_threading_pool'] = False
+    if not mc.zeus_parameters.get('use_threading_pool', False):
+        mc.zeus_parameters['use_threading_pool'] = False
 
 
     if reloaded_zeus:
@@ -193,7 +193,7 @@ def pyorbit_zeus(config_in, input_datasets=None, return_output=None):
 
         theta_dict = results_analysis.get_theta_dictionary(mc)
         population = np.zeros(
-            [mc.emcee_parameters['nwalkers'], mc.ndim], dtype=np.double)
+            [mc.zeus_parameters['nwalkers'], mc.ndim], dtype=np.double)
 
         for theta_name, theta_i in theta_dict.items():
             population[:, theta_i] = population_legacy[:,
@@ -223,8 +223,8 @@ def pyorbit_zeus(config_in, input_datasets=None, return_output=None):
             starting_point = mc.starting_point
 
         population = np.zeros(
-            [mc.emcee_parameters['nwalkers'], mc.ndim], dtype=np.double)
-        for ii in range(0, mc.emcee_parameters['nwalkers']):
+            [mc.zeus_parameters['nwalkers'], mc.ndim], dtype=np.double)
+        for ii in range(0, mc.zeus_parameters['nwalkers']):
             population[ii, :] = np.random.normal(starting_point, 0.0000001)
 
         print(
@@ -256,7 +256,7 @@ def pyorbit_zeus(config_in, input_datasets=None, return_output=None):
                 de = DiffEvol(
                     mc,
                     mc.bounds,
-                    mc.emcee_parameters['nwalkers'],
+                    mc.zeus_parameters['nwalkers'],
                     maximize=True,
                     pool=pool)
 
@@ -265,7 +265,7 @@ def pyorbit_zeus(config_in, input_datasets=None, return_output=None):
             de = DiffEvol(
                 mc,
                 mc.bounds,
-                mc.emcee_parameters['nwalkers'],
+                mc.zeus_parameters['nwalkers'],
                 maximize=True)
 
             de.optimize(int(mc.pyde_parameters['ngen']))
@@ -306,7 +306,7 @@ def pyorbit_zeus(config_in, input_datasets=None, return_output=None):
     print('Running zeus')
     print()
     print('zeus version: ', zeus.__version__)
-    print('Using threading pool for zeus:', mc.emcee_parameters.get('use_threading_pool', False))
+    print('Using threading pool for zeus:', mc.zeus_parameters.get('use_threading_pool', False))
     print()
 
     if reloaded_zeus:
@@ -314,28 +314,28 @@ def pyorbit_zeus(config_in, input_datasets=None, return_output=None):
         print()
     else:
         sampler = zeus.EnsembleSampler(
-            mc.emcee_parameters['nwalkers'], mc.ndim, mc)
+            mc.zeus_parameters['nwalkers'], mc.ndim, mc)
 
-    if mc.emcee_parameters['nsave'] > 0:
+    if mc.zeus_parameters['nsave'] > 0:
         print('Saving temporary steps not supported')
         print()
 
-    if mc.emcee_parameters['use_threading_pool']:
+    if mc.zeus_parameters['use_threading_pool']:
         with multiprocessing.Pool() as pool:
             sampler.pool = pool
             sampler.run_mcmc(
                 population,
                 nsteps_todo,
-                thin=mc.emcee_parameters['thin'],
+                thin=mc.zeus_parameters['thin'],
                 progress=True)
 
     else:
         sampler.run_mcmc(
             population,
             nsteps_todo,
-            thin=mc.emcee_parameters['thin'],
+            thin=mc.zeus_parameters['thin'],
             progress=True)
-    
+
     population = sampler.get_chain()
     prob= sampler.get_log_prob()
     state = None
@@ -349,13 +349,13 @@ def pyorbit_zeus(config_in, input_datasets=None, return_output=None):
 
     flatchain = zeus_flatchain(
         sampler.chain,
-        mc.emcee_parameters['nburn'],
-        mc.emcee_parameters['thin'])
+        mc.zeus_parameters['nburn'],
+        mc.zeus_parameters['thin'])
 
     results_analysis.print_integrated_ACF(
         sampler.chain,
         theta_dict,
-        mc.emcee_parameters['thin'])
+        mc.zeus_parameters['thin'])
 
     results_analysis.results_resumen(mc, flatchain)
 
