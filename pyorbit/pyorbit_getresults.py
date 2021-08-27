@@ -639,20 +639,24 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
         corner_plot['truths'].append(lnprob_med[0])
 
         if plot_dictionary['use_getdist']:
-            print(' Plotting full_correlation plot with GetDist')
-            print()
-            print(' Ignore the no burn in error warning from getdist')
-            print(' since burn in has been already removed from the chains')
+            try:
+                print(' Plotting full_correlation plot with GetDist')
+                print()
+                print(' Ignore the no burn in error warning from getdist')
+                print(' since burn in has been already removed from the chains')
 
-            plt.rc('text', usetex=False)
+                plt.rc('text', usetex=False)
 
-            samples = MCSamples(samples=corner_plot['samples'], names=corner_plot['labels'],
-                                labels=corner_plot['labels'])
+                samples = MCSamples(samples=corner_plot['samples'], names=corner_plot['labels'],
+                                    labels=corner_plot['labels'])
 
-            g = plots.getSubplotPlotter()
-            g.settings.num_plot_contours = 6
-            g.triangle_plot(samples, filled=True)
-            g.export(dir_output + "all_internal_variables_corner_getdist.pdf")
+                g = plots.getSubplotPlotter()
+                g.settings.num_plot_contours = 6
+                g.triangle_plot(samples, filled=True)
+                g.export(dir_output + "all_internal_variables_corner_getdist.pdf")
+            except AttributeError:
+                print(' Something went wrong when plotting the coner plot with GetDist')
+                print(' Please Run PyORBIT_GetResults.py with -dfm flag to get an alternative (slower) corne rplot')
 
             print()
 
