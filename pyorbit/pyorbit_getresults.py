@@ -56,6 +56,12 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
             sampler_chain, sampler_lnprobability, sampler_acceptance_fraction, _, _ = \
             emcee_load_from_cpickle(dir_input)
 
+        if hasattr(mc.emcee_parameters, 'version'):
+            emcee_version = mc.emcee_parameters['version'][0]
+        else:
+            import emcee
+            emcee_version = emcee.__version__[0]
+
         pars_input(config_in, mc, reload_emcee=True)
 
         if hasattr(mc.emcee_parameters, 'version'):

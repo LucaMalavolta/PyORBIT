@@ -115,8 +115,8 @@ def affine_load_from_cpickle(dir_output, prefix=''):
     except FileNotFoundError:
         population = pickle.load(open(dir_output + add_prefix + "starting_population.p", "rb"))
 
-    prob = pickle.load(open(mc.dir_output + add_prefix + "prob.p", "rb"))
-    state = pickle.load(open(mc.dir_output + add_prefix + "state.p", "rb"))
+    prob = pickle.load(open(dir_output + add_prefix + "prob.p", "rb"))
+    state = pickle.load(open(dir_output + add_prefix + "state.p", "rb"))
     sampler_chain = pickle.load(open(dir_output + add_prefix + "sampler_chain.p", "rb"))
     sampler_lnprobability = pickle.load(open(dir_output + add_prefix + "sampler_lnprobability.p", "rb"))
     sampler_acceptance_fraction = pickle.load(
@@ -255,6 +255,12 @@ def affine_flatlnprob(lnprob, nburnin, nthin, population, nwalkers):
         s = lnprob[nburn:, :].shape
         return lnprob[nburn:, :].reshape(s[0] * s[1]), lnprob
 
+
+def emcee_burnin_check(chain, nburnin, nthin, nwalkers=False):
+    return affine_burnin_check(chain, nburnin, nthin, nwalkers)
+
+def zeus_burnin_check(chain, nburnin, nthin, nwalkers=False):
+    return affine_burnin_check(chain, nburnin, nthin, nwalkers)
 
 def emcee_flatchain(chain, nburnin, nthin):
     return affine_flatchain(chain, nburnin, nthin)
