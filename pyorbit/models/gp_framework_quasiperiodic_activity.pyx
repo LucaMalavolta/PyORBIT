@@ -329,7 +329,7 @@ class GP_Framework_QuasiPeriodicActivity(AbstractModel):
         if failed:
             return -np.inf
         chi2 = np.dot(self._3res,np.matmul(inv_M,self._3res))
-        return -0.5 * (self.n * np.log(2 * np.pi)\
+        return -0.5 * (self._nx0 * np.log(2 * np.pi)\
             + np.dot(self._3res,np.matmul(inv_M,self._3res)) + det_A)
 
         #cov_matrix = self._compute_cov_matrix(add_diagonal_errors=True)
