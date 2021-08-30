@@ -19,6 +19,9 @@ from pyorbit.models.pytransit_transit import PyTransit_Transit
 from pyorbit.models.batman_transit import Batman_Transit
 from pyorbit.models.batman_transit_with_ttv import Batman_Transit_With_TTV
 
+from pyorbit.models.gp_framework_quasiperiodic_activity import \
+    GP_Framework_QuasiPeriodicActivity
+
 from pyorbit.models.gp_semiperiodic_activity import \
     GaussianProcess_QuasiPeriodicActivity
 from pyorbit.models.gp_semiperiodic_activity_common import \
@@ -109,6 +112,7 @@ define_type_to_class = {
     'pytransit_transit': PyTransit_Transit,
     'batman_transit': Batman_Transit,
     'batman_transit_with_ttv': Batman_Transit_With_TTV,
+    'gp_framework_quasiperiodic': GP_Framework_QuasiPeriodicActivity,
     'gp_quasiperiodic': GaussianProcess_QuasiPeriodicActivity,
     'gp_quasiperiodic_common': GaussianProcess_QuasiPeriodicActivity_Common,
     'gp_quasiperiodic_shared': GaussianProcess_QuasiPeriodicActivity_Shared,

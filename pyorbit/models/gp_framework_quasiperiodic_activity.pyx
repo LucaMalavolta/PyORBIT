@@ -4,8 +4,9 @@ from pyorbit.models.abstract_model import *
 from scipy.linalg import cho_factor, cho_solve
 from scipy import matrix
 from scipy import spatial
+from scipy.linalg import lapack
 
-class GP_Framework_Semiperiod_Activity(AbstractModel):
+class GP_Framework_QuasiPeriodicActivity(AbstractModel):
     ''' Three parameters out of four are the same for all the datasets, since they are related to
     the properties of the physical process rather than the observed effects on a dataset
      From Grunblatt+2015, Affer+2016
@@ -41,9 +42,9 @@ class GP_Framework_Semiperiod_Activity(AbstractModel):
     """ Indexing is determined by the way the kernel is constructed, so it is specific of the Model and not of the 
     Common class"""
     gp_pams_index = {
-        'Oamp': 0,
+        'Prot': 0,
         'Pdec': 1,
-        'Prot': 2,
+        'Oamp': 2,
         'Vc': 3,
         'Vr': 4,
         'Lc': 5,
@@ -51,11 +52,15 @@ class GP_Framework_Semiperiod_Activity(AbstractModel):
         'Br': 7
     }
 
+    inds_cache = {}
+
+
     def __init__(self, *args, **kwargs):
-        super(GP_Framework_Semiperiod_Activity, self).__init__(*args, **kwargs)
+        super(GP_Framework_QuasiPeriodicActivity, self).__init__(*args, **kwargs)
 
         self.internal_gp_pams = None
 
+        self._x0 = None
         self._nx0 = None
         self._3x0 = None
         self._3e = None
@@ -80,9 +85,9 @@ class GP_Framework_Semiperiod_Activity(AbstractModel):
         values to the parameter vector accepted by george.set_parameter_vector() function. Note: these values may be 
         different from ones accepted by the kernel
         """
+        output_pams[self.gp_pams_index['Prot']] = input_pams['Prot']
         output_pams[self.gp_pams_index['Pdec']] = input_pams['Pdec']
         output_pams[self.gp_pams_index['Oamp']] = input_pams['Oamp']
-        output_pams[self.gp_pams_index['Prot']] = input_pams['Prot']
         output_pams[self.gp_pams_index['Vc']] = input_pams['Vc']
         output_pams[self.gp_pams_index['Vr']] = input_pams['Vr']
         output_pams[self.gp_pams_index['Lc']] = input_pams['Lc']
@@ -113,7 +118,7 @@ class GP_Framework_Semiperiod_Activity(AbstractModel):
     def initialize_model(self, mc,  **kwargs):
         pass
 
-    def setup_dataset(self, dataset, **kwargs):
+    def setup_dataset(self, mc, dataset, **kwargs):
 
         if self._nx0:
             if not dataset.n == self._nx0:
@@ -144,7 +149,12 @@ class GP_Framework_Semiperiod_Activity(AbstractModel):
             self._added_datasets += 1
 
         if self._added_datasets == 3:
-            self._dist_t1, self._dist_t2 = self._compute_distance(self._3x0, self._3x0)
+
+            if self._3x0[:self._nx0].all() == self._3x0[self._nx0:2*self._nx0].all() == self._3x0[2*self._nx0:].all():
+                self._x0 = self._3x0[:self._nx0]
+                self._dist_t1, self._dist_t2 = self._compute_distance(self._x0, self._x0)
+            else:
+                raise ValueError("GP framework error: inconsistent datasets")
 
         return
 
@@ -211,8 +221,8 @@ class GP_Framework_Semiperiod_Activity(AbstractModel):
     def _compute_distance(self, bjd0, bjd1):
         X0 = np.array([bjd0]).T
         X1 = np.array([bjd1]).T
-        return spatial.distance.cdist(X0, X1, 'euclidean'), \
-               spatial.distance.cdist(X0, X1, 'sqeuclidean')
+        return spatial.distance.cdist(X0, X1, lambda u, v: u-v), \
+            spatial.distance.cdist(X0, X1, 'sqeuclidean')
 
     def _compute_cov_matrix(self, add_diagonal_errors=False, bjd0=None, bjd1=None):
 
@@ -224,9 +234,9 @@ class GP_Framework_Semiperiod_Activity(AbstractModel):
 
         cov_matrix = np.zeros([np.size(dist_t1, axis=0) * 3, np.size(dist_t1, axis=1) * 3])
 
-        Oamp = self.internal_gp_pams[0]
+        Prot = self.internal_gp_pams[0]
         Pdec = self.internal_gp_pams[1]
-        Prot = self.internal_gp_pams[2]
+        Oamp = self.internal_gp_pams[2]
         Vc = self.internal_gp_pams[3]
         Vr = self.internal_gp_pams[4]
         Lc = self.internal_gp_pams[5]
@@ -240,17 +250,18 @@ class GP_Framework_Semiperiod_Activity(AbstractModel):
         pi2 = np.pi * np.pi
 
         phi = 2. * np.pi * dist_t1 / Prot
+        sin_phi = np.sin(phi)
 
-        framework_GG = np.exp((-np.sin(phi / 2.) ** 2.) / (2.0 * Oamp2)) \
+        framework_GG = np.exp((-(np.sin(phi / 2.)) ** 2.) / (2.0 * Oamp2)) \
             * np.exp(- dist_t2 / (2 * Pdec2))
 
-        framework_GdG = framework_GG * (- (np.pi * np.sin(phi) / (2 * Prot * Oamp2)) \
-                      - dist_t1 / Pdec2)
+        framework_GdG = framework_GG * (- (np.pi * sin_phi / (2 * Prot * Oamp2)) \
+                    - dist_t1 / Pdec2)
 
-        framework_dGdG = framework_GG * ( - (pi2 * np.sin(phi) ** 2) / (4. * Prot2 * Oamp2 * Oamp2) \
-                     + (pi2 * np.cos(phi)) / (Prot2 * Oamp2) \
-                     - phi * np.sin(phi) / (2 * Oamp ** 2 * Pdec2) \
-                     - dist_t2 / (Pdec2 * Pdec2) + 1. / Pdec2)
+        framework_dGdG = framework_GG * ( - (pi2 * sin_phi ** 2) / (4. * Prot2 * Oamp2 * Oamp2) \
+                    + (pi2 * np.cos(phi)) / (Prot2 * Oamp2) \
+                    - phi * sin_phi / (2 * Oamp2 * Pdec2) \
+                    - dist_t2 / (Pdec2 * Pdec2) + 1. / Pdec2)
 
         prod_11 = Vc ** 2 * framework_GG + Vr ** 2 * framework_dGdG
         prod_22 = Lc ** 2 * framework_GG
@@ -265,9 +276,9 @@ class GP_Framework_Semiperiod_Activity(AbstractModel):
         k_12 = matrix(prod_12)
         k_13 = matrix(prod_13)
         k_23 = matrix(prod_23)
-        # k_21 = k_12
-        # k_31 = k_13
-        # k_32 = k_23
+        k_21 = k_12.T
+        k_31 = k_13.T
+        k_32 = k_23.T
 
         xs = np.size(dist_t1, axis=0)
         ys = np.size(dist_t1, axis=1)
@@ -276,12 +287,12 @@ class GP_Framework_Semiperiod_Activity(AbstractModel):
         cov_matrix[:xs, ys:2*ys] = k_12
         cov_matrix[:xs, 2*ys:] = k_13
 
-        cov_matrix[xs:2*xs, :ys] = k_12 # k_21
+        cov_matrix[xs:2*xs, :ys] = k_21
         cov_matrix[xs:2*xs, ys:2*ys] = k_22
         cov_matrix[xs:2*xs, 2*ys:] = k_23
 
-        cov_matrix[2*xs:,:ys] = k_13  # k_31
-        cov_matrix[2*xs:,   ys:2*ys] = k_23 # k_32
+        cov_matrix[2*xs:,:ys] = k_31
+        cov_matrix[2*xs:,   ys:2*ys] = k_32
         cov_matrix[2 * xs:, 2*ys:] = k_33
 
         if add_diagonal_errors:
@@ -289,18 +300,49 @@ class GP_Framework_Semiperiod_Activity(AbstractModel):
 
         return cov_matrix
 
+    # https://stackoverflow.com/questions/40703042/more-efficient-way-to-invert-a-matrix-knowing-it-is-symmetric-and-positive-semi
+    def fast_positive_definite_inverse(self, m):
+        cholesky, info = lapack.dpotrf(m)
+        if info != 0:
+            return None, None, True
+
+        detA = 2*np.sum(np.log(np.diagonal(cholesky)))
+        inv, info = lapack.dpotri(cholesky)
+        if info != 0:
+            return None, None, True
+
+        n = inv.shape[0]
+        try:
+            inds = self.inds_cache[n]
+        except KeyError:
+            inds = np.tri(n, k=-1, dtype=bool)
+            self.inds_cache[n] = inds
+        inv[inds] = inv.T[inds]
+
+        return inv, detA, False
+
+
     def lnlk_compute(self):
 
         cov_matrix = self._compute_cov_matrix(add_diagonal_errors=True)
-
-        try:
-            alpha = cho_solve(cho_factor(cov_matrix), self._3res)
-            (s, d) = np.linalg.slogdet(cov_matrix)
-
-            return -0.5 * (self.n * np.log(2 * np.pi) +
-                           np.dot(self._3res, alpha) + d)
-        except:
+        inv_M, det_A, failed = self.fast_positive_definite_inverse(cov_matrix)
+        if failed:
             return -np.inf
+        chi2 = np.dot(self._3res,np.matmul(inv_M,self._3res))
+        return -0.5 * (self.n * np.log(2 * np.pi)\
+            + np.dot(self._3res,np.matmul(inv_M,self._3res)) + det_A)
+
+        #cov_matrix = self._compute_cov_matrix(add_diagonal_errors=True)
+        #chi2 = np.dot(_3res,np.matmul(inv_M,_3res))
+        #
+        #try:
+        #    alpha = cho_solve(cho_factor(cov_matrix), self._3res)
+        #    (s, d) = np.linalg.slogdet(cov_matrix)
+        #
+        #    return -0.5 * (self.n * np.log(2 * np.pi) +
+        #                   np.dot(self._3res, alpha) + d)
+        #except:
+        #    return -np.inf
 
 
     def sample_predict(self, dataset, x0_input=None, return_covariance=False, return_variance=False):
