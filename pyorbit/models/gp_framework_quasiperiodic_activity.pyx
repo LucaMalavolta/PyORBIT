@@ -52,7 +52,6 @@ class GP_Framework_QuasiPeriodicActivity(AbstractModel):
         'Br': 7
     }
 
-    inds_cache = {}
 
 
     def __init__(self, *args, **kwargs):
@@ -70,6 +69,8 @@ class GP_Framework_QuasiPeriodicActivity(AbstractModel):
         self._dist_t2 = None
         self._added_datasets = 0
         self.dataset_ordering = {}
+        self.inds_cache = None
+
 
     def convert_val2gp(self, input_pams):
         """
@@ -149,6 +150,8 @@ class GP_Framework_QuasiPeriodicActivity(AbstractModel):
             self._added_datasets += 1
 
         if self._added_datasets == 3:
+
+            self.inds_cache = np.tri(3*self._nx0, k=-1, dtype=bool)
 
             if self._3x0[:self._nx0].all() == self._3x0[self._nx0:2*self._nx0].all() == self._3x0[2*self._nx0:].all():
                 self._x0 = self._3x0[:self._nx0]
@@ -232,7 +235,7 @@ class GP_Framework_QuasiPeriodicActivity(AbstractModel):
         else:
             dist_t1, dist_t2 = self._compute_distance(bjd0, bjd1)
 
-        cov_matrix = np.zeros([np.size(dist_t1, axis=0) * 3, np.size(dist_t1, axis=1) * 3])
+        cov_matrix = np.empty([np.size(dist_t1, axis=0) * 3, np.size(dist_t1, axis=1) * 3])
 
         Prot = self.internal_gp_pams[0]
         Pdec = self.internal_gp_pams[1]
@@ -302,6 +305,7 @@ class GP_Framework_QuasiPeriodicActivity(AbstractModel):
 
     # https://stackoverflow.com/questions/40703042/more-efficient-way-to-invert-a-matrix-knowing-it-is-symmetric-and-positive-semi
     def fast_positive_definite_inverse(self, m):
+
         cholesky, info = lapack.dpotrf(m)
         if info != 0:
             return None, None, True
@@ -311,13 +315,7 @@ class GP_Framework_QuasiPeriodicActivity(AbstractModel):
         if info != 0:
             return None, None, True
 
-        n = inv.shape[0]
-        try:
-            inds = self.inds_cache[n]
-        except KeyError:
-            inds = np.tri(n, k=-1, dtype=bool)
-            self.inds_cache[n] = inds
-        inv[inds] = inv.T[inds]
+        inv[self.inds_cache] = inv.T[self.inds_cache]
 
         return inv, detA, False
 
@@ -329,8 +327,9 @@ class GP_Framework_QuasiPeriodicActivity(AbstractModel):
         if failed:
             return -np.inf
         chi2 = np.dot(self._3res,np.matmul(inv_M,self._3res))
-        return -0.5 * (self._nx0 * np.log(2 * np.pi)\
-            + np.dot(self._3res,np.matmul(inv_M,self._3res)) + det_A)
+        log2_npi = self._nx0 * np.log(2 * np.pi)
+        output = -0.5 * (log2_npi + chi2 + det_A)
+        return output
 
         #cov_matrix = self._compute_cov_matrix(add_diagonal_errors=True)
         #chi2 = np.dot(_3res,np.matmul(inv_M,_3res))
