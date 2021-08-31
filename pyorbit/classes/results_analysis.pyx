@@ -641,7 +641,7 @@ def get_model(mc, theta, bjd_dict):
                     mc.models[logchi2_gp_model].sample_predict(
                         variable_values, dataset, x0_plot, return_variance=True)
 
-                model_x0[dataset_name][logchi2_gp_model] = x0_plot
+                model_x0[dataset_name][logchi2_gp_model] = x0_out
 
                 model_x0[dataset_name][logchi2_gp_model +
                                        '_std'] = np.sqrt(x0_var)
