@@ -1,6 +1,6 @@
 # PyORBIT
 
-## `PyORBIT` version 8.2 by Luca Malavolta - March 2021
+## `PyORBIT` version 8.3 by Luca Malavolta - October 2021
 
 **News** 
 Bayesian evidence estimation can now be performed with:
@@ -10,6 +10,7 @@ Bayesian evidence estimation can now be performed with:
 - `UltraNest` by Johannes Buchner [UltraNest
   documentation](https://johannesbuchner.github.io/UltraNest/), [code
   repository](https://github.com/JohannesBuchner/UltraNest/)
+- Several tiny bugfixes here and there 
 
 Just substitute "emcee" with "dynesty" or "ultranest" to when running the code.
 **Please check the respective documentation to give proper credit to their
