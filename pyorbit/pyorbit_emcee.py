@@ -22,7 +22,12 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
         print("ERROR: emcee not installed, this will not work")
         quit()
 
-    os.environ["OMP_NUM_THREADS"] = "1"
+    # Check how many CPU threads (I guess) should be used
+    omp_num_threads = config_in['parameters'].get('cpu_threads', "1")
+    if type(omp_num_threads) == type("1"):
+        os.environ["OMP_NUM_THREADS"] = omp_num_threads
+    else:
+        os.environ["OMP_NUM_THREADS"] = "{0:.0f}".format(omp_num_threads)
 
     optimize_dir_output = './' + config_in['output'] + '/optimize/'
     pyde_dir_output = './' + config_in['output'] + '/pyde/'
@@ -32,6 +37,8 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
     reloaded_optimize = False
     reloaded_pyde = False
     reloaded_emcee = False
+
+    emcee_skip_check = False
 
     try:
         mc, population, starting_point, theta_dict = pyde_load_from_cpickle(
@@ -43,7 +50,7 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
     try:
         mc, starting_point, population, prob, state, sampler_chain, \
             sampler_lnprobability, _, theta_dict, sampler = \
-            emcee_load_from_cpickle(emcee_dir_output) 
+            emcee_load_from_cpickle(emcee_dir_output)
         reloaded_emcee = True
     except FileNotFoundError:
         pass
@@ -224,13 +231,23 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
 
         population = np.zeros(
             [mc.emcee_parameters['nwalkers'], mc.ndim], dtype=np.double)
-        for ii in range(0, mc.emcee_parameters['nwalkers']):
-            population[ii, :] = np.random.normal(starting_point, 0.0000001)
 
-        print(
-            'to create a synthetic population extremely close to the starting values.')
+        for jj, val in enumerate(starting_point):
+            if np.isfinite(val):
+                population[:, jj] = np.random.normal(val, np.abs(val)*0.0000001, size=mc.emcee_parameters['nwalkers'])
+            else:
+                population[:, jj] = np.random.uniform(mc.bounds[jj,0], mc.bounds[jj,1], size=mc.emcee_parameters['nwalkers'])
+    
+        #for ii in range(0, mc.emcee_parameters['nwalkers']):
+        #    population[ii, :] = np.random.normal(starting_point, 0.0000001)
+       # for ii in range(0, mc.emcee_parameters['nwalkers']):
+       #     print(population[ii, :])
+
+        print('to create a synthetic population extremely close to the starting values.')
+        print('Undefned values have a uniform random value withing the boundaries.')
+        print('WARNING: Initial state check of emcee will ne skipped')
         print()
-
+        emcee_skip_check = True
         sys.stdout.flush()
 
     else:
@@ -333,14 +350,16 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
                         int(mc.emcee_parameters['nsave']),
                         thin=mc.emcee_parameters['thin'],
                         rstate0=state,
-                        progress=True)
+                        progress=True,
+                        skip_initial_state_check=emcee_skip_check)
             else:
                 population, prob, state = sampler.run_mcmc(
                     population,
                     int(mc.emcee_parameters['nsave']),
                     thin=mc.emcee_parameters['thin'],
                     rstate0=state,
-                    progress=True)
+                    progress=True,
+                    skip_initial_state_check=emcee_skip_check)
 
             sampled += mc.emcee_parameters['nsave']
             theta_dict = results_analysis.get_theta_dictionary(mc)
@@ -378,7 +397,8 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
                     nsteps_todo,
                     thin=mc.emcee_parameters['thin'],
                     rstate0=state,
-                    progress=True)
+                    progress=True,
+                    skip_initial_state_check=emcee_skip_check)
 
         else:
             population, prob, state = sampler.run_mcmc(
@@ -386,7 +406,8 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
                 nsteps_todo,
                 thin=mc.emcee_parameters['thin'],
                 rstate0=state,
-                progress=True)
+                progress=True,
+                    skip_initial_state_check=emcee_skip_check)
 
         sampled += nsteps_todo
 

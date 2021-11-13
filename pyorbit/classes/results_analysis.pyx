@@ -827,7 +827,12 @@ def print_integrated_ACF(sampler_chain, theta_dict, nthin):
     n_sam = swapped_chains.shape[0]
     n_cha = swapped_chains.shape[1]
     n_dim = swapped_chains.shape[2]
-    acf_len = int(np.max(integrated_ACF))  # 1000//nthin
+    try:
+        acf_len = int(np.nanmax(integrated_ACF))  # 1000//nthin
+    except:
+        print('Error in computing max integrated ACF, skipped ')
+        print()
+        return
     c = 5
 
     if n_sam > acf_len*tolerance:

@@ -124,6 +124,7 @@ class ModelContainer(object):
     def create_starting_point(self):
 
         self.starting_point = np.average(self.bounds, axis=1)
+        self.starting_point[:] = None
 
         for model_name, model in self.common_models.items():
             model.define_starting_point(self.starting_point)

@@ -134,6 +134,8 @@ class AbstractCommon(object):
             if self.define_special_starting_point(starting_point, var_sampler):
                 continue
 
+            if not self.starts.get(var_sampler, False): continue
+
             if self.spaces[var_sampler] == 'Linear':
                 start_converted = self.starts[var_sampler]
             if self.spaces[var_sampler] == 'Logarithmic':

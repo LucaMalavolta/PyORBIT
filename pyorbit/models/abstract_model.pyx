@@ -154,11 +154,11 @@ class AbstractModel(object):
         return False
 
     def define_starting_point(self, starting_point, dataset_name):
+
         if not bool(self.starts):
             return
 
         for var in self.starts[dataset_name]:
-
             if self.define_special_starting_point(
                     starting_point, dataset_name, var):
                 continue
