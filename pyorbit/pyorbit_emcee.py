@@ -234,7 +234,7 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
 
         for jj, val in enumerate(starting_point):
             if np.isfinite(val):
-                population[:, jj] = np.random.normal(val, np.abs(val)*0.0000001, size=mc.emcee_parameters['nwalkers'])
+                population[:, jj] = np.random.normal(val, np.abs(val)*0.0001, size=mc.emcee_parameters['nwalkers'])
             else:
                 population[:, jj] = np.random.uniform(mc.bounds[jj,0], mc.bounds[jj,1], size=mc.emcee_parameters['nwalkers'])
     
