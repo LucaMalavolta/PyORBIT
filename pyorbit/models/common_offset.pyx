@@ -45,11 +45,11 @@ class Offset(AbstractModel):
             min_offset = np.min(dataset.y) - 100.
             max_offset = np.max(dataset.y) + 100.
         else:
-            min_offset = min(mc.common_models[self.common_offset_ref].default_bounds['jitter'][0],
+            min_offset = min(mc.common_models[self.common_offset_ref].default_bounds['offset'][0],
                              np.min(dataset.y) - 100.)
-            max_offset = max(mc.common_models[self.common_offset_ref].default_bounds['jitter'][1],
+            max_offset = max(mc.common_models[self.common_offset_ref].default_bounds['offset'][1],
                              np.max(dataset.y) + 100.)
-        mc.common_models[self.common_offset_ref].default_bounds['jitter'] = [min_offset, max_offset]
+        mc.common_models[self.common_offset_ref].default_bounds['offset'] = [min_offset, max_offset]
         dataset.shutdown_offset()
         return
 
