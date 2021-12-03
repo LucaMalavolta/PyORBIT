@@ -888,7 +888,7 @@ def bounds_space_priors_starts_fixed(mc,
                                      dataset_2=None,
                                      add_var_name='',
                                      backup_conf=None):
-    # type: (object, object, object, object, object, object) -> object
+    # type: (object, object, object, object, object, object, object) -> object
 
     conf = input_conf.copy()
     key_list = ['boundaries', 'spaces', 'priors', 'starts', 'fixed']

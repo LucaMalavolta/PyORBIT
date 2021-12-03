@@ -3,10 +3,10 @@ from pyorbit.models.abstract_model import AbstractModel
 
 try:
     import celerite2
-    import autograd.numpy as np
+    #import autograd.numpy as np
     from celerite2 import terms
 except ImportError:
-    import numpy as np
+    #import numpy as np
     terms = dummy_import_4args
 
 
