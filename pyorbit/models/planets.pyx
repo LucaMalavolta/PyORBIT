@@ -43,7 +43,13 @@ class CommonPlanets(AbstractCommon):
         'lN', # longitude of ascending node (usually 180 degrees when unknown)
         'R',  # planet radius (in units of stellar radii)
         'a',  # semi-major axis (in units of stellar radii)
-        'b'   # impact parameter
+        'b',   # impact parameter
+        'phase_amp', #Amplitude of the phase light curve
+        'delta_occ', #depth of the occultation, as measured at the maximum value of the reflected light curve
+        'phase_off', #offset of the bright spot
+        'albedo',
+        'redist',
+        'insol'
     }
 
     default_bounds = {
@@ -64,7 +70,13 @@ class CommonPlanets(AbstractCommon):
         # Used by BATMAN
         'R': [0.00001, 0.5],  # Fix the unit
         'a': [0.00001, 500.],  # Fix the unit
-        'b': [0.0, 2.0]
+        'b': [0.0, 2.0],
+        'phase_amp': [0.00, 0.50],
+        'delta_occ': [0.00, 0.50],
+        'phase_off': [-np.pi, np.pi],
+        'albedo': [0., 1.],
+        'redist': [0., 1.],
+        'insol': [0, 1000000000]
     }
 
     """ Must be the same parameters as in list_pams, because priors are 
@@ -86,8 +98,14 @@ class CommonPlanets(AbstractCommon):
         'lN': ['Uniform', []],
         'R': ['Uniform', []],  # Fix the unit
         'a': ['Uniform', []],  # Fix the unit
-        'b': ['Uniform', []]  # Fix the unit
-    }
+        'b': ['Uniform', []],  # Fix the unit
+        'phase_amp': ['Uniform', []],  # Fix the unit
+        'delta_occ': ['Uniform', []],  # Fix the unit
+        'phase_off': ['Uniform', []],  # Fix the unit
+        'albedo': ['Uniform', []],  # Fix the unit
+        'redist': ['Uniform', []],  # Fix the unit
+        'insol': ['Uniform', []],  # Fix the unit
+        }
 
     default_spaces = {
         'P': 'Logarithmic',
@@ -105,7 +123,13 @@ class CommonPlanets(AbstractCommon):
         'lN': 'Linear',
         'R': 'Linear',
         'a': 'Linear',
-        'b': 'Linear'
+        'b': 'Linear',
+        'phase_amp': 'Linear',
+        'delta_occ': 'Linear',
+        'phase_off': 'Linear',
+        'albedo': 'Linear',
+        'redist': 'Linear',
+        'insol': 'Logarithmic',
     }
 
     default_fixed = {
@@ -119,7 +143,13 @@ class CommonPlanets(AbstractCommon):
         'lN': np.pi/2.,
         'R': 0.05,
         'a': 1.0,
-        'b': 1.0
+        'b': 1.0,
+        'phase_amp': 0.000,
+        'delta_occ': 0.000,
+        'phase_off': 0.000,
+        'albedo': 0.000,
+        'redist': 0.000,
+        'insol': 1000000.000,
     }
 
     recenter_pams = {'f', 'o', 'lN'}
