@@ -56,6 +56,12 @@ class Spiderman_Thermal(AbstractModel):
 
     def initialize_model(self, mc, **kwargs):
 
+        try:
+            import spiderman
+        except ImportError:
+            print("ERROR: spiderman not installed, this will not work")
+            quit()
+
         """ check if the stellar radius and effect temperature are provided as fixed values or not """
         stellarradius_names = [
             'stellar_radius',
@@ -255,7 +261,7 @@ class Spiderman_Thermal(AbstractModel):
 
         self.spiderman_params.insol = self.spiderman_options['radius']**2 \
             * (self.spiderman_params.T_s/5777.0)**4 \
-                * self.spiderman_params.a_abs ** 2 \
+                / self.spiderman_params.a_abs ** 2 \
                     * 1367 
 
         self.spiderman_params.albedo = variable_value['albedo']
