@@ -6,10 +6,10 @@ from pyorbit.models.abstract_model import AbstractModel
 
 #from time import process_time
 
-try:
-    import spiderman
-except ImportError:
-    pass
+#try:
+#    import spiderman
+#except ImportError:
+#    pass
 
 
 class Spiderman_Thermal(AbstractModel):

@@ -45,7 +45,7 @@ class dummy_import_4args(object):
 
 try:
     import celerite2
-    import autograd.numpy as np
+    #import autograd.numpy as np
 except ImportError:
     try:
         import celerite
