@@ -116,7 +116,7 @@ class GaussianProcess_QuasiPeriodicActivity(AbstractModel):
            -> set_parameter_vector() accepts the natural logarithm of this value
          gp_pams[2] = Gamma =  1/ (2 omega**2) -> ExpSine2Kernel(gamma, ln_period)
          gp_pams[3] = ln_theta = ln_Period -> ExpSine2Kernel(gamma, ln_period)
-         
+
         """
 
         if self.use_HODLR:

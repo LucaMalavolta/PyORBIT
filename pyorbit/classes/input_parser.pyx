@@ -37,6 +37,11 @@ from pyorbit.models.gp_semiperiodic_activity_alternative import \
 from pyorbit.models.gp_semiperiodic_activity_derivative import \
     GaussianProcess_QuasiPeriodicActivity_Derivative
 
+from pyorbit.models.celerite2_granulation_rotation import Celerite2_Granulation_Rotation
+from pyorbit.models.celerite2_granulation_rotation_linear import Celerite2_Granulation_Rotation_Linear
+from pyorbit.models.celerite2_matern32 import Celerite2_Matern32
+from pyorbit.models.celerite2_matern32_linear import Celerite2_Matern32_Linear
+
 from pyorbit.models.celerite_rotation import Celerite_Rotation
 from pyorbit.models.celerite_rotation_linear import Celerite_Rotation_Linear
 from pyorbit.models.celerite_rotation_legacy import Celerite_Rotation_Legacy
@@ -123,6 +128,10 @@ define_type_to_class = {
     'gp_quasiperiodic_shared': GaussianProcess_QuasiPeriodicActivity_Shared,
     'gp_quasiperiodic_alternative': GaussianProcess_QuasiPeriodicActivity_Alternative,
     'gp_quasiperiodic_derivative': GaussianProcess_QuasiPeriodicActivity_Derivative,
+    'celerite2_granulation_rotation': Celerite2_Granulation_Rotation,
+    'celerite2_granulation_rotation_linear': Celerite2_Granulation_Rotation_Linear,
+    'celerite2_matern32': Celerite2_Matern32,
+    'celerite2_matern32_linear': Celerite2_Matern32_Linear,
     'celerite_matern32': Celerite_Matern32,
     'celerite_matern32_common': Celerite_Matern32_Common,
     'celerite_rotation': Celerite_Rotation,

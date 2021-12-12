@@ -635,7 +635,7 @@ def get_model(mc, theta, bjd_dict):
 
                     #print('   ...Done')
                 else:
-                    print('     comouting GP prediction for the whole temporal range, it may take a while...')
+                    print('     computing GP prediction for the whole temporal range, it may take a while...')
 
                     x0_out, x0_var = \
                     mc.models[logchi2_gp_model].sample_predict(
@@ -697,7 +697,7 @@ def get_model(mc, theta, bjd_dict):
 
             #print('   ...Done')
         else:
-            print('     comouting GP prediction for the whole temporal range, it may take a while...')
+            print('     computing GP prediction for the whole temporal range, it may take a while...')
 
             x0_out, x0_var = \
             mc.models[logchi2_gp_model].sample_predict(

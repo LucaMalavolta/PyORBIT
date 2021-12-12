@@ -42,11 +42,16 @@ class dummy_import_4args(object):
     def __init__(self, a, b, c):
         pass
 
+
 try:
-    import celerite
+    import celerite2
     import autograd.numpy as np
 except ImportError:
-    import numpy as np
+    try:
+        import celerite
+        import autograd.numpy as np
+    except ImportError:
+        import numpy as np
 
 try:
     if os.path.isdir('/Users/malavolta/Astro/CODE/others/trades'):
