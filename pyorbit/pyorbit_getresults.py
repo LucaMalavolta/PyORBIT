@@ -1314,7 +1314,6 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
                             fileout.close()
 
                     except:
-                        print('** ERROR **')
                         pass
 
         print()
