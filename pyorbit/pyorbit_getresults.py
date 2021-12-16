@@ -1223,7 +1223,7 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
 
                         if getattr(mc.models[model_name], 'model_class', False) in oversampled_models:
                             """
-                            Exceptional model writing to deal with under-sampled lightcurves, i.e. when folding the 
+                            Additional output to deal with under-sampled lightcurves, i.e. when folding
                             the light curve from the model file is not good enough. Something similar is performed later
                             with the planetary RVs, but here we must keep into account the differences  between datasets
                             due to limb darkening, exposure times, etc.
