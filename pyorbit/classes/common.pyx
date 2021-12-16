@@ -43,16 +43,6 @@ class dummy_import_4args(object):
         pass
 
 
-#try:
-#    import celerite2
-#    import autograd.numpy as np
-#except ImportError:
-#    try:
-#        import celerite
-#        import autograd.numpy as np
-#    except ImportError:
-#        import numpy as np
-
 try:
     if os.path.isdir('/Users/malavolta/Astro/CODE/others/trades'):
         sys.path.insert(0, '/Users/malavolta/Astro/CODE/others/trades/pytrades/')

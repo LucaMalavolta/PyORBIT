@@ -6,14 +6,14 @@ from pyorbit.models.abstract_model import AbstractModel
 
 #from time import process_time
 
-try:
-    import spiderman
-except ImportError:
-    pass
+#try:
+#    import spiderman
+#except ImportError:
+#    pass
 
 
 class Spiderman_Thermal(AbstractModel):
-    model_class = 'phasecurve'
+    model_class = 'eclipse_phasecurve'
     unitary_model = True
 
     default_bounds = {}
@@ -38,8 +38,9 @@ class Spiderman_Thermal(AbstractModel):
             'e',  # eccentricity, uniform prior
             'o',  # argument of pericenter (in radians)
             'R',  # planet radius (in units of stellar radii)
-            'albedo'  # Bond Albedo
-            'redist'  # Heat redistribution
+            'albedo',  # Bond Albedo
+            'redist',  # Heat redistribution
+            #'insol'
         }
         self.list_pams_dataset = {}
 
@@ -54,6 +55,13 @@ class Spiderman_Thermal(AbstractModel):
         self.spiderman_options = {}
 
     def initialize_model(self, mc, **kwargs):
+
+        try:
+            import spiderman
+        except ImportError:
+            print("ERROR: spiderman not installed, this will not work")
+            quit()
+
         """ check if the stellar radius and effect temperature are provided as fixed values or not """
         stellarradius_names = [
             'stellar_radius',
@@ -112,9 +120,9 @@ class Spiderman_Thermal(AbstractModel):
 
         print('   Warning on Spiderman Thermal model: null limb darkening parameters for the planet')
         print('   Warning on Spiderman Thermal model: null T_int')
-        self.spider_params.p_u1 = 0.               # Planetary limb darkening parameter
-        self.spider_params.p_u2 = 0.               # Planetary limb darkening parameter
-        self.T_int = 0.
+        self.spiderman_params.p_u1 = 0.               # Planetary limb darkening parameter
+        self.spiderman_params.p_u2 = 0.               # Planetary limb darkening parameter
+        self.spiderman_params.T_int = 0.
 
     def setup_dataset(self, mc, dataset, **kwargs):
 
@@ -163,17 +171,16 @@ class Spiderman_Thermal(AbstractModel):
             'wavelength_boundaries',
         ]
 
-        """ Lower and upper wavelength boundaries for the filter, in (m) """
+        """ Lower and upper wavelength boundaries for the filter, in (nm) """
         for dict_name in wavebounds_names:
             if kwargs[dataset.name_ref].get(dict_name, False):
-                self.spiderman_options[dataset.name_ref]['l1'] = kwargs[dataset.name_ref][dict_name][0] / 10**10
-                self.spiderman_options[dataset.name_ref]['l2'] = kwargs[dataset.name_ref][dict_name][1] / 10**10
-
+                self.spiderman_options[dataset.name_ref]['l1'] = kwargs[dataset.name_ref][dict_name][0] / 10**9
+                self.spiderman_options[dataset.name_ref]['l2'] = kwargs[dataset.name_ref][dict_name][1] / 10**9
             elif kwargs.get(dict_name, False):
-                self.spiderman_options[dataset.name_ref]['l1'] = kwargs[dict_name][0] / 10**10
-                self.spiderman_options[dataset.name_ref]['l2'] = kwargs[dict_name][1] / 10**10
+                self.spiderman_options[dataset.name_ref]['l1'] = kwargs[dict_name][0] / 10**9
+                self.spiderman_options[dataset.name_ref]['l2'] = kwargs[dict_name][1] / 10**9
 
-        self.spider_params.thermal = True
+        self.spiderman_params.thermal = True
         self.spiderman_options[dataset.name_ref]['sample_factor'] = sample_factor
         self.spiderman_options[dataset.name_ref]['exp_time'] = exposure_time / constants.d2s
 
@@ -208,9 +215,9 @@ class Spiderman_Thermal(AbstractModel):
             stellar_radius = self.spiderman_options['radius']
 
         if self.use_stellar_temperature:
-            self.spider_params.T_s = variable_value['temperature']
+            self.spiderman_params.T_s = variable_value['temperature']
         else:
-            self.spider_params.T_s = self.spiderman_options['temperature']
+            self.spiderman_params.T_s = self.spiderman_options['temperature']
 
         if self.use_semimajor_axis:
             # semi-major axis (in units of stellar radii)
@@ -247,24 +254,49 @@ class Spiderman_Thermal(AbstractModel):
         self.spiderman_params.l2 = self.spiderman_options[dataset.name_ref]['l2']
 
         # The absolute value of the semi-major axis [AU]
-        self.spider_params.a_abs = (self.spider_params.a
+        self.spiderman_params.a_abs = (self.spiderman_params.a
                                     * self.spiderman_options['radius']
                                     * constants.RsunAU)
 
+
+        self.spiderman_params.insol = self.spiderman_options['radius']**2 \
+            * (self.spiderman_params.T_s/5777.0)**4 \
+                / self.spiderman_params.a_abs ** 2 \
+                    * 1367 
+
+        self.spiderman_params.albedo = variable_value['albedo']
+        self.spiderman_params.redist = variable_value['redist']
+        #self.spiderman_params.insol = variable_value['insol']
+
         if x0_input is None:
-            ##model = self.batman_models[dataset.name_ref].light_curve(self.batman_params) - 1.
-            ##t1_stop = process_time()
-            ##
-            ##print("Elapsed time:", t1_stop-t1_start)
-            # return model
-            return self.batman_models[dataset.name_ref].light_curve(self.batman_params) - 1.
+            if self.spiderman_params.a < 1.0: return dataset.x0 * 0.
+
+            if self.spiderman_options[dataset.name_ref]['sample_factor'] > 1:
+
+                time_array = np.linspace(-self.spiderman_options[dataset.name_ref]['exp_time']/2.,
+                                        self.spiderman_options[dataset.name_ref]['exp_time']/2.,
+                                        self.spiderman_options[dataset.name_ref]['sample_factor'])
+
+                lc_out = dataset.x0 * 0.
+                for it, tt in enumerate(dataset.x0):
+                    lc_out[it] = np.average(self.spiderman_params.lightcurve(tt + time_array))
+                return lc_out - 1.
+            else:
+                return self.spiderman_params.lightcurve(dataset.x0) - 1.
+
 
         else:
-            temporary_model = batman.TransitModel(self.batman_params,
-                                                  x0_input,
-                                                  supersample_factor=self.batman_options[
-                                                      dataset.name_ref]['sample_factor'],
-                                                  exp_time=self.batman_options[dataset.name_ref]['exp_time'],
-                                                  nthreads=self.nthreads)
+            if self.spiderman_params.a < 1.0: return x0_input*0.
 
-            return temporary_model.light_curve(self.batman_params) - 1.
+            if self.spiderman_options[dataset.name_ref]['sample_factor'] > 1:
+
+                time_array = np.linspace(-self.spiderman_options[dataset.name_ref]['exp_time']/2.,
+                                        self.spiderman_options[dataset.name_ref]['exp_time']/2.,
+                                        self.spiderman_options[dataset.name_ref]['sample_factor'])
+
+                lc_out = x0_input * 0.
+                for it, tt in enumerate(x0_input):
+                    lc_out[it] = np.average(self.spiderman_params.lightcurve(tt + time_array))
+                return lc_out - 1.
+            else:
+                return self.spiderman_params.lightcurve(x0_input) - 1.

@@ -31,6 +31,8 @@ __all__ = ["pyorbit_getresults"]
 
 def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
 
+
+
     try:
         use_tex = config_in['parameters']['use_tex']
     except:
@@ -45,6 +47,8 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
     # plt.rc('font', **{'family': 'serif', 'serif': ['Computer Modern Roman']})
     plt.rcParams["font.family"] = "Times New Roman"
     plt.rc('text', usetex=use_tex)
+
+    oversampled_models = plot_dictionary['oversampled_models']
 
     if sampler_name == 'emcee':
 
@@ -1217,7 +1221,7 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
                                     '{0:f} {1:f} {2:f} {3:f}\n'.format(x, tcf, pha, mod))
                             fileout.close()
 
-                        if getattr(mc.models[model_name], 'model_class', False) == 'transit':
+                        if getattr(mc.models[model_name], 'model_class', False) in oversampled_models:
                             """
                             Exceptional model writing to deal with under-sampled lightcurves, i.e. when folding the 
                             the light curve from the model file is not good enough. Something similar is performed later
@@ -1233,7 +1237,7 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
                                 mc.models[model_name].convert(chain_ref, dataset_name))
 
                             fileout = open(
-                                dir_models + dataset_name + '_' + model_name + '_transit.dat', 'w')
+                                dir_models + dataset_name + '_' + model_name + '_oversampled.dat', 'w')
 
                             x_range = np.arange(
                                 -variable_values['P']/2., variable_values['P']/2., 0.001)
@@ -1310,7 +1314,6 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
                             fileout.close()
 
                     except:
-                        print('** ERROR **')
                         pass
 
         print()

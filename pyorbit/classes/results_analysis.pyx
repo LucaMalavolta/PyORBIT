@@ -390,6 +390,16 @@ def get_planet_variables(mc, theta, verbose=False):
             except (KeyError, ValueError):
                 pass
 
+            try:
+                derived_variables['insol(W/m^2]'] = True
+                variable_values['insol(W/m^2]'] = \
+                    stellar_values['radius']**2 \
+                    * (stellar_values['temperature']**4) \
+                    / variable_values['a_AU_(rho,R)']**2 \
+                    *1367.0
+            except (KeyError, ValueError):
+                pass
+
             planet_variables[common_name] = variable_values.copy()
 
             for var in planet_variables[common_name].keys():

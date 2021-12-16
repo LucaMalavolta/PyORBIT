@@ -1,5 +1,5 @@
 import sys
-sys.path.insert(0, '/Users/malavolta/Astro/CODE/PyORBIT/')
+#sys.path.insert(0, '/Users/malavolta/Astro/CODE/PyORBIT/')
 
 from pyorbit.classes.common import np
 from scipy.optimize import fsolve, newton

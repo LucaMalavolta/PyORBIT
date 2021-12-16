@@ -18,6 +18,8 @@ from pyorbit.models.pytransit_transit import PyTransit_Transit
 
 from pyorbit.models.batman_transit import Batman_Transit
 from pyorbit.models.batman_transit_with_ttv import Batman_Transit_With_TTV
+from pyorbit.models.batman_transit_secondary_phasecurve import Batman_Transit_Eclipse_PhaseCurve
+from pyorbit.models.spiderman_thermal import Spiderman_Thermal
 
 from pyorbit.models.gp_framework_quasiperiodic_activity import \
     GP_Framework_QuasiPeriodicActivity
@@ -77,7 +79,8 @@ __all__ = ["pars_input", "yaml_parser"]
 """
 
 model_requires_planets = ['radial_velocities',
-                          'rv_planets', 'batman_transit', 'pytransit_transit', 'batman_transit_with_ttv']
+                          'rv_planets', 'batman_transit', 'pytransit_transit', 'batman_transit_with_ttv',
+                          'spiderman_thermal', 'batman_transit_eclipse_phasecurve']
 single_planet_model = ['Tc_planets', 'transit_times']
 transit_time_model = ['Tc_planets', 'transit_times']
 
@@ -117,6 +120,8 @@ define_type_to_class = {
     'pytransit_transit': PyTransit_Transit,
     'batman_transit': Batman_Transit,
     'batman_transit_with_ttv': Batman_Transit_With_TTV,
+    'batman_transit_eclipse_phasecurve': Batman_Transit_Eclipse_PhaseCurve,
+    'spiderman_thermal': Spiderman_Thermal,
     'gp_framework_quasiperiodic': GP_Framework_QuasiPeriodicActivity,
     'gp_quasiperiodic': GaussianProcess_QuasiPeriodicActivity,
     'gp_quasiperiodic_common': GaussianProcess_QuasiPeriodicActivity_Common,
@@ -618,7 +623,7 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, reload_ze
                             mc.dynamical_t0_dict[planet_name] = dataset_name
 
                 """ This snippet will work only for transit class"""
-                if mc.models[model_name_exp].model_class == 'transit':
+                if mc.models[model_name_exp].model_class in ['transit','transit_eclipse_phasecurve']: 
 
                     try:
                         common_name = mc.models[model_name_exp].model_conf['limb_darkening']
