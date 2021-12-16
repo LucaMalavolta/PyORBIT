@@ -1,5 +1,8 @@
 from pyorbit.classes.common import np
-from pyorbit.classes.common import get_var_exp
+from pyorbit.classes.common import get_var_exp, get_var_log
+from pyorbit.classes.common import get_var_exp_base2, get_var_log_base2
+from pyorbit.classes.common import get_var_exp_base10, get_var_log_base10
+from pyorbit.classes.common import get_var_exp_natural, get_var_log_natural
 from pyorbit.classes.common import get_var_val
 from pyorbit.classes.common import get_fix_val
 from pyorbit.classes.common import get_2darray_from_val
@@ -32,7 +35,7 @@ class AbstractCommon(object):
 
         self.prior_kind = {}
         self.prior_pams = {}
-        
+
     def define_special_variable_properties(self, ndim, output_lists, var):
         return ndim, output_lists, False
 
@@ -89,7 +92,18 @@ class AbstractCommon(object):
                 if self.spaces[var] == 'Linear':
                     self.transformation[var] = get_var_val
                     output_lists['bounds'].append(self.bounds[var])
-
+                elif self.spaces[var] == 'Log_Natural':
+                    self.transformation[var] = get_var_log_natural
+                    output_lists['bounds'].append(
+                        np.log(self.bounds[var]))
+                elif self.spaces[var] == 'Log_Base2':
+                    self.transformation[var] = get_var_exp_base2
+                    output_lists['bounds'].append(
+                        np.log2(self.bounds[var]))
+                elif self.spaces[var] == 'Log_Base10':
+                    self.transformation[var] = get_var_exp_base10
+                    output_lists['bounds'].append(
+                        np.log10(self.bounds[var]))
                 elif self.spaces[var] == 'Logarithmic':
                     self.transformation[var] = get_var_exp
                     output_lists['bounds'].append(
@@ -138,7 +152,13 @@ class AbstractCommon(object):
 
             if self.spaces[var_sampler] == 'Linear':
                 start_converted = self.starts[var_sampler]
-            if self.spaces[var_sampler] == 'Logarithmic':
+            elif self.spaces[var_sampler] == 'Log_Natural':
+                start_converted = np.log(self.starts[var_sampler])
+            elif self.spaces[var_sampler] == 'Log_Base2':
+                start_converted = np.log2(self.starts[var_sampler])
+            elif self.spaces[var_sampler] == 'Log_Base10':
+                start_converted = np.log10(self.starts[var_sampler])
+            elif self.spaces[var_sampler] == 'Logarithmic':
                 start_converted = np.log2(self.starts[var_sampler])
             starting_point[self.variable_sampler[var_sampler]
                            ] = start_converted

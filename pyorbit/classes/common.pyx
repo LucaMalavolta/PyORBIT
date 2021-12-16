@@ -65,6 +65,7 @@ except:
     pass
 
 
+# old base 2 logarithm
 def get_var_log(var, fix, i):
     if len(np.shape(var)) == 1:
         return np.log2(var[i], dtype=np.double)
@@ -77,6 +78,48 @@ def get_var_exp(var, fix, i):
         return np.exp2(var[i], dtype=np.double)
     else:
         return np.exp2(var[:, i], dtype=np.double)
+
+
+def get_var_log_base2(var, fix, i):
+    if len(np.shape(var)) == 1:
+        return np.log2(var[i], dtype=np.double)
+    else:
+        return np.log2(var[:, i], dtype=np.double)
+
+
+def get_var_exp_base2(var, fix, i):
+    if len(np.shape(var)) == 1:
+        return np.exp2(var[i], dtype=np.double)
+    else:
+        return np.exp2(var[:, i], dtype=np.double)
+
+
+def get_var_log_base10(var, fix, i):
+    if len(np.shape(var)) == 1:
+        return np.log10(var[i], dtype=np.double)
+    else:
+        return np.log10(var[:, i], dtype=np.double)
+
+
+def get_var_exp_base10(var, fix, i):
+    if len(np.shape(var)) == 1:
+        return 10**(var[i])
+    else:
+        return 10**(var[:, i])
+
+
+def get_var_log_natural(var, fix, i):
+    if len(np.shape(var)) == 1:
+        return np.log(var[i], dtype=np.double)
+    else:
+        return np.log(var[:, i], dtype=np.double)
+
+
+def get_var_exp_natural(var, fix, i):
+    if len(np.shape(var)) == 1:
+        return np.exp(var[i], dtype=np.double)
+    else:
+        return np.exp(var[:, i], dtype=np.double)
 
 
 def get_var_val(var, fix, i):
