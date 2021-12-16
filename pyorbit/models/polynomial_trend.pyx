@@ -219,7 +219,6 @@ class LocalPolynomialTrend(AbstractModel):
         try:
             if kwargs['time_interval']:
                 self.time_interval = kwargs['time_interval']
-            self.time_interval
         except:
             self.time_interval = 1.
 

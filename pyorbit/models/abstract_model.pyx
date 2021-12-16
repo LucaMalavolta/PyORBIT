@@ -7,6 +7,10 @@ from pyorbit.classes.common import \
     giveback_priors,\
     nested_sampling_prior_prepare
 
+from pyorbit.classes.common import get_var_exp, get_var_log
+from pyorbit.classes.common import get_var_exp_base2, get_var_log_base2
+from pyorbit.classes.common import get_var_exp_base10, get_var_log_base10
+from pyorbit.classes.common import get_var_exp_natural, get_var_log_natural
 
 class AbstractModel(object):
     """
@@ -119,8 +123,19 @@ class AbstractModel(object):
                     self.transformation[dataset_name][var] = get_var_val
                     output_lists['bounds'].append(
                         self.bounds[dataset_name][var])
-
-                if self.spaces[dataset_name][var] == 'Logarithmic':
+                elif self.spaces[dataset_name][var] == 'Log_Natural':
+                    self.transformation[dataset_name][var] = get_var_log_natural
+                    output_lists['bounds'].append(
+                        np.log(self.bounds[dataset_name][var]))
+                elif self.spaces[dataset_name][var] == 'Log_Base2':
+                    self.transformation[dataset_name][var] = get_var_exp_base2
+                    output_lists['bounds'].append(
+                        np.log2(self.bounds[dataset_name][var]))
+                elif self.spaces[dataset_name][var] == 'Log_Base10':
+                    self.transformation[dataset_name][var] = get_var_exp_base10
+                    output_lists['bounds'].append(
+                        np.log10(self.bounds[dataset_name][var]))
+                elif self.spaces[dataset_name][var] == 'Logarithmic':
                     self.transformation[dataset_name][var] = get_var_exp
                     output_lists['bounds'].append(
                         np.log2(self.bounds[dataset_name][var]))

@@ -6,6 +6,7 @@ import copy
 from scipy.stats import gaussian_kde
 
 from pyorbit.classes.common import np, get_2darray_from_val
+from pyorbit.models.harmonics import Harmonics
 
 from pyorbit.models.planets import CommonPlanets
 from pyorbit.models.activity import CommonActivity
@@ -13,8 +14,9 @@ from pyorbit.models.radial_velocities import \
     RVkeplerian, RVdynamical, \
     TransitTimeKeplerian, TransitTimeDynamical, DynamicalIntegrator
 
-from pyorbit.models.pytransit_transit import PyTransit_Transit
+from pyorbit.common.harmonics import CommonHarmonics
 
+from pyorbit.models.pytransit_transit import PyTransit_Transit
 
 from pyorbit.models.batman_transit import Batman_Transit
 from pyorbit.models.batman_transit_with_ttv import Batman_Transit_With_TTV
@@ -55,6 +57,7 @@ from pyorbit.models.polynomial_trend import CommonPolynomialTrend, \
 from pyorbit.models.common_offset import CommonOffset, Offset
 from pyorbit.models.common_jitter import CommonJitter, Jitter
 from pyorbit.models.sinusoid_common_period import SinusoidCommonPeriod
+from pyorbit.models.harmonics import Harmonics
 
 from pyorbit.models.pytransit_limb_darkening import PyTransit_LimbDarkening_Quadratic, \
     PyTransit_LimbDarkening_Power2
@@ -90,6 +93,7 @@ define_common_type_to_class = {
     'polynomial_trend': CommonPolynomialTrend,
     'common_offset': CommonOffset,
     'common_jitter': CommonJitter,
+    'harmonics': CommonHarmonics,
     'pytransit_ld_quadratic': PyTransit_LimbDarkening_Quadratic,
     'pytransit_ld_power2': PyTransit_LimbDarkening_Power2,
     'batman_ld_linear': Batman_LimbDarkening_Linear,
@@ -142,6 +146,7 @@ define_type_to_class = {
     'local_polynomial_trend': LocalPolynomialTrend,
     'common_offset': Offset,
     'common_jitter': Jitter,
+    'harmonics': Harmonics,
     'sinusoid_common_period': SinusoidCommonPeriod,
     'dilution_factor': DilutionFactor,
     'normalization_factor': NormalizationFactor,
