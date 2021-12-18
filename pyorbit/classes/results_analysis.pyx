@@ -843,6 +843,12 @@ def print_integrated_ACF(sampler_chain, theta_dict, nthin):
         print('Error in computing max integrated ACF, skipped ')
         print()
         return
+
+    if acf_len==0:
+        print('Error in computing integrated ACF, chains too short, skipped ')
+        print()
+        return
+
     c = 5
 
     if n_sam > acf_len*tolerance:
