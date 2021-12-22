@@ -235,7 +235,8 @@ class CommonPlanets(AbstractCommon):
             if var not in self.bounds:
                 self.bounds[var] = self.default_bounds[var]
 
-            self.spaces[var] = self.default_spaces[var]
+            if var not in self.spaces:
+                self.spaces[var] = self.default_spaces[var]
 
             output_lists['bounds'].append(self.bounds[var])
 
