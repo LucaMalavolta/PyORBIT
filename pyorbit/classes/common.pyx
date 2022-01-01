@@ -192,6 +192,17 @@ def get_2darray_from_val(val):
     return out
 
 
+def get_2var_rho(var, fix, i):
+    if len(np.shape(var)) == 1:
+        mass = var[i[0]]
+        radius = var[i[1]]
+    else:
+        mass = var[:, i[0]]
+        radius = var[:, i[1]]
+    return mass/radius**3
+
+
+
 def giveback_priors(kind, bounds, pams, val):
 
     """ The code is supposed to give -np.inf log-likelihood when the 

@@ -126,7 +126,7 @@ def results_resumen(mc, theta,
         return returned_samples
 
 
-def get_stellar_parameters(mc, theta, warnings=True):
+def get_stellar_parameters(mc, theta, warnings=True, stellar_ref=None):
     try:
         n_samplings, n_pams = np.shape(theta)
     except:
@@ -134,7 +134,18 @@ def get_stellar_parameters(mc, theta, warnings=True):
         n_pams = np.shape(theta)
 
     "Stellar mass, radius and density are pre-loaded since they are are required by most of the common models"
-    stellar_model = mc.common_models['star_parameters']
+    
+    """
+    #TODO associate to each planet the corresponding stellar parameters
+    """
+    try:
+        stellar_model = mc.common_models[stellar_ref]
+    except:
+        print(' Trying to identify the stellar parameters')
+        for model_name, model_obj in mc.common_models.items():
+            if getattr(model_obj,'model_class', None) == 'star_parameters':
+                stellar_model = mc.common_models[model_name]
+
     stellar_values = stellar_model.convert(theta)
 
     if 'rho' not in stellar_values:
@@ -246,7 +257,6 @@ def get_planet_variables(mc, theta, verbose=False):
         n_samplings, n_pams = np.shape(theta)
     except:
         n_samplings = 1
-    stellar_values = get_stellar_parameters(mc, theta, warnings=False)
 
     planet_variables = {}
 
@@ -255,6 +265,13 @@ def get_planet_variables(mc, theta, verbose=False):
         derived_variables = {}
 
         if common_model.model_class == 'planet':
+
+            stellar_ref = getattr(common_model, 'stellar_ref', None)
+
+            stellar_values = get_stellar_parameters(mc,
+                                                    theta,
+                                                    warnings=False,
+                                                    stellar_ref=stellar_ref)
 
             remove_i = False
             if verbose:

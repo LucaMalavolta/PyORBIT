@@ -56,15 +56,27 @@ class Batman_Transit(AbstractModel):
             'initialization_counter': 1000000
         }
 
+        self.multivariate_mass_radius = False
+
     def initialize_model(self, mc, **kwargs):
+
+        try:
+            multivariate_vars = mc.common_models[self.stellar_ref].multivariate_vars
+        except AttributeError:
+            multivariate_vars = []
 
         if mc.common_models[self.planet_ref].use_semimajor_axis:
             """ a is the semi-major axis (in units of stellar radii) """
             self.list_pams_common.update({'a': None})
             self.use_semimajor_axis = True
         else:
-            """ rho is the density of the star (in solar units) """
-            self.list_pams_common.update({'rho': None})
+            if 'mass' in multivariate_vars and 'radius' in multivariate_vars:
+                self.list_pams_common.update({'mass': None, 'radius':None})
+                self.multivariate_mass_radius = True
+            else:
+                """ rho is the density of the star (in solar units) """
+                self.list_pams_common.update({'rho': None})
+                self.multivariate_mass_radius = False
 
         if mc.common_models[self.planet_ref].use_inclination:
             """ i is the orbital inclination (in degrees) """
@@ -116,6 +128,9 @@ class Batman_Transit(AbstractModel):
 
         self.batman_options[dataset.name_ref] = {}
 
+        sample_factor = 1
+        exposure_time = 30.
+
         supersample_names = ['supersample_factor',
             'supersample',
             'supersampling',
@@ -129,9 +144,6 @@ class Batman_Transit(AbstractModel):
             'nsample',
             'nsampling'
             ]
-
-        sample_factor = 1
-        exposure_time = 30.
 
         for dict_name in supersample_names:
             if kwargs[dataset.name_ref].get(dict_name, False):
@@ -152,12 +164,10 @@ class Batman_Transit(AbstractModel):
                 exposure_time = kwargs[dataset.name_ref][dict_name]
             elif kwargs[dataset.name_ref].get(dict_name, False):
                 exposure_time = kwargs[dict_name]
-        
 
         self.batman_options[dataset.name_ref]['sample_factor'] = sample_factor
         self.batman_options[dataset.name_ref]['exp_time'] = exposure_time / constants.d2s
 
-        
         # # OLD code snippet 
         #try:
         #    self.batman_options[dataset.name_ref]['sample_factor'] = kwargs[dataset.name_ref]['supersample_factor']
@@ -189,6 +199,8 @@ class Batman_Transit(AbstractModel):
         """
         #t1_start = process_time()
 
+        if getattr(self, 'multivariate_mass_radius', False):
+            variable_value['rho'] = variable_value['mass'] / variable_value['radius']**3
 
         if self.use_semimajor_axis:
             # semi-major axis (in units of stellar radii)
@@ -220,6 +232,7 @@ class Batman_Transit(AbstractModel):
         self.batman_params.ecc = variable_value['e']  # eccentricity
         # longitude of periastron (in degrees)
         self.batman_params.w = variable_value['o'] * (180. / np.pi)
+
 
         """
         print 'a    ', self.batman_params.a

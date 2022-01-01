@@ -3,7 +3,7 @@ from pyorbit.models.dataset import Dataset
 import sys
 import yaml
 import copy
-from scipy.stats import gaussian_kde
+from scipy.stats import gaussian_kde, multivariate_normal
 
 from pyorbit.classes.common import np, get_2darray_from_val
 from pyorbit.models.harmonics import Harmonics
@@ -73,6 +73,8 @@ from pyorbit.models.normalization_factor import CommonNormalizationFactor, \
     NormalizationFactor
 from pyorbit.models.star_parameters import CommonStarParameters
 
+from pyorbit.models.rossitermclaughlin_ohta import LimbDarkening_Linear, RossiterMcLaughling_Ohta
+
 __all__ = ["pars_input", "yaml_parser"]
 
 """
@@ -86,6 +88,7 @@ model_requires_planets = ['radial_velocities',
                           'spiderman_thermal', 'batman_transit_eclipse_phasecurve']
 single_planet_model = ['Tc_planets', 'transit_times']
 transit_time_model = ['Tc_planets', 'transit_times']
+model_requires_limbdarkening = ['transit','transit_eclipse_phasecurve']
 
 define_common_type_to_class = {
     'planets': CommonPlanets,
@@ -103,6 +106,7 @@ define_common_type_to_class = {
     'batman_ld_exponential': Batman_LimbDarkening_Exponential,
     'batman_ld_power2': Batman_LimbDarkening_Power2,
     'batman_ld_nonlinear': Batman_LimbDarkening_NonLinear,
+    'ld_linear': LimbDarkening_Linear,
     'dilution_factor': CommonDilutionFactor,
     'normalization_factor': CommonNormalizationFactor,
     'star_parameters': CommonStarParameters
@@ -151,6 +155,7 @@ define_type_to_class = {
     'dilution_factor': DilutionFactor,
     'normalization_factor': NormalizationFactor,
     'local_correlated_jitter': LocalCorrelatedJitter,
+    'rossitermclaughlin_ohta': RossiterMcLaughling_Ohta,
 }
 
 accepted_extensions = ['.yaml', '.yml', '.conf', '.config', '.input', ]
@@ -259,25 +264,29 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, reload_ze
 
                 for planet_name, planet_conf in model_conf.items():
 
+                    if 'star_parameters' in planet_conf:
+                        mc.common_models[planet_name].stellar_ref = planet_conf['star_parameters']
+                    else:
+                        for common_name, common_obj in mc.common_models.items():
+                            if getattr(common_obj,'model_class', None) == 'star_parameters':
+                                mc.common_models[planet_name].stellar_ref = common_name
+
                     if 'fixed' in planet_conf:
                         fixed_conf = planet_conf['fixed']
                         for var in fixed_conf:
                             mc.common_models[planet_name].fix_list[var] = get_2darray_from_val(
                                 fixed_conf[var])
 
-            if model_name == 'star_parameters':
+            #TODO: make more general case - star_parameters with different label
+            if model_conf.get('kind',model_name) == 'star_parameters':
                 bounds_space_priors_starts_fixed(
                     mc, mc.common_models[model_name], model_conf)
 
             if model_name == 'star':
-                try:
-                    star_conf = model_conf['star_parameters']
-                    bounds_space_priors_starts_fixed(
-                        mc, mc.common_models['star_parameters'], star_conf)
-                except:
-                    print()
-                    print(" Error in reading the priors from stellar parameters ")
-
+                for submodel_name, submodel_conf in model_conf.items():
+                    if submodel_conf.get('kind', submodel_name) == 'star_parameters':
+                        bounds_space_priors_starts_fixed(
+                            mc, mc.common_models[submodel_name], submodel_conf)
         return
 
     for dataset_name, dataset_conf in conf_inputs.items():
@@ -521,9 +530,10 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, reload_ze
                         conf_models[model_name] = {'common': model_name}
 
 
-        if 'star_parameters' not in mc.common_models:
-            mc.common_models['star_parameters'] = define_common_type_to_class['star_parameters'](
-                'star_parameters')
+        # Add the stellar parameter class anyway
+        #if 'star_parameters' not in mc.common_models:
+        #    mc.common_models['star_parameters'] = define_common_type_to_class['star_parameters'](
+        #        'star_parameters')
 
 
     """ Check if there is any planet that requires dynamical computations"""
@@ -628,7 +638,7 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, reload_ze
                             mc.dynamical_t0_dict[planet_name] = dataset_name
 
                 """ This snippet will work only for transit class"""
-                if mc.models[model_name_exp].model_class in ['transit','transit_eclipse_phasecurve']: 
+                if mc.models[model_name_exp].model_class in model_requires_limbdarkening: 
 
                     try:
                         common_name = mc.models[model_name_exp].model_conf['limb_darkening']
@@ -646,7 +656,13 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, reload_ze
 
                     mc.models[model_name_exp].common_ref.append(common_name)
 
-                mc.models[model_name_exp].common_ref.append('star_parameters')
+                try:
+                    common_name = mc.models[model_name_exp].model_conf['star_parameters']
+                except:
+                    common_name = 'star_parameters'
+
+                mc.models[model_name_exp].common_ref.append(common_name)
+                mc.models[model_name_exp].stellar_ref = common_name
 
                 for dataset_name, dataset in mc.dataset_dict.items():
                     if model_name_exp in dataset.models:
@@ -964,19 +980,40 @@ def bounds_space_priors_starts_fixed(mc,
         if 'priors' in conf:
             prior_conf = conf['priors']
             for var in prior_conf:
-                prior_pams = np.atleast_1d(prior_conf[var])
-                model_obj.prior_kind[add_var_name+var] = prior_pams[0]
 
-                if prior_pams[0] == 'File':
-                    data_file = np.genfromtxt(prior_pams[1])
-                    model_obj.prior_pams[add_var_name + var] = \
-                        gaussian_kde(data_file)
-                elif np.size(prior_pams) > 1:
-                    model_obj.prior_pams[add_var_name + var] = \
-                        np.asarray(prior_pams[1:], dtype=np.double)
+                if var == 'multivariate':
+                    model_obj.multivariate_priors = True
+
+                    model_obj.multivariate_vars = prior_conf[var]['variables']
+                    data_file = np.genfromtxt(prior_conf[var]['file'])
+
+                    ll = []
+                    for ii in range(len(model_obj.multivariate_vars)):
+                        ll.append(data_file[:,ii])
+                    cov_data = np.stack(ll, axis=0)
+                    model_obj.multivariate_cov = np.cov(cov_data)
+                    model_obj.multivariate_med = np.median(data_file, axis=0)
+                    model_obj.multivariate_func = multivariate_normal(model_obj.multivariate_med,
+                                                                      model_obj.multivariate_cov)
+                    ll = None
+                    cov_data = None
+                    data_file = None
+
                 else:
-                    model_obj.prior_pams[add_var_name + var] = \
-                        np.asarray([0.00], dtype=np.double)
+                    prior_pams = np.atleast_1d(prior_conf[var])
+                    model_obj.prior_kind[add_var_name+var] = prior_pams[0]
+
+                    if prior_pams[0] == 'File':
+                        data_file = np.genfromtxt(prior_pams[1])
+                        model_obj.prior_pams[add_var_name + var] = \
+                            gaussian_kde(data_file)
+                        data_file = None
+                    elif np.size(prior_pams) > 1:
+                        model_obj.prior_pams[add_var_name + var] = \
+                            np.asarray(prior_pams[1:], dtype=np.double)
+                    else:
+                        model_obj.prior_pams[add_var_name + var] = \
+                            np.asarray([0.00], dtype=np.double)
 
         if 'starts' in conf:
             mc.starting_point_flag = True
@@ -1014,22 +1051,47 @@ def bounds_space_priors_starts_fixed(mc,
         if 'priors' in conf:
             prior_conf = conf['priors']
             for var in prior_conf:
+
+
+
+                if var == 'multivariate':
+                    model_obj.multivariate_priors[dataset_1] = True
+
+                    model_obj.multivariate_vars[dataset_1] = prior_conf[var]['variables']
+                    data_file = np.genfromtxt(prior_conf[var]['file'])
+
+                    ll = []
+                    for ii in range(len(model_obj.multivariate_vars[dataset_1])):
+                        ll.append(data_file[:,ii])
+                    cov_data = np.stack(ll, axis=0)
+                    model_obj.multivariate_cov[dataset_1] = np.cov(cov_data)
+                    model_obj.multivariate_med[dataset_1] = np.median(data_file, axis=0)
+                    model_obj.multivariate_func[dataset_1] = multivariate_normal(model_obj.multivariate_med[dataset_1],
+                                                                      model_obj.multivariate_cov[dataset_1])
+                    ll = None
+                    cov_data = None
+                    data_file = None
+
+
+
+
+
+                prior_pams = np.atleast_1d(prior_conf[var])
                 model_obj.prior_kind[dataset_1][add_var_name + var] = \
                     prior_conf[var][0]
 
                 if prior_conf[var][0] == 'File':
-                    data_file = np.genfromtxt(prior_conf[var][1])
+                    data_file = np.genfromtxt(prior_pams[1])
                     model_obj.prior_pams[dataset_1][add_var_name + var] = \
                         gaussian_kde(data_file)
+                    data_file = None
                 elif np.size(prior_conf[var]) > 1:
                     model_obj.prior_pams[dataset_1][add_var_name + var] = \
-                        np.asarray(prior_conf[var][1:], dtype=np.double)
+                        np.asarray(prior_pams[1:], dtype=np.double)
                 else:
                     model_obj.prior_pams[dataset_1][add_var_name + var] = \
                         np.asarray([0.00], dtype=np.double)
-                
-                #model_obj.prior_pams[dataset_1][add_var_name +
-                #                                var] = np.asarray(prior_conf[var][1:], dtype=np.double)
+
 
         if 'starts' in conf:
             mc.starting_point_flag = True

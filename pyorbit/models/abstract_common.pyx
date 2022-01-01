@@ -19,6 +19,9 @@ class AbstractCommon(object):
 
     def __init__(self, common_ref):
         self.common_ref = common_ref
+        self.planet_ref = common_ref
+        self.stellar_ref = 'star_parameters'
+
         self.variable_sampler = {}
 
         self.transformation = {}
@@ -35,6 +38,12 @@ class AbstractCommon(object):
 
         self.prior_kind = {}
         self.prior_pams = {}
+
+        self.multivariate_priors = False
+        self.multivariate_vars = []
+        self.multivariate_func = None
+        self.multivariate_med = None
+        self.multivariate_cov = None
 
     def define_special_variable_properties(self, ndim, output_lists, var):
         return ndim, output_lists, False
@@ -178,13 +187,26 @@ class AbstractCommon(object):
         """
 
         prior_out = 0.00
+
         variable_value = self.convert(theta)
 
-        """ The first time this subroutine is called, the KDE is computed
-            for those variables where a 
+        """ Preserving backcompatibility with version 8
+        #TODO: to be simplified in the next version
         """
+        if getattr(self, 'multivariate_priors', False):
+            multi_var = [variable_value[ii] for ii in self.multivariate_vars]
+            pdf = self.multivariate_func.pdf(multi_var)
+            if pdf > 0:
+                prior_out += np.log(self.multivariate_func.pdf(multi_var))
+            else:
+                return -np.inf
+        else:
+            self.multivariate_vars = []
 
         for var in variable_value:
+
+            if var in self.multivariate_vars: continue
+
             prior_out += giveback_priors(self.prior_kind[var],
                                          self.bounds[var],
                                          self.prior_pams[var],
