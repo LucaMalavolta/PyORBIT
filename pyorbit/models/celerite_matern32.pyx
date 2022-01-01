@@ -15,9 +15,9 @@ class Celerite_Matern32(AbstractModel):
     r"""A term that approximates a Matern-3/2 function
 
     Args:
-       log_sigma (float) – The log of the parameter σ.
-       log_rho (float) – The log of the parameter ρ.
-       eps (Optional[float]) – The value of the parameter ϵ. (default: 0.01)
+       log_sigma (float) - The log of the parameter σ.
+       log_rho (float) - The log of the parameter ρ.
+       eps (Optional[float]) - The value of the parameter ϵ. (default: 0.01)
     """
 
     internal_likelihood = True
