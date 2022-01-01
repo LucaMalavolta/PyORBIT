@@ -1,1 +1,0 @@
-celerite_semiperiodic_activity.pyx

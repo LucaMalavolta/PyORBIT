@@ -4,19 +4,13 @@ import pyorbit.classes.constants as constants
 import pyorbit.classes.kepler_exo as kepler_exo
 from pyorbit.models.abstract_model import AbstractModel
 
-
-from pyorbit.models.abstract_common import AbstractCommon
-from pyorbit.models.limb_darkening import LimbDarkening_1Pam
+from pyorbit.common.limb_darkening import LimbDarkening_1Pam
 #from time import process_time
 
 try:
     import batman
 except ImportError:
     pass
-
-class LimbDarkening_Linear(LimbDarkening_1Pam):
-    model_class = 'ld_linear'
-    ld_type = 'linear'
 
 
 class RossiterMcLaughling_Ohta(AbstractModel):

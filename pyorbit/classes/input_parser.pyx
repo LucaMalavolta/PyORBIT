@@ -59,21 +59,18 @@ from pyorbit.models.common_jitter import CommonJitter, Jitter
 from pyorbit.models.sinusoid_common_period import SinusoidCommonPeriod
 from pyorbit.models.harmonics import Harmonics
 
-from pyorbit.models.pytransit_limb_darkening import PyTransit_LimbDarkening_Quadratic, \
-    PyTransit_LimbDarkening_Power2
-
-from pyorbit.models.batman_limb_darkening import Batman_LimbDarkening_Linear, \
-    Batman_LimbDarkening_Quadratic, \
-    Batman_LimbDarkening_SquareRoot, Batman_LimbDarkening_Logarithmic, \
-    Batman_LimbDarkening_Exponential, Batman_LimbDarkening_Power2, \
-    Batman_LimbDarkening_NonLinear
+from pyorbit.common.limb_darkening import LimbDarkening_Linear, \
+    LimbDarkening_Quadratic, \
+    LimbDarkening_SquareRoot, LimbDarkening_Logarithmic, \
+    LimbDarkening_Exponential, LimbDarkening_Power2, \
+    LimbDarkening_NonLinear
 
 from pyorbit.models.dilution_factor import CommonDilutionFactor, DilutionFactor
 from pyorbit.models.normalization_factor import CommonNormalizationFactor, \
     NormalizationFactor
 from pyorbit.models.star_parameters import CommonStarParameters
 
-from pyorbit.models.rossitermclaughlin_ohta import LimbDarkening_Linear, RossiterMcLaughling_Ohta
+from pyorbit.models.rossitermclaughlin_ohta import RossiterMcLaughling_Ohta
 
 __all__ = ["pars_input", "yaml_parser"]
 
@@ -99,14 +96,13 @@ define_common_type_to_class = {
     'harmonics': CommonHarmonics,
     'pytransit_ld_quadratic': PyTransit_LimbDarkening_Quadratic,
     'pytransit_ld_power2': PyTransit_LimbDarkening_Power2,
-    'batman_ld_linear': Batman_LimbDarkening_Linear,
-    'batman_ld_quadratic': Batman_LimbDarkening_Quadratic,
-    'batman_ld_square-root': Batman_LimbDarkening_SquareRoot,
-    'batman_ld_logarithmic': Batman_LimbDarkening_Logarithmic,
-    'batman_ld_exponential': Batman_LimbDarkening_Exponential,
-    'batman_ld_power2': Batman_LimbDarkening_Power2,
-    'batman_ld_nonlinear': Batman_LimbDarkening_NonLinear,
     'ld_linear': LimbDarkening_Linear,
+    'ld_quadratic': LimbDarkening_Quadratic,
+    'ld_square-root': LimbDarkening_SquareRoot,
+    'ld_logarithmic': LimbDarkening_Logarithmic,
+    'ld_exponential': LimbDarkening_Exponential,
+    'ld_power2': LimbDarkening_Power2,
+    'ld_nonlinear': LimbDarkening_NonLinear,
     'dilution_factor': CommonDilutionFactor,
     'normalization_factor': CommonNormalizationFactor,
     'star_parameters': CommonStarParameters

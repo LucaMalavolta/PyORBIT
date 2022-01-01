@@ -4,7 +4,7 @@ from pyorbit.classes.common import \
     get_2var_c2,\
     nested_sampling_prior_prepare
 
-from pyorbit.models.abstract_common import AbstractCommon
+from pyorbit.common.abstract_common import AbstractCommon
 
 
 class LimbDarkening_1Pam(AbstractCommon):
