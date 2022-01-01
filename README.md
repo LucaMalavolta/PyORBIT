@@ -16,6 +16,8 @@ git branch -u origin/legacy legacy
 git remote set-head origin -a
 ```
 
+All the commands can be executed at once by running the script `update_local_clone.sh`
+
 ## `PyORBIT` version 8.3 by Luca Malavolta - October 2021
 
 **News**
