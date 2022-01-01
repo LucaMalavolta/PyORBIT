@@ -1,25 +1,5 @@
 from pyorbit.classes.common import *
-from pyorbit.models.abstract_common import *
 from pyorbit.models.abstract_model import *
-
-
-class CommonJitter(AbstractCommon):
-    ''' Common offset for datasets in different files
-    '''
-
-    model_class = 'common_jitter'
-
-    list_pams = {
-        'jitter'
-    }
-
-    default_bounds = {}
-    default_spaces = {'jitter': 'Linear'}
-    default_priors = {'jitter': ['Uniform', []]}
-    default_fixed = {}
-
-    recenter_pams = {}
-
 
 class Jitter(AbstractModel):
 

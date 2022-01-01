@@ -1,4 +1,3 @@
-
 from pyorbit.classes.common import np, convert_rho_to_a, convert_b_to_i
 import pyorbit.classes.constants as constants
 import pyorbit.classes.kepler_exo as kepler_exo

@@ -1,6 +1,5 @@
 from pyorbit.classes.common import *
-from pyorbit.models.abstract_common import *
-from pyorbit.models.abstract_model import *
+from pyorbit.common.abstract_common import *
 
 
 class CommonStarParameters(AbstractCommon):

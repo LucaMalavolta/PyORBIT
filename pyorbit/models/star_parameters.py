@@ -1,1 +1,0 @@
-star_parameters.pyx

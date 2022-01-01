@@ -1,21 +1,37 @@
 from __future__ import print_function
-from pyorbit.models.dataset import Dataset
+from pyorbit.common.dataset import Dataset
 import sys
 import yaml
 import copy
 from scipy.stats import gaussian_kde, multivariate_normal
 
 from pyorbit.classes.common import np, get_2darray_from_val
-from pyorbit.models.harmonics import Harmonics
 
-from pyorbit.models.planets import CommonPlanets
-from pyorbit.models.activity import CommonActivity
+from pyorbit.common.planets import CommonPlanets
+from pyorbit.common.activity import CommonActivity
+
+from pyorbit.common.polynomial_trend import CommonPolynomialTrend
+from pyorbit.common.common_offset import CommonOffset
+from pyorbit.common.common_jitter import CommonJitter
+
+from pyorbit.common.harmonics import CommonHarmonics
+
+from pyorbit.common.dilution_factor import CommonDilutionFactor
+from pyorbit.common.normalization_factor import CommonNormalizationFactor
+from pyorbit.common.star_parameters import CommonStarParameters
+
+
+from pyorbit.common.limb_darkening import LimbDarkening_Linear, \
+    LimbDarkening_Quadratic, \
+    LimbDarkening_SquareRoot, LimbDarkening_Logarithmic, \
+    LimbDarkening_Exponential, LimbDarkening_Power2, \
+    LimbDarkening_NonLinear
+
 from pyorbit.models.radial_velocities import \
     RVkeplerian, RVdynamical, \
     TransitTimeKeplerian, TransitTimeDynamical, DynamicalIntegrator
 
-from pyorbit.common.harmonics import CommonHarmonics
-
+from pyorbit.models.harmonics import Harmonics
 from pyorbit.models.pytransit_transit import PyTransit_Transit
 
 from pyorbit.models.batman_transit import Batman_Transit
@@ -52,25 +68,18 @@ from pyorbit.models.celerite_matern32_common import Celerite_Matern32_Common
 
 from pyorbit.models.correlations import LocalCorrelation
 from pyorbit.models.correlated_jitter import LocalCorrelatedJitter
-from pyorbit.models.polynomial_trend import CommonPolynomialTrend, \
-    PolynomialTrend, LocalPolynomialTrend
-from pyorbit.models.common_offset import CommonOffset, Offset
-from pyorbit.models.common_jitter import CommonJitter, Jitter
+from pyorbit.models.common_offset import Offset
+from pyorbit.models.common_jitter import Jitter
 from pyorbit.models.sinusoid_common_period import SinusoidCommonPeriod
 from pyorbit.models.harmonics import Harmonics
 
-from pyorbit.common.limb_darkening import LimbDarkening_Linear, \
-    LimbDarkening_Quadratic, \
-    LimbDarkening_SquareRoot, LimbDarkening_Logarithmic, \
-    LimbDarkening_Exponential, LimbDarkening_Power2, \
-    LimbDarkening_NonLinear
-
-from pyorbit.models.dilution_factor import CommonDilutionFactor, DilutionFactor
-from pyorbit.models.normalization_factor import CommonNormalizationFactor, \
-    NormalizationFactor
-from pyorbit.models.star_parameters import CommonStarParameters
+from pyorbit.models.dilution_factor import DilutionFactor
+from pyorbit.models.normalization_factor import NormalizationFactor
 
 from pyorbit.models.rossitermclaughlin_ohta import RossiterMcLaughling_Ohta
+
+from pyorbit.models.polynomial_trend import PolynomialTrend, LocalPolynomialTrend
+
 
 __all__ = ["pars_input", "yaml_parser"]
 
@@ -94,8 +103,6 @@ define_common_type_to_class = {
     'common_offset': CommonOffset,
     'common_jitter': CommonJitter,
     'harmonics': CommonHarmonics,
-    'pytransit_ld_quadratic': PyTransit_LimbDarkening_Quadratic,
-    'pytransit_ld_power2': PyTransit_LimbDarkening_Power2,
     'ld_linear': LimbDarkening_Linear,
     'ld_quadratic': LimbDarkening_Quadratic,
     'ld_square-root': LimbDarkening_SquareRoot,

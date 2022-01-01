@@ -1,6 +1,6 @@
 from pyorbit.classes.common import *
-from pyorbit.models.abstract_common import *
 from pyorbit.models.abstract_model import *
+
 from scipy.linalg import cho_factor, cho_solve
 from scipy import matrix
 from scipy import spatial

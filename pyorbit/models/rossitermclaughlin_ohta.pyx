@@ -1,17 +1,7 @@
-
 from pyorbit.classes.common import np, convert_rho_to_a, convert_b_to_i
 import pyorbit.classes.constants as constants
 import pyorbit.classes.kepler_exo as kepler_exo
 from pyorbit.models.abstract_model import AbstractModel
-
-from pyorbit.common.limb_darkening import LimbDarkening_1Pam
-#from time import process_time
-
-try:
-    import batman
-except ImportError:
-    pass
-
 
 class RossiterMcLaughling_Ohta(AbstractModel):
     model_class = 'rossiter_mclaughlin'
@@ -30,7 +20,7 @@ class RossiterMcLaughling_Ohta(AbstractModel):
         try:
             from PyAstronomy import modelSuite as PyAstroModelSuite
         except ImportError:
-            print("ERROR: batman not installed, this will not work")
+            print("ERROR: PyAstronomy not installed, this will not work")
             quit()
 
         # Must be moved here because it will updated depending on the selected limb darkening

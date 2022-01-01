@@ -1,5 +1,4 @@
 from pyorbit.classes.common import *
-from pyorbit.models.abstract_common import *
 from pyorbit.models.abstract_model import *
 import pyorbit.classes.kepler_exo as kepler_exo
 

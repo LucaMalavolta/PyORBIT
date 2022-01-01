@@ -1,6 +1,5 @@
 from __future__ import print_function
 from pyorbit.classes.common import *
-from pyorbit.models.abstract_common import *
 from pyorbit.models.abstract_model import *
 import pyorbit.classes.kepler_exo as kepler_exo
 from pyorbit.classes.results_analysis import get_stellar_parameters
