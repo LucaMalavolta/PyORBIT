@@ -1,13 +1,4 @@
-from pyorbit.classes.common import np, dummy_import_4args
 from pyorbit.models.abstract_model import AbstractModel
-
-try:
-    import celerite
-    #import autograd.numpy as np
-    from celerite.terms import Term
-except ImportError:
-    #import numpy as np
-    Term = dummy_import_4args
 
 
 class Celerite_Matern32(AbstractModel):
@@ -20,30 +11,27 @@ class Celerite_Matern32(AbstractModel):
        eps (Optional[float]) - The value of the parameter ϵ. (default: 0.01)
     """
 
-    internal_likelihood = True
-
     model_class = 'celerite_matern32'
-
-    list_pams_common = {}
-
-    list_pams_dataset = {
-        'matern32_log10_sigma',  # sigma
-        'matern32_log10_rho', # rho
-        }
-
-    recenter_pams_dataset = {}
-
-    n_pams = 2
+    internal_likelihood = True
 
     def __init__(self, *args, **kwargs):
         super(Celerite_Matern32, self).__init__(*args, **kwargs)
-        self.gp = {}
 
         try:
             import celerite
         except:
             print("ERROR: celerite not installed, this will not work")
             quit()
+
+        self.list_pams_common = {}
+
+        self.list_pams_dataset = {
+            'matern32_log10_sigma',  # sigma
+            'matern32_log10_rho', # rho
+            }
+
+        self.n_pams = 2
+        self.gp = {}
 
 
     def setup_dataset(self, mc, dataset, **kwargs):

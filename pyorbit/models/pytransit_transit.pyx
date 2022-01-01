@@ -1,11 +1,18 @@
+
 from pyorbit.subroutines.common import np, convert_rho_to_a, convert_b_to_i
 import pyorbit.subroutines.constants as constants
 import pyorbit.subroutines.kepler_exo as kepler_exo
 from pyorbit.models.abstract_model import AbstractModel
 
-class RossiterMcLaughling_Ohta(AbstractModel):
-    model_class = 'rossiter_mclaughlin'
-    unitary_model = False
+try:
+    from pytransit import QuadraticModel
+except ImportError:
+    pass
+
+
+class PyTransit_Transit(AbstractModel):
+    model_class = 'transit'
+    unitary_model = True
 
     default_bounds = {}
     default_spaces = {}
@@ -15,12 +22,14 @@ class RossiterMcLaughling_Ohta(AbstractModel):
 
     def __init__(self, *args, **kwargs):
 
-        super(RossiterMcLaughling_Ohta, self).__init__(*args, **kwargs)
+        super(PyTransit_Transit, self).__init__(*args, **kwargs)
 
         try:
-            from PyAstronomy import modelSuite as PyAstroModelSuite
+            from pytransit import QuadraticModel
+            from pytransit import RoadRunnerModel
+            from pytransit import QPower2Model
         except ImportError:
-            print("ERROR: PyAstronomy not installed, this will not work")
+            print("ERROR: PyTransit not installed, this will not work")
             quit()
 
         # Must be moved here because it will updated depending on the selected limb darkening
@@ -29,22 +38,28 @@ class RossiterMcLaughling_Ohta(AbstractModel):
             'e',  # eccentricity, uniform prior
             'o',  # argument of pericenter (in radians)
             'R',  # planet radius (in units of stellar radii)
-            'o_star', # Sky-projected angle between stellar rotation axis and normal of orbit plane [deg]
-            'i_star', # Inclination of the star
-            'v_sini' # projected rotational velocity of the star
         }
+        self.list_pams_dataset = {}
 
-        self.list_pams_dataset = {
-            'ld_c1', #linear limb darkening
-        }
-
+        self.pytransit_ldvars = {}
+        self.ld_ncoeff = 2
         self.parametrization = 'Standard'
-        self.orbit = 'circular'
+
         self.use_semimajor_axis = False
         self.use_inclination = False
         self.use_time_of_transit = False
+        #self.nthreads = 1
 
-        self.rm_ohta = None
+        #self.transittype = 'primary'
+        #self.batman_params = None
+        self.pytransit_models = {}
+        self.pytransit_plot = {}
+        self.pytransit_options = {}
+
+        self.limb_darkening_model = None
+
+        self.retrieve_ai = None
+        self.retrieve_t0 = None
         self.multivariate_mass_radius = False
 
     def initialize_model(self, mc, **kwargs):
@@ -65,7 +80,6 @@ class RossiterMcLaughling_Ohta(AbstractModel):
             else:
                 """ rho is the density of the star (in solar units) """
                 self.list_pams_common.update({'rho': None})
-                self.list_pams_common.update({'radius': None})
                 self.multivariate_mass_radius = False
 
         if mc.common_models[self.planet_ref].use_inclination:
@@ -106,17 +120,65 @@ class RossiterMcLaughling_Ohta(AbstractModel):
         else:
             self.retrieve_t0 = self._internal_transformation_mod05
 
-        """ Depending if the orbit is circular or not, a different function
-            is selected
-        """
-        if mc.common_models[self.planet_ref].orbit == 'circular':
-            self.orbit = 'circular'
-            self.rm_ohta = PyAstroModelSuite.RmcL()
-        else:
-            self.orbit = 'keplerian'
-            self.rm_ohta = PyAstroModelSuite.RmcLell()
+        """ Setting up the limb darkening calculation"""
 
+        self.limb_darkening_model = kwargs['limb_darkening_model']
+        self.ld_vars = [0.00] * kwargs['limb_darkening_ncoeff']
+        for i_coeff in range(1, kwargs['limb_darkening_ncoeff'] + 1):
+            var = 'ld_c' + repr(i_coeff)
+            self.pytransit_ldvars[var] = i_coeff - 1
+            self.list_pams_common.update({var: None})
 
+    def setup_dataset(self, mc, dataset, **kwargs):
+
+        supersample_names = ['supersample_factor',
+                             'supersample',
+                             'supersampling',
+                             'oversample_factor',
+                             'oversample',
+                             'oversampling',
+                             'sample_factor',
+                             'sample',
+                             'sampling'
+                             'nsample_factor',
+                             'nsample',
+                             'nsampling'
+                             ]
+
+        sample_factor = 1
+        exposure_time = 0.01
+
+        for dict_name in supersample_names:
+            if kwargs[dataset.name_ref].get(dict_name, False):
+                sample_factor = kwargs[dataset.name_ref][dict_name]
+            elif kwargs.get(dict_name, False):
+                sample_factor = kwargs[dict_name]
+
+        exptime_names = ['exposure_time',
+                         'exposure',
+                         'exp_time',
+                         'exptime',
+                         'obs_duration',
+                         'integration',
+                         ]
+
+        for dict_name in exptime_names:
+            if kwargs[dataset.name_ref].get(dict_name, False):
+                exposure_time = kwargs[dataset.name_ref][dict_name]
+            elif kwargs.get(dict_name, False):
+                exposure_time = kwargs[dict_name]
+
+        self.pytransit_options[dataset.name_ref] = {
+            'sample_factor': sample_factor,
+            'exp_time': exposure_time,
+        }
+
+        if self.limb_darkening_model == 'quadratic':
+            self.pytransit_models[dataset.name_ref] = QuadraticModel()
+            self.pytransit_plot[dataset.name_ref] = QuadraticModel()
+
+        self.pytransit_models[dataset.name_ref].set_data(
+            dataset.x0, exptimes=exposure_time, nsamples=sample_factor)
 
     def compute(self, variable_value, dataset, x0_input=None):
         """
@@ -125,60 +187,31 @@ class RossiterMcLaughling_Ohta(AbstractModel):
         :param x0_input:
         :return:
         """
-        #t1_start = process_time()
 
-        var_a, var_i = self.retrieve_ai(variable_value)
-        var_tc = self.retrieve_t0(variable_value, dataset.Tref)
+        pams_a, pams_i = self.retrieve_ai(variable_value)
+        pams_t0 = self.retrieve_t0(variable_value, dataset.Tref)
 
-        var_omega = variable_value['o'] * (180. / np.pi)
-
-
-        Omega = variable_value['v_sini'] / (variable_value['radius'] * constants.Rsun) / np.cos(variable_value['i_star']/180.*np.pi)
-
-        if self.orbit == 'circular':
-            self.rm_ohta.assignValue({"a": var_a, 
-                            "lambda": variable_value['o_star'], 
-                            "epsilon": variable_value['ld_c1'],
-                            "P": variable_value['P'],
-                            "T0": var_tc, 
-                            "i": var_i/180.*np.pi,
-                            "Is": variable_value['i_star']/180.*np.pi, 
-                            "Omega": Omega, 
-                            "gamma": variable_value['R']})
-        else:
-
-            if self.use_time_of_transit:
-                Tperi  = kepler_exo.kepler_Tc2Tperi_Tref(variable_value['P'],
-                                                         var_tc,
-                                                         variable_value['e'],
-                                                         variable_value['o'])
-            else:
-                Tperi  = kepler_exo.kepler_phase2Tperi_Tref(variable_value['P'],
-                                                         variable_value['f'],
-                                                         variable_value['e'],
-                                                         variable_value['o'])
-
-            self.rm_ohta.assignValue({"a": var_a,
-                "lambda": variable_value['o_star'],
-                "epsilon": variable_value['ld_c1'],
-                "P": variable_value['P'],
-                "tau": Tperi,
-                "i": variable_value['i']/180.*np.pi,
-                "w": variable_value['o']-np.pi,
-                "e":variable_value['e'],
-                "Is": variable_value['i_star']/180.*np.pi,
-                "Omega": Omega,
-                "gamma": variable_value['R']})
-
+        for var, i_var in self.pytransit_ldvars.items():
+            self.ld_vars[i_var] = variable_value[var]
 
         if x0_input is None:
-            return self.rm_ohta(time) * variable_value['radius'] * constants.Rsun * 1000.
-        else:
-            return self.rm_ohta(x0_input) * variable_value['radius'] * constants.Rsun * 1000.
+            return self.pytransit_models[dataset.name_ref].evaluate_ps(
+                variable_value['R'],
+                self.ld_vars,
+                pams_t0, variable_value['P'], pams_a, pams_i, variable_value['e'], variable_value['o']) - 1.
 
-    """ function for internal transformation of variables, to avoid if calls
-        copied & past from PyTransit_Transit class
-    """
+        else:
+            self.pytransit_plot[dataset.name_ref].set_data(x0_input,
+                                                           exptimes=self.pytransit_options[dataset.name_ref]['exp_time'],
+                                                           nsamples=self.pytransit_options[dataset.name_ref]['sample_factor'])
+
+            return self.pytransit_plot[dataset.name_ref].evaluate_ps(
+                variable_value['R'],
+                self.ld_vars,
+                pams_t0, variable_value['P'], pams_a, pams_i, variable_value['e'], variable_value['o']) - 1.
+
+
+    """ function for internal transformation of variables, to avoid if calls"""
     def _internal_transformation_mod00(self, variable_value):
         """ this function transforms b and rho to i and a  """
         a = convert_rho_to_a(variable_value['P'], variable_value['rho'])

@@ -1,4 +1,4 @@
-from pyorbit.classes.common import *
+from pyorbit.subroutines.common import *
 from pyorbit.common.abstract_common import *
 
 class CommonJitter(AbstractCommon):

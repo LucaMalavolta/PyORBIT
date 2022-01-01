@@ -1,4 +1,4 @@
-from pyorbit.classes.common import np, nested_sampling_prior_compute
+from pyorbit.subroutines.common import np, nested_sampling_prior_compute
 from pyorbit.classes.model_container_abstract import ModelContainer
 
 

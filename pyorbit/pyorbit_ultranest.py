@@ -1,12 +1,11 @@
 from __future__ import print_function
-#from pyorbit.classes.common import *
 from pyorbit.classes.model_container_ultranest import ModelContainerUltranest
-from pyorbit.classes.input_parser import yaml_parser, pars_input
-from pyorbit.classes.io_subroutines import nested_sampling_save_to_cpickle, \
+from pyorbit.subroutines.input_parser import yaml_parser, pars_input
+from pyorbit.subroutines.io_subroutines import nested_sampling_save_to_cpickle, \
     nested_sampling_load_from_cpickle, nested_sampling_create_dummy_file, \
     ultranest_sampler_save_to_cpickle, ultranest_sampler_load_from_cpickle
 
-import pyorbit.classes.results_analysis as results_analysis
+import pyorbit.subroutines.results_analysis as results_analysis
 import os
 import sys
 import re

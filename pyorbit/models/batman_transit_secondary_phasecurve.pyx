@@ -1,7 +1,7 @@
 
-from pyorbit.classes.common import np, convert_rho_to_a, convert_b_to_i
-import pyorbit.classes.constants as constants
-import pyorbit.classes.kepler_exo as kepler_exo
+from pyorbit.subroutines.common import np, convert_rho_to_a, convert_b_to_i
+import pyorbit.subroutines.constants as constants
+import pyorbit.subroutines.kepler_exo as kepler_exo
 from pyorbit.models.abstract_model import AbstractModel
 
 #from time import process_time
@@ -14,12 +14,6 @@ except ImportError:
 class Batman_Transit_Eclipse_PhaseCurve(AbstractModel):
     model_class = 'transit_eclipse_phasecurve'
     unitary_model = True
-
-    default_bounds = {}
-    default_spaces = {}
-    default_priors = {}
-
-    recenter_pams_dataset = {}
 
     def __init__(self, *args, **kwargs):
 

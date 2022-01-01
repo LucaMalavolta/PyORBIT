@@ -5,7 +5,7 @@ import yaml
 import copy
 from scipy.stats import gaussian_kde, multivariate_normal
 
-from pyorbit.classes.common import np, get_2darray_from_val
+from pyorbit.subroutines.common import np, get_2darray_from_val
 
 from pyorbit.common.planets import CommonPlanets
 from pyorbit.common.activity import CommonActivity

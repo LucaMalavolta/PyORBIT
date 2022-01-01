@@ -1,9 +1,9 @@
 import sys
 #sys.path.insert(0, '/Users/malavolta/Astro/CODE/PyORBIT/')
 
-from pyorbit.classes.common import np
+from pyorbit.subroutines.common import np
 from scipy.optimize import fsolve, newton
-import pyorbit.classes.constants as constants
+import pyorbit.subroutines.constants as constants
 
 # +
 # NAME:

@@ -1,13 +1,13 @@
-from pyorbit.classes.common import np
-from pyorbit.classes.common import get_var_exp, get_var_log
-from pyorbit.classes.common import get_var_exp_base2, get_var_log_base2
-from pyorbit.classes.common import get_var_exp_base10, get_var_log_base10
-from pyorbit.classes.common import get_var_exp_natural, get_var_log_natural
-from pyorbit.classes.common import get_var_val
-from pyorbit.classes.common import get_fix_val
-from pyorbit.classes.common import get_2darray_from_val
-from pyorbit.classes.common import giveback_priors
-from pyorbit.classes.common import nested_sampling_prior_prepare
+from pyorbit.subroutines.common import np
+from pyorbit.subroutines.common import get_var_exp, get_var_log
+from pyorbit.subroutines.common import get_var_exp_base2, get_var_log_base2
+from pyorbit.subroutines.common import get_var_exp_base10, get_var_log_base10
+from pyorbit.subroutines.common import get_var_exp_natural, get_var_log_natural
+from pyorbit.subroutines.common import get_var_val
+from pyorbit.subroutines.common import get_fix_val
+from pyorbit.subroutines.common import get_2darray_from_val
+from pyorbit.subroutines.common import giveback_priors
+from pyorbit.subroutines.common import nested_sampling_prior_prepare
 
 
 class AbstractCommon(object):

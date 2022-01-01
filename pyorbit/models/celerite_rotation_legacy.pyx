@@ -1,13 +1,4 @@
-from pyorbit.classes.common import np, dummy_import_4args
 from pyorbit.models.abstract_model import AbstractModel
-
-try:
-    import celerite
-    #import autograd.numpy as np
-    from celerite.terms import Term
-except:
-    #import numpy as np
-    Term = dummy_import_4args
 
 # This class was written by Daniel Foreman-Mackey for his paper:
 # https://github.com/dfm/celerite/blob/master/paper/figures/rotation/rotation.ipynb
@@ -58,33 +49,32 @@ class Celerite_Rotation_Legacy(AbstractModel):
             primary. This should probably always be ``0 < mix < 1``.
     """
 
-    internal_likelihood = True
-
     model_class = 'celerite_rotation_legacy'
-
-    list_pams_common = {
-        'Prot',  # Rotational period of the star
-        'Pdec',
-        'cel_factor',
-    }
-
-    list_pams_dataset = {
-        'Hamp',
-    }
-
-    recenter_pams_dataset = {}
-
-    n_pams = 4
+    internal_likelihood = True
 
     def __init__(self, *args, **kwargs):
         super(Celerite_Rotation_Legacy, self).__init__(*args, **kwargs)
-        self.gp = {}
 
         try:
             import celerite
         except:
             print("ERROR: celerite not installed, this will not work")
             quit()
+
+
+        self.list_pams_common = {
+            'Prot',  # Rotational period of the star
+            'Pdec',
+            'cel_factor',
+        }
+
+        self.list_pams_dataset = {
+            'Hamp',
+        }
+
+        self.n_pams = 4
+        self.gp = {}
+
 
     def convert_val2gp(self, input_pams):
         """

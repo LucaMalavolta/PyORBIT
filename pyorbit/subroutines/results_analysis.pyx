@@ -1,7 +1,7 @@
 from __future__ import print_function
-from pyorbit.classes.common import *
-import pyorbit.classes.constants as constants
-import pyorbit.classes.kepler_exo as kepler_exo
+from pyorbit.subroutines.common import *
+import pyorbit.subroutines.constants as constants
+import pyorbit.subroutines.kepler_exo as kepler_exo
 
 from tqdm import tqdm
 

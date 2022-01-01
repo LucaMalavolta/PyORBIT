@@ -1,4 +1,4 @@
-from pyorbit.classes.common import \
+from pyorbit.subroutines.common import \
     np,\
     get_var_exp,\
     get_var_val,\
@@ -7,10 +7,10 @@ from pyorbit.classes.common import \
     giveback_priors,\
     nested_sampling_prior_prepare
 
-from pyorbit.classes.common import get_var_exp, get_var_log
-from pyorbit.classes.common import get_var_exp_base2, get_var_log_base2
-from pyorbit.classes.common import get_var_exp_base10, get_var_log_base10
-from pyorbit.classes.common import get_var_exp_natural, get_var_log_natural
+from pyorbit.subroutines.common import get_var_exp, get_var_log
+from pyorbit.subroutines.common import get_var_exp_base2, get_var_log_base2
+from pyorbit.subroutines.common import get_var_exp_base10, get_var_log_base10
+from pyorbit.subroutines.common import get_var_exp_natural, get_var_log_natural
 
 class AbstractModel(object):
     """
@@ -21,6 +21,7 @@ class AbstractModel(object):
 
     unitary_model = False
     normalization_model = False
+    recenter_pams_dataset = {}
 
     def __init__(self, model_name, common_ref):
         self.model_name = model_name

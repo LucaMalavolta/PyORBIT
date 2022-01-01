@@ -1,13 +1,13 @@
 from __future__ import print_function
 #from pyorbit.classes.common import *
 from pyorbit.classes.model_container_dynesty import ModelContainerDynesty
-from pyorbit.classes.input_parser import yaml_parser, pars_input
-from pyorbit.classes.io_subroutines import nested_sampling_save_to_cpickle, \
+from pyorbit.subroutines.input_parser import yaml_parser, pars_input
+from pyorbit.subroutines.io_subroutines import nested_sampling_save_to_cpickle, \
     nested_sampling_load_from_cpickle, nested_sampling_create_dummy_file, \
     dynesty_results_save_to_cpickle, dynesty_results_load_from_cpickle, \
     dynesty_results_maxevidence_save_to_cpickle, dynesty_results_maxevidence_load_from_cpickle
 
-import pyorbit.classes.results_analysis as results_analysis
+import pyorbit.subroutines.results_analysis as results_analysis
 import os
 import sys
 import argparse

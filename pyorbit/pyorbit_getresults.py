@@ -1,13 +1,13 @@
 from __future__ import print_function
 
-from pyorbit.classes.common import *
+from pyorbit.subroutines.common import *
 from matplotlib import pyplot as plt
 import matplotlib.gridspec as gridspec
 from matplotlib.ticker import AutoMinorLocator
 import corner
-import pyorbit.classes.kepler_exo as kepler_exo
-import pyorbit.classes.common as common
-import pyorbit.classes.results_analysis as results_analysis
+import pyorbit.subroutines.kepler_exo as kepler_exo
+import pyorbit.subroutines.common as common
+import pyorbit.subroutines.results_analysis as results_analysis
 import h5py
 import csv
 import re
@@ -16,8 +16,8 @@ from pyorbit.classes.model_container_polychord import ModelContainerPolyChord
 from pyorbit.classes.model_container_emcee import ModelContainerEmcee
 from pyorbit.classes.model_container_zeus import ModelContainerZeus
 
-from pyorbit.classes.input_parser import pars_input
-from pyorbit.classes.io_subroutines import *
+from pyorbit.subroutines.input_parser import pars_input
+from pyorbit.subroutines.io_subroutines import *
 import numpy as np
 import os
 import matplotlib as mpl

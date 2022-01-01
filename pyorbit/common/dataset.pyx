@@ -1,4 +1,4 @@
-from pyorbit.classes.common import np
+from pyorbit.subroutines.common import np
 from pyorbit.common.abstract_common import AbstractCommon
 
 # Trying to guess all the possible mistakes....

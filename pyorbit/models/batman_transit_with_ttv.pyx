@@ -1,6 +1,6 @@
-from pyorbit.classes.common import np, convert_rho_to_a, convert_b_to_i
-import pyorbit.classes.constants as constants
-import pyorbit.classes.kepler_exo as kepler_exo
+from pyorbit.subroutines.common import np, convert_rho_to_a, convert_b_to_i
+import pyorbit.subroutines.constants as constants
+import pyorbit.subroutines.kepler_exo as kepler_exo
 from pyorbit.models.abstract_model import AbstractModel
 
 try:
@@ -11,8 +11,6 @@ except ImportError:
 class Batman_Transit_With_TTV(AbstractModel):
     model_class = 'transit'
     unitary_model = True
-
-    recenter_pams_dataset = {}
 
     def __init__(self, *args, **kwargs):
         super(Batman_Transit_With_TTV, self).__init__(*args, **kwargs)

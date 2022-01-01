@@ -1,6 +1,6 @@
-from pyorbit.classes.common import *
+from pyorbit.subroutines.common import *
 from pyorbit.models.abstract_model import *
-import pyorbit.classes.kepler_exo as kepler_exo
+import pyorbit.subroutines.kepler_exo as kepler_exo
 
 """
 New changes:

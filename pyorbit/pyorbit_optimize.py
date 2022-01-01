@@ -1,9 +1,9 @@
 from __future__ import print_function
-from pyorbit.classes.common import *
+from pyorbit.subroutines.common import *
 from pyorbit.classes.model_container_optimize import ModelContainerOptimize
-from pyorbit.classes.input_parser import yaml_parser, pars_input
-from pyorbit.classes.io_subroutines import starting_point_load_from_cpickle, starting_point_save_to_cpickle
-import pyorbit.classes.results_analysis as results_analysis
+from pyorbit.subroutines.input_parser import yaml_parser, pars_input
+from pyorbit.subroutines.io_subroutines import starting_point_load_from_cpickle, starting_point_save_to_cpickle
+import pyorbit.subroutines.results_analysis as results_analysis
 from scipy import optimize
 import os
 

@@ -1,4 +1,4 @@
-from pyorbit.classes.common import \
+from pyorbit.subroutines.common import \
     get_var_val,\
     get_2var_c1,\
     get_2var_c2,\

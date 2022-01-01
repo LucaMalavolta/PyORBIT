@@ -1,12 +1,12 @@
 from __future__ import print_function
-from pyorbit.classes.common import np
+from pyorbit.subroutines.common import np
 from pyorbit.classes.model_container_zeus import ModelContainerZeus
-from pyorbit.classes.input_parser import yaml_parser, pars_input
-from pyorbit.classes.io_subroutines import pyde_save_to_pickle,\
+from pyorbit.subroutines.input_parser import yaml_parser, pars_input
+from pyorbit.subroutines.io_subroutines import pyde_save_to_pickle,\
     pyde_load_from_cpickle,\
     zeus_save_to_cpickle, zeus_load_from_cpickle, zeus_flatchain,\
     zeus_create_dummy_file, starting_point_load_from_cpickle, zeus_simpler_load_from_cpickle
-import pyorbit.classes.results_analysis as results_analysis
+import pyorbit.subroutines.results_analysis as results_analysis
 import os
 import sys
 import multiprocessing
