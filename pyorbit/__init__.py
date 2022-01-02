@@ -1,13 +1,14 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from .pyorbit_emcee import *
-from .pyorbit_zeus import *
-from .pyorbit_optimize import *
-from .pyorbit_polychord import *
-from .pyorbit_multinest import *
-from .pyorbit_dynesty import *
-from .pyorbit_ultranest import *
-from .pyorbit_getresults import *
+from .model_definitions import *
+from .samplers.pyorbit_emcee import *
+from .samplers.pyorbit_zeus import *
+from .samplers.pyorbit_optimize import *
+from .samplers.pyorbit_polychord import *
+from .samplers.pyorbit_dynesty import *
+from .samplers.pyorbit_ultranest import *
+from .samplers.pyorbit_multinest import *
+from .samplers.pyorbit_getresults import *
 
-__version__ = "8.3"
+__version__ = "9.0b"

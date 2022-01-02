@@ -39,7 +39,6 @@ class Celerite2_Matern32(AbstractModel):
 
         try:
             import celerite2
-            from celerite2 import terms
         except:
             print("ERROR: celerite not installed, this will not work")
             quit()

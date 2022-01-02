@@ -190,7 +190,8 @@ class Batman_Transit(AbstractModel):
         :return:
         """
         #t1_start = process_time()
-
+        print(variable_value)
+        quit()
         if getattr(self, 'multivariate_mass_radius', False):
             variable_value['rho'] = variable_value['mass'] / variable_value['radius']**3
 

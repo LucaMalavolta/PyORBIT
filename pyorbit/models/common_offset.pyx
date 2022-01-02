@@ -1,5 +1,6 @@
 from pyorbit.models.abstract_model import *
 
+
 class Offset(AbstractModel):
 
     model_class = 'common_offset'
@@ -32,12 +33,10 @@ class Offset(AbstractModel):
                              np.min(dataset.y) - 100.)
             max_offset = max(mc.common_models[self.common_offset_ref].default_bounds['offset'][1],
                              np.max(dataset.y) + 100.)
-        mc.common_models[self.common_offset_ref].default_bounds['offset'] = [min_offset, max_offset]
+        mc.common_models[self.common_offset_ref].default_bounds['offset'] = [
+            min_offset, max_offset]
         dataset.shutdown_offset()
         return
 
     def compute(self, variable_value, dataset, x0_input=None):
         return variable_value['offset']
-
-
-

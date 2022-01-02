@@ -348,8 +348,7 @@ class ModelContainer(object):
                 the joined dataset"""
                 if hasattr(self.models[logchi2_gp_model], 'delayed_lnlk_computation'):
 
-                    self.models[logchi2_gp_model].add_internal_dataset(variable_values, dataset,
-                                                                       reset_status=delayed_lnlk_computation)
+                    self.models[logchi2_gp_model].add_internal_dataset(variable_values, dataset)
                     delayed_lnlk_computation.append(logchi2_gp_model)
                 else:
                     log_likelihood += self.models[logchi2_gp_model].lnlk_compute(

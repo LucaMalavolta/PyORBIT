@@ -12,9 +12,6 @@ class DilutionFactor(AbstractModel):
 
     recenter_pams_dataset = {}
 
-    # TODO: check if this dictionary is still required
-    unitary_array = {}
-
     def compute(self, variable_value, dataset, x0_input=None):
         """
 
@@ -54,8 +51,6 @@ class LocalDilutionFactor(AbstractModel):
 
     recenter_pams_dataset = {}
 
-    # TODO: check if this dictionary is still required
-    unitary_array = {}
 
     def compute(self, variable_value, dataset, x0_input=None):
         """
