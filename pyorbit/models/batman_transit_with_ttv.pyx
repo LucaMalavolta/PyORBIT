@@ -8,6 +8,7 @@ try:
 except ImportError:
     pass
 
+
 class Batman_Transit_With_TTV(AbstractModel):
     model_class = 'transit'
     unitary_model = True

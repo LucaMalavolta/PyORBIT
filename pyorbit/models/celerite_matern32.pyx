@@ -1,5 +1,10 @@
 from pyorbit.models.abstract_model import AbstractModel
 
+try:
+    import celerite
+except ImportError:
+    pass
+
 
 class Celerite_Matern32(AbstractModel):
 

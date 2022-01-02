@@ -7,20 +7,6 @@ import pyorbit.subroutines.constants as constants
 
 import numpy as np
 
-class dummy_import(object):
-    pyorbit_dummy = True
-
-    def __init__(self):
-        pass
-
-
-class dummy_import_4args(object):
-    pyorbit_dummy = True
-
-    def __init__(self, a, b, c):
-        pass
-
-
 try:
     if os.path.isdir('/Users/malavolta/Astro/CODE/others/trades'):
         sys.path.insert(0, '/Users/malavolta/Astro/CODE/others/trades/pytrades/')

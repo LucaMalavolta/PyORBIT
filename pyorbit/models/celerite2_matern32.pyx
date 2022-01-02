@@ -1,13 +1,11 @@
-from pyorbit.subroutines.common import np, dummy_import_4args
+from pyorbit.subroutines.common import np
 from pyorbit.models.abstract_model import AbstractModel
 
 try:
     import celerite2
-    #import autograd.numpy as np
     from celerite2 import terms
 except ImportError:
-    #import numpy as np
-    terms = dummy_import_4args
+    pass
 
 
 class Celerite2_Matern32(AbstractModel):
@@ -40,7 +38,8 @@ class Celerite2_Matern32(AbstractModel):
         self.gp = {}
 
         try:
-            import celerite
+            import celerite2
+            from celerite2 import terms
         except:
             print("ERROR: celerite not installed, this will not work")
             quit()

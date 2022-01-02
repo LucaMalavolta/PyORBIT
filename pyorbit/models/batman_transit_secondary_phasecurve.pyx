@@ -4,12 +4,11 @@ import pyorbit.subroutines.constants as constants
 import pyorbit.subroutines.kepler_exo as kepler_exo
 from pyorbit.models.abstract_model import AbstractModel
 
-#from time import process_time
-
 try:
     import batman
 except ImportError:
     pass
+
 
 class Batman_Transit_Eclipse_PhaseCurve(AbstractModel):
     model_class = 'transit_eclipse_phasecurve'

@@ -62,7 +62,6 @@ from pyorbit.models.celerite2_matern32_linear import Celerite2_Matern32_Linear
 
 from pyorbit.models.celerite_rotation import Celerite_Rotation
 from pyorbit.models.celerite_rotation_linear import Celerite_Rotation_Linear
-from pyorbit.models.celerite_rotation_legacy import Celerite_Rotation_Legacy
 from pyorbit.models.celerite_matern32 import Celerite_Matern32
 from pyorbit.models.celerite_matern32_common import Celerite_Matern32_Common
 
@@ -147,7 +146,6 @@ define_type_to_class = {
     'celerite_matern32_common': Celerite_Matern32_Common,
     'celerite_rotation': Celerite_Rotation,
     'celerite_rotation_linear': Celerite_Rotation_Linear,
-    'celerite_rotation_legacy': Celerite_Rotation_Legacy,
     'local_correlation': LocalCorrelation,
     'polynomial_trend': PolynomialTrend,
     'local_polynomial_trend': LocalPolynomialTrend,

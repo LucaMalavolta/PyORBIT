@@ -4,6 +4,11 @@ import pyorbit.subroutines.constants as constants
 import pyorbit.subroutines.kepler_exo as kepler_exo
 from pyorbit.models.abstract_model import AbstractModel
 
+try:
+    import batman
+except ImportError:
+    pass
+
 
 class Batman_Transit(AbstractModel):
     model_class = 'transit'
@@ -15,7 +20,7 @@ class Batman_Transit(AbstractModel):
         try:
             import batman
         except ImportError:
-            print("ERROR: batman not installed, this will not work")
+            print("ERROR: batman package not installed, this will not work")
             quit()
 
         # Must be moved here because it will updated depending on the selected limb darkening

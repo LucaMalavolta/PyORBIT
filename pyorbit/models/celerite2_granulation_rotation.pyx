@@ -1,13 +1,12 @@
-from pyorbit.subroutines.common import np, dummy_import_4args
+from pyorbit.subroutines.common import np
 from pyorbit.models.abstract_model import AbstractModel
 
 try:
     import celerite2
-    #import autograd.numpy as np
     from celerite2 import terms
 except ImportError:
-    #import numpy as np
-    terms = dummy_import_4args
+    pass
+
 
 class Celerite2_Granulation_Rotation(AbstractModel):
 
@@ -67,6 +66,7 @@ class Celerite2_Granulation_Rotation(AbstractModel):
 
         try:
             import celerite2
+            from celerite2 import terms
         except ImportError:
             print("ERROR: celerite2 not installed, this will not work")
             quit()

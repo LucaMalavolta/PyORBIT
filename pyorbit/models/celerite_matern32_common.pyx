@@ -1,5 +1,10 @@
-from pyorbit.subroutines.common import np, dummy_import_4args
+from pyorbit.subroutines.common import np
 from pyorbit.models.abstract_model import AbstractModel
+
+try:
+    import celerite
+except ImportError:
+    pass
 
 
 class Celerite_Matern32_Common(AbstractModel):

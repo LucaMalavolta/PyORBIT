@@ -1,5 +1,12 @@
-from pyorbit.subroutines.common import np, dummy_import_4args
+from pyorbit.subroutines.common import np
 from pyorbit.models.abstract_model import AbstractModel
+
+try:
+    import celerite2
+    from celerite2 import terms
+except ImportError:
+    pass
+
 
 class Celerite2_Granulation_Rotation_Linear(AbstractModel):
 
