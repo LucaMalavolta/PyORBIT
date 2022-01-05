@@ -387,3 +387,7 @@ def convert_b_to_i(b,e,o,a):
         arccos_argument = [-1. if b < -1. else b for b in arccos_argument]
 
     return np.arccos(arccos_argument)*180./np.pi
+
+
+def conver_RTaAU_to_insol(R, Ts, a_abs):
+    return R**2 * (Ts/constants.Sun_temperature)**4 / a_abs**2 * constants.Sun_constant

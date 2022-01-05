@@ -3,20 +3,19 @@ from pyorbit.subroutines.common import np, convert_rho_to_a, convert_b_to_i
 import pyorbit.subroutines.constants as constants
 import pyorbit.subroutines.kepler_exo as kepler_exo
 from pyorbit.models.abstract_model import AbstractModel
-
-try:
-    import batman
-except ImportError:
-    pass
+from pyorbit.models.abstract_transit import AbstractTransit
 
 
-class Batman_Transit_Eclipse_PhaseCurve(AbstractModel):
-    model_class = 'transit_eclipse_phasecurve'
-    unitary_model = True
+class Batman_Transit_Eclipse_PhaseCurve(AbstractModel, AbstractTransit):
+
 
     def __init__(self, *args, **kwargs):
 
-        super(Batman_Transit_Eclipse_PhaseCurve, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)  # this calls all constructors up to AbstractModel
+        super(AbstractModel, self).__init__(*args, **kwargs)
+
+        self.model_class = 'transit_eclipse_phasecurve'
+        self.unitary_model = True
 
         try:
             import batman
@@ -37,50 +36,20 @@ class Batman_Transit_Eclipse_PhaseCurve(AbstractModel):
             'delta_occ',
         }
 
-        self.batman_ldvars = {}
-        self.ld_ncoeff = 2
-        self.parametrization = 'Standard'
-
-        self.use_semimajor_axis = False
-        self.use_inclination = False
-        self.use_time_of_transit = False
-        self.nthreads = 1
-
         self.batman_params = None
-        self.batman_transit = {}
-        self.batman_eclipse = {}
-        self.batman_options = {
-            'initialization_counter': 1000000
+        self.batman_models = {}
+        self.code_options = {
+            'nthreads': 1,
+            'initialization_counter': 5000
         }
 
     def initialize_model(self, mc, **kwargs):
 
-        if mc.common_models[self.planet_ref].use_semimajor_axis:
-            """ a is the semi-major axis (in units of stellar radii) """
-            self.list_pams_common.update({'a': None})
-            self.use_semimajor_axis = True
-        else:
-            """ rho is the density of the star (in solar units) """
-            self.list_pams_common.update({'rho': None})
-
-        if mc.common_models[self.planet_ref].use_inclination:
-            """ i is the orbital inclination (in degrees) """
-            self.list_pams_common.update({'i': None})
-            self.use_inclination = True
-        else:
-            """ b is the impact parameter """
-            self.list_pams_common.update({'b': None})
-
-        if mc.common_models[self.planet_ref].use_time_of_transit:
-            self.list_pams_common.update({'Tc': None})
-            self.use_time_of_transit = True
-            # Copying the property to the class for faster access
-        else:
-            self.list_pams_common.update({'f': None})
-            # mean longitude = argument of pericenter + mean anomaly at Tref
+        self._prepare_planetary_parameters(mc, **kwargs)
+        self._prepare_limnb_darkening_coefficients(mc, **kwargs)
 
         if hasattr(kwargs, 'nthreads'):
-            self.nthreads = kwargs['nthreads']
+            self.code_options['nthreads'] = kwargs['nthreads']
 
         self.batman_params = batman.TransitParams()
 
@@ -100,12 +69,6 @@ class Batman_Transit_Eclipse_PhaseCurve(AbstractModel):
         """ Setting up the limb darkening calculation"""
 
         self.batman_params.limb_dark = kwargs['limb_darkening_model']
-
-        for i_coeff in range(1, kwargs['limb_darkening_ncoeff'] + 1):
-            var = 'ld_c' + repr(i_coeff)
-            self.batman_ldvars[var] = i_coeff - 1
-            self.list_pams_common.update({var: None})
-
         self.batman_params.u = np.ones(kwargs['limb_darkening_ncoeff'],
                                        dtype=np.double) * 0.1  # limb darkening coefficients
 
@@ -113,63 +76,7 @@ class Batman_Transit_Eclipse_PhaseCurve(AbstractModel):
 
     def setup_dataset(self, mc, dataset, **kwargs):
 
-        self.batman_options[dataset.name_ref] = {}
-
-        supersample_names = ['supersample_factor',
-            'supersample',
-            'supersampling',
-            'oversample_factor',
-            'oversample',
-            'oversampling',
-            'sample_factor',
-            'sample',
-            'sampling'
-            'nsample_factor',
-            'nsample',
-            'nsampling'
-            ]
-
-        sample_factor = 1
-        exposure_time = 30.
-
-        for dict_name in supersample_names:
-            if kwargs[dataset.name_ref].get(dict_name, False):
-                sample_factor = kwargs[dataset.name_ref][dict_name]
-            elif kwargs[dataset.name_ref].get(dict_name, False):
-                sample_factor = kwargs[dict_name]
-
-        exptime_names = ['exposure_time',
-            'exposure',
-            'exp_time',
-            'exptime',
-            'obs_duration',
-            'integration',
-        ]
-
-        for dict_name in exptime_names:
-            if kwargs[dataset.name_ref].get(dict_name, False):
-                exposure_time = kwargs[dataset.name_ref][dict_name]
-            elif kwargs[dataset.name_ref].get(dict_name, False):
-                exposure_time = kwargs[dict_name]
-        
-
-        self.batman_options[dataset.name_ref]['sample_factor'] = sample_factor
-        self.batman_options[dataset.name_ref]['exp_time'] = exposure_time / constants.d2s
-
-        
-        # # OLD code snippet 
-        #try:
-        #    self.batman_options[dataset.name_ref]['sample_factor'] = kwargs[dataset.name_ref]['supersample_factor']
-        #except:
-        #    self.batman_options[dataset.name_ref]['sample_factor'] = kwargs['supersample_factor']
-        #
-        #try:
-        #    self.batman_options[dataset.name_ref]['exp_time'] = kwargs[dataset.name_ref][
-        #        'exposure_time'] / constants.d2s
-        #except:
-        #    self.batman_options[dataset.name_ref]['exp_time'] = kwargs['exposure_time'] / constants.d2s
-        #
-
+        self._prepare_dataset_options(mc, dataset, **kwargs)
 
         self.batman_params.fp = 0.001
         self.batman_params.t_secondary = self.batman_params.t0 + self.batman_params.per / 2.
@@ -179,14 +86,14 @@ class Batman_Transit_Eclipse_PhaseCurve(AbstractModel):
                                 dataset.x0,
                                 supersample_factor=self.batman_options[dataset.name_ref]['sample_factor'],
                                 exp_time=self.batman_options[dataset.name_ref]['exp_time'],
-                                nthreads=self.nthreads)
+                                nthreads=self.code_options['nthreads'])
 
         self.batman_eclipse[dataset.name_ref] = \
             batman.TransitModel(self.batman_params,
                                 dataset.x0,
                                 supersample_factor=self.batman_options[dataset.name_ref]['sample_factor'],
                                 exp_time=self.batman_options[dataset.name_ref]['exp_time'],
-                                nthreads=self.nthreads,
+                                nthreads=self.code_options['nthreads'],
                                 transittype="secondary")
 
     def compute(self, variable_value, dataset, x0_input=None):
@@ -198,30 +105,12 @@ class Batman_Transit_Eclipse_PhaseCurve(AbstractModel):
         """
         #t1_start = process_time()
 
+        pams_a, pams_i = self.retrieve_ai(variable_value)
+        pams_t0 = self.retrieve_t0(variable_value, dataset.Tref)
 
-        if self.use_semimajor_axis:
-            # semi-major axis (in units of stellar radii)
-            self.batman_params.a = variable_value['a']
-        else:
-            self.batman_params.a = convert_rho_to_a(
-                variable_value['P'], variable_value['rho'])
-
-        if self.use_inclination:
-            # orbital inclination (in degrees)
-            self.batman_params.inc = variable_value['i']
-        else:
-            self.batman_params.inc = convert_b_to_i(variable_value['b'],
-                                                    variable_value['e'],
-                                                    variable_value['o'],
-                                                    self.batman_params.a)
-
-        if self.use_time_of_transit:
-            self.batman_params.t0 = variable_value['Tc'] - dataset.Tref
-        else:
-            self.batman_params.t0 = kepler_exo.kepler_phase2Tc_Tref(variable_value['P'],
-                                                                    variable_value['f'],
-                                                                    variable_value['e'],
-                                                                    variable_value['o'])
+        self.batman_params.a = pams_a
+        self.batman_params.inc = pams_i
+        self.batman_params.t0 = pams_t0
 
         self.batman_params.per = variable_value['P']  # orbital period
         # planet radius (in units of stellar radii)
@@ -240,7 +129,7 @@ class Batman_Transit_Eclipse_PhaseCurve(AbstractModel):
         print 'w    ', self.batman_params.w
         print 'u    ', self.batman_params.u
         """
-        for var, i_var in self.batman_ldvars.items():
+        for var, i_var in self.ldvars.items():
             self.batman_params.u[i_var] = variable_value[var]
 
         self.batman_params.fp = variable_value['delta_occ']
@@ -261,14 +150,14 @@ class Batman_Transit_Eclipse_PhaseCurve(AbstractModel):
                                             dataset.x0,
                                             supersample_factor=self.batman_options[dataset.name_ref]['sample_factor'],
                                             exp_time=self.batman_options[dataset.name_ref]['exp_time'],
-                                            nthreads=self.nthreads,
+                                            nthreads=self.code_options['nthreads'],
                                             transittype="secondary")
 
             self.batman_transit[dataset.name_ref] = batman.TransitModel(self.batman_params,
                                                 dataset.x0,
                                                 supersample_factor=self.batman_options[dataset.name_ref]['sample_factor'],
                                                 exp_time=self.batman_options[dataset.name_ref]['exp_time'],
-                                                nthreads=self.nthreads)
+                                                nthreads=self.code_options['nthreads'])
 
         else:
             self.batman_options['initialization_counter'] += 1
@@ -292,14 +181,14 @@ class Batman_Transit_Eclipse_PhaseCurve(AbstractModel):
                                 x0_input,
                                 supersample_factor=self.batman_options[dataset.name_ref]['sample_factor'],
                                 exp_time=self.batman_options[dataset.name_ref]['exp_time'],
-                                nthreads=self.nthreads,
+                                nthreads=self.code_options['nthreads'],
                                 transittype="secondary")
 
             batman_transit = batman.TransitModel(self.batman_params,
                                                 x0_input,
                                                 supersample_factor=self.batman_options[dataset.name_ref]['sample_factor'],
                                                 exp_time=self.batman_options[dataset.name_ref]['exp_time'],
-                                                nthreads=self.nthreads)
+                                                nthreads=self.code_options['nthreads'])
 
             return (batman_eclipse.light_curve(self.batman_params)-1.) * phase_curve \
                 + batman_transit.light_curve(self.batman_params) - 1.

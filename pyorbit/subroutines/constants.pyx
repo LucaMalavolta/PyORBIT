@@ -89,3 +89,7 @@ RjupAU = (Rjup*1.e3)/AU #Jupiter radius in AU
 MJD = 2400000.5 # MJD ref time to convert to JD
 
 rho_Sun = Msun / (4./3.*np.pi* (Rsun*1000.)**3 )
+
+# Used in the computation of the stellar insolation
+Sun_constant = 1367.
+Sun_temperature = 5777.
