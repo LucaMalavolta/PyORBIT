@@ -10,4 +10,4 @@ from .pyorbit_dynesty import *
 from .pyorbit_ultranest import *
 from .pyorbit_getresults import *
 
-__version__ = "8.3"
+__version__ = "8.4"
