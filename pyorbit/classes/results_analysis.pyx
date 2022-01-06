@@ -126,7 +126,7 @@ def results_resumen(mc, theta,
         return returned_samples
 
 
-def get_stellar_parameters(mc, theta, warnings=True):
+def get_stellar_parameters(mc, theta, warnings=True, stellar_ref=None):
     try:
         n_samplings, n_pams = np.shape(theta)
     except:
@@ -134,7 +134,18 @@ def get_stellar_parameters(mc, theta, warnings=True):
         n_pams = np.shape(theta)
 
     "Stellar mass, radius and density are pre-loaded since they are are required by most of the common models"
-    stellar_model = mc.common_models['star_parameters']
+    
+    """
+    #TODO associate to each planet the corresponding stellar parameters
+    """
+    try:
+        stellar_model = mc.common_models[stellar_ref]
+    except:
+        print(' Trying to identify the stellar parameters')
+        for model_name, model_obj in mc.common_models.items():
+            if getattr(model_obj,'model_class', None) == 'star_parameters':
+                stellar_model = mc.common_models[model_name]
+
     stellar_values = stellar_model.convert(theta)
 
     if 'rho' not in stellar_values:
@@ -246,7 +257,6 @@ def get_planet_variables(mc, theta, verbose=False):
         n_samplings, n_pams = np.shape(theta)
     except:
         n_samplings = 1
-    stellar_values = get_stellar_parameters(mc, theta, warnings=False)
 
     planet_variables = {}
 
@@ -255,6 +265,13 @@ def get_planet_variables(mc, theta, verbose=False):
         derived_variables = {}
 
         if common_model.model_class == 'planet':
+
+            stellar_ref = getattr(common_model, 'stellar_ref', None)
+
+            stellar_values = get_stellar_parameters(mc,
+                                                    theta,
+                                                    warnings=False,
+                                                    stellar_ref=stellar_ref)
 
             remove_i = False
             if verbose:
@@ -387,6 +404,16 @@ def get_planet_variables(mc, theta, verbose=False):
                 variable_values['a_AU_(rho,R)'] = convert_ars_to_a(
                     variable_values['a'],
                     stellar_values['radius'])
+            except (KeyError, ValueError):
+                pass
+
+            try:
+                derived_variables['insol(W/m^2]'] = True
+                variable_values['insol(W/m^2]'] = \
+                    stellar_values['radius']**2 \
+                    * (stellar_values['temperature']**4) \
+                    / variable_values['a_AU_(rho,R)']**2 \
+                    *1367.0
             except (KeyError, ValueError):
                 pass
 
@@ -833,6 +860,12 @@ def print_integrated_ACF(sampler_chain, theta_dict, nthin):
         print('Error in computing max integrated ACF, skipped ')
         print()
         return
+
+    if acf_len==0:
+        print('Error in computing integrated ACF, chains too short, skipped ')
+        print()
+        return
+
     c = 5
 
     if n_sam > acf_len*tolerance:

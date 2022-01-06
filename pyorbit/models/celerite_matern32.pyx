@@ -3,10 +3,10 @@ from pyorbit.models.abstract_model import AbstractModel
 
 try:
     import celerite
-    import autograd.numpy as np
+    #import autograd.numpy as np
     from celerite.terms import Term
 except ImportError:
-    import numpy as np
+    #import numpy as np
     Term = dummy_import_4args
 
 
@@ -15,9 +15,9 @@ class Celerite_Matern32(AbstractModel):
     r"""A term that approximates a Matern-3/2 function
 
     Args:
-       log_sigma (float) – The log of the parameter σ.
-       log_rho (float) – The log of the parameter ρ.
-       eps (Optional[float]) – The value of the parameter ϵ. (default: 0.01)
+       log_sigma (float) - The log of the parameter σ.
+       log_rho (float) - The log of the parameter ρ.
+       eps (Optional[float]) - The value of the parameter ϵ. (default: 0.01)
     """
 
     internal_likelihood = True

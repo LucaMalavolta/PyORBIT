@@ -27,7 +27,7 @@ from pyorbit.classes.common import convert_b_to_i
 from pyorbit.classes.common import celerite, pytrades, ttvfast, george, batman
 
 """
-
+import numpy as np
 
 class dummy_import(object):
     pyorbit_dummy = True
@@ -44,16 +44,6 @@ class dummy_import_4args(object):
 
 
 try:
-    import celerite2
-    import autograd.numpy as np
-except ImportError:
-    try:
-        import celerite
-        import autograd.numpy as np
-    except ImportError:
-        import numpy as np
-
-try:
     if os.path.isdir('/Users/malavolta/Astro/CODE/others/trades'):
         sys.path.insert(0, '/Users/malavolta/Astro/CODE/others/trades/pytrades/')
     elif os.path.isdir('/Users/malavolta/Astro/CODE/trades'):
@@ -65,6 +55,7 @@ except:
     pass
 
 
+# old base 2 logarithm
 def get_var_log(var, fix, i):
     if len(np.shape(var)) == 1:
         return np.log2(var[i], dtype=np.double)
@@ -77,6 +68,48 @@ def get_var_exp(var, fix, i):
         return np.exp2(var[i], dtype=np.double)
     else:
         return np.exp2(var[:, i], dtype=np.double)
+
+
+def get_var_log_base2(var, fix, i):
+    if len(np.shape(var)) == 1:
+        return np.log2(var[i], dtype=np.double)
+    else:
+        return np.log2(var[:, i], dtype=np.double)
+
+
+def get_var_exp_base2(var, fix, i):
+    if len(np.shape(var)) == 1:
+        return np.exp2(var[i], dtype=np.double)
+    else:
+        return np.exp2(var[:, i], dtype=np.double)
+
+
+def get_var_log_base10(var, fix, i):
+    if len(np.shape(var)) == 1:
+        return np.log10(var[i], dtype=np.double)
+    else:
+        return np.log10(var[:, i], dtype=np.double)
+
+
+def get_var_exp_base10(var, fix, i):
+    if len(np.shape(var)) == 1:
+        return 10**(var[i])
+    else:
+        return 10**(var[:, i])
+
+
+def get_var_log_natural(var, fix, i):
+    if len(np.shape(var)) == 1:
+        return np.log(var[i], dtype=np.double)
+    else:
+        return np.log(var[:, i], dtype=np.double)
+
+
+def get_var_exp_natural(var, fix, i):
+    if len(np.shape(var)) == 1:
+        return np.exp(var[i], dtype=np.double)
+    else:
+        return np.exp(var[:, i], dtype=np.double)
 
 
 def get_var_val(var, fix, i):
@@ -157,6 +190,17 @@ def get_2darray_from_val(val):
         except:
             out = val
     return out
+
+
+def get_2var_rho(var, fix, i):
+    if len(np.shape(var)) == 1:
+        mass = var[i[0]]
+        radius = var[i[1]]
+    else:
+        mass = var[:, i[0]]
+        radius = var[:, i[1]]
+    return mass/radius**3
+
 
 
 def giveback_priors(kind, bounds, pams, val):

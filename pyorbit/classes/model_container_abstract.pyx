@@ -183,7 +183,31 @@ class ModelContainer(object):
                     if not b <= 1 + R:
                         return False
 
-        """ Step 6 check for overlapping periods (within 2.5% arbitrarily chosen)"""
+                """ Step 6 eclipse depth must be greater than the amplitude of
+                phase variation (during the eclipse we only have the stellar line) """
+                if 'phase_amp' in model.variable_index and 'delta_occ' in model.variable_index:
+                    phase_amp = model.transformation['delta_occ'](theta,
+                                                  model.fixed,
+                                                  model.variable_index['phase_amp'])
+                    delta_occ = model.transformation['delta_occ'](theta,
+                                                  model.fixed,
+                                                  model.variable_index['delta_occ'])
+                    if phase_amp > delta_occ: return False
+
+
+        """ Step 6 eclipse depth must be greater than the amplitude of
+        phase variation (during the eclipse we only have the stellar line) """
+        for dataset_name, dataset in self.dataset_dict.items():
+            if 'phase_amp' in dataset.variable_index and 'delta_occ' in dataset.variable_index:
+                phase_amp = dataset.transformation['delta_occ'](theta,
+                                                dataset.fixed,
+                                                dataset.variable_index['phase_amp'])
+                delta_occ = dataset.transformation['delta_occ'](theta,
+                                                dataset.fixed,
+                                                dataset.variable_index['delta_occ'])
+                if phase_amp > delta_occ: return False
+
+        """ Step 7 check for overlapping periods (within 2.5% arbitrarily chosen)"""
         for i_n, i_v in enumerate(period_storage):
             if i_n == len(period_storage) - 1:
                 break
@@ -192,7 +216,7 @@ class ModelContainer(object):
                 # print()
                 return False
 
-        """ Step 7 check if the planet are ordered"""
+        """ Step 8 check if the planet are ordered"""
         for i_n, i_v in enumerate(period_storage_ordered):
 
             if i_n == len(period_storage_ordered) - 1:

@@ -1,14 +1,6 @@
 from pyorbit.classes.common import np, dummy_import_4args
 from pyorbit.models.abstract_model import AbstractModel
 
-try:
-    import celerite2
-    import autograd.numpy as np
-    from celerite2 import terms
-except ImportError:
-    import numpy as np
-    terms = dummy_import_4args
-
 class Celerite2_Granulation_Rotation_Linear(AbstractModel):
 
     r"""A mixture of two SHO terms that can be used to model stellar rotation

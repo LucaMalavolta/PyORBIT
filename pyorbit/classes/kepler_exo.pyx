@@ -1,5 +1,5 @@
 import sys
-sys.path.insert(0, '/Users/malavolta/Astro/CODE/PyORBIT/')
+#sys.path.insert(0, '/Users/malavolta/Astro/CODE/PyORBIT/')
 
 from pyorbit.classes.common import np
 from scipy.optimize import fsolve, newton
@@ -131,7 +131,7 @@ def kepler_K1(m_star1, m_star2, period, i, e0):
            * (m_star2 * (m_star1 + m_star2) ** (-2. / 3.))
 
 
-def kepler_RV(BJD, TPeri, Period, gamma, K, e0, omega0):
+def kepler_RV(BJD, TPeri, Period, K, e0, omega0):
     # omega = argument of pericenter
     # Mean Anomaly
     #
@@ -153,7 +153,7 @@ def kepler_RV(BJD, TPeri, Period, gamma, K, e0, omega0):
         EccAn = kepler_E(MeAn, e)
         TrAn = 2. * np.arctan(np.sqrt((1.0 + e) / (1.0 - e)) * np.tan(EccAn / 2.0))
 
-    rv = K * (np.cos(TrAn + omega) + e * np.cos(omega)) + gamma
+    rv = K * (np.cos(TrAn + omega) + e * np.cos(omega))
 
     return rv
 
@@ -195,11 +195,26 @@ def kepler_phase2Tc_Tref(Period, phase, e0, omega0):
 
 
 def kepler_Tc2phase_Tref(Period, Tcent , e0, omega0):
-    # The closest Tcent after Tref is given back
     TrAn = np.pi / 2 - omega0
     EccAn = 2. * np.arctan(np.sqrt((1.0 - e0) / (1.0 + e0)) * np.tan(TrAn / 2.0))
     MeAn = EccAn - e0 * np.sin(EccAn)
     return (omega0 + MeAn - Tcent / Period * 2 * np.pi) % (2 * np.pi)
+
+
+def kepler_Tc2Tperi_Tref(Period, Tcent , e0, omega0):
+    # The closest Tcent after Tref is given back
+    TrAn = np.pi / 2 - omega0
+    EccAn = 2. * np.arctan(np.sqrt((1.0 - e0) / (1.0 + e0)) * np.tan(TrAn / 2.0))
+    MeAn = EccAn - e0 * np.sin(EccAn)
+    return Tcent - MeAn/(2*np.pi)*Period
+
+def kepler_phase2Tperi_Tref(Period, phase, e0, omega0):
+    # The closest Tcent after Tref is given back
+    TrAn = np.pi / 2 - omega0
+    EccAn = 2. * np.arctan(np.sqrt((1.0 - e0) / (1.0 + e0)) * np.tan(TrAn / 2.0))
+    MeAn = EccAn - e0 * np.sin(EccAn)
+    Tcent = (MeAn - phase + omega0) / (2 * np.pi) * Period % Period
+    return Tcent - MeAn/(2*np.pi)*Period
 
 
 def f_get_mass(m_star2, m_star1, period, e0, k1):

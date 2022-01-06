@@ -36,7 +36,12 @@ if __name__ == '__main__':
         'common_corner': False,
         'use_getdist': True,
         'veuz_corner_files': False,
-        'P_versus_lnprob': False
+        'P_versus_lnprob': False,
+        'oversampled_models': ['transit',
+                               'eclipse',
+                               'phasecurve',
+                               'eclipse_phasecurve',
+                               'transit_eclipse_phasecurve']
     }
 
     # Moved here from pyorbit_getresults.py fro consistency with PyORBIT_run.py

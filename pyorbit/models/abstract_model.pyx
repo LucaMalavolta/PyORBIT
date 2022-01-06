@@ -7,6 +7,10 @@ from pyorbit.classes.common import \
     giveback_priors,\
     nested_sampling_prior_prepare
 
+from pyorbit.classes.common import get_var_exp, get_var_log
+from pyorbit.classes.common import get_var_exp_base2, get_var_log_base2
+from pyorbit.classes.common import get_var_exp_base10, get_var_log_base10
+from pyorbit.classes.common import get_var_exp_natural, get_var_log_natural
 
 class AbstractModel(object):
     """
@@ -30,6 +34,7 @@ class AbstractModel(object):
             self.common_ref = []
 
         self.planet_ref = common_ref
+        self.stellar_ref = 'star_parameters'
 
         self.variable_sampler = {}
 
@@ -53,7 +58,13 @@ class AbstractModel(object):
         self.default_priors = {}
 
         self.model_conf = None
-        
+
+        self.multivariate_priors = {}
+        self.multivariate_vars = {}
+        self.multivariate_func = {}
+        self.multivariate_med = {}
+        self.multivariate_cov = {}
+
     def initialize_model(self, mc, **kwargs):
         pass
 
@@ -119,8 +130,19 @@ class AbstractModel(object):
                     self.transformation[dataset_name][var] = get_var_val
                     output_lists['bounds'].append(
                         self.bounds[dataset_name][var])
-
-                if self.spaces[dataset_name][var] == 'Logarithmic':
+                elif self.spaces[dataset_name][var] == 'Log_Natural':
+                    self.transformation[dataset_name][var] = get_var_log_natural
+                    output_lists['bounds'].append(
+                        np.log(self.bounds[dataset_name][var]))
+                elif self.spaces[dataset_name][var] == 'Log_Base2':
+                    self.transformation[dataset_name][var] = get_var_exp_base2
+                    output_lists['bounds'].append(
+                        np.log2(self.bounds[dataset_name][var]))
+                elif self.spaces[dataset_name][var] == 'Log_Base10':
+                    self.transformation[dataset_name][var] = get_var_exp_base10
+                    output_lists['bounds'].append(
+                        np.log10(self.bounds[dataset_name][var]))
+                elif self.spaces[dataset_name][var] == 'Logarithmic':
                     self.transformation[dataset_name][var] = get_var_exp
                     output_lists['bounds'].append(
                         np.log2(self.bounds[dataset_name][var]))
@@ -165,7 +187,13 @@ class AbstractModel(object):
 
             if self.spaces[dataset_name][var] == 'Linear':
                 start_converted = self.starts[dataset_name][var]
-            if self.spaces[dataset_name][var] == 'Logarithmic':
+            elif self.spaces[dataset_name][var] == 'Log_Natural':
+                start_converted = np.log(self.starts[dataset_name][var])
+            elif self.spaces[dataset_name][var] == 'Log_Base2':
+                start_converted = np.log2(self.starts[dataset_name][var])
+            elif self.spaces[dataset_name][var] == 'Log_Base10':
+                start_converted = np.log10(self.starts[dataset_name][var])
+            elif self.spaces[dataset_name][var] == 'Logarithmic':
                 start_converted = np.log2(self.starts[dataset_name][var])
             starting_point[self.variable_sampler[dataset_name]
                            [var]] = start_converted
@@ -184,7 +212,28 @@ class AbstractModel(object):
         prior_out = 0.00
         variable_value = self.convert(theta, dataset_name)
 
+
+        """ Preserving backcompatibility with version 8
+        #TODO: to be simplified in the next version
+        """ 
+
+        if getattr(self, 'multivariate_priors', False):
+            if len(set(self.multivariate_vars[dataset_name]) & set(self.list_pams_dataset[dataset_name])) > 0:
+                multi_var = [variable_value[ii] for ii in self.multivariate_vars[dataset_name]]
+                pdf = self.multivariate_func[dataset_name].pdf(multi_var)
+                if pdf > 0:
+                    prior_out += np.log(self.multivariate_func[dataset_name].pdf(multi_var))
+                else:
+                    return -np.inf
+            else: self.multivariate_vars[dataset_name] = []
+        else:
+            self.multivariate_vars = {dataset_name: []}
+
+
         for var in self.list_pams_dataset:
+
+            if var in self.multivariate_vars[dataset_name]: continue
+
             prior_out += giveback_priors(
                 self.prior_kind[dataset_name][var],
                 self.bounds[dataset_name][var],
