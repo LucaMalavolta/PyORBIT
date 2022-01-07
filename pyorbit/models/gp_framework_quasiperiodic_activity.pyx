@@ -191,7 +191,7 @@ class GP_Framework_QuasiPeriodicActivity(AbstractModel):
         Oamp2 = self.internal_variable_value['Oamp']**2
         pi2 = np.pi * np.pi
 
-        phi = 2. * np.pi * dist_t1 / Prot
+        phi = 2. * np.pi * dist_t1 / self.internal_variable_value['Prot']
         sin_phi = np.sin(phi)
 
         framework_GG = np.exp((-(np.sin(phi / 2.)) ** 2.) / (2.0 * Oamp2)) \
@@ -213,6 +213,10 @@ class GP_Framework_QuasiPeriodicActivity(AbstractModel):
         prod_13 = Vc * Bc * framework_GG + Vr * Br * \
             framework_dGdG + (Vc * Br - Vr * Bc) * framework_GdG
         prod_23 = Lc * Bc * framework_GG + Lc * Br * framework_GdG
+        prod_21 = Vc * Lc * framework_GG + Vr * Lc * framework_GdG
+        prod_31 = Vc * Bc * framework_GG + Vr * Br * \
+            framework_dGdG + (- Vc * Br + Vr * Bc) * framework_GdG
+        prod_32 = Lc * Bc * framework_GG - Lc * Br * framework_GdG
 
         k_11 = matrix(prod_11)
         k_22 = matrix(prod_22)
@@ -220,9 +224,9 @@ class GP_Framework_QuasiPeriodicActivity(AbstractModel):
         k_12 = matrix(prod_12)
         k_13 = matrix(prod_13)
         k_23 = matrix(prod_23)
-        k_21 = k_12.T
-        k_31 = k_13.T
-        k_32 = k_23.T
+        k_21 = matrix(prod_21)
+        k_31 = matrix(prod_31)
+        k_32 = matrix(prod_32)
 
         xs = np.size(dist_t1, axis=0)
         ys = np.size(dist_t1, axis=1)
