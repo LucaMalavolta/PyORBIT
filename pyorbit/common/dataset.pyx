@@ -1,19 +1,7 @@
 from pyorbit.subroutines.common import np
 from pyorbit.common.abstract_common import AbstractCommon
+#from pyorbit.model_definitions import datatype_definition
 
-# Trying to guess all the possible mistakes....
-kind_definition = {
-    'RV': ['RV', 'RVs', 'rv', 'rvs'],
-    'Tcent': ['Tcent', 'TCent', 'Tc', 'TC', 'T0', 'TT'],
-    'H-alpha': ['H', 'HA', 'h', 'ha', 'Halpha', 'H-alpha', 'halpha', 'h-alpha'],
-    'Phot': ['P', 'Ph', 'p', 'ph', 'PHOT', 'Phot', 'phot', 'Photometry', 'photometry'],
-    'FWHM': ['FWHM', 'fwhm'],
-    'BIS': ['BIS', 'bis'],
-    'Ca_HK': ['Ca', 'Cahk', 'CaHK', 'Ca_hk', 'Ca_HK',
-              'logR', 'logRhk', 'logRHK', 'logR_hk', 'logR_HK',
-              'log(R)', 'log(Rhk)', 'log(RHK)', 'log(R_hk)', 'log(R_HK)'],
-    'S_index': ['S', 'S_index', 'Shk', 'SHK', 'S_HK', 'S_hk']
-}
 
 
 class Dataset(AbstractCommon):
@@ -22,7 +10,7 @@ class Dataset(AbstractCommon):
 
         super(self.__class__, self).__init__(None)
 
-        for kind_name, kind_list in kind_definition.items():
+        for kind_name, kind_list in datatype_definition.items():
             if kind in kind_list:
                 self.kind = kind_name
                 break

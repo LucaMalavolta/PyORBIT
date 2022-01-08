@@ -31,22 +31,16 @@ __all__ = ["pyorbit_getresults"]
 
 def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
 
+    print(' LaTeX disabled by default')
+    use_tex = False
+    plt.rc('text', usetex=use_tex)
 
-
-    try:
-        use_tex = config_in['parameters']['use_tex']
-    except:
-        use_tex = True
-
-    if use_tex is False:
-        print(' LaTeX disabled')
 
     if plot_dictionary['use_getdist']:
         from getdist import plots, MCSamples
 
     # plt.rc('font', **{'family': 'serif', 'serif': ['Computer Modern Roman']})
     plt.rcParams["font.family"] = "Times New Roman"
-    plt.rc('text', usetex=use_tex)
 
     oversampled_models = plot_dictionary['oversampled_models']
 
@@ -655,8 +649,6 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
                 print(' Ignore the no burn in error warning from getdist')
                 print(' since burn in has been already removed from the chains')
 
-                plt.rc('text', usetex=False)
-
                 samples = MCSamples(samples=corner_plot['samples'], names=corner_plot['labels'],
                                     labels=corner_plot['labels'])
 
@@ -664,6 +656,7 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
                 g.settings.num_plot_contours = 6
                 g.triangle_plot(samples, filled=True)
                 g.export(dir_output + "all_internal_variables_corner_getdist.pdf")
+
             except AttributeError:
                 print(' Something went wrong when plotting the coner plot with GetDist')
                 print(' Please Run PyORBIT_GetResults.py with -dfm flag to get an alternative (slower) corne rplot')
@@ -673,14 +666,12 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
         else:
             # plotting mega-corner plot
             print('Plotting full_correlation plot with Corner')
-            plt.rc('text', usetex=False)
 
             fig = corner.corner(
                 corner_plot['samples'], labels=corner_plot['labels'], truths=corner_plot['truths'])
             fig.savefig(dir_output + "all_internal_variables_corner_dfm.pdf",
                         bbox_inches='tight', dpi=300)
             plt.close(fig)
-            plt.rc('text', usetex=use_tex)
 
         print()
         print('****************************************************************************************************')
@@ -740,7 +731,6 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
 
         print(' Plotting the common models corner plots')
 
-        plt.rc('text', usetex=False)
         for common_name, common_model in mc.common_models.items():
 
             print('     Common model: ', common_name)
@@ -805,6 +795,16 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
 
             for model_name in dataset.models:
 
+                corner_plot = {
+                    'samples': [],
+                    'labels': [],
+                    'truths': []
+                }
+
+
+                print('     Dataset: ', dataset_name, '    model: ',
+                      model_name, ' corner plot  starting ')
+
                 variable_values = dataset.convert(flat_chain)
                 variable_median = dataset.convert(chain_med[:, 0])
 
@@ -819,9 +819,6 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
                 variable_median.update(mc.models[model_name].convert(
                     chain_med[:, 0], dataset_name))
 
-                corner_plot['samples'] = []
-                corner_plot['labels'] = []
-                corner_plot['truths'] = []
                 for var_i, var in enumerate(variable_values):
                     if np.size(variable_values[var]) <= 1:
                         continue
@@ -834,6 +831,7 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
                 fig.savefig(dir_output + dataset_name + '_' + model_name +
                             "_corners.pdf", bbox_inches='tight', dpi=300)
                 plt.close(fig)
+                fig = None
 
                 print('     Dataset: ', dataset_name, '    model: ',
                       model_name, ' corner plot  done ')
@@ -849,6 +847,7 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
 
         samples_dir = dir_output + '/planet_samples/'
         os.system('mkdir -p ' + samples_dir)
+        sys.stdout.flush()
 
         for common_ref, variable_values in planet_variables.items():
             for variable_name, variable in variable_values.items():

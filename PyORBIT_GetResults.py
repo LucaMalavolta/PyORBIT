@@ -44,7 +44,7 @@ if __name__ == '__main__':
                                'transit_eclipse_phasecurve']
     }
 
-    # Moved here from pyorbit_getresults.py fro consistency with PyORBIT_run.py
+    # Moved here from pyorbit_getresults.py for consistency with PyORBIT_run.py
     sampler_keyword = {
         'multinest':['multinest', 'MultiNest', 'multi'],
         'polychord':['polychord', 'PolyChord', 'polychrod', 'poly'],

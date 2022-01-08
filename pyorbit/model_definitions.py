@@ -155,3 +155,17 @@ define_type_to_class = {
 accepted_extensions = ['.yaml', '.yml', '.conf', '.config', '.input', ]
 
 star_properties_list = ['limb_darkening', 'dilution_factor']
+
+# Trying to guess all the possible mistakes....
+datatype_definition = {
+    'RV': ['RV', 'RVs', 'rv', 'rvs'],
+    'Tcent': ['Tcent', 'TCent', 'Tc', 'TC', 'T0', 'TT'],
+    'H-alpha': ['H', 'HA', 'h', 'ha', 'Halpha', 'H-alpha', 'halpha', 'h-alpha'],
+    'Phot': ['P', 'Ph', 'p', 'ph', 'PHOT', 'Phot', 'phot', 'Photometry', 'photometry'],
+    'FWHM': ['FWHM', 'fwhm'],
+    'BIS': ['BIS', 'bis'],
+    'Ca_HK': ['Ca', 'Cahk', 'CaHK', 'Ca_hk', 'Ca_HK',
+              'logR', 'logRhk', 'logRHK', 'logR_hk', 'logR_HK',
+              'log(R)', 'log(Rhk)', 'log(RHK)', 'log(R_hk)', 'log(R_HK)'],
+    'S_index': ['S', 'S_index', 'Shk', 'SHK', 'S_HK', 'S_hk']
+}

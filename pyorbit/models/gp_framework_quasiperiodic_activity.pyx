@@ -165,16 +165,17 @@ class GP_Framework_QuasiPeriodicActivity(AbstractModel):
         return spatial.distance.cdist(X0, X1, lambda u, v: u-v), \
             spatial.distance.cdist(X0, X1, 'sqeuclidean')
 
-    def _compute_cov_matrix(self, add_diagonal_errors=False, bjd0=None, bjd1=None):
+    def _compute_cov_matrix(self, add_diagonal_errors=False, bjd0=None, bjd1=None, return_diag=False):
 
-        if bjd0 is None and bjd1 is None:
+        if bjd0 is None:
             dist_t1 = self._dist_t1
             dist_t2 = self._dist_t2
         else:
-            dist_t1, dist_t2 = self._compute_distance(bjd0, bjd1)
-
-        cov_matrix = np.empty(
-            [np.size(dist_t1, axis=0) * 3, np.size(dist_t1, axis=1) * 3])
+            if return_diag:
+                dist_t1 = bjd0 * 0.
+                dist_t2 = bjd0 * 0.
+            else:
+                dist_t1, dist_t2 = self._compute_distance(bjd0, bjd1)
 
         Vc = self.internal_variable_value['Vc']
         Vr = self.internal_variable_value['Vr']
@@ -209,6 +210,15 @@ class GP_Framework_QuasiPeriodicActivity(AbstractModel):
         prod_11 = Vc ** 2 * framework_GG + Vr ** 2 * framework_dGdG
         prod_22 = Lc ** 2 * framework_GG
         prod_33 = Bc ** 2 * framework_GG + Br ** 2 * framework_dGdG
+
+        if return_diag:
+            xs = np.size(dist_t1, axis=0)
+            cov_diag = np.empty([np.size(dist_t1, axis=0) * 3])
+            cov_diag[:xs] = prod_11
+            cov_diag[xs:2*xs] = prod_22
+            cov_diag[2*xs:] = prod_33
+            return cov_diag
+
         prod_12 = Vc * Lc * framework_GG - Vr * Lc * framework_GdG
         prod_13 = Vc * Bc * framework_GG + Vr * Br * \
             framework_dGdG + (Vc * Br - Vr * Bc) * framework_GdG
@@ -230,6 +240,9 @@ class GP_Framework_QuasiPeriodicActivity(AbstractModel):
 
         xs = np.size(dist_t1, axis=0)
         ys = np.size(dist_t1, axis=1)
+
+        cov_matrix = np.empty(
+            [np.size(dist_t1, axis=0) * 3, np.size(dist_t1, axis=1) * 3])
 
         cov_matrix[:xs, :ys] = k_11
         cov_matrix[:xs, ys:2*ys] = k_12
@@ -290,27 +303,35 @@ class GP_Framework_QuasiPeriodicActivity(AbstractModel):
     def sample_predict(self, dataset, x0_input=None, return_covariance=False, return_variance=False):
 
         if x0_input is None:
-            t_predict = self._3x0
+            t_predict = self._x0
             n_output = self._nx0
         else:
-            t_predict = np.concatenate([x0_input, x0_input, x0_input])
+            t_predict = x0_input
             n_output = np.size(x0_input, axis=0)
 
         cov_matrix = self._compute_cov_matrix(add_diagonal_errors=True)
         Ks = self._compute_cov_matrix(add_diagonal_errors=False,
                                       bjd0=t_predict,
-                                      bjd1=self._3x0)
+                                      bjd1=self._x0)
 
         alpha = cho_solve(cho_factor(cov_matrix), self._3res)
         mu = np.dot(Ks, alpha).flatten()
         (s, d) = np.linalg.slogdet(cov_matrix)
 
+        B = cho_solve(cho_factor(cov_matrix), Ks.T)
+        KsB_dot_diag = np.diag(np.dot(Ks, B))
+
+        B = None
+        Ks = None
+        cov_matrix = None
+
         Kss = self._compute_cov_matrix(add_diagonal_errors=False,
                                        bjd0=t_predict,
-                                       bjd1=t_predict)
+                                       bjd1=t_predict,
+                                       return_diag=True)
+        std = np.sqrt(np.array(Kss - KsB_dot_diag).flatten())
 
-        B = cho_solve(cho_factor(cov_matrix), Ks.T)
-        std = np.sqrt(np.array(np.diag(Kss - np.dot(Ks, B))).flatten())
+        Kss = None
 
         if return_covariance:
             print('Covariance matrix output not implemented - ERROR')

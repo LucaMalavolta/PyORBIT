@@ -611,8 +611,7 @@ def get_model(mc, theta, bjd_dict):
                 mc.models[logchi2_gp_model].convert(theta, dataset.name_ref))
 
             if hasattr(mc.models[logchi2_gp_model], 'delayed_lnlk_computation'):
-                mc.models[logchi2_gp_model].add_internal_dataset(variable_values, dataset,
-                                                                 reset_status=delayed_lnlk_computation)
+                mc.models[logchi2_gp_model].add_internal_dataset(variable_values, dataset)
                 delayed_lnlk_computation[dataset.name_ref] = logchi2_gp_model
 
             else:
@@ -689,9 +688,11 @@ def get_model(mc, theta, bjd_dict):
             here we set it to take 0.5 Gb
         """
         ram_occupancy= (0.5 *  1024**3) / 8
+
+        x0_plot = bjd_dict[dataset_name]['x0_plot']
         x0_len = len(x0_plot)
 
-        if (x0_len * dataset.n) > ram_occupancy:
+        if (6* x0_len * dataset.n * len(delayed_lnlk_computation)**2) > ram_occupancy:
 
             print('     Splitting the plot array to allow GP prediction of extended datasets, it may take a while...')
 
