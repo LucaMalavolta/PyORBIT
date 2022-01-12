@@ -43,7 +43,7 @@ class AbstractTransit(object):
 
         if mc.common_models[self.planet_ref].use_semimajor_axis:
             """ a is the semi-major axis (in units of stellar radii) """
-            self.list_pams_common.update({'a': None})
+            self.list_pams_common.update({'a_Rs': None})
             self.use_semimajor_axis = True
         else:
             if 'mass' in multivariate_vars and 'radius' in multivariate_vars:
@@ -51,7 +51,7 @@ class AbstractTransit(object):
                 self.multivariate_mass_radius = True
             else:
                 """ rho is the density of the star (in solar units) """
-                self.list_pams_common.update({'rho': None})
+                self.list_pams_common.update({'density': None})
                 self.multivariate_mass_radius = False
 
         if mc.common_models[self.planet_ref].use_inclination:
@@ -204,7 +204,7 @@ class AbstractTransit(object):
     """ function for internal transformation of variables, to avoid if calls"""
     def _internal_transformation_mod00(self, variable_value):
         """ this function transforms b and rho to i and a  """
-        a = convert_rho_to_a(variable_value['P'], variable_value['rho'])
+        a = convert_rho_to_a(variable_value['P'], variable_value['density'])
         i = convert_b_to_i(
             variable_value['b'], variable_value['e'], variable_value['o'], a)
         return a, i
@@ -212,17 +212,17 @@ class AbstractTransit(object):
     def _internal_transformation_mod01(self, variable_value):
         """ this function transforms b to i"""
         i = convert_b_to_i(
-            variable_value['b'], variable_value['e'], variable_value['o'], variable_value['a'])
-        return variable_value['a'], i
+            variable_value['b'], variable_value['e'], variable_value['omega'], variable_value['a_Rs'])
+        return variable_value['a_Rs'], i
 
     def _internal_transformation_mod02(self, variable_value):
         """ this function transforms rho to a  """
-        a = convert_rho_to_a(variable_value['P'], variable_value['rho'])
+        a = convert_rho_to_a(variable_value['P'], variable_value['density'])
         return a, variable_value['i']
 
     def _internal_transformation_mod03(self, variable_value):
         """ no transformation needed  """
-        return variable_value['a'], variable_value['i']
+        return variable_value['a_Rs'], variable_value['i']
 
     def _internal_transformation_mod04(self, variable_value, Tref):
         """ this function transforms Tc into Tc- Tref t"""
@@ -231,19 +231,19 @@ class AbstractTransit(object):
     def _internal_transformation_mod05(self, variable_value, Tref):
         """ this function transforms phase into Tc- Tref t"""
         return kepler_exo.kepler_phase2Tc_Tref(variable_value['P'],
-                                               variable_value['f'],
+                                               variable_value['mean_long'],
                                                variable_value['e'],
                                                variable_value['o'])
 
     def _internal_transformation_mod06(self, variable_value):
-        """ this function transforms b, mass, radius to i and a 
+        """ this function transforms b, mass, radius to i and a
             it replaces _internal_transformation_mod00 when mass & radius
             multivariate are used
         """
         rho = variable_value['mass']/variable_value['radius']**3
         a = convert_rho_to_a(variable_value['P'], rho)
         i = convert_b_to_i(
-            variable_value['b'], variable_value['e'], variable_value['o'], a)
+            variable_value['b'], variable_value['e'], variable_value['omega'], a)
         return a, i
 
     def _internal_transformation_mod07(self, variable_value):

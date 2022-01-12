@@ -27,8 +27,8 @@ class RossiterMcLaughling_Ohta(AbstractModel):
         self.list_pams_common = {
             'P',  # Period, log-uniform prior
             'e',  # eccentricity, uniform prior
-            'o',  # argument of pericenter (in radians)
-            'R',  # planet radius (in units of stellar radii)
+            'omega',  # argument of pericenter (in radians)
+            'R_Rs',  # planet radius (in units of stellar radii)
             'o_star', # Sky-projected angle between stellar rotation axis and normal of orbit plane [deg]
             'i_star', # Inclination of the star
             'v_sini' # projected rotational velocity of the star
@@ -56,7 +56,7 @@ class RossiterMcLaughling_Ohta(AbstractModel):
 
         if mc.common_models[self.planet_ref].use_semimajor_axis:
             """ a is the semi-major axis (in units of stellar radii) """
-            self.list_pams_common.update({'a': None})
+            self.list_pams_common.update({'a_Rs': None})
             self.use_semimajor_axis = True
         else:
             if 'mass' in multivariate_vars and 'radius' in multivariate_vars:
@@ -64,7 +64,7 @@ class RossiterMcLaughling_Ohta(AbstractModel):
                 self.multivariate_mass_radius = True
             else:
                 """ rho is the density of the star (in solar units) """
-                self.list_pams_common.update({'rho': None})
+                self.list_pams_common.update({'density': None})
                 self.list_pams_common.update({'radius': None})
                 self.multivariate_mass_radius = False
 
@@ -81,7 +81,7 @@ class RossiterMcLaughling_Ohta(AbstractModel):
             self.use_time_of_transit = True
             # Copying the property to the class for faster access
         else:
-            self.list_pams_common.update({'f': None})
+            self.list_pams_common.update({'mean_long': None})
             # mean longitude = argument of pericenter + mean anomaly at Tref
 
         """ The appropriate function for variable conversion is stored internally
@@ -130,33 +130,33 @@ class RossiterMcLaughling_Ohta(AbstractModel):
         var_a, var_i = self.retrieve_ai(variable_value)
         var_tc = self.retrieve_t0(variable_value, dataset.Tref)
 
-        var_omega = variable_value['o'] * (180. / np.pi)
+        var_omega = variable_value['omega']
 
 
         Omega = variable_value['v_sini'] / (variable_value['radius'] * constants.Rsun) / np.cos(variable_value['i_star']/180.*np.pi)
 
         if self.orbit == 'circular':
-            self.rm_ohta.assignValue({"a": var_a, 
-                            "lambda": variable_value['o_star'], 
+            self.rm_ohta.assignValue({"a": var_a,
+                            "lambda": variable_value['o_star'],
                             "epsilon": variable_value['ld_c1'],
                             "P": variable_value['P'],
-                            "T0": var_tc, 
+                            "T0": var_tc,
                             "i": var_i/180.*np.pi,
-                            "Is": variable_value['i_star']/180.*np.pi, 
-                            "Omega": Omega, 
-                            "gamma": variable_value['R']})
+                            "Is": variable_value['i_star']/180.*np.pi,
+                            "Omega": Omega/180.*np.pi,
+                            "gamma": variable_value['R_Rs']})
         else:
 
             if self.use_time_of_transit:
                 Tperi  = kepler_exo.kepler_Tc2Tperi_Tref(variable_value['P'],
                                                          var_tc,
                                                          variable_value['e'],
-                                                         variable_value['o'])
+                                                         variable_value['omega'])
             else:
                 Tperi  = kepler_exo.kepler_phase2Tperi_Tref(variable_value['P'],
                                                          variable_value['f'],
                                                          variable_value['e'],
-                                                         variable_value['o'])
+                                                         variable_value['omega'])
 
             self.rm_ohta.assignValue({"a": var_a,
                 "lambda": variable_value['o_star'],
@@ -164,15 +164,15 @@ class RossiterMcLaughling_Ohta(AbstractModel):
                 "P": variable_value['P'],
                 "tau": Tperi,
                 "i": variable_value['i']/180.*np.pi,
-                "w": variable_value['o']-np.pi,
+                "w": variable_value['omega']/180.*np.pi-np.pi,
                 "e":variable_value['e'],
                 "Is": variable_value['i_star']/180.*np.pi,
-                "Omega": Omega,
-                "gamma": variable_value['R']})
+                "Omega": Omega/180.*np.pi,
+                "gamma": variable_value['R_Rs']})
 
 
         if x0_input is None:
-            return self.rm_ohta(time) * variable_value['radius'] * constants.Rsun * 1000.
+            return self.rm_ohta(dataset.x0) * variable_value['radius'] * constants.Rsun * 1000.
         else:
             return self.rm_ohta(x0_input) * variable_value['radius'] * constants.Rsun * 1000.
 
@@ -181,25 +181,25 @@ class RossiterMcLaughling_Ohta(AbstractModel):
     """
     def _internal_transformation_mod00(self, variable_value):
         """ this function transforms b and rho to i and a  """
-        a = convert_rho_to_a(variable_value['P'], variable_value['rho'])
+        a = convert_rho_to_a(variable_value['P'], variable_value['density'])
         i = convert_b_to_i(
-            variable_value['b'], variable_value['e'], variable_value['o'], a)
+            variable_value['b'], variable_value['e'], variable_value['omega'], a)
         return a, i
 
     def _internal_transformation_mod01(self, variable_value):
         """ this function transforms b to i"""
         i = convert_b_to_i(
-            variable_value['b'], variable_value['e'], variable_value['o'], variable_value['a'])
-        return variable_value['a'], i
+            variable_value['b'], variable_value['e'], variable_value['o'], variable_value['a_Rs'])
+        return variable_value['a_Rs'], i
 
     def _internal_transformation_mod02(self, variable_value):
         """ this function transforms rho to a  """
-        a = convert_rho_to_a(variable_value['P'], variable_value['rho'])
+        a = convert_rho_to_a(variable_value['P'], variable_value['density'])
         return a, variable_value['i']
 
     def _internal_transformation_mod03(self, variable_value):
         """ no transformation needed  """
-        return variable_value['a'], variable_value['i']
+        return variable_value['a_Rs'], variable_value['i']
 
     def _internal_transformation_mod04(self, variable_value, Tref):
         """ this function transforms Tc into Tc- Tref t"""
@@ -208,19 +208,19 @@ class RossiterMcLaughling_Ohta(AbstractModel):
     def _internal_transformation_mod05(self, variable_value, Tref):
         """ this function transforms Tc into Tc- Tref t"""
         return kepler_exo.kepler_phase2Tc_Tref(variable_value['P'],
-                                               variable_value['f'],
+                                               variable_value['mean_long'],
                                                variable_value['e'],
-                                               variable_value['o'])
+                                               variable_value['omega'])
 
     def _internal_transformation_mod06(self, variable_value):
-        """ this function transforms b, mass, radius to i and a 
+        """ this function transforms b, mass, radius to i and a
             it replaces _internal_transformation_mod00 when mass & radius
             multivariate are used
         """
         rho = variable_value['mass']/variable_value['radius']**3
         a = convert_rho_to_a(variable_value['P'], rho)
         i = convert_b_to_i(
-            variable_value['b'], variable_value['e'], variable_value['o'], a)
+            variable_value['b'], variable_value['e'], variable_value['omega'], a)
         return a, i
 
     def _internal_transformation_mod07(self, variable_value):

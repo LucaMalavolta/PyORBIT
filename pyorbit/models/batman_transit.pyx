@@ -27,8 +27,8 @@ class Batman_Transit(AbstractModel, AbstractTransit):
         self.list_pams_common = {
             'P',  # Period, log-uniform prior
             'e',  # eccentricity, uniform prior
-            'o',  # argument of pericenter (in radians)
-            'R',  # planet radius (in units of stellar radii)
+            'omega',  # argument of pericenter (in radians)
+            'R_Rs',  # planet radius (in units of stellar radii)
         }
         self.list_pams_dataset = {}
 
@@ -94,10 +94,10 @@ class Batman_Transit(AbstractModel, AbstractTransit):
 
         self.batman_params.per = variable_value['P']  # orbital period
         # planet radius (in units of stellar radii)
-        self.batman_params.rp = variable_value['R']
+        self.batman_params.rp = variable_value['R_rs']
         self.batman_params.ecc = variable_value['e']  # eccentricity
         # longitude of periastron (in degrees)
-        self.batman_params.w = variable_value['o'] * (180. / np.pi)
+        self.batman_params.w = variable_value['omega']
 
 
         """
@@ -116,8 +116,8 @@ class Batman_Transit(AbstractModel, AbstractTransit):
         """
         From the batman manual:
         Reinitializing the model is by far the slowest component of batman,because it calculates the optimal step size
-        for the integration starting from a very small value. 
-        -> However, we estimated the optimal step size from random parameters, so at some point we'll need to 
+        for the integration starting from a very small value.
+        -> However, we estimated the optimal step size from random parameters, so at some point we'll need to
         reinitialize the model so that the correct step size is computed.
         """
         if self.code_options['initialization_counter'] > 1000:

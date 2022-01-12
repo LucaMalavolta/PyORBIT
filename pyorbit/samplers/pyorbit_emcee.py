@@ -237,7 +237,7 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
                 population[:, jj] = np.random.normal(val, np.abs(val)*0.0001, size=mc.emcee_parameters['nwalkers'])
             else:
                 population[:, jj] = np.random.uniform(mc.bounds[jj,0], mc.bounds[jj,1], size=mc.emcee_parameters['nwalkers'])
-    
+
         #for ii in range(0, mc.emcee_parameters['nwalkers']):
         #    population[ii, :] = np.random.normal(starting_point, 0.0000001)
        # for ii in range(0, mc.emcee_parameters['nwalkers']):
@@ -261,7 +261,7 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
         if not os.path.exists(mc.pyde_dir_output):
             os.makedirs(mc.pyde_dir_output)
 
-        print('Using threading pool for PyDE:', 
+        print('Using threading pool for PyDE:',
             mc.pyde_parameters['use_threading_pool'])
 
         print('PyDE running')
@@ -364,7 +364,7 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
             sampled += mc.emcee_parameters['nsave']
             theta_dict = results_analysis.get_theta_dictionary(mc)
             emcee_save_to_cpickle(mc, starting_point, population,
-                                  prob, state, sampler, theta_dict, 
+                                  prob, state, sampler, theta_dict,
                                   samples=sampled)
 
             flatchain = emcee_flatchain(
@@ -413,7 +413,7 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
 
         theta_dict = results_analysis.get_theta_dictionary(mc)
         emcee_save_to_cpickle(mc, starting_point, population,
-                              prob, state, sampler, theta_dict, 
+                              prob, state, sampler, theta_dict,
                               samples=sampled)
 
         flatchain = emcee_flatchain(

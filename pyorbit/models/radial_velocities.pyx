@@ -36,7 +36,7 @@ class RVkeplerian(AbstractModel):
             'P',  # Period
             'K',  # RV semi-amplitude
             'e',  # eccentricity, uniform prior - to be fixed
-            'o'}  # argument of pericenter
+            'omega'}  # argument of pericenter
 
         self.list_pams_dataset = {}
 
@@ -51,10 +51,10 @@ class RVkeplerian(AbstractModel):
             self.use_time_of_transit = True
             # Copying the property to the class for faster access
         else:
-            self.list_pams_common.update({'f': None})
+            self.list_pams_common.update({'mean_long': None})
 
         if mc.common_models[self.planet_ref].use_mass_for_planets:
-            self.list_pams_common.update({'M': None})
+            self.list_pams_common.update({'M_Me': None})
             self.list_pams_common.update({'mass': None})
             self.use_mass_for_planets = True
         else:
@@ -63,35 +63,35 @@ class RVkeplerian(AbstractModel):
     def compute(self, variable_value, dataset, x0_input=None):
 
         if self.use_time_of_transit:
-            f = kepler_exo.kepler_Tc2phase_Tref(variable_value['P'],
+            mean_long = kepler_exo.kepler_Tc2phase_Tref(variable_value['P'],
                                                 variable_value['Tc'] - dataset.Tref,
                                                 variable_value['e'],
-                                                variable_value['o'])
+                                                variable_value['omega'])
         else:
-            f = variable_value['f']
+            mean_long = variable_value['mean_long']
 
         if self.use_mass_for_planets:
 
             K = kepler_exo.kepler_K1(variable_value['mass'],
-                                     variable_value['M'] / constants.Msear, variable_value['P'], variable_value['i'],
+                                     variable_value['M_Me'] / constants.Msear, variable_value['P'], variable_value['i'],
                                      variable_value['e'])
         else:
             K = variable_value['K']
 
         if x0_input is None:
             return kepler_exo.kepler_RV_T0P(dataset.x0,
-                                            f,
+                                            mean_long,
                                             variable_value['P'],
                                             K,
                                             variable_value['e'],
-                                            variable_value['o'])
+                                            variable_value['omega'])
         else:
             return kepler_exo.kepler_RV_T0P(x0_input,
-                                            f,
+                                            mean_long,
                                             variable_value['P'],
                                             K,
                                             variable_value['e'],
-                                            variable_value['o'])
+                                            variable_value['omega'])
 
 
 class RVdynamical(AbstractModel):
@@ -103,10 +103,10 @@ class RVdynamical(AbstractModel):
         ''' Orbital parameters to be used in the dynamical fit '''
         self.list_pams_common = {
             'P',  # Period in days
-            'M',  # Mass in Earth masses
-            'lN',  # longitude of ascending node
+            'M_Me',  # Mass in Earth masses
+            'Omega',  # longitude of ascending node
             'e',  # eccentricity, uniform prior - to be fixed
-            'o',  # argument of pericenter
+            'omega',  # argument of pericenter
             'mass'} #mass of the star (needed for proper dynamical computation and for reversibility)
 
         self.list_pams_dataset = {}
@@ -123,15 +123,15 @@ class RVdynamical(AbstractModel):
 
             if mc.common_models[self.planet_ref].use_semimajor_axis:
                 """ a is the semi-major axis (in units of stellar radii) """
-                self.list_pams_common.update({'a': None})
+                self.list_pams_common.update({'a_Rs': None})
             else:
                 """ rho is the density of the star (in solar units) """
-                self.list_pams_common.update({'rho': None})
+                self.list_pams_common.update({'density': None})
 
         if mc.common_models[self.planet_ref].use_time_of_transit:
             self.list_pams_common.update({'Tc': None})
         else:
-            self.list_pams_common.update({'f': None})
+            self.list_pams_common.update({'mean_long': None})
 
     #def compute(self, variable_value, dataset, x0_input=None):
     #    return dataset.external_model
@@ -155,9 +155,9 @@ class TransitTimeKeplerian(AbstractModel):
             self.use_time_of_transit = True
             # Copying the property to the class for faster access
         else:
-            self.list_pams_common.update({'f': None})
+            self.list_pams_common.update({'mean_long': None})
             self.list_pams_common.update({'e': None})
-            self.list_pams_common.update({'o': None})
+            self.list_pams_common.update({'omega': None})
             # mean longitude = argument of pericenter + mean anomaly at Tref
 
     def compute(self, variable_value, dataset, x0_input=None):
@@ -168,9 +168,9 @@ class TransitTimeKeplerian(AbstractModel):
         else:
             delta_T = dataset.Tref + \
                       kepler_exo.kepler_phase2Tc_Tref(variable_value['P'],
-                                                      variable_value['f'],
+                                                      variable_value['mean_long'],
                                                       variable_value['e'],
-                                                      variable_value['o'])
+                                                      variable_value['omega'])
 
         if x0_input is None:
             return np.floor(dataset.x0 / variable_value['P']) * variable_value['P'] + delta_T
@@ -187,11 +187,11 @@ class TransitTimeDynamical(AbstractModel):
         ''' Orbital parameters to be used in the dynamical fit '''
         self.list_pams_common = {
             'P',    # Period in days
-            'M',    # Mass in Earth masses
-            'lN',   # longitude of ascending node
+            'M_Me',    # Mass in Earth masses
+            'Omega',   # longitude of ascending node
             'e',    # eccentricity, uniform prior - to be fixed
-            'R',    # planet radius (in units of stellar radii)
-            'o',    # argument of pericenter
+            'R_Rs',    # planet radius (in units of stellar radii)
+            'omega',    # argument of pericenter
             'mass'} # mass of the star (needed for proper dynamical computation and for reversibility)
 
         self.list_pams_dataset = {}
@@ -218,14 +218,14 @@ class TransitTimeDynamical(AbstractModel):
                 self.use_semimajor_axis = True
             else:
                 """ rho is the density of the star (in solar units) """
-                self.list_pams_common.update({'rho': None})
+                self.list_pams_common.update({'density': None})
 
         if mc.common_models[self.planet_ref].use_time_of_transit:
             self.list_pams_common.update({'Tc': None})
             self.use_time_of_transit = True
             # Copying the property to the class for faster access
         else:
-            self.list_pams_common.update({'f': None})
+            self.list_pams_common.update({'mean_long': None})
             # mean longitude = argument of pericenter + mean anomaly at Tref
 
 
@@ -251,7 +251,7 @@ class DynamicalIntegrator:
             except ImportError:
                 print("ERROR: TRADES not installed, this will not work")
                 quit()
-            
+
             self.prepare_trades(mc)
 
         if self.dynamical_integrator == 'ttvfast':
@@ -260,7 +260,7 @@ class DynamicalIntegrator:
             except ImportError:
                 print("ERROR: ttvfast not installed, this will not work")
                 quit()
-            
+
             self.prepare_ttvfast(mc)
         return
 
@@ -440,9 +440,9 @@ class DynamicalIntegrator:
             'R': np.zeros(self.dynamical_set['trades']['n_body'], dtype=np.float64),
             'P': np.zeros(self.dynamical_set['trades']['n_body'], dtype=np.float64),
             'e': np.zeros(self.dynamical_set['trades']['n_body'], dtype=np.float64),
-            'o': np.zeros(self.dynamical_set['trades']['n_body'], dtype=np.float64),
+            'omega': np.zeros(self.dynamical_set['trades']['n_body'], dtype=np.float64),
             'i': np.zeros(self.dynamical_set['trades']['n_body'], dtype=np.float64),
-            'lN': np.zeros(self.dynamical_set['trades']['n_body'], dtype=np.float64),
+            'Omega': np.zeros(self.dynamical_set['trades']['n_body'], dtype=np.float64),
             'mA': np.zeros(self.dynamical_set['trades']['n_body'], dtype=np.float64)
         }
 
@@ -450,8 +450,8 @@ class DynamicalIntegrator:
         star_pams = get_stellar_parameters(mc, theta, warnings=False)
         #star_pams = mc.common_models['star_parameters'].convert(theta)
 
-        self.dynamical_set['pams']['M'][0] = star_pams['mass']
-        self.dynamical_set['pams']['R'][0] = star_pams['radius']
+        self.dynamical_set['pams']['mass'][0] = star_pams['mass']
+        self.dynamical_set['pams']['radius'][0] = star_pams['radius']
 
         for planet_name in mc.dynamical_dict:
             n_plan = self.dynamical_set['data']['plan_ref'][planet_name]
@@ -465,41 +465,41 @@ class DynamicalIntegrator:
                     self.dynamical_set['pams']['i'][n_plan] = \
                         convert_b_to_i(dict_pams['b'],
                                        dict_pams['e'],
-                                       dict_pams['o'],
-                                       dict_pams['a'])
+                                       dict_pams['omega'],
+                                       dict_pams['a_Rs'])
                 else:
-                    a_temp = convert_rho_to_a(dict_pams['P'], star_pams['rho'])
+                    a_temp = convert_rho_to_a(dict_pams['P'], star_pams['density'])
                     self.dynamical_set['pams']['i'][n_plan] = \
                         convert_b_to_i(dict_pams['b'],
                                        dict_pams['e'],
-                                       dict_pams['o'],
+                                       dict_pams['omega'],
                                        a_temp)
 
             if mc.common_models[planet_name].use_time_of_transit:
-                dict_pams['f'] = kepler_exo.kepler_Tc2phase_Tref(dict_pams['P'],
+                dict_pams['mean_long'] = kepler_exo.kepler_Tc2phase_Tref(dict_pams['P'],
                                                                  dict_pams['Tc'] - mc.Tref,
                                                                  dict_pams['e'],
-                                                                 dict_pams['o'])
+                                                                 dict_pams['omega'])
 
             if 'R' in dict_pams:
                 """ Converting the radius from Stellar units to Solar units"""
-                self.dynamical_set['pams']['R'][n_plan] = dict_pams['R'] * star_pams['radius']
+                self.dynamical_set['pams']['R'][n_plan] = dict_pams['R_Rs'] * star_pams['radius']
             else:
                 """ Default value: slightly more than 1 Earth radii in Solar units"""
                 self.dynamical_set['pams']['R'][n_plan] = 0.02
 
-            self.dynamical_set['pams']['M'][n_plan] = dict_pams['M'] / constants.Msear
+            self.dynamical_set['pams']['M'][n_plan] = dict_pams['M_Me'] / constants.Msear
             self.dynamical_set['pams']['P'][n_plan] = dict_pams['P']
             self.dynamical_set['pams']['e'][n_plan] = dict_pams['e']
-            self.dynamical_set['pams']['o'][n_plan] = dict_pams['o'] * (180. / np.pi)
-            self.dynamical_set['pams']['lN'][n_plan] = dict_pams['lN'] * (180. / np.pi)
-            self.dynamical_set['pams']['mA'][n_plan] = (dict_pams['f'] - dict_pams['o']) * (180. / np.pi)
+            self.dynamical_set['pams']['omega'][n_plan] = dict_pams['omega']
+            self.dynamical_set['pams']['Omega'][n_plan] = dict_pams['Omega']
+            self.dynamical_set['pams']['mA'][n_plan] = (dict_pams['mean_long'] - dict_pams['omega'])
 
         # sample_plan[:, convert_out['Tcent']] = mc.Tref + kepler_exo.kepler_phase2Tc_Tref(
         #    sample_plan[:, convert_out['P']], sample_plan[:, convert_out['mL']],
         #    sample_plan[:, convert_out['e']], sample_plan[:, convert_out['o']])
 
-        """ Extracted from TRADES: 
+        """ Extracted from TRADES:
           !!! SUBROUTINE TO RUN TRADES INTEGRATION AND RETURN RV_SIM AND T0_SIM
         !   subroutine kelements_to_data(t_start,t_epoch,step_in,t_int,&
         !     &m_msun,R_rsun,P_day,ecc,argp_deg,mA_deg,inc_deg,lN_deg,&
@@ -511,13 +511,13 @@ class DynamicalIntegrator:
             &t_rv,transit_flag,& ! input
             &rv_sim,t0_sim,& ! output
             &n_body,n_rv,n_max_t0) ! dimensions
-        
+
             ! INPUT
             ! t_start      == start of the integration
             ! t_epoch      == reference time epoch
             ! step_in      == initial step size of the integration
             ! t_int        == total integration time in days
-            
+
             ! m_msun       == masses of all the bodies in Msun m_sun(n_body)
             ! R_rsun       == radii of all the bodies in Rsun r_rsun(n_body)
             ! P_day        == periods of all the bodies in days p_day(n_body); p_day(0) = 0
@@ -526,14 +526,14 @@ class DynamicalIntegrator:
             ! mA_deg       == mean anomaly of all the bodies mA_deg(n_body); mA_deg(0) = 0
             ! inc_deg      == inclination of all the bodies inc_deg(n_body); inc_deg(0) = 0
             ! lN_deg       == longitude of node of all the bodies lN_deg(n_body); lN_deg(0) = 0
-        
+
             ! t_rv         == time of the RV datapoints t_rv(n_rv)
             ! transit_flag == logical/boolean vector with which bodies should transit (.true.) or not (.false) transit_flag(n_body); transit_flag(0) = False
-            
+
             ! OUTPUT
             ! rv_sim       == rv simulated in m/s, same dimension of t_rv
             ! t0_sim       == t0 simulated in days, same dimension of t0_num
-            
+
             ! DIMENSIONS
             ! n_body       == number of bodies (take into account the star)
             ! n_rv         == number of radial velocities datapoints
@@ -551,10 +551,10 @@ class DynamicalIntegrator:
                 self.dynamical_set['pams']['R'],
                 self.dynamical_set['pams']['P'],
                 self.dynamical_set['pams']['e'],
-                self.dynamical_set['pams']['o'],
+                self.dynamical_set['pams']['omega'],
                 self.dynamical_set['pams']['mA'],
                 self.dynamical_set['pams']['i'],
-                self.dynamical_set['pams']['lN'],
+                self.dynamical_set['pams']['Omega'],
                 self.dynamical_set['data']['rv_times'],
                 self.dynamical_set['data']['t0_flg'], self.n_max_t0)
         else:
@@ -567,10 +567,10 @@ class DynamicalIntegrator:
                 self.dynamical_set['pams']['R'],
                 self.dynamical_set['pams']['P'],
                 self.dynamical_set['pams']['e'],
-                self.dynamical_set['pams']['o'],
+                self.dynamical_set['pams']['omega'],
                 self.dynamical_set['pams']['mA'],
                 self.dynamical_set['pams']['i'],
-                self.dynamical_set['pams']['lN'],
+                self.dynamical_set['pams']['Omega'],
                 x_input,
                 self.dynamical_set['data']['t0_flg'], self.n_max_t0)
 
@@ -677,32 +677,32 @@ class DynamicalIntegrator:
                     i_temp = \
                         convert_b_to_i(dict_pams['b'],
                                        dict_pams['e'],
-                                       dict_pams['o'],
-                                       dict_pams['a'])
+                                       dict_pams['omega'],
+                                       dict_pams['a_Rs'])
                 else:
-                    a_temp = convert_rho_to_a(dict_pams['P'], star_pams['rho'])
+                    a_temp = convert_rho_to_a(dict_pams['P'], star_pams['density'])
                     i_temp = \
                         convert_b_to_i(dict_pams['b'],
                                        dict_pams['e'],
-                                       dict_pams['o'],
+                                       dict_pams['omega'],
                                        a_temp)
 
             if mc.common_models[planet_name].use_time_of_transit:
-                dict_pams['f'] = kepler_exo.kepler_Tc2phase_Tref(dict_pams['P'],
+                dict_pams['mean_long'] = kepler_exo.kepler_Tc2phase_Tref(dict_pams['P'],
                                                                  dict_pams['Tc'] - mc.Tref,
                                                                  dict_pams['e'],
-                                                                 dict_pams['o'])
+                                                                 dict_pams['omega'])
 
-            mA = (dict_pams['f'] - dict_pams['o']) * (180. / np.pi) \
+            mA = (dict_pams['mean_long'] - dict_pams['omega']) \
                  + self.dynamical_set['ttvfast']['t_beg'] / dict_pams['P'] * 360.0000000000
 
             params.extend([
-                dict_pams['M'] / constants.Msear,  # mass in Solar unit
+                dict_pams['M_Me'] / constants.Msear,  # mass in Solar unit
                 dict_pams['P'],
                 dict_pams['e'],
                 i_temp,
-                dict_pams['lN'] * (180. / np.pi),
-                dict_pams['o'] * (180. / np.pi),
+                dict_pams['Omega'],
+                dict_pams['omega'],
                 mA])
 
             n_plan += 1

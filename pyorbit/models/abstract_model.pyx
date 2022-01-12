@@ -216,7 +216,7 @@ class AbstractModel(object):
 
         """ Preserving backcompatibility with version 8
         #TODO: to be simplified in the next version
-        """ 
+        """
 
         if getattr(self, 'multivariate_priors', False):
             if len(set(self.multivariate_vars[dataset_name]) & set(self.list_pams_dataset[dataset_name])) > 0:

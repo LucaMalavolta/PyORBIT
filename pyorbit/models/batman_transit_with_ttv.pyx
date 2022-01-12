@@ -4,6 +4,11 @@ import pyorbit.subroutines.kepler_exo as kepler_exo
 from pyorbit.models.abstract_model import AbstractModel
 from pyorbit.models.abstract_transit import AbstractTransit
 
+try:
+    import batman
+except ImportError:
+    pass
+
 
 class Batman_Transit_With_TTV(AbstractModel, AbstractTransit):
 
@@ -21,8 +26,8 @@ class Batman_Transit_With_TTV(AbstractModel, AbstractTransit):
         self.list_pams_common = {
             'P',  # Period, log-uniform prior
             'e',  # eccentricity, uniform prior
-            'o',  # argument of pericenter (in radians)
-            'R',  # planet radius (in units of stellar radii)
+            'omega',  # argument of pericenter (in radians)
+            'R_Rs',  # planet radius (in units of stellar radii)
         }
 
         self.list_pams_dataset = {
@@ -100,9 +105,9 @@ class Batman_Transit_With_TTV(AbstractModel, AbstractTransit):
         self.batman_params.t0 = self.retrieve_t0(variable_value, dataset.Tref) + variable_value['deltaT']
 
         self.batman_params.per = variable_value['P']  # orbital period
-        self.batman_params.rp = variable_value['R']  # planet radius (in units of stellar radii)
+        self.batman_params.rp = variable_value['R_Rs']  # planet radius (in units of stellar radii)
         self.batman_params.ecc = variable_value['e']  # eccentricity
-        self.batman_params.w = variable_value['o'] * (180. / np.pi)  # longitude of periastron (in degrees)
+        self.batman_params.w = variable_value['omega']  # longitude of periastron (in degrees)
 
         """
         print 'a    ', self.batman_params.a
@@ -120,8 +125,8 @@ class Batman_Transit_With_TTV(AbstractModel, AbstractTransit):
         """
         From the batman manual:
         Reinitializing the model is by far the slowest component of batman,because it calculates the optimal step size
-        for the integration starting from a very small value. 
-        -> However, we estimated the optimal step size from random parameters, so at some point we'll need to 
+        for the integration starting from a very small value.
+        -> However, we estimated the optimal step size from random parameters, so at some point we'll need to
         reinitialize the model so that the correct step size is computed.
         """
         if self.code_options['initialization_counter'] > 1000:

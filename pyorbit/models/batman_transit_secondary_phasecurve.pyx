@@ -5,6 +5,11 @@ import pyorbit.subroutines.kepler_exo as kepler_exo
 from pyorbit.models.abstract_model import AbstractModel
 from pyorbit.models.abstract_transit import AbstractTransit
 
+try:
+    import batman
+except ImportError:
+    pass
+
 
 class Batman_Transit_Eclipse_PhaseCurve(AbstractModel, AbstractTransit):
 
@@ -27,8 +32,8 @@ class Batman_Transit_Eclipse_PhaseCurve(AbstractModel, AbstractTransit):
         self.list_pams_common = {
             'P',  # Period, log-uniform prior
             'e',  # eccentricity, uniform prior
-            'o',  # argument of pericenter (in radians)
-            'R',  # planet radius (in units of stellar radii)
+            'omega',  # argument of pericenter (in radians)
+            'R_Rs',  # planet radius (in units of stellar radii)
             'phase_off',
         }
         self.list_pams_dataset = {
@@ -114,10 +119,10 @@ class Batman_Transit_Eclipse_PhaseCurve(AbstractModel, AbstractTransit):
 
         self.batman_params.per = variable_value['P']  # orbital period
         # planet radius (in units of stellar radii)
-        self.batman_params.rp = variable_value['R']
+        self.batman_params.rp = variable_value['R_Rs']
         self.batman_params.ecc = variable_value['e']  # eccentricity
         # longitude of periastron (in degrees)
-        self.batman_params.w = variable_value['o'] * (180. / np.pi)
+        self.batman_params.w = variable_value['omega']
 
         """
         print 'a    ', self.batman_params.a
@@ -139,14 +144,14 @@ class Batman_Transit_Eclipse_PhaseCurve(AbstractModel, AbstractTransit):
         """
         From the batman manual:
         Reinitializing the model is by far the slowest component of batman,because it calculates the optimal step size
-        for the integration starting from a very small value. 
-        -> However, we estimated the optimal step size from random parameters, so at some point we'll need to 
+        for the integration starting from a very small value.
+        -> However, we estimated the optimal step size from random parameters, so at some point we'll need to
         reinitialize the model so that the correct step size is computed.
         """
         if self.batman_options['initialization_counter'] > 1000:
             self.batman_options['initialization_counter'] = 0
 
-            self.batman_eclipse[dataset.name_ref] = batman.TransitModel(self.batman_params, 
+            self.batman_eclipse[dataset.name_ref] = batman.TransitModel(self.batman_params,
                                             dataset.x0,
                                             supersample_factor=self.batman_options[dataset.name_ref]['sample_factor'],
                                             exp_time=self.batman_options[dataset.name_ref]['exp_time'],
@@ -177,7 +182,7 @@ class Batman_Transit_Eclipse_PhaseCurve(AbstractModel, AbstractTransit):
                 * (np.cos(2*np.pi*(x0_input - self.batman_params.t_secondary)/self.batman_params.per + variable_value['phase_off'])/2. + 0.5) \
                 + (1 - amplitude_sin/self.batman_params.fp)
 
-            batman_eclipse = batman.TransitModel(self.batman_params, 
+            batman_eclipse = batman.TransitModel(self.batman_params,
                                 x0_input,
                                 supersample_factor=self.batman_options[dataset.name_ref]['sample_factor'],
                                 exp_time=self.batman_options[dataset.name_ref]['exp_time'],

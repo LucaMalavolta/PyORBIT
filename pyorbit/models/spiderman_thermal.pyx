@@ -1,4 +1,4 @@
-from pyorbit.subroutines.common import np, convert_ars_to_a
+from pyorbit.subroutines.common import np, convert_ars_to_a, convert_RTaAU_to_insol
 import pyorbit.subroutines.constants as constants
 import pyorbit.subroutines.kepler_exo as kepler_exo
 from pyorbit.models.abstract_model import AbstractModel
@@ -18,8 +18,8 @@ class Spiderman_Thermal(AbstractModel, AbstractTransit):
         self.list_pams_common = {
             'P',  # Period, log-uniform prior
             'e',  # eccentricity, uniform prior
-            'o',  # argument of pericenter (in radians)
-            'R',  # planet radius (in units of stellar radii)
+            'omega',  # argument of pericenter (in radians)
+            'R_Rs',  # planet radius (in units of stellar radii)
             'albedo',  # Bond Albedo
             'redist',  # Heat redistribution
             #'insol'
@@ -37,7 +37,7 @@ class Spiderman_Thermal(AbstractModel, AbstractTransit):
 
     def initialize_model(self, mc, **kwargs):
 
-        # Workarounf to allow spiderman import only when the code is axtually needed 
+        # Workarounf to allow spiderman import only when the code is axtually needed
         try:
             import spiderman
         except ImportError:
@@ -80,10 +80,10 @@ class Spiderman_Thermal(AbstractModel, AbstractTransit):
 
         self.spiderman_params.per = variable_value['P']  # orbital period
         # planet radius (in units of stellar radii)
-        self.spiderman_params.rp = variable_value['R']
+        self.spiderman_params.rp = variable_value['R_Rs']
         self.spiderman_params.ecc = variable_value['e']  # eccentricity
-        # longitude of periastron (in degrees)
-        self.spiderman_params.w = variable_value['o'] * (180. / np.pi)
+        # argument of periastron (in degrees)
+        self.spiderman_params.w = variable_value['omega']
 
         self.spiderman_params.l1 = self.code_options[dataset.name_ref]['l1']
         self.spiderman_params.l2 = self.code_options[dataset.name_ref]['l2']
@@ -92,7 +92,7 @@ class Spiderman_Thermal(AbstractModel, AbstractTransit):
         self.spiderman_params.a_abs = convert_ars_to_a(self.spiderman_params.a,
                                                        stellar_radius)
 
-        self.spiderman_params.insol = conver_RTaAU_to_insol(stellar_radius,
+        self.spiderman_params.insol = convert_RTaAU_to_insol(stellar_radius,
                                                             self.spiderman_params.T_s,
                                                             self.spiderman_params.a_abs)
 

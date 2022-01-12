@@ -34,14 +34,14 @@ class CommonPlanets(AbstractCommon):
         'P',  # Period, log-uniform prior
         'K',  # RV semi-amplitude, log-uniform prior
         'Tc', # central time of transit
-        'f',  # mean longitude = argument of pericenter + mean anomaly at Tref
+        'mean_long',  # mean longitude = argument of pericenter + mean anomaly at Tref
         'e',  # eccentricity, uniform prior - to be fixed
-        'o',  # argument of pericenter (in radians)
-        'M',  # Mass in Earth masses
+        'omega',  # argument of pericenter (in degrees)
+        'M_Me',  # Mass in Earth masses
         'i',  # orbital inclination (in degrees)
-        'lN', # longitude of ascending node (usually 180 degrees when unknown)
-        'R',  # planet radius (in units of stellar radii)
-        'a',  # semi-major axis (in units of stellar radii)
+        'Omega', # longitude of ascending node (usually 180 degrees when unknown)
+        'R_Rs',  # planet radius (in units of stellar radii)
+        'a_Rs',  # semi-major axis (in units of stellar radii)
         'b',   # impact parameter
         'phase_amp', #Amplitude of the phase light curve
         'delta_occ', #depth of the occultation, as measured at the maximum value of the reflected light curve
@@ -55,17 +55,17 @@ class CommonPlanets(AbstractCommon):
         'P': [0.4, 100000.0],
         'K': [0.5, 2000.0],
         'Tc': [0.0, 1000.0],
-        'f': [0.0, 2 * np.pi],
+        'mean_long': [0.0, 360.],
         'e_coso': [-1.0, 1.0],
         'e_sino': [-1.0, 1.0],
         'sre_coso': [-1.0, 1.0],
         'sre_sino': [-1.0, 1.0],
         'e': [0.0, 1.0],
-        'o': [0.0, 2 * np.pi],
+        'omega': [0.0, 360.],
         # Used by TTVfast/TRADES
-        'M': [0.5, 1000.0],  # Fix the unit
+        'M_Me': [0.5, 1000.0],  # Fix the unit
         'i': [0.0, 180.0],
-        'lN': [0.0, 2 * np.pi],
+        'Omega': [0.0, 2 * np.pi],
         # Used by BATMAN
         'R': [0.00001, 0.5],  # Fix the unit
         'a': [0.00001, 500.],  # Fix the unit
@@ -78,25 +78,25 @@ class CommonPlanets(AbstractCommon):
         'insol': [0, 1000000000]
     }
 
-    """ Must be the same parameters as in list_pams, because priors are 
+    """ Must be the same parameters as in list_pams, because priors are
     applied only to _physical_ parameters """
     default_priors = {
         'P': ['Uniform', []],
         'K': ['Uniform', []],
         'Tc': ['Uniform', []],
-        'f': ['Uniform', []],
+        'mean_long': ['Uniform', []],
         #'e': ['BetaDistribution', [0.71, 2.57]],
         'e': ['Uniform', []],
         'e_coso': ['Uniform', []],
         'e_sino': ['Uniform', []],
         'sre_coso': ['Uniform', []],
         'sre_sino': ['Uniform', []],
-        'o': ['Uniform', []],
-        'M': ['Uniform', []],  # Fix the unit
+        'omega': ['Uniform', []],
+        'M_Me': ['Uniform', []],  # Fix the unit
         'i': ['Uniform', []],
-        'lN': ['Uniform', []],
-        'R': ['Uniform', []],  # Fix the unit
-        'a': ['Uniform', []],  # Fix the unit
+        'Omega': ['Uniform', []],
+        'R_Rs': ['Uniform', []],  # Fix the unit
+        'a_Rs': ['Uniform', []],  # Fix the unit
         'b': ['Uniform', []],  # Fix the unit
         'phase_amp': ['Uniform', []],  # Fix the unit
         'delta_occ': ['Uniform', []],  # Fix the unit
@@ -107,28 +107,28 @@ class CommonPlanets(AbstractCommon):
         }
 
     default_spaces = {
-        'P': 'Logarithmic',
-        'K': 'Logarithmic',
+        'P': 'Log_Base2',
+        'K': 'Log_Base2',
         'Tc': 'Linear',
-        'f': 'Linear',
+        'mean_long': 'Linear',
         'e_coso': 'Linear',
         'e_sino': 'Linear',
         'sre_coso': 'Linear',
         'sre_sino': 'Linear',
         'e': 'Linear',
-        'o': 'Linear',
-        'M': 'Logarithmic',
+        'omega': 'Linear',
+        'M_Me': 'Log_Base2',
         'i': 'Linear',
-        'lN': 'Linear',
-        'R': 'Linear',
-        'a': 'Linear',
+        'Omega': 'Linear',
+        'R_Rs': 'Linear',
+        'a_Rs': 'Linear',
         'b': 'Linear',
         'phase_amp': 'Linear',
         'delta_occ': 'Linear',
         'phase_off': 'Linear',
         'albedo': 'Linear',
         'redist': 'Linear',
-        'insol': 'Logarithmic',
+        'insol': 'Log_Base2',
     }
 
     default_fixed = {
@@ -137,11 +137,11 @@ class CommonPlanets(AbstractCommon):
         'sre_coso': 0.0000,
         'sre_sino': 0.0000,
         'e': 0.0000,
-        'o': np.pi/2.,
+        'omega': 90.,
         'i': 90.000000,
-        'lN': np.pi/2.,
-        'R': 0.05,
-        'a': 1.0,
+        'Omega': 90.,
+        'R_Rs': 0.05,
+        'a_Rs': 1.0,
         'b': 1.0,
         'phase_amp': 0.000,
         'delta_occ': 0.000,
@@ -151,7 +151,7 @@ class CommonPlanets(AbstractCommon):
         'insol': 1000000.000,
     }
 
-    recenter_pams = {'f', 'o', 'lN'}
+    recenter_pams = {'mean_long', 'omega', 'Omega'}
 
     def __init__(self, *args, **kwargs):
         super(CommonPlanets, self).__init__(*args, **kwargs)
@@ -197,23 +197,23 @@ class CommonPlanets(AbstractCommon):
                     self.period_average = np.average(self.default_bounds[var])
             return ndim, output_lists, False
 
-        if not(var == "e" or var == "o"):
+        if not(var == "e" or var == "omega"):
             return ndim, output_lists, False
 
         if 'e' in self.fix_list or \
-           'o' in self.fix_list:
+           'omega' in self.fix_list:
             return ndim, output_lists, False
 
-        for var_check in ['e', 'o', 'e_coso', 'e_sino', 'sre_coso', 'sre_sino']:
+        for var_check in ['e', 'omega', 'e_coso', 'e_sino', 'sre_coso', 'sre_sino']:
             if var_check in self.variable_sampler:
                 return ndim, output_lists, False
 
         if self.parametrization[:8] == 'Standard':
             self.transformation['e'] = get_var_val
             self.variable_index['e'] = ndim
-            self.transformation['o'] = get_var_val
-            self.variable_index['o'] = ndim + 1
-            variable_list = ['e', 'o']
+            self.transformation['omega'] = get_var_val
+            self.variable_index['omega'] = ndim + 1
+            variable_list = ['e', 'omega']
 
         else:
             if self.parametrization[:8] == 'Ford2006':
@@ -226,8 +226,8 @@ class CommonPlanets(AbstractCommon):
                 self.variable_index['e'] = [ndim, ndim + 1]
                 variable_list = ['sre_coso', 'sre_sino']
 
-            self.transformation['o'] = get_2var_o
-            self.variable_index['o'] = [ndim, ndim + 1]
+            self.transformation['omega'] = get_2var_o
+            self.variable_index['omega'] = [ndim, ndim + 1]
 
         for var in variable_list:
 
@@ -254,7 +254,7 @@ class CommonPlanets(AbstractCommon):
             self.variable_sampler[var] = ndim
             ndim += 1
 
-        for var in ['e', 'o']:
+        for var in ['e', 'omega']:
             if var not in self.bounds:
                 self.bounds[var] = self.default_bounds[var]
 
@@ -285,12 +285,12 @@ class CommonPlanets(AbstractCommon):
         """
         if var_sampler == 'sre_coso' or var_sampler=='sre_sino':
 
-            if 'e' in self.starts and 'o' in self.starts:
+            if 'e' in self.starts and 'omega' in self.starts:
 
                 starting_point[self.variable_sampler['sre_coso']] = \
-                    np.sqrt(self.starts['e']) * np.cos(self.starts['o'])
+                    np.sqrt(self.starts['e']) * np.cos(self.starts['omega'])
                 starting_point[self.variable_sampler['sre_sino']] = \
-                    np.sqrt(self.starts['e']) * np.sin(self.starts['o'])
+                    np.sqrt(self.starts['e']) * np.sin(self.starts['omega'])
 
             elif 'sre_coso' in self.starts and 'sre_sino' in self.starts:
                 starting_point[self.variable_sampler['sre_coso']] = self.starts['sre_coso']
@@ -300,7 +300,7 @@ class CommonPlanets(AbstractCommon):
 
         if var_sampler == 'e_coso' or var_sampler=='e_sino':
 
-            if 'e' in self.starts and 'o' in self.starts:
+            if 'e' in self.starts and 'omega' in self.starts:
                 starting_point[self.variable_sampler['e_coso']] = \
                     self.starts['e'] * np.cos(self.starts['o'])
                 starting_point[self.variable_sampler['e_sino']] = \

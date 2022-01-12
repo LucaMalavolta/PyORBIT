@@ -30,8 +30,8 @@ class PyTransit_Transit(AbstractModel, AbstractTransit):
         self.list_pams_common = {
             'P',  # Period, log-uniform prior
             'e',  # eccentricity, uniform prior
-            'o',  # argument of pericenter (in radians)
-            'R',  # planet radius (in units of stellar radii)
+            'omega',  # argument of pericenter (in radians)
+            'R_Rs',  # planet radius (in units of stellar radii)
         }
         self.list_pams_dataset = {}
 
@@ -49,7 +49,7 @@ class PyTransit_Transit(AbstractModel, AbstractTransit):
             self.pytransit_models[dataset.name_ref] = QuadraticModel()
             self.pytransit_plot[dataset.name_ref] = QuadraticModel()
 
-        self.pytransit_models[dataset.name_ref].set_data(dataset.x0, 
+        self.pytransit_models[dataset.name_ref].set_data(dataset.x0,
                                                          exptimes=self.code_options[dataset.name_ref]['exp_time'],
                                                          nsamples=self.code_options[dataset.name_ref]['sample_factor'])
 
@@ -63,15 +63,16 @@ class PyTransit_Transit(AbstractModel, AbstractTransit):
 
         pams_a, pams_i = self.retrieve_ai(variable_value)
         pams_t0 = self.retrieve_t0(variable_value, dataset.Tref)
+        omega_rad = variable_value['omega'] / 180. * np.pi
 
         for var, i_var in self.ldvars.items():
             self.ld_vars[i_var] = variable_value[var]
 
         if x0_input is None:
             return self.pytransit_models[dataset.name_ref].evaluate_ps(
-                variable_value['R'],
+                variable_value['R_rs'],
                 self.ld_vars,
-                pams_t0, variable_value['P'], pams_a, pams_i, variable_value['e'], variable_value['o']) - 1.
+                pams_t0, variable_value['P'], pams_a, pams_i, variable_value['e'], omega_rad) - 1.
 
         else:
             self.pytransit_plot[dataset.name_ref].set_data(x0_input,
@@ -79,6 +80,6 @@ class PyTransit_Transit(AbstractModel, AbstractTransit):
                                                            nsamples=self.code_options[dataset.name_ref]['sample_factor'])
 
             return self.pytransit_plot[dataset.name_ref].evaluate_ps(
-                variable_value['R'],
+                variable_value['R_Rs'],
                 self.ld_vars,
-                pams_t0, variable_value['P'], pams_a, pams_i, variable_value['e'], variable_value['o']) - 1.
+                pams_t0, variable_value['P'], pams_a, pams_i, variable_value['e'], omega_rad) - 1.
