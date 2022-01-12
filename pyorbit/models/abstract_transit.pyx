@@ -110,10 +110,10 @@ class AbstractTransit(object):
             if kwargs.get(dict_name, False):
                 self.code_options['radius'] = kwargs[dict_name]
                 self.use_stellar_radius = False
-                self.retrieve_radius = _internal_transformation_mod10
+                self.retrieve_radius = self._internal_transformation_mod10
         if self.use_stellar_radius:
             self.list_pams_common.update({'radius': None})
-            self.retrieve_radius = _internal_transformation_mod11
+            self.retrieve_radius = self._internal_transformation_mod11
 
         self.use_stellar_temperature = True
 
@@ -127,10 +127,10 @@ class AbstractTransit(object):
             if kwargs.get(dict_name, False):
                 self.code_options['temperature'] = kwargs[dict_name]
                 self.use_stellar_temperature = False
-                self.retrieve_temperature = _internal_transformation_mod12
+                self.retrieve_temperature = self._internal_transformation_mod12
         if self.use_stellar_temperature:
             self.list_pams_common.update({'temperature': None})
-            self.retrieve_temperature = _internal_transformation_mod13
+            self.retrieve_temperature = self._internal_transformation_mod13
 
     def _prepare_limnb_darkening_coefficients(self, mc, **kwargs):
         """ Setting up the limb darkening calculation"""
@@ -229,7 +229,7 @@ class AbstractTransit(object):
         return variable_value['Tc'] - Tref
 
     def _internal_transformation_mod05(self, variable_value, Tref):
-        """ this function transforms Tc into Tc- Tref t"""
+        """ this function transforms phase into Tc- Tref t"""
         return kepler_exo.kepler_phase2Tc_Tref(variable_value['P'],
                                                variable_value['f'],
                                                variable_value['e'],
