@@ -1,21 +1,15 @@
-from pyorbit.subroutines.common import np, convert_rho_to_a, convert_b_to_i
+from pyorbit.subroutines.common import np
 import pyorbit.subroutines.constants as constants
 import pyorbit.subroutines.kepler_exo as kepler_exo
 from pyorbit.models.abstract_model import AbstractModel
+from pyorbit.models.abstract_transit import AbstractTransit
 
-class RossiterMcLaughling_Ohta(AbstractModel):
+class RossiterMcLaughling_Ohta(AbstractModel, AbstractTransit):
     model_class = 'rossiter_mclaughlin'
-    unitary_model = False
-
-    default_bounds = {}
-    default_spaces = {}
-    default_priors = {}
-
-    recenter_pams_dataset = {}
 
     def __init__(self, *args, **kwargs):
-
-        super(RossiterMcLaughling_Ohta, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)  # this calls all constructors up to AbstractModel
+        super(AbstractModel, self).__init__(*args, **kwargs)
 
         try:
             from PyAstronomy import modelSuite as PyAstroModelSuite
@@ -34,77 +28,16 @@ class RossiterMcLaughling_Ohta(AbstractModel):
             'v_sini' # projected rotational velocity of the star
         }
 
-        self.list_pams_dataset = {
-            'ld_c1', #linear limb darkening
-        }
-
-        self.parametrization = 'Standard'
-        self.orbit = 'circular'
-        self.use_semimajor_axis = False
-        self.use_inclination = False
-        self.use_time_of_transit = False
+        self.use_stellar_radius = True
+        self.unitary_model = False
 
         self.rm_ohta = None
-        self.multivariate_mass_radius = False
 
     def initialize_model(self, mc, **kwargs):
 
-        try:
-            multivariate_vars = mc.common_models[self.stellar_ref].multivariate_vars
-        except AttributeError:
-            multivariate_vars = []
-
-        if mc.common_models[self.planet_ref].use_semimajor_axis:
-            """ a is the semi-major axis (in units of stellar radii) """
-            self.list_pams_common.update({'a_Rs': None})
-            self.use_semimajor_axis = True
-        else:
-            if 'mass' in multivariate_vars and 'radius' in multivariate_vars:
-                self.list_pams_common.update({'mass': None, 'radius':None})
-                self.multivariate_mass_radius = True
-            else:
-                """ rho is the density of the star (in solar units) """
-                self.list_pams_common.update({'density': None})
-                self.list_pams_common.update({'radius': None})
-                self.multivariate_mass_radius = False
-
-        if mc.common_models[self.planet_ref].use_inclination:
-            """ i is the orbital inclination (in degrees) """
-            self.list_pams_common.update({'i': None})
-            self.use_inclination = True
-        else:
-            """ b is the impact parameter """
-            self.list_pams_common.update({'b': None})
-
-        if mc.common_models[self.planet_ref].use_time_of_transit:
-            self.list_pams_common.update({'Tc': None})
-            self.use_time_of_transit = True
-            # Copying the property to the class for faster access
-        else:
-            self.list_pams_common.update({'mean_long': None})
-            # mean longitude = argument of pericenter + mean anomaly at Tref
-
-        """ The appropriate function for variable conversion is stored internally
-        """
-        if self.use_semimajor_axis and self.use_inclination:
-            self.retrieve_ai = self._internal_transformation_mod03
-        elif self.use_semimajor_axis:
-            if self.multivariate_mass_radius:
-                self.retrieve_ai = self._internal_transformation_mod07
-            else:
-                self.retrieve_ai = self._internal_transformation_mod02
-        elif self.use_inclination:
-            self.retrieve_ai = self._internal_transformation_mod01
-        else:
-            if self.multivariate_mass_radius:
-                self.retrieve_ai = self._internal_transformation_mod06
-            else:
-                self.retrieve_ai = self._internal_transformation_mod00
-
-        if self.use_time_of_transit:
-            self.retrieve_t0 = self._internal_transformation_mod04
-        else:
-            self.retrieve_t0 = self._internal_transformation_mod05
+        self._prepare_planetary_parameters(mc, **kwargs)
+        self._prepare_star_parameters(self, mc, **kwargs)
+        self._prepare_limnb_darkening_coefficients(mc, **kwargs)
 
         """ Depending if the orbit is circular or not, a different function
             is selected
@@ -116,7 +49,10 @@ class RossiterMcLaughling_Ohta(AbstractModel):
             self.orbit = 'keplerian'
             self.rm_ohta = PyAstroModelSuite.RmcLell()
 
-
+        if len(self.ld_vars) > 1:
+            print('WARNING on rossiter_mclaughlin ohta model:  ')
+            print(' this model accepts only linear limb-darkening coefficients')
+            print()
 
     def compute(self, variable_value, dataset, x0_input=None):
         """
@@ -129,9 +65,6 @@ class RossiterMcLaughling_Ohta(AbstractModel):
 
         var_a, var_i = self.retrieve_ai(variable_value)
         var_tc = self.retrieve_t0(variable_value, dataset.Tref)
-
-        var_omega = variable_value['omega']
-
 
         Omega = variable_value['v_sini'] / (variable_value['radius'] * constants.Rsun) / np.cos(variable_value['i_star']/180.*np.pi)
 
@@ -154,7 +87,7 @@ class RossiterMcLaughling_Ohta(AbstractModel):
                                                          variable_value['omega'])
             else:
                 Tperi  = kepler_exo.kepler_phase2Tperi_Tref(variable_value['P'],
-                                                         variable_value['f'],
+                                                         variable_value['mean_long'],
                                                          variable_value['e'],
                                                          variable_value['omega'])
 
@@ -176,58 +109,3 @@ class RossiterMcLaughling_Ohta(AbstractModel):
         else:
             return self.rm_ohta(x0_input) * variable_value['radius'] * constants.Rsun * 1000.
 
-    """ function for internal transformation of variables, to avoid if calls
-        copied & past from PyTransit_Transit class
-    """
-    def _internal_transformation_mod00(self, variable_value):
-        """ this function transforms b and rho to i and a  """
-        a = convert_rho_to_a(variable_value['P'], variable_value['density'])
-        i = convert_b_to_i(
-            variable_value['b'], variable_value['e'], variable_value['omega'], a)
-        return a, i
-
-    def _internal_transformation_mod01(self, variable_value):
-        """ this function transforms b to i"""
-        i = convert_b_to_i(
-            variable_value['b'], variable_value['e'], variable_value['o'], variable_value['a_Rs'])
-        return variable_value['a_Rs'], i
-
-    def _internal_transformation_mod02(self, variable_value):
-        """ this function transforms rho to a  """
-        a = convert_rho_to_a(variable_value['P'], variable_value['density'])
-        return a, variable_value['i']
-
-    def _internal_transformation_mod03(self, variable_value):
-        """ no transformation needed  """
-        return variable_value['a_Rs'], variable_value['i']
-
-    def _internal_transformation_mod04(self, variable_value, Tref):
-        """ this function transforms Tc into Tc- Tref t"""
-        return variable_value['Tc'] - Tref
-
-    def _internal_transformation_mod05(self, variable_value, Tref):
-        """ this function transforms Tc into Tc- Tref t"""
-        return kepler_exo.kepler_phase2Tc_Tref(variable_value['P'],
-                                               variable_value['mean_long'],
-                                               variable_value['e'],
-                                               variable_value['omega'])
-
-    def _internal_transformation_mod06(self, variable_value):
-        """ this function transforms b, mass, radius to i and a
-            it replaces _internal_transformation_mod00 when mass & radius
-            multivariate are used
-        """
-        rho = variable_value['mass']/variable_value['radius']**3
-        a = convert_rho_to_a(variable_value['P'], rho)
-        i = convert_b_to_i(
-            variable_value['b'], variable_value['e'], variable_value['omega'], a)
-        return a, i
-
-    def _internal_transformation_mod07(self, variable_value):
-        """ this function transforms P,mass, radius to a
-            it replaces _internal_transformation_mod02 when mass & radius
-            multivariate are used
-        """
-        rho = variable_value['mass']/variable_value['radius']**3
-        a = convert_rho_to_a(variable_value['P'], rho)
-        return a, variable_value['i']

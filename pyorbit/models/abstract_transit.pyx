@@ -98,7 +98,6 @@ class AbstractTransit(object):
             fixed values or not.
             As in version 9., only used by spiderman models
         """
-        self.use_stellar_radius = True
 
         stellarradius_names = [
             'stellar_radius',
@@ -114,8 +113,6 @@ class AbstractTransit(object):
         if self.use_stellar_radius:
             self.list_pams_common.update({'radius': None})
             self.retrieve_radius = self._internal_transformation_mod11
-
-        self.use_stellar_temperature = True
 
         effectivetemperature_names = [
             'teff',
