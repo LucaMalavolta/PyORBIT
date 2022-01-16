@@ -169,7 +169,7 @@ def get_2var_rho(var, fix, i):
 
 def giveback_priors(kind, bounds, pams, val):
 
-    """ The code is supposed to give -np.inf log-likelihood when the 
+    """ The code is supposed to give -np.inf log-likelihood when the
     parameters are outside the boundaries,
     so this case is not encompassed in the definition of the priors """
 
@@ -389,5 +389,5 @@ def convert_b_to_i(b,e,o,a):
     return np.arccos(arccos_argument)*180./np.pi
 
 
-def conver_RTaAU_to_insol(R, Ts, a_abs):
+def convert_RTaAU_to_insol(R, Ts, a_abs):
     return R**2 * (Ts/constants.Sun_temperature)**4 / a_abs**2 * constants.Sun_constant

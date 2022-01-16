@@ -1,6 +1,6 @@
 from pyorbit.subroutines.common import np
 from pyorbit.common.abstract_common import AbstractCommon
-#from pyorbit.model_definitions import datatype_definition
+from pyorbit.model_definitions import datatype_definition
 
 
 
@@ -103,7 +103,7 @@ class Dataset(AbstractCommon):
             """
             x_range = np.max(self.x) - np.min(self.x)
             y_range = np.max(self.y) - np.min(self.y)
-            y_trend = np.abs(y_range/x_range) 
+            y_trend = np.abs(y_range/x_range)
             y_diff = np.abs(np.mean(self.x)-self.Tref) * y_trend + 1000.
             self.generic_default_bounds = {'offset': [np.min(self.y) - 10.*y_diff, np.max(self.y) + 10.*y_diff],
                                            'jitter': [np.min(self.e)/100., 100 * np.max(self.e)],

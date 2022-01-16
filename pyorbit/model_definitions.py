@@ -1,4 +1,4 @@
-from pyorbit.common.dataset import Dataset
+#from pyorbit.common.dataset import Dataset
 from pyorbit.common.planets import CommonPlanets
 from pyorbit.common.activity import CommonActivity
 
@@ -76,8 +76,8 @@ from pyorbit.models.polynomial_trend import PolynomialTrend, LocalPolynomialTren
 
 """
  model_requires_planets: all those models that requires AT LEAST one of the planets in the system must be listed here
-    this is the case for dataset that contains the signature of multiple planets, e.g., RVs or transit light curve 
- single_planet_model: the model is associated to a specific planet, e.g., time of transits 
+    this is the case for dataset that contains the signature of multiple planets, e.g., RVs or transit light curve
+ single_planet_model: the model is associated to a specific planet, e.g., time of transits
 """
 
 model_requires_planets = ['radial_velocities',

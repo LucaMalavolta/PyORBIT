@@ -331,7 +331,7 @@ class ModelContainer(object):
             dataset.compute_residuals()
 
             """ Gaussian Process check MUST be the last one or the program will fail
-             that's because for the GP to work we need to know the _deterministic_ part of the model 
+             that's because for the GP to work we need to know the _deterministic_ part of the model
              (i.e. the theoretical values you get when you feed your model with the parameter values) """
 
             if logchi2_gp_model:
@@ -344,7 +344,7 @@ class ModelContainer(object):
                 variable_values.update(
                     self.models[logchi2_gp_model].convert(theta, dataset_name))
 
-                """ GP Log-likelihood is not computed now because a single matrix must be created with 
+                """ GP Log-likelihood is not computed now because a single matrix must be created with
                 the joined dataset"""
                 if hasattr(self.models[logchi2_gp_model], 'delayed_lnlk_computation'):
 

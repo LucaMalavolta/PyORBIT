@@ -1,6 +1,10 @@
 from __future__ import print_function
 
 from pyorbit.model_definitions import *
+# Special import for Dataset, it had to be escluded from
+# model_definitons to avoid circular import
+from pyorbit.common.dataset import Dataset
+
 from pyorbit.subroutines.common import np, get_2darray_from_val
 
 import sys
@@ -488,7 +492,7 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, reload_ze
                             mc.dynamical_t0_dict[planet_name] = dataset_name
 
                 """ This snippet will work only for transit class"""
-                if mc.models[model_name_exp].model_class in model_requires_limbdarkening: 
+                if mc.models[model_name_exp].model_class in model_requires_limbdarkening:
 
                     try:
                         common_name = mc.models[model_name_exp].model_conf['limb_darkening']
