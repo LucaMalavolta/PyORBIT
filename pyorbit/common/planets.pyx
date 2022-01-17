@@ -67,8 +67,8 @@ class CommonPlanets(AbstractCommon):
         'i': [0.0, 180.0],
         'Omega': [0.0, 2 * np.pi],
         # Used by BATMAN
-        'R': [0.00001, 0.5],  # Fix the unit
-        'a': [0.00001, 500.],  # Fix the unit
+        'R_Rs': [0.00001, 0.5],  # Fix the unit
+        'a_Rs': [0.00001, 500.],  # Fix the unit
         'b': [0.0, 2.0],
         'phase_amp': [0.00, 0.50],
         'delta_occ': [0.00, 0.50],

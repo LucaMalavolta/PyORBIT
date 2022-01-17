@@ -134,7 +134,7 @@ def get_stellar_parameters(mc, theta, warnings=True, stellar_ref=None):
         n_pams = np.shape(theta)
 
     "Stellar mass, radius and density are pre-loaded since they are are required by most of the common models"
-    
+
     """
     #TODO associate to each planet the corresponding stellar parameters
     """
@@ -287,10 +287,10 @@ def get_planet_variables(mc, theta, verbose=False):
                     variable_values[var] = variable_values[var] * \
                         np.ones(n_samplings)
 
-            if 'a' not in variable_values.keys() and 'rho' in stellar_values.keys():
-                derived_variables['a'] = True
-                variable_values['a'] = convert_rho_to_a(variable_values['P'],
-                                                        stellar_values['rho'])
+            if 'a_Rs' not in variable_values.keys() and 'density' in stellar_values.keys():
+                derived_variables['a_Rs'] = True
+                variable_values['a_Rs'] = convert_rho_to_a(variable_values['P'],
+                                                        stellar_values['density'])
 
             if 'i' not in variable_values.keys():
                 derived_variables['i'] = True
@@ -305,67 +305,62 @@ def get_planet_variables(mc, theta, verbose=False):
                 elif 'b' in variable_values.keys() and 'a' in variable_values.keys():
                     variable_values['i'] = convert_b_to_i(variable_values['b'],
                                                           variable_values['e'],
-                                                          variable_values['o'],
-                                                          variable_values['a'])
+                                                          variable_values['omega'],
+                                                          variable_values['a_Rs'])
                 else:
                     print('Inclination fixed to 90 deg!')
                     variable_values['i'] = 90.00 * np.ones(n_samplings)
                     remove_i = True
 
             if 'K' in variable_values.keys() and 'mass' in stellar_values.keys():
-                derived_variables['M'] = True
-                variable_values['M'] = kepler_exo.get_planet_mass(variable_values['P'],
+                M_Msun = kepler_exo.get_planet_mass(variable_values['P'],
                                                                   variable_values['K'],
                                                                   variable_values['e'],
                                                                   stellar_values['mass']) \
                     / np.sin(np.radians(variable_values['i']))
 
-                variable_values['M_Mj'] = variable_values['M'] * \
-                    constants.Msjup
+                variable_values['M_Mj'] =M_Msun * constants.Msjup
                 derived_variables['M_Mj'] = True
 
-                variable_values['M_Me'] = variable_values['M'] * \
-                    constants.Msear
+                variable_values['M_Me']  =M_Msun * constants.Msear
                 derived_variables['M_Me'] = True
 
-            elif 'M' in variable_values.keys() and 'mass' in stellar_values.keys():
+            elif 'M_Me' in variable_values.keys() and 'mass' in stellar_values.keys():
                 derived_variables['K'] = True
                 derived_variables['K'] = kepler_exo.kepler_K1(stellar_values['mass'],
-                                                              variable_values['M'] /
+                                                              variable_values['M_Me'] /
                                                               constants.Msear,
                                                               variable_values['P'],
                                                               variable_values['i'],
                                                               variable_values['e'])
 
-                variable_values['M_Mj'] = variable_values['M'] * \
+                variable_values['M_Mj'] = variable_values['M_Me'] * \
                     (constants.Msjup/constants.Msear)
                 derived_variables['M_Mj'] = True
 
-                variable_values['M_Me'] = variable_values['M']
-                derived_variables['M_Me'] = True
 
             if 'Tc' in variable_values.keys():
                 if 'e' in variable_values:
-                    derived_variables['f'] = True
-                    variable_values['f'] = kepler_exo.kepler_Tc2phase_Tref(variable_values['P'],
+                    derived_variables['mean_long'] = True
+                    variable_values['mean_long'] = kepler_exo.kepler_Tc2phase_Tref(variable_values['P'],
                                                                            variable_values['Tc'] -
                                                                            mc.Tref,
                                                                            variable_values['e'],
-                                                                           variable_values['o'])
+                                                                           variable_values['omega'])
 
             elif 'f' in variable_values.keys():
                 derived_variables['Tc'] = True
                 variable_values['Tc'] = mc.Tref + kepler_exo.kepler_phase2Tc_Tref(variable_values['P'],
-                                                                                  variable_values['f'],
+                                                                                  variable_values['mean_long'],
                                                                                   variable_values['e'],
-                                                                                  variable_values['o'])
+                                                                                  variable_values['omega'])
 
-            if 'R' in variable_values.keys() and 'radius' in stellar_values.keys():
-                variable_values['R_Rj'] = variable_values['R'] * \
+            if 'R_Rs' in variable_values.keys() and 'radius' in stellar_values.keys():
+                variable_values['R_Rj'] = variable_values['R_Rs'] * \
                     constants.Rsjup * stellar_values['radius']
                 derived_variables['R_Rj'] = True
 
-                variable_values['R_Re'] = variable_values['R'] * \
+                variable_values['R_Re'] = variable_values['R_Rs'] * \
                     constants.Rsear * stellar_values['radius']
                 derived_variables['R_Re'] = True
 
@@ -373,16 +368,16 @@ def get_planet_variables(mc, theta, verbose=False):
                 del variable_values['i']
 
             try:
-                k = variable_values['R']
+                k = variable_values['R_Rs']
 
                 variable_values['T_41'] = variable_values['P'] / np.pi \
-                    * np.arcsin(1./variable_values['a'] *
+                    * np.arcsin(1./variable_values['a_Rs'] *
                                 np.sqrt((1. + k)**2 - variable_values['b']**2)
                                 / np.sin(variable_values['i']*constants.deg2rad))
                 derived_variables['T_41'] = True
 
                 variable_values['T_32'] = variable_values['P'] / np.pi \
-                    * np.arcsin(1./variable_values['a'] *
+                    * np.arcsin(1./variable_values['a_Rs'] *
                                 np.sqrt((1. - k)**2 - variable_values['b']**2)
                                 / np.sin(variable_values['i']*constants.deg2rad))
                 derived_variables['T_32'] = True
@@ -395,25 +390,26 @@ def get_planet_variables(mc, theta, verbose=False):
                 variable_values['a_AU_(M)'] = convert_PMsMp_to_a(
                     variable_values['P'],
                     stellar_values['mass'],
-                    variable_values['M'])
+                    variable_values['M_Me'])
             except (KeyError, ValueError):
                 pass
 
             try:
                 derived_variables['a_AU_(rho,R)'] = True
                 variable_values['a_AU_(rho,R)'] = convert_ars_to_a(
-                    variable_values['a'],
+                    variable_values['a_Rs'],
                     stellar_values['radius'])
             except (KeyError, ValueError):
                 pass
 
             try:
-                derived_variables['insol(W/m^2]'] = True
-                variable_values['insol(W/m^2]'] = \
-                    stellar_values['radius']**2 \
-                    * (stellar_values['temperature']**4) \
-                    / variable_values['a_AU_(rho,R)']**2 \
-                    *1367.0
+                derived_variables['insol'] = True
+                variable_values['insol]'] = \
+                    convert_RTaAU_to_insol(
+                        stellar_values['radius'],
+                        stellar_values['temperature'],
+                        variable_values['a_AU_(rho,R)']
+                    )
             except (KeyError, ValueError):
                 pass
 
@@ -596,7 +592,7 @@ def get_model(mc, theta, bjd_dict):
         model_out[dataset_name]['complete'] += dataset.model
 
         """ Gaussian Process check MUST be the last one or the program will fail
-         that's because for the GP to work we need to know the _deterministic_ part of the model 
+         that's because for the GP to work we need to know the _deterministic_ part of the model
          (i.e. the theoretical values you get when you feed your model with the parameter values) """
         if logchi2_gp_model:
             variable_values = {}
@@ -891,7 +887,7 @@ def print_integrated_ACF(sampler_chain, theta_dict, nthin):
                 taus = 2.0 * np.cumsum(integrated_part) - 1.0
                 window = auto_window(taus, c)
                 acf_current[i_dim] = taus[window]
-            
+
             acf_current[acf_current < 0.1] = 0.1
             sel = (i_sam > integrated_ACF*tolerance) & (np.abs(acf_current -
                                                                acf_previous)/acf_current < 0.01) & (acf_converged_at < 0.)
@@ -934,7 +930,7 @@ def print_integrated_ACF(sampler_chain, theta_dict, nthin):
             if np.sum(how_many_ACT > 100, dtype=np.int16) == n_dim:
                 print('All the chains are longer than 100*ACF ')
             elif (np.sum(how_many_ACT > 50, dtype=np.int16) == n_dim):
-                print("""All the chains are longer than 50*ACF, but some are shorter than 100*ACF 
+                print("""All the chains are longer than 50*ACF, but some are shorter than 100*ACF
 PyORBIT should keep running for at least {0:9.0f} more steps to reach 100*ACF""".format(np.amax(still_required_100)))
             else:
                 print("""All the chains have converged, but PyORBIT should keep running for at least:
