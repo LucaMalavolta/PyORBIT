@@ -302,9 +302,9 @@ class CommonPlanets(AbstractCommon):
 
             if 'e' in self.starts and 'omega' in self.starts:
                 starting_point[self.variable_sampler['e_coso']] = \
-                    self.starts['e'] * np.cos(self.starts['o'])
+                    self.starts['e'] * np.cos(self.starts['omega'])
                 starting_point[self.variable_sampler['e_sino']] = \
-                    self.starts['e'] * np.sin(self.starts['o'])
+                    self.starts['e'] * np.sin(self.starts['omega'])
 
             elif 'e_coso' in self.starts and 'e_sino' in self.starts:
                 starting_point[self.variable_sampler['e_coso']] = self.starts['e_coso']

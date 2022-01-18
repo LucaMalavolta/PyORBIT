@@ -227,8 +227,8 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, reload_ze
                         if planet_conf['orbit'] == 'circular':
                             mc.common_models[planet_name].fix_list['e'] = np.asarray(
                                 [0.000, 0.0000], dtype=np.double)
-                            mc.common_models[planet_name].fix_list['o'] = np.asarray(
-                                [np.pi/2., 0.0000], dtype=np.double)
+                            mc.common_models[planet_name].fix_list['omega'] = np.asarray(
+                                [90.0, 0.0000], dtype=np.double)
                         if planet_conf['orbit'] == 'dynamical':
                             mc.dynamical_dict[planet_name] = True
                     else:

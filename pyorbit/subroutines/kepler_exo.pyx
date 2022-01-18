@@ -200,7 +200,7 @@ def kepler_Tc2phase_Tref(Period, Tcent , e0, omega0):
     TrAn = np.pi / 2 - omega
     EccAn = 2. * np.arctan(np.sqrt((1.0 - e0) / (1.0 + e0)) * np.tan(TrAn / 2.0))
     MeAn = EccAn - e0 * np.sin(EccAn)
-    return (omega + MeAn - Tcent / Period * 2 * np.pi) % (2 * np.pi)
+    return ((omega + MeAn - Tcent / Period * 2 * np.pi) * (180. / np.pi)) % 360.
 
 
 def kepler_Tc2Tperi_Tref(Period, Tcent , e0, omega0):
