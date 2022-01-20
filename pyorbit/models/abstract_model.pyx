@@ -92,10 +92,19 @@ class AbstractModel(object):
         return ndim, output_lists, False
 
     def define_variable_properties(self, ndim, output_lists, dataset_name):
-        """ Bounds are defined in this class, where all the Planet-related
+        """[summary]
+            Boundaries are defined in this class, where all the dataset-related
             variables are stored. Bounds and parameter index CANNOT be defined
             in the Common class: we don't know a priori which parameters
             will be actually used in the complete model.
+
+        Args:
+            ndim ([type]): [description]
+            output_lists ([type]): [description]
+            dataset_name ([type]): [description]
+
+        Returns:
+            [type]: [description]
         """
 
         self.transformation[dataset_name] = {}

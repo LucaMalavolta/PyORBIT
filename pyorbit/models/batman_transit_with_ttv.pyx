@@ -30,30 +30,23 @@ class Batman_Transit_With_TTV(AbstractModel, AbstractTransit):
             'R_Rs',  # planet radius (in units of stellar radii)
         }
 
-        self.list_pams_dataset = {
-            'deltaT' # time offset for the central time of transit
-        }
-        self.default_bounds = {
-            'deltaT': [-1., 1.]
-        }
-        self.default_spaces = {
-            'deltaT': 'Linear'
-        }
-        self.default_priors = {
-            'deltaT': ['Uniform', []]
-        }
-        self.default_fixed = {
-            'deltaT': 0.00000
-        }
+        self.list_pams_dataset = {}
 
         self.batman_params = None
         self.batman_models = {}
         self.code_options = {
             'nthreads': 1,
-            'initialization_counter': 5000
+            'initialization_counter': 5000,
         }
 
+        """ Dataset-spicific time of transit boundaries are stored here"""
+        self.transit_time_boundaries = {}
+
+
     def initialize_model(self, mc, **kwargs):
+
+        """ Force the use of the central time of transit"""
+        self.use_time_of_transit = True
 
         self._prepare_planetary_parameters(mc, **kwargs)
         self._prepare_limnb_darkening_coefficients(mc, **kwargs)
@@ -80,12 +73,11 @@ class Batman_Transit_With_TTV(AbstractModel, AbstractTransit):
 
         self.code_options['initialization_counter'] = 5000
 
-    def define_special_variable_properties(self,
-                                           ndim,
-                                           output_lists,
-                                           dataset_name,
-                                           var):
-        return ndim, output_lists, False
+        """ And now we remove the transit time from the common variables, and add it back as a dataset-specific variable """
+
+        self.list_pams_common.pop('Tc', None)
+        self.list_pams_dataset.update({'Tc': None})
+
 
 
     def initialize_model_dataset(self, mc, dataset, **kwargs):
@@ -99,6 +91,19 @@ class Batman_Transit_With_TTV(AbstractModel, AbstractTransit):
                                                                    exp_time=self.code_options[dataset.name_ref][
                                                                        'exp_time'],
                                                                    nthreads=self.code_options['nthreads'])
+        """ Keep track of the boundaries of each dataset"""
+        self.transit_time_boundaries[dataset.name_ref] = [np.amin(dataset.x), np.amax(dataset.x)]
+
+    def define_special_variable_properties(self,
+                                           ndim,
+                                           output_lists,
+                                           dataset_name,
+                                           var):
+
+        if var == 'Tc':
+            self.bounds[dataset_name][var] =  self.transit_time_boundaries[dataset_name]
+        return ndim, output_lists, False
+
 
     def compute(self, variable_value, dataset, x0_input=None):
 
@@ -110,7 +115,7 @@ class Batman_Transit_With_TTV(AbstractModel, AbstractTransit):
         """
 
         self.batman_params.a, self.batman_params.inc = self.retrieve_ai(variable_value)
-        self.batman_params.t0 = self.retrieve_t0(variable_value, dataset.Tref) + variable_value['deltaT']
+        self.batman_params.t0 = self.retrieve_t0(variable_value, dataset.Tref)
 
         self.batman_params.per = variable_value['P']  # orbital period
         self.batman_params.rp = variable_value['R_Rs']  # planet radius (in units of stellar radii)

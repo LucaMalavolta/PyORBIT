@@ -67,7 +67,7 @@ class AbstractTransit(object):
             self.use_time_of_transit = True
             # Copying the property to the class for faster access
         else:
-            self.list_pams_common.update({'f': None})
+            self.list_pams_common.update({'mean_long': None})
             # mean longitude = argument of pericenter + mean anomaly at Tref
 
         """ The appropriate function for variable conversion is stored internally
