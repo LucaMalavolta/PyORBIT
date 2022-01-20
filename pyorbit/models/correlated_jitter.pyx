@@ -10,13 +10,13 @@ class LocalCorrelatedJitter(AbstractModel):
     def __init__(self, *args, **kwargs):
         super(LocalCorrelatedJitter, self).__init__(*args, **kwargs)
 
-        self.list_pams_common = {}
-        self.list_pams_dataset = {'x_zero': None}
+        self.list_pams_common = set()
+        self.list_pams_dataset = {'x_zero'}
         self.default_bounds = {'x_zero': [-10**5, 10**5]}
         self.default_spaces = {'x_zero': 'Linear'}
         self.default_priors = {'x_zero': ['Uniform', []]}
 
-        self.recenter_pams_dataset = {}
+        self.recenter_pams_dataset = set()
 
         self.order = 1
         self.x_vals = None
@@ -40,7 +40,7 @@ class LocalCorrelatedJitter(AbstractModel):
                 remove that part from dataset.pyx
                 Add a None option for the dataset
                 Fix input_parser to accomodate the new changes
-                Jitter must not be included in the analysis, but how about the offset? 
+                Jitter must not be included in the analysis, but how about the offset?
                 Or maybe I should just leave the zero point of the polynomial fit free?
         """
 
@@ -65,7 +65,7 @@ class LocalCorrelatedJitter(AbstractModel):
 
         for i_order in range(1, self.order+1):
             var = 'c'+repr(i_order)
-            self.list_pams_dataset.update({var: None})
+            self.list_pams_dataset.update(var)
             self.default_bounds.update({var: [0.0, 10**6]})
             self.default_spaces.update({var: 'Linear'})
             self.default_priors.update({var: ['Uniform', []]})
@@ -79,7 +79,7 @@ class LocalCorrelatedJitter(AbstractModel):
         x_zero = variable_value['x_zero']
 
         """ In our array, coefficient are sorted from the lowest degree to the higher
-        This is the order accepted by NumPy.polynomial.polynomial.polyval , 
+        This is the order accepted by NumPy.polynomial.polynomial.polyval ,
         which is reversed with respect to from NumPy.polyval
         """
         if x0_input is None:

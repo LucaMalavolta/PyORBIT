@@ -9,15 +9,15 @@ class PolynomialTrend(AbstractModel):
     def __init__(self, *args, **kwargs):
         super(PolynomialTrend, self).__init__(*args, **kwargs)
 
-        self.list_pams_common = {'x_zero': None}
+        self.list_pams_common = {'x_zero'}
 
         """ in this model x_zero will be common to all the models, however it is treated
             as a specific
         """
-        self.list_pams_dataset = {}
+        self.list_pams_dataset = set()
 
 
-        self.recenter_pams_dataset = {}
+        self.recenter_pams_dataset = set()
 
         self.order = 1
         self.starting_order = 1
@@ -52,7 +52,7 @@ class PolynomialTrend(AbstractModel):
 
         for i_order in range(self.starting_order, self.order+1):
             var = 'poly_c'+repr(i_order)
-            self.list_pams_common.update({var: None})
+            self.list_pams_common.update([var])
 
         for common_ref in self.common_ref:
             if mc.common_models[common_ref].model_class == 'polynomial_trend':
@@ -93,9 +93,9 @@ class LocalPolynomialTrend(AbstractModel):
     def __init__(self, *args, **kwargs):
         super(LocalPolynomialTrend, self).__init__(*args, **kwargs)
 
-        self.list_pams_common = {}
+        self.list_pams_common = set()
 
-        self.list_pams_dataset = {'x_zero': None}
+        self.list_pams_dataset = {'x_zero'}
         self.default_bounds = {'x_zero': [-10**6, 10**6]}
         self.default_spaces = {'x_zero': 'Linear'}
         self.default_priors = {'x_zero': ['Uniform', []]}
@@ -133,7 +133,7 @@ class LocalPolynomialTrend(AbstractModel):
 
         for i_order in range(self.starting_order, self.order+1):
             var = 'poly_c'+repr(i_order)
-            self.list_pams_dataset.update({var: None})
+            self.list_pams_dataset.update([var])
 
     def initialize_model_dataset(self, mc, dataset, **kwargs):
 

@@ -43,31 +43,32 @@ class AbstractTransit(object):
 
         if mc.common_models[self.planet_ref].use_semimajor_axis:
             """ a is the semi-major axis (in units of stellar radii) """
-            self.list_pams_common.update({'a_Rs': None})
+            self.list_pams_common.update(['a_Rs'])
             self.use_semimajor_axis = True
         else:
             if 'mass' in multivariate_vars and 'radius' in multivariate_vars:
-                self.list_pams_common.update({'mass': None, 'radius':None})
+                self.list_pams_common.update(['mass'])
+                self.list_pams_common.update(['radius'])
                 self.multivariate_mass_radius = True
             else:
                 """ rho is the density of the star (in solar units) """
-                self.list_pams_common.update({'density': None})
+                self.list_pams_common.update(['density'])
                 self.multivariate_mass_radius = False
 
         if mc.common_models[self.planet_ref].use_inclination:
             """ i is the orbital inclination (in degrees) """
-            self.list_pams_common.update({'i': None})
+            self.list_pams_common.update(['i'])
             self.use_inclination = True
         else:
             """ b is the impact parameter """
-            self.list_pams_common.update({'b': None})
+            self.list_pams_common.update(['b'])
 
         if mc.common_models[self.planet_ref].use_time_of_transit:
-            self.list_pams_common.update({'Tc': None})
+            self.list_pams_common.update(['Tc'])
             self.use_time_of_transit = True
             # Copying the property to the class for faster access
         else:
-            self.list_pams_common.update({'mean_long': None})
+            self.list_pams_common.update(['mean_long'])
             # mean longitude = argument of pericenter + mean anomaly at Tref
 
         """ The appropriate function for variable conversion is stored internally
@@ -111,7 +112,7 @@ class AbstractTransit(object):
                 self.use_stellar_radius = False
                 self.retrieve_radius = self._internal_transformation_mod10
         if self.use_stellar_radius:
-            self.list_pams_common.update({'radius': None})
+            self.list_pams_common.update(['radius'])
             self.retrieve_radius = self._internal_transformation_mod11
 
         effectivetemperature_names = [
@@ -126,7 +127,7 @@ class AbstractTransit(object):
                 self.use_stellar_temperature = False
                 self.retrieve_temperature = self._internal_transformation_mod12
         if self.use_stellar_temperature:
-            self.list_pams_common.update({'temperature': None})
+            self.list_pams_common.update(['temperature'])
             self.retrieve_temperature = self._internal_transformation_mod13
 
     def _prepare_limnb_darkening_coefficients(self, mc, **kwargs):
@@ -137,7 +138,7 @@ class AbstractTransit(object):
         for i_coeff in range(1, kwargs['limb_darkening_ncoeff'] + 1):
             var = 'ld_c' + repr(i_coeff)
             self.ldvars[var] = i_coeff - 1
-            self.list_pams_common.update({var: None})
+            self.list_pams_common.update([var])
 
     def _prepare_dataset_options(self, mc, dataset, **kwargs):
 

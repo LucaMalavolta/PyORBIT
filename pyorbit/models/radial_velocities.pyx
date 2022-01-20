@@ -38,27 +38,26 @@ class RVkeplerian(AbstractModel):
             'e',  # eccentricity, uniform prior - to be fixed
             'omega'}  # argument of pericenter
 
-        self.list_pams_dataset = {}
+        self.list_pams_dataset = set()
 
         self.use_time_of_transit = False
         self.use_mass_for_planets = False
-        self.recenter_pams_dataset = {}
 
     def initialize_model(self, mc, **kwargs):
 
         if mc.common_models[self.planet_ref].use_time_of_transit:
-            self.list_pams_common.update({'Tc': None})
+            self.list_pams_common.update(['Tc'])
             self.use_time_of_transit = True
             # Copying the property to the class for faster access
         else:
-            self.list_pams_common.update({'mean_long': None})
+            self.list_pams_common.update(['mean_long'])
 
         if mc.common_models[self.planet_ref].use_mass_for_planets:
-            self.list_pams_common.update({'M_Me': None})
-            self.list_pams_common.update({'mass': None})
+            self.list_pams_common.update(['M_Me'])
+            self.list_pams_common.update(['mass'])
             self.use_mass_for_planets = True
         else:
-            self.list_pams_common.update({'K': None})
+            self.list_pams_common.update(['K'])
 
     def compute(self, variable_value, dataset, x0_input=None):
 
@@ -109,29 +108,28 @@ class RVdynamical(AbstractModel):
             'omega',  # argument of pericenter
             'mass'} #mass of the star (needed for proper dynamical computation and for reversibility)
 
-        self.list_pams_dataset = {}
-        self.recenter_pams_dataset = {}
+        self.list_pams_dataset = set()
 
     def initialize_model(self, mc, **kwargs):
 
         if mc.common_models[self.planet_ref].use_inclination:
             """ i is the orbital inclination (in degrees) """
-            self.list_pams_common.update({'i': None})
+            self.list_pams_common.update(['i'])
         else:
             """ b is the impact parameter """
-            self.list_pams_common.update({'b': None})
+            self.list_pams_common.update(['b'])
 
             if mc.common_models[self.planet_ref].use_semimajor_axis:
                 """ a is the semi-major axis (in units of stellar radii) """
-                self.list_pams_common.update({'a_Rs': None})
+                self.list_pams_common.update(['a_Rs'])
             else:
                 """ rho is the density of the star (in solar units) """
-                self.list_pams_common.update({'density': None})
+                self.list_pams_common.update(['density'])
 
         if mc.common_models[self.planet_ref].use_time_of_transit:
-            self.list_pams_common.update({'Tc': None})
+            self.list_pams_common.update(['Tc'])
         else:
-            self.list_pams_common.update({'mean_long': None})
+            self.list_pams_common.update(['mean_long'])
 
     #def compute(self, variable_value, dataset, x0_input=None):
     #    return dataset.external_model
@@ -145,19 +143,18 @@ class TransitTimeKeplerian(AbstractModel):
 
         self.list_pams_common = {'P'}  # Period
 
-        self.list_pams_dataset = {}
-        self.recenter_pams_dataset = {}
+        self.list_pams_dataset = set()
 
     def initialize_model(self, mc, **kwargs):
 
         if mc.common_models[self.planet_ref].use_time_of_transit:
-            self.list_pams_common.update({'Tc': None})
+            self.list_pams_common.update(['Tc'])
             self.use_time_of_transit = True
             # Copying the property to the class for faster access
         else:
-            self.list_pams_common.update({'mean_long': None})
-            self.list_pams_common.update({'e': None})
-            self.list_pams_common.update({'omega': None})
+            self.list_pams_common.update(['mean_long'])
+            self.list_pams_common.update(['e'])
+            self.list_pams_common.update(['omega'])
             # mean longitude = argument of pericenter + mean anomaly at Tref
 
     def compute(self, variable_value, dataset, x0_input=None):
@@ -194,9 +191,7 @@ class TransitTimeDynamical(AbstractModel):
             'omega',    # argument of pericenter
             'mass'} # mass of the star (needed for proper dynamical computation and for reversibility)
 
-        self.list_pams_dataset = {}
-
-        self.recenter_pams_dataset = {}
+        self.list_pams_dataset = set()
 
         self.use_semimajor_axis = False
         self.use_inclination = False
@@ -206,26 +201,26 @@ class TransitTimeDynamical(AbstractModel):
 
         if mc.common_models[self.planet_ref].use_inclination:
             """ i is the orbital inclination (in degrees) """
-            self.list_pams_common.update({'i': None})
+            self.list_pams_common.update(['i'])
             self.use_inclination = True
         else:
             """ b is the impact parameter """
-            self.list_pams_common.update({'b': None})
+            self.list_pams_common.update(['b'])
 
             if mc.common_models[self.planet_ref].use_semimajor_axis:
                 """ a is the semi-major axis (in units of stellar radii) """
-                self.list_pams_common.update({'a': None})
+                self.list_pams_common.update(['a_Rs'])
                 self.use_semimajor_axis = True
             else:
                 """ rho is the density of the star (in solar units) """
-                self.list_pams_common.update({'density': None})
+                self.list_pams_common.update(['density'])
 
         if mc.common_models[self.planet_ref].use_time_of_transit:
-            self.list_pams_common.update({'Tc': None})
+            self.list_pams_common.update(['Tc'])
             self.use_time_of_transit = True
             # Copying the property to the class for faster access
         else:
-            self.list_pams_common.update({'mean_long': None})
+            self.list_pams_common.update(['mean_long'])
             # mean longitude = argument of pericenter + mean anomaly at Tref
 
 

@@ -33,7 +33,7 @@ class PyTransit_Transit(AbstractModel, AbstractTransit):
             'omega',  # argument of pericenter (in radians)
             'R_Rs',  # planet radius (in units of stellar radii)
         }
-        self.list_pams_dataset = {}
+        self.list_pams_dataset = set()
 
         self.pytransit_models = {}
         self.pytransit_plot = {}

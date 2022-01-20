@@ -35,7 +35,7 @@ class Celerite_Matern32_Common(AbstractModel):
             'matern32_log10_rho', # rho
         }
 
-        self.list_pams_dataset = {}
+        self.list_pams_dataset = set()
 
         self.n_pams = 2
         self.gp = {}

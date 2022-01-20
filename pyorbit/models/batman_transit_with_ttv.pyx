@@ -30,7 +30,7 @@ class Batman_Transit_With_TTV(AbstractModel, AbstractTransit):
             'R_Rs',  # planet radius (in units of stellar radii)
         }
 
-        self.list_pams_dataset = {}
+        self.list_pams_dataset = set()
 
         self.batman_params = None
         self.batman_models = {}
@@ -75,8 +75,8 @@ class Batman_Transit_With_TTV(AbstractModel, AbstractTransit):
 
         """ And now we remove the transit time from the common variables, and add it back as a dataset-specific variable """
 
-        self.list_pams_common.pop('Tc', None)
-        self.list_pams_dataset.update({'Tc': None})
+        self.list_pams_common.discard('Tc')
+        self.list_pams_dataset.update(['Tc'])
 
 
 

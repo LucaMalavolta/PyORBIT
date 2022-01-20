@@ -14,7 +14,7 @@ class CommonStarParameters(AbstractCommon):
         'density',  # density of the star, in Solar density units
         'o_star', # Sky-projected angle between stellar rotation axis and normal of orbit plane [deg]
         'i_star', # Inclination of the star
-        'v_sini' # projected rotational velocity of the star
+        'v_sini', # projected rotational velocity of the star
         'temperature' #effective temperature of the star, in K
     }
 
@@ -59,7 +59,7 @@ class CommonStarParameters(AbstractCommon):
         'temperature': 5777
     }
 
-    recenter_pams = {}
+    recenter_pams = set()
 
     #def __init__(self, *args, **kwargs):
     #    super(CommonStarParameters, self).__init__(*args, **kwargs)

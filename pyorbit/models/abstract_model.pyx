@@ -21,7 +21,7 @@ class AbstractModel(object):
 
     unitary_model = False
     normalization_model = False
-    recenter_pams_dataset = {}
+    recenter_pams_dataset = set()
 
     def __init__(self, model_name, common_ref):
         self.model_name = model_name
@@ -72,14 +72,14 @@ class AbstractModel(object):
     def change_variable_status(self, mc, **kwargs):
 
         dataset_vars = kwargs.get('dataset_variables', [])
-        for variable in dataset_vars:
-            self.list_pams_common.pop(variable, None)
-            self.list_pams_dataset.update({variable: None})
+        for var in dataset_vars:
+            self.list_pams_common.discard([var])
+            self.list_pams_dataset.update([var])
 
         common_vars = kwargs.get('common_variables', [])
-        for variable in common_vars:
-            self.list_pams_dataset.pop(variable, None)
-            self.list_pams_common.update({variable: None})
+        for var in common_vars:
+            self.list_pams_dataset.discard([var])
+            self.list_pams_common.update([var])
 
     def initialize_model_dataset(self, mc, dataset, **kwargs):
         pass

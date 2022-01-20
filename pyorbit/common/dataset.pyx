@@ -42,7 +42,7 @@ class Dataset(AbstractCommon):
         self.variable_expanded = {}
 
         self.model_class = 'dataset'
-        self.list_pams = {}
+        self.list_pams = set()
         self.default_bounds = {}
         self.default_spaces = {}
         self.default_priors = {}
@@ -129,7 +129,7 @@ class Dataset(AbstractCommon):
         self.variable_compressed[var_generic] = {}
         for ii in range(0, n_sys):
             var = var_generic + '_' + repr(ii)
-            self.list_pams.update({var: None})
+            self.list_pams.update([var])
             self.default_bounds[var] = self.generic_default_bounds[var_generic]
             self.default_spaces[var] = self.generic_default_spaces[var_generic]
             self.default_priors[var] = self.generic_default_priors[var_generic]
@@ -147,7 +147,7 @@ class Dataset(AbstractCommon):
         if var_generic not in self.variable_compressed:
             return
         for var in self.variable_compressed[var_generic]:
-            self.list_pams.pop(var, None)
+            self.list_pams.discard(var)
             self.default_bounds.pop(var, None)
             self.default_spaces.pop(var, None)
             self.default_priors.pop(var, None)

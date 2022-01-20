@@ -148,7 +148,7 @@ def get_stellar_parameters(mc, theta, warnings=True, stellar_ref=None):
 
     stellar_values = stellar_model.convert(theta)
 
-    if 'rho' not in stellar_values:
+    if 'density' not in stellar_values:
 
         if 'radius' not in stellar_values:
             try:
@@ -173,7 +173,7 @@ def get_stellar_parameters(mc, theta, warnings=True, stellar_ref=None):
                     print()
 
         if 'mass' in stellar_values.keys() and 'radius' in stellar_values.keys():
-            stellar_values['rho'] = stellar_values['mass'] / \
+            stellar_values['density'] = stellar_values['mass'] / \
                 stellar_values['radius'] ** 3
             if warnings:
                 print('Note: stellar density derived from its mass and radius')
@@ -186,12 +186,12 @@ def get_stellar_parameters(mc, theta, warnings=True, stellar_ref=None):
                 print()
         elif 'mass' in stellar_values:
             stellar_values['radius'] = (
-                stellar_values['mass'] / stellar_values['rho']) ** (1. / 3.)
+                stellar_values['mass'] / stellar_values['density']) ** (1. / 3.)
             if warnings:
                 print('Note: stellar radius derived from its mass and density')
                 print()
         elif 'radius' in stellar_values:
-            stellar_values['mass'] = stellar_values['radius'] ** 3. * stellar_values['rho']
+            stellar_values['mass'] = stellar_values['radius'] ** 3. * stellar_values['density']
             if warnings:
                 print('Note: stellar mass derived from its radius and density')
                 print()
@@ -215,7 +215,7 @@ def get_stellar_parameters(mc, theta, warnings=True, stellar_ref=None):
                                                               stellar_model.prior_pams['mass'][1],
                                                               size=n_samplings)
                     stellar_values['radius'] = (
-                        stellar_values['mass'] / stellar_values['rho']) ** (1. / 3.)
+                        stellar_values['mass'] / stellar_values['density']) ** (1. / 3.)
                 if warnings:
                     print('Note: stellar radius derived from its measured density and its prior on mass')
                     print()
@@ -227,7 +227,7 @@ def get_stellar_parameters(mc, theta, warnings=True, stellar_ref=None):
                                                                 stellar_model.prior_pams['radius'][1],
                                                                 size=n_samplings)
                     stellar_values['mass'] = stellar_values['radius'] ** 3. * \
-                        stellar_values['rho']
+                        stellar_values['density']
                 if warnings:
                     print('Note: stellar radius derived from its measured density and its prior on mass')
                     print()
@@ -302,7 +302,7 @@ def get_planet_variables(mc, theta, verbose=False):
                     variable_values['i'] = np.random.normal(common_model.fix_list['i'][0],
                                                             common_model.fix_list['i'][1],
                                                             size=n_samplings)
-                elif 'b' in variable_values.keys() and 'a' in variable_values.keys():
+                elif 'b' in variable_values.keys() and 'a_Rs' in variable_values.keys():
                     variable_values['i'] = convert_b_to_i(variable_values['b'],
                                                           variable_values['e'],
                                                           variable_values['omega'],
@@ -348,7 +348,7 @@ def get_planet_variables(mc, theta, verbose=False):
                                                                            variable_values['e'],
                                                                            variable_values['omega'])
 
-            elif 'f' in variable_values.keys():
+            elif 'mean_long' in variable_values.keys():
                 derived_variables['Tc'] = True
                 variable_values['Tc'] = mc.Tref + kepler_exo.kepler_phase2Tc_Tref(variable_values['P'],
                                                                                   variable_values['mean_long'],

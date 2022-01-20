@@ -9,10 +9,8 @@ class Harmonics(AbstractModel):
     def __init__(self, *args, **kwargs):
         super(Harmonics, self).__init__(*args, **kwargs)
 
-        self.list_pams_common = {}
-        self.list_pams_dataset = {}
-
-        self.recenter_pams_dataset = {}
+        self.list_pams_common = set()
+        self.list_pams_dataset = set()
 
         self.sine_harmonics = [1, 2]
         self.cosine_harmonics = [1]
@@ -28,7 +26,7 @@ class Harmonics(AbstractModel):
 
         for i_order in self.sine_harmonics:
             var = 'amp_S'+repr(i_order)
-            self.list_pams_dataset.update({var: None})
+            self.list_pams_dataset.update([var])
 
         if 'cosine_harmonics' in kwargs:
             self.cosine_harmonics = np.arange(1, kwargs['cosine_harmonics']+1, dtpye=np.int16)
@@ -37,41 +35,41 @@ class Harmonics(AbstractModel):
 
         for i_order in self.cosine_harmonics:
             var = 'amp_C'+repr(i_order)
-            self.list_pams_dataset.update({var: None})
+            self.list_pams_dataset.update([var])
 
         if kwargs.get('use_common_independent_phases', False):
             if kwargs.get('use_T0', False):
-                print("Harmonics model: independent phases and T0 are not compatible options") 
+                print("Harmonics model: independent phases and T0 are not compatible options")
             for i_order in self.sine_harmonics:
                 var = 'pha_S'+repr(i_order)
-                self.list_pams_common.update({var: None})
+                self.list_pams_common.update([var])
             for i_order in self.cosine_harmonics:
                 var = 'pha_C'+repr(i_order)
-                self.list_pams_common.update({var: None})
+                self.list_pams_common.update([var])
         elif kwargs.get('use_independent_phases', False):
             if kwargs.get('use_T0', False) or kwargs.get('use_common_T0', False):
-                print("Harmonics model: independent phases and T0 are not compatible options") 
+                print("Harmonics model: independent phases and T0 are not compatible options")
             for i_order in self.sine_harmonics:
                 var = 'pha_S'+repr(i_order)
-                self.list_pams_dataset.update({var: None})
+                self.list_pams_dataset.update([var])
             for i_order in self.cosine_harmonics:
                 var = 'pha_C'+repr(i_order)
-                self.list_pams_dataset.update({var: None})
+                self.list_pams_dataset.update([var])
         elif kwargs.get('use_common_T0', False):
             self.use_t0 = True
-            self.list_pams_common.update({'T0': None})
+            self.list_pams_common.update(['T0'])
         elif kwargs.get('use_T0', False):
             self.use_t0 = True
-            self.list_pams_dataset.update({'T0': None})
+            self.list_pams_dataset.update(['T0'])
         elif kwargs.get('use_common_phase', False):
-            self.list_pams_common.update({'phase': None})
+            self.list_pams_common.update(['phase'])
         else:
-            self.list_pams_dataset.update({'phase': None})
+            self.list_pams_dataset.update(['phase'])
 
         if kwargs.get('use_common_period', self.use_common_period):
-            self.list_pams_common.update({'P': None})
+            self.list_pams_common.update(['P'])
         else:
-            self.list_pams_dataset.update({'P': None})
+            self.list_pams_dataset.update(['P'])
 
 
 
