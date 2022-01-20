@@ -31,21 +31,7 @@ class Batman_Transit_With_TTV(AbstractModel):
             'R',  # planet radius (in units of stellar radii)
         }
 
-        self.list_pams_dataset = {
-            'deltaT' # time offset for the central time of transit
-        }
-        self.default_bounds = {
-            'deltaT': [-1., 1.]
-        }
-        self.default_spaces = {
-            'deltaT': 'Linear'
-        }
-        self.default_priors = {
-            'deltaT': ['Uniform', []]
-        }
-        self.default_fixed = {
-            'deltaT': 0.00000
-        }
+        self.list_pams_dataset = set()
 
         print('Batman_Transit_With_TTV')
         print(self.default_bounds)
@@ -68,6 +54,9 @@ class Batman_Transit_With_TTV(AbstractModel):
         self.batman_options = {
             'initialization_counter': 1000000
         }
+
+        """ Dataset-spicific time of transit boundaries are stored here"""
+        self.transit_time_boundaries = {}
 
     def initialize_model(self, mc, **kwargs):
 
@@ -94,14 +83,6 @@ class Batman_Transit_With_TTV(AbstractModel):
         else:
             """ b is the impact parameter """
             self.list_pams_common.update({'b': None})
-
-        if mc.common_models[self.planet_ref].use_time_of_transit:
-            self.list_pams_common.update({'Tc': None})
-            self.use_time_of_transit = True
-            # Copying the property to the class for faster access
-        else:
-            self.list_pams_common.update({'f': None})
-            # mean longitude = argument of pericenter + mean anomaly at Tref
 
         if hasattr(kwargs, 'nthreads'):
             self.nthreads = kwargs['nthreads']
@@ -130,6 +111,8 @@ class Batman_Transit_With_TTV(AbstractModel):
                                        dtype=np.double) * 0.1  # limb darkening coefficients
 
         self.batman_options['initialization_counter'] = 5000
+        self.list_pams_dataset.update(['Tc'])
+        self.use_time_of_transit = True
 
     def setup_dataset(self, mc, dataset, **kwargs):
 
@@ -137,7 +120,7 @@ class Batman_Transit_With_TTV(AbstractModel):
 
         sample_factor = 1
         exposure_time = 30.
-        
+
         supersample_names = ['supersample_factor',
             'supersample',
             'supersampling',
@@ -185,6 +168,18 @@ class Batman_Transit_With_TTV(AbstractModel):
                                                                        'exp_time'],
                                                                    nthreads=self.nthreads)
 
+        self.transit_time_boundaries[dataset.name_ref] = [np.amin(dataset.x), np.amax(dataset.x)]
+
+    def define_special_variable_properties(self,
+                                           ndim,
+                                           output_lists,
+                                           dataset_name,
+                                           var):
+
+        if var == 'Tc':
+            self.bounds[dataset_name][var] =  self.transit_time_boundaries[dataset_name]
+        return ndim, output_lists, False
+
     def compute(self, variable_value, dataset, x0_input=None):
 
         """
@@ -211,13 +206,12 @@ class Batman_Transit_With_TTV(AbstractModel):
                                                                       self.batman_params.a)
 
         if self.use_time_of_transit:
-            self.batman_params.t0 = variable_value['Tc'] - dataset.Tref + variable_value['deltaT']
+            self.batman_params.t0 = variable_value['Tc'] - dataset.Tref
         else:
             self.batman_params.t0 = kepler_exo.kepler_phase2Tc_Tref(variable_value['P'],
                                                                                       variable_value['f'],
                                                                                       variable_value['e'],
-                                                                                      variable_value['o'])\
-                                    + variable_value['deltaT']
+                                                                                      variable_value['o'])
 
         self.batman_params.per = variable_value['P']  # orbital period
         self.batman_params.rp = variable_value['R']  # planet radius (in units of stellar radii)
@@ -237,11 +231,11 @@ class Batman_Transit_With_TTV(AbstractModel):
         for var, i_var in self.batman_ldvars.items():
             self.batman_params.u[i_var] = variable_value[var]
 
-        """ 
+        """
         From the batman manual:
         Reinitializing the model is by far the slowest component of batman,because it calculates the optimal step size
-        for the integration starting from a very small value. 
-        -> However, we estimated the optimal step size from random parameters, so at some point we'll need to 
+        for the integration starting from a very small value.
+        -> However, we estimated the optimal step size from random parameters, so at some point we'll need to
         reinitialize the model so that the correct step size is computed.
         """
         if self.batman_options['initialization_counter'] > 1000:
