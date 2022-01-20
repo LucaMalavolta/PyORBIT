@@ -60,6 +60,7 @@ class ModelContainer(object):
                 model_conf = model.model_conf
 
             model.initialize_model(self, **model_conf)
+            model.change_variable_status(self, **model_conf)
 
             for dataset_name in list(set(model_conf) & set(self.dataset_dict)):
                 model.setup_dataset(

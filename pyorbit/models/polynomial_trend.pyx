@@ -35,25 +35,16 @@ class PolynomialTrend(AbstractModel):
 
     def initialize_model(self, mc, **kwargs):
 
-        if 'order' in kwargs:
-            self.order = kwargs['order']
+        self.order = kwargs.get('order', 1)
 
         """ The user may decide to include the 0th order anyway - be aware of correlations with dataset offset!"""
-        try:
-            if kwargs['include_zero_point']:
-                self.starting_order = 0
-        except:
-            self.starting_order = 1
+        if kwargs.get('include_zero_point', False):
+            self.starting_order = 0
 
         """ The user may decide to compute the polynomial parameters over a different time interval
             useful for leng-term with very slow variations over a single day
         """
-        try:
-            if kwargs['time_interval']:
-                self.time_interval = kwargs['time_interval']
-            print('TIME INTERVAL: ', self.time_interval)
-        except:
-            self.time_interval = 1.
+        self.time_interval = kwargs.get('time_interval', 1.000000000)
 
         """ If the polynomial is used as normalization factor, the first order must be included"""
         if self.normalization_model:
@@ -115,7 +106,7 @@ class LocalPolynomialTrend(AbstractModel):
         self.starting_order = 1
 
         """
-        The x-intercept must be defined within the interval of at least one dataset, 
+        The x-intercept must be defined within the interval of at least one dataset,
         otherwise there will be a degeneracy between the offset parameter and the coefficients
         of the polynomial
         """
@@ -125,25 +116,16 @@ class LocalPolynomialTrend(AbstractModel):
 
     def initialize_model(self, mc, **kwargs):
 
-        if 'order' in kwargs:
-            self.order = kwargs['order']
+        self.order = kwargs.get('order', 1)
 
         """ The user may decide to include the 0th order anyway - be aware of correlations with dataset offset!"""
-        try:
-            if kwargs['include_zero_point']:
-                self.starting_order = 0
-            self.starting_order
-        except:
-            self.starting_order = 1
+        if kwargs.get('include_zero_point', False):
+            self.starting_order = 0
 
         """ The user may decide to compute the polynomial parameters over a different time interval
             useful for leng-term with very slow variations over a single day
         """
-        try:
-            if kwargs['time_interval']:
-                self.time_interval = kwargs['time_interval']
-        except:
-            self.time_interval = 1.
+        self.time_interval = kwargs.get('time_interval', 1.000000000)
 
         """ If the polynomial is used as normalization factor, the first order must be included"""
         if self.normalization_model:

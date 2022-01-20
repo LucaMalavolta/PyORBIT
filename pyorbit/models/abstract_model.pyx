@@ -69,6 +69,18 @@ class AbstractModel(object):
     def initialize_model(self, mc, **kwargs):
         pass
 
+    def change_variable_status(self, mc, **kwargs):
+
+        dataset_vars = kwargs.get('dataset_variables', [])
+        for variable in dataset_vars:
+            self.list_pams_common.pop(variable, None)
+            self.list_pams_dataset.update({variable: None})
+
+        common_vars = kwargs.get('common_variables', [])
+        for variable in common_vars:
+            self.list_pams_dataset.pop(variable, None)
+            self.list_pams_common.update({variable: None})
+
     def setup_dataset(self, mc, dataset, **kwargs):
         pass
 

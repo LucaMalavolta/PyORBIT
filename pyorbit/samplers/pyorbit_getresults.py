@@ -69,7 +69,6 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
             emcee_version = emcee.__version__[0]
 
         mc.model_setup()
-        """ Required to create the right objects inside each class - if defined inside """
         theta_dictionary = results_analysis.get_theta_dictionary(mc)
 
         nburnin = int(mc.emcee_parameters['nburn'])
@@ -132,7 +131,6 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
             zeus = zeus.__version__[0]
 
         mc.model_setup()
-        """ Required to create the right objects inside each class - if defined inside """
         theta_dictionary = results_analysis.get_theta_dictionary(mc)
 
         nburnin = int(mc.zeus_parameters['nburn'])
@@ -187,7 +185,6 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
         mc.initialize_logchi2()
         results_analysis.results_resumen(mc, None, skip_theta=True)
 
-        """ Required to create the right objects inside each class - if defined inside """
         theta_dictionary = results_analysis.get_theta_dictionary(mc)
 
         data_in = np.genfromtxt(dir_input + 'post_equal_weights.dat')
@@ -222,7 +219,6 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
         mc.initialize_logchi2()
         results_analysis.results_resumen(mc, None, skip_theta=True)
 
-        """ Required to create the right objects inside each class - if defined inside """
         theta_dictionary = results_analysis.get_theta_dictionary(mc)
 
         data_in = np.genfromtxt(dir_input + 'pyorbit_equal_weights.txt')
@@ -260,7 +256,6 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
         mc.initialize_logchi2()
         results_analysis.results_resumen(mc, None, skip_theta=True)
 
-        """ Required to create the right objects inside each class - if defined inside """
         theta_dictionary = results_analysis.get_theta_dictionary(mc)
 
         pfrac = mc.nested_sampling_parameters['pfrac']
@@ -439,7 +434,6 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
         with open(dir_input + 'info/results.json') as f:
             results = json.load(f)
 
-        """ Required to create the right objects inside each class - if defined inside """
         theta_dictionary = results_analysis.get_theta_dictionary(mc)
 
         res = ("niter: {:d}\n"
@@ -703,7 +697,7 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
         print()
         """
         Gelman-Rubin traces are stored in the dedicated folder iniside the _plot folder
-        Note that the GR statistics is not robust because the wlakers are not independent 
+        Note that the GR statistics is not robust because the wlakers are not independent
         """
         os.system('mkdir -p ' + dir_output + 'gr_traces')
 
@@ -980,7 +974,7 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
             bjd_plot[dataset_name]['end'] += bjd_plot[dataset_name]['range'] * 0.10
 
             if dataset.kind == 'Phot':
-                
+
                 if bjd_plot[dataset_name]['range'] > P_minimum:
                     # more than one transit:
                     step_size = 5.  / (24 * 60) #five minute stepsize

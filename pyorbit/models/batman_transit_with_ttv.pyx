@@ -80,6 +80,14 @@ class Batman_Transit_With_TTV(AbstractModel, AbstractTransit):
 
         self.code_options['initialization_counter'] = 5000
 
+    def define_special_variable_properties(self,
+                                           ndim,
+                                           output_lists,
+                                           dataset_name,
+                                           var):
+        return ndim, output_lists, False
+
+
     def setup_dataset(self, mc, dataset, **kwargs):
 
         self._prepare_dataset_options(mc, dataset, **kwargs)

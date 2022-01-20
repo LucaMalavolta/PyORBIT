@@ -72,7 +72,7 @@ def emcee_save_to_cpickle(mc, starting_point, population, prob, state, sampler, 
                 open(mc.emcee_dir_output + add_prefix + "sampler_acceptance_fraction.p", "wb"))
 
 
-def zeus_create_dummy_file(mc, prefix=''):
+def zeus_write_dummy_file(mc, prefix=''):
     add_prefix = (prefix + '_' if prefix else '')
     file_dummy = open(mc.zeus_dir_output + add_prefix + "dummy_file", "wb")
     file_dummy.close()
