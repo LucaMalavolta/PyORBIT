@@ -145,7 +145,7 @@ def pyorbit_zeus(config_in, input_datasets=None, return_output=None):
         mc.zeus_parameters['version'] = zeus.__version__[0]
 
         mc.model_setup()
-        mc.create_variables_bounds()
+        mc.boundaries_setup()
         mc.initialize_logchi2()
 
         results_analysis.results_resumen(mc, None, skip_theta=True)
@@ -219,7 +219,7 @@ def pyorbit_zeus(config_in, input_datasets=None, return_output=None):
                 starting_point[theta_i] = starting_point_legacy[theta_dict_legacy[theta_name]]
         else:
             print('Using user-defined starting point from YAML file')
-            mc.create_starting_point()
+            mc.starting_points_setup()
             starting_point = mc.starting_point
 
         population = np.zeros(
@@ -228,7 +228,7 @@ def pyorbit_zeus(config_in, input_datasets=None, return_output=None):
             population[ii, :] = np.random.normal(starting_point, 0.0000001)
 
         print(
-            'to create a synthetic population extremely close to the starting values.')
+            'to write a synthetic population extremely close to the starting values.')
         print()
 
         sys.stdout.flush()
@@ -363,7 +363,7 @@ def pyorbit_zeus(config_in, input_datasets=None, return_output=None):
     print('zeus completed')
     print()
 
-    """ A dummy file is created to let the cpulimit script to proceed with the next step"""
+    """ A dummy file is written to let the cpulimit script to proceed with the next step"""
     zeus_write_dummy_file(mc)
 
     if return_output:

@@ -70,7 +70,7 @@ class Celerite2_Granulation_Rotation_Linear(AbstractModel):
             print("ERROR: celerite2 not installed, this will not work")
             quit()
 
-    def setup_dataset(self, mc, dataset, **kwargs):
+    def initialize_model_dataset(self, mc, dataset, **kwargs):
         self.define_kernel(dataset)
         return
 
@@ -103,8 +103,8 @@ class Celerite2_Granulation_Rotation_Linear(AbstractModel):
                                                          Q=self.Q_granulation) \
             + terms.RotationTerm(sigma=variable_value['rot_sigma'],
                                  period=variable_value['Prot'],
-                                 Q0=variable_value['rot_Q0'], 
-                                 dQ=variable_value['rot_deltaQ'], 
+                                 Q0=variable_value['rot_Q0'],
+                                 dQ=variable_value['rot_deltaQ'],
                                  f=variable_value['rot_fmix'])
 
         diag = dataset.e ** 2.0 + dataset.jitter ** 2.0
@@ -120,8 +120,8 @@ class Celerite2_Granulation_Rotation_Linear(AbstractModel):
                                                          Q=self.Q_granulation) \
             + terms.RotationTerm(sigma=variable_value['rot_sigma'],
                                  period=variable_value['Prot'],
-                                 Q0=variable_value['rot_Q0'], 
-                                 dQ=variable_value['rot_deltaQ'], 
+                                 Q0=variable_value['rot_Q0'],
+                                 dQ=variable_value['rot_deltaQ'],
                                  f=variable_value['rot_fmix'])
 
         diag = dataset.e ** 2.0 + dataset.jitter ** 2.0

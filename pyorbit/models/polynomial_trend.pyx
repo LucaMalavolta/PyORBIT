@@ -59,7 +59,7 @@ class PolynomialTrend(AbstractModel):
                 self.common_poly_ref = common_ref
                 break
 
-    def setup_dataset(self, mc, dataset, **kwargs):
+    def initialize_model_dataset(self, mc, dataset, **kwargs):
 
         try:
             mc.common_models[self.common_poly_ref].fix_list['x_zero'] = np.asarray([kwargs['x_zero'], 0.0000], dtype=np.double)
@@ -135,7 +135,7 @@ class LocalPolynomialTrend(AbstractModel):
             var = 'poly_c'+repr(i_order)
             self.list_pams_dataset.update({var: None})
 
-    def setup_dataset(self, mc, dataset, **kwargs):
+    def initialize_model_dataset(self, mc, dataset, **kwargs):
 
         try:
             self.fix_list[dataset.name_ref]['x_zero'] = np.asarray([kwargs['x_zero'], 0.0000], dtype=np.double)

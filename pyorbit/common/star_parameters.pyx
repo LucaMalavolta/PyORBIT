@@ -3,7 +3,7 @@ from pyorbit.common.abstract_common import *
 
 
 class CommonStarParameters(AbstractCommon):
-    ''' This class must be created for each planet in the system
+    ''' This class must be used by each planet in the system
             model_name is the way the planet is identified
     '''
     model_class = 'star_parameters'

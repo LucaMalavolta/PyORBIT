@@ -23,7 +23,7 @@ class Offset(AbstractModel):
                 self.common_offset_ref = common_ref
                 break
 
-    def setup_dataset(self, mc, dataset, **kwargs):
+    def initialize_model_dataset(self, mc, dataset, **kwargs):
 
         if not mc.common_models[self.common_offset_ref].default_bounds:
             min_offset = np.min(dataset.y) - 100.

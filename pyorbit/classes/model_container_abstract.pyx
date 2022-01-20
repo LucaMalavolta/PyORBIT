@@ -63,7 +63,7 @@ class ModelContainer(object):
             model.change_variable_status(self, **model_conf)
 
             for dataset_name in list(set(model_conf) & set(self.dataset_dict)):
-                model.setup_dataset(
+                model.initialize_model_dataset(
                     self, self.dataset_dict[dataset_name], **model_conf)
 
         if self.dynamical_model:
@@ -71,9 +71,9 @@ class ModelContainer(object):
 
             # self.dynamical_model.prepare(self)
 
-    def create_variables_bounds(self):
-        # This routine creates the boundary array and at the same time
-        # creates a dictionary with the name of the arrays and their
+    def boundaries_setup(self):
+        # This routine setup the boundary array and at the same time
+        # define a dictionary with the name of the arrays and their
         # positions in bounds/theta array so that they can be accessed
         # without using nested counters
 
@@ -122,7 +122,7 @@ class ModelContainer(object):
             self.ndata += dataset.n
         self.ndof = self.ndata - self.ndim
 
-    def create_starting_point(self):
+    def starting_points_setup(self):
 
         self.starting_point = np.average(self.bounds, axis=1)
         self.starting_point[:] = None
@@ -345,8 +345,8 @@ class ModelContainer(object):
                 variable_values.update(
                     self.models[logchi2_gp_model].convert(theta, dataset_name))
 
-                """ GP Log-likelihood is not computed now because a single matrix must be created with
-                the joined dataset"""
+                """ GP Log-likelihood is not computed now because a single matrix must be
+                    computed with the joint dataset"""
                 if hasattr(self.models[logchi2_gp_model], 'delayed_lnlk_computation'):
 
                     self.models[logchi2_gp_model].add_internal_dataset(variable_values, dataset)

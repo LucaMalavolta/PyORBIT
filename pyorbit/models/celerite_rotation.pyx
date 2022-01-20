@@ -80,7 +80,7 @@ class Celerite_Rotation(AbstractModel):
         output_pams[2] = 4 * np.pi * output_pams[1] \
             / (input_pams['Prot'] * np.sqrt(4 * output_pams[1] ** 2 - 1))
         output_pams[0] = input_pams['amp'] \
-            / (output_pams[2] * output_pams[1]) 
+            / (output_pams[2] * output_pams[1])
 
         # Another term at half the period
         output_pams[4] = 0.5 + np.exp(input_pams['ln_Q0'])
@@ -91,7 +91,7 @@ class Celerite_Rotation(AbstractModel):
 
         return output_pams
 
-    def setup_dataset(self, mc, dataset, **kwargs):
+    def initialize_model_dataset(self, mc, dataset, **kwargs):
         self.define_kernel(dataset)
         return
 

@@ -181,7 +181,7 @@ class AbstractCommon(object):
         to the log_chi2 only once
 
         Args:
-            theta: the set of parameters created by the solver
+            theta: the set of parameters used by the solver
         Returns:
             prior_out: prior probability, to be added to the posterior prob.
         """

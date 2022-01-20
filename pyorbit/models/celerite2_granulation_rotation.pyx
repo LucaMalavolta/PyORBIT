@@ -71,7 +71,7 @@ class Celerite2_Granulation_Rotation(AbstractModel):
             print("ERROR: celerite2 not installed, this will not work")
             quit()
 
-    def setup_dataset(self, mc, dataset, **kwargs):
+    def initialize_model_dataset(self, mc, dataset, **kwargs):
         self.define_kernel(dataset)
         return
 

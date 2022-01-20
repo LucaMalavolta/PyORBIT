@@ -33,7 +33,7 @@ class GaussianProcess_QuasiPeriodicActivity(AbstractModel):
 
     n_pams = 4
 
-    """ Indexing is determined by the way the kernel is constructed, so it is specific of the Model and not of the 
+    """ Indexing is determined by the way the kernel is constructed, so it is specific of the Model and not of the
     Common class"""
     gp_pams_index = {
         'Hamp': 0, # amp2
@@ -64,8 +64,8 @@ class GaussianProcess_QuasiPeriodicActivity(AbstractModel):
         """
         output_pams = np.zeros(self.n_pams, dtype=np.double)
 
-        """ You must check _george_ documentation (and possibily do a lot of testing) to know how to convert physical 
-        values to the parameter vector accepted by george.set_parameter_vector() function. Note: these values may be 
+        """ You must check _george_ documentation (and possibily do a lot of testing) to know how to convert physical
+        values to the parameter vector accepted by george.set_parameter_vector() function. Note: these values may be
         different from ones accepted by the kernel
         """
         output_pams[self.gp_pams_index['Hamp']] = np.log(input_pams['Hamp'])*2
@@ -95,7 +95,7 @@ class GaussianProcess_QuasiPeriodicActivity(AbstractModel):
         if 'use_HODLR' in kwargs:
             self.use_HODLR = kwargs['use_HODLR']
 
-    def setup_dataset(self, mc, dataset, **kwargs):
+    def initialize_model_dataset(self, mc, dataset, **kwargs):
         self.define_kernel(dataset)
         return
 
@@ -126,7 +126,7 @@ class GaussianProcess_QuasiPeriodicActivity(AbstractModel):
         else:
             self.gp[dataset.name_ref] = george.GP(kernel)
 
-        """ I've decided to add the jitter in quadrature instead of using a constant kernel to allow the use of 
+        """ I've decided to add the jitter in quadrature instead of using a constant kernel to allow the use of
         different / selective jitter within the dataset
         """
         env = np.sqrt(dataset.e ** 2.0 + dataset.jitter ** 2.0)

@@ -53,7 +53,7 @@ class GP_Framework_QuasiPeriodicActivity(AbstractModel):
     def initialize_model(self, mc,  **kwargs):
         pass
 
-    def setup_dataset(self, mc, dataset, **kwargs):
+    def initialize_model_dataset(self, mc, dataset, **kwargs):
 
         if self._nx0:
             if not dataset.n == self._nx0:

@@ -53,8 +53,8 @@ class GaussianProcess_QuasiPeriodicCosineActivity(AbstractModel):
         cov_matrix = np.exp(- dist_t2 / variable_value['Pdec']**2) \
             * (variable_value['Hamp']**2 *
                np.exp(- np.sin(np.pi * dist_t1 / variable_value['Prot']) ** 2.
-                / (2.0 * variable_value['Oamp']**2)) 
-                + variable_value['Camp']**2 
+                / (2.0 * variable_value['Oamp']**2))
+                + variable_value['Camp']**2
                 * np.cos(4 * np.pi * dist_t1 / variable_value['Prot']))
 
         if diagonal_env is not None:
@@ -62,7 +62,7 @@ class GaussianProcess_QuasiPeriodicCosineActivity(AbstractModel):
 
         return cov_matrix
 
-    def setup_dataset(self, mc, dataset, **kwargs):
+    def initialize_model_dataset(self, mc, dataset, **kwargs):
 
         self._dist_t1[dataset.name_ref], self._dist_t2[dataset.name_ref]=self._compute_distance(
             dataset.x0, dataset.x0)

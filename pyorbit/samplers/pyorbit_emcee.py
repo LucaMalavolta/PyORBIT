@@ -5,7 +5,7 @@ from pyorbit.subroutines.input_parser import yaml_parser, pars_input
 from pyorbit.subroutines.io_subroutines import pyde_save_to_pickle,\
     pyde_load_from_cpickle,\
     emcee_save_to_cpickle, emcee_load_from_cpickle, emcee_flatchain,\
-    emcee_create_dummy_file, starting_point_load_from_cpickle, emcee_simpler_load_from_cpickle
+    emcee_write_dummy_file, starting_point_load_from_cpickle, emcee_simpler_load_from_cpickle
 import pyorbit.subroutines.results_analysis as results_analysis
 import os
 import sys
@@ -152,7 +152,7 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
         mc.emcee_parameters['version'] = emcee.__version__[0]
 
         mc.model_setup()
-        mc.create_variables_bounds()
+        mc.boundaries_setup()
         mc.initialize_logchi2()
 
         results_analysis.results_resumen(mc, None, skip_theta=True)
@@ -226,7 +226,7 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
                 starting_point[theta_i] = starting_point_legacy[theta_dict_legacy[theta_name]]
         else:
             print('Using user-defined starting point from YAML file')
-            mc.create_starting_point()
+            mc.starting_points_setup()
             starting_point = mc.starting_point
 
         population = np.zeros(
@@ -243,7 +243,7 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
        # for ii in range(0, mc.emcee_parameters['nwalkers']):
        #     print(population[ii, :])
 
-        print('to create a synthetic population extremely close to the starting values.')
+        print('to write a synthetic population extremely close to the starting values.')
         print('Undefned values have a uniform random value withing the boundaries.')
         print('WARNING: Initial state check of emcee will ne skipped')
         print()
@@ -432,8 +432,10 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
     print('emcee completed')
     print()
 
-    """ A dummy file is created to let the cpulimit script to proceed with the next step"""
-    emcee_create_dummy_file(mc)
+    """ A dummy file is written to let the cpulimit script to proceed with the next step
+        Nopt sure if this step is needed anymore
+    """
+    emcee_write_dummy_file(mc)
 
     if return_output:
         return mc, sampler.chain,  sampler.lnprobability

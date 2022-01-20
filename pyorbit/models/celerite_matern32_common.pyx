@@ -41,7 +41,7 @@ class Celerite_Matern32_Common(AbstractModel):
         self.gp = {}
 
 
-    def setup_dataset(self, mc, dataset, **kwargs):
+    def initialize_model_dataset(self, mc, dataset, **kwargs):
         self.define_kernel(dataset)
         return
 

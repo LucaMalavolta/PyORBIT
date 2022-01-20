@@ -60,7 +60,7 @@ class GaussianProcess_QuasiPeriodicActivity_Alternative(AbstractModel):
 
         return cov_matrix
 
-    def setup_dataset(self, mc, dataset, **kwargs):
+    def initialize_model_dataset(self, mc, dataset, **kwargs):
 
         self._dist_t1[dataset.name_ref], self._dist_t2[dataset.name_ref] = \
             self._compute_distance(dataset.x0, dataset.x0)

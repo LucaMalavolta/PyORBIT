@@ -81,7 +81,7 @@ class AbstractModel(object):
             self.list_pams_dataset.pop(variable, None)
             self.list_pams_common.update({variable: None})
 
-    def setup_dataset(self, mc, dataset, **kwargs):
+    def initialize_model_dataset(self, mc, dataset, **kwargs):
         pass
 
     def define_special_variable_properties(self,

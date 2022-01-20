@@ -14,7 +14,7 @@ def funcname(self,  parameter_list):
     pass
 
 
-def pyde_create_dummy_file(mc, prefix=''):
+def pyde_write_dummy_file(mc, prefix=''):
     add_prefix = (prefix + '_' if prefix else '')
     file_dummy = open(mc.pyde_dir_output + add_prefix + "dummy_file", "wb")
     file_dummy.close()
@@ -47,7 +47,7 @@ def pyde_load_from_cpickle(pyde_dir_output, prefix=''):
     return mc, population, starting_point, theta_dict
 
 
-def emcee_create_dummy_file(mc, prefix=''):
+def emcee_write_dummy_file(mc, prefix=''):
     add_prefix = (prefix + '_' if prefix else '')
     file_dummy = open(mc.emcee_dir_output + add_prefix + "dummy_file", "wb")
     file_dummy.close()
@@ -168,7 +168,7 @@ def starting_point_load_from_cpickle(dir_output, prefix=None):
     return starting_point, bounds, theta_dict
 
 
-def nested_sampling_create_dummy_file(mc, prefix=''):
+def nested_sampling_write_dummy_file(mc, prefix=''):
     add_prefix = (prefix + '_' if prefix else '')
     file_dummy = open(mc.output_directory + add_prefix + "dummy_file", "wb")
     file_dummy.close()

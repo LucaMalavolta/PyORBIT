@@ -68,7 +68,7 @@ class Batman_Transit(AbstractModel, AbstractTransit):
 
         self.code_options['initialization_counter'] = 5000
 
-    def setup_dataset(self, mc, dataset, **kwargs):
+    def initialize_model_dataset(self, mc, dataset, **kwargs):
 
         self._prepare_dataset_options(mc, dataset, **kwargs)
         self.batman_models[dataset.name_ref] = batman.TransitModel(self.batman_params,

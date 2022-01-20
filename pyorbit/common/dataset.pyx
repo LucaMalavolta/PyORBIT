@@ -113,18 +113,18 @@ class Dataset(AbstractCommon):
                 self.generic_default_bounds['offset'][0] = - \
                     1000.0 * np.max(self.e)
 
-            self.create_systematic_dictionaries('jitter', data_input[:, 3])
-            self.create_systematic_dictionaries('offset', data_input[:, 4])
-            self.create_systematic_dictionaries('linear', data_input[:, 5])
+            self._setup_systematic_dictionaries('jitter', data_input[:, 3])
+            self._setup_systematic_dictionaries('offset', data_input[:, 4])
+            self._setup_systematic_dictionaries('linear', data_input[:, 5])
 
         self.x0 = self.x - self.Tref
-        self.create_systematic_mask('jitter', data_input[:, 3])
-        self.create_systematic_mask('offset', data_input[:, 4])
-        self.create_systematic_mask('linear', data_input[:, 5])
+        self._setup_systematic_mask('jitter', data_input[:, 3])
+        self._setup_systematic_mask('offset', data_input[:, 4])
+        self._setup_systematic_mask('linear', data_input[:, 5])
 
         self.model_reset()
 
-    def create_systematic_dictionaries(self, var_generic, dataset_vals):
+    def _setup_systematic_dictionaries(self, var_generic, dataset_vals):
         n_sys = np.max(dataset_vals.astype(np.int64)) + 1
         self.variable_compressed[var_generic] = {}
         for ii in range(0, n_sys):
@@ -136,7 +136,7 @@ class Dataset(AbstractCommon):
             self.variable_compressed[var_generic][var] = None
             self.variable_expanded[var] = var_generic
 
-    def create_systematic_mask(self, var_generic, dataset_vals):
+    def _setup_systematic_mask(self, var_generic, dataset_vals):
         n_sys = np.max(dataset_vals.astype(np.int64)) + 1
         for ii in range(0, n_sys):
             var = var_generic + '_' + repr(ii)

@@ -56,7 +56,7 @@ class Spiderman_Thermal(AbstractModel, AbstractTransit):
         self.spiderman_params.p_u2 = 0.               # Planetary limb darkening parameter
         self.spiderman_params.T_int = 0.
 
-    def setup_dataset(self, mc, dataset, **kwargs):
+    def initialize_model_dataset(self, mc, dataset, **kwargs):
 
         self._prepare_dataset_options(self, mc, dataset, **kwargs)
         self.spiderman_params.thermal = True

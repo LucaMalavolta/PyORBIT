@@ -13,7 +13,7 @@ class Celerite_Rotation_Linear(AbstractModel):
     This term has two modes in Fourier space: one at ``period`` and one at
     ``0.5 * period``. This can be a good descriptive model for a wide range of
     stochastic variability in stellar time series from rotation to pulsations.
-    from Foreman-Mackey+2017 and exoplanet, but keeping the notation of 
+    from Foreman-Mackey+2017 and exoplanet, but keeping the notation of
     the semi-periodic goerge kernel used in PyORBIT
     differently from the example provided in the paper, here the terms are passed in the linear space already. It will
     the job of the sampler to convert from Logarithmic to Linear space for those variables that the user has decided
@@ -80,7 +80,7 @@ class Celerite_Rotation_Linear(AbstractModel):
         output_pams[2] = 4 * np.pi * output_pams[1] \
             / (input_pams['Prot'] * np.sqrt(4 * output_pams[1] ** 2 - 1))
         output_pams[0] = input_pams['amp'] \
-            / (output_pams[2] * output_pams[1]) 
+            / (output_pams[2] * output_pams[1])
 
         # Another term at half the period
         output_pams[4] = 0.5 + input_pams['Q0']
@@ -91,7 +91,7 @@ class Celerite_Rotation_Linear(AbstractModel):
 
         return output_pams
 
-    def setup_dataset(self, mc, dataset, **kwargs):
+    def initialize_model_dataset(self, mc, dataset, **kwargs):
         self.define_kernel(dataset)
         return
 

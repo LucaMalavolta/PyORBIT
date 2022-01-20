@@ -45,7 +45,7 @@ class Celerite2_Matern32_Linear(AbstractModel):
             quit()
 
 
-    def setup_dataset(self, mc, dataset, **kwargs):
+    def initialize_model_dataset(self, mc, dataset, **kwargs):
         self.define_kernel(dataset)
         return
 

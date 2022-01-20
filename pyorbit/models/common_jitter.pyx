@@ -23,7 +23,7 @@ class Jitter(AbstractModel):
                 self.common_jitter_ref = common_ref
                 break
 
-    def setup_dataset(self, mc, dataset, **kwargs):
+    def initialize_model_dataset(self, mc, dataset, **kwargs):
 
         if not mc.common_models[self.common_jitter_ref].default_bounds:
             min_jitter = np.min(dataset.e) / 100.

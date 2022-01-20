@@ -3,7 +3,7 @@ from pyorbit.subroutines.common import *
 from pyorbit.classes.model_container_polychord import ModelContainerPolyChord
 from pyorbit.subroutines.input_parser import yaml_parser, pars_input
 from pyorbit.subroutines.io_subroutines import nested_sampling_save_to_cpickle, nested_sampling_load_from_cpickle, \
-    nested_sampling_create_dummy_file
+    nested_sampling_write_dummy_file
 import pyorbit.subroutines.results_analysis as results_analysis
 import os
 import sys
@@ -11,7 +11,7 @@ import argparse
 
 __all__ = ["pyorbit_polychord", "yaml_parser"]
 
-""" 
+"""
 def show(filepath):
     # open the output (pdf) file for the user
     if os.name == 'mac': subprocess.call(('open', filepath))
@@ -36,10 +36,10 @@ def pyorbit_polychord(config_in, input_datasets=None, return_output=None):
             dataset.shutdown_jitter()
 
     mc.model_setup()
-    mc.create_variables_bounds()
+    mc.boundaries_setup()
     mc.initialize_logchi2()
 
-    mc.create_starting_point()
+    mc.starting_points_setup()
 
     results_analysis.results_resumen(mc, None, skip_theta=True)
 
@@ -99,8 +99,8 @@ def pyorbit_polychord(config_in, input_datasets=None, return_output=None):
     print('PolyChord COMPLETED')
     print()
 
-    """ A dummy file is created to let the cpulimit script to proceed with the next step"""
-    nested_sampling_create_dummy_file(mc)
+    """ A dummy file is written to let the cpulimit script to proceed with the next step"""
+    nested_sampling_write_dummy_file(mc)
 
     if return_output:
         return mc

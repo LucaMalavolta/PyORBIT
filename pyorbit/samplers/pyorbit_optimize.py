@@ -22,10 +22,10 @@ def pyorbit_optimize(config_in, input_datasets=None, return_output=None):
     pars_input(config_in, mc, input_datasets)
 
     mc.model_setup()
-    mc.create_variables_bounds()
+    mc.boundaries_setup()
     mc.initialize_logchi2()
 
-    mc.create_starting_point()
+    mc.starting_points_setup()
 
     mc.optimize_dir_output = optimize_dir_output
 
