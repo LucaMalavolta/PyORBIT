@@ -22,14 +22,12 @@ class Celerite2_Matern32_Linear(AbstractModel):
 
     model_class = 'celerite2_matern32_linear'
 
-    list_pams_common = {}
+    list_pams_common = set()
 
     list_pams_dataset = {
         'matern32_sigma',  # sigma
         'matern32_rho', # rho
         }
-
-    recenter_pams_dataset = {}
 
     n_pams = 2
 

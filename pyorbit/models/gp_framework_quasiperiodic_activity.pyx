@@ -30,8 +30,6 @@ class GP_Framework_QuasiPeriodicActivity(AbstractModel):
         'Br'
     }
 
-    list_pams_dataset = {}
-
     internal_variable_value = None
 
     def __init__(self, *args, **kwargs):

@@ -15,8 +15,6 @@ class LocalCorrelation(AbstractModel):
         self.default_spaces = {'x_zero': 'Linear'}
         self.default_priors = {'x_zero': ['Uniform', []]}
 
-        self.recenter_pams_dataset = set()
-
         self.order = 1
         self.x_vals = None
         self.x_mask = None

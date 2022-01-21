@@ -31,8 +31,6 @@ class GaussianProcess_QuasiPeriodicActivity_Alternative(AbstractModel):
         'Hamp',  # Amplitude of the signal in the covariance matrix
     }
 
-    recenter_pams_dataset = {}
-
 
     def __init__(self, *args, **kwargs):
         super(GaussianProcess_QuasiPeriodicActivity_Alternative, self).__init__(*args, **kwargs)

@@ -30,7 +30,7 @@ class Batman_Transit(AbstractModel, AbstractTransit):
             'omega',  # argument of pericenter (in radians)
             'R_Rs',  # planet radius (in units of stellar radii)
         }
-        self.list_pams_dataset = {}
+        self.list_pams_dataset = set()
 
         self.batman_params = None
         self.batman_models = {}
@@ -38,7 +38,8 @@ class Batman_Transit(AbstractModel, AbstractTransit):
             'nthreads': 1,
             'initialization_counter': 5000
         }
-
+        self.transit_time_boundaries = {}
+    
     def initialize_model(self, mc, **kwargs):
 
         self._prepare_planetary_parameters(mc, **kwargs)
@@ -78,7 +79,9 @@ class Batman_Transit(AbstractModel, AbstractTransit):
                                                                    exp_time=self.code_options[dataset.name_ref][
                                                                        'exp_time'],
                                                                    nthreads=self.code_options['nthreads'])
-
+        """ Keep track of the boundaries of each dataset"""
+        self.transit_time_boundaries[dataset.name_ref] = [np.amin(dataset.x), np.amax(dataset.x)]
+    
     def compute(self, variable_value, dataset, x0_input=None):
         """
         :param variable_value:
@@ -94,7 +97,7 @@ class Batman_Transit(AbstractModel, AbstractTransit):
 
         self.batman_params.per = variable_value['P']  # orbital period
         # planet radius (in units of stellar radii)
-        self.batman_params.rp = variable_value['R_rs']
+        self.batman_params.rp = variable_value['R_Rs']
         self.batman_params.ecc = variable_value['e']  # eccentricity
         # longitude of periastron (in degrees)
         self.batman_params.w = variable_value['omega']

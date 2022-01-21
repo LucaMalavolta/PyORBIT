@@ -73,12 +73,11 @@ class AbstractModel(object):
 
         dataset_vars = kwargs.get('dataset_variables', [])
         for var in dataset_vars:
-            self.list_pams_common.discard([var])
+            self.list_pams_common.discard(var)
             self.list_pams_dataset.update([var])
-
         common_vars = kwargs.get('common_variables', [])
         for var in common_vars:
-            self.list_pams_dataset.discard([var])
+            self.list_pams_dataset.discard(var)
             self.list_pams_common.update([var])
 
     def initialize_model_dataset(self, mc, dataset, **kwargs):

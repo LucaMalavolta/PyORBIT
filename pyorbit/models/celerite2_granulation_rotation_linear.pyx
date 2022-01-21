@@ -55,8 +55,6 @@ class Celerite2_Granulation_Rotation_Linear(AbstractModel):
         'rot_sigma'
     }
 
-    recenter_pams_dataset = {}
-
     n_pams = 7
     Q_granulation = 1./np.sqrt(2.)
 

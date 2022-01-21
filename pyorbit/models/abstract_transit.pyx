@@ -204,7 +204,7 @@ class AbstractTransit(object):
         """ this function transforms b and rho to i and a  """
         a = convert_rho_to_a(variable_value['P'], variable_value['density'])
         i = convert_b_to_i(
-            variable_value['b'], variable_value['e'], variable_value['o'], a)
+            variable_value['b'], variable_value['e'], variable_value['omega'], a)
         return a, i
 
     def _internal_transformation_mod01(self, variable_value):
@@ -231,7 +231,7 @@ class AbstractTransit(object):
         return kepler_exo.kepler_phase2Tc_Tref(variable_value['P'],
                                                variable_value['mean_long'],
                                                variable_value['e'],
-                                               variable_value['o'])
+                                               variable_value['omega'])
 
     def _internal_transformation_mod06(self, variable_value):
         """ this function transforms b, mass, radius to i and a

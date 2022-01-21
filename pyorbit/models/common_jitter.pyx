@@ -7,9 +7,7 @@ class Jitter(AbstractModel):
     jitter_model = True
 
     list_pams_common = {'jitter'}
-    list_pams_dataset = {}
-
-    recenter_pams_dataset = {}
+    list_pams_dataset = set()
 
     def __init__(self, *args, **kwargs):
         super(Jitter, self).__init__(*args, **kwargs)

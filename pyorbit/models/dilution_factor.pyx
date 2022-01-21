@@ -8,9 +8,7 @@ class DilutionFactor(AbstractModel):
     list_pams_common = {
         'd_factor',  # Diluition factor, expressed as all_other_stars / star_A ratio of flux
     }
-    list_pams_dataset = {}
-
-    recenter_pams_dataset = {}
+    list_pams_dataset = set()
 
     def compute(self, variable_value, dataset, x0_input=None):
         """

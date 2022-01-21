@@ -29,8 +29,6 @@ class GaussianProcess_QuasiPeriodicActivity(AbstractModel):
         'Hamp'  # Amplitude of the signal in the covariance matrix
     }
 
-    recenter_pams_dataset = {}
-
     n_pams = 4
 
     """ Indexing is determined by the way the kernel is constructed, so it is specific of the Model and not of the

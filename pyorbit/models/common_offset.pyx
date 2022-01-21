@@ -7,9 +7,7 @@ class Offset(AbstractModel):
     systematic_model = True
 
     list_pams_common = {'offset': 'U'}
-    list_pams_dataset = {}
-
-    recenter_pams_dataset = {}
+    list_pams_dataset = set()
 
     def __init__(self, *args, **kwargs):
         super(Offset, self).__init__(*args, **kwargs)

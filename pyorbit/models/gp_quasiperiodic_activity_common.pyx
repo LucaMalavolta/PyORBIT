@@ -28,9 +28,7 @@ class GaussianProcess_QuasiPeriodicActivity_Common(AbstractModel):
         'Hamp'  # Amplitude of the signal in the covariance matrix
     }
 
-    list_pams_dataset = {}
-
-    recenter_pams_dataset = {}
+    list_pams_dataset = set()
 
     n_pams = 4
 

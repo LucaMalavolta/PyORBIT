@@ -22,17 +22,15 @@ class Dataset(AbstractCommon):
         self.dynamical = False
         self.planet_name = None
 
-        self.generic_list_pams = {'jitter', 'offset', 'linear'}
+        self.generic_list_pams = {'jitter', 'offset'}
 
         self.generic_default_priors = {
             'jitter': ['Uniform', []],
-            'offset': ['Uniform', []],
-            'linear': ['Uniform', []]}
+            'offset': ['Uniform', []]}
 
         self.generic_default_spaces = {
             'jitter': 'Linear',
-            'offset': 'Linear',
-            'linear': 'Linear'}
+            'offset': 'Linear'}
 
         if self.kind == 'Tcent':
             self.generic_default_spaces['jitter'] = 'Logarithmic'
@@ -106,8 +104,7 @@ class Dataset(AbstractCommon):
             y_trend = np.abs(y_range/x_range)
             y_diff = np.abs(np.mean(self.x)-self.Tref) * y_trend + 1000.
             self.generic_default_bounds = {'offset': [np.min(self.y) - 10.*y_diff, np.max(self.y) + 10.*y_diff],
-                                           'jitter': [np.min(self.e)/100., 100 * np.max(self.e)],
-                                           'linear': [-10.*y_trend, 10.*y_trend]}
+                                           'jitter': [np.min(self.e)/100., 100 * np.max(self.e)]}
 
             if self.kind == 'Phot':
                 self.generic_default_bounds['offset'][0] = - \
@@ -115,12 +112,17 @@ class Dataset(AbstractCommon):
 
             self._setup_systematic_dictionaries('jitter', data_input[:, 3])
             self._setup_systematic_dictionaries('offset', data_input[:, 4])
-            self._setup_systematic_dictionaries('linear', data_input[:, 5])
 
         self.x0 = self.x - self.Tref
         self._setup_systematic_mask('jitter', data_input[:, 3])
         self._setup_systematic_mask('offset', data_input[:, 4])
-        self._setup_systematic_mask('linear', data_input[:, 5])
+
+        if np.amax(data_input[:, 4]) > 0:
+            self.submodel_flag = np.amax(data_input[:, 4])
+            self.submodel_id = data_input[:, 4]
+        else:
+            self.submodel_flag = None
+        
 
         self.model_reset()
 
@@ -143,7 +145,7 @@ class Dataset(AbstractCommon):
             self.mask[var] = np.zeros(self.n, dtype=bool)
             self.mask[var][(abs(dataset_vals - ii) < 0.1)] = True
 
-    def delete_systematic_dictionaries_mask(self, var_generic):
+    def _delete_systematic_dictionaries_mask(self, var_generic):
         if var_generic not in self.variable_compressed:
             return
         for var in self.variable_compressed[var_generic]:
@@ -156,13 +158,10 @@ class Dataset(AbstractCommon):
         self.variable_compressed[var_generic] = {}
 
     def shutdown_jitter(self):
-        self.delete_systematic_dictionaries_mask('jitter')
+        self._delete_systematic_dictionaries_mask('jitter')
 
     def shutdown_offset(self):
-        self.delete_systematic_dictionaries_mask('offset')
-
-    def shutdown_linear(self):
-        self.delete_systematic_dictionaries_mask('linear')
+        self._delete_systematic_dictionaries_mask('offset')
 
     def common_Tref(self, Tref_in):
         self.Tref = Tref_in
@@ -185,9 +184,6 @@ class Dataset(AbstractCommon):
                 self.jitter[self.mask[var]] += variable_value[var]
             elif self.variable_expanded[var] == 'offset':
                 self.additive_model[self.mask[var]] += variable_value[var]
-            elif self.variable_expanded[var] == 'linear':
-                self.additive_model[self.mask[var]] += \
-                    variable_value[var] * self.x0[self.mask[var]]
 
     def compute_model(self):
         if self.normalization_model is None:

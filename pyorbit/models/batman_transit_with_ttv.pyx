@@ -75,6 +75,7 @@ class Batman_Transit_With_TTV(AbstractModel, AbstractTransit):
 
         """ And now we remove the transit time from the common variables, and add it back as a dataset-specific variable """
 
+        print(self.list_pams_common)
         self.list_pams_common.discard('Tc')
         self.list_pams_dataset.update(['Tc'])
 
@@ -100,7 +101,7 @@ class Batman_Transit_With_TTV(AbstractModel, AbstractTransit):
                                            dataset_name,
                                            var):
 
-        if var == 'Tc':
+        if var == 'Tc' and (var not in self.bounds[dataset_name]):
             self.bounds[dataset_name][var] =  self.transit_time_boundaries[dataset_name]
         return ndim, output_lists, False
 

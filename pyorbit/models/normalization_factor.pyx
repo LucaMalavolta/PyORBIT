@@ -10,13 +10,11 @@ class NormalizationFactor(AbstractModel):
     list_pams_common = {
         'n_factor',  # Diluition factor, expressed as all_other_stars / star_A ratio of flux
         }
-    list_pams_dataset = {}
+    list_pams_dataset = set()
 
     default_bounds = {}
     default_spaces = {}
     default_priors = {}
-
-    recenter_pams_dataset = {}
 
     def compute(self, variable_value, dataset, x0_input=None):
 
