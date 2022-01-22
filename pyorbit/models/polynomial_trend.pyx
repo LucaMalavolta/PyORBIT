@@ -4,20 +4,13 @@ import numpy.polynomial.polynomial
 
 class PolynomialTrend(AbstractModel):
 
-    model_class = 'polynomial_trend'
 
     def __init__(self, *args, **kwargs):
-        super(PolynomialTrend, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
+
+        self.model_class = 'polynomial_trend'
 
         self.list_pams_common = {'x_zero'}
-
-        """ in this model x_zero will be common to all the models, however it is treated
-            as a specific
-        """
-        self.list_pams_dataset = set()
-
-
-        self.recenter_pams_dataset = set()
 
         self.order = 1
         self.starting_order = 1

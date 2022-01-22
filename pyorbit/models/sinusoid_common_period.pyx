@@ -16,18 +16,21 @@ New changes:
 
 class SinusoidCommonPeriod(AbstractModel):
 
-    model_class = 'sinusoid_common_period'
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
 
-    list_pams_common = {
-        'P' # Period, log-uniform prior
-    }
+        self.model_class = 'sinusoid_common_period'
 
-    list_pams_dataset = {
-        'K',  # RV semi-amplitude, log-uniform prior
-        'f'  # RV vurve phase, uniform prior
-    }
+        self.list_pams_common = {
+            'P'  # Period, log-uniform prior
+        }
 
-    recenter_pams_dataset = {'f'}
+        self.list_pams_dataset = {
+            'K',  # RV semi-amplitude, log-uniform prior
+            'f'  # RV vurve phase, uniform prior
+        }
+
+        self.recenter_pams_dataset = {'f'}
 
     def compute(self, variable_value, dataset, x0_input=None):
         if x0_input is None:
@@ -44,4 +47,3 @@ class SinusoidCommonPeriod(AbstractModel):
                                             variable_value['K'],
                                             0.00,
                                             np.pi / 2.)
-

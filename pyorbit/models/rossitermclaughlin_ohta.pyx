@@ -17,6 +17,8 @@ class RossiterMcLaughling_Ohta(AbstractModel, AbstractTransit):
             print("ERROR: PyAstronomy not installed, this will not work")
             quit()
 
+        self.unitary_model = False
+
         # Must be moved here because it will updated depending on the selected limb darkening
         self.list_pams_common = {
             'P',  # Period, log-uniform prior
@@ -29,7 +31,6 @@ class RossiterMcLaughling_Ohta(AbstractModel, AbstractTransit):
         }
 
         self.use_stellar_radius = True
-        self.unitary_model = False
 
         self.rm_ohta = None
 
