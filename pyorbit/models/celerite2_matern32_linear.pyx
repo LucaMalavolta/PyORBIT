@@ -18,22 +18,8 @@ class Celerite2_Matern32_Linear(AbstractModel):
        eps (Optional[float]) – The value of the parameter ϵ. (default: 0.01)
     """
 
-    internal_likelihood = True
-
-    model_class = 'celerite2_matern32_linear'
-
-    list_pams_common = set()
-
-    list_pams_dataset = {
-        'matern32_sigma',  # sigma
-        'matern32_rho', # rho
-        }
-
-    n_pams = 2
-
     def __init__(self, *args, **kwargs):
-        super(Celerite2_Matern32_Linear, self).__init__(*args, **kwargs)
-        self.gp = {}
+        super().__init__(*args, **kwargs)
 
         try:
             import celerite2
@@ -42,6 +28,18 @@ class Celerite2_Matern32_Linear(AbstractModel):
             print("ERROR: celerite2 not installed, this will not work")
             quit()
 
+        self.model_class = 'celerite2_matern32_linear'
+        self.internal_likelihood = True
+
+        self.list_pams_common = set()
+
+        self.list_pams_dataset = {
+            'matern32_sigma',  # sigma
+            'matern32_rho',  # rho
+        }
+
+        self.n_pams = 2
+        self.gp = {}
 
     def initialize_model_dataset(self, mc, dataset, **kwargs):
         self.define_kernel(dataset)

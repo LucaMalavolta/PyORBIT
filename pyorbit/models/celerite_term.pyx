@@ -4,6 +4,7 @@ try:
 except ImportError:
     pass
 
+
 class SHOTerm(Term):
     r"""
     A term representing a stochastically-driven, damped harmonic oscillator

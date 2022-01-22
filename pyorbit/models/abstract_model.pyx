@@ -12,16 +12,8 @@ from pyorbit.subroutines.common import get_var_exp_base2, get_var_log_base2
 from pyorbit.subroutines.common import get_var_exp_base10, get_var_log_base10
 from pyorbit.subroutines.common import get_var_exp_natural, get_var_log_natural
 
+
 class AbstractModel(object):
-    """
-
-        Comments to be updated
-
-    """
-
-    unitary_model = False
-    normalization_model = False
-    recenter_pams_dataset = set()
 
     def __init__(self, model_name, common_ref):
         self.model_name = model_name
@@ -34,8 +26,33 @@ class AbstractModel(object):
         except (NameError, TypeError):
             self.common_ref = []
 
+        """ Set of variables shared among all the datasets relying on the same
+        physical (i.e., common) objects. Variables belonging to different common
+        objects can be listed together.
+        When making new objects, always pay attention to avoid duplicate names
+        for variables
+        """
+        self.list_pams_common = set()
+
+        """ Dataset-specific variables must be listed here. A given model will
+        be re-computed for each dataset using the corresponding values of the
+        variables listed here, while all the other varables will be taken by the
+        common objects of reference. As an example, all Gaussian Process object
+        will have the same period (listed in list_pams_common) but each dataset
+        will be characterized by its own covariance amplitude (listed in
+        list_pams_dataset).
+        """
         self.list_pams_dataset = set()
 
+        """ For some circular variables it is convenient to recenter the
+        boundaries so that tha mode is near the center of the interval defined
+        by the boundaries, in such a way the computation of the median and the
+        confidence interval are less prone to errors
+        """
+        self.recenter_pams_dataset = set()
+
+        self.unitary_model = False
+        self.normalization_model = False
 
         self.planet_ref = common_ref
         self.stellar_ref = 'star_parameters'
@@ -236,27 +253,29 @@ class AbstractModel(object):
         prior_out = 0.00
         variable_value = self.convert(theta, dataset_name)
 
-
         """ Preserving backcompatibility with version 8
         #TODO: to be simplified in the next version
         """
 
         if getattr(self, 'multivariate_priors', False):
             if len(set(self.multivariate_vars[dataset_name]) & set(self.list_pams_dataset[dataset_name])) > 0:
-                multi_var = [variable_value[ii] for ii in self.multivariate_vars[dataset_name]]
+                multi_var = [variable_value[ii]
+                             for ii in self.multivariate_vars[dataset_name]]
                 pdf = self.multivariate_func[dataset_name].pdf(multi_var)
                 if pdf > 0:
-                    prior_out += np.log(self.multivariate_func[dataset_name].pdf(multi_var))
+                    prior_out += np.log(
+                        self.multivariate_func[dataset_name].pdf(multi_var))
                 else:
                     return -np.inf
-            else: self.multivariate_vars[dataset_name] = []
+            else:
+                self.multivariate_vars[dataset_name] = []
         else:
             self.multivariate_vars = {dataset_name: []}
 
-
         for var in self.list_pams_dataset:
 
-            if var in self.multivariate_vars[dataset_name]: continue
+            if var in self.multivariate_vars[dataset_name]:
+                continue
 
             prior_out += giveback_priors(
                 self.prior_kind[dataset_name][var],

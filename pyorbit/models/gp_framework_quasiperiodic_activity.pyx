@@ -14,12 +14,15 @@ class GP_Framework_QuasiPeriodicActivity(AbstractModel):
      - omega: is the length scale of the periodic component, and can be linked to the size evolution of the active regions;
      - h: represents the amplitude of the correlations '''
 
-    model_class = 'gp_framework_semiperiod_activity'
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
 
-    internal_likelihood = True
-    delayed_lnlk_computation = True
+        self.model_class = 'gp_framework_semiperiod_activity'
 
-    list_pams_common = {
+        self.internal_likelihood = True
+        self.delayed_lnlk_computation = True
+
+        self.list_pams_common = {
             'Prot',  # Rotational period of the star
             'Pdec',  # Decay timescale of activity
             'Oamp',  # Granulation of activity
@@ -30,19 +33,7 @@ class GP_Framework_QuasiPeriodicActivity(AbstractModel):
             'Br'
         }
 
-    list_pams_dataset = set()
-
-    internal_variable_value = None
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        print('porcodiooooooooo')
-        self.internal_likelihood = True
-        self.delayed_lnlk_computation = True
-
         self.internal_variable_value = None
-
-
         self._x0 = None
         self._nx0 = None
         self._3x0 = None

@@ -14,30 +14,28 @@ class GaussianProcess_QuasiPeriodicActivity_Derivative(AbstractModel):
      - omega: is the length scale of the periodic component, and can be linked to the size evolution of the active regions;
      - h: represents the amplitude of the correlations '''
 
-    model_class = 'gp_quasiperiodic_derivative'
-
-    internal_likelihood = True
-
-    list_pams_common = {
-        'Prot',  # Rotational period of the star
-        'Pdec',  # Decay timescale of activity
-        'Oamp'  # Granulation of activity
-    }
-
-    list_pams_dataset = {
-        'Hamp',  # Amplitude of the signal in the covariance matrix
-        'Camp'  # Amplitude of the convective term of the covariance matrix
-    }
-
     def __init__(self, *args, **kwargs):
-        super(GaussianProcess_QuasiPeriodicActivity_Derivative,
-              self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
         try:
             import george
         except ImportError:
             print("ERROR: george not installed, this will not work")
             quit()
+
+        self.model_class = 'gp_quasiperiodic_derivative'
+        self.internal_likelihood = True
+
+        self.list_pams_common = {
+            'Prot',  # Rotational period of the star
+            'Pdec',  # Decay timescale of activity
+            'Oamp'  # Granulation of activity
+        }
+
+        self.list_pams_dataset = {
+            'Hamp',  # Amplitude of the signal in the covariance matrix
+            'Camp'  # Amplitude of the convective term of the covariance matrix
+        }
 
         self._dist_t1 = {}
         self._dist_t2 = {}
@@ -90,9 +88,7 @@ class GaussianProcess_QuasiPeriodicActivity_Derivative(AbstractModel):
 
         return
 
-
     def lnlk_compute(self, variable_value, dataset):
-
 
         env = dataset.e ** 2.0 + dataset.jitter ** 2.0
         cov_matrix = self._compute_cov_matrix(variable_value,
@@ -110,13 +106,13 @@ class GaussianProcess_QuasiPeriodicActivity_Derivative(AbstractModel):
         if info != 0:
             return -np.inf
 
-        inv_M[self.inds_cache[dataset.name_ref]] = inv_M.T[self.inds_cache[dataset.name_ref]]
+        inv_M[self.inds_cache[dataset.name_ref]
+              ] = inv_M.T[self.inds_cache[dataset.name_ref]]
 
         chi2 = np.dot(dataset.residuals, np.matmul(inv_M, dataset.residuals))
         log2_npi = dataset.n * np.log(2 * np.pi)
         output = -0.5 * (log2_npi + chi2 + det_A)
         return output
-
 
     def sample_predict(self, variable_value, dataset, x0_input=None, return_covariance=False, return_variance=False):
 

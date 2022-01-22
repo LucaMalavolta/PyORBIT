@@ -6,6 +6,7 @@ try:
 except:
     pass
 
+
 class GaussianProcess_QuasiPeriodicActivity(AbstractModel):
     ''' Three parameters out of four are the same for all the datasets, since they are related to
     the properties of the physical process rather than the observed effects on a dataset
@@ -15,39 +16,36 @@ class GaussianProcess_QuasiPeriodicActivity(AbstractModel):
      - omega: is the length scale of the periodic component, and can be linked to the size evolution of the active regions;
      - h: represents the amplitude of the correlations '''
 
-    internal_likelihood = True
-
-    model_class = 'gp_quasiperiodic'
-
-    list_pams_common = {
-        'Prot', # Rotational period of the star
-        'Pdec', # Decay timescale of activity
-        'Oamp' # Granulation of activity
-    }
-
-    list_pams_dataset = {
-        'Hamp'  # Amplitude of the signal in the covariance matrix
-    }
-
-    n_pams = 4
-
-    """ Indexing is determined by the way the kernel is constructed, so it is specific of the Model and not of the
-    Common class"""
-    gp_pams_index = {
-        'Hamp': 0, # amp2
-        'Pdec': 1, # metric
-        'Oamp': 2, # gamma
-        'Prot': 3 # ln_P
-    }
-
     def __init__(self, *args, **kwargs):
-        super(GaussianProcess_QuasiPeriodicActivity, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
         try:
             import george
         except ImportError:
             print("ERROR: george not installed, this will not work")
             quit()
+
+        self.model_class = 'gp_quasiperiodic'
+        self.internal_likelihood = True
+
+        self.list_pams_common = {
+            'Prot',  # Rotational period of the star
+            'Pdec',  # Decay timescale of activity
+            'Oamp'  # Granulation of activity
+        }
+
+        self.list_pams_dataset = {
+            'Hamp'  # Amplitude of the signal in the covariance matrix
+        }
+
+        self.n_pams = 4
+
+        self.gp_pams_index = {
+            'Hamp': 0,  # amp2
+            'Pdec': 1,  # metric
+            'Oamp': 2,  # gamma
+            'Prot': 3  # ln_P
+        }
 
         self.gp = {}
         self.use_HODLR = False
@@ -68,7 +66,8 @@ class GaussianProcess_QuasiPeriodicActivity(AbstractModel):
         """
         output_pams[self.gp_pams_index['Hamp']] = np.log(input_pams['Hamp'])*2
         output_pams[self.gp_pams_index['Pdec']] = np.log(input_pams['Pdec'])*2
-        output_pams[self.gp_pams_index['Oamp']] = 1. / (2.*input_pams['Oamp'] ** 2)
+        output_pams[self.gp_pams_index['Oamp']] = 1. / \
+            (2.*input_pams['Oamp'] ** 2)
         output_pams[self.gp_pams_index['Prot']] = np.log(input_pams['Prot'])
 
         return output_pams
@@ -102,9 +101,9 @@ class GaussianProcess_QuasiPeriodicActivity(AbstractModel):
         gp_pams = np.ones(self.n_pams)
         """ Kernel initialized with fake values... don't worry, they'll be overwritten soon"""
         kernel = np.exp(gp_pams[0]) * \
-                      george.kernels.ExpSquaredKernel(metric=np.exp(gp_pams[1])) * \
-                      george.kernels.ExpSine2Kernel(gamma=gp_pams[2], log_period=gp_pams[3])
-
+            george.kernels.ExpSquaredKernel(metric=np.exp(gp_pams[1])) * \
+            george.kernels.ExpSine2Kernel(
+                gamma=gp_pams[2], log_period=gp_pams[3])
 
         """
          gp_pams[0] = h^2 -> h^2 * ExpSquaredKernel * ExpSine2Kernel
@@ -117,7 +116,8 @@ class GaussianProcess_QuasiPeriodicActivity(AbstractModel):
         """
 
         if self.use_HODLR:
-            self.gp[dataset.name_ref] = george.GP(kernel, solver=george.HODLRSolver, mean=0.00)
+            self.gp[dataset.name_ref] = george.GP(
+                kernel, solver=george.HODLRSolver, mean=0.00)
             print(' *** USING HODLR *** ')
             print()
 
@@ -156,7 +156,6 @@ class GaussianProcess_QuasiPeriodicActivity(AbstractModel):
         else:
             return self.gp[dataset.name_ref].predict(dataset.residuals, x0_input, return_cov=return_covariance, return_var=return_variance)
 
-
     def sample_conditional(self, variable_value, dataset, x0_input=None):
 
         gp_pams = self.convert_val2gp(variable_value)
@@ -168,5 +167,3 @@ class GaussianProcess_QuasiPeriodicActivity(AbstractModel):
             return self.gp[dataset.name_ref].sample_conditional(dataset.residuals, dataset.x0)
         else:
             return self.gp[dataset.name_ref].sample_conditional(dataset.residuals, x0_input)
-
-

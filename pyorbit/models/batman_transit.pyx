@@ -14,7 +14,8 @@ except ImportError:
 class Batman_Transit(AbstractModel, AbstractTransit):
 
     def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)  # this calls all constructors up to AbstractModel
+        # this calls all constructors up to AbstractModel
+        super().__init__(*args, **kwargs)
         super(AbstractModel, self).__init__(*args, **kwargs)
 
         try:
@@ -30,8 +31,8 @@ class Batman_Transit(AbstractModel, AbstractTransit):
             'omega',  # argument of pericenter (in radians)
             'R_Rs',  # planet radius (in units of stellar radii)
         }
-        self.list_pams_dataset = set()
 
+        """ Model-specifc variables, not declared in the abstract class """
         self.batman_params = None
         self.batman_models = {}
         self.code_options = {
@@ -39,11 +40,11 @@ class Batman_Transit(AbstractModel, AbstractTransit):
             'initialization_counter': 5000
         }
         self.transit_time_boundaries = {}
-    
+
     def initialize_model(self, mc, **kwargs):
 
         self._prepare_planetary_parameters(mc, **kwargs)
-        self._prepare_limnb_darkening_coefficients(mc, **kwargs)
+        self._prepare_limb_darkening_coefficients(mc, **kwargs)
 
         if hasattr(kwargs, 'nthreads'):
             self.code_options['nthreads'] = kwargs['nthreads']
@@ -64,24 +65,28 @@ class Batman_Transit(AbstractModel, AbstractTransit):
         """ Setting up the limb darkening calculation"""
 
         self.batman_params.limb_dark = kwargs['limb_darkening_model']
-        self.batman_params.u = np.ones(kwargs['limb_darkening_ncoeff'],
-                                       dtype=np.double) * 0.1  # limb darkening coefficients
+        # limb darkening coefficients
+        self.batman_params.u = np.ones(
+            kwargs['limb_darkening_ncoeff'], dtype=np.double) * 0.1
 
         self.code_options['initialization_counter'] = 5000
 
     def initialize_model_dataset(self, mc, dataset, **kwargs):
 
         self._prepare_dataset_options(mc, dataset, **kwargs)
-        self.batman_models[dataset.name_ref] = batman.TransitModel(self.batman_params,
-                                                                   dataset.x0,
-                                                                   supersample_factor=self.code_options[dataset.name_ref][
-                                                                       'sample_factor'],
-                                                                   exp_time=self.code_options[dataset.name_ref][
-                                                                       'exp_time'],
-                                                                   nthreads=self.code_options['nthreads'])
-        """ Keep track of the boundaries of each dataset"""
-        self.transit_time_boundaries[dataset.name_ref] = [np.amin(dataset.x), np.amax(dataset.x)]
-    
+        self.batman_models[dataset.name_ref] = \
+            batman.TransitModel(self.batman_params,
+                                dataset.x0,
+                                supersample_factor=self.code_options[dataset.name_ref]['sample_factor'],
+                                exp_time=self.code_options[dataset.name_ref]['exp_time'],
+                                nthreads=self.code_options['nthreads'])
+
+        """ Keep track of the boundaries of each dataset, so that the user do
+        not have to write down the boundaries of each transit in case of TTV fit
+        """
+        self.transit_time_boundaries[dataset.name_ref] = \
+            [np.amin(dataset.x), np.amax(dataset.x)]
+
     def compute(self, variable_value, dataset, x0_input=None):
         """
         :param variable_value:
@@ -91,9 +96,9 @@ class Batman_Transit(AbstractModel, AbstractTransit):
         """
         #t1_start = process_time()
 
-        self.batman_params.a, self.batman_params.inc = self.retrieve_ai(variable_value)
+        self.batman_params.a, self.batman_params.inc = self.retrieve_ai(
+            variable_value)
         self.batman_params.t0 = self.retrieve_t0(variable_value, dataset.Tref)
-
 
         self.batman_params.per = variable_value['P']  # orbital period
         # planet radius (in units of stellar radii)
@@ -101,7 +106,6 @@ class Batman_Transit(AbstractModel, AbstractTransit):
         self.batman_params.ecc = variable_value['e']  # eccentricity
         # longitude of periastron (in degrees)
         self.batman_params.w = variable_value['omega']
-
 
         """
         print 'a    ', self.batman_params.a
@@ -118,10 +122,12 @@ class Batman_Transit(AbstractModel, AbstractTransit):
 
         """
         From the batman manual:
-        Reinitializing the model is by far the slowest component of batman,because it calculates the optimal step size
-        for the integration starting from a very small value.
-        -> However, we estimated the optimal step size from random parameters, so at some point we'll need to
-        reinitialize the model so that the correct step size is computed.
+        Reinitializing the model is by far the slowest component of batman,
+        because it calculates the optimal step size for the integration starting
+        from a very small value.
+        -> However, we estimated the optimal step size from random parameters,
+        so at some point we'll need to reinitialize the model so that the
+        correct step size is computed.
         """
         if self.code_options['initialization_counter'] > 1000:
             self.code_options['initialization_counter'] = 0
@@ -129,8 +135,7 @@ class Batman_Transit(AbstractModel, AbstractTransit):
                 batman.TransitModel(self.batman_params,
                                     dataset.x0,
                                     supersample_factor=self.code_options[dataset.name_ref]['sample_factor'],
-                                    exp_time=self.code_options[dataset.name_ref][
-                                        'exp_time'],
+                                    exp_time=self.code_options[dataset.name_ref]['exp_time'],
                                     nthreads=self.code_options['nthreads'])
 
         else:

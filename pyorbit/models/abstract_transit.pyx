@@ -130,7 +130,7 @@ class AbstractTransit(object):
             self.list_pams_common.update(['temperature'])
             self.retrieve_temperature = self._internal_transformation_mod13
 
-    def _prepare_limnb_darkening_coefficients(self, mc, **kwargs):
+    def _prepare_limb_darkening_coefficients(self, mc, **kwargs):
         """ Setting up the limb darkening calculation"""
 
         self.limb_darkening_model = kwargs['limb_darkening_model']

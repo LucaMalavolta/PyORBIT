@@ -3,18 +3,40 @@ from pyorbit.models.abstract_model import *
 
 class NormalizationFactor(AbstractModel):
 
-    model_class = 'normalization_factor'
-    unitary_model = False
-    normalization_model = True
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
 
-    list_pams_common = {
-        'n_factor',  # Diluition factor, expressed as all_other_stars / star_A ratio of flux
-        }
-    list_pams_dataset = set()
+        self.model_class = 'normalization_factor'
+        self.unitary_model = False
+        self.normalization_model = True
 
-    default_bounds = {}
-    default_spaces = {}
-    default_priors = {}
+        self.list_pams_common = {
+            'n_factor',  # Normalization factor, expressed as all_other_stars / star_A ratio of flux
+            }
+
+    def compute(self, variable_value, dataset, x0_input=None):
+
+        """
+
+        :param variable_value:
+        :param dataset:
+        :param x0_input:
+        :return:
+        """
+        return np.asarray(variable_value['n_factor'])
+
+class LocalNormalizationFactor(AbstractModel):
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self.model_class = 'normalization_factor'
+        self.unitary_model = False
+        self.normalization_model = True
+
+        self.list_pams_dataset = {
+            'n_factor',  # Normalization factor, expressed as all_other_stars / star_A ratio of flux
+            }
 
     def compute(self, variable_value, dataset, x0_input=None):
 

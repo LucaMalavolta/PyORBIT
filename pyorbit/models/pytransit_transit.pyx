@@ -40,7 +40,7 @@ class PyTransit_Transit(AbstractModel, AbstractTransit):
 
     def initialize_model(self, mc, **kwargs):
         self._prepare_planetary_parameters(mc, **kwargs)
-        self._prepare_limnb_darkening_coefficients(mc, **kwargs)
+        self._prepare_limb_darkening_coefficients(mc, **kwargs)
 
     def initialize_model_dataset(self, mc, dataset, **kwargs):
         self._prepare_dataset_options(mc, dataset, **kwargs)

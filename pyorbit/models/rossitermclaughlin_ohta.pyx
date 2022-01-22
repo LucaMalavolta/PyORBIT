@@ -37,7 +37,7 @@ class RossiterMcLaughling_Ohta(AbstractModel, AbstractTransit):
 
         self._prepare_planetary_parameters(mc, **kwargs)
         self._prepare_star_parameters(self, mc, **kwargs)
-        self._prepare_limnb_darkening_coefficients(mc, **kwargs)
+        self._prepare_limb_darkening_coefficients(mc, **kwargs)
 
         """ Depending if the orbit is circular or not, a different function
             is selected

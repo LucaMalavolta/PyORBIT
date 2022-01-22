@@ -31,18 +31,17 @@ class Celerite_Rotation(AbstractModel):
             primary. This should probably always be ``0 < mix < 1``.
     """
 
-    model_class = 'celerite_rotation'
-    internal_likelihood = True
-
     def __init__(self, *args, **kwargs):
-        super(Celerite_Rotation, self).__init__(*args, **kwargs)
-        self.gp = {}
+        super().__init__(*args, **kwargs)
 
         try:
             from pyorbit.models.celerite_term import celerite, SHOTerm
         except:
             print("ERROR: celerite not installed, this will not work")
             #quit()
+
+        self.model_class = 'celerite_rotation'
+        self.internal_likelihood = True
 
         self.list_pams_common = {
             'Prot',  # Rotational period of the star
@@ -56,6 +55,7 @@ class Celerite_Rotation(AbstractModel):
         }
 
         self.n_pams = 6
+        self.gp = {}
 
     def convert_val2gp(self, input_pams):
         """

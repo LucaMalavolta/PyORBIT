@@ -1,14 +1,18 @@
 from pyorbit.subroutines.common import *
 from pyorbit.models.abstract_model import *
 
-class DilutionFactor(AbstractModel):
-    model_class = 'dilution_factor'
-    unitary_model = True
 
-    list_pams_common = {
-        'd_factor',  # Diluition factor, expressed as all_other_stars / star_A ratio of flux
-    }
-    list_pams_dataset = set()
+class DilutionFactor(AbstractModel):
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self.model_class = 'dilution_factor'
+        self.unitary_model = True
+
+        self.list_pams_common = {
+            'd_factor',  # Dilution factor, expressed as all_other_stars / star_A ratio of flux
+        }
 
     def compute(self, variable_value, dataset, x0_input=None):
         """
@@ -22,33 +26,16 @@ class DilutionFactor(AbstractModel):
 
 
 class LocalDilutionFactor(AbstractModel):
-    model_class = 'dilution_factor'
-    unitary_model = True
 
-    list_pams_common = {
-        'd_factor',  # Diluition factor, expressed as all_other_stars / star_A ratio of flux
-    }
-    list_pams_dataset = {'d_factor'}
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
 
-    default_bounds = {
-        'd_factor': [0.0000, 1.0000]
-    }
+        self.model_class = 'dilution_factor'
+        self.unitary_model = True
 
-    """ Must be the same parameters as in list_pams, because priors are applied only to _physical_ parameters """
-    default_priors = {
-        'd_factor': ['Uniform', []]
-    }
-
-    default_spaces = {
-        'd_factor': 'Linear'
-    }
-
-    default_fixed = {
-        'd_factor': 0.0000
-    }
-
-    recenter_pams_dataset = {}
-
+        self.list_pams_dataset = {
+            'd_factor',  # Dilution factor, expressed as all_other_stars / star_A ratio of flux
+        }
 
     def compute(self, variable_value, dataset, x0_input=None):
         """

@@ -1,16 +1,16 @@
 from pyorbit.subroutines.common import *
 from pyorbit.models.abstract_model import *
 
+
 class Jitter(AbstractModel):
 
-    model_class = 'common_jitter'
-    jitter_model = True
-
-    list_pams_common = {'jitter'}
-    list_pams_dataset = set()
-
     def __init__(self, *args, **kwargs):
-        super(Jitter, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
+
+        self.model_class = 'common_jitter'
+        self.jitter_model = True
+
+        self.list_pams_common = {'jitter'}
 
         self.common_jitter_ref = None
 
@@ -31,12 +31,10 @@ class Jitter(AbstractModel):
                              np.min(dataset.e) / 100.)
             max_jitter = max(mc.common_models[self.common_jitter_ref].default_bounds['jitter'][1],
                              np.max(dataset.e) * 100.)
-        mc.common_models[self.common_jitter_ref].default_bounds['jitter'] = [min_jitter, max_jitter]
+        mc.common_models[self.common_jitter_ref].default_bounds['jitter'] = [
+            min_jitter, max_jitter]
         dataset.shutdown_jitter()
         return
 
     def compute(self, variable_value, dataset, x0_input=None):
         return variable_value['jitter']
-
-
-
