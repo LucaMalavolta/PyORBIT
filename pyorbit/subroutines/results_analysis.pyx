@@ -623,7 +623,6 @@ def get_model(mc, theta, bjd_dict):
                 """
                 ram_occupancy= (0.5 *  1024**3) / 8
                 x0_len = len(x0_plot)
-
                 if (x0_len * dataset.n) > ram_occupancy:
 
                     print('     Splitting the plot array to allow GP prediction of extended datasets, it may take a while...')
@@ -631,7 +630,7 @@ def get_model(mc, theta, bjd_dict):
                     x0_out = np.empty(x0_len)
                     x0_var = np.empty(x0_len)
 
-                    array_length = int(ram_occupancy / dataset.n)
+                    array_length = int(x0_len / dataset.n)
 
                     id_start = 0
                     id_end = array_length
@@ -687,7 +686,8 @@ def get_model(mc, theta, bjd_dict):
 
         x0_plot = bjd_dict[dataset_name]['x0_plot']
         x0_len = len(x0_plot)
-
+        print(ram_occupancy,x0_len, dataset.n )
+        print((6* x0_len * dataset.n * len(delayed_lnlk_computation)**2))
         if (6* x0_len * dataset.n * len(delayed_lnlk_computation)**2) > ram_occupancy:
 
             print('     Splitting the plot array to allow GP prediction of extended datasets, it may take a while...')
@@ -695,12 +695,15 @@ def get_model(mc, theta, bjd_dict):
             x0_out = np.empty(x0_len)
             x0_var = np.empty(x0_len)
 
-            array_length = int(ram_occupancy / dataset.n)
+            array_length = int(x0_len / dataset.n)
+            print(array_length)
 
             id_start = 0
             id_end = array_length
 
             max_iterations = x0_len//array_length + 1
+            print(max_iterations)
+            print()
             for i_gp in tqdm(range(max_iterations+1)):
 
                 #print("{0:4.1f}%".format(100/max_iterations*i_gp), end = '')

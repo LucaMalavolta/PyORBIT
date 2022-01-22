@@ -20,21 +20,28 @@ class GP_Framework_QuasiPeriodicActivity(AbstractModel):
     delayed_lnlk_computation = True
 
     list_pams_common = {
-        'Prot',  # Rotational period of the star
-        'Pdec',  # Decay timescale of activity
-        'Oamp',  # Granulation of activity
-        'Vc',
-        'Vr',
-        'Lc',
-        'Bc',
-        'Br'
-    }
+            'Prot',  # Rotational period of the star
+            'Pdec',  # Decay timescale of activity
+            'Oamp',  # Granulation of activity
+            'Vc',
+            'Vr',
+            'Lc',
+            'Bc',
+            'Br'
+        }
+
+    list_pams_dataset = set()
 
     internal_variable_value = None
 
     def __init__(self, *args, **kwargs):
-        super(GP_Framework_QuasiPeriodicActivity,
-              self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
+        print('porcodiooooooooo')
+        self.internal_likelihood = True
+        self.delayed_lnlk_computation = True
+
+        self.internal_variable_value = None
+
 
         self._x0 = None
         self._nx0 = None

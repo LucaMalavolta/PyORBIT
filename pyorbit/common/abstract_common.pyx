@@ -22,6 +22,9 @@ class AbstractCommon(object):
         self.planet_ref = common_ref
         self.stellar_ref = 'star_parameters'
 
+        self.list_pams_common = set()
+        self.list_pams_dataset = set()
+
         self.variable_sampler = {}
 
         self.transformation = {}

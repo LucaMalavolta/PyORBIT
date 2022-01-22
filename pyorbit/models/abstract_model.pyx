@@ -34,6 +34,9 @@ class AbstractModel(object):
         except (NameError, TypeError):
             self.common_ref = []
 
+        self.list_pams_dataset = set()
+
+
         self.planet_ref = common_ref
         self.stellar_ref = 'star_parameters'
 
