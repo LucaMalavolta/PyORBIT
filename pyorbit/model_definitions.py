@@ -65,8 +65,8 @@ from pyorbit.models.common_jitter import Jitter
 from pyorbit.models.sinusoid_common_period import SinusoidCommonPeriod
 from pyorbit.models.harmonics import Harmonics
 
-from pyorbit.models.dilution_factor import DilutionFactor
-from pyorbit.models.normalization_factor import NormalizationFactor
+from pyorbit.models.dilution_factor import DilutionFactor, LocalDilutionFactor
+from pyorbit.models.normalization_factor import NormalizationFactor, LocalNormalizationFactor
 
 from pyorbit.models.rossitermclaughlin_ohta import RossiterMcLaughling_Ohta
 
@@ -149,7 +149,9 @@ define_type_to_class = {
     'harmonics': Harmonics,
     'sinusoid_common_period': SinusoidCommonPeriod,
     'dilution_factor': DilutionFactor,
+    'local_dilution_factor': LocalDilutionFactor,
     'normalization_factor': NormalizationFactor,
+    'local_normalization_factor': LocalNormalizationFactor,
     'local_correlated_jitter': LocalCorrelatedJitter,
     'rossitermclaughlin_ohta': RossiterMcLaughling_Ohta,
 }

@@ -1,13 +1,14 @@
 import numpy.polynomial.polynomial
 from pyorbit.models.abstract_model import *
 
+
 class LocalCorrelation(AbstractModel):
 
-    model_class = 'correlations'
-    time_independent_model = True
-
     def __init__(self, *args, **kwargs):
-        super(LocalCorrelation, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
+
+        self.model_class = 'correlations'
+        self.time_independent_model = True
 
         self.list_pams_common = set()
         self.list_pams_dataset = {'x_zero'}
@@ -53,12 +54,15 @@ class LocalCorrelation(AbstractModel):
         print('Correlation model')
         print('Reference dataset:  ', kwargs['reference'])
         print('Associated dataset: ', kwargs['associated'])
-        print('Cross-match between datasets: {0:d} out of {1:d} '.format(int(np.sum(self.x_mask)), dataset_ref.n))
+        print('Cross-match between datasets: {0:d} out of {1:d} '.format(
+            int(np.sum(self.x_mask)), dataset_ref.n))
 
         try:
-            self.fix_list[dataset_ref.name_ref]['x_zero'] = np.asarray([kwargs['x_zero'], 0.0000], dtype=np.double)
+            self.fix_list[dataset_ref.name_ref]['x_zero'] = np.asarray(
+                [kwargs['x_zero'], 0.0000], dtype=np.double)
         except (KeyError, ValueError):
-            self.fix_list[dataset_ref.name_ref]['x_zero'] = np.asarray([np.median(self.x_vals[self.x_mask]), 0.0000], dtype=np.double)
+            self.fix_list[dataset_ref.name_ref]['x_zero'] = np.asarray(
+                [np.median(self.x_vals[self.x_mask]), 0.0000], dtype=np.double)
 
         for i_order in range(1, self.order+1):
             var = 'c'+repr(i_order)
@@ -83,4 +87,3 @@ class LocalCorrelation(AbstractModel):
             return np.where(self.x_mask, numpy.polynomial.polynomial.polyval(self.x_vals-x_zero, coeff), 0.0)
         else:
             return numpy.polynomial.polynomial.polyval(x0_input-x_zero, coeff)
-

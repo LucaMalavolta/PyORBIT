@@ -38,29 +38,8 @@ class Celerite2_Granulation_Rotation_Linear(AbstractModel):
             primary. This should probably always be ``0 < mix < 1``.
     """
 
-    internal_likelihood = True
-
-    model_class = 'celerite2_granulation_rotation_linear'
-
-    list_pams_common = {
-        'grn_period',
-        'Prot',
-        'rot_Q0',
-        'rot_deltaQ',
-        'rot_fmix',
-    }
-
-    list_pams_dataset = {
-        'grn_sigma',
-        'rot_sigma'
-    }
-
-    n_pams = 7
-    Q_granulation = 1./np.sqrt(2.)
-
     def __init__(self, *args, **kwargs):
-        super(Celerite2_Granulation_Rotation_Linear, self).__init__(*args, **kwargs)
-        self.gp = {}
+        super().__init__(*args, **kwargs)
 
         try:
             import celerite2
@@ -68,12 +47,31 @@ class Celerite2_Granulation_Rotation_Linear(AbstractModel):
             print("ERROR: celerite2 not installed, this will not work")
             quit()
 
+        self.model_class = 'celerite2_granulation_rotation_linear'
+        self.internal_likelihood = True
+
+        self.list_pams_common = {
+            'grn_period',
+            'Prot',
+            'rot_Q0',
+            'rot_deltaQ',
+            'rot_fmix',
+        }
+
+        self.list_pams_dataset = {
+            'grn_sigma',
+            'rot_sigma'
+        }
+
+        self.n_pams = 7
+        self.Q_granulation = 1./np.sqrt(2.)
+        self.gp = {}
+
     def initialize_model_dataset(self, mc, dataset, **kwargs):
         self.define_kernel(dataset)
         return
 
     def define_kernel(self, dataset):
-
         """ Kernel initialized with fake values... don't worry, they'll be overwritten soon"""
         kernel = terms.SHOTerm(sigma=1.0, rho=1.0, Q=self.Q_granulation) \
             + terms.RotationTerm(sigma=1.0, period=10., Q0=1.0, dQ=0.5, f=0.5)
@@ -88,7 +86,6 @@ class Celerite2_Granulation_Rotation_Linear(AbstractModel):
 
         self.gp[dataset.name_ref].compute(dataset.x0, diag=diag)
         return
-
 
     def lnlk_compute(self, variable_value, dataset):
         """

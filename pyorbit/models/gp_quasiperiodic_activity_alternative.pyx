@@ -4,6 +4,7 @@ from pyorbit.models.abstract_model import *
 from scipy.linalg import cho_factor, cho_solve, lapack
 from scipy import spatial
 
+
 class GaussianProcess_QuasiPeriodicActivity_Alternative(AbstractModel):
     '''
     This is an altervative version of GaussianProcess_QuasiPeriodicActivity class,
@@ -17,41 +18,38 @@ class GaussianProcess_QuasiPeriodicActivity_Alternative(AbstractModel):
      - omega: is the length scale of the periodic component, and can be linked to the size evolution of the active regions;
      - h: represents the amplitude of the correlations '''
 
-    internal_likelihood = True
-
-    model_class = 'gp_quasiperiodic_alternative'
-
-    list_pams_common = {
-        'Prot', # Rotational period of the star
-        'Pdec', # Decay timescale of activity
-        'Oamp' # Granulation of activity
-    }
-
-    list_pams_dataset = {
-        'Hamp',  # Amplitude of the signal in the covariance matrix
-    }
-
-
     def __init__(self, *args, **kwargs):
-        super(GaussianProcess_QuasiPeriodicActivity_Alternative, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
+
+        self.model_class = 'gp_quasiperiodic_alternative'
+        self.internal_likelihood = True
+
+        self.list_pams_common = {
+            'Prot',  # Rotational period of the star
+            'Pdec',  # Decay timescale of activity
+            'Oamp'  # Granulation of activity
+        }
+
+        self.list_pams_dataset = {
+            'Hamp',  # Amplitude of the signal in the covariance matrix
+        }
 
         self._dist_t1 = {}
         self._dist_t2 = {}
         self.inds_cache = {}
-        print(' Quasi-periodic GP alternative')
 
     def _compute_distance(self, bjd0, bjd1):
         X0 = np.array([bjd0]).T
         X1 = np.array([bjd1]).T
         return spatial.distance.cdist(X0, X1, lambda u, v: u-v), \
-               spatial.distance.cdist(X0, X1, 'sqeuclidean')
+            spatial.distance.cdist(X0, X1, 'sqeuclidean')
 
     def _compute_cov_matrix(self, variable_value, dist_t1, dist_t2, diagonal_env=None):
 
         cov_matrix = variable_value['Hamp'] ** 2 * \
-                     np.exp( (-np.sin(np.pi * dist_t1 / variable_value['Prot']) ** 2.) /
-                               (2.0 * variable_value['Oamp']**2)
-                               - dist_t2 / variable_value['Pdec']**2)
+            np.exp((-np.sin(np.pi * dist_t1 / variable_value['Prot']) ** 2.) /
+                   (2.0 * variable_value['Oamp']**2)
+                   - dist_t2 / variable_value['Pdec']**2)
 
         if diagonal_env is not None:
             cov_matrix += np.diag(diagonal_env)
@@ -84,16 +82,13 @@ class GaussianProcess_QuasiPeriodicActivity_Alternative(AbstractModel):
         if info != 0:
             return -np.inf
 
-        inv_M[self.inds_cache[dataset.name_ref]] = inv_M.T[self.inds_cache[dataset.name_ref]]
+        inv_M[self.inds_cache[dataset.name_ref]
+              ] = inv_M.T[self.inds_cache[dataset.name_ref]]
 
         chi2 = np.dot(dataset.residuals, np.matmul(inv_M, dataset.residuals))
         log2_npi = dataset.n * np.log(2 * np.pi)
         output = -0.5 * (log2_npi + chi2 + det_A)
         return output
-
-
-
-
 
     def sample_predict(self, variable_value, dataset, x0_input=None, return_covariance=False, return_variance=False):
 
@@ -105,7 +100,8 @@ class GaussianProcess_QuasiPeriodicActivity_Alternative(AbstractModel):
 
         if x0_input is not None:
             predict_t1, predict_t2 = self._compute_distance(x0_input, x0_input)
-            crossed_t1, crossed_t2 = self._compute_distance(x0_input, dataset.x0)
+            crossed_t1, crossed_t2 = self._compute_distance(
+                x0_input, dataset.x0)
         else:
             predict_t1 = self._dist_t1[dataset.name_ref]
             predict_t2 = self._dist_t2[dataset.name_ref]

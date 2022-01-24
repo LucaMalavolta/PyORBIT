@@ -27,18 +27,17 @@ New changes:
 
 
 class RVkeplerian(AbstractModel):
-    model_class = 'rv_keplerian'
 
     def __init__(self, *args, **kwargs):
-        super(RVkeplerian, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
+
+        self.model_class = 'rv_keplerian'
 
         self.list_pams_common = {
             'P',  # Period
             'K',  # RV semi-amplitude
             'e',  # eccentricity, uniform prior - to be fixed
             'omega'}  # argument of pericenter
-
-        self.list_pams_dataset = set()
 
         self.use_time_of_transit = False
         self.use_mass_for_planets = False

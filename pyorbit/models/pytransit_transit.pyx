@@ -33,14 +33,13 @@ class PyTransit_Transit(AbstractModel, AbstractTransit):
             'omega',  # argument of pericenter (in radians)
             'R_Rs',  # planet radius (in units of stellar radii)
         }
-        self.list_pams_dataset = set()
 
         self.pytransit_models = {}
         self.pytransit_plot = {}
 
     def initialize_model(self, mc, **kwargs):
         self._prepare_planetary_parameters(mc, **kwargs)
-        self._prepare_limnb_darkening_coefficients(mc, **kwargs)
+        self._prepare_limb_darkening_coefficients(mc, **kwargs)
 
     def initialize_model_dataset(self, mc, dataset, **kwargs):
         self._prepare_dataset_options(mc, dataset, **kwargs)

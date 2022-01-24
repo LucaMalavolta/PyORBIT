@@ -24,7 +24,6 @@ class Spiderman_Thermal(AbstractModel, AbstractTransit):
             'redist',  # Heat redistribution
             #'insol'
         }
-        self.list_pams_dataset = set()
 
         self.use_semimajor_axis = False
         self.use_inclination = False

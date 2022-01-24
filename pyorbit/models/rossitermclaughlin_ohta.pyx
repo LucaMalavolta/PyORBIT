@@ -17,6 +17,8 @@ class RossiterMcLaughling_Ohta(AbstractModel, AbstractTransit):
             print("ERROR: PyAstronomy not installed, this will not work")
             quit()
 
+        self.unitary_model = False
+
         # Must be moved here because it will updated depending on the selected limb darkening
         self.list_pams_common = {
             'P',  # Period, log-uniform prior
@@ -29,7 +31,6 @@ class RossiterMcLaughling_Ohta(AbstractModel, AbstractTransit):
         }
 
         self.use_stellar_radius = True
-        self.unitary_model = False
 
         self.rm_ohta = None
 
@@ -37,7 +38,7 @@ class RossiterMcLaughling_Ohta(AbstractModel, AbstractTransit):
 
         self._prepare_planetary_parameters(mc, **kwargs)
         self._prepare_star_parameters(self, mc, **kwargs)
-        self._prepare_limnb_darkening_coefficients(mc, **kwargs)
+        self._prepare_limb_darkening_coefficients(mc, **kwargs)
 
         """ Depending if the orbit is circular or not, a different function
             is selected

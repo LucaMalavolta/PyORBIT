@@ -16,40 +16,36 @@ class GaussianProcess_QuasiPeriodicActivity_Common(AbstractModel):
      - omega: is the length scale of the periodic component, and can be linked to the size evolution of the active regions;
      - h: represents the amplitude of the correlations '''
 
-    internal_likelihood = True
-    delayed_lnlk_computation = True
-
-    model_class = 'gp_quasiperiodic_common'
-
-    list_pams_common = {
-        'Prot',  # Rotational period of the star
-        'Pdec',  # Decay timescale of activity
-        'Oamp',  # Granulation of activity
-        'Hamp'  # Amplitude of the signal in the covariance matrix
-    }
-
-    list_pams_dataset = set()
-
-    n_pams = 4
-
-    """ Indexing is determined by the way the kernel is constructed, so it is specific of the Model and not of the
-    Common class"""
-    gp_pams_index = {
-        'Hamp': 0,  # amp2
-        'Pdec': 1,  # metric
-        'Oamp': 2,  # gamma
-        'Prot': 3  # ln_P
-    }
-
     def __init__(self, *args, **kwargs):
-        super(GaussianProcess_QuasiPeriodicActivity_Common,
-              self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
         try:
             import george
         except ImportError:
             print("ERROR: george not installed, this will not work")
             quit()
+
+        self.model_class = 'gp_quasiperiodic_common'
+        self.internal_likelihood = True
+        self.delayed_lnlk_computation = True
+
+        self.list_pams_common = {
+            'Prot',  # Rotational period of the star
+            'Pdec',  # Decay timescale of activity
+            'Oamp',  # Granulation of activity
+            'Hamp'  # Amplitude of the signal in the covariance matrix
+        }
+
+        self.n_pams = 4
+
+        """ Indexing is determined by the way the kernel is constructed, so it
+        is specific of the Model and not of the Common class"""
+        self.gp_pams_index = {
+            'Hamp': 0,  # amp2
+            'Pdec': 1,  # metric
+            'Oamp': 2,  # gamma
+            'Prot': 3  # ln_P
+        }
 
         self.gp = {}
         self.internal_dataset = {'x0': [], 'yr': [], 'ej': []}

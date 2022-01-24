@@ -4,10 +4,10 @@ from pyorbit.models.abstract_model import *
 
 class Harmonics(AbstractModel):
 
-    model_class = 'harmonics'
-
     def __init__(self, *args, **kwargs):
         super(Harmonics, self).__init__(*args, **kwargs)
+
+        self.model_class = 'harmonics'
 
         self.list_pams_common = set()
         self.list_pams_dataset = set()
@@ -20,7 +20,8 @@ class Harmonics(AbstractModel):
     def initialize_model(self, mc, **kwargs):
 
         if 'sine_harmonics' in kwargs:
-            self.sine_harmonics = np.arange(1, kwargs['sine_harmonics']+1, dtpye=np.int16)
+            self.sine_harmonics = np.arange(
+                1, kwargs['sine_harmonics']+1, dtpye=np.int16)
         if 'sine_harmonics_selection' in kwargs:
             self.sine_harmonics = kwargs['sine_harmonics_selection']
 
@@ -29,7 +30,8 @@ class Harmonics(AbstractModel):
             self.list_pams_dataset.update([var])
 
         if 'cosine_harmonics' in kwargs:
-            self.cosine_harmonics = np.arange(1, kwargs['cosine_harmonics']+1, dtpye=np.int16)
+            self.cosine_harmonics = np.arange(
+                1, kwargs['cosine_harmonics']+1, dtpye=np.int16)
         if 'cosine_harmonics_selection' in kwargs:
             self.cosine_harmonics = kwargs['cosine_harmonics_selection']
 
@@ -39,7 +41,8 @@ class Harmonics(AbstractModel):
 
         if kwargs.get('use_common_independent_phases', False):
             if kwargs.get('use_T0', False):
-                print("Harmonics model: independent phases and T0 are not compatible options")
+                print(
+                    "Harmonics model: independent phases and T0 are not compatible options")
             for i_order in self.sine_harmonics:
                 var = 'pha_S'+repr(i_order)
                 self.list_pams_common.update([var])
@@ -48,7 +51,8 @@ class Harmonics(AbstractModel):
                 self.list_pams_common.update([var])
         elif kwargs.get('use_independent_phases', False):
             if kwargs.get('use_T0', False) or kwargs.get('use_common_T0', False):
-                print("Harmonics model: independent phases and T0 are not compatible options")
+                print(
+                    "Harmonics model: independent phases and T0 are not compatible options")
             for i_order in self.sine_harmonics:
                 var = 'pha_S'+repr(i_order)
                 self.list_pams_dataset.update([var])
@@ -71,16 +75,15 @@ class Harmonics(AbstractModel):
         else:
             self.list_pams_dataset.update(['P'])
 
-
-
-
     def compute(self, variable_value, dataset, x0_input=None):
 
         if self.use_t0:
             if x0_input is None:
-                phi_value = (dataset.x - variable_value['T0']) / variable_value['P'] * 2 * np.pi
+                phi_value = (
+                    dataset.x - variable_value['T0']) / variable_value['P'] * 2 * np.pi
             else:
-                phi_value = (x0_input + dataset.Tref - variable_value['T0']) / variable_value['P'] * 2 * np.pi
+                phi_value = (x0_input + dataset.Tref -
+                             variable_value['T0']) / variable_value['P'] * 2 * np.pi
         else:
             if x0_input is None:
                 phi_value = dataset.x0 / variable_value['P'] * 2 * np.pi
@@ -94,12 +97,13 @@ class Harmonics(AbstractModel):
         for i_order in self.sine_harmonics:
             var = 'amp_S'+repr(i_order)
             pha = variable_value.get('pha_S'+repr(i_order),  phase)
-            harmonics_output += variable_value[var] * np.sin(phi_value * i_order + pha)
+            harmonics_output += variable_value[var] * \
+                np.sin(phi_value * i_order + pha)
 
         for i_order in self.cosine_harmonics:
             var = 'amp_C'+repr(i_order)
             pha = variable_value.get('pha_C'+repr(i_order),  phase)
-            harmonics_output += variable_value[var] * np.cos(phi_value * i_order + pha)
+            harmonics_output += variable_value[var] * \
+                np.cos(phi_value * i_order + pha)
 
         return harmonics_output
-

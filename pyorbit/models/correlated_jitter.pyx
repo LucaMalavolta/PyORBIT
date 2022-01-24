@@ -4,11 +4,13 @@ from pyorbit.models.abstract_model import *
 
 class LocalCorrelatedJitter(AbstractModel):
 
-    model_class = 'local_correlated_jitter'
-    jitter_model = True
+
 
     def __init__(self, *args, **kwargs):
-        super(LocalCorrelatedJitter, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
+
+        self.model_class = 'local_correlated_jitter'
+        self.jitter_model = True
 
         self.list_pams_common = set()
         self.list_pams_dataset = {'x_zero'}

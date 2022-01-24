@@ -17,11 +17,8 @@ class Celerite_Matern32_Common(AbstractModel):
        eps (Optional[float]) – The value of the parameter ϵ. (default: 0.01)
     """
 
-    model_class = 'celerite_matern32_common'
-    internal_likelihood = True
-
     def __init__(self, *args, **kwargs):
-        super(Celerite_Matern32_Common, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
         try:
             import celerite
@@ -29,17 +26,16 @@ class Celerite_Matern32_Common(AbstractModel):
             print("ERROR: celerite not installed, this will not work")
             quit()
 
+        self.model_class = 'celerite_matern32_common'
+        self.internal_likelihood = True
 
         self.list_pams_common = {
             'matern32_log10_sigma',  # sigma
-            'matern32_log10_rho', # rho
+            'matern32_log10_rho',  # rho
         }
-
-        self.list_pams_dataset = set()
 
         self.n_pams = 2
         self.gp = {}
-
 
     def initialize_model_dataset(self, mc, dataset, **kwargs):
         self.define_kernel(dataset)
@@ -63,7 +59,8 @@ class Celerite_Matern32_Common(AbstractModel):
            1) theta parameters must be converted in physical units (e.g. from logarithmic to linear spaces)
            2) physical values must be converted to {\tt george} input parameters
         """
-        gp_pams = np.asarray([variable_value['matern32_log10_sigma'],variable_value['matern32_log10_rho']])
+        gp_pams = np.asarray(
+            [variable_value['matern32_log10_sigma'], variable_value['matern32_log10_rho']])
 
         env = np.sqrt(dataset.e ** 2.0 + dataset.jitter ** 2.0)
         self.gp[dataset.name_ref].set_parameter_vector(gp_pams)
@@ -73,7 +70,8 @@ class Celerite_Matern32_Common(AbstractModel):
 
     def sample_predict(self, variable_value, dataset, x0_input=None, return_covariance=False, return_variance=False):
 
-        gp_pams = np.asarray([variable_value['matern32_log10_sigma'],variable_value['matern32_log10_rho']])
+        gp_pams = np.asarray(
+            [variable_value['matern32_log10_sigma'], variable_value['matern32_log10_rho']])
 
         env = np.sqrt(dataset.e ** 2.0 + dataset.jitter ** 2.0)
         self.gp[dataset.name_ref].set_parameter_vector(gp_pams)
@@ -86,7 +84,8 @@ class Celerite_Matern32_Common(AbstractModel):
 
     def sample_conditional(self, variable_value, dataset,  x0_input=None):
 
-        gp_pams = np.asarray([variable_value['matern32_log10_sigma'],variable_value['matern32_log10_rho']])
+        gp_pams = np.asarray(
+            [variable_value['matern32_log10_sigma'], variable_value['matern32_log10_rho']])
 
         env = np.sqrt(dataset.e ** 2.0 + dataset.jitter ** 2.0)
         self.gp[dataset.name_ref].set_parameter_vector(gp_pams)

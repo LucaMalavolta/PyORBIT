@@ -5,6 +5,8 @@ try:
     import george
 except:
     pass
+
+
 class GaussianProcess_QuasiPeriodicActivity_Shared(AbstractModel):
     ''' Three parameters out of four are the same for all the datasets, since they are related to
     the properties of the physical process rather than the observed effects on a dataset
@@ -14,41 +16,40 @@ class GaussianProcess_QuasiPeriodicActivity_Shared(AbstractModel):
      - omega: is the length scale of the periodic component, and can be linked to the size evolution of the active regions;
      - h: represents the amplitude of the correlations '''
 
-    internal_likelihood = True
-    delayed_lnlk_computation = True
-
-    model_class = 'gp_quasiperiodic_shared'
-
-    list_pams_common = {
-        'Prot', # Rotational period of the star
-        'Pdec', # Decay timescale of activity
-        'Oamp', # Granulation of activity
-        'Hamp'  # Amplitude of the signal in the covariance matrix
-    }
-
-    list_pams_dataset = {
-        'Hamp_factor'  # Amplitude of the signal in the covariance matrix
-    }
-
-    n_pams = 4
-
-    """ Indexing is determined by the way the kernel is constructed, so it is specific of the Model and not of the
-    Common class"""
-    gp_pams_index = {
-        'Hamp': 0, # amp2
-        'Pdec': 1, # metric
-        'Oamp': 2, # gamma
-        'Prot': 3 # ln_P
-    }
-
     def __init__(self, *args, **kwargs):
-        super(GaussianProcess_QuasiPeriodicActivity_Shared, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
         try:
             import george
         except ImportError:
             print("ERROR: george not installed, this will not work")
             quit()
+
+        self.model_class = 'gp_quasiperiodic_shared'
+        self.internal_likelihood = True
+        self.delayed_lnlk_computation = True
+
+        self.list_pams_common = {
+            'Prot',  # Rotational period of the star
+            'Pdec',  # Decay timescale of activity
+            'Oamp',  # Granulation of activity
+            'Hamp'  # Amplitude of the signal in the covariance matrix
+        }
+
+        self.list_pams_dataset = {
+            'Hamp_factor'  # Amplitude of the signal in the covariance matrix
+        }
+
+        self.n_pams = 4
+
+        """ Indexing is determined by the way the kernel is constructed, so it
+        is specific of the Model and not of the Common class"""
+        self.gp_pams_index = {
+            'Hamp': 0,  # amp2
+            'Pdec': 1,  # metric
+            'Oamp': 2,  # gamma
+            'Prot': 3  # ln_P
+        }
 
         self.gp = {}
         self.internal_dataset = {'x0': [], 'yr': [], 'ej': []}
@@ -71,7 +72,8 @@ class GaussianProcess_QuasiPeriodicActivity_Shared(AbstractModel):
         """
         output_pams[self.gp_pams_index['Hamp']] = np.log(input_pams['Hamp'])*2
         output_pams[self.gp_pams_index['Pdec']] = np.log(input_pams['Pdec'])*2
-        output_pams[self.gp_pams_index['Oamp']] = 1. / (2.*input_pams['Oamp'] ** 2)
+        output_pams[self.gp_pams_index['Oamp']] = 1. / \
+            (2.*input_pams['Oamp'] ** 2)
         output_pams[self.gp_pams_index['Prot']] = np.log(input_pams['Prot'])
 
         return output_pams
@@ -105,8 +107,9 @@ class GaussianProcess_QuasiPeriodicActivity_Shared(AbstractModel):
         gp_pams = np.ones(self.n_pams)
         """ Kernel initialized with fake values... don't worry, they'll be overwritten soon"""
         kernel = np.exp(gp_pams[0]) * \
-                      george.kernels.ExpSquaredKernel(metric=np.exp(gp_pams[1])) * \
-                      george.kernels.ExpSine2Kernel(gamma=gp_pams[2], log_period=gp_pams[3])
+            george.kernels.ExpSquaredKernel(metric=np.exp(gp_pams[1])) * \
+            george.kernels.ExpSine2Kernel(
+                gamma=gp_pams[2], log_period=gp_pams[3])
 
         """
          gp_pams[0] = h^2 -> h^2 * ExpSquaredKernel * ExpSine2Kernel
@@ -143,11 +146,13 @@ class GaussianProcess_QuasiPeriodicActivity_Shared(AbstractModel):
 
         self.internal_dataset[dataset.name_ref] = variable_value['Hamp_factor']
         self.internal_dataset['x0'].extend(dataset.x0)
-        self.internal_dataset['yr'].extend(dataset.residuals*variable_value['Hamp_factor'])
+        self.internal_dataset['yr'].extend(
+            dataset.residuals*variable_value['Hamp_factor'])
 
-        self.internal_dataset['ej'].extend(np.sqrt(dataset.e**2.0 + dataset.jitter**2.0)*variable_value['Hamp_factor'])
+        self.internal_dataset['ej'].extend(
+            np.sqrt(dataset.e**2.0 + dataset.jitter**2.0)*variable_value['Hamp_factor'])
 
-        #self.internal_dataset['ej'].extend(np.sqrt((dataset.e / variable_value['Hamp_factor'])**2.0 +
+        # self.internal_dataset['ej'].extend(np.sqrt((dataset.e / variable_value['Hamp_factor'])**2.0 +
         #                                           (dataset.jitter/variable_value['Hamp_factor'])**2.0))
 
     def lnlk_compute(self):
@@ -156,14 +161,16 @@ class GaussianProcess_QuasiPeriodicActivity_Shared(AbstractModel):
            2) physical values must be converted to {\tt george} input parameters
         """
         self.gp.set_parameter_vector(self.internal_gp_pams)
-        self.gp.compute(self.internal_dataset['x0'], self.internal_dataset['ej'])
+        self.gp.compute(
+            self.internal_dataset['x0'], self.internal_dataset['ej'])
 
         return self.gp.log_likelihood(self.internal_dataset['yr'], quiet=True)
 
     def sample_predict(self, dataset, x0_input=None, return_covariance=False, return_variance=False):
 
         self.gp.set_parameter_vector(self.internal_gp_pams)
-        self.gp.compute(self.internal_dataset['x0'], self.internal_dataset['ej'])
+        self.gp.compute(
+            self.internal_dataset['x0'], self.internal_dataset['ej'])
 
         if x0_input is None:
             return self.gp.predict(self.internal_dataset['yr'], dataset.x0, return_cov=return_covariance, return_var=return_variance)
@@ -173,11 +180,10 @@ class GaussianProcess_QuasiPeriodicActivity_Shared(AbstractModel):
     def sample_conditional(self, dataset, x0_input=None):
 
         self.gp.set_parameter_vector(self.internal_gp_pams)
-        self.gp.compute(self.internal_dataset['x0'], self.internal_dataset['ej'])
+        self.gp.compute(
+            self.internal_dataset['x0'], self.internal_dataset['ej'])
 
         if x0_input is None:
             return self.gp.sample_conditional(self.internal_dataset['yr'], dataset.x0) * self.internal_dataset[dataset.name_ref]
         else:
             return self.gp.sample_conditional(self.internal_dataset['yr'], x0_input) * self.internal_dataset[dataset.name_ref]
-
-

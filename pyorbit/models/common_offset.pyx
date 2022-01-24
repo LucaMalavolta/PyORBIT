@@ -3,14 +3,13 @@ from pyorbit.models.abstract_model import *
 
 class Offset(AbstractModel):
 
-    model_class = 'common_offset'
-    systematic_model = True
-
-    list_pams_common = {'offset': 'U'}
-    list_pams_dataset = set()
-
     def __init__(self, *args, **kwargs):
-        super(Offset, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
+
+        self.model_class = 'common_offset'
+        self.systematic_model = True
+
+        self.list_pams_common = {'offset'}
 
         self.common_offset_ref = None
 
