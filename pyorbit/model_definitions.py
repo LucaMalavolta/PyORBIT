@@ -70,7 +70,8 @@ from pyorbit.models.normalization_factor import NormalizationFactor
 
 from pyorbit.models.rossitermclaughlin_ohta import RossiterMcLaughling_Ohta
 
-from pyorbit.models.polynomial_trend import PolynomialTrend, LocalPolynomialTrend
+from pyorbit.models.polynomial_trend import PolynomialTrend, LocalPolynomialTrend, SubsetPolynomialTrend
+
 
 
 
@@ -142,6 +143,7 @@ define_type_to_class = {
     'local_correlation': LocalCorrelation,
     'polynomial_trend': PolynomialTrend,
     'local_polynomial_trend': LocalPolynomialTrend,
+    'subset_polynomial_trend': SubsetPolynomialTrend,
     'common_offset': Offset,
     'common_jitter': Jitter,
     'harmonics': Harmonics,

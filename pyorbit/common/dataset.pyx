@@ -118,11 +118,10 @@ class Dataset(AbstractCommon):
         self._setup_systematic_mask('offset', data_input[:, 4])
 
         if np.amax(data_input[:, 4]) > 0:
-            self.submodel_flag = np.amax(data_input[:, 4])
+            self.submodel_flag = np.amax(data_input[:, 4]) + 1
             self.submodel_id = data_input[:, 4]
         else:
             self.submodel_flag = None
-        
 
         self.model_reset()
 
