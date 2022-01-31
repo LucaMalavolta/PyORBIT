@@ -181,7 +181,7 @@ class SubsetPolynomialTrend(AbstractModel):
     default_common = 'polynomial_trend'
 
     def __init__(self, *args, **kwargs):
-        super(LocalPolynomialTrend, self).__init__(*args, **kwargs)
+        super(SubsetPolynomialTrend, self).__init__(*args, **kwargs)
 
         self.model_class = 'subset_polynomial_trend'
 
@@ -232,6 +232,10 @@ class SubsetPolynomialTrend(AbstractModel):
                 var = 'poly_sub'+repr(i_sub)+'_c'+repr(i_order)
                 self.list_pams_dataset.update([var])
 
+                #TODO: fix here to avoid hard-coded values
+                self.default_bounds.update({var: [-10 ** 5, 10 ** 6] })
+                self.default_spaces.update({var: 'Linear'})
+                self.default_priors.update({var: ['Uniform', []]})
         try:
             self.fix_list[dataset.name_ref]['x_zero'] = np.asarray([kwargs['x_zero'], 0.0000], dtype=np.double)
         except (KeyError, ValueError):
