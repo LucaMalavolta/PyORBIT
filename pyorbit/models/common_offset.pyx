@@ -3,6 +3,8 @@ from pyorbit.models.abstract_model import *
 
 class Offset(AbstractModel):
 
+    default_common = 'common_offset'
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 

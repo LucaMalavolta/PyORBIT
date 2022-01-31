@@ -4,8 +4,6 @@ from pyorbit.models.abstract_model import *
 
 class LocalCorrelatedJitter(AbstractModel):
 
-
-
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -41,7 +39,7 @@ class LocalCorrelatedJitter(AbstractModel):
         """ HERE: we must associated the data from name_asc dataset to the one from name_ref
                 remove that part from dataset.pyx
                 Add a None option for the dataset
-                Fix input_parser to accomodate the new changes
+                Fix input_parser to accommodate the new changes
                 Jitter must not be included in the analysis, but how about the offset?
                 Or maybe I should just leave the zero point of the polynomial fit free?
         """

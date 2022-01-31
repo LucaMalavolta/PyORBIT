@@ -54,6 +54,8 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, reload_ze
     if conf_models is None:
         conf_models = {'dummy_model': True}
 
+
+    """ Beginning of snippet dedicated to the reloading of parameters that are not involved in the fit procedure"""
     if reload_emcee or reload_zeus or reload_affine:
         if hasattr(mc, 'emcee_parameters'):
             conf = None
@@ -142,6 +144,7 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, reload_ze
                         bounds_space_priors_starts_fixed(
                             mc, mc.common_models[submodel_name], submodel_conf)
         return
+    """ End of snippet dedicated to the reloading of parameters that are not involved in the fit procedure"""
 
     for dataset_name, dataset_conf in conf_inputs.items():
 
@@ -416,15 +419,11 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, reload_ze
         else:
             model_type = model_name
 
+        """ some models requires one or more planets, with some specific properties"""
         if model_type in model_requires_planets or model_type in single_planet_model:
 
             """ radial_velocities and transits are just wrappers for the planets to be actually included in the model, so we
                 substitute it with the individual planets in the list"""
-
-            # try:
-            #    planet_list = np.atleast_1d(model_conf['planets']).tolist()
-            # except:
-            #    planet_list = np.atleast_1d(model_conf['common']).tolist()
 
             try:
                 model_name_expanded = []
@@ -531,6 +530,7 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, reload_ze
                             continue
 
         elif model_type == 'local_correlation' or model_type == 'correlation':
+            """ correlations or local_correlation models requires an extra dataset, that must be passed to """
             mc.models[model_name] = \
                 define_type_to_class[model_type](model_name, None)
             mc.models[model_name].model_conf = model_conf.copy()
@@ -539,14 +539,27 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, reload_ze
 
         else:
 
-            try:
-                mc.models[model_name] = \
-                    define_type_to_class[model_type](
-                        model_name, model_conf['common'])
-            except KeyError:
-                mc.models[model_name] = \
-                    define_type_to_class[model_type](model_name, None)
+            if model_conf.get('common', False):
+                common_ref = model_conf['common']
+            elif hasattr(define_type_to_class[model_name], 'default_common'):
 
+                """ New: some data-specific models may noy need a common model, e.g., local polynomial trends,
+                    however the code requires that such common model is provided in order to have a fall-back for the
+                    default priors, boundaries, spaces, and fixed parameters.
+                    Default common model only works it has been defined in the model class as a Class attribute
+                """
+                common_ref = define_type_to_class[model_name].default_common
+
+                if common_ref not in mc.common_models:
+                    mc.common_models[common_ref] = define_common_type_to_class[common_ref](common_ref)
+            else:
+                common_ref = None
+
+            mc.models[model_name] = define_type_to_class[model_type](model_name, common_ref)
+
+            """ A model can be exclusively unitary, additive, or normalization.
+                How the individual model are combined to provided the final model is embedded in the Dataset class
+            """
             try:
                 if model_conf['normalization_model'] is True:
                     mc.models[model_name].normalization_model = True

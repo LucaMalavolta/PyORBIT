@@ -4,6 +4,8 @@ from pyorbit.models.abstract_model import *
 
 class DilutionFactor(AbstractModel):
 
+    default_common = 'dilution_factor'
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -27,10 +29,12 @@ class DilutionFactor(AbstractModel):
 
 class LocalDilutionFactor(AbstractModel):
 
+    default_common = 'dilution_factor'
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.model_class = 'dilution_factor'
+        self.model_class = 'local_dilution_factor'
         self.unitary_model = True
 
         self.list_pams_dataset = {

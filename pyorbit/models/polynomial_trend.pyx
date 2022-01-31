@@ -4,6 +4,8 @@ from numpy.polynomial import polynomial
 
 class PolynomialTrend(AbstractModel):
 
+    default_common = 'polynomial_trend'
+
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -35,7 +37,7 @@ class PolynomialTrend(AbstractModel):
             self.starting_order = 0
 
         """ The user may decide to compute the polynomial parameters over a different time interval
-            useful for leng-term with very slow variations over a single day
+            useful for long-term with very slow variations over a single day
         """
         self.time_interval = kwargs.get('time_interval', 1.000000000)
 
@@ -81,10 +83,12 @@ class PolynomialTrend(AbstractModel):
 
 class LocalPolynomialTrend(AbstractModel):
 
-    model_class = 'local_polynomial_trend'
+    default_common = 'polynomial_trend'
 
     def __init__(self, *args, **kwargs):
         super(LocalPolynomialTrend, self).__init__(*args, **kwargs)
+
+        self.model_class = 'local_polynomial_trend'
 
         self.list_pams_common = set()
 
@@ -114,7 +118,7 @@ class LocalPolynomialTrend(AbstractModel):
             self.starting_order = 0
 
         """ The user may decide to compute the polynomial parameters over a different time interval
-            useful for leng-term with very slow variations over a single day
+            useful for long-term with very slow variations over a single day
         """
         self.time_interval = kwargs.get('time_interval', 1.000000000)
 
@@ -174,10 +178,12 @@ class LocalPolynomialTrend(AbstractModel):
 
 class SubsetPolynomialTrend(AbstractModel):
 
-    model_class = 'subset_polynomial_trend'
+    default_common = 'polynomial_trend'
 
     def __init__(self, *args, **kwargs):
         super(LocalPolynomialTrend, self).__init__(*args, **kwargs)
+
+        self.model_class = 'subset_polynomial_trend'
 
         self.list_pams_common = set()
 

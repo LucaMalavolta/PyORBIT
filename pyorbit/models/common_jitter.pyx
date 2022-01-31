@@ -4,6 +4,8 @@ from pyorbit.models.abstract_model import *
 
 class Jitter(AbstractModel):
 
+    default_common = 'common_jitter'
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
