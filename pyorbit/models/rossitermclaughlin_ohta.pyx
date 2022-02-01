@@ -4,6 +4,11 @@ import pyorbit.subroutines.kepler_exo as kepler_exo
 from pyorbit.models.abstract_model import AbstractModel
 from pyorbit.models.abstract_transit import AbstractTransit
 
+try:
+    from PyAstronomy import modelSuite as PyAstroModelSuite
+except ImportError:
+    pass
+
 class RossiterMcLaughling_Ohta(AbstractModel, AbstractTransit):
     model_class = 'rossiter_mclaughlin'
 
@@ -35,9 +40,11 @@ class RossiterMcLaughling_Ohta(AbstractModel, AbstractTransit):
         self.rm_ohta = None
 
     def initialize_model(self, mc, **kwargs):
-
+        print('-------------')
+        print(kwargs)
+        print('-------------')
         self._prepare_planetary_parameters(mc, **kwargs)
-        self._prepare_star_parameters(self, mc, **kwargs)
+        self._prepare_star_parameters(mc, **kwargs)
         self._prepare_limb_darkening_coefficients(mc, **kwargs)
 
         """ Depending if the orbit is circular or not, a different function

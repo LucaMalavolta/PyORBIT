@@ -541,21 +541,22 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, reload_ze
 
             if model_conf.get('common', False):
                 common_ref = model_conf['common']
-            elif hasattr(define_type_to_class[model_name], 'default_common'):
+            elif hasattr(define_type_to_class[model_type], 'default_common'):
 
                 """ New: some data-specific models may noy need a common model, e.g., local polynomial trends,
                     however the code requires that such common model is provided in order to have a fall-back for the
-                    default priors, boundaries, spaces, and fixed parameters.
+                    default priors, boundaries, spaces, and fixed parameters. Such common model is saved with the same
+                    name of the data-specifc model.
                     Default common model only works it has been defined in the model class as a Class attribute
                 """
-                common_ref = define_type_to_class[model_name].default_common
+                common_ref = define_type_to_class[model_type].default_common
 
-                if common_ref not in mc.common_models:
-                    mc.common_models[common_ref] = define_common_type_to_class[common_ref](common_ref)
+                if model_name not in mc.common_models:
+                    mc.common_models[model_name] = define_common_type_to_class[common_ref](common_ref)
             else:
                 common_ref = None
 
-            mc.models[model_name] = define_type_to_class[model_type](model_name, common_ref)
+            mc.models[model_name] = define_type_to_class[model_type](model_name, model_name)
 
             """ A model can be exclusively unitary, additive, or normalization.
                 How the individual model are combined to provided the final model is embedded in the Dataset class

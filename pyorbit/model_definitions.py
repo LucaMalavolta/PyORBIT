@@ -83,6 +83,7 @@ from pyorbit.models.polynomial_trend import PolynomialTrend, LocalPolynomialTren
 
 model_requires_planets = ['radial_velocities',
                           'rv_planets', 'batman_transit', 'pytransit_transit', 'batman_transit_with_ttv',
+                          'rossitermclaughlin_ohta',
                           'spiderman_thermal', 'batman_transit_eclipse_phasecurve']
 single_planet_model = ['Tc_planets', 'transit_times']
 transit_time_model = ['Tc_planets', 'transit_times']
