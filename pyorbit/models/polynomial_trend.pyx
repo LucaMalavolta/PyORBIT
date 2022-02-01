@@ -92,9 +92,9 @@ class LocalPolynomialTrend(AbstractModel):
 
         self.list_pams_common = set()
 
-        self.list_pams_dataset = {'x_zero'}
-        self.default_bounds = {'x_zero': [-10**6, 10**6]}
-        self.default_spaces = {'x_zero': 'Linear'}
+        #self.list_pams_dataset = {'x_zero'}
+        #self.default_bounds = {'x_zero': [-10**6, 10**6]}
+        #self.default_spaces = {'x_zero': 'Linear'}
         self.default_priors = {'x_zero': ['Uniform', []]}
 
         self.order = 1
@@ -187,10 +187,11 @@ class SubsetPolynomialTrend(AbstractModel):
 
         self.list_pams_common = set()
 
-        self.list_pams_dataset = {'x_zero'}
-        self.default_bounds = {'x_zero': [-10**6, 10**6]}
-        self.default_spaces = {'x_zero': 'Linear'}
-        self.default_priors = {'x_zero': ['Uniform', []]}
+        self.list_pams_dataset = set()
+        #self.list_pams_dataset = {'x_zero'}
+        #self.default_bounds = {'x_zero': [-10**6, 10**6]}
+        #self.default_spaces = {'x_zero': 'Linear'}
+        #self.default_priors = {'x_zero': ['Uniform', []]}
 
         self.order = 1
         self.starting_order = 1
@@ -236,25 +237,37 @@ class SubsetPolynomialTrend(AbstractModel):
                 self.default_bounds.update({var: [-10 ** 5, 10 ** 6] })
                 self.default_spaces.update({var: 'Linear'})
                 self.default_priors.update({var: ['Uniform', []]})
-        try:
-            self.fix_list[dataset.name_ref]['x_zero'] = np.asarray([kwargs['x_zero'], 0.0000], dtype=np.double)
-        except (KeyError, ValueError):
-            if np.amin(dataset.x) < dataset.Tref < np.amax(dataset.x):
-                self.x_zero[dataset.name_ref] = dataset.Tref
-            else:
-                self.x_zero[dataset.name_ref] = np.average(dataset.x)
-            self.fix_list[dataset.name_ref]['x_zero'] = np.asarray([self.x_zero[dataset.name_ref], 0.0000])
+
+            var = 'x_zero_sub'+repr(i_sub)
+            sub_dataset = dataset.x[(dataset.submodel_id==i_sub)]
+
+            try:
+                xzero_ref = kwargs[var] * 1.
+                self.fix_list[dataset.name_ref][var] = np.asarray([kwargs[var], 0.0000], dtype=np.double)
+            except (KeyError, ValueError):
+                xzero_ref = np.average(sub_dataset)
+
+            self.fix_list[dataset.name_ref][var] = np.asarray([xzero_ref, 0.0000])
+
+            self.list_pams_dataset.update([var])
+            self.default_bounds.update({var: [xzero_ref-1., xzero_ref+1.] })
+            self.default_spaces.update({var: 'Linear'})
+            self.default_priors.update({var: ['Uniform', []]})
+
 
     def compute(self, variable_value, dataset, x0_input=None):
 
         if x0_input is None:
             y_output = np.zeros(dataset.n)
-            x_input = dataset.x-variable_value['x_zero']
+            xd_input = dataset.x
         else:
             y_output = x0_input * 0.
-            x_input = x0_input+dataset.Tref-variable_value['x_zero']
+            xd_input = x0_input+dataset.Tref
 
         for i_sub in range(0,dataset.submodel_flag):
+
+            x_zero_var = 'x_zero_sub'+repr(i_sub)
+            x_input = xd_input-variable_value[x_zero_var]
 
             coeff = np.zeros(self.order+1)
             """ In our array, coefficient are sorted from the lowest degree to the highest """
@@ -265,7 +278,7 @@ class SubsetPolynomialTrend(AbstractModel):
             if x0_input is None:
                 sel_data = (dataset.submodel_id==i_sub)
             else:
-                original_dataset = dataset.x[(dataset.submodel_id==i_sub)] -variable_value['x_zero']
+                original_dataset = dataset.x[(dataset.submodel_id==i_sub)] -variable_value[x_zero_var]
                 sel_data = (x_input >= np.amin(original_dataset)) &  (x_input <= np.amax(original_dataset))
             y_output[sel_data] = polynomial.polyval(x_input[sel_data]/self.time_interval, coeff)
 
