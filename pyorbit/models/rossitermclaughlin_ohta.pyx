@@ -113,7 +113,7 @@ class RossiterMcLaughling_Ohta(AbstractModel, AbstractTransit):
 
 
         if x0_input is None:
-            return self.rm_ohta(dataset.x0) * variable_value['radius'] * constants.Rsun * 1000.
+            return self.rm_ohta.evaluate(dataset.x0) * variable_value['radius'] * constants.Rsun * 1000.
         else:
-            return self.rm_ohta(x0_input) * variable_value['radius'] * constants.Rsun * 1000.
+            return self.rm_ohta.evaluate(x0_input) * variable_value['radius'] * constants.Rsun * 1000.
 
