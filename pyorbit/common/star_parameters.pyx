@@ -12,7 +12,6 @@ class CommonStarParameters(AbstractCommon):
         'radius',  # radius of the star, in Solar radii
         'mass',  # mass of the star, in Solar masses
         'density',  # density of the star, in Solar density units
-        'o_star', # Sky-projected angle between stellar rotation axis and normal of orbit plane [deg]
         'i_star', # Inclination of the star
         'v_sini', # projected rotational velocity of the star
         'temperature' #effective temperature of the star, in K
@@ -22,7 +21,6 @@ class CommonStarParameters(AbstractCommon):
         'radius': [0.0000, 2.0000],
         'mass': [0.0000, 2.0000],
         'density': [0.0000, 5.0000],
-        'o_star': [0.0000, 180.0000],
         'i_star': [0.0000, 180.0000],
         'v_sini': [0.0000, 200.0000],
         'temperature': [2000., 11000.]
@@ -33,7 +31,6 @@ class CommonStarParameters(AbstractCommon):
         'radius': ['Uniform', []],
         'mass': ['Uniform', []],
         'density': ['Uniform', []],
-        'o_star': ['Uniform', []],
         'i_star': ['Uniform', []],
         'v_sini': ['Uniform', []],
         'temperature': ['Uniform', []]
@@ -43,7 +40,6 @@ class CommonStarParameters(AbstractCommon):
         'radius': 'Linear',
         'mass': 'Linear',
         'density': 'Linear',
-        'o_star': 'Linear',
         'i_star': 'Linear',
         'v_sini': 'Linear',
         'temperature': 'Linear'
@@ -53,7 +49,6 @@ class CommonStarParameters(AbstractCommon):
         'radius': 1.0000,
         'mass': 1.0000,
         'density': 1.0000,
-        'o_star': 0.0000,
         'i_star': 90.0000,
         'v_sini': 1.6000,
         'temperature': 5777

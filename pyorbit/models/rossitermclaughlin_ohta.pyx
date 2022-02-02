@@ -29,8 +29,8 @@ class RossiterMcLaughling_Ohta(AbstractModel, AbstractTransit):
             'P',  # Period, log-uniform prior
             'e',  # eccentricity, uniform prior
             'omega',  # argument of pericenter (in radians)
+            'lambda', # Sky-projected angle between stellar rotation axis and normal of orbit plane [deg]
             'R_Rs',  # planet radius (in units of stellar radii)
-            'o_star', # Sky-projected angle between stellar rotation axis and normal of orbit plane [deg]
             'i_star', # Inclination of the star
             'v_sini' # projected rotational velocity of the star
         }
@@ -40,9 +40,7 @@ class RossiterMcLaughling_Ohta(AbstractModel, AbstractTransit):
         self.rm_ohta = None
 
     def initialize_model(self, mc, **kwargs):
-        print('-------------')
-        print(kwargs)
-        print('-------------')
+
         self._prepare_planetary_parameters(mc, **kwargs)
         self._prepare_star_parameters(mc, **kwargs)
         self._prepare_limb_darkening_coefficients(mc, **kwargs)
@@ -74,11 +72,11 @@ class RossiterMcLaughling_Ohta(AbstractModel, AbstractTransit):
         var_a, var_i = self.retrieve_ai(variable_value)
         var_tc = self.retrieve_t0(variable_value, dataset.Tref)
 
-        Omega = variable_value['v_sini'] / (variable_value['radius'] * constants.Rsun) / np.cos(variable_value['i_star']/180.*np.pi)
+        Omega = variable_value['v_sini'] / (variable_value['radius'] * constants.Rsun) / np.sin(variable_value['i_star']/180.*np.pi)
 
         if self.orbit == 'circular':
             self.rm_ohta.assignValue({"a": var_a,
-                            "lambda": variable_value['o_star'],
+                            "lambda": variable_value['lambda']/180.*np.pi,
                             "epsilon": variable_value['ld_c1'],
                             "P": variable_value['P'],
                             "T0": var_tc,
@@ -100,7 +98,7 @@ class RossiterMcLaughling_Ohta(AbstractModel, AbstractTransit):
                                                          variable_value['omega'])
 
             self.rm_ohta.assignValue({"a": var_a,
-                "lambda": variable_value['o_star'],
+                "lambda": variable_value['lambda']/180.*np.pi,
                 "epsilon": variable_value['ld_c1'],
                 "P": variable_value['P'],
                 "tau": Tperi,

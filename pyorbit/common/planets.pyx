@@ -43,6 +43,7 @@ class CommonPlanets(AbstractCommon):
         'R_Rs',  # planet radius (in units of stellar radii)
         'a_Rs',  # semi-major axis (in units of stellar radii)
         'b',   # impact parameter
+        'lambda', # Sky-projected angle between stellar rotation axis and normal of orbit plane [deg]
         'phase_amp', #Amplitude of the phase light curve
         'delta_occ', #depth of the occultation, as measured at the maximum value of the reflected light curve
         'phase_off', #offset of the bright spot
@@ -65,11 +66,12 @@ class CommonPlanets(AbstractCommon):
         # Used by TTVfast/TRADES
         'M_Me': [0.5, 1000.0],  # Fix the unit
         'i': [0.0, 180.0],
-        'Omega': [0.0, 2 * np.pi],
+        'Omega': [0.0, 180],
         # Used by BATMAN
         'R_Rs': [0.00001, 0.5],  # Fix the unit
         'a_Rs': [0.00001, 500.],  # Fix the unit
         'b': [0.0, 2.0],
+        'lambda': [-90.0000, 90.0000],
         'phase_amp': [0.00, 0.50],
         'delta_occ': [0.00, 0.50],
         'phase_off': [-np.pi, np.pi],
@@ -98,6 +100,7 @@ class CommonPlanets(AbstractCommon):
         'R_Rs': ['Uniform', []],  # Fix the unit
         'a_Rs': ['Uniform', []],  # Fix the unit
         'b': ['Uniform', []],  # Fix the unit
+        'lambda': ['Uniform', []],  # Fix the unit
         'phase_amp': ['Uniform', []],  # Fix the unit
         'delta_occ': ['Uniform', []],  # Fix the unit
         'phase_off': ['Uniform', []],  # Fix the unit
@@ -123,6 +126,7 @@ class CommonPlanets(AbstractCommon):
         'R_Rs': 'Linear',
         'a_Rs': 'Linear',
         'b': 'Linear',
+        'lambda': 'Linear',
         'phase_amp': 'Linear',
         'delta_occ': 'Linear',
         'phase_off': 'Linear',
@@ -143,6 +147,7 @@ class CommonPlanets(AbstractCommon):
         'R_Rs': 0.05,
         'a_Rs': 1.0,
         'b': 1.0,
+        'lambda': 0.0000,
         'phase_amp': 0.000,
         'delta_occ': 0.000,
         'phase_off': 0.000,
