@@ -538,7 +538,6 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, reload_ze
                 mc, mc.models[model_name], model_conf, dataset_1=model_conf['reference'])
 
         else:
-
             if model_conf.get('common', False):
                 common_ref = model_conf['common']
             elif hasattr(define_type_to_class[model_type], 'default_common'):
@@ -549,14 +548,14 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, reload_ze
                     name of the data-specifc model.
                     Default common model only works it has been defined in the model class as a Class attribute
                 """
-                common_ref = define_type_to_class[model_type].default_common
-
+                common_type = define_type_to_class[model_type].default_common
+                common_ref = model_name
                 if model_name not in mc.common_models:
-                    mc.common_models[model_name] = define_common_type_to_class[common_ref](common_ref)
+                    mc.common_models[common_ref] = define_common_type_to_class[common_type](common_ref)
             else:
                 common_ref = None
 
-            mc.models[model_name] = define_type_to_class[model_type](model_name, model_name)
+            mc.models[model_name] = define_type_to_class[model_type](model_name, common_ref)
 
             """ A model can be exclusively unitary, additive, or normalization.
                 How the individual model are combined to provided the final model is embedded in the Dataset class
