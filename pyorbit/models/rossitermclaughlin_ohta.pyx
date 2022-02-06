@@ -73,7 +73,6 @@ class RossiterMcLaughling_Ohta(AbstractModel, AbstractTransit):
         var_tc = self.retrieve_t0(variable_value, dataset.Tref)
 
         Omega = variable_value['v_sini'] / (variable_value['radius'] * constants.Rsun) / np.sin(variable_value['i_star']/180.*np.pi)
-
         if self.orbit == 'circular':
             self.rm_ohta.assignValue({"a": var_a,
                             "lambda": variable_value['lambda']/180.*np.pi,
@@ -82,7 +81,7 @@ class RossiterMcLaughling_Ohta(AbstractModel, AbstractTransit):
                             "T0": var_tc,
                             "i": var_i/180.*np.pi,
                             "Is": variable_value['i_star']/180.*np.pi,
-                            "Omega": Omega/180.*np.pi,
+                            "Omega": Omega,
                             "gamma": variable_value['R_Rs']})
         else:
 
@@ -102,13 +101,12 @@ class RossiterMcLaughling_Ohta(AbstractModel, AbstractTransit):
                 "epsilon": variable_value['ld_c1'],
                 "P": variable_value['P'],
                 "tau": Tperi,
-                "i": variable_value['i']/180.*np.pi,
+                "i": var_i/180.*np.pi,
                 "w": variable_value['omega']/180.*np.pi-np.pi,
                 "e":variable_value['e'],
                 "Is": variable_value['i_star']/180.*np.pi,
-                "Omega": Omega/180.*np.pi,
+                "Omega": Omega,
                 "gamma": variable_value['R_Rs']})
-
 
         if x0_input is None:
             return self.rm_ohta.evaluate(dataset.x0) * variable_value['radius'] * constants.Rsun * 1000.

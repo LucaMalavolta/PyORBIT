@@ -41,7 +41,8 @@ if __name__ == '__main__':
                                'eclipse',
                                'phasecurve',
                                'eclipse_phasecurve',
-                               'transit_eclipse_phasecurve']
+                               'transit_eclipse_phasecurve',
+                               'rv_keplerian']
     }
 
     # Moved here from pyorbit_getresults.py for consistency with PyORBIT_run.py

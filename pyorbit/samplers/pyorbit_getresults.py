@@ -1238,9 +1238,9 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
                                 delta_T = variable_values['Tc']-dataset.Tref
                             except KeyError:
                                 delta_T = kepler_exo.kepler_phase2Tc_Tref(variable_values['P'],
-                                                                          variable_values['f'],
+                                                                          variable_values['mean_long'],
                                                                           variable_values['e'],
-                                                                          variable_values['o'])
+                                                                          variable_values['omega'])
 
                             y_plot = mc.models[model_name].compute(
                                 variable_values, dataset, x_range+delta_T)
@@ -1262,11 +1262,11 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
                     try:
 
                         RV_out = kepler_exo.kepler_RV_T0P(bjd_plot['full']['x_plot']-mc.Tref,
-                                                          planet_vars[model]['f'],
+                                                          planet_vars[model]['mean_long'],
                                                           planet_vars[model]['P'],
                                                           planet_vars[model]['K'],
                                                           planet_vars[model]['e'],
-                                                          planet_vars[model]['o'])
+                                                          planet_vars[model]['omega'])
                         fileout = open(
                             dir_models + 'RV_planet_' + model + '_kep.dat', 'w')
                         fileout.write('descriptor x_range  m_kepler \n')
@@ -1276,11 +1276,11 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
 
                         x_range = np.arange(-1.50, 1.50, 0.001)
                         RV_out = kepler_exo.kepler_RV_T0P(x_range * planet_vars[model]['P'],
-                                                          planet_vars[model]['f'],
+                                                          planet_vars[model]['mean_long'],
                                                           planet_vars[model]['P'],
                                                           planet_vars[model]['K'],
                                                           planet_vars[model]['e'],
-                                                          planet_vars[model]['o'])
+                                                          planet_vars[model]['omega'])
                         fileout = open(
                             dir_models + 'RV_planet_' + model + '_pha.dat', 'w')
                         fileout.write('descriptor x_phase m_phase \n')
@@ -1294,11 +1294,11 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
                                 planet_vars[model]['P'] + \
                                 planet_vars[model]['Tc'] - mc.Tref
                             RV_out = kepler_exo.kepler_RV_T0P(Tc_range,
-                                                              planet_vars[model]['f'],
+                                                              planet_vars[model]['mean_long'],
                                                               planet_vars[model]['P'],
                                                               planet_vars[model]['K'],
                                                               planet_vars[model]['e'],
-                                                              planet_vars[model]['o'])
+                                                              planet_vars[model]['omega'])
                             fileout = open(
                                 dir_models + 'RV_planet_' + model + '_Tcf.dat', 'w')
                             fileout.write('descriptor Tc_phase m_phase \n')
