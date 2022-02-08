@@ -74,11 +74,8 @@ class CommonActivity(AbstractCommon):
         'K': [0.5, 2000.0],
         'f': [0.0, 2 * np.pi],
         #
-        'matern32_sigma': [0.00000001, 1000000.0],
+        'matern32_sigma': [0.000001, 1000000.0],
         'matern32_rho': [0.001, 1000.00],
-        #
-        'matern32_log10_sigma': [-6.0, 6.0],
-        'matern32_log10_rho': [-3.0, 3.0],
         #
         'Hamp_factor': [0.01, 10.0],
         'Q0': [0.00001, 10000.000],
@@ -161,9 +158,6 @@ class CommonActivity(AbstractCommon):
         #
         'matern32_sigma':'Log_Base10',
         'matern32_rho': 'Log_Base10',
-        #
-        'matern32_log10_sigma':'Linear',
-        'matern32_log10_rho': 'Linear',
         #
         'P': 'Logarithmic',
         'K': 'Logarithmic',

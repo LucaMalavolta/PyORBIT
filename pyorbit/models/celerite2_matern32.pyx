@@ -19,12 +19,13 @@ class Celerite2_Matern32(AbstractModel):
     """
 
     def __init__(self, *args, **kwargs):
-        super(Celerite2_Matern32, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
         try:
             import celerite2
+            from celerite2 import terms
         except:
-            print("ERROR: celerite not installed, this will not work")
+            print("ERROR: celerite2 not installed, this will not work")
             quit()
 
         self.model_class = 'celerite2_matern32'
@@ -33,8 +34,8 @@ class Celerite2_Matern32(AbstractModel):
         self.list_pams_common = set()
 
         self.list_pams_dataset = {
-            'matern32_log10_sigma',  # sigma
-            'matern32_log10_rho',  # rho
+            'matern32_sigma',  # sigma
+            'matern32_rho',  # rho
         }
 
         self.n_pams = 2
@@ -65,8 +66,8 @@ class Celerite2_Matern32(AbstractModel):
 
         self.gp[dataset.name_ref].mean = 0.
         self.gp[dataset.name_ref].kernel = terms.SHOTerm(
-            10**variable_value['matern32_log10_sigma'],
-            10**variable_value['matern32_log10_rho'])
+            variable_value['matern32_sigma'],
+            variable_value['matern32_rho'])
 
         diag = dataset.e ** 2.0 + dataset.jitter ** 2.0
         self.gp[dataset.name_ref].compute(dataset.x0, diag=diag, quiet=True)
@@ -77,8 +78,8 @@ class Celerite2_Matern32(AbstractModel):
 
         self.gp[dataset.name_ref].mean = 0.
         self.gp[dataset.name_ref].kernel = terms.SHOTerm(
-            10**variable_value['matern32_log10_sigma'],
-            10**variable_value['matern32_log10_rho'])
+            variable_value['matern32_sigma'],
+            variable_value['matern32_rho'])
 
         diag = dataset.e ** 2.0 + dataset.jitter ** 2.0
         self.gp[dataset.name_ref].compute(dataset.x0, diag=diag, quiet=True)
@@ -92,8 +93,8 @@ class Celerite2_Matern32(AbstractModel):
 
         self.gp[dataset.name_ref].mean = 0.
         self.gp[dataset.name_ref].kernel = terms.SHOTerm(
-            10**variable_value['matern32_log10_sigma'],
-            10**variable_value['matern32_log10_rho'])
+            variable_value['matern32_sigma'],
+            variable_value['matern32_rho'])
 
         diag = dataset.e ** 2.0 + dataset.jitter ** 2.0
         self.gp[dataset.name_ref].compute(dataset.x0, diag=diag, quiet=True)
