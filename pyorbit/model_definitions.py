@@ -49,6 +49,7 @@ from pyorbit.models.gp_quasiperiodic_activity_derivative import \
     GaussianProcess_QuasiPeriodicActivity_Derivative
 
 from pyorbit.models.celerite2_granulation_rotation import Celerite2_Granulation_Rotation
+from pyorbit.models.celerite2_rotation import Celerite2_Rotation
 from pyorbit.models.celerite2_matern32 import Celerite2_Matern32
 
 from pyorbit.models.celerite_rotation import Celerite_Rotation
@@ -131,6 +132,7 @@ define_type_to_class = {
     'gp_quasiperiodic_derivative': GaussianProcess_QuasiPeriodicActivity_Derivative,
     'gp_quasiperiodic_cosine': GaussianProcess_QuasiPeriodicCosineActivity,
     'celerite2_granulation_rotation': Celerite2_Granulation_Rotation,
+    'celerite2_rotation': Celerite2_Rotation,
     'celerite2_matern32': Celerite2_Matern32,
     'celerite_matern32': Celerite_Matern32,
     'celerite_matern32_common': Celerite_Matern32_Common,
