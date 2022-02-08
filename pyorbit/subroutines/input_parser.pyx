@@ -538,6 +538,7 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, reload_ze
                 mc, mc.models[model_name], model_conf, dataset_1=model_conf['reference'])
 
         else:
+
             if model_conf.get('common', False):
                 common_ref = model_conf['common']
             elif hasattr(define_type_to_class[model_type], 'default_common'):
@@ -550,12 +551,48 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, reload_ze
                 """
                 common_type = define_type_to_class[model_type].default_common
                 common_ref = model_name
+
                 if model_name not in mc.common_models:
                     mc.common_models[common_ref] = define_common_type_to_class[common_type](common_ref)
             else:
                 common_ref = None
 
             mc.models[model_name] = define_type_to_class[model_type](model_name, common_ref)
+
+
+            """ Check if we need to add the limb darkening parameters to the model"""
+            if mc.models[model_name].model_class in model_requires_limbdarkening:
+
+                try:
+                    common_name = mc.models[model_name].model_conf['limb_darkening']
+                except:
+                    common_name = 'limb_darkening'
+
+                print('  model: {0:s} is using {1:s} LD parameters'.format(
+                    model_name, common_name))
+
+                model_conf['limb_darkening_model'] = \
+                    mc.common_models[common_name].ld_type
+
+                model_conf['limb_darkening_ncoeff'] = \
+                    mc.common_models[common_name].ld_ncoeff
+
+                mc.models[model_name].common_ref.append(common_name)
+
+            """ Adding the stlerra parameters common model by default """
+            ##TODO: is it really needed?
+            #try:
+            #    common_name = mc.models[model_name].model_conf['star_parameters']
+            #except:
+            #    common_name = 'star_parameters'
+            #mc.models[model_name].common_ref.append(common_name)
+            #mc.models[model_name].stellar_ref = common_name
+
+
+
+
+
+
 
             """ A model can be exclusively unitary, additive, or normalization.
                 How the individual model are combined to provided the final model is embedded in the Dataset class

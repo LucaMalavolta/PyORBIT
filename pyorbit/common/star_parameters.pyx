@@ -14,7 +14,10 @@ class CommonStarParameters(AbstractCommon):
         'density',  # density of the star, in Solar density units
         'i_star', # Inclination of the star
         'v_sini', # projected rotational velocity of the star
-        'temperature' #effective temperature of the star, in K
+        'temperature', #effective temperature of the star, in K
+        'line_contrast',
+        'line_fwhm',
+        'rv_center'
     }
 
     default_bounds = {
@@ -23,7 +26,10 @@ class CommonStarParameters(AbstractCommon):
         'density': [0.0000, 5.0000],
         'i_star': [0.0000, 180.0000],
         'v_sini': [0.0000, 200.0000],
-        'temperature': [2000., 11000.]
+        'temperature': [2000., 11000.],
+        'line_contrast': [0., 100.],
+        'line_fwhm': [0., 12.],
+        'rv_center': [-300., 300.],
     }
 
     """ Must be the same parameters as in list_pams, because priors are applied only to _physical_ parameters """
@@ -33,7 +39,10 @@ class CommonStarParameters(AbstractCommon):
         'density': ['Uniform', []],
         'i_star': ['Uniform', []],
         'v_sini': ['Uniform', []],
-        'temperature': ['Uniform', []]
+        'temperature': ['Uniform', []],
+        'line_contrast': ['Uniform', []],
+        'line_fwhm': ['Uniform', []],
+        'rv_center': ['Uniform', []],
     }
 
     default_spaces = {
@@ -42,7 +51,10 @@ class CommonStarParameters(AbstractCommon):
         'density': 'Linear',
         'i_star': 'Linear',
         'v_sini': 'Linear',
-        'temperature': 'Linear'
+        'temperature': 'Linear',
+        'line_contrast': 'Linear',
+        'line_fwhm': 'Linear',
+        'rv_center': 'Linear',
     }
 
     default_fixed = {
@@ -51,7 +63,10 @@ class CommonStarParameters(AbstractCommon):
         'density': 1.0000,
         'i_star': 90.0000,
         'v_sini': 1.6000,
-        'temperature': 5777
+        'temperature': 5777,
+        'line_contrast': 50,
+        'line_fwhm': 6,
+        'rv_center': 0.00,
     }
 
     recenter_pams = set()

@@ -36,6 +36,9 @@ class Dataset(AbstractCommon):
             self.generic_default_spaces['jitter'] = 'Logarithmic'
             self.generic_default_priors['jitter'] = ['Uniform', []]
 
+        if self.kind == 'CCFs':
+            self.Tref = 0.000
+
         self.variable_compressed = {}
         self.variable_expanded = {}
 
@@ -163,7 +166,10 @@ class Dataset(AbstractCommon):
         self._delete_systematic_dictionaries_mask('offset')
 
     def common_Tref(self, Tref_in):
-        self.Tref = Tref_in
+        if self.kind == 'CCFs':
+            self.Tref = 0.000
+        else:
+            self.Tref = Tref_in
         self.x0 = self.x - self.Tref
         return
 

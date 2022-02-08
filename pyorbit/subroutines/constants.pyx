@@ -79,7 +79,7 @@ Gsi = 6.67428e-11  # Gravitational Constant in SI system [m^3/kg/s^2]
 Gaumjd = Gsi*d2s*d2s*Mjup/(AU**3)  # G in [AU,Mjup,day]
 speed = 299792458.  # speed of light (c) in [m/s]
 speedaud = speed*d2s/AU  # speed of light in [AU/d]
-pc2AU = 206264.806 
+pc2AU = 206264.806
 
 
 # others
@@ -93,3 +93,5 @@ rho_Sun = Msun / (4./3.*np.pi* (Rsun*1000.)**3 )
 # Used in the computation of the stellar insolation
 Sun_constant = 1367.
 Sun_temperature = 5777.
+
+sigma2FWHM = 2. * np.sqrt(2.* np.log(2,))

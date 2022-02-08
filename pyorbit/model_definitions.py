@@ -70,6 +70,7 @@ from pyorbit.models.rossitermclaughlin_ohta import RossiterMcLaughling_Ohta
 
 from pyorbit.models.polynomial_trend import PolynomialTrend, LocalPolynomialTrend, SubsetPolynomialTrend
 
+from pyorbit.models.spectral_rotation import SpectralRotation
 
 
 
@@ -85,7 +86,7 @@ model_requires_planets = ['radial_velocities',
                           'spiderman_thermal', 'batman_transit_eclipse_phasecurve']
 single_planet_model = ['Tc_planets', 'transit_times']
 transit_time_model = ['Tc_planets', 'transit_times']
-model_requires_limbdarkening = ['transit','transit_eclipse_phasecurve']
+model_requires_limbdarkening = ['transit','transit_eclipse_phasecurve','spectral_rotation']
 
 define_common_type_to_class = {
     'planets': CommonPlanets,
@@ -151,6 +152,7 @@ define_type_to_class = {
     'local_normalization_factor': LocalNormalizationFactor,
     'local_correlated_jitter': LocalCorrelatedJitter,
     'rossitermclaughlin_ohta': RossiterMcLaughling_Ohta,
+    'spectral_rotation': SpectralRotation
 }
 
 accepted_extensions = ['.yaml', '.yml', '.conf', '.config', '.input', ]
@@ -168,5 +170,7 @@ datatype_definition = {
     'Ca_HK': ['Ca', 'Cahk', 'CaHK', 'Ca_hk', 'Ca_HK',
               'logR', 'logRhk', 'logRHK', 'logR_hk', 'logR_HK',
               'log(R)', 'log(Rhk)', 'log(RHK)', 'log(R_hk)', 'log(R_HK)'],
-    'S_index': ['S', 'S_index', 'Shk', 'SHK', 'S_HK', 'S_hk']
+    'S_index': ['S', 'S_index', 'Shk', 'SHK', 'S_HK', 'S_hk'],
+    'CCF': ['CCF', 'CCFs', 'ccf', 'ccfs']
+
 }
