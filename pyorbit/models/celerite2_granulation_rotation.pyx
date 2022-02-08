@@ -8,7 +8,7 @@ except ImportError:
     pass
 
 
-class Celerite2_Granulation_Rotation_Linear(AbstractModel):
+class Celerite2_Granulation_Rotation(AbstractModel):
 
     r"""A mixture of two SHO terms that can be used to model stellar rotation
     This term has two modes in Fourier space: one at ``period`` and one at
@@ -47,7 +47,7 @@ class Celerite2_Granulation_Rotation_Linear(AbstractModel):
             print("ERROR: celerite2 not installed, this will not work")
             quit()
 
-        self.model_class = 'celerite2_granulation_rotation_linear'
+        self.model_class = 'celerite2_granulation_rotation'
         self.internal_likelihood = True
 
         self.list_pams_common = {

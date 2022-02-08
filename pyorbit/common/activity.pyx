@@ -63,8 +63,6 @@ class CommonActivity(AbstractCommon):
         'rot_fmix': [0.001, 1.000],
         'rot_Q0': [0.00001, 100000.000],
         'rot_deltaQ': [0.00001, 100000.000],
-        'rot_log10_Q0':[-10., 10.0],
-        'rot_log10_deltaQ': [-10., 10.0],
         #
         'Vc': [-500.0, 500.0],
         'Vr': [-500.0, 500.0],
@@ -83,10 +81,8 @@ class CommonActivity(AbstractCommon):
         'matern32_log10_rho': [-3.0, 3.0],
         #
         'Hamp_factor': [0.01, 10.0],
-        'Q0': [0.001, 1000.000],
-        'deltaQ': [0.001, 1000.000],
-        'ln_Q0': [-10., 10.0],
-        'ln_deltaQ': [-10., 10.0],
+        'Q0': [0.00001, 10000.000],
+        'deltaQ': [0.00001, 10000.000],
         'mix': [0.001, 1000.000],
         'amp': [0.0001, 1000.0],
         #
@@ -163,8 +159,8 @@ class CommonActivity(AbstractCommon):
         'Bc': 'Linear',
         'Br': 'Linear',
         #
-        'matern32_sigma':'Linear',
-        'matern32_rho': 'Linear',
+        'matern32_sigma':'Log_Base10',
+        'matern32_rho': 'Log_Base10',
         #
         'matern32_log10_sigma':'Linear',
         'matern32_log10_rho': 'Linear',
@@ -174,8 +170,8 @@ class CommonActivity(AbstractCommon):
         'f': 'Linear',
         #
         'Hamp_factor': 'Linear',
-        'Q0': 'Logarithmic',
-        'deltaQ': 'Logarithmic',
+        'Q0': 'Log_Base10',
+        'deltaQ': 'Log_Base10',
         'mix': 'Logarithmic',
         'amp': 'Logarithmic',
         #
