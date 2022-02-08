@@ -61,8 +61,8 @@ class CommonActivity(AbstractCommon):
         'grn_sigma': [0.00000001, 1000000.0],
         'rot_sigma': [0.00000001, 1000000.0],
         'rot_fmix': [0.001, 1.000],
-        'rot_Q0': [0.001, 1000.000],
-        'rot_deltaQ': [0.001, 1000.000],
+        'rot_Q0': [0.00001, 100000.000],
+        'rot_deltaQ': [0.00001, 100000.000],
         'rot_log10_Q0':[-10., 10.0],
         'rot_log10_deltaQ': [-10., 10.0],
         #
@@ -154,8 +154,8 @@ class CommonActivity(AbstractCommon):
         'grn_sigma': 'Logarithmic',
         'rot_sigma': 'Logarithmic',
         'rot_fmix': 'Linear',
-        'rot_Q0': 'Logarithmic',
-        'rot_deltaQ': 'Logarithmic',
+        'rot_Q0': 'Log_Base10',
+        'rot_deltaQ': 'Log_Base10',
         'rot_log10_Q0': 'Linear',
         'rot_log10_deltaQ': 'Linear',
         #
