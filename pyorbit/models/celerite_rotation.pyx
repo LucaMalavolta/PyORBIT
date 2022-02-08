@@ -7,7 +7,7 @@ except ImportError:
     pass
 
 
-class Celerite_Rotation_Linear(AbstractModel):
+class Celerite_Rotation(AbstractModel):
 
     r"""A mixture of two SHO terms that can be used to model stellar rotation
     This term has two modes in Fourier space: one at ``period`` and one at

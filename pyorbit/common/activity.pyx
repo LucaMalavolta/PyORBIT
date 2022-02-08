@@ -156,8 +156,6 @@ class CommonActivity(AbstractCommon):
         'rot_fmix': 'Linear',
         'rot_Q0': 'Log_Base10',
         'rot_deltaQ': 'Log_Base10',
-        'rot_log10_Q0': 'Linear',
-        'rot_log10_deltaQ': 'Linear',
         #
         'Vc': 'Linear',
         'Vr': 'Linear',
@@ -178,8 +176,6 @@ class CommonActivity(AbstractCommon):
         'Hamp_factor': 'Linear',
         'Q0': 'Logarithmic',
         'deltaQ': 'Logarithmic',
-        'ln_Q0': 'Linear',
-        'ln_deltaQ': 'Linear',
         'mix': 'Logarithmic',
         'amp': 'Logarithmic',
         #
