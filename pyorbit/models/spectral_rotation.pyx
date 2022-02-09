@@ -1,5 +1,6 @@
 from pyorbit.subroutines.common import *
 from pyorbit.models.abstract_model import *
+from numpy.polynomial import polynomial
 
 try:
     from PyAstronomy.pyasl import fastRotBroad as PyAstroFastRotBroad
@@ -179,8 +180,6 @@ class SubsetSpectralRotation(AbstractModel):
 
 class SubsetSpectralRotationPolynomial(AbstractModel):
 
-    default_common = 'polynomial_trend'
-
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -204,12 +203,17 @@ class SubsetSpectralRotationPolynomial(AbstractModel):
             'v_sini',
         }
 
-        self.list_pams_common = set()
+        self.list_pams_dataset = set()
 
         self.order = 1
         self.starting_order = 1
 
     def initialize_model(self, mc, **kwargs):
+
+        self.order = kwargs.get('polynomial_order', 6)
+        for i_order in range(self.starting_order, self.order+1):
+            var = 'poly_c'+repr(i_order)
+            self.list_pams_common.update([var])
 
         self.reference_wavelength = kwargs.get('reference_wavelength', 5500.)
         self.baseline_RV = kwargs.get('baseline_RV', True)
@@ -238,6 +242,11 @@ class SubsetSpectralRotationPolynomial(AbstractModel):
         :return:
         """
 
+        coeff = np.zeros(self.order+1)
+        for i_order in range(self.starting_order, self.order+1):
+            var = 'poly_c'+repr(i_order)
+            coeff[i_order] = variable_value[var]
+
         if x0_input is None:
 
             sigma = variable_value['line_fwhm']/constants.sigma2FWHM
@@ -248,8 +257,6 @@ class SubsetSpectralRotationPolynomial(AbstractModel):
             else:
                 wave_array = dataset.x
 
-
-
             y_output = np.zeros(dataset.n)
 
             for i_sub in range(0, dataset.submodel_flag):
@@ -257,15 +264,20 @@ class SubsetSpectralRotationPolynomial(AbstractModel):
                 sel_data = (dataset.submodel_id == i_sub)
 
                 solar_flux = -(variable_value['line_contrast']/100.) \
-                    * np.exp(-(dataset.x - variable_value[var])**2 / (2 * sigma**2))
+                    * np.exp(-(dataset.x[sel_data] - variable_value[var])**2 / (2 * sigma**2))
 
-                y_output[sel_data] = PyAstroFastRotBroad(wave_array,
+                y_output[sel_data] = PyAstroFastRotBroad(wave_array[sel_data],
                                                      solar_flux,
                                                      variable_value['ld_c1'],
                                                      variable_value['v_sini'],
                                                      effWvl=self.reference_wavelength)
+                y_output[sel_data] += polynomial.polyval(dataset.x[sel_data]-variable_value[var], coeff)
+
+            return y_output
+
         else:
             return x0_input*0.
+
 
     def _prepare_limb_darkening_coefficients(self, mc, **kwargs):
         """ Setting up the limb darkening calculation"""
