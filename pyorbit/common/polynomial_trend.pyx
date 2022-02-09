@@ -22,7 +22,7 @@ class CommonPolynomialTrend(AbstractCommon):
 
     """These default boundaries are used when the user does not define them in the yaml file"""
     default_bounds = {
-        'x_zero': [-10 ** 6, 10 ** 6],
+        'x_zero': [-10 ** 9, 10 ** 9],
         'poly_c0': [-10 ** 5, 10 ** 6],
         'poly_c1': [-10 ** 5, 10 ** 6],
         'poly_c2': [-10 ** 6, 10 ** 6],

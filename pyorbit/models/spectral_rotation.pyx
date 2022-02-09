@@ -86,6 +86,8 @@ class SpectralRotation(AbstractModel):
 
 class SubsetSpectralRotation(AbstractModel):
 
+    default_common = 'star_parameters'
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -109,7 +111,7 @@ class SubsetSpectralRotation(AbstractModel):
             'v_sini',
         }
 
-        self.list_pams_common = set()
+        self.list_pams_dataset = set()
 
     def initialize_model(self, mc, **kwargs):
 
@@ -124,13 +126,9 @@ class SubsetSpectralRotation(AbstractModel):
 
         for i_sub in range(0, dataset.submodel_flag):
 
-            var = 'rv_center_sub'+repr(i_sub)
-            self.list_pams_dataset.update([var])
-
-            # TODO: fix here to avoid hard-coded values
-            self.default_bounds.update({var: [-300, 300]})
-            self.default_spaces.update({var: 'Linear'})
-            self.default_priors.update({var: ['Uniform', []]})
+            var_original = 'rv_center'
+            var_subset = 'rv_center_sub'+repr(i_sub)
+            self._subset_transfer_priors(mc, dataset, var_original, var_subset)
 
     def compute(self, variable_value, dataset, x0_input=None):
         """
@@ -150,8 +148,6 @@ class SubsetSpectralRotation(AbstractModel):
             else:
                 wave_array = dataset.x
 
-
-
             y_output = np.zeros(dataset.n)
 
             for i_sub in range(0, dataset.submodel_flag):
@@ -159,13 +155,14 @@ class SubsetSpectralRotation(AbstractModel):
                 sel_data = (dataset.submodel_id == i_sub)
 
                 solar_flux = -(variable_value['line_contrast']/100.) \
-                    * np.exp(-(dataset.x - variable_value[var])**2 / (2 * sigma**2))
+                    * np.exp(-(dataset.x[sel_data] - variable_value[var])**2 / (2 * sigma**2))
 
-                y_output[sel_data] = PyAstroFastRotBroad(wave_array,
+                y_output[sel_data] = PyAstroFastRotBroad(wave_array[sel_data],
                                                      solar_flux,
                                                      variable_value['ld_c1'],
                                                      variable_value['v_sini'],
                                                      effWvl=self.reference_wavelength)
+            return y_output
         else:
             return x0_input*0.
 

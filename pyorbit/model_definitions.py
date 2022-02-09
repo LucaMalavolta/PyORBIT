@@ -64,13 +64,13 @@ from pyorbit.models.sinusoid_common_period import SinusoidCommonPeriod
 from pyorbit.models.harmonics import Harmonics
 
 from pyorbit.models.dilution_factor import DilutionFactor, LocalDilutionFactor
-from pyorbit.models.normalization_factor import NormalizationFactor, LocalNormalizationFactor
+from pyorbit.models.normalization_factor import NormalizationFactor, LocalNormalizationFactor, SubsetNormalizationFactor
 
 from pyorbit.models.rossitermclaughlin_ohta import RossiterMcLaughling_Ohta
 
 from pyorbit.models.polynomial_trend import PolynomialTrend, LocalPolynomialTrend, SubsetPolynomialTrend
 
-from pyorbit.models.spectral_rotation import SpectralRotation
+from pyorbit.models.spectral_rotation import SpectralRotation, SubsetSpectralRotation
 
 
 
@@ -86,7 +86,7 @@ model_requires_planets = ['radial_velocities',
                           'spiderman_thermal', 'batman_transit_eclipse_phasecurve']
 single_planet_model = ['Tc_planets', 'transit_times']
 transit_time_model = ['Tc_planets', 'transit_times']
-model_requires_limbdarkening = ['transit','transit_eclipse_phasecurve','spectral_rotation']
+model_requires_limbdarkening = ['transit','transit_eclipse_phasecurve','spectral_rotation', 'subset_spectral_rotation']
 
 define_common_type_to_class = {
     'planets': CommonPlanets,
@@ -150,9 +150,11 @@ define_type_to_class = {
     'local_dilution_factor': LocalDilutionFactor,
     'normalization_factor': NormalizationFactor,
     'local_normalization_factor': LocalNormalizationFactor,
+    'subset_normalization_factor': SubsetNormalizationFactor,
     'local_correlated_jitter': LocalCorrelatedJitter,
     'rossitermclaughlin_ohta': RossiterMcLaughling_Ohta,
-    'spectral_rotation': SpectralRotation
+    'spectral_rotation': SpectralRotation,
+    'subset_spectral_rotation': SubsetSpectralRotation
 }
 
 accepted_extensions = ['.yaml', '.yml', '.conf', '.config', '.input', ]
