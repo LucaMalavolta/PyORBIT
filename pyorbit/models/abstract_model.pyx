@@ -309,3 +309,36 @@ class AbstractModel(object):
 
     def compute(self, variable_value, dataset, x0_input=None):
         return 0.00
+
+    def _subset_transfer_priors(self, mc, dataset, var_original, var_subset):
+
+        self.list_pams_dataset.update([var_subset])
+
+        for common_model in self.common_ref:
+            if var_original not in mc.common_models[common_model].list_pams:
+                continue
+
+            if var_original in self.bounds[dataset.name_ref]:
+                var_update = self.bounds[dataset.name_ref][var_original]
+            else:
+                var_update = mc.common_models[common_model].default_bounds[var_original]
+
+            self.bounds[dataset.name_ref].update({var_subset: var_update})
+
+            if var_original in self.spaces[dataset.name_ref]:
+                var_update = self.spaces[dataset.name_ref][var_original]
+            else:
+                var_update = mc.common_models[common_model].default_spaces[var_original]
+
+            self.spaces[dataset.name_ref].update({var_subset: var_update})
+
+            if var_original in self.prior_pams[dataset.name_ref]:
+                var_update0 = self.prior_kind[dataset.name_ref][var_original]
+                var_update1 = self.prior_pams[dataset.name_ref][var_original]
+            else:
+                var_update0 = mc.common_models[common_model].default_priors[var_original][0]
+                var_update1 = mc.common_models[common_model].default_priors[var_original][1]
+
+            self.prior_kind[dataset.name_ref].update({var_subset: var_update0})
+            self.prior_pams[dataset.name_ref].update({var_subset: var_update1})
+

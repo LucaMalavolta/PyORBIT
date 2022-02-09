@@ -73,15 +73,9 @@ class SubsetNormalizationFactor(AbstractModel):
             return
 
         for i_sub in range(0,dataset.submodel_flag):
-
-            var = 'n_factor_sub'+repr(i_sub)
-            self.list_pams_dataset.update([var])
-
-            #TODO: fix here to avoid hard-coded values
-            self.default_bounds.update({var: [0.0000010, 100000.0000] })
-            self.default_spaces.update({var: 'Log_Base2'})
-            self.default_priors.update({var: ['Uniform', []]})
-
+            var_original = 'n_factor'
+            var_subset = 'n_factor_sub'+repr(i_sub)
+            self._subset_transfer_priors(mc, dataset, var_original, var_subset)
 
     def compute(self, variable_value, dataset, x0_input=None):
 

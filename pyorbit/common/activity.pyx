@@ -17,8 +17,8 @@ class CommonActivity(AbstractCommon):
         'grn_sigma', # the standard deviation of the process
         'rot_sigma',
         'rot_fmix',
-        'rot_log10_Q0',
-        'rot_log10_deltaQ',
+        'rot_Q0',
+        'rot_deltaQ',
         # GP framework parameter
         'Vc',  # GP framework parameter
         'Vr',  # GP framework parameter
@@ -28,8 +28,6 @@ class CommonActivity(AbstractCommon):
          # Matern kernel
         'matern32_sigma', # Matern kernel,  sigma parameter
         'matern32_rho', # Matern kernel,  rho parameter
-        'matern32_log10_sigma', # Matern kernel,  sigma parameter
-        'matern32_log10_rho', # Matern kernel,  rho parameter
         # sinusoid-like activity
         'P',  # Period
         'K',  # Sinusoid semi-amplitude
@@ -105,8 +103,6 @@ class CommonActivity(AbstractCommon):
         'rot_fmix': ['Uniform', []],
         'rot_Q0': ['Uniform', []],
         'rot_deltaQ': ['Uniform', []],
-        'rot_log10_Q0': ['Uniform', []],
-        'rot_log10_deltaQ': ['Uniform', []],
         #
         'Vc': ['Uniform', []],
         'Vr': ['Uniform', []],
@@ -116,8 +112,6 @@ class CommonActivity(AbstractCommon):
         #
         'matern32_sigma': ['Uniform', []],
         'matern32_rho': ['Uniform', []],
-        'matern32_log10_sigma': ['Uniform', []],
-        'matern32_log10_rho': ['Uniform', []],
         #
         'P': ['Uniform', []],
         'K': ['Uniform', []],
@@ -126,8 +120,6 @@ class CommonActivity(AbstractCommon):
         'Hamp_factor': ['Uniform', []],
         'Q0': ['Uniform', []],
         'deltaQ': ['Uniform', []],
-        'ln_Q0': ['Uniform', []],
-        'ln_deltaQ': ['Uniform', []],
         'mix': ['Uniform', []],
         'amp': ['Uniform', []],
         #
@@ -144,8 +136,8 @@ class CommonActivity(AbstractCommon):
         'Camp': 'Linear',
         #
         'grn_period': 'Linear',
-        'grn_sigma': 'Logarithmic',
-        'rot_sigma': 'Logarithmic',
+        'grn_sigma': 'Log_Base2',
+        'rot_sigma': 'Log_Base2',
         'rot_fmix': 'Linear',
         'rot_Q0': 'Log_Base10',
         'rot_deltaQ': 'Log_Base10',
@@ -166,8 +158,8 @@ class CommonActivity(AbstractCommon):
         'Hamp_factor': 'Linear',
         'Q0': 'Log_Base10',
         'deltaQ': 'Log_Base10',
-        'mix': 'Logarithmic',
-        'amp': 'Logarithmic',
+        'mix': 'Log_Base10',
+        'amp': 'Log_Base2',
         #
         'cel_factor': 'Linear',
         'cel_B': 'Logarithmic',

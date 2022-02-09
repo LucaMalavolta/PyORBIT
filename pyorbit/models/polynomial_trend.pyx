@@ -93,9 +93,6 @@ class LocalPolynomialTrend(AbstractModel):
         self.list_pams_common = set()
 
         self.list_pams_dataset = {'x_zero'}
-        self.default_bounds = {'x_zero': [-10**6, 10**6]}
-        self.default_spaces = {'x_zero': 'Linear'}
-        self.default_priors = {'x_zero': ['Uniform', []]}
 
         self.order = 1
         self.starting_order = 1
@@ -188,10 +185,6 @@ class SubsetPolynomialTrend(AbstractModel):
         self.list_pams_common = set()
 
         self.list_pams_dataset = set()
-        #self.list_pams_dataset = {'x_zero'}
-        #self.default_bounds = {'x_zero': [-10**6, 10**6]}
-        #self.default_spaces = {'x_zero': 'Linear'}
-        #self.default_priors = {'x_zero': ['Uniform', []]}
 
         self.order = 1
         self.starting_order = 1
@@ -230,30 +223,24 @@ class SubsetPolynomialTrend(AbstractModel):
         for i_sub in range(0,dataset.submodel_flag):
 
             for i_order in range(self.starting_order, self.order+1):
-                var = 'poly_sub'+repr(i_sub)+'_c'+repr(i_order)
-                self.list_pams_dataset.update([var])
+                var_original = 'poly_c'+repr(i_order)
+                var_subset = 'poly_sub'+repr(i_sub)+'_c'+repr(i_order)
 
-                #TODO: fix here to avoid hard-coded values
-                self.default_bounds.update({var: [-10 ** 5, 10 ** 6] })
-                self.default_spaces.update({var: 'Linear'})
-                self.default_priors.update({var: ['Uniform', []]})
+                self._subset_transfer_priors(mc, dataset, var_original, var_subset)
 
-            var = 'x_zero_sub'+repr(i_sub)
             sub_dataset = dataset.x[(dataset.submodel_id==i_sub)]
 
+            var_original = 'x_zero'
+            var_subset = 'x_zero_sub'+repr(i_sub)
             try:
-                xzero_ref = kwargs[var] * 1.
-                self.fix_list[dataset.name_ref][var] = np.asarray([kwargs[var], 0.0000], dtype=np.double)
+                xzero_ref = kwargs[var_subset] * 1.
+                self.fix_list[dataset.name_ref][var_subset] = np.asarray([kwargs[var_subset], 0.0000], dtype=np.double)
             except (KeyError, ValueError):
                 xzero_ref = np.average(sub_dataset)
 
-            self.fix_list[dataset.name_ref][var] = np.asarray([xzero_ref, 0.0000])
+            self.fix_list[dataset.name_ref][var_subset] = np.asarray([xzero_ref, 0.0000])
 
-            self.list_pams_dataset.update([var])
-            self.default_bounds.update({var: [xzero_ref-1., xzero_ref+1.] })
-            self.default_spaces.update({var: 'Linear'})
-            self.default_priors.update({var: ['Uniform', []]})
-
+            self._subset_transfer_priors(mc, dataset, var_original, var_subset)
 
     def compute(self, variable_value, dataset, x0_input=None):
 

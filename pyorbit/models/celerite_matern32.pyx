@@ -31,8 +31,8 @@ class Celerite_Matern32(AbstractModel):
         self.list_pams_common = {}
 
         self.list_pams_dataset = {
-            'matern32_log10_sigma',  # sigma
-            'matern32_log10_rho',  # rho
+            'matern32_sigma',  # sigma
+            'matern32_rho',  # rho
         }
 
         self.n_pams = 2
@@ -61,7 +61,7 @@ class Celerite_Matern32(AbstractModel):
            2) physical values must be converted to {\tt george} input parameters
         """
         gp_pams = np.asarray(
-            [variable_value['matern32_log10_sigma'], variable_value['matern32_log10_rho']])
+            [np.log10(variable_value['matern32_sigma']), np.log10(variable_value['matern32_rho'])])
 
         env = np.sqrt(dataset.e ** 2.0 + dataset.jitter ** 2.0)
         self.gp[dataset.name_ref].set_parameter_vector(gp_pams)
@@ -72,7 +72,7 @@ class Celerite_Matern32(AbstractModel):
     def sample_predict(self, variable_value, dataset, x0_input=None, return_covariance=False, return_variance=False):
 
         gp_pams = np.asarray(
-            [variable_value['matern32_log10_sigma'], variable_value['matern32_log10_rho']])
+            [np.log10(variable_value['matern32_sigma']), np.log10(variable_value['matern32_rho'])])
 
         env = np.sqrt(dataset.e ** 2.0 + dataset.jitter ** 2.0)
         self.gp[dataset.name_ref].set_parameter_vector(gp_pams)
@@ -86,7 +86,7 @@ class Celerite_Matern32(AbstractModel):
     def sample_conditional(self, variable_value, dataset,  x0_input=None):
 
         gp_pams = np.asarray(
-            [variable_value['matern32_log10_sigma'], variable_value['matern32_log10_rho']])
+            [np.log10(variable_value['matern32_sigma']), np.log10(variable_value['matern32_rho'])])
 
         env = np.sqrt(dataset.e ** 2.0 + dataset.jitter ** 2.0)
         self.gp[dataset.name_ref].set_parameter_vector(gp_pams)
