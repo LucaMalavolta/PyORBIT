@@ -226,13 +226,9 @@ class SubsetSpectralRotationPolynomial(AbstractModel):
 
         for i_sub in range(0, dataset.submodel_flag):
 
-            var = 'rv_center_sub'+repr(i_sub)
-            self.list_pams_dataset.update([var])
-
-            # TODO: fix here to avoid hard-coded values
-            self.default_bounds.update({var: [-300, 300]})
-            self.default_spaces.update({var: 'Linear'})
-            self.default_priors.update({var: ['Uniform', []]})
+            var_original = 'rv_center'
+            var_subset = 'rv_center_sub'+repr(i_sub)
+            self._subset_transfer_priors(mc, dataset, var_original, var_subset)
 
     def compute(self, variable_value, dataset, x0_input=None):
         """
