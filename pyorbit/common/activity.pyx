@@ -120,8 +120,6 @@ class CommonActivity(AbstractCommon):
         'Hamp_factor': ['Uniform', []],
         'Q0': ['Uniform', []],
         'deltaQ': ['Uniform', []],
-        'ln_Q0': ['Uniform', []],
-        'ln_deltaQ': ['Uniform', []],
         'mix': ['Uniform', []],
         'amp': ['Uniform', []],
         #
