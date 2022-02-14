@@ -34,9 +34,6 @@ class Batman_Transit_With_TTV(AbstractModel):
         self.list_pams_dataset = set()
 
         print('Batman_Transit_With_TTV')
-        print(self.default_bounds)
-        print(self.default_spaces)
-        print(self.default_priors)
         print()
 
         self.batman_ldvars = {}
@@ -55,7 +52,7 @@ class Batman_Transit_With_TTV(AbstractModel):
             'initialization_counter': 1000000
         }
 
-        """ Dataset-spicific time of transit boundaries are stored here"""
+        """ Dataset-specific time of transit boundaries are stored here"""
         self.transit_time_boundaries = {}
 
     def initialize_model(self, mc, **kwargs):
@@ -138,7 +135,7 @@ class Batman_Transit_With_TTV(AbstractModel):
         for dict_name in supersample_names:
             if kwargs[dataset.name_ref].get(dict_name, False):
                 sample_factor = kwargs[dataset.name_ref][dict_name]
-            elif kwargs[dataset.name_ref].get(dict_name, False):
+            elif kwargs.get(dict_name, False):
                 sample_factor = kwargs[dict_name]
 
         exptime_names = ['exposure_time',
@@ -152,7 +149,7 @@ class Batman_Transit_With_TTV(AbstractModel):
         for dict_name in exptime_names:
             if kwargs[dataset.name_ref].get(dict_name, False):
                 exposure_time = kwargs[dataset.name_ref][dict_name]
-            elif kwargs[dataset.name_ref].get(dict_name, False):
+            elif kwargs.get(dict_name, False):
                 exposure_time = kwargs[dict_name]
 
         self.batman_options[dataset.name_ref]['sample_factor'] = sample_factor
