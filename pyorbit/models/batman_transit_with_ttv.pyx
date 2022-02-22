@@ -165,7 +165,23 @@ class Batman_Transit_With_TTV(AbstractModel):
                                                                        'exp_time'],
                                                                    nthreads=self.nthreads)
 
-        self.transit_time_boundaries[dataset.name_ref] = [np.amin(dataset.x), np.amax(dataset.x)]
+        tc_boundaries_names = ['Tc_boundaries',
+            'Tc_bounds',
+            'T_boundaries',
+            'T_bounds',
+            'TC_boundaries',
+            'TC_bounds',
+        ]
+
+        tc_boundaries = [np.amin(dataset.x), np.amax(dataset.x)]
+        if kwargs[dataset.name_ref].get('boundaries', False):
+            tc_boundaries = kwargs[dataset.name_ref]['boundaries']['Tc']
+        else:
+            for dict_name in tc_boundaries_names:
+                if kwargs[dataset.name_ref].get(dict_name, False):
+                    tc_boundaries = kwargs[dataset.name_ref][dict_name]
+
+        self.transit_time_boundaries[dataset.name_ref] = tc_boundaries
 
     def define_special_variable_properties(self,
                                            ndim,
