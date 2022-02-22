@@ -169,7 +169,8 @@ class Batman_Transit_Eclipse_PhaseCurve(AbstractModel, AbstractTransit):
         if x0_input is None:
 
             phase_curve =  amplitude_sin/self.batman_params.fp \
-                * (np.cos(2*np.pi*(dataset.x0 - self.batman_params.t_secondary)/self.batman_params.per + variable_value['phase_off'])/2. + 0.5) \
+                * (np.cos(2*np.pi*(dataset.x0 - self.batman_params.t_secondary)/self.batman_params.per
+                          + variable_value['phase_off']/180.*np.pi)/2. + 0.5) \
                 + (1 - amplitude_sin/self.batman_params.fp)
 
             return (self.batman_eclipse[dataset.name_ref].light_curve(self.batman_params)-1.) * phase_curve \
@@ -178,7 +179,8 @@ class Batman_Transit_Eclipse_PhaseCurve(AbstractModel, AbstractTransit):
         else:
 
             phase_curve =  amplitude_sin/self.batman_params.fp \
-                * (np.cos(2*np.pi*(x0_input - self.batman_params.t_secondary)/self.batman_params.per + variable_value['phase_off'])/2. + 0.5) \
+                * (np.cos(2*np.pi*(x0_input - self.batman_params.t_secondary)/self.batman_params.per
+                          + variable_value['phase_off']/180.*np.pi)/2. + 0.5) \
                 + (1 - amplitude_sin/self.batman_params.fp)
 
             batman_eclipse = batman.TransitModel(self.batman_params,

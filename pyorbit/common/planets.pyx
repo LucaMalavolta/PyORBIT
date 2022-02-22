@@ -30,6 +30,173 @@ class CommonPlanets(AbstractCommon):
                             'Ford2006_Tc', 'Eastman2013_Tc', 'Standard_Tc']
     orbit_list = ['circular', 'keplerian', 'dynamical']
 
+
+    parameters_dictionary = {
+        'P': # Orbital period of the planet
+            {
+                'bounds': [0.4, 100000.0],
+                'priors': ['Uniform', []],
+                'spaces': 'Log_Base2',
+                'fixed' : None,
+                'unit': 'days',
+            },
+        'K': # RV semi-amplitude, in m/s
+            {
+                'bounds': [0.5, 2000.0],
+                'priors': ['Uniform', []],
+                'spaces': 'Log_Base2',
+                'fixed' : None,
+            },
+        'Tc':
+            {
+                'bounds': [0.0, 1000.0],
+                'priors': ['Uniform', []],
+                'spaces': 'Linear',
+                'fixed' : None,
+            },
+        'mean_long':
+            {
+                'bounds': [0.0, 360.],
+                'priors': ['Uniform', []],
+                'spaces': 'Linear',
+                'fixed' : 0.0000,
+            },
+        'e_coso':
+            {
+                'bounds': [-1.0, 1.0],
+                'priors': ['Uniform', []],
+                'spaces': 'Linear',
+                'fixed' : 0.0000,
+            },
+        'e_sino':
+            {
+                'bounds': [-1.0, 1.0],
+                'priors': ['Uniform', []],
+                'spaces': 'Linear',
+                'fixed' : 0.0000,
+            },
+        'sre_coso':
+            {
+                'bounds': [-1.0, 1.0],
+                'priors': ['Uniform', []],
+                'spaces': 'Linear',
+                'fixed' : 0.0000,
+            },
+        'sre_sino':
+            {
+                'bounds': [-1.0, 1.0],
+                'priors': ['Uniform', []],
+                'spaces': 'Linear',
+                'fixed' : 0.0000,
+            },
+        'e':
+            {
+                'bounds': [0.0, 1.0],
+                'priors': ['Uniform', []],
+                'spaces': 'Linear',
+                'fixed' : 0.0000,
+            },
+        'omega':
+            {
+                'bounds': [0.0, 360.],
+                'priors': ['Uniform', []],
+                'spaces': 'Linear',
+                'fixed' : 90.,
+            },
+        'M_Me':
+            {
+                'bounds': [0.05, 1000.0],
+                'priors': ['Uniform', []],
+                'spaces': 'Log_Base2',
+                'fixed' : None,
+            },
+        'i':
+            {
+                'bounds':  [0.0, 180],
+                'priors': ['Uniform', []],
+                'spaces': 'Linear',
+                'fixed' : 90.,
+            },
+        'Omega':
+            {
+                'bounds':  [0.0, 180],
+                'priors': ['Uniform', []],
+                'spaces': 'Linear',
+                'fixed' : 90.,
+            },
+        'R_Rs':
+            {
+                'bounds': [0.00001, 0.5],
+                'priors': ['Uniform', []],
+                'spaces': 'Linear',
+                'fixed' : 0.05,
+            },
+        'a_Rs':
+            {
+                'bounds': [0.00001, 500.],
+                'priors': ['Uniform', []],
+                'spaces': 'Linear',
+                'fixed' : 1.0,
+            },
+        'b':
+            {
+                'bounds': [0.0, 2.0],
+                'priors': ['Uniform', []],
+                'spaces': 'Linear',
+                'fixed' : 0.0,
+            },
+        'lambda':
+            {
+                'bounds': [-90.0000, 90.0000],
+                'priors': ['Uniform', []],
+                'spaces': 'Linear',
+                'fixed' : 0.0,
+            },
+        'phase_amp':
+            {
+                'bounds':  [0.00, 0.50],
+                'priors': ['Uniform', []],
+                'spaces': 'Linear',
+                'fixed' : 0.0,
+            },
+        'delta_occ':
+            {
+                'bounds': [0.00, 0.50],
+                'priors': ['Uniform', []],
+                'spaces': 'Linear',
+                'fixed' : 0.0,
+            },
+        'phase_off':
+            {
+                'bounds': [-180.0, 180.0],  #FIX
+                'priors': ['Uniform', []],
+                'spaces': 'Linear',
+                'fixed' : 0.0,
+            },
+        'albedo':
+            {
+                'bounds': [0., 1.],
+                'priors': ['Uniform', []],
+                'spaces': 'Linear',
+                'fixed' : 0.0,
+            },
+        'redist':
+            {
+                'bounds': [0., 1.],
+                'priors': ['Uniform', []],
+                'spaces': 'Linear',
+                'fixed' : 0.0,
+            },
+        'insol':
+            {
+                'bounds': [0, 1000000000],
+                'priors': ['Uniform', []],
+                'spaces': 'Log_Base2',
+                'fixed' : 1.00000,
+            },
+    }
+
+    """
     list_pams = {
         'P',  # Period, log-uniform prior
         'K',  # RV semi-amplitude, log-uniform prior
@@ -80,8 +247,7 @@ class CommonPlanets(AbstractCommon):
         'insol': [0, 1000000000]
     }
 
-    """ Must be the same parameters as in list_pams, because priors are
-    applied only to _physical_ parameters """
+
     default_priors = {
         'P': ['Uniform', []],
         'K': ['Uniform', []],
@@ -155,6 +321,7 @@ class CommonPlanets(AbstractCommon):
         'redist': 0.000,
         'insol': 1000000.000,
     }
+    """
 
     recenter_pams = {'mean_long', 'omega', 'Omega'}
 
