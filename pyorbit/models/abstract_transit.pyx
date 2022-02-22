@@ -198,6 +198,28 @@ class AbstractTransit(object):
                 self.code_options[dataset.name_ref]['l1'] = kwargs[dict_name][0] / 10**9
                 self.code_options[dataset.name_ref]['l2'] = kwargs[dict_name][1] / 10**9
 
+        """ Keep track of the boundaries of each dataset, so that the user do
+            not have to write down the boundaries of each transit in case of TTV fit
+        """
+
+        tc_boundaries_names = ['Tc_boundaries',
+            'Tc_bounds',
+            'T_boundaries',
+            'T_bounds',
+            'TC_boundaries',
+            'TC_bounds',
+        ]
+
+        tc_boundaries = [np.amin(dataset.x), np.amax(dataset.x)]
+        if kwargs[dataset.name_ref].get('boundaries', False):
+            tc_boundaries = kwargs[dataset.name_ref]['boundaries']['Tc']
+        else:
+            for dict_name in tc_boundaries_names:
+                if kwargs[dataset.name_ref].get(dict_name, False):
+                    tc_boundaries = kwargs[dataset.name_ref][dict_name]
+
+        self.code_options[dataset.name_ref]['Tc_boundaries'] = tc_boundaries
+
 
     """ function for internal transformation of variables, to avoid if calls"""
     def _internal_transformation_mod00(self, variable_value):

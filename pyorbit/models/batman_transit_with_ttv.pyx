@@ -87,11 +87,6 @@ class Batman_Transit_With_TTV(AbstractModel, AbstractTransit):
                                 exp_time=self.code_options[dataset.name_ref]['exp_time'],
                                 nthreads=self.code_options['nthreads'])
 
-        """ Keep track of the boundaries of each dataset, so that the user do not have to write down the boundaries of each transit in case of TTV fit
-        """
-        self.transit_time_boundaries[dataset.name_ref] = \
-            [np.amin(dataset.x), np.amax(dataset.x)]
-
     def define_special_variable_properties(self,
                                            ndim,
                                            output_lists,
@@ -99,7 +94,7 @@ class Batman_Transit_With_TTV(AbstractModel, AbstractTransit):
                                            var):
 
         if var == 'Tc' and (var not in self.bounds[dataset_name]):
-            self.bounds[dataset_name][var] = self.transit_time_boundaries[dataset_name]
+            self.bounds[dataset_name][var] = self.code_options[dataset_name]['Tc_boundaries']
         return ndim, output_lists, False
 
     def compute(self, variable_value, dataset, x0_input=None):
