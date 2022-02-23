@@ -62,6 +62,20 @@ class Dataset(AbstractCommon):
         self.jitter = None
         self.mask = {}
 
+        self.ancillary = None
+
+    def convert_ancyllary_from_file(self, input_file):
+        """ Function to read an ancillary file containing a dataset required to
+        model some effect (usually, instrumental) but not object of modelling
+        itself (i.e., the dataset does not enter in the log-likelihhod)
+        Added in PyORBIT 9.0
+
+        Args:
+            input_file (string): name of the file, absolute or relative path
+        """
+        # read ancillary data from txt file
+        self.ancillary = np.genfromtxt(input_file, names=True)
+
     def convert_dataset_from_file(self, input_file):
         data = np.atleast_2d(np.loadtxt(input_file))
 

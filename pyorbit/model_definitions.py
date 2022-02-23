@@ -19,6 +19,9 @@ from pyorbit.common.limb_darkening import LimbDarkening_Linear, \
     LimbDarkening_Exponential, LimbDarkening_Power2, \
     LimbDarkening_NonLinear
 
+from pyorbit.common.cheops_detrending import CommonCheopsDetrending
+
+
 from pyorbit.models.radial_velocities import \
     RVkeplerian, RVdynamical, \
     TransitTimeKeplerian, TransitTimeDynamical, DynamicalIntegrator
@@ -72,7 +75,7 @@ from pyorbit.models.polynomial_trend import PolynomialTrend, LocalPolynomialTren
 
 from pyorbit.models.spectral_rotation import SpectralRotation, SubsetSpectralRotation, SubsetSpectralRotationPolynomial
 
-
+from pyorbit.models.cheops_detrending import CheopsDetrending
 
 """
  model_requires_planets: all those models that requires AT LEAST one of the planets in the system must be listed here
@@ -108,7 +111,8 @@ define_common_type_to_class = {
     'ld_nonlinear': LimbDarkening_NonLinear,
     'dilution_factor': CommonDilutionFactor,
     'normalization_factor': CommonNormalizationFactor,
-    'star_parameters': CommonStarParameters
+    'star_parameters': CommonStarParameters,
+    'cheops_detrending': CommonCheopsDetrending
 }
 
 define_type_to_class = {
@@ -159,7 +163,8 @@ define_type_to_class = {
     'rossitermclaughlin_ohta': RossiterMcLaughling_Ohta,
     'spectral_rotation': SpectralRotation,
     'subset_spectral_rotation': SubsetSpectralRotation,
-    'subset_spectral_rotation_polynomial': SubsetSpectralRotationPolynomial
+    'subset_spectral_rotation_polynomial': SubsetSpectralRotationPolynomial,
+    'cheops_detrending': CheopsDetrending
 }
 
 accepted_extensions = ['.yaml', '.yml', '.conf', '.config', '.input', ]

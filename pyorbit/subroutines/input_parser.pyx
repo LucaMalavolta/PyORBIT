@@ -151,7 +151,7 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, reload_ze
         if not isinstance(dataset_name, str):
             dataset_name = repr(dataset_name)
 
-        """ The keyword in dataset_dict and the name assigned internally to the databes must be the same
+        """ The keyword in dataset_dict and the name assigned internally to the dataset must be the same
             or everything will fall apart """
         print('Opening: ', dataset_name)
 
@@ -196,6 +196,20 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, reload_ze
                     starts_conf[var], dtype=np.double)
 
         mc.dataset_dict[dataset_name].update_bounds_spaces_priors_starts()
+
+        """ Added in PyORBIT 9: ancillary datasets for additional datasets that
+            are required for the modelling (e.g., instrumental parameters) but
+            do not required any modelling themselves
+            Differently from the standard pyorbit dataset, the first row must
+            include the dataset names
+         """
+        if 'ancillary_name' in dataset_conf:
+            mc.dataset_dict[dataset_name].ancillary = input_datasets[dataset_conf['ancillary_name']]
+
+        for ancill in ['ancillary_file', 'ancillary', 'ancillary_data', 'ancillary_dataset']:
+            if ancill in dataset_conf:
+                mc.dataset_dict[dataset_name].convert_ancyllary_from_file(dataset_conf[ancill])
+
 
     for model_name, model_conf in conf_common.items():
 

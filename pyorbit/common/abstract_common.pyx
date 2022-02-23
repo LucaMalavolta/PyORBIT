@@ -59,7 +59,6 @@ class AbstractCommon(object):
             self.default_fixed = {}
 
             for var_name, var_dict in self.parameters_dictionary.items():
-                print(var_name, var_dict)
                 self.list_pams.update([var_name])
                 self.default_bounds[var_name] = var_dict['bounds']
                 self.default_priors[var_name] = var_dict['priors']
