@@ -35,6 +35,7 @@ if __name__ == '__main__':
         'optimize': ['optimize', 'scipy', 'Optimize', 'OPTIMIZE'],
     }
 
+
     if sampler in sampler_keyword['emcee']:
         pyorbit.pyorbit_emcee(config_in)
 
@@ -55,6 +56,9 @@ if __name__ == '__main__':
 
     if sampler in sampler_keyword['optimize']:
         pyorbit.pyorbit_optimize(config_in)
+
+
+
 
 # This line was used to check if imprtation was working
 # else:

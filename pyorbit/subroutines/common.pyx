@@ -7,6 +7,7 @@ import pyorbit.subroutines.constants as constants
 
 import numpy as np
 
+
 try:
     if os.path.isdir('/Users/malavolta/Astro/CODE/others/trades'):
         sys.path.insert(0, '/Users/malavolta/Astro/CODE/others/trades/pytrades/')
