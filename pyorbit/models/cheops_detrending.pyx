@@ -2,12 +2,8 @@ from pyorbit.subroutines.common import *
 from pyorbit.models.abstract_model import *
 import pyorbit.subroutines.constants as constants
 
-try:
-    import pycheops
-    from lmfit import Parameter, Parameters
-except ImportError:
-    pass
-
+from scipy.interpolate import interp1d
+from numpy.lib.recfunctions import append_fields
 
 class CheopsDetrending(AbstractModel):
 
@@ -17,8 +13,8 @@ class CheopsDetrending(AbstractModel):
         super().__init__(*args, **kwargs)
 
         self.model_class = 'cheops_detrending'
-        self.unitary_model = False
-        self.normalization_model = True
+        self.unitary_model = True
+        self.normalization_model = False
 
         self.list_pams_dataset = {
             "dfdt",
@@ -49,21 +45,23 @@ class CheopsDetrending(AbstractModel):
         self.detrend_model = {}
 
 
-        self.cheops_diagnostics = ['ramp', etc etc]
+        self.cheops_diagnostics = {
+            'roll_angle': 'None',
+            'ramp': 'max', # ??? 
+            'smear': 'max',
+            'deltaT': 'None',
+            'xoff': 'range',
+            'yoff': 'range',
+            'bg': 'max',
+            'contam': 'max',
+            'sinphi': 'None',
+            'cosphi': 'None'
+        }
 
         self.cheops_instrumental = {}
         self.cheops_interpolated = {}
 
-        #self.FM = pycheops.models.FactorModel
-        #self.make_interp = pycheops.dataset._make_interp
-
     def initialize_model(self, mc, **kwargs):
-
-        for common_ref in self.common_ref:
-            if mc.common_models[common_ref].model_class == 'cheops_detrending':
-                self.common_cheops_detrending = common_ref
-                break
-
 
         self.fit_roll_angle = kwargs.get('fit_roll_angle', True)
         if not self.fit_roll_angle:
@@ -71,183 +69,93 @@ class CheopsDetrending(AbstractModel):
                 if 'phi' in p:
                     self.list_pams_dataset.remove(p)
 
-
-
-
-
-
-
     def initialize_model_dataset(self, mc, dataset, **kwargs):
-
 
         self.cheops_instrumental[dataset.name_ref] = {}
         self.cheops_interpolated[dataset.name_ref] = {}
 
-        for cheops_diagnosi
-
-        if 'ramp' in dataset.ancillary:
-            self.cheops_instrumental[dataset.name_ref]['ramp'] = dataset.ancillary['ramp']
-        else:
-            self.cheops_instrumental[dataset.name_ref]['ramp'] = np.zeros_like(dataset.ancillary['time'])
+        append_fields(dataset.ancillary, 'sinphi', np.sin(dataset.ancillary["roll_angle"]/180.*np.pi), np.double)
+        append_fields(dataset.ancillary, 'cosphi', np.cos(dataset.ancillary["roll_angle"]/180.*np.pi), np.double)
 
 
-        #self.cheops_interpolate
+        for diag_name, diag_scale in self.cheops_diagnostics.items():
 
-        #        ramp = np.zeros_like(lc["time"])
-        #        
-        #        phi = np.array(lc["roll_angle"])/180.*np.pi
-        #        dx     = make_interp(lc["time"], lc["xoff"], scale="range")
-        #        dy     = make_interp(lc["time"], lc["yoff"], scale="range")
-        #        sinphi = make_interp(lc["time"], np.sin(phi))
-        #        cosphi = make_interp(lc["time"], np.cos(phi))
-        #        bg     = make_interp(lc["time"], lc["bg"], scale="max")
-        #        contam = make_interp(lc["time"], lc["contam"], scale="max")
-        #        smear  = make_interp(lc["time"], lc["smear"], scale="max")
-        #        deltaT = make_interp(lc["time"], lc["deltaT"])
+            if diag_name in dataset.ancillary:
+                if diag_scale == 'max':
+                    self.cheops_instrumental[dataset.name_ref][diag_name] = \
+                        (dataset.ancillary[diag_name] - np.amin(dataset.ancillary[diag_name])) \
+                            / np.ptp(dataset.ancillary[diag_name])
+                elif diag_scale == 'range':
+                    self.cheops_instrumental[dataset.name_ref][diag_name] = \
+                        ( 2 * dataset.ancillary[diag_name]
+                        - (np.amin(dataset.ancillary[diag_name]) + np.amax(dataset.ancillary[diag_name]))) \
+                            / np.ptp(dataset.ancillary[diag_name])
+                else:
+                    self.cheops_instrumental[dataset.name_ref][diag_name] = dataset.ancillary[diag_name]
 
-
-
-
-
-
-
-
-        for var in self.parameters_copy:
-            if var in self.list_pams_dataset: continue
-
-            self.fix_list[dataset.name_ref][var] = np.asarray([
-                mc.common_models[self.common_cheops_detrending].default_fixed[var],
-                0.000
-            ])
-
-
-
-
-
-        self.pycheops_params[dataset.name_ref] = Parameters()
-
-        # DEFAULT VALUES: use them all
-        default_value, default_vary, default_min, default_max = 0.2, True, 0.0, 1.0
-        for p in self.parameters_copy:
-            if p not in self.list_pams_dataset:
-                self.pycheops_params[dataset.name_ref][p] = \
-                    Parameter(p,
-                        value= 0.0,
-                        vary = False,
-                        min = -1.,
-                        max =  1,
-                    )
             else:
-                self.pycheops_params[dataset.name_ref][p] = \
-                    Parameter(p,
-                        value=mc.common_models[self.common_cheops_detrending].default_fixed[p],
-                        vary = True,
-                        min  = mc.common_models[self.common_cheops_detrending].default_bounds[p][0],
-                        max  = mc.common_models[self.common_cheops_detrending].default_bounds[p][1],
-                    )
+                self.cheops_instrumental[dataset.name_ref][diag_name] = np.zeros_like(dataset.ancillary['time'])
 
-        # tooks functions from pycheops
-        #FM = pycheops.models.FactorModel
-        #make_interp = pycheops.dataset._make_interp
+            self.cheops_interpolated[dataset.name_ref][diag_name] =interp1d(
+                dataset.ancillary['time'],
+                self.cheops_instrumental[dataset.name_ref][diag_name],
+                  bounds_error=False, 
+                  fill_value=(self.cheops_instrumental[dataset.name_ref][diag_name][0],self.cheops_instrumental[dataset.name_ref][diag_name][-1]))
 
-        """ Function that set the detrend model of cheops data
-
-        :dataset.ancillary: lc data with time, flux, flux_err, roll_angle, xoff, yoff, bg, contam, smear (optional), deltaT (optional)
-        :type lc: Dict or numpy.struct_array
-
-        : detrend_model: the detrending model to use
-        :rtype detrend_model: FactorModel function
-        """
-        print(kwargs)
-        print(self.fix_list)
-        print(self.fixed)
-        #self.detrend_model[dataset.name_ref]=  kwargs[dataset.name_ref]['pycheops_detrend_model']
 
     def compute(self, variable_value, dataset, x0_input=None):
 
-        for p in self.list_pams_dataset:
-            self.pycheops_params[dataset.name_ref][p].value = variable_value[p]
+        if x0_input is None:
 
-        print(variable_value)
-        quit()
-        return 5.
-        #if x0_input is None:
-        #    return self.detrend_model[dataset.name_ref].eval(self.pycheops_params[dataset.name_ref], t=dataset.x) # full detrend
-        #else:
-        #    return self.detrend_model[dataset.name_ref].eval(self.pycheops_params[dataset.name_ref], t=x0_input + dataset.Tref) # full detrend
+            dt = dataset.x - np.median(dataset.x)
+            # average model is zero - it is added to the light curve 
+            trend = variable_value['dfdt'] *dt +  variable_value['d2fdt2'] *dt**2 
 
+            trend += variable_value['dfdbg']* self.cheops_instrumental[dataset.name_ref]['bg']
 
+            trend += variable_value['dfdcontam']* self.cheops_instrumental[dataset.name_ref]['contam']
 
-    ### from pycheops
-    def _make_interp(t,x,scale=None):
-        if scale is None:
-            z = x
-        elif np.ptp(x) == 0:
-            z = np.zeros_like(x)
-        elif scale == 'max':
-            z = (x-min(x))/np.ptp(x) 
-        elif scale == 'range':
-            z = (2*x-(x.min()+x.max()))/np.ptp(x)
+            trend += variable_value['dfdsmear']* self.cheops_instrumental[dataset.name_ref]['smear']
+
+            trend += self.cheops_instrumental[dataset.name_ref]['smear'] * self.cheops_instrumental[dataset.name_ref]['deltaT'] /1e6
+
+            trend += variable_value['dfdx']* self.cheops_instrumental[dataset.name_ref]['xoff'] + variable_value['d2fdx2']*self.cheops_instrumental[dataset.name_ref]['xoff']**2
+
+            trend += variable_value['dfdy']* self.cheops_instrumental[dataset.name_ref]['yoff'] + variable_value['d2fdy2'] * self.cheops_instrumental[dataset.name_ref]['yoff']**2
+            trend += variable_value['d2fdxdy'] * self.cheops_instrumental[dataset.name_ref]['xoff'] * self.cheops_instrumental[dataset.name_ref]['yoff']
+
+            if self.fit_roll_angle:
+                trend += variable_value['dfdsinphi']*self.cheops_instrumental[dataset.name_ref]['sinphi'] + variable_value['dfdcosphi']*self.cheops_instrumental[dataset.name_ref]['cosphi']
+                trend += variable_value['dfdsin2phi']*(2*self.cheops_instrumental[dataset.name_ref]['sinphi']*self.cheops_instrumental[dataset.name_ref]['cosphi'])
+                trend += variable_value['dfdcos2phi']*(2*self.cheops_instrumental[dataset.name_ref]['cosphi']**2 - 1)
+                trend += variable_value['dfdsin3phi']*(3*self.cheops_instrumental[dataset.name_ref]['sinphi'] - 4* self.cheops_instrumental[dataset.name_ref]['sinphi']**3)
+                trend += variable_value['dfdcos3phi']*(4*self.cheops_instrumental[dataset.name_ref]['cosphi']**3 - 3*self.cheops_instrumental[dataset.name_ref]['cosphi'])
+            return trend
+
         else:
-            raise ValueError('scale must be None, max or range')
-        return interp1d(t,z,bounds_error=False, fill_value=(z[0],z[-1]))
 
+            t = x0_input + dataset.Tref
+            dt = t - np.median(dataset.x)
+            # average model is zero - it is added to the light curve
+            trend = variable_value['dfdt'] *dt +  variable_value['d2fdt2'] *dt**2 
 
+            trend += variable_value['dfdbg']* self.cheops_interpolated[dataset.name_ref]['bg'](t)
 
+            trend += variable_value['dfdcontam']* self.cheops_interpolated[dataset.name_ref]['contam'](t)
 
-def broken():
+            trend += variable_value['dfdsmear']* self.cheops_interpolated[dataset.name_ref]['smear'](t)
 
-    time = np.array(lc["time"])
-    phi = np.array(lc["roll_angle"])*180./np.pi
-    try:
-        smear = lc["smear"]
-    except KeyError:
-        smear = np.zeros_like(time)
-    try:
-        deltaT = lc["deltaT"]
-    except KeyError:
-        deltaT = np.zeros_like(time)
-        
-    from scipy.interpolate import interp1d
+            trend += self.cheops_interpolated[dataset.name_ref]['smear'](t) * self.cheops_interpolated[dataset.name_ref]['deltaT'](t) /1e6
 
-    def compute_model(variable_values, t, lc):
+            trend += variable_value['dfdx']* self.cheops_interpolated[dataset.name_ref]['xoff'](t) + variable_value['d2fdx2']*self.cheops_interpolated[dataset.name_ref]['xoff'](t)**2
 
-                ramp = np.zeros_like(lc["time"])
-                
-                phi = np.array(lc["roll_angle"])/180.*np.pi
-                dx     = make_interp(lc["time"], lc["xoff"], scale="range")
-                dy     = make_interp(lc["time"], lc["yoff"], scale="range")
-                sinphi = make_interp(lc["time"], np.sin(phi))
-                cosphi = make_interp(lc["time"], np.cos(phi))
-                bg     = make_interp(lc["time"], lc["bg"], scale="max")
-                contam = make_interp(lc["time"], lc["contam"], scale="max")
-                smear  = make_interp(lc["time"], lc["smear"], scale="max")
-                deltaT = make_interp(lc["time"], lc["deltaT"])
-                
-                
-                dt = t - np.median(t)
-                trend = 1. +  variable_values['dfdt'] *dt +  variable_values['d2fdt2'] *dt**2 
+            trend += variable_value['dfdy']* self.cheops_interpolated[dataset.name_ref]['yoff'](t) + variable_value['d2fdy2'] * self.cheops_interpolated[dataset.name_ref]['yoff'](t)**2
+            trend += variable_value['d2fdxdy'] * self.cheops_interpolated[dataset.name_ref]['xoff'](t) * self.cheops_interpolated[dataset.name_ref]['yoff'](t)
 
-                trend += variable_values['dfdbg']* bg(t)
+            if self.fit_roll_angle:
+                trend += variable_value['dfdsinphi']*self.cheops_interpolated[dataset.name_ref]['sinphi'](t) + variable_value['dfdcosphi']*self.cheops_interpolated[dataset.name_ref]['cosphi'](t)
+                trend += variable_value['dfdsin2phi']*(2*self.cheops_interpolated[dataset.name_ref]['sinphi'](t)*self.cheops_interpolated[dataset.name_ref]['cosphi'](t))
+                trend += variable_value['dfdcos2phi']*(2*self.cheops_interpolated[dataset.name_ref]['cosphi'](t)**2 - 1)
+                trend += variable_value['dfdsin3phi']*(3*self.cheops_interpolated[dataset.name_ref]['sinphi'](t) - 4* self.cheops_interpolated[dataset.name_ref]['sinphi'](t)**3)
+            return trend
 
-                trend += variable_values['dfdcontam']* contam(t)
-
-                trend += variable_values['dfdsmear']* smear(t)
-
-                #trend += ramp*deltaT(t)/1e6
-
-                trend += variable_values['dfdx']* dx(t) + variable_values['d2fdx2']* dx(t)**2
-
-                trend += variable_values['dfdy']* dy(t) + variable_values['d2fdy2'] * dy(t)**2
-                trend += variable_values['d2fdxdy'] * dx(t) * dy(t)
-                sinphit = sinphi(t)
-                cosphit = cosphi(t)
-                trend += variable_values['dfdsinphi']*sinphit + variable_values['dfdcosphi']*cosphit
-                trend += variable_values['dfdsin2phi']*(2*sinphit*cosphit)
-                trend += variable_values['dfdcos2phi']*(2*cosphit**2 - 1)
-                trend += variable_values['dfdsin3phi']*(3*sinphit - 4* sinphit**3)
-                trend += variable_values['dfdcos3phi']*(4*cosphit**3 - 3*cosphit)
-
-                return trend
-
-    detrend_flux = compute_model(detrending_params, lc['time'], lc)
