@@ -27,6 +27,11 @@ class CheopsDetrending(AbstractModel):
             "d2fdx2",
             "d2fdxdy",
             "d2fdy2",
+        }
+
+        self.fit_roll_angle = True
+
+        self.roll_angle_parameters = {
             "dfdsinphi",
             "dfdcosphi",
             "dfdcos2phi",
@@ -34,16 +39,6 @@ class CheopsDetrending(AbstractModel):
             "dfdcos3phi",
             "dfdsin3phi",
         }
-
-        self.fit_roll_angle = True
-
-        self.parameters_copy = self.list_pams_dataset.copy()
-
-        ## serve??????
-        self.common_cheops_detrending = None
-        self.pycheops_params ={}
-        self.detrend_model = {}
-
 
         self.cheops_diagnostics = {
             'roll_angle': 'None',
@@ -64,35 +59,36 @@ class CheopsDetrending(AbstractModel):
     def initialize_model(self, mc, **kwargs):
 
         self.fit_roll_angle = kwargs.get('fit_roll_angle', True)
-        if not self.fit_roll_angle:
-            for p in self.parameters_copy:
-                if 'phi' in p:
-                    self.list_pams_dataset.remove(p)
+        if self.fit_roll_angle:
 
+            for var in self.roll_angle_parameters:
+                self.list_pams_dataset.update([var])
+
+        print(self.list_pams_dataset)
     def initialize_model_dataset(self, mc, dataset, **kwargs):
 
         self.cheops_instrumental[dataset.name_ref] = {}
         self.cheops_interpolated[dataset.name_ref] = {}
 
-        append_fields(dataset.ancillary, 'sinphi', np.sin(dataset.ancillary["roll_angle"]/180.*np.pi), np.double)
-        append_fields(dataset.ancillary, 'cosphi', np.cos(dataset.ancillary["roll_angle"]/180.*np.pi), np.double)
-
+        if 'sinphi' not in dataset.ancillary.dtype.names:
+            dataset.ancillary = append_fields(dataset.ancillary, 'sinphi', np.sin(dataset.ancillary["roll_angle"]/180.*np.pi))
+        if 'cosphi' not in dataset.ancillary.dtype.names:
+            dataset.ancillary = append_fields(dataset.ancillary, 'cosphi', np.cos(dataset.ancillary["roll_angle"]/180.*np.pi))
 
         for diag_name, diag_scale in self.cheops_diagnostics.items():
-
-            if diag_name in dataset.ancillary:
-                if diag_scale == 'max':
+            if diag_name in dataset.ancillary.dtype.names:
+                if diag_scale is 'max':
                     self.cheops_instrumental[dataset.name_ref][diag_name] = \
                         (dataset.ancillary[diag_name] - np.amin(dataset.ancillary[diag_name])) \
                             / np.ptp(dataset.ancillary[diag_name])
-                elif diag_scale == 'range':
+                elif diag_scale is 'range':
                     self.cheops_instrumental[dataset.name_ref][diag_name] = \
                         ( 2 * dataset.ancillary[diag_name]
                         - (np.amin(dataset.ancillary[diag_name]) + np.amax(dataset.ancillary[diag_name]))) \
                             / np.ptp(dataset.ancillary[diag_name])
                 else:
                     self.cheops_instrumental[dataset.name_ref][diag_name] = dataset.ancillary[diag_name]
-
+                print()
             else:
                 self.cheops_instrumental[dataset.name_ref][diag_name] = np.zeros_like(dataset.ancillary['time'])
 
