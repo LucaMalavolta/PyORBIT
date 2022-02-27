@@ -22,6 +22,7 @@ if __name__ == '__main__':
     parser.add_argument('-all_corners', type=str, nargs='?', default=False, help='Do all the corner plots')
     parser.add_argument('-all', type=str, nargs='?', default=False, help='Active all flags')
     parser.add_argument('-dfm_corner', type=str, nargs='?', default=False, help='Use DFM corner script for corner plots')
+    parser.add_argument('-getdist_corner', type=str, nargs='?', default=False, help='Use getdist script for corner plots')
 
     plot_dictionary = {
         'plot_models': False,
@@ -34,7 +35,8 @@ if __name__ == '__main__':
         'full_correlation': False,
         'dataset_corner': False,
         'common_corner': False,
-        'use_getdist': True,
+        'use_getdist': False,
+        'use_corner': False,
         'veuz_corner_files': False,
         'P_versus_lnprob': False,
         'oversampled_models': ['transit',
@@ -92,8 +94,12 @@ if __name__ == '__main__':
         plot_dictionary['common_corner'] = True
     if args.v is not False:
         plot_dictionary['veuz_corner_files'] = True
+    if args.getdist_corner is not False :
+        plot_dictionary['use_getdist'] = True
+        plot_dictionary['full_correlation'] = True
     if args.dfm_corner is not False :
         plot_dictionary['use_getdist'] = False
+        plot_dictionary['use_corner'] = True
         plot_dictionary['full_correlation'] = True
 
     if args.all is not False:

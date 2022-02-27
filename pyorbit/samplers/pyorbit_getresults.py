@@ -5,6 +5,7 @@ from matplotlib import pyplot as plt
 import matplotlib.gridspec as gridspec
 from matplotlib.ticker import AutoMinorLocator
 import corner
+import pygtc
 import pyorbit.subroutines.kepler_exo as kepler_exo
 import pyorbit.subroutines.common as common
 import pyorbit.subroutines.results_analysis as results_analysis
@@ -628,7 +629,8 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
         i_corner = 0
         for var, var_dict in theta_dictionary.items():
             corner_plot['samples'][:, i_corner] = flat_chain[:, var_dict]
-            corner_plot['labels'].append(re.sub('_', '-', var))
+            corner_plot['labels'].append(repr(var_dict))
+            #corner_plot['labels'].append(re.sub('_', '-', var))
             corner_plot['truths'].append(chain_med[var_dict, 0])
             i_corner += 1
 
@@ -657,7 +659,7 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
 
             print()
 
-        else:
+        elif plot_dictionary['use_corner']:
             # plotting mega-corner plot
             print('Plotting full_correlation plot with Corner')
 
@@ -667,10 +669,19 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
                         bbox_inches='tight', dpi=300)
             plt.close(fig)
 
+        else:
+            print('Plotting full_correlation plot with pygtc')
+
+            GTC = pygtc.plotGTC(chains=corner_plot['samples'],
+                                paramNames=corner_plot['labels'],
+                                truths=corner_plot['truths'],
+                                plotName=dir_output + "all_internal_variables_corner_pygtc.pdf")
+            GTC = None
         print()
         print('****************************************************************************************************')
         print()
         sys.stdout.flush()
+        corner_plot = None
 
     if plot_dictionary['chains']:
 
@@ -765,15 +776,27 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
                 planetary mass with uncertainty """
 
             try:
-                fig = corner.corner(np.asarray(corner_plot['samples']).T,
-                                    labels=corner_plot['labels'],
-                                    truths=corner_plot['truths'])
-                fig.savefig(dir_output + common_name + "_corners.pdf",
-                            bbox_inches='tight', dpi=300)
-                plt.close(fig)
+                if plot_dictionary['use_corner']:
+                    fig = corner.corner(np.asarray(corner_plot['samples']).T,
+                                        labels=corner_plot['labels'],
+                                        truths=corner_plot['truths'])
+                    fig.savefig(dir_output + common_name + "_corners.pdf",
+                                bbox_inches='tight', dpi=300)
+                    plt.close(fig)
+                else:
+                    GTC = pygtc.plotGTC(chains=np.asarray(corner_plot['samples']).T,
+                                        paramNames=corner_plot['labels'],
+                                        truths=corner_plot['truths'],
+                                        figureSize='MNRAS_page',
+                                        plotName=dir_output + common_name + "_corners.pdf")
+                    GTC = None
+
             except AssertionError:
                 print('     Something went wrong, plot skipped ')
                 print()
+
+            corner_plot = None
+            sys.stdout.flush()
 
         print()
         print('****************************************************************************************************')
@@ -820,15 +843,30 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
                     corner_plot['labels'].append(var)
                     corner_plot['truths'].append(variable_median[var])
 
-                fig = corner.corner(np.asarray(corner_plot['samples']).T,
-                                    labels=corner_plot['labels'], truths=corner_plot['truths'])
-                fig.savefig(dir_output + dataset_name + '_' + model_name +
-                            "_corners.pdf", bbox_inches='tight', dpi=300)
-                plt.close(fig)
-                fig = None
+
+                try:
+                    if plot_dictionary['use_corner']:
+                        fig = corner.corner(np.asarray(corner_plot['samples']).T,
+                                            labels=corner_plot['labels'], truths=corner_plot['truths'])
+                        fig.savefig(dir_output + dataset_name + '_' + model_name +
+                                    "_corners.pdf", bbox_inches='tight', dpi=300)
+                        plt.close(fig)
+                        fig = None
+                    else:
+                        GTC = pygtc.plotGTC(chains=np.asarray(corner_plot['samples']).T,
+                                            paramNames=corner_plot['labels'],
+                                            truths=corner_plot['truths'],
+                                            figureSize='MNRAS_page',
+                                            plotName=dir_output + dataset_name + '_' + model_name + "_corners.pdf")
+                        GTC = None
+                except AssertionError:
+                    print('     Something went wrong, plot skipped ')
+                    print()
 
                 print('     Dataset: ', dataset_name, '    model: ',
                       model_name, ' corner plot  done ')
+                corner_plot = None
+                sys.stdout.flush()
 
         print()
         print('****************************************************************************************************')
