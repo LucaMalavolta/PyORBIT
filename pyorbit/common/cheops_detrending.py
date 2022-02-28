@@ -1,1 +1,0 @@
-cheops_detrending.pyx

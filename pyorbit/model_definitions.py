@@ -19,7 +19,7 @@ from pyorbit.common.limb_darkening import LimbDarkening_Linear, \
     LimbDarkening_Exponential, LimbDarkening_Power2, \
     LimbDarkening_NonLinear
 
-from pyorbit.common.cheops_detrending import CommonCheopsDetrending
+from pyorbit.common.cheops_modelling import CommonCheopsModelling
 
 
 from pyorbit.models.radial_velocities import \
@@ -76,6 +76,7 @@ from pyorbit.models.polynomial_trend import PolynomialTrend, LocalPolynomialTren
 from pyorbit.models.spectral_rotation import SpectralRotation, SubsetSpectralRotation, SubsetSpectralRotationPolynomial
 
 from pyorbit.models.cheops_detrending import CheopsDetrending
+from pyorbit.models.cheops_factormodel import CheopsFactorModel
 
 """
  model_requires_planets: all those models that requires AT LEAST one of the planets in the system must be listed here
@@ -112,7 +113,7 @@ define_common_type_to_class = {
     'dilution_factor': CommonDilutionFactor,
     'normalization_factor': CommonNormalizationFactor,
     'star_parameters': CommonStarParameters,
-    'cheops_detrending': CommonCheopsDetrending
+    'cheops_modelling': CommonCheopsModelling
 }
 
 define_type_to_class = {
@@ -164,7 +165,9 @@ define_type_to_class = {
     'spectral_rotation': SpectralRotation,
     'subset_spectral_rotation': SubsetSpectralRotation,
     'subset_spectral_rotation_polynomial': SubsetSpectralRotationPolynomial,
-    'cheops_detrending': CheopsDetrending
+    'cheops_detrending': CheopsDetrending,
+    'cheops_factormodel': CheopsFactorModel
+
 }
 
 accepted_extensions = ['.yaml', '.yml', '.conf', '.config', '.input', ]

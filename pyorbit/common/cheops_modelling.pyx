@@ -2,7 +2,7 @@ from pyorbit.subroutines.common import *
 from pyorbit.common.abstract_common import *
 
 
-class CommonCheopsDetrending(AbstractCommon):
+class CommonCheopsModelling(AbstractCommon):
     """
     Inherited class from AbstractCommon
 
@@ -15,7 +15,7 @@ class CommonCheopsDetrending(AbstractCommon):
         :period_average: variable used only by TRADES
     """
 
-    model_class = 'cheops_detrending'
+    model_class = 'cheops_modelling'
 
     #detrending_params = [
     #    "dfdt",
@@ -38,6 +38,14 @@ class CommonCheopsDetrending(AbstractCommon):
 
 
     parameters_dictionary = {
+        'scale_factor': # Orbital period of the planet
+            {
+                'bounds': [-5., 20.],
+                'priors': ['Uniform', []],
+                'spaces': 'Log_Base2',
+                'fixed' : 1.00,
+                'unit': None,
+            },
         'dfdt': # Orbital period of the planet
             {
                 'bounds': [-1., 1.],

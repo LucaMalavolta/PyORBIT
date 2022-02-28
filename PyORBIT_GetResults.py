@@ -15,7 +15,7 @@ if __name__ == '__main__':
     parser.add_argument('-c', type=str, nargs='?', default=False, help='Save chains plots')
     parser.add_argument('-ln', type=str, nargs='?', default=False, help='Save ln_prob chain plot')
     parser.add_argument('-t', type=str, nargs='?', default=False, help='Compute and save Gelman-Rubin traces')
-    parser.add_argument('-fc', type=str, nargs='?', default=False, help='Save full corellation plot - it may be slow!')
+    parser.add_argument('-fc', type=str, nargs='?', default=False, help='Save full correlation plot - it may be slow!')
     parser.add_argument('-cc', type=str, nargs='?', default=False, help='Save corner plots of common variables')
     parser.add_argument('-dc', type=str, nargs='?', default=False, help='Save individual corner plots of reach dataset')
     parser.add_argument('-v', type=str, nargs='?', default=False, help='Write Veusz files for corner plot')

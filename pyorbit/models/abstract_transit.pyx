@@ -222,40 +222,47 @@ class AbstractTransit(object):
 
 
     """ function for internal transformation of variables, to avoid if calls"""
-    def _internal_transformation_mod00(self, variable_value):
+    @staticmethod
+    def _internal_transformation_mod00(variable_value):
         """ this function transforms b and rho to i and a  """
         a = convert_rho_to_a(variable_value['P'], variable_value['density'])
         i = convert_b_to_i(
             variable_value['b'], variable_value['e'], variable_value['omega'], a)
         return a, i
 
-    def _internal_transformation_mod01(self, variable_value):
+    @staticmethod
+    def _internal_transformation_mod01(variable_value):
         """ this function transforms b to i"""
         i = convert_b_to_i(
             variable_value['b'], variable_value['e'], variable_value['omega'], variable_value['a_Rs'])
         return variable_value['a_Rs'], i
 
-    def _internal_transformation_mod02(self, variable_value):
+    @staticmethod
+    def _internal_transformation_mod02(variable_value):
         """ this function transforms rho to a  """
         a = convert_rho_to_a(variable_value['P'], variable_value['density'])
         return a, variable_value['i']
 
-    def _internal_transformation_mod03(self, variable_value):
+    @staticmethod
+    def _internal_transformation_mod03(variable_value):
         """ no transformation needed  """
         return variable_value['a_Rs'], variable_value['i']
 
-    def _internal_transformation_mod04(self, variable_value, Tref):
+    @staticmethod
+    def _internal_transformation_mod04(variable_value, Tref):
         """ this function transforms Tc into Tc- Tref t"""
         return variable_value['Tc'] - Tref
 
-    def _internal_transformation_mod05(self, variable_value, Tref):
+    @staticmethod
+    def _internal_transformation_mod05(variable_value, Tref):
         """ this function transforms phase into Tc- Tref t"""
         return kepler_exo.kepler_phase2Tc_Tref(variable_value['P'],
                                                variable_value['mean_long'],
                                                variable_value['e'],
                                                variable_value['omega'])
 
-    def _internal_transformation_mod06(self, variable_value):
+    @staticmethod
+    def _internal_transformation_mod06(variable_value):
         """ this function transforms b, mass, radius to i and a
             it replaces _internal_transformation_mod00 when mass & radius
             multivariate are used
@@ -266,7 +273,8 @@ class AbstractTransit(object):
             variable_value['b'], variable_value['e'], variable_value['omega'], a)
         return a, i
 
-    def _internal_transformation_mod07(self, variable_value):
+    @staticmethod
+    def _internal_transformation_mod07(variable_value):
         """ this function transforms P,mass, radius to a
             it replaces _internal_transformation_mod02 when mass & radius
             multivariate are used

@@ -629,8 +629,10 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
         i_corner = 0
         for var, var_dict in theta_dictionary.items():
             corner_plot['samples'][:, i_corner] = flat_chain[:, var_dict]
-            corner_plot['labels'].append(repr(var_dict))
-            #corner_plot['labels'].append(re.sub('_', '-', var))
+            if len(theta_dictionary) > 10:
+                corner_plot['labels'].append(repr(var_dict))
+            else:
+                corner_plot['labels'].append(re.sub('_', '-', var))
             corner_plot['truths'].append(chain_med[var_dict, 0])
             i_corner += 1
 
@@ -655,7 +657,7 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
 
             except AttributeError:
                 print(' Something went wrong when plotting the coner plot with GetDist')
-                print(' Please Run PyORBIT_GetResults.py with -dfm flag to get an alternative (slower) corne rplot')
+                print(' Please Run PyORBIT_GetResults.py with without corner plot flat to get an alternative corner plot')
 
             print()
 
@@ -787,7 +789,7 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
                     GTC = pygtc.plotGTC(chains=np.asarray(corner_plot['samples']).T,
                                         paramNames=corner_plot['labels'],
                                         truths=corner_plot['truths'],
-                                        figureSize='MNRAS_page',
+                                        #figureSize='MNRAS_page',
                                         plotName=dir_output + common_name + "_corners.pdf")
                     GTC = None
 
@@ -856,7 +858,7 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
                         GTC = pygtc.plotGTC(chains=np.asarray(corner_plot['samples']).T,
                                             paramNames=corner_plot['labels'],
                                             truths=corner_plot['truths'],
-                                            figureSize='MNRAS_page',
+                                            #figureSize='MNRAS_page',
                                             plotName=dir_output + dataset_name + '_' + model_name + "_corners.pdf")
                         GTC = None
                 except AssertionError:

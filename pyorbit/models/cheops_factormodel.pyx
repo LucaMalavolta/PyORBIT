@@ -5,18 +5,19 @@ import pyorbit.subroutines.constants as constants
 from scipy.interpolate import interp1d
 from numpy.lib.recfunctions import append_fields
 
-class CheopsDetrending(AbstractModel):
+class CheopsFactorModel(AbstractModel):
 
     default_common = 'cheops_modelling'
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.model_class = 'cheops_detrending'
-        self.unitary_model = True
-        self.normalization_model = False
+        self.model_class = 'cheops_factormodel'
+        self.unitary_model = False
+        self.normalization_model = True
 
         self.list_pams_dataset = {
+            "scale_factor",
             "dfdbg",
             "dfdcontam",
             "dfdsmear",
@@ -26,8 +27,6 @@ class CheopsDetrending(AbstractModel):
             "d2fdxdy",
             "d2fdy2",
         }
-
-        self.fit_roll_angle = True
 
         self.roll_angle_parameters = {
             "dfdsinphi",
@@ -67,17 +66,15 @@ class CheopsDetrending(AbstractModel):
         else:
             self.retrieve_roll_angle = self._retrieve_roll_angle_mod00
 
-        if kwargs.get('fit_quadratic_trend', False):
-            self.list_pams_dataset.update(['dfdt'])
-            self.list_pams_dataset.update(['d2fdt2'])
-
-            self.retrieve_trend = self._retrieve_trend_mod02
-
+        if kwargs.get('fit_constant_trend', False):
+            self.retrieve_trend = self._retrieve_trend_mod00
         elif kwargs.get('fit_linear_trend', False):
             self.list_pams_dataset.update(['dfdt'])
             self.retrieve_trend = self._retrieve_trend_mod01
         else:
-            self.retrieve_trend = self._retrieve_trend_mod00
+            self.list_pams_dataset.update(['dfdt'])
+            self.list_pams_dataset.update(['d2fdt2'])
+            self.retrieve_trend = self._retrieve_trend_mod02
 
     def initialize_model_dataset(self, mc, dataset, **kwargs):
 
@@ -162,7 +159,7 @@ class CheopsDetrending(AbstractModel):
             trend += self.retrieve_trend(variable_value, t)
             trend += self.retrieve_roll_angle(variable_value, self.cheops_interpolated[dataset.name_ref]['sinphi'](t), self.cheops_interpolated[dataset.name_ref]['cosphi'](t))
 
-        return trend
+        return trend * variable_value['dfdbg']
 
     @staticmethod
     def _retrieve_roll_angle_mod00(variable_value, sinphi, cosphi):
