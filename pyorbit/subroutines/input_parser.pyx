@@ -539,17 +539,9 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, reload_ze
                                 mc.models[model_name_exp].model_conf[dataset_name] = {}
 
                             bounds_space_priors_starts_fixed(mc, mc.models[model_name_exp], model_conf[dataset_name],
-                                                            dataset_1=dataset_name, backup_conf=model_conf)
+                                                            dataset=dataset_name, backup_conf=model_conf)
                         except TypeError:
                             continue
-
-        elif model_type == 'local_correlation' or model_type == 'correlation':
-            """ correlations or local_correlation models requires an extra dataset, that must be passed to """
-            mc.models[model_name] = \
-                define_type_to_class[model_type](model_name, None)
-            mc.models[model_name].model_conf = model_conf.copy()
-            bounds_space_priors_starts_fixed(
-                mc, mc.models[model_name], model_conf, dataset_1=model_conf['reference'])
 
         else:
 
@@ -646,7 +638,7 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, reload_ze
                         bounds_space_priors_starts_fixed(mc,
                                                          mc.models[model_name],
                                                          model_conf[dataset_name],
-                                                         dataset_1=dataset_name,
+                                                         dataset=dataset_name,
                                                          backup_conf=model_conf)
 
             except:
@@ -827,11 +819,10 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, reload_ze
 def bounds_space_priors_starts_fixed(mc,
                                      model_obj,
                                      input_conf,
-                                     dataset_1=None,
-                                     dataset_2=None,
+                                     dataset=None,
                                      add_var_name='',
                                      backup_conf=None):
-    # type: (object, object, object, object, object, object, object) -> object
+    # type: (object, object, object, object, object, object) -> object
 
     conf = input_conf.copy()
     key_list = ['boundaries', 'spaces', 'priors', 'starts', 'fixed']
@@ -882,7 +873,7 @@ def bounds_space_priors_starts_fixed(mc,
                 if var_name not in  conf[key_name]:
                     conf[key_name][var_name] = backup_conf[key_name][var_name]
 
-    if dataset_1 is None:
+    if dataset is None:
         if 'boundaries' in conf:
             bound_conf = conf['boundaries']
             for var in bound_conf:
@@ -945,24 +936,24 @@ def bounds_space_priors_starts_fixed(mc,
                 model_obj.fix_list[add_var_name + var] = \
                     get_2darray_from_val(fixed_conf[var])
 
-    elif dataset_2 is None:
-        model_obj.bounds[dataset_1] = {}
-        model_obj.spaces[dataset_1] = {}
-        model_obj.starts[dataset_1] = {}
-        model_obj.fix_list[dataset_1] = {}
-        model_obj.prior_kind[dataset_1] = {}
-        model_obj.prior_pams[dataset_1] = {}
+    else:
+        model_obj.bounds[dataset] = {}
+        model_obj.spaces[dataset] = {}
+        model_obj.starts[dataset] = {}
+        model_obj.fix_list[dataset] = {}
+        model_obj.prior_kind[dataset] = {}
+        model_obj.prior_pams[dataset] = {}
 
         if 'boundaries' in conf:
             bound_conf = conf['boundaries']
             for var in bound_conf:
-                model_obj.bounds[dataset_1][add_var_name + var] = \
+                model_obj.bounds[dataset][add_var_name + var] = \
                     np.asarray(bound_conf[var], dtype=np.double)
 
         if 'spaces' in conf:
             space_conf = conf['spaces']
             for var in space_conf:
-                model_obj.spaces[dataset_1][add_var_name + var] = \
+                model_obj.spaces[dataset][add_var_name + var] = \
                     space_conf[var]
 
         if 'priors' in conf:
@@ -972,19 +963,19 @@ def bounds_space_priors_starts_fixed(mc,
 
 
                 if var == 'multivariate':
-                    model_obj.multivariate_priors[dataset_1] = True
+                    model_obj.multivariate_priors[dataset] = True
 
-                    model_obj.multivariate_vars[dataset_1] = prior_conf[var]['variables']
+                    model_obj.multivariate_vars[dataset] = prior_conf[var]['variables']
                     data_file = np.genfromtxt(prior_conf[var]['file'])
 
                     ll = []
-                    for ii in range(len(model_obj.multivariate_vars[dataset_1])):
+                    for ii in range(len(model_obj.multivariate_vars[dataset])):
                         ll.append(data_file[:,ii])
                     cov_data = np.stack(ll, axis=0)
-                    model_obj.multivariate_cov[dataset_1] = np.cov(cov_data)
-                    model_obj.multivariate_med[dataset_1] = np.median(data_file, axis=0)
-                    model_obj.multivariate_func[dataset_1] = multivariate_normal(model_obj.multivariate_med[dataset_1],
-                                                                      model_obj.multivariate_cov[dataset_1])
+                    model_obj.multivariate_cov[dataset] = np.cov(cov_data)
+                    model_obj.multivariate_med[dataset] = np.median(data_file, axis=0)
+                    model_obj.multivariate_func[dataset] = multivariate_normal(model_obj.multivariate_med[dataset],
+                                                                      model_obj.multivariate_cov[dataset])
                     ll = None
                     cov_data = None
                     data_file = None
@@ -994,19 +985,19 @@ def bounds_space_priors_starts_fixed(mc,
 
 
                 prior_pams = np.atleast_1d(prior_conf[var])
-                model_obj.prior_kind[dataset_1][add_var_name + var] = \
+                model_obj.prior_kind[dataset][add_var_name + var] = \
                     prior_conf[var][0]
 
                 if prior_conf[var][0] == 'File':
                     data_file = np.genfromtxt(prior_pams[1])
-                    model_obj.prior_pams[dataset_1][add_var_name + var] = \
+                    model_obj.prior_pams[dataset][add_var_name + var] = \
                         gaussian_kde(data_file)
                     data_file = None
                 elif np.size(prior_conf[var]) > 1:
-                    model_obj.prior_pams[dataset_1][add_var_name + var] = \
+                    model_obj.prior_pams[dataset][add_var_name + var] = \
                         np.asarray(prior_pams[1:], dtype=np.double)
                 else:
-                    model_obj.prior_pams[dataset_1][add_var_name + var] = \
+                    model_obj.prior_pams[dataset][add_var_name + var] = \
                         np.asarray([0.00], dtype=np.double)
 
 
@@ -1014,59 +1005,14 @@ def bounds_space_priors_starts_fixed(mc,
             mc.starting_point_flag = True
             starts_conf = conf['starts']
             for var in starts_conf:
-                model_obj.starts[dataset_1][add_var_name + var] = \
+                model_obj.starts[dataset][add_var_name + var] = \
                     np.asarray(starts_conf[var], dtype=np.double)
 
         if 'fixed' in conf:
             fixed_conf = conf['fixed']
             for var in fixed_conf:
-                model_obj.fix_list[dataset_1][add_var_name + var] = \
+                model_obj.fix_list[dataset][add_var_name + var] = \
                     get_2darray_from_val(fixed_conf[var])
 
-    else:
 
-        if 'boundaries' in conf:
-            bound_conf = conf['boundaries']
-            for var in bound_conf:
-                model_obj.bounds[dataset_1][dataset_2][add_var_name + var] = \
-                    np.asarray(bound_conf[var], dtype=np.double)
-
-        if 'spaces' in conf:
-            space_conf = conf['spaces']
-            for var in space_conf:
-                model_obj.spaces[dataset_1][dataset_2][add_var_name + var] = \
-                    space_conf[var]
-
-        if 'priors' in conf:
-            prior_conf = conf['priors']
-            for var in prior_conf:
-                model_obj.prior_kind[dataset_1][dataset_2][add_var_name + var] = \
-                    prior_conf[var][0]
-
-                if prior_conf[var][0] == 'File':
-                    data_file = np.genfromtxt(prior_conf[var][1])
-                    model_obj.prior_pams[dataset_1][dataset_2][add_var_name + var] = \
-                        gaussian_kde(data_file)
-                elif np.size(prior_conf[var]) > 1:
-                    model_obj.prior_pams[dataset_1][dataset_2][add_var_name + var] = \
-                        np.asarray(prior_conf[var][1:], dtype=np.double)
-                else:
-                    model_obj.prior_pams[dataset_1][dataset_2][add_var_name + var] = \
-                        np.asarray([0.00], dtype=np.double)
-
-                #model_obj.prior_pams[dataset_1][dataset_2][add_var_name + var] = \
-                #    np.asarray(prior_conf[var][1:], dtype=np.double)
-
-        if 'starts' in conf:
-            mc.starting_point_flag = True
-            starts_conf = conf['starts']
-            for var in starts_conf:
-                model_obj.starts[dataset_1][dataset_2][add_var_name + var] = \
-                    np.asarray(starts_conf[var], dtype=np.double)
-
-        if 'fixed' in conf:
-            fixed_conf = conf['fixed']
-            for var in fixed_conf:
-                model_obj.fix_list[dataset_1][dataset_2][add_var_name + var] = \
-                    get_2darray_from_val(fixed_conf[var])
     return

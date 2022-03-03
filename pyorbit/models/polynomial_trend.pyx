@@ -6,7 +6,6 @@ class PolynomialTrend(AbstractModel):
 
     default_common = 'polynomial_trend'
 
-
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 

@@ -7,7 +7,7 @@ class CommonPolynomialTrend(AbstractCommon):
 
     "polynomial trend up to 10th order"
     list_pams = {
-        'x_zero',
+        '',
         'poly_c0',  # order 0
         'poly_c1',  # order 1
         'poly_c2',  # order 2

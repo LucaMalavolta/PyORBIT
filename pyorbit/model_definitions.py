@@ -20,6 +20,7 @@ from pyorbit.common.limb_darkening import LimbDarkening_Linear, \
     LimbDarkening_NonLinear
 
 from pyorbit.common.cheops_modelling import CommonCheopsModelling
+from pyorbit.common.correlation import CommonCorrelation
 
 
 from pyorbit.models.radial_velocities import \
@@ -59,7 +60,7 @@ from pyorbit.models.celerite_rotation import Celerite_Rotation
 from pyorbit.models.celerite_matern32 import Celerite_Matern32
 from pyorbit.models.celerite_matern32_common import Celerite_Matern32_Common
 
-from pyorbit.models.correlations import LocalCorrelation
+from pyorbit.models.correlation import LocalCorrelation
 from pyorbit.models.correlated_jitter import LocalCorrelatedJitter
 from pyorbit.models.common_offset import Offset
 from pyorbit.models.common_jitter import Jitter
@@ -113,7 +114,8 @@ define_common_type_to_class = {
     'dilution_factor': CommonDilutionFactor,
     'normalization_factor': CommonNormalizationFactor,
     'star_parameters': CommonStarParameters,
-    'cheops_modelling': CommonCheopsModelling
+    'cheops_modelling': CommonCheopsModelling,
+    'correlation': CommonCorrelation,
 }
 
 define_type_to_class = {
@@ -148,6 +150,7 @@ define_type_to_class = {
     'celerite_matern32_common': Celerite_Matern32_Common,
     'celerite_rotation': Celerite_Rotation,
     'local_correlation': LocalCorrelation,
+    'correlation': LocalCorrelation,
     'polynomial_trend': PolynomialTrend,
     'local_polynomial_trend': LocalPolynomialTrend,
     'subset_polynomial_trend': SubsetPolynomialTrend,
