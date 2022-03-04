@@ -1,3 +1,4 @@
+from pyorbit.subroutines.common import np
 from pyorbit.models.abstract_model import AbstractModel
 
 try:
