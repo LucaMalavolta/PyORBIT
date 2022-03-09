@@ -118,7 +118,7 @@ def get_2var_o(var, fix, i):
     else:
         ecoso = var[:, i[0]]
         esino = var[:, i[1]]
-    return np.arctan2(esino, ecoso, dtype=np.double)
+    return np.arctan2(esino, ecoso, dtype=np.double) * constants.rad2deg
 
 
 # Kipping transformation for quadratic limb darkening coefficients
