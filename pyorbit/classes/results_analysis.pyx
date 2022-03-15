@@ -374,7 +374,9 @@ def get_planet_variables(mc, theta, verbose=False):
 
             try:
                 k = variable_values['R']
-
+                print(variable_values['R'], variable_values['b'])
+                print((1. + k)**2)
+                print(variable_values['b']**2)
                 variable_values['T_41'] = variable_values['P'] / np.pi \
                     * np.arcsin(1./variable_values['a'] *
                                 np.sqrt((1. + k)**2 - variable_values['b']**2)
