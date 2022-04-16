@@ -98,12 +98,12 @@ class Harmonics(AbstractModel):
             var = 'amp_S'+repr(i_order)
             pha = variable_value.get('pha_S'+repr(i_order),  phase)
             harmonics_output += variable_value[var] * \
-                np.sin(phi_value * i_order + pha)
+                np.sin(phi_value * i_order + pha/180.*np.pi)
 
         for i_order in self.cosine_harmonics:
             var = 'amp_C'+repr(i_order)
             pha = variable_value.get('pha_C'+repr(i_order),  phase)
             harmonics_output += variable_value[var] * \
-                np.cos(phi_value * i_order + pha)
+                np.cos(phi_value * i_order + pha/180.*np.pi)
 
         return harmonics_output

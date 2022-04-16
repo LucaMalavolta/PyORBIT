@@ -5,12 +5,16 @@ class CommonOffset(AbstractCommon):
     '''
 
     model_class = 'common_offset'
-    list_pams = {
-        'offset'  # order 1
+
+    parameters_dictionary = {
+        'offset':
+            {
+                'bounds': {},
+                'priors': ['Uniform', []],
+                'spaces': 'Linear',
+                'fixed' : 0.000,
+                'unit': 'as input',
+            },
     }
 
-    default_bounds = {}
-    default_spaces = {'offset': 'Linear'}
-    default_priors = {'offset': ['Uniform', []]}
-    default_fixed = {}
     recenter_pams = {}

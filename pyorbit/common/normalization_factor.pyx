@@ -9,25 +9,14 @@ class CommonNormalizationFactor(AbstractCommon):
     unitary_model = False
     normalization_model = True
 
-    list_pams = {
-        'n_factor',  # normalization factor
+    parameters_dictionary = {
+        'n_factor':
+            {
+                'bounds': [1e-06, 1e06],
+                'priors': ['Uniform', []],
+                'spaces': 'Log_Base2',
+                'fixed' : 0.000,
+                'unit': 'as input',
+            },
     }
-
-    default_bounds = {
-        'n_factor': [0.0000010, 100000.0000]
-    }
-
-    """ Must be the same parameters as in list_pams, because priors are applied only to _physical_ parameters """
-    default_priors = {
-        'n_factor': ['Uniform', []]
-    }
-
-    default_spaces = {
-        'n_factor': 'Logarithmic'
-    }
-
-    default_fixed = {
-        'n_factor': 1.0000
-    }
-
     recenter_pams = {}

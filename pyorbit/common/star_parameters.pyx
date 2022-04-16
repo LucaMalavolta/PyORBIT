@@ -8,71 +8,82 @@ class CommonStarParameters(AbstractCommon):
     '''
     model_class = 'star_parameters'
 
-    list_pams = {
-        'radius',  # radius of the star, in Solar radii
-        'mass',  # mass of the star, in Solar masses
-        'density',  # density of the star, in Solar density units
-        'i_star', # Inclination of the star
-        'v_sini', # projected rotational velocity of the star
-        'temperature', #effective temperature of the star, in K
-        'line_contrast',
-        'line_fwhm',
-        'rv_center'
-    }
-
-    default_bounds = {
-        'radius': [0.0000, 2.0000],
-        'mass': [0.0000, 2.0000],
-        'density': [0.0000, 5.0000],
-        'i_star': [0.0000, 180.0000],
-        'v_sini': [0.0000, 200.0000],
-        'temperature': [2000., 11000.],
-        'line_contrast': [0., 100.],
-        'line_fwhm': [0., 12.],
-        'rv_center': [-300., 300.],
-    }
-
-    """ Must be the same parameters as in list_pams, because priors are applied only to _physical_ parameters """
-    default_priors = {
-        'radius': ['Uniform', []],
-        'mass': ['Uniform', []],
-        'density': ['Uniform', []],
-        'i_star': ['Uniform', []],
-        'v_sini': ['Uniform', []],
-        'temperature': ['Uniform', []],
-        'line_contrast': ['Uniform', []],
-        'line_fwhm': ['Uniform', []],
-        'rv_center': ['Uniform', []],
-    }
-
-    default_spaces = {
-        'radius': 'Linear',
-        'mass': 'Linear',
-        'density': 'Linear',
-        'i_star': 'Linear',
-        'v_sini': 'Linear',
-        'temperature': 'Linear',
-        'line_contrast': 'Linear',
-        'line_fwhm': 'Linear',
-        'rv_center': 'Linear',
-    }
-
-    default_fixed = {
-        'radius': 1.0000,
-        'mass': 1.0000,
-        'density': 1.0000,
-        'i_star': 90.0000,
-        'v_sini': 1.6000,
-        'temperature': 5777,
-        'line_contrast': 50,
-        'line_fwhm': 6,
-        'rv_center': 0.00,
+    parameters_dictionary = {
+        'radius': # Radius of the star, in Solar radii
+            {
+                'bounds': [0., 2.],
+                'priors': ['Uniform', []],
+                'spaces': 'Linear',
+                'fixed' : 1.0,
+                'unit': 'solar_unit',
+            },
+        'mass': # Mass of the star, in Solar masses
+            {
+                'bounds': [0., 2.],
+                'priors': ['Uniform', []],
+                'spaces': 'Linear',
+                'fixed' : 1.0,
+                'unit': 'solar_unit',
+            },
+        'density': # Density of the star, in Solar density units
+            {
+                'bounds': [0., 5.],
+                'priors': ['Uniform', []],
+                'spaces': 'Linear',
+                'fixed' : 1.0,
+                'unit': 'solar_unit',
+            },
+        'i_star': # Inclination of the star
+            {
+                'bounds': [0., 180.],
+                'priors': ['Uniform', []],
+                'spaces': 'Linear',
+                'fixed' : 90,
+                'unit': 'degree',
+            },
+        'v_sini': # Projected rotational velocity of the star
+            {
+                'bounds': [0., 200.],
+                'priors': ['Uniform', []],
+                'spaces': 'Linear',
+                'fixed' : 1.6,
+                'unit': 'km/s',
+            },
+        'temperature': # Effective temperature of the photosphere
+            {
+                'bounds': [2000., 11000.],
+                'priors': ['Uniform', []],
+                'spaces': 'Linear',
+                'fixed' : 5777,
+                'unit': 'kelvin',
+            },
+        'line_contrast':
+            {
+                'bounds': [0., 100.],
+                'priors': ['Uniform', []],
+                'spaces': 'Linear',
+                'fixed' : 50,
+                'unit': 'percentual',
+            },
+        'line_fwhm':
+            {
+                'bounds': [0., 12.],
+                'priors': ['Uniform', []],
+                'spaces': 'Linear',
+                'fixed' : 6,
+                'unit': 'km/s',
+            },
+        'rv_center':
+            {
+                'bounds': [-3e2, 3e2],
+                'priors': ['Uniform', []],
+                'spaces': 'Linear',
+                'fixed' : 0.0,
+                'unit': 'km/s',
+            },
     }
 
     recenter_pams = set()
-
-    #def __init__(self, *args, **kwargs):
-    #    super(CommonStarParameters, self).__init__(*args, **kwargs)
 
     def define_special_variable_properties(self, ndim, output_lists, var):
 

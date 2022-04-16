@@ -42,8 +42,6 @@ from pyorbit.models.gp_quasiperiodic_activity import \
     GaussianProcess_QuasiPeriodicActivity
 from pyorbit.models.gp_quasiperiodic_activity_common import \
     GaussianProcess_QuasiPeriodicActivity_Common
-from pyorbit.models.gp_quasiperiodic_activity_shared import \
-    GaussianProcess_QuasiPeriodicActivity_Shared
 from pyorbit.models.gp_quasiperiodic_activity_alternative import \
     GaussianProcess_QuasiPeriodicActivity_Alternative
 from pyorbit.models.gp_quasiperiodic_cosine_activity import \
@@ -139,7 +137,6 @@ define_type_to_class = {
     'gp_framework_quasiperiodic': GP_Framework_QuasiPeriodicActivity,
     'gp_quasiperiodic': GaussianProcess_QuasiPeriodicActivity,
     'gp_quasiperiodic_common': GaussianProcess_QuasiPeriodicActivity_Common,
-    'gp_quasiperiodic_shared': GaussianProcess_QuasiPeriodicActivity_Shared,
     'gp_quasiperiodic_alternative': GaussianProcess_QuasiPeriodicActivity_Alternative,
     'gp_quasiperiodic_derivative': GaussianProcess_QuasiPeriodicActivity_Derivative,
     'gp_quasiperiodic_cosine': GaussianProcess_QuasiPeriodicCosineActivity,

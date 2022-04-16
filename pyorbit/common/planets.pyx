@@ -42,7 +42,7 @@ class CommonPlanets(AbstractCommon):
             },
         'K': # RV semi-amplitude, in m/s
             {
-                'bounds': [0.5, 2000.0],
+                'bounds': [0.001, 2000.0],
                 'priors': ['Uniform', []],
                 'spaces': 'Log_Base2',
                 'fixed' : None,
@@ -195,133 +195,6 @@ class CommonPlanets(AbstractCommon):
                 'fixed' : 1.00000,
             },
     }
-
-    """
-    list_pams = {
-        'P',  # Period, log-uniform prior
-        'K',  # RV semi-amplitude, log-uniform prior
-        'Tc', # central time of transit
-        'mean_long',  # mean longitude = argument of pericenter + mean anomaly at Tref
-        'e',  # eccentricity, uniform prior - to be fixed
-        'omega',  # argument of pericenter (in degrees)
-        'M_Me',  # Mass in Earth masses
-        'i',  # orbital inclination (in degrees)
-        'Omega', # longitude of ascending node (usually 180 degrees when unknown)
-        'R_Rs',  # planet radius (in units of stellar radii)
-        'a_Rs',  # semi-major axis (in units of stellar radii)
-        'b',   # impact parameter
-        'lambda', # Sky-projected angle between stellar rotation axis and normal of orbit plane [deg]
-        'phase_amp', #Amplitude of the phase light curve
-        'delta_occ', #depth of the occultation, as measured at the maximum value of the reflected light curve
-        'phase_off', #offset of the bright spot
-        'albedo',
-        'redist',
-        'insol'
-    }
-
-    default_bounds = {
-        'P': [0.4, 100000.0],
-        'K': [0.5, 2000.0],
-        'Tc': [0.0, 1000.0],
-        'mean_long': [0.0, 360.],
-        'e_coso': [-1.0, 1.0],
-        'e_sino': [-1.0, 1.0],
-        'sre_coso': [-1.0, 1.0],
-        'sre_sino': [-1.0, 1.0],
-        'e': [0.0, 1.0],
-        'omega': [0.0, 360.],
-        # Used by TTVfast/TRADES
-        'M_Me': [0.5, 1000.0],  # Fix the unit
-        'i': [0.0, 180.0],
-        'Omega': [0.0, 180],
-        # Used by BATMAN
-        'R_Rs': [0.00001, 0.5],  # Fix the unit
-        'a_Rs': [0.00001, 500.],  # Fix the unit
-        'b': [0.0, 2.0],
-        'lambda': [-90.0000, 90.0000],
-        'phase_amp': [0.00, 0.50],
-        'delta_occ': [0.00, 0.50],
-        'phase_off': [-np.pi, np.pi],
-        'albedo': [0., 1.],
-        'redist': [0., 1.],
-        'insol': [0, 1000000000]
-    }
-
-
-    default_priors = {
-        'P': ['Uniform', []],
-        'K': ['Uniform', []],
-        'Tc': ['Uniform', []],
-        'mean_long': ['Uniform', []],
-        #'e': ['BetaDistribution', [0.71, 2.57]],
-        'e': ['Uniform', []],
-        'e_coso': ['Uniform', []],
-        'e_sino': ['Uniform', []],
-        'sre_coso': ['Uniform', []],
-        'sre_sino': ['Uniform', []],
-        'omega': ['Uniform', []],
-        'M_Me': ['Uniform', []],  # Fix the unit
-        'i': ['Uniform', []],
-        'Omega': ['Uniform', []],
-        'R_Rs': ['Uniform', []],  # Fix the unit
-        'a_Rs': ['Uniform', []],  # Fix the unit
-        'b': ['Uniform', []],  # Fix the unit
-        'lambda': ['Uniform', []],  # Fix the unit
-        'phase_amp': ['Uniform', []],  # Fix the unit
-        'delta_occ': ['Uniform', []],  # Fix the unit
-        'phase_off': ['Uniform', []],  # Fix the unit
-        'albedo': ['Uniform', []],  # Fix the unit
-        'redist': ['Uniform', []],  # Fix the unit
-        'insol': ['Uniform', []],  # Fix the unit
-        }
-
-    default_spaces = {
-        'P': 'Log_Base2',
-        'K': 'Log_Base2',
-        'Tc': 'Linear',
-        'mean_long': 'Linear',
-        'e_coso': 'Linear',
-        'e_sino': 'Linear',
-        'sre_coso': 'Linear',
-        'sre_sino': 'Linear',
-        'e': 'Linear',
-        'omega': 'Linear',
-        'M_Me': 'Log_Base2',
-        'i': 'Linear',
-        'Omega': 'Linear',
-        'R_Rs': 'Linear',
-        'a_Rs': 'Linear',
-        'b': 'Linear',
-        'lambda': 'Linear',
-        'phase_amp': 'Linear',
-        'delta_occ': 'Linear',
-        'phase_off': 'Linear',
-        'albedo': 'Linear',
-        'redist': 'Linear',
-        'insol': 'Log_Base2',
-    }
-
-    default_fixed = {
-        'e_coso': 0.0000,
-        'e_sino': 0.0000,
-        'sre_coso': 0.0000,
-        'sre_sino': 0.0000,
-        'e': 0.0000,
-        'omega': 90.,
-        'i': 90.000000,
-        'Omega': 90.,
-        'R_Rs': 0.05,
-        'a_Rs': 1.0,
-        'b': 1.0,
-        'lambda': 0.0000,
-        'phase_amp': 0.000,
-        'delta_occ': 0.000,
-        'phase_off': 0.000,
-        'albedo': 0.000,
-        'redist': 0.000,
-        'insol': 1000000.000,
-    }
-    """
 
     recenter_pams = {'mean_long', 'omega', 'Omega'}
 

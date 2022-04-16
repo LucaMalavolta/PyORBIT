@@ -13,23 +13,16 @@ class LimbDarkening_1Pam(AbstractCommon):
     '''
 
     "Linear LD"
-    list_pams = {
-        'ld_c1'
-    }
 
-    """These default boundaries are used when the user does not define them
-    in the yaml file"""
-    default_bounds = {
-        'ld_c1': [0.00, 1.00]
-
-    }
-
-    default_spaces = {
-        'ld_c1': 'Linear'
-    }
-
-    default_priors = {
-        'ld_c1': ['Uniform', []]
+    parameters_dictionary = {
+        'ld_c1': # Limb darkening linear coefficient
+            {
+                'bounds': [0.0, 1.0],
+                'priors': ['Uniform', []],
+                'spaces': 'Linear',
+                'fixed' : None,
+                'unit': 'days',
+            }
     }
 
     ld_ncoeff = 1
@@ -44,34 +37,39 @@ class LimbDarkening_2Pam(AbstractCommon):
     '''
 
     "2-coefficient LD"
-    list_pams = {
-        'ld_c1',
-        'ld_c2',
-        'ld_q1',
-        'ld_q2'
-    }
-
-    """These default boundaries are used when the user does not define them
-    in the yaml file"""
-    default_bounds = {
-        'ld_c1': [0.00, 2.00],
-        'ld_c2': [-1.00, 1.00],
-        'ld_q1': [0.00, 1.00],
-        'ld_q2': [0.00, 1.00]
-    }
-
-    default_spaces = {
-        'ld_c1': 'Linear',
-        'ld_c2': 'Linear',
-        'ld_q1': 'Linear',
-        'ld_q2': 'Linear'
-    }
-
-    default_priors = {
-        'ld_c1': ['Uniform', []],
-        'ld_c2': ['Uniform', []],
-        'ld_q1': ['Uniform', []],
-        'ld_q2': ['Uniform', []]
+    parameters_dictionary = {
+        'ld_c1': # Limb darkening linear coefficient
+            {
+                'bounds': [0.0, 1.0],
+                'priors': ['Uniform', []],
+                'spaces': 'Linear',
+                'fixed' : None,
+                'unit': 'adimensional',
+            },
+        'ld_c2':# Limb darkening quadratic coefficient
+            {
+                'bounds': [-1.00, 1.00],
+                'priors': ['Uniform', []],
+                'spaces': 'Linear',
+                'fixed' : None,
+                'unit': 'adimensional',
+            },
+        'ld_q1': # Limb darkening linear coefficient in Kipping parametrization
+            {
+                'bounds': [0.0, 1.0],
+                'priors': ['Uniform', []],
+                'spaces': 'Linear',
+                'fixed' : None,
+                'unit': 'adimensional',
+            },
+        'ld_q2': # Limb darkening quadratic coefficient in Kipping parametrization
+            {
+                'bounds': [0.0, 1.0],
+                'priors': ['Uniform', []],
+                'spaces': 'Linear',
+                'fixed' : None,
+                'unit': 'adimensional',
+            },
     }
 
     ld_ncoeff = 2
@@ -176,34 +174,39 @@ class LimbDarkening_4Pam(AbstractCommon):
     '''
 
     "4-coefficient LD"
-    list_pams = {
-        'ld_c1',
-        'ld_c2',
-        'ld_c3',
-        'ld_c4'
-    }
-
-    """These default boundaries are used when the user does not define them
-    in the yaml file"""
-    default_bounds = {
-        'ld_c1': [0.00, 1.00],
-        'ld_c2': [0.00, 1.00],
-        'ld_c3': [0.00, 1.00],
-        'ld_c4': [0.00, 1.00]
-    }
-
-    default_spaces = {
-        'ld_c1': 'Linear',
-        'ld_c2': 'Linear',
-        'ld_c3': 'Linear',
-        'ld_c4': 'Linear'
-    }
-
-    default_priors = {
-        'ld_c1': ['Uniform', []],
-        'ld_c2': ['Uniform', []],
-        'ld_c3': ['Uniform', []],
-        'ld_c4': ['Uniform', []]
+    parameters_dictionary = {
+        'ld_c1': # Limb darkening linear coefficient
+            {
+                'bounds': [0.0, 1.0],
+                'priors': ['Uniform', []],
+                'spaces': 'Linear',
+                'fixed' : None,
+                'unit': 'adimensional',
+            },
+        'ld_c2':# Limb darkening quadratic coefficient
+            {
+                'bounds': [0.0, 1.0],
+                'priors': ['Uniform', []],
+                'spaces': 'Linear',
+                'fixed' : None,
+                'unit': 'adimensional',
+            },
+        'ld_c3': # Limb darkening linear coefficient in Kipping parametrization
+            {
+                'bounds': [0.0, 1.0],
+                'priors': ['Uniform', []],
+                'spaces': 'Linear',
+                'fixed' : None,
+                'unit': 'adimensional',
+            },
+        'ld_c4': # Limb darkening quadratic coefficient in Kipping parametrization
+            {
+                'bounds': [0.0, 1.0],
+                'priors': ['Uniform', []],
+                'spaces': 'Linear',
+                'fixed' : None,
+                'unit': 'adimensional',
+            },
     }
 
     ld_ncoeff = 4

@@ -7,14 +7,16 @@ class CommonJitter(AbstractCommon):
 
     model_class = 'common_jitter'
 
-    list_pams = {
-        'jitter'
-    }
-
-    default_bounds = {}
-    default_spaces = {'jitter': 'Linear'}
-    default_priors = {'jitter': ['Uniform', []]}
-    default_fixed = {}
+    parameters_dictionary = {
+        'jitter':
+            {
+                'bounds': {},
+                'priors': ['Uniform', []],
+                'spaces': 'Linear',
+                'fixed' : 0.000,
+                'unit': 'as input',
+            },
+        }
 
     recenter_pams = {}
 
