@@ -316,17 +316,21 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
         print()
         print('Summary - \n=======\n'+res)
 
-        # Generate a new set of results with statistical+sampling uncertainties.
-        results_sim = dyfunc.simulate_run(results)
-        res = ("niter: {:d}\n"
-                "ncall: {:d}\n"
-                "eff(%): {:6.3f}\n"
-                "logz: {:6.3f} +/- {:6.3f}"
-                .format(results_sim.niter, sum(results_sim.ncall),
-                        results_sim.eff, results_sim.logz[-1], results_sim.logzerr[-1]))
+        try:
+            # Generate a new set of results with statistical+sampling uncertainties.
+            results_sim = dyfunc.simulate_run(results)
+            res = ("niter: {:d}\n"
+                    "ncall: {:d}\n"
+                    "eff(%): {:6.3f}\n"
+                    "logz: {:6.3f} +/- {:6.3f}"
+                    .format(results_sim.niter, sum(results_sim.ncall),
+                            results_sim.eff, results_sim.logz[-1], results_sim.logzerr[-1]))
 
-        print()
-        print('Summary - statistical+sampling errors - \n=======\n'+res)
+            print()
+            print('Summary - statistical+sampling errors - \n=======\n'+res)
+        except AttributeError:
+            print('Computation of statistical+sampling errors skipped - workaround after dynesty>1.2 update')
+
 
         results = dynesty_results_load_from_cpickle(dir_input)
         print('Posteriors analysis from dynesty run with posterior/evidence split = {0:4.3f}'.format(pfrac))
