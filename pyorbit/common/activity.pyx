@@ -137,7 +137,25 @@ class CommonActivity(AbstractCommon):
                 'fixed' : None,
                 'unit': 'as input',
             },
-         # Matern kernel
+        # Multi-dimensional parameters
+        'rot_amp': # the rotational term
+            {
+                'bounds': [-500.0, 500.0],
+                'priors': ['Uniform', []],
+                'spaces': 'Linear',
+                'fixed' : None,
+                'unit': 'as input',
+            },
+        'con_amp': # the convective blueshift suppression term
+            {
+                'bounds': [-500.0, 500.0],
+                'priors': ['Uniform', []],
+                'spaces': 'Linear',
+                'fixed' : None,
+                'unit': 'as input',
+            },
+        
+        # Matern kernel
         'matern32_sigma': # Matern kernel,  sigma parameter
             {
                 'bounds': [0.000001, 1000000.0],
