@@ -38,6 +38,10 @@ from pyorbit.models.spiderman_thermal import Spiderman_Thermal
 from pyorbit.models.gp_framework_quasiperiodic_activity import \
     GP_Framework_QuasiPeriodicActivity
 
+from pyorbit.models.gp_multidimensional_quasiperiodic_activity import \
+    GP_Multidimensional_QuasiPeriodicActivity
+
+
 from pyorbit.models.gp_quasiperiodic_activity import \
     GaussianProcess_QuasiPeriodicActivity
 from pyorbit.models.gp_quasiperiodic_activity_common import \
@@ -135,6 +139,7 @@ define_type_to_class = {
     'batman_transit_eclipse_phasecurve': Batman_Transit_Eclipse_PhaseCurve,
     'spiderman_thermal': Spiderman_Thermal,
     'gp_framework_quasiperiodic': GP_Framework_QuasiPeriodicActivity,
+    'gp_multidimensional_quasiperiodic': GP_Multidimensional_QuasiPeriodicActivity,
     'gp_quasiperiodic': GaussianProcess_QuasiPeriodicActivity,
     'gp_quasiperiodic_common': GaussianProcess_QuasiPeriodicActivity_Common,
     'gp_quasiperiodic_alternative': GaussianProcess_QuasiPeriodicActivity_Alternative,

@@ -5,7 +5,7 @@ from scipy.linalg import cho_factor, cho_solve, lapack, LinAlgError
 from scipy import matrix, spatial
 
 
-class GP_Framework_QuasiPeriodicActivity(AbstractModel):
+class GP_Multidimensional_QuasiPeriodicActivity(AbstractModel):
     ''' Three parameters out of four are the same for all the datasets, since they are related to
     the properties of the physical process rather than the observed effects on a dataset
      From Grunblatt+2015, Affer+2016
@@ -17,7 +17,7 @@ class GP_Framework_QuasiPeriodicActivity(AbstractModel):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.model_class = 'gp_framework_semiperiod_activity'
+        self.model_class = 'gp_multidimensional_quasiperiodic_activity'
 
         self.internal_likelihood = True
         self.delayed_lnlk_computation = True
@@ -55,7 +55,7 @@ class GP_Framework_QuasiPeriodicActivity(AbstractModel):
 
         self._added_datasets = 0
         self._n_cov_matrix = 0
-        
+
         self.pi2 = np.pi * np.pi
 
 
@@ -64,11 +64,11 @@ class GP_Framework_QuasiPeriodicActivity(AbstractModel):
 
     def initialize_model_dataset(self, mc, dataset, **kwargs):
 
-        self._dataset_nindex.append([len(self._dataset_x0),
-                                     self._dataset_nstart[-1]+dataset.n])
+        self._dataset_nindex.append([self._n_cov_matrix,
+                                     self._n_cov_matrix+dataset.n])
+        self.internal_coefficients.append([0.00, 0.00])
 
         self._dataset_x0.append(dataset.x0)
-        self._dataset_n.append(dataset.n)
 
         self._dataset_e2 = np.append(self._dataset_e2, dataset.e**2)
 
@@ -77,10 +77,13 @@ class GP_Framework_QuasiPeriodicActivity(AbstractModel):
         self._added_datasets += 1
 
         self._dataset_ej2 = self._dataset_e2 * 1.
-        self._dataset_res = self._dataset_x0 * 0.
+        self._dataset_res = self._dataset_e2 * 0.
+        self._nugget = self._dataset_e2 * 0. + 1e-7
 
         if hasattr(kwargs, 'derivative'):
             use_derivative = kwargs['derivative'].get(dataset.name_ref, False)
+        elif hasattr(kwargs, dataset.name_ref):
+            use_derivative = kwargs[dataset.name_ref].get('derivative', False)
         else:
             if dataset.kind == 'H-alpha' or \
                 dataset.kind == 'S_index' or \
@@ -93,48 +96,20 @@ class GP_Framework_QuasiPeriodicActivity(AbstractModel):
         if not use_derivative:
             self.fix_list[dataset.name_ref] = {'rot_amp': [0., 0.]}
 
+        self.inds_cache = np.tri(self._n_cov_matrix, k=-1, dtype=bool)
+
+
         return
 
-    # WHICH ONE SHOULD I KEEP???
-    def common_initialization_with_dataset(self, dataset):
-        self.define_kernel(dataset)
-        return
+    ## WHICH ONE SHOULD I KEEP???
+    #def common_initialization_with_dataset(self, dataset):
+    #    self.define_kernel(dataset)
+    #    return
 
-    def define_kernel(self):
+    #def define_kernel(self):
 
-        # Prot, Pdec, Oamp
-        return
-
-    """
-    def add_internal_dataset(self, variable_value, dataset, reset_status):
-
-        self.internal_gp_pams = self.convert_val2gp(variable_value)
-
-        if dataset.kind == 'RV':
-            self._rv_x = dataset.x0
-            self._rv_y = dataset.y - dataset.model
-            self._rv_e = np.sqrt(dataset.e ** 2.0 + dataset.jitter ** 2.0)
-            scatter = np.std(self.gp_framwork.rv)
-            self._rv /= scatter
-            self._rverr /= scatter
-
-        if dataset.kind == 'BIS':
-            self.gp_framwork.bis = dataset.y - dataset.model
-            self.gp_framwork.sig_bis = np.sqrt(dataset.e ** 2.0 + dataset.jitter ** 2.0)
-            scatter = np.std(self.gp_framwork.bis)
-            self.gp_framwork.bis /= scatter
-            self.gp_framwork.sig_bis /= scatter
-
-        if dataset.kind == 'H-alpha' or \
-                dataset.kind == 'S_index' or \
-                dataset.kind == 'Ca_HK':
-            self.gp_framwork.rhk = dataset.y - dataset.model
-            self.gp_framwork.sig_rhk = np.sqrt(dataset.e ** 2.0 + dataset.jitter ** 2.0)
-            scatter = np.std(self.gp_framwork.rhk)
-            self.gp_framwork.rhk /= scatter
-            self.gp_framwork.sig_rhk /= scatter
-
-    """
+    #    # Prot, Pdec, Oamp
+    #    return
 
     def add_internal_dataset(self, variable_value, dataset):
 
@@ -149,13 +124,14 @@ class GP_Framework_QuasiPeriodicActivity(AbstractModel):
         self.internal_coefficients[d_ind] = [variable_value['con_amp'], variable_value['rot_amp']]
 
 
+
     def _compute_distance(self, bjd0, bjd1):
         X0 = np.array([bjd0]).T
         X1 = np.array([bjd1]).T
         return spatial.distance.cdist(X0, X1, lambda u, v: u-v), \
             spatial.distance.cdist(X0, X1, 'sqeuclidean')
 
-    def _compute_submatrix(self, dist_t1, dist_t2, Prot, Pdec, Oamp, Prot2, Pdec2, Oamp2):
+    def _compute_submatrix(self, dist_t1, dist_t2, Prot, Prot2, Pdec2, Oamp2):
         phi = 2. * np.pi * dist_t1 / Prot
         sin_phi = np.sin(phi)
 
@@ -173,39 +149,16 @@ class GP_Framework_QuasiPeriodicActivity(AbstractModel):
 
         return framework_GG, framework_GdG, framework_dGdG
 
-    def _compute_cov_matrix(self, add_diagonal_errors=False, bjd0=None, bjd1=None, return_diag=False):
+    def _compute_cov_matrix(self):
 
         """ Notice the difference in the factor 2 of the decay time scale
             between Grunblatt+2015 (used for the "standard" GP model of PyORBIT) and Rajpaul+2015"""
 
         # this is faster than computing val**4 several times
-        Pdec = self.internal_variable_value['Pdec']
         Prot = self.internal_variable_value['Prot']
-        Oamp =  self.internal_variable_value['Oamp']
         Pdec2 = self.internal_variable_value['Pdec']**2 / 2.
         Prot2 = self.internal_variable_value['Prot']**2
         Oamp2 = self.internal_variable_value['Oamp']**2
-
-        if return_diag:
-            cov_diag = np.empty([self._n_cov_matrix])
-
-            for l_dataset in range(0, self._added_datasets):
-                l_nstart, l_nend = self._dataset_nindex[l_dataset]
-
-                dist_t1, dist_t2 = np.zeros(self._dataset_n[l_dataset])
-
-                Al, Bl = self.internal_coefficients[l_dataset]
-
-                framework_GG, framework_GdG, framework_dGdG = \
-                    _compute_submatrix(dist_t1, dist_t2,
-                                       Prot, Pdec, Oamp,
-                                       Prot2, Pdec2, Oamp2)
-
-                k_lm = Al * Al * framework_GG + Bl * Bl * framework_dGdG
-
-                cov_diag[l_nstart:l_nend] = k_lm
-
-            return cov_diag
 
         cov_matrix = np.empty([self._n_cov_matrix, self._n_cov_matrix])
 
@@ -223,9 +176,8 @@ class GP_Framework_QuasiPeriodicActivity(AbstractModel):
                 Am, Bm = self.internal_coefficients[m_dataset]
 
                 framework_GG, framework_GdG, framework_dGdG = \
-                    _compute_submatrix(dist_t1, dist_t2,
-                                       Prot, Pdec, Oamp,
-                                       Prot2, Pdec2, Oamp2)
+                    self._compute_submatrix(dist_t1, dist_t2,
+                                       Prot, Prot2, Pdec2, Oamp2)
 
                 k_lm = Al * Am * framework_GG \
                         + Bl * Bm * framework_dGdG \
@@ -235,10 +187,97 @@ class GP_Framework_QuasiPeriodicActivity(AbstractModel):
                 cov_matrix[l_nstart:l_nend, m_nstart:m_nend] = k_lm
                 #cov_matrix[l_nstart:l_nend, m_nstart:m_nend] = matrix(k_lm)
 
-        if add_diagonal_errors:
-            cov_matrix += np.diag(self._dataset_ej2)
+        cov_matrix += np.diag(self._dataset_ej2)
 
         return cov_matrix
+
+
+
+
+
+
+    def _compute_cov_diag(self, t_array):
+
+        """ Notice the difference in the factor 2 of the decay time scale
+            between Grunblatt+2015 (used for the "standard" GP model of PyORBIT) and Rajpaul+2015"""
+
+        # this is faster than computing val**4 several times
+        Prot = self.internal_variable_value['Prot']
+        Pdec2 = self.internal_variable_value['Pdec']**2 / 2.
+        Prot2 = self.internal_variable_value['Prot']**2
+        Oamp2 = self.internal_variable_value['Oamp']**2
+
+        len_diag = len(t_array)
+        cov_diag = np.empty(len_diag)
+        dist_t1, dist_t2 = np.zeros(len_diag)
+
+
+        for l_dataset in range(0, self._added_datasets):
+            l_nstart, l_nend = l_dataset*len_diag,  (l_dataset+1)*len_diag
+
+            Al, Bl = self.internal_coefficients[l_dataset]
+
+            framework_GG, framework_GdG, framework_dGdG = \
+                self._compute_submatrix(dist_t1, dist_t2,
+                                    Prot, Prot2, Pdec2, Oamp2)
+
+            k_lm = Al * Al * framework_GG + Bl * Bl * framework_dGdG
+
+            cov_diag[l_nstart:l_nend] = k_lm
+
+        return cov_diag
+
+
+
+
+    def _compute_cov_Ks(self, t_array):
+
+        """ Notice the difference in the factor 2 of the decay time scale
+            between Grunblatt+2015 (used for the "standard" GP model of PyORBIT) and Rajpaul+2015"""
+
+        # this is faster than computing val**4 several times
+        Prot = self.internal_variable_value['Prot']
+        Pdec2 = self.internal_variable_value['Pdec']**2 / 2.
+        Prot2 = self.internal_variable_value['Prot']**2
+        Oamp2 = self.internal_variable_value['Oamp']**2
+
+        len_t_array = len(t_array)
+        cov_matrix = np.empty([len_t_array, self._n_cov_matrix])
+
+        for l_dataset in range(0, self._added_datasets):
+            for m_dataset in range(0, self._added_datasets):
+
+                l_nstart, l_nend = l_dataset*len_t_array,  (l_dataset+1)*len_t_array
+                m_nstart, m_nend = self._dataset_nindex[m_dataset]
+
+
+                dist_t1, dist_t2 = self._compute_distance(t_array,
+                                                          self._dataset_x0[m_dataset])
+
+                Al, Bl = self.internal_coefficients[l_dataset]
+                Am, Bm = self.internal_coefficients[m_dataset]
+
+                framework_GG, framework_GdG, framework_dGdG = \
+                    self._compute_submatrix(dist_t1, dist_t2,
+                                       Prot, Prot2, Pdec2, Oamp2)
+
+                k_lm = Al * Am * framework_GG \
+                        + Bl * Bm * framework_dGdG \
+                        + Al * Bm * framework_GdG \
+                        - Bl * Am * framework_GdG
+
+                cov_matrix[l_nstart:l_nend, m_nstart:m_nend] = k_lm
+                #cov_matrix[l_nstart:l_nend, m_nstart:m_nend] = matrix(k_lm)
+
+        cov_matrix += np.diag(self._nugget)
+
+        return cov_matrix
+
+
+
+
+
+
 
     # https://stackoverflow.com/questions/40703042/more-efficient-way-to-invert-a-matrix-knowing-it-is-symmetric-and-positive-semi
     def fast_positive_definite_inverse(self, m):
@@ -258,12 +297,12 @@ class GP_Framework_QuasiPeriodicActivity(AbstractModel):
 
     def lnlk_compute(self):
 
-        cov_matrix = self._compute_cov_matrix(add_diagonal_errors=True)
+        cov_matrix = self._compute_cov_matrix()
         inv_M, det_A, failed = self.fast_positive_definite_inverse(cov_matrix)
         if failed:
             return -np.inf
-        chi2 = np.dot(self._3res, np.matmul(inv_M, self._3res))
-        log2_npi = self._nx0 * np.log(2 * np.pi)
+        chi2 = np.dot(self._dataset_res, np.matmul(inv_M, self._dataset_res))
+        log2_npi = self._n_cov_matrix * np.log(2 * np.pi)
         output = -0.5 * (log2_npi + chi2 + det_A)
         return output
 
@@ -281,19 +320,21 @@ class GP_Framework_QuasiPeriodicActivity(AbstractModel):
 
     def sample_predict(self, dataset, x0_input=None, return_covariance=False, return_variance=False):
 
+        dataset_index = self._dataset_names[dataset.name_ref]
+
+
+
         if x0_input is None:
-            t_predict = self._x0
-            n_output = self._nx0
+            t_predict = dataset.x0
+            l_nstart, l_nend = self._dataset_nindex[dataset_index]
         else:
             t_predict = x0_input
-            n_output = np.size(x0_input, axis=0)
+            l_nstart, l_nend = len(x0_input)*dataset_index, len(x0_input)*(dataset_index+1)
 
-        cov_matrix = self._compute_cov_matrix(add_diagonal_errors=True)
-        Ks = self._compute_cov_matrix(add_diagonal_errors=False,
-                                      bjd0=t_predict,
-                                      bjd1=self._x0)
+        cov_matrix = self._compute_cov_matrix()
+        Ks = self._compute_cov_Ks(t_predict)
 
-        alpha = cho_solve(cho_factor(cov_matrix), self._3res)
+        alpha = cho_solve(cho_factor(cov_matrix), self._dataset_res)
         mu = np.dot(Ks, alpha).flatten()
         (s, d) = np.linalg.slogdet(cov_matrix)
 
@@ -304,10 +345,8 @@ class GP_Framework_QuasiPeriodicActivity(AbstractModel):
         Ks = None
         cov_matrix = None
 
-        Kss = self._compute_cov_matrix(add_diagonal_errors=False,
-                                       bjd0=t_predict,
-                                       bjd1=t_predict,
-                                       return_diag=True)
+        Kss = self._compute_cov_diag(t_predict)
+
         std = np.sqrt(np.array(Kss - KsB_dot_diag).flatten())
 
         Kss = None
@@ -316,25 +355,10 @@ class GP_Framework_QuasiPeriodicActivity(AbstractModel):
             print('Covariance matrix output not implemented - ERROR')
             quit()
 
-        if dataset.kind == 'RV':
-            if return_variance:
-                return mu[:n_output], std[:n_output]
-            else:
-                return mu[:n_output]
-
-        if dataset.kind == 'H-alpha' or \
-                dataset.kind == 'S_index' or \
-                dataset.kind == 'Ca_HK':
-            if return_variance:
-                return mu[n_output:2*n_output], std[n_output:2*n_output]
-            else:
-                return mu[n_output:2*n_output]
-
-        if dataset.kind == 'BIS':
-            if return_variance:
-                return mu[2*n_output:], std[2*n_output:]
-            else:
-                return mu[2*n_output:]
+        if return_variance:
+            return mu[l_nstart:l_nend], std[l_nstart:l_nend]
+        else:
+            return mu[l_nstart:l_nend]
 
     def sample_conditional(self, dataset, x0_input=None):
         val, std = self.sample_predict(dataset, x0_input)

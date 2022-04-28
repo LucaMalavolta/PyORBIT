@@ -324,6 +324,8 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, reload_ze
                     model_type = star_conf['type']
                 elif 'kind' in star_conf:
                     model_type = star_conf['kind']
+                elif 'model' in star_conf:
+                    model_type = star_conf['model']
                 else:
                     model_type = conf_name
 
@@ -335,7 +337,7 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, reload_ze
 
                 dict_copy = model_conf[conf_name].copy()
 
-                for key in ['type', 'kind', 'priors', 'spaces', 'boundaries', 'starts', 'fixed', 'parametrization']:
+                for key in ['type', 'kind','model', 'priors', 'spaces', 'boundaries', 'starts', 'fixed', 'parametrization']:
                     if key in dict_copy:
                         del dict_copy[key]
 
@@ -371,6 +373,8 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, reload_ze
                 model_type = model_conf['type']
             elif 'kind' in model_conf:
                 model_type = model_conf['kind']
+            elif 'model' in model_conf:
+                model_type = model_conf['model']
             else:
                 model_type = model_name
 
@@ -430,6 +434,8 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, reload_ze
             model_type = model_conf['type']
         elif 'kind' in model_conf:
             model_type = model_conf['kind']
+        elif 'model' in model_conf:
+            model_type = model_conf['model']
         else:
             model_type = model_name
 

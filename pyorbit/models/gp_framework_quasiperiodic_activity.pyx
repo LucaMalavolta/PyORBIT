@@ -280,7 +280,7 @@ class GP_Framework_QuasiPeriodicActivity(AbstractModel):
         if failed:
             return -np.inf
         chi2 = np.dot(self._3res, np.matmul(inv_M, self._3res))
-        log2_npi = self._nx0 * np.log(2 * np.pi)
+        log2_npi = 3* self._nx0 * np.log(2 * np.pi)
         output = -0.5 * (log2_npi + chi2 + det_A)
         return output
 
