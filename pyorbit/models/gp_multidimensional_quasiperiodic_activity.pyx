@@ -155,7 +155,7 @@ class GP_Multidimensional_QuasiPeriodicActivity(AbstractModel):
 
         # this is faster than computing val**4 several times
         Prot = self.internal_variable_value['Prot']
-        Pdec2 = self.internal_variable_value['Pdec']**2 / 2.
+        Pdec2 = self.internal_variable_value['Pdec']**2
         Prot2 = self.internal_variable_value['Prot']**2
         Oamp2 = self.internal_variable_value['Oamp']**2
 
@@ -202,7 +202,7 @@ class GP_Multidimensional_QuasiPeriodicActivity(AbstractModel):
 
         # this is faster than computing val**4 several times
         Prot = self.internal_variable_value['Prot']
-        Pdec2 = self.internal_variable_value['Pdec']**2 / 2.
+        Pdec2 = self.internal_variable_value['Pdec']**2
         Prot2 = self.internal_variable_value['Prot']**2
         Oamp2 = self.internal_variable_value['Oamp']**2
 
@@ -236,7 +236,7 @@ class GP_Multidimensional_QuasiPeriodicActivity(AbstractModel):
 
         # this is faster than computing val**4 several times
         Prot = self.internal_variable_value['Prot']
-        Pdec2 = self.internal_variable_value['Pdec']**2 / 2.
+        Pdec2 = self.internal_variable_value['Pdec']**2
         Prot2 = self.internal_variable_value['Prot']**2
         Oamp2 = self.internal_variable_value['Oamp']**2
 

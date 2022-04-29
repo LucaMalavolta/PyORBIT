@@ -82,7 +82,7 @@ class GaussianProcess_QuasiPeriodicActivity(AbstractModel):
         """
         return {
             'Hamp': np.exp(input_pams[self.gp_pams_index['Hamp']]/2.0),
-            'Pdec': np.exp(input_pams[self.gp_pams_index['Pdec']] / 2.0),
+            'Pdec': np.exp(input_pams[self.gp_pams_index['Pdec']]/2.0),
             'Oamp': np.sqrt(1. / (2.*input_pams[self.gp_pams_index['Oamp']])),
             'Prot': np.exp(input_pams[self.gp_pams_index['Prot']])
         }

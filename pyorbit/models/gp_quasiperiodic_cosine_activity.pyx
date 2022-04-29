@@ -47,7 +47,7 @@ class GaussianProcess_QuasiPeriodicCosineActivity(AbstractModel):
 
     def _compute_cov_matrix(self, variable_value, dist_t1, dist_t2, diagonal_env=None):
 
-        cov_matrix = np.exp(- dist_t2 / variable_value['Pdec']**2) \
+        cov_matrix = np.exp(- dist_t2 / (2*variable_value['Pdec']**2)) \
             * (variable_value['Hamp']**2 *
                np.exp(- np.sin(np.pi * dist_t1 / variable_value['Prot']) ** 2.
                       / (2.0 * variable_value['Oamp']**2))

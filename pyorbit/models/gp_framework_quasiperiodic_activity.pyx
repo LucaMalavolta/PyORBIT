@@ -183,7 +183,7 @@ class GP_Framework_QuasiPeriodicActivity(AbstractModel):
             between Grunblatt+2015 (used for the "standard" GP model of PyORBIT) and Rajpaul+2015"""
 
         # this is faster than computing val**4 several times
-        Pdec2 = self.internal_variable_value['Pdec']**2 / 2.
+        Pdec2 = self.internal_variable_value['Pdec']**2
         Prot2 = self.internal_variable_value['Prot']**2
         Oamp2 = self.internal_variable_value['Oamp']**2
         pi2 = np.pi * np.pi

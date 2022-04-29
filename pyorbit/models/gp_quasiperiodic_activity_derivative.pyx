@@ -62,7 +62,7 @@ class GaussianProcess_QuasiPeriodicActivity_Derivative(AbstractModel):
 
         framework_GG = np.exp((-np.sin(np.pi * dist_t1 / variable_value['Prot']) ** 2.)
                               / (2.0 * Oamp2)
-                              - dist_t2 / Pdec2)
+                              - dist_t2 / (2*Pdec2))
 
         phi = 2. * np.pi * dist_t1 / variable_value['Prot']
 
