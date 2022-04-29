@@ -80,9 +80,13 @@ class GP_Multidimensional_QuasiPeriodicActivity(AbstractModel):
         self._dataset_res = self._dataset_e2 * 0.
         self._nugget = self._dataset_e2 * 0. + 1e-7
 
-        if hasattr(kwargs, 'derivative'):
+        print(kwargs)
+        print(dataset.name_ref)
+        print(kwargs[dataset.name_ref])
+
+        if 'derivative'in kwargs:
             use_derivative = kwargs['derivative'].get(dataset.name_ref, False)
-        elif hasattr(kwargs, dataset.name_ref):
+        elif dataset.name_ref in kwargs:
             use_derivative = kwargs[dataset.name_ref].get('derivative', False)
         else:
             if dataset.kind == 'H-alpha' or \
@@ -97,7 +101,8 @@ class GP_Multidimensional_QuasiPeriodicActivity(AbstractModel):
             self.fix_list[dataset.name_ref] = {'rot_amp': [0., 0.]}
 
         self.inds_cache = np.tri(self._n_cov_matrix, k=-1, dtype=bool)
-
+        print(use_derivative)
+        print('------------')
 
         return
 
