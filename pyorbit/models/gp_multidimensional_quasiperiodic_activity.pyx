@@ -3,7 +3,6 @@ from pyorbit.models.abstract_model import *
 
 from scipy.linalg import cho_factor, cho_solve, lapack, LinAlgError
 from scipy import matrix, spatial
-import time
 
 class GP_Multidimensional_QuasiPeriodicActivity(AbstractModel):
     ''' Three parameters out of four are the same for all the datasets, since they are related to
@@ -301,11 +300,8 @@ class GP_Multidimensional_QuasiPeriodicActivity(AbstractModel):
         return inv, detA, False
 
     def lnlk_compute(self):
-        #time1 = time.time()
-        cov_matrix = self._compute_cov_matrix()
 
-        #time2 = time.time()
-        #print('TOTAL ',time2-time1)
+        cov_matrix = self._compute_cov_matrix()
 
         inv_M, det_A, failed = self.fast_positive_definite_inverse(cov_matrix)
 
@@ -332,8 +328,6 @@ class GP_Multidimensional_QuasiPeriodicActivity(AbstractModel):
     def sample_predict(self, dataset, x0_input=None, return_covariance=False, return_variance=False):
 
         dataset_index = self._dataset_names[dataset.name_ref]
-
-
 
         if x0_input is None:
             t_predict = dataset.x0
