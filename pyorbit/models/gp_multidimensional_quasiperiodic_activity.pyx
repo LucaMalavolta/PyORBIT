@@ -3,7 +3,7 @@ from pyorbit.models.abstract_model import *
 
 from scipy.linalg import cho_factor, cho_solve, lapack, LinAlgError
 from scipy import matrix, spatial
-
+import time
 
 class GP_Multidimensional_QuasiPeriodicActivity(AbstractModel):
     ''' Three parameters out of four are the same for all the datasets, since they are related to
@@ -98,6 +98,15 @@ class GP_Multidimensional_QuasiPeriodicActivity(AbstractModel):
 
         self.inds_cache = np.tri(self._n_cov_matrix, k=-1, dtype=bool)
 
+        self._dataset_dists = [[0] * self._added_datasets for i in range(self._added_datasets)]
+        for l_dataset in range(self._added_datasets):
+            for m_dataset in range(self._added_datasets):
+
+                dist_t1, dist_t2 = self._compute_distance(self._dataset_x0[l_dataset],
+                                                          self._dataset_x0[m_dataset])
+                self._dataset_dists[l_dataset][m_dataset] = [dist_t1, dist_t2]
+
+
         return
 
     ## WHICH ONE SHOULD I KEEP???
@@ -167,9 +176,10 @@ class GP_Multidimensional_QuasiPeriodicActivity(AbstractModel):
                 l_nstart, l_nend = self._dataset_nindex[l_dataset]
                 m_nstart, m_nend = self._dataset_nindex[m_dataset]
 
+                #dist_t1, dist_t2 = self._compute_distance(self._dataset_x0[l_dataset],
+                #                                          self._dataset_x0[m_dataset])
 
-                dist_t1, dist_t2 = self._compute_distance(self._dataset_x0[l_dataset],
-                                                          self._dataset_x0[m_dataset])
+                dist_t1, dist_t2 = self._dataset_dists[l_dataset][m_dataset]
 
                 Al, Bl = self.internal_coefficients[l_dataset]
                 Am, Bm = self.internal_coefficients[m_dataset]
@@ -189,11 +199,6 @@ class GP_Multidimensional_QuasiPeriodicActivity(AbstractModel):
         cov_matrix += np.diag(self._dataset_ej2)
 
         return cov_matrix
-
-
-
-
-
 
     def _compute_cov_diag(self, t_array):
 
@@ -282,24 +287,31 @@ class GP_Multidimensional_QuasiPeriodicActivity(AbstractModel):
     def fast_positive_definite_inverse(self, m):
 
         cholesky, info = lapack.dpotrf(m)
+
         if info != 0:
             return None, None, True
 
         detA = 2*np.sum(np.log(np.diagonal(cholesky)))
+
         inv, info = lapack.dpotri(cholesky)
         if info != 0:
             return None, None, True
 
         inv[self.inds_cache] = inv.T[self.inds_cache]
-
         return inv, detA, False
 
     def lnlk_compute(self):
-
+        #time1 = time.time()
         cov_matrix = self._compute_cov_matrix()
+
+        #time2 = time.time()
+        #print('TOTAL ',time2-time1)
+
         inv_M, det_A, failed = self.fast_positive_definite_inverse(cov_matrix)
+
         if failed:
             return -np.inf
+
         chi2 = np.dot(self._dataset_res, np.matmul(inv_M, self._dataset_res))
         log2_npi = self._n_cov_matrix * np.log(2 * np.pi)
         output = -0.5 * (log2_npi + chi2 + det_A)
