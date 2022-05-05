@@ -156,10 +156,10 @@ class GP_Pyaneti_QuasiPeriodicActivity(AbstractModel):
                                 self._dataset_res,
                                 np.sqrt(self._dataset_ej2),
                                 fake_jitter, fake_ljitter)
-        print(output)
+        #print(output)
         #cov_matrix = self._compute_cov_matrix()
 
-        return output
+        return output[0]
 
         #cov_matrix = self._compute_cov_matrix(add_diagonal_errors=True)
         #chi2 = np.dot(_3res,np.matmul(inv_M,_3res))
