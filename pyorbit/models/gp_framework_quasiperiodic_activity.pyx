@@ -155,6 +155,9 @@ class GP_Framework_QuasiPeriodicActivity(AbstractModel):
                                               ** 2 + dataset.jitter**2.0)
             self._3res[2 * self._nx0:] = dataset.residuals
 
+
+
+
     def _compute_distance(self, bjd0, bjd1):
         X0 = np.array([bjd0]).T
         X1 = np.array([bjd1]).T
@@ -252,6 +255,7 @@ class GP_Framework_QuasiPeriodicActivity(AbstractModel):
         cov_matrix[2*xs:,   ys:2*ys] = k_32
         cov_matrix[2 * xs:, 2*ys:] = k_33
 
+        cov_matrix_old = cov_matrix*1.
         if add_diagonal_errors:
             cov_matrix += np.diag(self._3ej ** 2)
 
@@ -280,7 +284,7 @@ class GP_Framework_QuasiPeriodicActivity(AbstractModel):
         if failed:
             return -np.inf
         chi2 = np.dot(self._3res, np.matmul(inv_M, self._3res))
-        log2_npi = 3* self._nx0 * np.log(2 * np.pi)
+        log2_npi = 3*self._nx0 * np.log(2 * np.pi)
         output = -0.5 * (log2_npi + chi2 + det_A)
         return output
 
