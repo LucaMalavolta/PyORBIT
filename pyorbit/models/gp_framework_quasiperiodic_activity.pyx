@@ -51,6 +51,9 @@ class GP_Framework_QuasiPeriodicActivity(AbstractModel):
 
     def initialize_model_dataset(self, mc, dataset, **kwargs):
 
+        if self._added_datasets == 3:
+            return
+
         if self._nx0:
             if not dataset.n == self._nx0:
                 raise ValueError("GP framework error: inconsistent datasets")

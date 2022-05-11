@@ -63,8 +63,13 @@ class GP_Multidimensional_QuasiPeriodicActivity(AbstractModel):
 
     def initialize_model_dataset(self, mc, dataset, **kwargs):
 
+        """ when reloading the .p files, the object is not reinitialized, so we have to skip the
+        incremental addition of datasets if they are already present  """
+        if dataset.name_ref in self._dataset_names:
+            return
+
         self._dataset_nindex.append([self._n_cov_matrix,
-                                     self._n_cov_matrix+dataset.n])
+                                    self._n_cov_matrix+dataset.n])
         self.internal_coefficients.append([0.00, 0.00])
 
         self._dataset_x0.append(dataset.x0)
@@ -105,7 +110,6 @@ class GP_Multidimensional_QuasiPeriodicActivity(AbstractModel):
                                                           self._dataset_x0[m_dataset])
                 self._dataset_dists[l_dataset][m_dataset] = [dist_t1, dist_t2]
 
-
         return
 
     ## WHICH ONE SHOULD I KEEP???
@@ -129,7 +133,6 @@ class GP_Multidimensional_QuasiPeriodicActivity(AbstractModel):
         self._dataset_res[d_nstart:d_nend] = dataset.residuals
 
         self.internal_coefficients[d_ind] = [variable_value['con_amp'], variable_value['rot_amp']]
-
 
 
     def _compute_distance(self, bjd0, bjd1):
@@ -211,8 +214,8 @@ class GP_Multidimensional_QuasiPeriodicActivity(AbstractModel):
         Oamp2 = self.internal_variable_value['Oamp']**2
 
         len_diag = len(t_array)
-        cov_diag = np.empty(len_diag)
-        dist_t1, dist_t2 = np.zeros(len_diag)
+        cov_diag = np.empty(3*len_diag)
+        dist_t1, dist_t2 = np.zeros(len_diag), np.zeros(len_diag)
 
 
         for l_dataset in range(0, self._added_datasets):
@@ -231,8 +234,6 @@ class GP_Multidimensional_QuasiPeriodicActivity(AbstractModel):
         return cov_diag
 
 
-
-
     def _compute_cov_Ks(self, t_array):
 
         """ Notice the difference in the factor 2 of the decay time scale
@@ -245,7 +246,7 @@ class GP_Multidimensional_QuasiPeriodicActivity(AbstractModel):
         Oamp2 = self.internal_variable_value['Oamp']**2
 
         len_t_array = len(t_array)
-        cov_matrix = np.empty([len_t_array, self._n_cov_matrix])
+        cov_matrix = np.empty([3*len_t_array, self._n_cov_matrix])
 
         for l_dataset in range(0, self._added_datasets):
             for m_dataset in range(0, self._added_datasets):
@@ -272,14 +273,9 @@ class GP_Multidimensional_QuasiPeriodicActivity(AbstractModel):
                 cov_matrix[l_nstart:l_nend, m_nstart:m_nend] = k_lm
                 #cov_matrix[l_nstart:l_nend, m_nstart:m_nend] = matrix(k_lm)
 
-        cov_matrix += np.diag(self._nugget)
+        #cov_matrix += np.diag(self._nugget)
 
         return cov_matrix
-
-
-
-
-
 
 
     # https://stackoverflow.com/questions/40703042/more-efficient-way-to-invert-a-matrix-knowing-it-is-symmetric-and-positive-semi

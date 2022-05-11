@@ -75,6 +75,11 @@ class GP_Pyaneti_QuasiPeriodicActivity(AbstractModel):
 
     def initialize_model_dataset(self, mc, dataset, **kwargs):
 
+        """ when reloading the .p files, the object is not reinitialized, so we have to skip the
+        incremental addition of datasets if they are already present  """
+        if dataset.name_ref in self._dataset_names:
+            return
+
         self._dataset_nindex.append([self._n_cov_matrix,
                                      self._n_cov_matrix+dataset.n])
         self.internal_coefficients.append([0.00, 0.00])
