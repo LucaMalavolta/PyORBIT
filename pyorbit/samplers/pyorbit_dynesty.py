@@ -107,6 +107,8 @@ def pyorbit_dynesty(config_in, input_datasets=None, return_output=None):
                                                     nlive=nlive,
                                                     pool=pool,
                                                     queue_size=nthreads,
+                                                    bound= mc.nested_sampling_parameters['bound'],
+                                                    sample= mc.nested_sampling_parameters['sample'],
                                                     use_pool={
                                                         'prior_transform': False},
                                                     )
@@ -160,6 +162,8 @@ def pyorbit_dynesty(config_in, input_datasets=None, return_output=None):
                                                 nlive=nlive,
                                                 pool=pool,
                                                 #bounds='multi',
+                                                bound= mc.nested_sampling_parameters['bound'],
+                                                sample= mc.nested_sampling_parameters['sample'],
                                                 queue_size=nthreads,
                                                 use_pool={
                                                     'prior_transform': False},
