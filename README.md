@@ -18,7 +18,7 @@ git remote set-head origin -a
 
 All the commands can be executed at once by running the script `update_local_clone.sh`
 
-## `PyORBIT` version 8.3 by Luca Malavolta - October 2021
+## `PyORBIT` version 8.4 by Luca Malavolta - March 2021
 
 **News**
 Bayesian evidence estimation can now be performed with:
@@ -46,7 +46,7 @@ at the moment there could be problems when performing transit fit and dynamical 
  does not include Transit Time Variations modelling (i.e., it's not a photodynamical model).
 - GetResults needs to be fixed in the part of model extraction
 
-**Documentation** Some incomplete documentation is available [here](http://pyorbit.readthedocs.io/). For any doubt, feel free to contact me at luca.malavolta_at_inaf.it, I'll be happy to work out together any problem that may arise during installation or usage of this software.
+**Documentation** Some incomplete documentation is available [here](http://pyorbit.readthedocs.io/). For any doubt, feel free to contact me at luca.malavolta_at_unipd.it, I'll be happy to work out together any problem that may arise during installation or usage of this software.
 
 `PyORBIT` handles several kinds of datasets, such as radial velocity (RV), activity indexes, and photometry, to simultaneously characterize the orbital parameters of exoplanets and the noise induced by the activity of the host star. RV computation is performed using either non-interacting Kepler orbits or n-body integration. Stellar activity can be modeled either with sinusoids at the rotational period and its harmonics or gaussian process. Offsets and systematics in measurements from several instruments can be modeled as well. Thanks to the modular approach, new methods for stellar activity modeling or parameter estimation can be easily incorporated into the code.
 
@@ -74,4 +74,4 @@ These priors can be applied to any of the parameters (it's up to the user to cho
 **Parameter exploration**
 The user can choice between `Linear` and `Logarithmic`. Note that in the second case the parameter space is transformed into base-2 logarithm.
 
-Most of the information can be found in [Malavolta et al. (2016)](https://ui.adsabs.harvard.edu//#abs/2016A&A...588A.118M/abstract) and [Malavolta et al. (2018)](https://ui.adsabs.harvard.edu//#abs/2018AJ....155..107M/abstract).  
+Most of the information can be found in [Malavolta et al. (2016)](https://ui.adsabs.harvard.edu/abs/2016A%26A...588A.118M/abstract) and [Malavolta et al. (2018)](https://ui.adsabs.harvard.edu/abs/2018AJ....155..107M/abstract).  
