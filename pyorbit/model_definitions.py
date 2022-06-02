@@ -186,6 +186,7 @@ star_properties_list = ['limb_darkening', 'dilution_factor']
 datatype_definition = {
     'RV': ['RV', 'RVs', 'rv', 'rvs'],
     'Tcent': ['Tcent', 'TCent', 'Tc', 'TC', 'T0', 'TT'],
+    'astrometry': ['astrometry', 'Astrometry', 'AstroMetry', 'Astro', 'astro', 'AM', 'Gaia', 'gaia'],
     'H-alpha': ['H', 'HA', 'h', 'ha', 'Halpha', 'H-alpha', 'halpha', 'h-alpha'],
     'Phot': ['P', 'Ph', 'p', 'ph', 'PHOT', 'Phot', 'phot', 'Photometry', 'photometry'],
     'FWHM': ['FWHM', 'fwhm'],
@@ -195,5 +196,4 @@ datatype_definition = {
               'log(R)', 'log(Rhk)', 'log(RHK)', 'log(R_hk)', 'log(R_HK)'],
     'S_index': ['S', 'S_index', 'Shk', 'SHK', 'S_HK', 'S_hk'],
     'CCF': ['CCF', 'CCFs', 'ccf', 'ccfs']
-
 }

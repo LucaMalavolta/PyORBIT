@@ -208,7 +208,7 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, reload_ze
 
         for ancill in ['ancillary_file', 'ancillary', 'ancillary_data', 'ancillary_dataset']:
             if ancill in dataset_conf:
-                mc.dataset_dict[dataset_name].convert_ancyllary_from_file(dataset_conf[ancill])
+                mc.dataset_dict[dataset_name].convert_ancillary_from_file(dataset_conf[ancill])
 
 
     for model_name, model_conf in conf_common.items():
