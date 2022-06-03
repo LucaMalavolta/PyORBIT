@@ -63,10 +63,11 @@
 **Models**
 Any of these models can be applied to a dataset. The user can choose which models should be used for each dataset.
 - `Gaussian Processes` for RV or photometry (shared or independent hyperparameter)
--
+- Transits, eclipses, phase curves
 - `Polynomial trends` with user-defined order
 - `Correlation` with activity indexes (or any other dataset)
 - `Sinusoids` (independent or shared amplitudes and periods)
+- `Harmonics` to test old results in the literature
 
 **Priors**
 These priors can be applied to any of the parameters (it's up to the user to choice the appropriate ones):
