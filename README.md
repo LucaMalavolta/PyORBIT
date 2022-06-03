@@ -48,7 +48,6 @@
 
 
 **Samplers**
-  
 
   Bayesian evidence estimation can now be performed with:
   * `dynesty` by Josh Speagle [dynesty documentation](https://dynesty.readthedocs.io/en/latest/), [code repository](https://github.com/joshspeagle/dynesty/)
