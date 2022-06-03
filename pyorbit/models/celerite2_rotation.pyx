@@ -21,10 +21,6 @@ class Celerite2_Rotation(AbstractModel):
     to explore in logarithmic space
 
     Args:
-        SHOTerm (granulation):
-        grn_period:  the undamped period of the oscillator
-        grn_sigma:  the standard deviation of the process
-
         RotationTerm (rotation):
         rot_sigma: The standard deviation of the process.
         Prot - rot_period: The primary period of variability,
