@@ -45,8 +45,6 @@
   git checkout main
   ```
 
-
-
 **Samplers**
 
   Bayesian evidence estimation can now be performed with:
