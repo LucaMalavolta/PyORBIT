@@ -48,17 +48,17 @@ class RossiterMcLaughling_Starry(AbstractModel, AbstractTransit):
         """ Depending if the orbit is circular or not, a different function
             is selected
         """
-        if mc.common_models[self.planet_ref].orbit == 'circular':
-            self.orbit = 'circular'
-            self.rm_ohta = PyAstroModelSuite.RmcL()
-        else:
-            self.orbit = 'keplerian'
-            self.rm_ohta = PyAstroModelSuite.RmcLell()
+        #if mc.common_models[self.planet_ref].orbit == 'circular':
+        #    self.orbit = 'circular'
+        #    self.rm_ohta = PyAstroModelSuite.RmcL()
+        #else:
+        #    self.orbit = 'keplerian'
+        #    self.rm_ohta = PyAstroModelSuite.RmcLell()
 
-        if len(self.ld_vars) > 1:
-            print('WARNING on rossiter_mclaughlin ohta model:  ')
-            print(' this model accepts only linear limb-darkening coefficients')
-            print()
+        #if len(self.ld_vars) > 1:
+        #    print('WARNING on rossiter_mclaughlin ohta model:  ')
+        #    print(' this model accepts only linear limb-darkening coefficients')
+        #    print()
 
     def compute(self, variable_value, dataset, x0_input=None):
         """
@@ -72,7 +72,7 @@ class RossiterMcLaughling_Starry(AbstractModel, AbstractTransit):
         Omega = variable_value['v_sini'] / (variable_value['radius'] *
                                             constants.Rsun) / np.cos(variable_value['i_star']/180.*np.pi)
 
-        veq = Omega * variable_value['radius'] * Rsun
+        veq = Omega * variable_value['radius'] * constants.Rsun
         veq = variable_value['v_sini'] / \
             np.cos(variable_value['i_star']/180.*np.pi) * 1000.  # (m/s)
 
@@ -89,6 +89,7 @@ class RossiterMcLaughling_Starry(AbstractModel, AbstractTransit):
         # obl = lambda_ang
         # inc = Is
 
+        ''' 
         a = 6.039                       # Semi major axis [stellar radii]
 
         # Sky-projected angle between stellar rotation axis and normal of orbit plane [rad]
@@ -191,3 +192,5 @@ class RossiterMcLaughling_Starry(AbstractModel, AbstractTransit):
             return self.rm_ohta(dataset.x0) * variable_value['radius'] * constants.Rsun * 1000.
         else:
             return self.rm_ohta(x0_input) * variable_value['radius'] * constants.Rsun * 1000.
+
+    '''

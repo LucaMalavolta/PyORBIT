@@ -1,3 +1,5 @@
+from pyorbit.subroutines.common import np
+
 try:
     import celerite
     from celerite.terms import Term
