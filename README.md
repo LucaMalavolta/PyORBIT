@@ -18,7 +18,7 @@
 
 * Some variables have been renamed, to improve clarity of results:
 
-  | Definition  | PyORBIT 8.4 | PyORBIT 9.0 |
+  | Definition  | PyORBIT 8.x | PyORBIT 9.0 |
   | ----------- | ----------- | ----------- |
   | Mean Longitude | f | mean_long |
   | Scaled planetary radius | R  | R_Rs |
