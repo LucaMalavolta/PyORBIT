@@ -1,6 +1,11 @@
 # PyORBIT
 
+## `PyORBIT` version 8.5 by Luca Malavolta - May 2022
+
+Small version bump after some minor bugfixes here and there, before the release of version 9.0
+
 ## `PyORBIT` version 8.4 by Luca Malavolta - January 2022
+
 
 **News**
 Main branch has been renamed from `master` to `legacy`, in preparation of an upcoming major update.
@@ -18,7 +23,7 @@ git remote set-head origin -a
 
 All the commands can be executed at once by running the script `update_local_clone.sh`
 
-## `PyORBIT` version 8.4 by Luca Malavolta - March 2021
+## `PyORBIT` version 8.3 by Luca Malavolta - October 2021
 
 **News**
 Bayesian evidence estimation can now be performed with:
