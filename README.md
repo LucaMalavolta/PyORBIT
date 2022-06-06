@@ -8,9 +8,8 @@
   * Multidimensional Gaussian Process (also known as GP Framework, [Rajpaul et al. 2015](https://ui.adsabs.harvard.edu/abs/2015MNRAS.452.2269R/abstract), [Barragán et al. 2022](https://ui.adsabs.harvard.edu/abs/2022MNRAS.509..866B/abstract)).
   * New kernels for Gaussian Process regression: Quasi-Periodic with Cosine [(Perger et al. 2021)](https://ui.adsabs.harvard.edu/abs/2021A%26A...645A..58P/abstract), Quasi-Periodic with first derivative.
   * CHEOPS detrending (similar to FactorModel as in [pycheops](https://github.com/pmaxted/pycheops)).
-  * Multi-component GP for light curves (Rotation + Granulation, Rotation + Granulation + Oscillations), following [Barros et al. 2020](https://ui.adsabs.harvard.edu/abs/2020A%26A...634A..75B/abstract).
-  * Phase curve and secondary eclipse modelling with `batman` [(Kreidberg 2015)](https://ui.adsabs.harvard.edu/abs/2015PASP..127.1161K/) or `batman` [(Louden et al. 2016)](https://ui.adsabs.harvard.edu/abs/2018MNRAS.477.2613L/abstract).
-  * Rossiter-McLaughlin though analytical formulation by [Ohta et al. 2005](https://ui.adsabs.harvard.edu/abs/2005ApJ...622.1118O/abstract) or through `starry` [(Luger et al. 2019)](https://ui.adsabs.harvard.edu/abs/2019AJ....157...64L/abstract)
+  * Phase curve and secondary eclipse modelling with `batman` [(Kreidberg 2015)](https://ui.adsabs.harvard.edu/abs/2015PASP..127.1161K/) or `spiderman` [(Louden et al. 2016)](https://ui.adsabs.harvard.edu/abs/2018MNRAS.477.2613L/abstract).
+  * Rossiter-McLaughlin through analytical formulation by [Ohta et al. 2005](https://ui.adsabs.harvard.edu/abs/2005ApJ...622.1118O/abstract).
   * Celerite/Celerite2 _standard_ models, now better organized.
   * Fit of individual time of transits (with automatic definition of boundaries) for TTV analysis.
 
@@ -26,7 +25,7 @@
   | Planetary mass in Earth masses | M | M_Me |
   | Stellar density | rho | density |
 
-  Also, `batman_ld_quadratic` and `pytransit_ld_quadratic` have been merged into `ld_quadratic.
+  Also, `batman_ld_quadratic` and `pytransit_ld_quadratic` have been merged into `ld_quadratic`.
 
   Note: the Mean Longitude is defined assuming the longitude of the ascending node $\Omega$ equal to zero, thus corresponding to the angle defined in section 4.3 of  [(Ford 2006)](https://ui.adsabs.harvard.edu/abs/2006ApJ...642..505F/abstract) and simply called _phase_ in [Malavolta et al. (2016)](https://ui.adsabs.harvard.edu//#abs/2016A&A...588A.118M/abstract)
 
@@ -44,6 +43,10 @@
   ```bash
   git checkout main
   ```
+
+**Working on it**
+  * Rossiter-McLaughlin through `starry` [(Luger et al. 2019)](https://ui.adsabs.harvard.edu/abs/2019AJ....157...64L/abstract)
+  * Multi-component GP for light curves (Rotation + Granulation, Rotation + Granulation + Oscillations), following [Barros et al. 2020](https://ui.adsabs.harvard.edu/abs/2020A%26A...634A..75B/abstract).
 
 **Samplers**
 

@@ -2,7 +2,7 @@ from pyorbit.subroutines.common import np
 from pyorbit.models.abstract_model import AbstractModel
 
 try:
-    import celerite
+    from pyorbit.models.celerite_term import celerite, SHOTerm
 except ImportError:
     pass
 
