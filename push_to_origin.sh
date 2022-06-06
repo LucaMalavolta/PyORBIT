@@ -1,3 +1,3 @@
 #!/bin/bash
 git fetch upstream
-git push upstream legacy
+git push upstream main
