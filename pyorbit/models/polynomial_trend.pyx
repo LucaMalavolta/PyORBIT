@@ -216,8 +216,6 @@ class SubsetPolynomialTrend(AbstractModel):
 
     def initialize_model_dataset(self, mc, dataset, **kwargs):
 
-        print('AAAAAAAAAA', dataset.submodel_flag, self.order)
-
         if not dataset.submodel_flag:
             return
 
@@ -242,8 +240,6 @@ class SubsetPolynomialTrend(AbstractModel):
             self.fix_list[dataset.name_ref][var_subset] = np.asarray([xzero_ref, 0.0000])
 
             self._subset_transfer_priors(mc, dataset, var_original, var_subset)
-
-        print('BBBBBBBBBBBBB', dataset.submodel_flag, self.order)
 
 
     def compute(self, variable_value, dataset, x0_input=None):

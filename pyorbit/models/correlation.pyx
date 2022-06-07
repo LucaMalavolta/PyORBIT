@@ -20,12 +20,13 @@ class LocalCorrelation(AbstractModel):
 
     def initialize_model(self, mc, **kwargs):
 
-        # Threshold value to check if the datasets have the same dimesnions
+        # Threshold value to check if the datasets have the same dimensions
+        # Well it looks like I have assumed that the user is careful enough
         self.threshold = kwargs.get('threshold', 0.001)
         self.order = kwargs.get('order', 1)
         self.correlated_val = kwargs.get('correlated_val', 'flux')
 
-        """ The user may decide to include the 0th order anyway - 
+        """ The user may decide to include the 0th order anyway -
             be aware of correlations with dataset offset!"""
         if kwargs.get('include_zero_point', False):
             self.starting_order = 0
@@ -48,7 +49,7 @@ class LocalCorrelation(AbstractModel):
     def compute(self, variable_value, dataset, x0_input=None):
 
         coeff = np.zeros(self.order+1)
-        for i_order in range(1, self.order+1):
+        for i_order in range(self.starting_order, self.order+1):
             var = 'corr_c'+repr(i_order)
             coeff[i_order] = variable_value[var]
 

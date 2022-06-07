@@ -246,5 +246,35 @@ class AbstractCommon(object):
     def special_fix_population(self, pop_mean, population):
         return population
 
+    def _transfer_priors(self, mc, var_original, var_subset):
 
-# Temporary fix to avoid running the GAPS activity analysis again
+        self.list_pams.update([var_subset])
+
+        for common_model in self.common_ref:
+            if var_original not in mc.common_models[common_model].list_pams:
+                continue
+
+            if var_original in self.bounds:
+                var_update = self.bounds[var_original]
+            else:
+                var_update = mc.common_models[common_model].default_bounds[var_original]
+
+            self.bounds.update({var_subset: var_update})
+
+            if var_original in self.spaces:
+                var_update = self.spaces[var_original]
+            else:
+                var_update = mc.common_models[common_model].default_spaces[var_original]
+
+            self.spaces.update({var_subset: var_update})
+
+            if var_original in self.prior_pams:
+                var_update0 = self.prior_kind[var_original]
+                var_update1 = self.prior_pams[var_original]
+            else:
+                var_update0 = mc.common_models[common_model].default_priors[var_original][0]
+                var_update1 = mc.common_models[common_model].default_priors[var_original][1]
+
+            self.prior_kind.update({var_subset: var_update0})
+            self.prior_pams.update({var_subset: var_update1})
+
