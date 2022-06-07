@@ -216,10 +216,12 @@ class SubsetPolynomialTrend(AbstractModel):
 
     def initialize_model_dataset(self, mc, dataset, **kwargs):
 
+        print('AAAAAAAAAA', dataset.submodel_flag, self.order)
+
         if not dataset.submodel_flag:
             return
 
-        for i_sub in range(0,dataset.submodel_flag):
+        for i_sub in range(0, dataset.submodel_flag):
 
             for i_order in range(self.starting_order, self.order+1):
                 var_original = 'poly_c'+repr(i_order)
@@ -240,6 +242,9 @@ class SubsetPolynomialTrend(AbstractModel):
             self.fix_list[dataset.name_ref][var_subset] = np.asarray([xzero_ref, 0.0000])
 
             self._subset_transfer_priors(mc, dataset, var_original, var_subset)
+
+        print('BBBBBBBBBBBBB', dataset.submodel_flag, self.order)
+
 
     def compute(self, variable_value, dataset, x0_input=None):
 

@@ -35,7 +35,6 @@ if __name__ == '__main__':
         'optimize': ['optimize', 'scipy', 'Optimize', 'OPTIMIZE'],
     }
 
-
     if sampler in sampler_keyword['emcee']:
         pyorbit.pyorbit_emcee(config_in)
 

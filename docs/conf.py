@@ -86,7 +86,8 @@ todo_include_todos = True
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 #
-html_theme = 'default'
+#https://bashtage.github.io/sphinx-material/index.html
+html_theme = 'sphinx_material'
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
@@ -94,10 +95,46 @@ html_theme = 'default'
 #
 # html_theme_options = {}
 
+# Material theme options (see theme.conf for more information)
+html_theme_options = {
+
+    # Set the name of the project to appear in the navigation.
+    'nav_title': 'PyORBIT',
+
+    # Set you GA account ID to enable tracking
+    #'google_analytics_account': 'UA-XXXXX',
+
+    # Specify a base_url used to generate sitemap.xml. If not
+    # specified, then no sitemap will be built.
+    #'base_url': 'https://project.github.io/project',  
+    'base_url': 'https://pyorbit.readthedocs.io/en/latest/', 
+
+    # Set the color and the accent color
+    'color_primary': 'blue',
+    'color_accent': 'light-blue',
+
+    # Set the repo location to get a badge with stats
+    'repo_url': 'https://github.com/LucaMalavolta/PyORBIT',
+    'repo_name': 'PyORBIT',
+
+    # Visible levels of the global TOC; -1 means unlimited
+    'globaltoc_depth': 3,
+    # If False, expand all TOC entries
+    'globaltoc_collapse': True,
+    # If True, show hidden TOC entries
+    'globaltoc_includehidden': False,
+}
+
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ['_static']
+
+# These paths are either relative to html_static_path
+# or fully qualified paths (eg. https://...)
+#html_css_files = [
+#    'graphite.css',
+#]
 
 # Custom sidebar templates, must be a dictionary that maps document names
 # to template names.
@@ -106,8 +143,9 @@ html_static_path = ['_static']
 # refs: http://alabaster.readthedocs.io/en/latest/installation.html#sidebars
 html_sidebars = {
     '**': [
-        'relations.html',  # needs 'show_related': True theme option to display
-        'searchbox.html',
+        'logo-text.html', 'globaltoc.html', 'localtoc.html', 'searchbox.html',
+        #'relations.html',  # needs 'show_related': True theme option to display
+        #'searchbox.html',
     ]
 }
 
