@@ -18,7 +18,7 @@ class CommonPolynomialTrend(AbstractCommon):
 
     for i_pol in range(0,10):
         # Coefficient of the i_pol order of the polynomial
-        parameters_dictionary['poly_c0'+repr(i_pol)] = {
+        parameters_dictionary['poly_c'+repr(i_pol)] = {
                 'bounds': [-1e06, 1e06],
                 'priors': ['Uniform', []],
                 'spaces': 'Linear',
