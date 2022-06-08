@@ -231,12 +231,12 @@ class LocalLightcurveDetrending(AbstractModel):
 
             for data_name, data_vals in self.lightcurve_ancillary[dataset.name_ref].items():
 
-                coeff = np.zeros(self.order+1)
+                coeff = np.zeros(self.ancillary_order[data_name]+1)
                 for i_order in range(1, self.ancillary_order[data_name]+1):
                     var_addition = 'coeff_' + data_name + '_c'+repr(i_order)
                     coeff[i_order] = variable_value[var_addition]
 
-                trend += polynomial.polyval(self.lightcurve_ancillary[dataset.name_ref][data_name], coeff)
+                trend += polynomial.polyval(data_vals, coeff)
 
 
             return trend
