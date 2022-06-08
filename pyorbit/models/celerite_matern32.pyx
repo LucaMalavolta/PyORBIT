@@ -16,6 +16,7 @@ class Celerite_Matern32(AbstractModel):
        log_rho (float) - The log of the parameter ρ.
        eps (Optional[float]) - The value of the parameter ϵ. (default: 0.01)
     """
+    default_common = 'activity'
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

@@ -31,6 +31,8 @@ class Celerite_Rotation(AbstractModel):
             primary. This should probably always be ``0 < mix < 1``.
     """
 
+    default_common = 'activity'
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 

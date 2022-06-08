@@ -134,14 +134,16 @@ class LocalLightcurvePolyDetrending(AbstractModel):
 
 
         if kwargs.get('ancillary_skip_first_column', False):
-            self.ancillary_skip_first_columns = kwargs['ancillary_skip_first_column']
+            self.ancillary_skip_first_column = kwargs['ancillary_skip_first_column']
 
     def initialize_model_dataset(self, mc, dataset, **kwargs):
 
         self.lightcurve_ancillary[dataset.name_ref] = {}
 
-        if self.ancillary_skip_first_columns:
+        if self.ancillary_skip_first_column:
             skip_name = dataset.ancillary.dtype.names[0]
+        else:
+            skip_name = None
 
         if kwargs.get('include_zero_point', False):
             self.starting_order = 0
