@@ -17,6 +17,8 @@ class Celerite_Matern32_Common(AbstractModel):
        eps (Optional[float]) – The value of the parameter ϵ. (default: 0.01)
     """
 
+    default_common = 'activity'
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 

@@ -22,6 +22,7 @@ from pyorbit.common.limb_darkening import LimbDarkening_Linear, \
 from pyorbit.common.cheops_modelling import CommonCheopsModelling
 from pyorbit.common.correlation import CommonCorrelation
 
+from pyorbit.common.lightcurve_detrending import CommonLightcurveDetrending
 
 from pyorbit.models.radial_velocities import \
     RVkeplerian, RVdynamical, \
@@ -83,6 +84,11 @@ from pyorbit.models.spectral_rotation import SpectralRotation, SubsetSpectralRot
 from pyorbit.models.cheops_detrending import CheopsDetrending
 from pyorbit.models.cheops_factormodel import CheopsFactorModel
 
+from pyorbit.models.lightcurve_linear_detrending import LightcurveLinearDetrending, LocalLightcurveLinearDetrending
+from pyorbit.models.lightcurve_detrending import LightcurveDetrending, LocalLightcurveDetrending
+from pyorbit.models.lightcurve_poly_detrending import LightcurvePolyDetrending, LocalLightcurvePolyDetrending
+
+
 """
  model_requires_planets: all those models that requires AT LEAST one of the planets in the system must be listed here
     this is the case for dataset that contains the signature of multiple planets, e.g., RVs or transit light curve
@@ -120,6 +126,7 @@ define_common_type_to_class = {
     'star_parameters': CommonStarParameters,
     'cheops_modelling': CommonCheopsModelling,
     'correlation': CommonCorrelation,
+    'lightcurve_detrending': CommonLightcurveDetrending,
 }
 
 define_type_to_class = {
@@ -174,8 +181,13 @@ define_type_to_class = {
     'subset_spectral_rotation': SubsetSpectralRotation,
     'subset_spectral_rotation_polynomial': SubsetSpectralRotationPolynomial,
     'cheops_detrending': CheopsDetrending,
-    'cheops_factormodel': CheopsFactorModel
-
+    'cheops_factormodel': CheopsFactorModel,
+    'lightcurve_linear_detrending': LightcurveLinearDetrending,
+    'local_lightcurve_detrending': LocalLightcurveLinearDetrending,
+    'lightcurve_detrending': LightcurveDetrending,
+    'local_lightcurve_detrending': LocalLightcurveDetrending,
+    'lightcurve_poly_detrending': LightcurvePolyDetrending,
+    'local_lightcurve_poly_detrending': LocalLightcurvePolyDetrending
 }
 
 accepted_extensions = ['.yaml', '.yml', '.conf', '.config', '.input', ]

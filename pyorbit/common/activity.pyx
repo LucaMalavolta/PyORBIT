@@ -154,7 +154,6 @@ class CommonActivity(AbstractCommon):
                 'fixed' : None,
                 'unit': 'as input',
             },
-        
         # Matern kernel
         'matern32_sigma': # Matern kernel,  sigma parameter
             {

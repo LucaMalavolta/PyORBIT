@@ -3,7 +3,6 @@ from pyorbit.models.abstract_model import AbstractModel
 
 try:
     import celerite2
-    from celerite2 import terms
 except ImportError:
     pass
 
@@ -18,12 +17,13 @@ class Celerite2_Matern32(AbstractModel):
        eps (Optional[float]) – The value of the parameter ϵ. (default: 0.01)
     """
 
+    default_common = 'activity'
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
         try:
             import celerite2
-            from celerite2 import terms
         except:
             print("ERROR: celerite2 not installed, this will not work")
             quit()
@@ -48,7 +48,7 @@ class Celerite2_Matern32(AbstractModel):
     def define_kernel(self, dataset):
         # random initialization
 
-        kernel = terms.Matern32Term(0.0, 0.0)
+        kernel = celerite2.terms.Matern32Term(sigma=0.0, rho=0.0)
         self.gp[dataset.name_ref] = celerite2.GaussianProcess(kernel, mean=0.0)
 
         """ I've decided to add the jitter in quadrature instead of using a constant kernel to allow the use of
@@ -65,9 +65,9 @@ class Celerite2_Matern32(AbstractModel):
         """
 
         self.gp[dataset.name_ref].mean = 0.
-        self.gp[dataset.name_ref].kernel = terms.SHOTerm(
-            variable_value['matern32_sigma'],
-            variable_value['matern32_rho'])
+        self.gp[dataset.name_ref].kernel = celerite2.terms.Matern32Term(
+            sigma=variable_value['matern32_sigma'],
+            rho=variable_value['matern32_rho'])
 
         diag = dataset.e ** 2.0 + dataset.jitter ** 2.0
         self.gp[dataset.name_ref].compute(dataset.x0, diag=diag, quiet=True)
@@ -77,9 +77,9 @@ class Celerite2_Matern32(AbstractModel):
     def sample_predict(self, variable_value, dataset, x0_input=None, return_covariance=False, return_variance=False):
 
         self.gp[dataset.name_ref].mean = 0.
-        self.gp[dataset.name_ref].kernel = terms.SHOTerm(
-            variable_value['matern32_sigma'],
-            variable_value['matern32_rho'])
+        self.gp[dataset.name_ref].kernel = celerite2.terms.Matern32Term(
+            sigma=variable_value['matern32_sigma'],
+            rho=variable_value['matern32_rho'])
 
         diag = dataset.e ** 2.0 + dataset.jitter ** 2.0
         self.gp[dataset.name_ref].compute(dataset.x0, diag=diag, quiet=True)
@@ -92,9 +92,9 @@ class Celerite2_Matern32(AbstractModel):
     def sample_conditional(self, variable_value, dataset,  x0_input=None):
 
         self.gp[dataset.name_ref].mean = 0.
-        self.gp[dataset.name_ref].kernel = terms.SHOTerm(
-            variable_value['matern32_sigma'],
-            variable_value['matern32_rho'])
+        self.gp[dataset.name_ref].kernel = celerite2.terms.Matern32Term(
+            sigma=variable_value['matern32_sigma'],
+            rho=variable_value['matern32_rho'])
 
         diag = dataset.e ** 2.0 + dataset.jitter ** 2.0
         self.gp[dataset.name_ref].compute(dataset.x0, diag=diag, quiet=True)
