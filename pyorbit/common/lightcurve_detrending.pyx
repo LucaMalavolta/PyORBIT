@@ -18,7 +18,7 @@ class CommonLightcurveDetrending(AbstractCommon):
     model_class = 'lightcurve_detrending'
 
     parameters_dictionary = {
-        'coeff_linear': # Orbital period of the planet
+        'coeff_linear':
             {
                 'bounds': [-10., 10.],
                 'priors': ['Uniform', []],
@@ -26,7 +26,7 @@ class CommonLightcurveDetrending(AbstractCommon):
                 'fixed' : 0.00,
                 'unit': None,
             },
-        'coeff_poly': # Orbital period of the planet
+        'coeff_poly':
             {
                 'bounds': [-10., 10.],
                 'priors': ['Uniform', []],
@@ -34,7 +34,7 @@ class CommonLightcurveDetrending(AbstractCommon):
                 'fixed' : 0.00,
                 'unit': None,
             },
-        'coeff_c0': # Orbital period of the planet
+        'coeff_c0':
             {
                 'bounds': [-100000., 100000.],
                 'priors': ['Uniform', []],
@@ -42,15 +42,25 @@ class CommonLightcurveDetrending(AbstractCommon):
                 'fixed' : 0.00,
                 'unit': None,
             },
-        'x_zero': # Orbital period of the planet
+        'x_zero':
             {
-                'bounds': [-1000., 1000.],
+                'bounds': [-1e09, 1e09],
                 'priors': ['Uniform', []],
                 'spaces': 'Linear',
                 'fixed' : 0.00,
-                'unit': None,
+                'unit': 'as input',
             },
     }
+
+    for i_pol in range(0,10):
+        # Coefficient of the i_pol order of the polynomial
+        parameters_dictionary['poly_c'+repr(i_pol)] = {
+                'bounds': [-1e06, 1e06],
+                'priors': ['Uniform', []],
+                'spaces': 'Linear',
+                'fixed' : 0.00,
+                'unit': 'poly order '+repr(i_pol),
+        }
 
     default_fixed = {}
 

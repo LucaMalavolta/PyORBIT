@@ -84,6 +84,7 @@ from pyorbit.models.spectral_rotation import SpectralRotation, SubsetSpectralRot
 from pyorbit.models.cheops_detrending import CheopsDetrending
 from pyorbit.models.cheops_factormodel import CheopsFactorModel
 
+from pyorbit.models.lightcurve_linear_detrending import LightcurveLinearDetrending, LocalLightcurveLinearDetrending
 from pyorbit.models.lightcurve_detrending import LightcurveDetrending, LocalLightcurveDetrending
 from pyorbit.models.lightcurve_poly_detrending import LightcurvePolyDetrending, LocalLightcurvePolyDetrending
 
@@ -181,6 +182,8 @@ define_type_to_class = {
     'subset_spectral_rotation_polynomial': SubsetSpectralRotationPolynomial,
     'cheops_detrending': CheopsDetrending,
     'cheops_factormodel': CheopsFactorModel,
+    'lightcurve_linear_detrending': LightcurveLinearDetrending,
+    'local_lightcurve_detrending': LocalLightcurveLinearDetrending,
     'lightcurve_detrending': LightcurveDetrending,
     'local_lightcurve_detrending': LocalLightcurveDetrending,
     'lightcurve_poly_detrending': LightcurvePolyDetrending,

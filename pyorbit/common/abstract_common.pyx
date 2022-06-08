@@ -246,35 +246,35 @@ class AbstractCommon(object):
     def special_fix_population(self, pop_mean, population):
         return population
 
-    def _transfer_priors(self, mc, var_original, var_subset):
+    def _transfer_priors(self, mc, var_original, var_addition):
 
-        self.list_pams.update([var_subset])
 
-        for common_model in self.common_ref:
-            if var_original not in mc.common_models[common_model].list_pams:
-                continue
+        if var_original not in self.list_pams:
+            return
 
-            if var_original in self.bounds:
-                var_update = self.bounds[var_original]
-            else:
-                var_update = mc.common_models[common_model].default_bounds[var_original]
+        self.list_pams.update([var_addition])
 
-            self.bounds.update({var_subset: var_update})
+        if var_original in self.bounds:
+            var_update = self.bounds[var_original]
+        else:
+            var_update = self.default_bounds[var_original]
 
-            if var_original in self.spaces:
-                var_update = self.spaces[var_original]
-            else:
-                var_update = mc.common_models[common_model].default_spaces[var_original]
+        self.bounds.update({var_addition: var_update})
 
-            self.spaces.update({var_subset: var_update})
+        if var_original in self.spaces:
+            var_update = self.spaces[var_original]
+        else:
+            var_update = self.default_spaces[var_original]
 
-            if var_original in self.prior_pams:
-                var_update0 = self.prior_kind[var_original]
-                var_update1 = self.prior_pams[var_original]
-            else:
-                var_update0 = mc.common_models[common_model].default_priors[var_original][0]
-                var_update1 = mc.common_models[common_model].default_priors[var_original][1]
+        self.spaces.update({var_addition: var_update})
 
-            self.prior_kind.update({var_subset: var_update0})
-            self.prior_pams.update({var_subset: var_update1})
+        if var_original in self.prior_pams:
+            var_update0 = self.prior_kind[var_original]
+            var_update1 = self.prior_pams[var_original]
+        else:
+            var_update0 = self.default_priors[var_original][0]
+            var_update1 = self.default_priors[var_original][1]
+
+        self.prior_kind.update({var_addition: var_update0})
+        self.prior_pams.update({var_addition: var_update1})
 
