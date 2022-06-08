@@ -14,6 +14,7 @@ class LightcurveDetrending(AbstractModel):
         self.model_class = 'lightcurve_detrending'
         self.unitary_model = True
         self.normalization_model = False
+        self.multiplicative_model = False
         self.time_independent_model = True
 
 
@@ -39,10 +40,18 @@ class LightcurveDetrending(AbstractModel):
                 self.common_lcpd_ref = common_ref
                 break
 
-        """ The user may decide to include the 0th order anyway -
-            be aware of correlations with dataset offset!"""
+        if self.multiplicative_model:
+            self.baseline_value = 1.0000
+
+        if self.normalization_model:
+            self.starting_order = 0
+
         if kwargs.get('include_zero_point', False):
             self.starting_order = 0
+
+        """ The user may decide to include the 0th order anyway -
+            be aware of correlations with dataset offset!"""
+        if self.starting_order == 0 :
             var_original = 'coeff_c0'
             var_addition = 'lcpd_c0'
             mc.common_models[self.common_lcpd_ref]._transfer_priors(mc, var_original, var_addition)
@@ -113,6 +122,7 @@ class LocalLightcurveDetrending(AbstractModel):
         self.model_class = 'local_lightcurve_detrending'
         self.unitary_model = True
         self.normalization_model = False
+        self.multiplicative_model = False
         self.time_independent_model = True
 
 
@@ -140,8 +150,14 @@ class LocalLightcurveDetrending(AbstractModel):
         if kwargs.get('ancillary_skip_first_column', False):
             self.ancillary_skip_first_column = kwargs['ancillary_skip_first_column']
 
-        if self.normalization_model:
+        if self.multiplicative_model:
             self.baseline_value = 1.0000
+
+        if self.normalization_model:
+            self.starting_order = 0
+
+        if kwargs.get('include_zero_point', False):
+            self.starting_order = 0
 
     def initialize_model_dataset(self, mc, dataset, **kwargs):
 
@@ -152,8 +168,7 @@ class LocalLightcurveDetrending(AbstractModel):
         else:
             skip_name = None
 
-        if kwargs.get('include_zero_point', False):
-            self.starting_order = 0
+        if self.starting_order == 0 :
             var_original = 'coeff_c0'
             var_addition = 'lcpd_c0'
 

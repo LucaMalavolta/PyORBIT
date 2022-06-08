@@ -618,7 +618,8 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, reload_ze
 
             try:
                 if model_conf['multiplicative_model'] is True:
-                    mc.models[model_name].normalization_model = True
+                    mc.models[model_name].multiplicative_model = True
+                    mc.models[model_name].normalization_model = False
                     mc.models[model_name].unitary_model = False
                     print('Model type: normalization')
             except KeyError:

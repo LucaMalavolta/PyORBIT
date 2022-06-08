@@ -13,6 +13,7 @@ class LightcurveLinearDetrending(AbstractModel):
         self.model_class = 'lightcurve_linear_detrending'
         self.unitary_model = True
         self.normalization_model = False
+        self.multiplicative_model = False
         self.time_independent_model = True
 
 
@@ -33,7 +34,7 @@ class LightcurveLinearDetrending(AbstractModel):
                 self.common_lcd_ref = common_ref
                 break
 
-        if kwargs.get('include_zero_point', False):
+        if kwargs.get('include_zero_point', False) or self.normalization_model:
             self.starting_order = 0
             var_original = 'coeff_c0'
             var_addition = 'lcd_c0'
@@ -124,8 +125,7 @@ class LocalLightcurveLinearDetrending(AbstractModel):
         else:
             skip_name = None
 
-        if kwargs.get('include_zero_point', False):
-            self.starting_order = 0
+        if kwargs.get('include_zero_point', False) or self.normalization_model:
             var_original = 'coeff_c0'
             var_addition = 'lcd_c0'
             self._subset_transfer_priors(mc, dataset, var_original, var_addition)
