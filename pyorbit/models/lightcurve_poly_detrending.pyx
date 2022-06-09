@@ -40,10 +40,7 @@ class LightcurvePolyDetrending(AbstractModel):
         if self.multiplicative_model:
             self.baseline_value = 1.0000
 
-        if self.normalization_model:
-            self.starting_order = 0
-
-        if kwargs.get('include_zero_point', False):
+        if kwargs.get('include_zero_point', False) or self.normalization_model:
             self.starting_order = 0
 
 
@@ -156,11 +153,10 @@ class LocalLightcurvePolyDetrending(AbstractModel):
         if self.multiplicative_model:
             self.baseline_value = 1.0000
 
-        if self.normalization_model:
+        if kwargs.get('include_zero_point', False) or self.normalization_model:
             self.starting_order = 0
-
-        if kwargs.get('include_zero_point', False):
-            self.starting_order = 0
+        else:
+            self.starting_order = 1
 
     def initialize_model_dataset(self, mc, dataset, **kwargs):
 
@@ -228,7 +224,7 @@ class LocalLightcurvePolyDetrending(AbstractModel):
             for i_order in range(1, self.ancillary_order[data_name]+1):
 
                 var_original = 'coeff_poly'
-                var_addition = 'coeff_' + data_name + '_c'+repr(i_order)
+                var_addition = 'lcpd_' + data_name + '_c'+repr(i_order)
 
                 self._subset_transfer_priors(mc, dataset, var_original, var_addition)
 
@@ -239,13 +235,13 @@ class LocalLightcurvePolyDetrending(AbstractModel):
 
         if x0_input is None:
 
-            trend = np.ones(dataset.n) * variable_value.get('coeff_c0', self.baseline_value)
+            trend = np.ones(dataset.n) * variable_value.get('lcpd_c0', self.baseline_value)
 
             for data_name, data_vals in self.lightcurve_ancillary[dataset.name_ref].items():
 
                 coeff = np.zeros(self.ancillary_order[data_name]+1)
                 for i_order in range(1, self.ancillary_order[data_name]+1):
-                    var_addition = 'coeff_' + data_name + '_c'+repr(i_order)
+                    var_addition = 'lcpd_' + data_name + '_c'+repr(i_order)
                     coeff[i_order] = variable_value[var_addition]
 
                 #trend += polynomial.polyval(self.lightcurve_ancillary[dataset.name_ref][data_name], coeff)
