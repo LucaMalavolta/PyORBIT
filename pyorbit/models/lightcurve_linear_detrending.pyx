@@ -37,7 +37,7 @@ class LightcurveLinearDetrending(AbstractModel):
         if kwargs.get('include_zero_point', False) or self.normalization_model:
             self.starting_order = 0
             var_original = 'coeff_c0'
-            var_addition = 'lcd_c0'
+            var_addition = 'lcld_c0'
             mc.common_models[self.common_lcd_ref]._transfer_priors(mc, var_original, var_addition)
             self.list_pams_common.update([var_addition])
 
@@ -48,7 +48,7 @@ class LightcurveLinearDetrending(AbstractModel):
         for data_name, keywords in kwargs['ancillary_sets'].items():
             self.ancillary_names[data_name] = None
             var_original = 'coeff_linear'
-            var_addition = 'lcd_coeff_'+data_name
+            var_addition = 'lcld_coeff_'+data_name
 
             mc.common_models[self.common_lcd_ref]._transfer_priors(mc, var_original, var_addition)
             self.list_pams_common.update([var_addition])
@@ -74,10 +74,10 @@ class LightcurveLinearDetrending(AbstractModel):
 
         if x0_input is None:
 
-            trend = np.ones(dataset.n) * variable_value.get('lcd_c0', self.baseline_value)
+            trend = np.ones(dataset.n) * variable_value.get('lcld_c0', self.baseline_value)
 
             for data_name in self.ancillary_names:
-                trend += variable_value['lcd_coeff_'+data_name] * (dataset.ancillary[data_name]-variable_value['x_zero_'+data_name])
+                trend += variable_value['lcld_coeff_'+data_name] * (dataset.ancillary[data_name]-variable_value['x_zero_'+data_name])
 
 
             return trend
@@ -127,14 +127,14 @@ class LocalLightcurveLinearDetrending(AbstractModel):
 
         if kwargs.get('include_zero_point', False) or self.normalization_model:
             var_original = 'coeff_c0'
-            var_addition = 'lcd_c0'
+            var_addition = 'lcld_c0'
             self._subset_transfer_priors(mc, dataset, var_original, var_addition)
 
         for data_name in dataset.ancillary.dtype.names:
             if data_name == skip_name: continue
 
             var_original = 'coeff_linear'
-            var_addition = 'lcd_coeff_'+data_name
+            var_addition = 'lcld_coeff_'+data_name
 
             self._subset_transfer_priors(mc, dataset, var_original, var_addition)
 
@@ -157,10 +157,10 @@ class LocalLightcurveLinearDetrending(AbstractModel):
 
         if x0_input is None:
 
-            trend = np.ones(dataset.n) * variable_value.get('lcd_c0', self.baseline_value)
+            trend = np.ones(dataset.n) * variable_value.get('lcld_c0', self.baseline_value)
 
             for data_name, data_vals in self.lightcurve_ancillary[dataset.name_ref].items():
-                trend += variable_value['lcd_coeff_'+data_name] * data_vals
+                trend += variable_value['lcld_coeff_'+data_name] * data_vals
 
 
             return trend

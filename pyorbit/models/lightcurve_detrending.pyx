@@ -53,7 +53,7 @@ class LightcurveDetrending(AbstractModel):
             be aware of correlations with dataset offset!"""
         if self.starting_order == 0 :
             var_original = 'coeff_c0'
-            var_addition = 'lcpd_c0'
+            var_addition = 'lcd_c0'
             mc.common_models[self.common_lcpd_ref]._transfer_priors(mc, var_original, var_addition)
             self.list_pams_common.update([var_addition])
 
@@ -74,7 +74,7 @@ class LightcurveDetrending(AbstractModel):
 
             for i_order in range(1, self.ancillary_order[data_name]+1):
                 var_original = 'coeff_poly'
-                var_addition = 'lcpd_' + data_name + '_c'+repr(i_order)
+                var_addition = 'lcd_' + data_name + '_c'+repr(i_order)
 
                 mc.common_models[self.common_lcpd_ref]._transfer_priors(mc, var_original, var_addition)
                 self.list_pams_common.update([var_addition])
@@ -94,13 +94,13 @@ class LightcurveDetrending(AbstractModel):
 
         if x0_input is None:
 
-            trend = np.ones(dataset.n) * variable_value.get('lcpd_c0', self.baseline_value)
+            trend = np.ones(dataset.n) * variable_value.get('lcd_c0', self.baseline_value)
 
             for data_name, data_order in self.ancillary_order.items():
 
                 coeff = np.zeros(data_order+1)
                 for i_order in range(1, data_order+1):
-                    var_addition = 'lcpd_' + data_name + '_c'+repr(i_order)
+                    var_addition = 'lcd_' + data_name + '_c'+repr(i_order)
                     coeff[i_order] = variable_value[var_addition]
 
                 trend += polynomial.polyval(dataset.ancillary[data_name]-variable_value['x_zero_'+data_name], coeff)
@@ -170,7 +170,7 @@ class LocalLightcurveDetrending(AbstractModel):
 
         if self.starting_order == 0 :
             var_original = 'coeff_c0'
-            var_addition = 'lcpd_c0'
+            var_addition = 'lcd_c0'
 
             self._subset_transfer_priors(mc, dataset, var_original, var_addition)
 
@@ -216,7 +216,7 @@ class LocalLightcurveDetrending(AbstractModel):
             for i_order in range(1, self.ancillary_order[data_name]+1):
 
                 var_original = 'coeff_poly'
-                var_addition = 'coeff_' + data_name + '_c'+repr(i_order)
+                var_addition = 'lcd_' + data_name + '_c'+repr(i_order)
 
                 self._subset_transfer_priors(mc, dataset, var_original, var_addition)
 
@@ -227,13 +227,13 @@ class LocalLightcurveDetrending(AbstractModel):
 
         if x0_input is None:
 
-            trend = np.ones(dataset.n) * variable_value.get('coeff_c0', self.baseline_value)
+            trend = np.ones(dataset.n) * variable_value.get('lcd_c0', self.baseline_value)
 
             for data_name, data_vals in self.lightcurve_ancillary[dataset.name_ref].items():
 
                 coeff = np.zeros(self.ancillary_order[data_name]+1)
                 for i_order in range(1, self.ancillary_order[data_name]+1):
-                    var_addition = 'coeff_' + data_name + '_c'+repr(i_order)
+                    var_addition = 'lcd_' + data_name + '_c'+repr(i_order)
                     coeff[i_order] = variable_value[var_addition]
 
                 trend += polynomial.polyval(data_vals, coeff)
