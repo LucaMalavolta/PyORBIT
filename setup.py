@@ -9,7 +9,7 @@ setup(
     author="Luca Malavolta",
 	author_email = 'luca.malavolta@unipd.it',
 	url = 'https://github.com/LucaMalavolta/PyORBIT',
-	packages =['pyorbit'],
+	packages =['pyorbit', 'pyorbit.common', 'pyorbit.classes', 'pyorbit.models', 'pyorbit.samplers', 'pyorbit.subroutines'],
 	#license = 'GNU GPLv3',
 	#description ='',
 	classifiers = [
