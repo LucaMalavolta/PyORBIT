@@ -4,13 +4,11 @@ from pyorbit.subroutines.common import *
 from matplotlib import pyplot as plt
 import matplotlib.gridspec as gridspec
 from matplotlib.ticker import AutoMinorLocator
-import corner
 import pygtc
 import pyorbit.subroutines.kepler_exo as kepler_exo
 import pyorbit.subroutines.common as common
 import pyorbit.subroutines.results_analysis as results_analysis
 import h5py
-import csv
 import re
 from pyorbit.classes.model_container_multinest import ModelContainerMultiNest
 from pyorbit.classes.model_container_polychord import ModelContainerPolyChord
@@ -36,6 +34,9 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
     use_tex = False
     plt.rc('text', usetex=use_tex)
 
+
+    if plot_dictionary['use_corner']:
+        import corner
 
     if plot_dictionary['use_getdist']:
         from getdist import plots, MCSamples
@@ -668,7 +669,6 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
         elif plot_dictionary['use_corner']:
             # plotting mega-corner plot
             print('Plotting full_correlation plot with Corner')
-
             fig = corner.corner(
                 corner_plot['samples'], labels=corner_plot['labels'], truths=corner_plot['truths'])
             fig.savefig(dir_output + "all_internal_variables_corner_dfm.pdf",
@@ -1359,6 +1359,8 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
         sys.stdout.flush()
 
     if plot_dictionary['veuz_corner_files']:
+
+        import csv
 
         print(' Writing Veusz-compatible files for personalized corner plots')
 
