@@ -2,6 +2,7 @@ from setuptools import setup
 
 # Inspired from here:
 # https://hynek.me/articles/sharing-your-labor-of-love-pypi-quick-and-dirty/
+# https://realpython.com/pypi-publish-python-package/#prepare-your-package-for-publication
 
 # read the contents of your README file
 from pathlib import Path
