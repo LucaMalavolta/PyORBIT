@@ -29,7 +29,7 @@ setup(
             'pyorbit_results=pyorbit.pyorbit_results:pyorbit_results'
         ]
     },
-    zip_safe=False
+    zip_safe=False,
     install_requires=[
         'numpy',
         'numba',
