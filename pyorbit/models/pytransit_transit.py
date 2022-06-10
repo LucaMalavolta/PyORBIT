@@ -69,7 +69,7 @@ class PyTransit_Transit(AbstractModel, AbstractTransit):
 
         if x0_input is None:
             return self.pytransit_models[dataset.name_ref].evaluate_ps(
-                variable_value['R_rs'],
+                variable_value['R_Rs'],
                 self.ld_vars,
                 pams_t0, variable_value['P'], pams_a, pams_i, variable_value['e'], omega_rad) - 1.
 

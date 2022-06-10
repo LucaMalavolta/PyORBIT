@@ -9,3 +9,18 @@ h5py
 tqdm
 pygtc
 PyDE @ git+https://github.com/hpparvi/PyDE.git
+#--- multiporcessing (not sure if required)
+#gxx_linux-64
+#mpy4py
+batman-package
+#--- pytransit
+arviz
+celerite
+corner
+pytransit
+#--- GP regression
+celerite2
+george
+#--- nested sampling
+dynesty
+ultranest
