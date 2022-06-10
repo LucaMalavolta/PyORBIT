@@ -6,7 +6,7 @@ from scipy.interpolate import splrep, splev
 import pyorbit.subroutines.constants as constants
 
 import numpy as np
-
+np.seterr(invalid='ignore')
 
 try:
     if os.path.isdir('/Users/malavolta/Astro/CODE/others/trades'):
