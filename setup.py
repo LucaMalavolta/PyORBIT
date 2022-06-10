@@ -19,7 +19,7 @@ setup(
 	license = 'MIT License',
 	description ='PyORBIT: a code for exoplanet orbital parameters and stellar activity',
     long_description=long_description,
-    long_description_content_type='text/markdown'
+    long_description_content_type='text/markdown',
 	classifiers = [
 		'Development Status :: 5 - Production/Stable',
 		'Intended Audience :: Science/Research',
