@@ -1,8 +1,3 @@
-.. PyORBIT documentation master file, created by
-   sphinx-quickstart on Sat Dec 16 17:20:15 2017.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
-
 PyORBIT: the ultimate tool for exoplanet characterization!
 ==========================================================
 
@@ -37,6 +32,23 @@ If you are wondering what ``PyORBIT`` stands for: I am bad at acronym creation s
 I decided to write it with capitol *ORBIT* just because I liked how it looked.
 Feel free to submit your retrofitting acronym!  
 
+[![GitHub][github-badge]][github-link]
+
+[github-badge]: https://img.shields.io/badge/GitHub-PyORBIT-blue
+[github-link]: https://github.com/LucaMalavolta/PyORBIT
+
+
+```{eval-rst}
+.. image::  https://img.shields.io/badge/GitHub-PyORBIT-blue
+  :target: https://github.com/LucaMalavolta/PyORBIT
+```
+
+
+```{admonition} Be careful
+Documentation is still work in progress
+```
+
+```{eval-rst}
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
@@ -47,14 +59,23 @@ Feel free to submit your retrofitting acronym!
    api
 
 
+
 ..
   Following `PEP 8 Style Guide for Python Code <https://www.python.org/dev/peps/pep-0008/>`_  ,
   `PEP 257 Docstring Conventions <https://www.python.org/dev/peps/pep-0257/>`_ and `Google Python Style Guide <http://google.github.io/styleguide/pyguide.html>`_
 
+..
+  Indices and tables
+  ==================
 
-Indices and tables
-==================
+  * :ref:`genindex`
+  * :ref:`modindex`
+  * :ref:`search`
 
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
+
+..
+ https://sphinx-book-theme.readthedocs.io/
+ https://myst-parser.readthedocs.io/
+
+
+```

@@ -48,7 +48,6 @@ setup(
         'h5py',
         'tqdm',
         'pygtc',
-        'PyDE @ git+https://github.com/hpparvi/PyDE.git'
     ],
     setup_requires=['setuptools']
 )

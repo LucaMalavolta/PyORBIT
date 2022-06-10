@@ -4,9 +4,9 @@ Abstract Common Model
 =====================
 This is the common model class
 
-.. module:: pyorbit.models.abstract_common
+.. module:: pyorbit.common.abstract_common
 
 Some stuff here
 
-.. automodule:: pyorbit.models.abstract_common
+.. automodule:: pyorbit.common.abstract_common
    :members:

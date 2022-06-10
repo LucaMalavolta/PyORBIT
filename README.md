@@ -1,5 +1,5 @@
 
-![PyORBIT logo](PyORBIT_logo_transp.png?raw=true)
+![PyORBIT logo](docs/_static/PyORBIT_logo_transp.png?raw=true)
 
 ### A code for exoplanet orbital parameters and stellar activity.
 ***

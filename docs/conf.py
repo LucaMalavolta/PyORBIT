@@ -34,7 +34,11 @@ import pyorbit
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
-extensions = ['sphinx.ext.autodoc','sphinx.ext.mathjax']
+extensions = ['myst_parser','sphinx.ext.autodoc',
+    'sphinx.ext.mathjax',
+    'sphinx.ext.napoleon']
+
+myst_enable_extensions = ["dollarmath", "colon_fence"]
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -42,15 +46,15 @@ templates_path = ['_templates']
 # The suffix(es) of source filenames.
 # You can specify multiple suffix as a list of string:
 #
-# source_suffix = ['.rst', '.md']
-source_suffix = '.rst'
+source_suffix = ['.rst', '.md']
+#source_suffix = '.rst'
 
 # The master toctree document.
 master_doc = 'index'
 
 # General information about the project.
 project = u'PyORBIT'
-copyright = u'2016, Luca Malavolta'
+copyright = u'2016-2022, Luca Malavolta'
 author = u'Luca Malavolta'
 
 # The version info for the project you're documenting, acts as replacement for
@@ -86,44 +90,29 @@ todo_include_todos = True
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 #
-#https://bashtage.github.io/sphinx-material/index.html
 html_theme = 'sphinx_book_theme'
+html_logo = "_static/PyORBIT_logo_transp.png"
+html_title = "PyORBIT"
+
+html_copy_source = True
+html_show_sourcelink = True
+html_sourcelink_suffix = ""
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
 # documentation.
 #
 # html_theme_options = {}
-
-# Material theme options (see theme.conf for more information)
 html_theme_options = {
-
-    # Set the name of the project to appear in the navigation.
-    'nav_title': 'PyORBIT',
-
-    # Set you GA account ID to enable tracking
-    #'google_analytics_account': 'UA-XXXXX',
-
-    # Specify a base_url used to generate sitemap.xml. If not
-    # specified, then no sitemap will be built.
-    #'base_url': 'https://project.github.io/project',  
-    'base_url': 'https://pyorbit.readthedocs.io/en/latest/', 
-
-    # Set the color and the accent color
-    'color_primary': 'blue',
-    'color_accent': 'light-blue',
-
-    # Set the repo location to get a badge with stats
-    'repo_url': 'https://github.com/LucaMalavolta/PyORBIT',
-    'repo_name': 'PyORBIT',
-
-    # Visible levels of the global TOC; -1 means unlimited
-    'globaltoc_depth': 3,
-    # If False, expand all TOC entries
-    'globaltoc_collapse': True,
-    # If True, show hidden TOC entries
-    'globaltoc_includehidden': False,
+    "path_to_docs": "docs",
+    "repository_url": "https://github.com/LucaMalavolta/PyORBIT",
+    "use_repository_button": True,
+    #"home_page_in_toc": True,
+    "show_navbar_depth": 2,
+    "logo_only": True,
+    "show_related": True
 }
+
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
@@ -139,13 +128,12 @@ html_static_path = ['_static']
 # Custom sidebar templates, must be a dictionary that maps document names
 # to template names.
 #
-# This is required for the alabaster theme
-# refs: http://alabaster.readthedocs.io/en/latest/installation.html#sidebars
+
 html_sidebars = {
-    '**': [
-        'logo-text.html', 'globaltoc.html', 'localtoc.html', 'searchbox.html',
-        #'relations.html',  # needs 'show_related': True theme option to display
-        #'searchbox.html',
+    '**': ['sidebar-logo.html','search-field.html',
+        'globaltoc.html',
+        'relations.html',  # needs 'show_related': True theme option to display
+#        #'searchbox.html',
     ]
 }
 
@@ -155,53 +143,3 @@ html_sidebars = {
 # Output file base name for HTML help builder.
 htmlhelp_basename = 'PyORBITdoc'
 
-
-# -- Options for LaTeX output ---------------------------------------------
-
-latex_elements = {
-    # The paper size ('letterpaper' or 'a4paper').
-    #
-    # 'papersize': 'letterpaper',
-
-    # The font size ('10pt', '11pt' or '12pt').
-    #
-    # 'pointsize': '10pt',
-
-    # Additional stuff for the LaTeX preamble.
-    #
-    # 'preamble': '',
-
-    # Latex figure (float) alignment
-    #
-    # 'figure_align': 'htbp',
-}
-
-# Grouping the document tree into LaTeX files. List of tuples
-# (source start file, target name, title,
-#  author, documentclass [howto, manual, or own class]).
-latex_documents = [
-    (master_doc, 'PyORBIT.tex', u'PyORBIT Documentation',
-     u'Luca Malavolta', 'manual'),
-]
-
-
-# -- Options for manual page output ---------------------------------------
-
-# One entry per manual page. List of tuples
-# (source start file, name, description, authors, manual section).
-man_pages = [
-    (master_doc, 'pyorbit', u'PyORBIT Documentation',
-     [author], 1)
-]
-
-
-# -- Options for Texinfo output -------------------------------------------
-
-# Grouping the document tree into Texinfo files. List of tuples
-# (source start file, target name, title, author,
-#  dir menu entry, description, category)
-texinfo_documents = [
-    (master_doc, 'PyORBIT', u'PyORBIT Documentation',
-     author, 'PyORBIT', 'One line description of project.',
-     'Miscellaneous'),
-]
