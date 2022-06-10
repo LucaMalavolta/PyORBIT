@@ -32,10 +32,11 @@ To download ``PyORBIT`` from the repository:
 
   git clone https://github.com/LucaMalavolta/PyORBIT.git
 
+You can then install ``PyORBIT`` by using ``pip`` inside the code repository:
 
-
-Right now the code is not installable, so ``python setup.py install`` will not work.
-Software requirements can be satisfied after downloading the code from the repository.
+.. code:: bash
+  cd PyORBIT
+  pip install .
 
 .. _requirements-label:
 

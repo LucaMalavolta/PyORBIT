@@ -1,6 +1,8 @@
-# PyORBIT
+# PyORBIT - a code for exoplanet orbital parameters and stellar activity.
+![PyORBIT logo](PyORBIT_logo_transp.png?raw=true)
 
-## `PyORBIT` version 9.0 by Luca Malavolta - June 2022
+
+### `PyORBIT` version 9.0 by Luca Malavolta - June 2022
 
 **News**
 
