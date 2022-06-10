@@ -1,5 +1,13 @@
 from setuptools import setup
-import numpy as np
+
+# Inspired from here:
+# https://hynek.me/articles/sharing-your-labor-of-love-pypi-quick-and-dirty/
+# https://realpython.com/pypi-publish-python-package/#prepare-your-package-for-publication
+
+# read the contents of your README file
+from pathlib import Path
+this_directory = Path(__file__).parent
+long_description = (this_directory / "README.md").read_text()
 
 setup(
     name="pyorbit",
@@ -8,13 +16,16 @@ setup(
 	author_email = 'luca.malavolta@unipd.it',
 	url = 'https://github.com/LucaMalavolta/PyORBIT',
 	packages =['pyorbit', 'pyorbit.common', 'pyorbit.classes', 'pyorbit.models', 'pyorbit.samplers', 'pyorbit.subroutines'],
-	#license = 'GNU GPLv3',
-	#description ='',
+	license = 'MIT License',
+	description ='PyORBIT: a code for exoplanet orbital parameters and stellar activity',
+    long_description=long_description,
+    long_description_content_type='text/markdown',
 	classifiers = [
 		'Development Status :: 5 - Production/Stable',
 		'Intended Audience :: Science/Research',
 		'Topic :: Scientific/Engineering',
-		'Programming Language :: Python'
+        'Operating System :: OS Independent',
+		'Programming Language :: Python :: 3'
 		],
     # To provide executable scripts, use entry points in preference to the
     # "scripts" keyword. Entry points provide cross-platform support and allow
@@ -25,5 +36,18 @@ setup(
             'pyorbit_results=pyorbit.pyorbit_results:pyorbit_results'
         ]
     },
-     zip_safe=False
+    zip_safe=False,
+    install_requires=[
+        'numpy',
+        'numba',
+        'scipy',
+        'matplotlib',
+        'argparse',
+        'emcee',
+        'pyyaml',
+        'h5py',
+        'tqdm',
+        'pygtc',
+    ],
+    setup_requires=['setuptools']
 )

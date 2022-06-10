@@ -43,3 +43,5 @@ __pycache__
 .vscode
 _build
 docs/_build
+dist/
+pyorbit.egg-info/

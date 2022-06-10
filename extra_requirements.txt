@@ -3,11 +3,9 @@ numba
 scipy
 matplotlib
 argparse
-corner
 emcee
 pyyaml
 h5py
-cython
-getdist
 tqdm
 pygtc
+PyDE @ git+https://github.com/hpparvi/PyDE.git
