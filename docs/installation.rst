@@ -3,11 +3,12 @@
 Installing PyORBIT
 ==================
 
-Before proceeding with the installation, I suggest to create an environment dedicated to ``PyORBIT``. With conda/anaconda:
+Before proceeding with the installation, I suggest to create an environment dedicated to ``PyORBIT`` using python<=3.9.
+With conda/anaconda:
 
 .. code:: bash
 
-  conda create --name pyorbit python=3
+  conda create --name pyorbit python=3.9
 
 To list the available environment do:
 
@@ -22,7 +23,7 @@ To activate the ``pyorbit`` environment:
 .. code:: bash
 
   WINDOWS: activate pyorbit
-  LINUX, macOS: source activate pyorbit
+  LINUX, macOS: conda activate pyorbit
 
 
 To download ``PyORBIT`` from the repository:
@@ -30,6 +31,8 @@ To download ``PyORBIT`` from the repository:
 .. code:: bash
 
   git clone https://github.com/LucaMalavolta/PyORBIT.git
+
+
 
 Right now the code is not installable, so ``python setup.py install`` will not work.
 Software requirements can be satisfied after downloading the code from the repository.
@@ -47,7 +50,7 @@ This is the list of packages required by PyORBIT to work out-of-the-box:
 - ``corner``: to make corner plots (`corner.py home page`_)
 - ``h5py``: HDF5 for Python (`h5py home page`_)
 
-Basic analysis can be performed using the ``scipy.optimize`` package, however to fully unwind the power of ``PyORBIT`` I strongly recommend these two packages:
+Basic analysis can be performed using the ``scipy.optimize`` package, however to fully unwind the power of ``PyORBIT`` I strongly recommend these two packages (already included in the requirements):
 - ``pyDE``: global optimization package (`PyDE home page`_)
 - ``emcee``: ensemble sampling toolkit for affine-invariant MCMC (`emcee home page`_)
 
