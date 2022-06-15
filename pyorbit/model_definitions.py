@@ -30,6 +30,7 @@ from pyorbit.models.radial_velocities import \
 
 from pyorbit.models.harmonics import Harmonics
 from pyorbit.models.pytransit_transit import PyTransit_Transit
+from pyorbit.models.pytransit_transit_with_ttv import PyTransit_Transit_With_TTV
 
 from pyorbit.models.batman_transit import Batman_Transit
 from pyorbit.models.batman_transit_with_ttv import Batman_Transit_With_TTV
@@ -143,6 +144,7 @@ define_type_to_class = {
                       'keplerian': TransitTimeKeplerian,
                       'dynamical': TransitTimeDynamical},
     'pytransit_transit': PyTransit_Transit,
+    'pytransit_transit_with_ttv': PyTransit_Transit_With_TTV,
     'batman_transit': Batman_Transit,
     'batman_transit_with_ttv': Batman_Transit_With_TTV,
     'batman_transit_eclipse_phasecurve': Batman_Transit_Eclipse_PhaseCurve,

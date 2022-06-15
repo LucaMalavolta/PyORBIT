@@ -13,7 +13,7 @@ except ImportError:
     pass
 
 
-class PyTransit_Transit(AbstractModel, AbstractTransit):
+class PyTransit_Transit_With_TTV(AbstractModel, AbstractTransit):
 
     def __init__(self, *args, **kwargs):
 
@@ -37,9 +37,19 @@ class PyTransit_Transit(AbstractModel, AbstractTransit):
         self.pytransit_models = {}
         self.pytransit_plot = {}
 
+        """ Dataset-specific time of transit boundaries are stored here"""
+        self.transit_time_boundaries = {}
+
+
     def initialize_model(self, mc, **kwargs):
+        """ Force the use of the central time of transit"""
+        self.use_time_of_transit = True
+
         self._prepare_planetary_parameters(mc, **kwargs)
         self._prepare_limb_darkening_coefficients(mc, **kwargs)
+
+        self.list_pams_common.discard('Tc')
+        self.list_pams_dataset.update(['Tc'])
 
     def initialize_model_dataset(self, mc, dataset, **kwargs):
         self._prepare_dataset_options(mc, dataset, **kwargs)
@@ -51,6 +61,16 @@ class PyTransit_Transit(AbstractModel, AbstractTransit):
         self.pytransit_models[dataset.name_ref].set_data(dataset.x0,
                                                          exptimes=self.code_options[dataset.name_ref]['exp_time'],
                                                          nsamples=self.code_options[dataset.name_ref]['sample_factor'])
+
+    def define_special_variable_properties(self,
+                                           ndim,
+                                           output_lists,
+                                           dataset_name,
+                                           var):
+
+        if var == 'Tc' and (var not in self.bounds[dataset_name]):
+            self.bounds[dataset_name][var] = self.code_options[dataset_name]['Tc_boundaries']
+        return ndim, output_lists, False
 
     def compute(self, variable_value, dataset, x0_input=None):
         """
