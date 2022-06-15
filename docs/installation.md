@@ -28,40 +28,81 @@ LINUX, macOS: conda activate pyorbit
 
 You can then install `PyORBIT` by using `pip` inside the code repository:
 
-```{code} bash 
+```{code} bash
  pip install pyorbit-package
 ```
 
-Note that the name is 
-
-
-To download `PyORBIT` from the repository:
+Note that the name is  `pyorbit-package` and not  `pyorbit`, as the former was already taken by another package in PyPI (altough not installable). The name for package importation will still be `pyorbit`:
 
 ```{code} bash
-git clone https://github.com/LucaMalavolta/PyORBIT.git
+ python -c "import pyorbit"
+```
+
+## Install from the repository
+
+Download the latest version from the GitHub repository:
+
+```{code} bash
+ git clone https://github.com/LucaMalavolta/PyORBIT.git
 ```
 
 You can then install `PyORBIT` by using `pip` inside the code repository:
 
-```{code} bash cd PyORBIT pip install .
+```{code} bash 
+ cd PyORBIT
+ pip install .
 ```
 
-(requirements-label)=
+Alternatively, you can install `PyORBIT` using the `setup.py` file:
+
+```{code} bash
+ cd PyORBIT
+ python setup.py install
+```
 
 ## Requirements
 
-This is the list of packages required by PyORBIT to work out-of-the-box:
+```{admonition} Give people credit for their work
+
+If you are using any of those packages listed above, *please be sure to cite the proper references*, as stated in the relative web page. 
+```
+
+These packages are installed automatically when using pip.
 
 - `numpy`, `scipy`, `matplotlib`: pretty standard
-- `argparse`: required to pass terminal keywords
-- `pyyaml`: YAML is the language used for the configuration file
-- `corner`: to make corner plots ([corner.py home page])
+-  `numba`: open source JIT compiler, actually required as undeclared dependency by some packages ([numba home page])
+- `argparse`: Parser for command-line options, arguments and sub-commands, required to pass terminal keywords ([argpares home page])
+- `pyyaml`: a full-featured YAML framework for the Python programming language.  YAML is the language used for the configuration file ([pyyaml home page], [yaml home page])
 - `h5py`: HDF5 for Python ([h5py home page])
+- `pygtc`: Make a publication-ready giant-triangle-confusogram (GTC) ([pygtc home page])
+- `tqdm`: A Fast, Extensible Progress Bar for Python and CLI ([tqdm home page])
 
-Basic analysis can be performed using the `scipy.optimize` package, however to fully unwind the power of `PyORBIT` I strongly recommend these two packages (already included in the requirements):
-\- `pyDE`: global optimization package ([PyDE home page])
-\- `emcee`: ensemble sampling toolkit for affine-invariant MCMC ([emcee home page])
+Basic analysis can be performed using the `scipy.optimize` package, however to fully unwind the power of `PyORBIT` these two packages should be installed:
 
+ - `pyDE`: global optimization package ([PyDE home page])
+ - `emcee`: ensemble sampling toolkit for affine-invariant MCMC ([emcee home page]). 
+
+`emcee` is already included in the requirements, `pyDE` needs to be installed separately as the GitHub version supports multiprocessing: 
+
+```{code} bash
+ pip install git+https://github.com/hpparvi/PyDE.git
+```
+
+THe alternative ensemble slice sampler `zeus` is supported as well ([zeus home page]).
+
+````{tip}
+ `pyDE` and all the additional requirements can be installed by locating the `extra_requirements.txt` file in the [PyORBIT repository] or by downloading it directly [from here](https://github.com/LucaMalavolta/PyORBIT/blob/main/extra_requirements.txt) and then running from a terminal:
+
+ ```{code} bash
+ pip install -r extra_requirements.txt
+ ```
+
+````
+[extra_requirements.txt]: https://github.com/LucaMalavolta/PyORBIT/blob/main/extra_requirements.txt
+
+## Additional requirements
+
+<!---
 Simply speaking, `PyDE` searches for the best global solution and passes it to `emcee`, ensuring that the MCMC will not be stuck around a local minimum of the chi-square. The `PyDE` + `emcee` combination is the easiest to install and set up, but it is possible to specify the starting point of `emcee` instead of using the outcome of `PyDE`.
 It is possible to use other samplers as well, such as:
 
@@ -78,47 +119,58 @@ Additional packages may be required to perform certain types of analysis:
 - `TTVfast` : transit times for and radial velocities for n-planet systems ([TTVfast home page])
 - `cython` : C extension for Python ([Cython home page])
 - `getdist`: For the analysis of MCMC chains ([getdist home page])
+-->
+Depending on the kind of analysis you want to perform, you may need the following packages:
 
-If you are using any of those packages listed above, please be sure to cite the proper references, as stated in their web page
+Transit modelling:
 
-## Instructions
+- `batman`: Bad-Ass Transit Model cAlculatioN ([BATMAN home page])
+- `PyTransit`: a package for exoplanet transit light curve modelling ([Pttransit home page])
 
-### `pyDE`
+Gaussian Process Regression:
 
-Installing from pip will results in an error, so you have to install the most up-to-date version from source using the following commands:
+- `george`: a fast and flexible Python library for Gaussian process regression ([george home page])
+- `celerite` or `celerite2`: an algorithm for fast and scalable Gaussian process regression ([celerite home page], [celerite2 home page])
+
+Nersted Sampling:
+
+- `dynesty`: a pure Python Dynamic Nested Sampling package for estimating Bayesian posteriors and evidences ([dynesty home page])
+- `UltraNest`: fit and compare complex models reliably and rapidly with advanced sampling techniques ([UltraNest home page])
+
+Other models:
+
+- `PyAstronomy`: a collection of astronomy related packages ([PyAstronomy home page])
+- `starry`: a suite of tools for mapping stars and exoplanets based on timeseries data ([starry home page])
+- `spiderman`: A fast code to simulate secondary transits and phase curves ([spiderman home page])
+
+````{warning}
+ `spiderman` installation with recent version of matplotlib will fail, a working version can be found [at this repository] and can be installed directly from terminal with this comand:
 
 ```{code} bash
-git clone https://github.com/hpparvi/PyDE.git
-cd PyDE
-python setup.py install
+pip install git+https://github.com/LucaMalavolta/SPIDERMAN.git
 ```
+````
 
-From the [pyDE source repository]
+[PyORBIT repository]: https://github.com/LucaMalavolta/PyORBIT
 
-[batman home page]: https://www.cfa.harvard.edu/~lkreidberg/batman/
-[brew]: https://brew.sh
-[celerite home page]: https://github.com/dfm/celerite
-[celerite installation page]: http://celerite.readthedocs.io/en/stable/python/install/
-[corner.py home page]: https://github.com/dfm/corner.py
-[cython]: http://cython.org/
-[cython home page]: http://cython.org/
-[distutils]: https://docs.python.org/2/extending/building.html
-[dynesty home page]: https://github.com/joshspeagle/dynesty
-[emcee home page]: https://github.com/dfm/emcee
-[fixing missing headers for homebrew in mac os x mojave (from the caffeinated engineer)]: https://silvae86.github.io/sysadmin/mac/osx/mojave/beta/libxml2/2018/07/05/fixing-missing-headers-for-homebrew-in-mac-osx-mojave/
-[george home page]: https://github.com/dfm/george
-[george installation page]: http://george.readthedocs.io/en/latest/user/quickstart/#installation
-[getdist home page]: https://github.com/cmbant/getdist
-[h5py home page]: http://docs.h5py.org/en/stable
-[hyperthreading]: https://superuser.com/questions/96001/why-does-my-intel-i7-920-display-8-cores-instead-of-4-cores
-[multinest home page]: https://github.com/farhanferoz/MultiNest
-[openmpi]: https://www.open-mpi.org/
-[polychordlite home page]: https://github.com/PolyChord/PolyChordLite
-[pyde home page]: https://github.com/hpparvi/PyDE
-[pyde source repository]: https://github.com/hpparvi/PyDE
-[pymultinest]: https://github.com/JohannesBuchner/PyMultiNest
-[pymultinest documentation]: http://johannesbuchner.github.io/PyMultiNest/
-[pymultinest home page]: https://github.com/JohannesBuchner/PyMultiNest
-[trades home page]: https://github.com/lucaborsato/trades
-[ttvfast home page]: https://github.com/kdeck/TTVFast
+[numba home page]: https://numba.pydata.org/
+[tqdm home page]: https://tqdm.github.io/
+[pygtc home page]: https://pygtc.readthedocs.io/
+[argpares home page]: https://docs.python.org/3/library/argparse.html
+[pyyaml home page]: https://pyyaml.org/
+[yaml home page]: https://yaml.org/
+[emcee home page]: https://emcee.readthedocs.io/
+[h5py home page]: http://docs.h5py.org/
+[zeus home page]: https://zeus-mcmc.readthedocs.io/
 
+[BATMAN home page]: https://github.com/lkreidberg/batman
+[celerite home page]: https://celerite.readthedocs.io/
+[celerite2 home page]: https://celerite2.readthedocs.io/
+[PyTransit home page]: https://pytransit.readthedocs.io/
+[george home page]: https://george.readthedocs.io/
+[dynesty home page]: https://dynesty.readthedocs.io/
+[UltraNest home page]: https://johannesbuchner.github.io/UltraNest/index.html
+[PyAstronomy home page]: https://pyastronomy.readthedocs.io/
+[starry home page]: https://starry.readthedocs.io/
+[spiderman home page]: https://spiderman.readthedocs.io/en/latest/
+[at this repository]: https://github.com/LucaMalavolta/SPIDERMAN

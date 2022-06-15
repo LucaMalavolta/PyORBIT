@@ -12,6 +12,7 @@ or keep it fixed if necessary. Thanks to abstraction, it is virtually possible t
 Every information you need to analyze your data is contained in an easy-to-use and portable configuration file in the ``yaml`` format.
 Alternatively, for easy automatization, PyORBIT can be called as a Python function by passing a dictionary instead of a configuration file.
 
+<!---
 ..
   One of the main strength of PyORBIT is in the abstraction of the models. For
   example,  you can use more than one Gaussian process, with independent
@@ -19,6 +20,7 @@ Alternatively, for easy automatization, PyORBIT can be called as a Python functi
   Alternatively, for your Gaussian process regression you can use "celerite" on
   your light curve and "george " on your radial velocities, by having them sharing
   the same hyper-parameters.
+-->
 
 ``PyORBIT`` started in 2015 as an exercise to learn Python (2), and also because at
 the time the only publicly available code for the Bayesian analysis of RVs was
