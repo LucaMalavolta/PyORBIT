@@ -10,7 +10,7 @@ this_directory = Path(__file__).parent
 long_description = (this_directory / "README.md").read_text()
 
 setup(
-    name="pyorbit",
+    name="pyorbit-package",
     version='9.0',
     author="Luca Malavolta",
 	author_email = 'luca.malavolta@unipd.it',

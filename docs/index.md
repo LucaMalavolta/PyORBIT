@@ -37,11 +37,11 @@ Feel free to submit your retrofitting acronym!
 [github-badge]: https://img.shields.io/badge/GitHub-PyORBIT-blue
 [github-link]: https://github.com/LucaMalavolta/PyORBIT
 
-
-```{eval-rst}
-.. image::  https://img.shields.io/badge/GitHub-PyORBIT-blue
+..
+ ```{eval-rst}
+ .. image::  https://img.shields.io/badge/GitHub-PyORBIT-blue
   :target: https://github.com/LucaMalavolta/PyORBIT
-```
+ ```
 
 
 ```{admonition} Be careful
