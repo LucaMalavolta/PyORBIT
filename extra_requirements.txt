@@ -24,3 +24,10 @@ george
 #--- nested sampling
 dynesty
 ultranest
+#--- RML
+pyastronomy
+starry
+# other packages
+opencv-python
+spiderman-package @ git+https://github.com/LucaMalavolta/SPIDERMAN.git
+zeus
