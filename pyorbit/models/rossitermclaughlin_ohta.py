@@ -31,11 +31,12 @@ class RossiterMcLaughling_Ohta(AbstractModel, AbstractTransit):
             'omega',  # argument of pericenter (in radians)
             'lambda', # Sky-projected angle between stellar rotation axis and normal of orbit plane [deg]
             'R_Rs',  # planet radius (in units of stellar radii)
-            'i_star', # Inclination of the star
             'v_sini' # projected rotational velocity of the star
         }
 
         self.use_stellar_radius = True
+        self.use_stellar_period = True
+        self.use_stellar_inclination = False
 
         self.rm_ohta = None
 
@@ -60,9 +61,6 @@ class RossiterMcLaughling_Ohta(AbstractModel, AbstractTransit):
             print(' this model accepts only linear limb-darkening coefficients')
             print()
 
-        print(self.common_ref)
-        quit()
-
     def compute(self, variable_value, dataset, x0_input=None):
         """
         :param variable_value:
@@ -74,8 +72,8 @@ class RossiterMcLaughling_Ohta(AbstractModel, AbstractTransit):
 
         var_a, var_i = self.retrieve_ai(variable_value)
         var_tc = self.retrieve_t0(variable_value, dataset.Tref)
+        var_Omega, var_Is = self.retrieve_Omega_Istar(variable_value)
 
-        Omega = variable_value['v_sini'] / (variable_value['radius'] * constants.Rsun) / np.sin(variable_value['i_star']/180.*np.pi)
         if self.orbit == 'circular':
             self.rm_ohta.assignValue({"a": var_a,
                             "lambda": variable_value['lambda']/180.*np.pi,
@@ -83,8 +81,8 @@ class RossiterMcLaughling_Ohta(AbstractModel, AbstractTransit):
                             "P": variable_value['P'],
                             "T0": var_tc,
                             "i": var_i/180.*np.pi,
-                            "Is": variable_value['i_star']/180.*np.pi,
-                            "Omega": Omega,
+                            "Is": var_Is/180.*np.pi,
+                            "Omega": var_Omega,
                             "gamma": variable_value['R_Rs']})
         else:
 
@@ -107,8 +105,8 @@ class RossiterMcLaughling_Ohta(AbstractModel, AbstractTransit):
                 "i": var_i/180.*np.pi,
                 "w": variable_value['omega']/180.*np.pi-np.pi,
                 "e":variable_value['e'],
-                "Is": variable_value['i_star']/180.*np.pi,
-                "Omega": Omega,
+                "Is": var_Is/180.*np.pi,
+                "Omega": var_Omega,
                 "gamma": variable_value['R_Rs']})
 
         if x0_input is None:
