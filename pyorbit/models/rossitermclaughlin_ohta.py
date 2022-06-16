@@ -60,6 +60,9 @@ class RossiterMcLaughling_Ohta(AbstractModel, AbstractTransit):
             print(' this model accepts only linear limb-darkening coefficients')
             print()
 
+        print(self.common_ref)
+        quit()
+
     def compute(self, variable_value, dataset, x0_input=None):
         """
         :param variable_value:

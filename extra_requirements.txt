@@ -1,33 +1,35 @@
-numpy
-numba
-scipy
-matplotlib
+###### Requirements with Version Specifiers ######
+numpy >=1.18, <1.23
+numba >=0.55
+scipy >=1.8.1
+matplotlib >=3.5.2
+emcee >=3.1.2
+###### Requirements without Version Specifiers ######
 argparse
-emcee
 pyyaml
 h5py
 tqdm
 pygtc
 PyDE @ git+https://github.com/hpparvi/PyDE.git
-#--- multiporcessing (not sure if required)
+###### multiporcessing (not sure if required)
 #gxx_linux-64
 #mpy4py
 batman-package
-#--- pytransit
+###### pytransit
 arviz
-celerite
+celerite >= 0.4.1
 corner
-pytransit
-#--- GP regression
-celerite2
-george
-#--- nested sampling
-dynesty
-ultranest
-#--- RML
+pytransit >= 2.5.21
+###### GP regression
+celerite2 == 0.2.1
+george >= 0.4.0
+###### nested sampling
+dynesty >= 1.2.3
+ultranest >= 3.4.4
+###### RML
 pyastronomy
-starry
-# other packages
+starry >= 1.2.0
+####### other packages
 opencv-python
 spiderman-package @ git+https://github.com/LucaMalavolta/SPIDERMAN.git
 zeus-mcmc
