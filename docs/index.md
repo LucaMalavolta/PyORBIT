@@ -1,5 +1,10 @@
-PyORBIT: the ultimate tool for exoplanet characterization!
-==========================================================
+# PyORBIT
+## a code for exoplanet orbital parameters and stellar activity.
+<!---
+## the ultimate tool for exoplanet characterization
+--->
+
+[![GitHub][github-badge]][github-link]
 
 ``PyORBIT`` is a robust, versatile framework for the characterization of planetary systems.
 With ``PyORBIT`` you can model light curves, radial velocities, activity indexes and transit time variations.
@@ -22,32 +27,32 @@ Alternatively, for easy automatization, PyORBIT can be called as a Python functi
   the same hyper-parameters.
 -->
 
+## References
+
+If you find `PyORBIT` useful for your work, please cite [Malavolta et al. (2016)](https://ui.adsabs.harvard.edu//#abs/2016A&A...588A.118M/abstract) and [Malavolta et al. (2018)](https://ui.adsabs.harvard.edu//#abs/2018AJ....155..107M/abstract).
+
+<!---
+PyORBIT has been used in the following works 
+--->
+
+
+## Some background
+
 ``PyORBIT`` started in 2015 as an exercise to learn Python (2), and also because at
 the time the only publicly available code for the Bayesian analysis of RVs was
-written in IDL, for which I didn't have a license. Since then I've been added new options
-every time I needed so, and I kept updating the code while improving my Python skills.
-
-``PyORBIT`` has been now converted and tested for Python 3, but it should still
-be back-compatible with Python 2 (at your own risk).
+written in IDL, for which I didn't have a license. Since then I've been added new options every time I needed, and I kept updating the code while improving my Python skills.
 
 If you are wondering what ``PyORBIT`` stands for: I am bad at acronym creation so
 I decided to write it with capitol *ORBIT* just because I liked how it looked.
 Feel free to submit your retrofitting acronym!  
 
-[![GitHub][github-badge]][github-link]
+``PyORBIT`` has been now converted and tested for Python 3 fow a while, back-compatibitlity with Python 2 is not guaranteed anymore at least since version 8.0. If you havn't done it already, I strongly suggest you to move to Python 3.
 
 [github-badge]: https://img.shields.io/badge/GitHub-PyORBIT-blue
 [github-link]: https://github.com/LucaMalavolta/PyORBIT
 
-..
- ```{eval-rst}
- .. image::  https://img.shields.io/badge/GitHub-PyORBIT-blue
-  :target: https://github.com/LucaMalavolta/PyORBIT
- ```
-
-
 ```{admonition} Be careful
-Documentation is still work in progress
+Documentation is still work in progress!
 ```
 
 ```{eval-rst}
@@ -59,8 +64,9 @@ Documentation is still work in progress
    prepare_datasets
    prepare_yaml
    api
+```
 
-
+<!---
 
 ..
   Following `PEP 8 Style Guide for Python Code <https://www.python.org/dev/peps/pep-0008/>`_  ,
@@ -74,10 +80,6 @@ Documentation is still work in progress
   * :ref:`modindex`
   * :ref:`search`
 
+--->
 
-..
- https://sphinx-book-theme.readthedocs.io/
- https://myst-parser.readthedocs.io/
-
-
-```
+This documentation has been rendered using the [Sphinx Book Theme](https://sphinx-book-theme.readthedocs.io/) and the [Myst parser](https://myst-parser.readthedocs.io/)

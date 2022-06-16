@@ -30,4 +30,4 @@ starry
 # other packages
 opencv-python
 spiderman-package @ git+https://github.com/LucaMalavolta/SPIDERMAN.git
-zeus
+zeus-mcmc
