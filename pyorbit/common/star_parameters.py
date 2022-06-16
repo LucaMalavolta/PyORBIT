@@ -49,6 +49,14 @@ class CommonStarParameters(AbstractCommon):
                 'fixed' : 1.6,
                 'unit': 'km/s',
             },
+        'rotation_period': # Rotation period of the star
+            {
+                'bounds': [1., 1000.],
+                'priors': ['Uniform', []],
+                'spaces': 'Linear',
+                'fixed' : 27,
+                'unit': 'days',
+            },
         'temperature': # Effective temperature of the photosphere
             {
                 'bounds': [2000., 11000.],
