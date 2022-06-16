@@ -31,5 +31,4 @@ pyastronomy
 starry >= 1.2.0
 ####### other packages
 opencv-python
-spiderman-package @ git+https://github.com/LucaMalavolta/SPIDERMAN.git
 zeus-mcmc
