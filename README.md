@@ -48,12 +48,14 @@
   ```
 
 **Working on it**
+
   * Rossiter-McLaughlin through `starry` [(Luger et al. 2019)](https://ui.adsabs.harvard.edu/abs/2019AJ....157...64L/abstract)
   * Multi-component GP for light curves (Rotation + Granulation, Rotation + Granulation + Oscillations), following [Barros et al. 2020](https://ui.adsabs.harvard.edu/abs/2020A%26A...634A..75B/abstract).
 
 **Samplers**
 
-  Bayesian evidence estimation can now be performed with:
+Bayesian evidence estimation can now be performed with:
+
   * `dynesty` by Josh Speagle [dynesty documentation](https://dynesty.readthedocs.io/en/latest/), [code repository](https://github.com/joshspeagle/dynesty/)
   * `UltraNest` by Johannes Buchner [UltraNest documentation](https://johannesbuchner.github.io/UltraNest/), [code repository](https://github.com/JohannesBuchner/UltraNest/)
   * Multinest and Polychord support is still there, but not supported anymore

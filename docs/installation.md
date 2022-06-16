@@ -70,7 +70,7 @@ If you are using any of those packages listed above, *please be sure to cite the
 These packages are installed automatically when using pip.
 
 - `numpy`, `scipy`, `matplotlib`: pretty standard
--  `numba`: open source JIT compiler, actually required as undeclared dependency by some packages ([numba home page])
+- `numba`: open source JIT compiler, actually required as undeclared dependency by some packages ([numba home page])
 - `argparse`: Parser for command-line options, arguments and sub-commands, required to pass terminal keywords ([argpares home page])
 - `pyyaml`: a full-featured YAML framework for the Python programming language.  YAML is the language used for the configuration file ([pyyaml home page], [yaml home page])
 - `h5py`: HDF5 for Python ([h5py home page])
@@ -79,8 +79,8 @@ These packages are installed automatically when using pip.
 
 Basic analysis can be performed using the `scipy.optimize` package, however to fully unwind the power of `PyORBIT` these two packages should be installed:
 
- - `pyDE`: global optimization package ([PyDE home page])
- - `emcee`: ensemble sampling toolkit for affine-invariant MCMC ([emcee home page]). 
+- `pyDE`: global optimization package ([PyDE home page])
+- `emcee`: ensemble sampling toolkit for affine-invariant MCMC ([emcee home page]). 
 
 `emcee` is already included in the requirements, `pyDE` needs to be installed separately as the GitHub version supports multiprocessing: 
 
@@ -98,6 +98,7 @@ THe alternative ensemble slice sampler `zeus` is supported as well ([zeus home p
  ```
 
 ````
+
 [extra_requirements.txt]: https://github.com/LucaMalavolta/PyORBIT/blob/main/extra_requirements.txt
 
 ## Additional requirements
