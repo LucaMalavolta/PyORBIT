@@ -262,10 +262,34 @@ def nested_sampling_prior_prepare(kind, bounds, pams, space):
     :return:
     """
 
-    if kind in ['Uniform']:
+    if kind == 'Uniform':
         return bounds
 
-    if kind in ['Uniform', 'Gaussian', 'BetaDistribution', 'Beta', 'beta']:
+    elif kind == 'Gaussian':
+        out_array = np.empty(6)
+        out_array[0] = pams[0]
+        out_array[1] = pams[1]
+        out_array[4] = (bounds[0] - pams[0]) / pams[1]
+        out_array[5] = (bounds[1] - pams[0]) / pams[1]
+        return out_array
+
+    elif kind in ['HalfGaussian', 'PositiveHalfGaussian']:
+        out_array = np.empty(6)
+        out_array[0] = pams[0]
+        out_array[1] = pams[1]
+        out_array[4] = 0.00
+        out_array[5] = (bounds[1] - pams[0]) / pams[1]
+        return out_array
+
+    elif kind in ['NegativeHalfGaussian']:
+        out_array = np.empty(6)
+        out_array[0] = pams[0]
+        out_array[1] = pams[1]
+        out_array[2] = (bounds[0] - pams[0]) / pams[1]
+        out_array[3] = 0.00
+        return out_array
+
+    elif kind in ['BetaDistribution', 'Beta']:
         return pams
 
     """ All the following priors are defined only if the variable is sampled in the Natural space"""
@@ -305,29 +329,29 @@ def nested_sampling_prior_compute(val, kind, coeff, space):
     if kind == 'Uniform':
         return val * (coeff[1] - coeff[0]) + coeff[0]
 
-    if kind == 'Gaussian':
-        if space == 'Logarithmic':
-            return np.log2(stats.norm.isf(val, coeff[0], coeff[1]))
-        else:
-            return stats.norm.isf(val, coeff[0], coeff[1])
+    if kind in ['Gaussian', 'HalfGaussian', 'PositiveHalfGaussian', 'NegativeHalfGaussian']:
+        x_new = stats.truncnorm.ppf(val, coeff[2], coeff[3]) * coeff[1] +  coeff[0]
 
-    #if kind == 'HalfGaussian' or kind=='PositiveHalfGaussian':
-    #    if space == 'Logarithmic':
-    #        return np.log2(stats.truncnorm.isf(val, 0, 20*coeff[1], coeff[0], coeff[1]))
-    #    else:
-    #        return stats.norm.isf(val, 0, 20*coeff[1], coeff[0], coeff[1])
+        if space == 'Linear':
+            return x_new
+        elif space in ['Log_Base2', 'Logarithmic']:
+            return np.log2(x_new)
+        elif space == 'Log_Base10':
+            return np.log10(x_new)
+        elif space == 'Log_Natural':
+            return np.log(x_new)
 
-    #if kind == 'NegativeHalfGaussian':
-    #    if space == 'Logarithmic':
-    #        return np.log2(stats.truncnorm.isf(val, -20*coeff[1], 0, coeff[0], coeff[1]))
-    #    else:
-    #        return stats.norm.isf(val, 20*coeff[1], 0, coeff[0], coeff[1])
+    elif kind in ['BetaDistribution', 'Beta']:
+        x_new = stats.beta.ppf(val, coeff[0], coeff[1])
 
-    elif kind in ['BetaDistribution', 'Beta', 'beta']:
-        if space == 'Logarithmic':
-            return np.log2(stats.norm.isf(stats.beta.isf(val, coeff[0], coeff[1])))
-        else:
-            return stats.beta.isf(val, coeff[0], coeff[1])
+        if space == 'Linear':
+            return x_new
+        elif space in ['Log_Base2', 'Logarithmic']:
+            return np.log2(x_new)
+        elif space == 'Log_Base10':
+            return np.log10(x_new)
+        elif space == 'Log_Natural':
+            return np.log(x_new)
 
     return splev(val, coeff)
 
