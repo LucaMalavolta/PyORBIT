@@ -150,6 +150,8 @@ Other models:
 ```{code} bash
 pip install git+https://github.com/LucaMalavolta/SPIDERMAN.git
 ```
+
+as the installation of this package may result problematic for its many dependencies, it has been excluded from the `extra_requirements.txt` file.
 ````
 
 [PyORBIT repository]: https://github.com/LucaMalavolta/PyORBIT
