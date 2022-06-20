@@ -91,7 +91,7 @@ Basic analysis can be performed using the `scipy.optimize` package, however to f
 THe alternative ensemble slice sampler `zeus` is supported as well ([zeus home page]).
 
 ````{tip}
- `pyDE` and all the additional requirements can be installed by locating the `extra_requirements.txt` file in the [PyORBIT repository] or by downloading it directly [from here](https://github.com/LucaMalavolta/PyORBIT/blob/main/extra_requirements.txt) and then running from a terminal:
+ `pyDE` and all the additional requirements can be installed by locating the `extra_requirements.txt` file in the [PyORBIT repository] or by downloading it directly [from here]([https://github.com/LucaMalavolta/PyORBIT/blob/main/extra_requirements.txt](https://raw.githubusercontent.com/LucaMalavolta/PyORBIT/main/extra_requirements.txt) and then running from a terminal:
 
  ```{code} bash
  pip install -r extra_requirements.txt
