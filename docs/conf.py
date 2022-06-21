@@ -108,9 +108,9 @@ html_theme_options = {
     "repository_url": "https://github.com/LucaMalavolta/PyORBIT",
     "use_repository_button": True,
     #"home_page_in_toc": True,
-    "show_navbar_depth": 2,
+    "show_navbar_depth": 3,
     "logo_only": True,
-    "show_related": True
+    #"show_related": True
 }
 
 

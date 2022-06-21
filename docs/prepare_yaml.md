@@ -1,28 +1,28 @@
-.. _prepare_yaml:
+# Prepare a configuration file
 
-Prepare a configuration file
-============================
+The configuration file is the most important part of your analysis, because it will contain the specifics of your model,
+the priors you want to assign to the parameters, and the way you want to analyze your data.
+Thanks to the readability of the YAML language, it will also serve as a useful memento at a glance for the set-up of your model.
 
-The configuration file is the most important part of your analysis, because it will contain the specifics of your model, the priors you want to assign to the parameters, and the way you want to analyze your data. Thanks to the readability of the YAML language, it will also serve as a useful memento at a glance for the set-up of your model.
-
-File structure
---------------
+## File structure
 
 The file is divided in several sections, each one with a clear purpose:
 
-- ``inputs``: here you list the files containing the datasets
+- ``inputs``: here you list the files containing the datasets.
 - ``common``: the physical parameters of your planetary system that are going to be shared between the models (and are independent from them): orbital parameters of the planets, mass and radius of the star, rotational period and decay timescale of the active regions...
-- ``models``: this is where you specific how the physical elements of the system in the *common* section are going to influence your data: which planets include in the radial velocity computation, what kind of model/kernel you want to use to model the activity...
-- ``parameters``: values that are not system parameters per se, but are required for the correctness of the analysis
-- ``solver``: the parameters required by PyDE, emcee, or MultiNest are all listed here
+- ``models``: this is where you specific how the physical elements of the system in the *common* section are going to influence your data: which planets should be included in the radial velocity computation, what kind of model/kernel you want to use to model the activity...
+- ``parameters``: values that are not system parameters per se, but are required to properly perform the analysis.
+- ``solver``: the parameters required by the samplers are all listed here.
 
+<!---
 To have a glance at how a configuration file looks like, check the .. _documentation_example.yaml: http://cnn.com/:
+--->
 
-Adding a dataset
-----------------
+## Adding a dataset
 
 Datasets are grouped under the input section:
 
+```{eval-rst}
 .. code-block:: yaml
    :linenos:
 
@@ -33,6 +33,7 @@ Datasets are grouped under the input section:
        models:
          - rv_model
          - gp_regression
+```
 
 - ``RVdata``: the label to identify the dataset. The same label must be used later in the file if we need to specify a property of the dataset.
 - ``file``: the file including the dataset.
@@ -61,6 +62,7 @@ The physical *objects* of your system must be included in the ``common`` section
 
 Let's have a look at this example where we have included a transiting planet in a circular orbit (*b*), a non-transiting planet (*c*), some properties for the stellar activity, and of of course the stellar parameters.
 
+```{eval-rst}
 .. code-block:: yaml
    :linenos:
 
@@ -101,7 +103,10 @@ Let's have a look at this example where we have included a transiting planet in 
          priors:
            radius: ['Gaussian', 0.681, 0.018]
            mass: ['Gaussian', 0.708, 0.028]
-           rho: ['Gaussian', 2.244, 0.161]
+           density: ['Gaussian', 2.244, 0.161]
+
+```
+
 
 Quite a lot to process, right? Let's start with the main sections. ``planets`` and ``star`` are kind special because the section names are also the reference name of the objects, i.e., these names are hard coded and if you try to put planet or star parameters in sections with different names you will break everything. The reason is that ``planets``  and ``star`` are actually containers for the true objects, which are ``b``, ``c`` (see the relative documentation for more details). ``stellar_activity`` instead is a label for the object with reference names ``activity``, e.g., if you want to know more you have to look for the object named ``activity`` in the documentation  and for the file ``activity.py`` in the source code. Note that if you are including just a single object of a kind, you can use its reference name as label and omit the ``type`` keyword, as in actual example file in the repository.
 
