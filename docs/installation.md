@@ -1,3 +1,5 @@
+(installation)=
+
 # Installing PyORBIT
 
 ## Setting up an environment

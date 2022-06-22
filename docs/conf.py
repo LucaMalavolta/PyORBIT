@@ -34,8 +34,11 @@ import pyorbit
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
-extensions = ['myst_parser','sphinx.ext.autodoc',
+extensions = ['myst_parser',
+    "sphinx.ext.autosummary",
+    'sphinx.ext.autodoc',
     'sphinx.ext.mathjax',
+    "sphinx.ext.viewcode",
     'sphinx.ext.napoleon']
 
 myst_enable_extensions = ["dollarmath", "colon_fence"]
@@ -46,7 +49,11 @@ templates_path = ['_templates']
 # The suffix(es) of source filenames.
 # You can specify multiple suffix as a list of string:
 #
-source_suffix = ['.rst', '.md']
+#source_suffix = ['.rst', '.md']
+source_suffix = {
+    ".rst": "restructuredtext",
+    ".ipynb": "myst-nb",
+}
 #source_suffix = '.rst'
 
 # The master toctree document.
@@ -106,7 +113,9 @@ html_sourcelink_suffix = ""
 html_theme_options = {
     "path_to_docs": "docs",
     "repository_url": "https://github.com/LucaMalavolta/PyORBIT",
+    "repository_branch": "main",
     "use_repository_button": True,
+    "use_issues_button": True,
     #"home_page_in_toc": True,
     "show_navbar_depth": 3,
     "logo_only": True,
@@ -119,23 +128,18 @@ html_theme_options = {
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ['_static']
 
-# These paths are either relative to html_static_path
-# or fully qualified paths (eg. https://...)
-#html_css_files = [
-#    'graphite.css',
-#]
 
 # Custom sidebar templates, must be a dictionary that maps document names
 # to template names.
 #
 
-html_sidebars = {
-    '**': ['sidebar-logo.html','search-field.html',
-        'globaltoc.html',
-        'relations.html',  # needs 'show_related': True theme option to display
-#        #'searchbox.html',
-    ]
-}
+#html_sidebars = {
+#    '**': ['sidebar-logo.html','search-field.html',
+#        'globaltoc.html',
+#        'relations.html',  # needs 'show_related': True theme option to display
+##        #'searchbox.html',
+#    ]
+#}
 
 
 # -- Options for HTMLHelp output ------------------------------------------

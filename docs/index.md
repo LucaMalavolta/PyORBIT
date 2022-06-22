@@ -55,6 +55,17 @@ Feel free to submit your retrofitting acronym!
 Documentation is still work in progress!
 ```
 
+## Table of contents
+
+```{toctree}
+:maxdepth: 2
+installation
+prepare_datasets
+prepare_yaml
+GitHub Repository <https://github.com/LucaMalavolta/PyORBIT>
+```
+
+<!--- 
 ```{eval-rst}
 .. toctree::
    :maxdepth: 2
@@ -65,6 +76,7 @@ Documentation is still work in progress!
    prepare_yaml
    api
 ```
+--->
 
 <!---
 
