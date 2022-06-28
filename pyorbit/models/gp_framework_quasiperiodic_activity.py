@@ -164,11 +164,11 @@ class GP_Framework_QuasiPeriodicActivity(AbstractModel):
     def _compute_distance(self, bjd0, bjd1):
         X0 = np.array([bjd0]).T
         X1 = np.array([bjd1]).T
-        # Change after Rajpaul, priv. comm.
-        #return spatial.distance.cdist(X0, X1, lambda u, v: u-v), \
-        #    spatial.distance.cdist(X0, X1, 'sqeuclidean')
-        return spatial.distance.cdist(X0, X1, lambda u, v: v-u), \
+        return spatial.distance.cdist(X0, X1, lambda u, v: u-v), \
             spatial.distance.cdist(X0, X1, 'sqeuclidean')
+        # Change after Rajpaul, Barragàn,  priv. comm.
+        #return spatial.distance.cdist(X0, X1, lambda u, v: v-u), \
+        #    spatial.distance.cdist(X0, X1, 'sqeuclidean')
 
     def _compute_cov_matrix(self, add_diagonal_errors=False, bjd0=None, bjd1=None, return_diag=False):
 
