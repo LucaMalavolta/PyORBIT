@@ -4,9 +4,9 @@ Planets Common Model
 ====================
 Can I haz planetz?
 
-.. module:: pyorbit.models.planets
+.. module:: pyorbit.common.planets
 
 Some planet stuff here
 
-.. automodule:: pyorbit.models.planets
+.. automodule:: pyorbit.common.planets
    :members:

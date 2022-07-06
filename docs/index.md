@@ -32,7 +32,7 @@ Alternatively, for easy automatization, PyORBIT can be called as a Python functi
 If you find `PyORBIT` useful for your work, please cite [Malavolta et al. (2016)](https://ui.adsabs.harvard.edu//#abs/2016A&A...588A.118M/abstract) and [Malavolta et al. (2018)](https://ui.adsabs.harvard.edu//#abs/2018AJ....155..107M/abstract).
 
 <!---
-PyORBIT has been used in the following works 
+PyORBIT has been used in the following works
 --->
 
 
@@ -44,7 +44,7 @@ written in IDL, for which I didn't have a license. Since then I've been added ne
 
 If you are wondering what ``PyORBIT`` stands for: I am bad at acronym creation so
 I decided to write it with capitol *ORBIT* just because I liked how it looked.
-Feel free to submit your retrofitting acronym!  
+Feel free to submit your retrofitting acronym!
 
 ``PyORBIT`` has been now converted and tested for Python 3 fow a while, back-compatibitlity with Python 2 is not guaranteed anymore at least since version 8.0. If you havn't done it already, I strongly suggest you to move to Python 3.
 
@@ -55,6 +55,17 @@ Feel free to submit your retrofitting acronym!
 Documentation is still work in progress!
 ```
 
+## Table of contents
+
+```{toctree}
+:maxdepth: 2
+installation
+prepare_datasets
+prepare_yaml
+GitHub Repository <https://github.com/LucaMalavolta/PyORBIT>
+```
+
+<!--- 
 ```{eval-rst}
 .. toctree::
    :maxdepth: 2
@@ -65,6 +76,7 @@ Documentation is still work in progress!
    prepare_yaml
    api
 ```
+--->
 
 <!---
 

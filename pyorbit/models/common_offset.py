@@ -24,14 +24,15 @@ class Offset(AbstractModel):
 
     def initialize_model_dataset(self, mc, dataset, **kwargs):
 
-        if not mc.common_models[self.common_offset_ref].default_bounds:
-            min_offset = np.min(dataset.y) - 100.
-            max_offset = np.max(dataset.y) + 100.
-        else:
+        try:
             min_offset = min(mc.common_models[self.common_offset_ref].default_bounds['offset'][0],
                              np.min(dataset.y) - 100.)
             max_offset = max(mc.common_models[self.common_offset_ref].default_bounds['offset'][1],
                              np.max(dataset.y) + 100.)
+        except KeyError:
+            min_offset = np.min(dataset.y) - 100.
+            max_offset = np.max(dataset.y) + 100.
+
         mc.common_models[self.common_offset_ref].default_bounds['offset'] = [
             min_offset, max_offset]
         dataset.shutdown_offset()

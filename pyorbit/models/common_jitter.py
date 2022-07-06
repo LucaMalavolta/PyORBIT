@@ -25,14 +25,15 @@ class Jitter(AbstractModel):
 
     def initialize_model_dataset(self, mc, dataset, **kwargs):
 
-        if not mc.common_models[self.common_jitter_ref].default_bounds:
-            min_jitter = np.min(dataset.e) / 100.
-            max_jitter = np.max(dataset.e) * 100.
-        else:
+        try:
             min_jitter = min(mc.common_models[self.common_jitter_ref].default_bounds['jitter'][0],
                              np.min(dataset.e) / 100.)
             max_jitter = max(mc.common_models[self.common_jitter_ref].default_bounds['jitter'][1],
                              np.max(dataset.e) * 100.)
+        except KeyError:
+            min_jitter = np.min(dataset.e) / 100.
+            max_jitter = np.max(dataset.e) * 100.
+
         mc.common_models[self.common_jitter_ref].default_bounds['jitter'] = [
             min_jitter, max_jitter]
         dataset.shutdown_jitter()

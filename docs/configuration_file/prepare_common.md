@@ -1,66 +1,12 @@
-.. _prepare_yaml:
+(prepare_common)=
 
-Prepare a configuration file
-============================
-
-The configuration file is the most important part of your analysis, because it will contain the specifics of your model, the priors you want to assign to the parameters, and the way you want to analyze your data. Thanks to the readability of the YAML language, it will also serve as a useful memento at a glance for the set-up of your model.
-
-File structure
---------------
-
-The file is divided in several sections, each one with a clear purpose:
-
-- ``inputs``: here you list the files containing the datasets
-- ``common``: the physical parameters of your planetary system that are going to be shared between the models (and are independent from them): orbital parameters of the planets, mass and radius of the star, rotational period and decay timescale of the active regions...
-- ``models``: this is where you specific how the physical elements of the system in the *common* section are going to influence your data: which planets include in the radial velocity computation, what kind of model/kernel you want to use to model the activity...
-- ``parameters``: values that are not system parameters per se, but are required for the correctness of the analysis
-- ``solver``: the parameters required by PyDE, emcee, or MultiNest are all listed here
-
-To have a glance at how a configuration file looks like, check the .. _documentation_example.yaml: http://cnn.com/:
-
-Adding a dataset
-----------------
-
-Datasets are grouped under the input section:
-
-.. code-block:: yaml
-   :linenos:
-
-   inputs:
-     RVdata:
-       file: K2-141_dataset/K2-141_RV_HARPN.dat
-       kind: RV
-       models:
-         - rv_model
-         - gp_regression
-
-- ``RVdata``: the label to identify the dataset. The same label must be used later in the file if we need to specify a property of the dataset.
-- ``file``: the file including the dataset.
-- ``kind``: the kind of dataset provided. This label is used only by specific models that requires a special treatment with respect to standard datasets, i.e. central times of transits must be tagged with the ``Tcent`` data type.
-- ``models``: list of models' labels to be used to analyze the dataset. If only one model is specified, it can be written on the same line without the ``-`` sign.
-
-Dataset kinds
-+++++++++++++
-The following datasets are recognized by the code. In the majority of the cases, the way the dataset is treated depends on the specified models. A list of aliases is defined to circumvent the most common typos (and to avoid checking the documentation every time...).
-
-- ``RV``: radial velocities. Aliases: ``RV``, ``RVs``, ``rv``, ``rvs``.
-- ``Phot``: photometry. Aliases: ``P``, ``Ph``, ``p``, ``ph``, ``PHOT``, ``Phot``, ``phot``, ``Photometry``, ``photometry``.
-- ``Tcent``: central times of transits. Aliases: ``Tcent``, ``TCent``, ``Tc``, ``TC``, ``T0``, ``TT``.
-- ``FWHM``: Full Width Half Maximum of the Cross-Correlation Function (CCF). Aliases: ``FWHM``, ``fwhm``.
-- ``BIS``: Bisector Inverse Span of the CCF. Aliases: ``BIS``, ``bis``.
-- ``H-alpha``: measurements of the emission in the core of the H-alpha line. Aliases: ``H``, ``HA``, ``h``, ``ha``, ``Halpha``, ``H-alpha``, ``halpha``, ``h-alpha``.
-- ``S_index``: (uncalibrated) measurements of the emission in the core of the CA H&K  lines. Aliases: ``S``, ``S_index``.
-- ``Ca_HK``: as for the S index, but with the photometric contribution removed. Aliases: ``Ca_HK``, ``logR``.
-
-.. _common-label:
-
-Include common parameters
--------------------------
+# Include common parameters
 
 The physical *objects* of your system must be included in the ``common`` section. The name of the section derives from the fact each specific model required to model a given dataset will rely on physical parameters of planets and star (and more...) that are shared with all the other models eventually employed. For example, a simultaneous fit of a radial velocity curve and a transit light curve will be characterized by a single period for the planet of interest.
 
 Let's have a look at this example where we have included a transiting planet in a circular orbit (*b*), a non-transiting planet (*c*), some properties for the stellar activity, and of of course the stellar parameters.
 
+```{eval-rst}
 .. code-block:: yaml
    :linenos:
 
@@ -101,7 +47,10 @@ Let's have a look at this example where we have included a transiting planet in 
          priors:
            radius: ['Gaussian', 0.681, 0.018]
            mass: ['Gaussian', 0.708, 0.028]
-           rho: ['Gaussian', 2.244, 0.161]
+           density: ['Gaussian', 2.244, 0.161]
+
+```
+
 
 Quite a lot to process, right? Let's start with the main sections. ``planets`` and ``star`` are kind special because the section names are also the reference name of the objects, i.e., these names are hard coded and if you try to put planet or star parameters in sections with different names you will break everything. The reason is that ``planets``  and ``star`` are actually containers for the true objects, which are ``b``, ``c`` (see the relative documentation for more details). ``stellar_activity`` instead is a label for the object with reference names ``activity``, e.g., if you want to know more you have to look for the object named ``activity`` in the documentation  and for the file ``activity.py`` in the source code. Note that if you are including just a single object of a kind, you can use its reference name as label and omit the ``type`` keyword, as in actual example file in the repository.
 
@@ -132,6 +81,8 @@ Let's focus on planet ``b`` as an example of the properties of an object. There 
 Under this section you need to list only the parameters that will be actually used by the models in ``models`` section. For example, a circular orbit does not require boundaries or priors for the eccentricity.
 
 The default choices for each possible parameter and for each section listed above are declared in the source file of the object.
+
+<!--- 
 
 Include the models
 ------------------
@@ -234,3 +185,4 @@ This is a brief explanation of the parameters associated to each keyword, please
   Add links to abstract_common model
   Add links to star and planet models
   Add documentation
+--->
