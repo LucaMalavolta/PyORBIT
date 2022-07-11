@@ -6,7 +6,7 @@ class CommonActivity(AbstractCommon):
 
     ''' all the possible parameters that can be assigned to activity models are listed here'''
     parameters_dictionary = {
-        # quasi-periodic 
+        # quasi-periodic
         'Prot':  # Rotational period of the star
             {
                 'bounds': [1.0, 1000.0],
@@ -197,6 +197,48 @@ class CommonActivity(AbstractCommon):
                 'unit': 'degrees',
             },
     }
+
+
+
+    for i_k in range(0,10):
+        # Following the priors definitions in Barros+2022
+        parameters_dictionary['grn_k'+repr(i_k) + '_period'] = {
+                'bounds': [1e-08, 100.],
+                'priors': ['Uniform', []],
+                'spaces': 'Linear',
+                'fixed' : 0.00,
+                'unit': 'days',
+        }
+        parameters_dictionary['grn_k'+repr(i_k) + '_sigma'] = {
+                'bounds': [1e-08, 100.],
+                'priors': ['Uniform', []],
+                'spaces': 'Log_Base2',
+                'fixed' : None,
+                'unit': 'as input',
+        }
+
+
+        parameters_dictionary['osc_k'+repr(i_k) + '_period'] = {
+                'bounds': [1e-08, 100.],
+                'priors': ['Uniform', []],
+                'spaces': 'Linear',
+                'fixed' : 0.00,
+                'unit': 'days',
+        }
+        parameters_dictionary['osc_k'+repr(i_k) + '_sigma'] = {
+                'bounds': [1e-08, 100.],
+                'priors': ['Uniform', []],
+                'spaces': 'Log_Base2',
+                'fixed' : None,
+                'unit': 'as input',
+        }
+        parameters_dictionary['osc_k'+repr(i_k) + '_Q0'] = {
+                'bounds': [1.00, 1e3],
+                'priors': ['Uniform', []],
+                'spaces': 'Log_Base10',
+                'fixed' : None,
+                'unit': 'as input',
+            }
 
     # legacy parameters for the second implementation of celerite
     ##'Hamp_factor',

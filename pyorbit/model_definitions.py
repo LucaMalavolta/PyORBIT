@@ -89,6 +89,7 @@ from pyorbit.models.lightcurve_linear_detrending import LightcurveLinearDetrendi
 from pyorbit.models.lightcurve_detrending import LightcurveDetrending, LocalLightcurveDetrending
 from pyorbit.models.lightcurve_poly_detrending import LightcurvePolyDetrending, LocalLightcurvePolyDetrending
 
+from pyorbit.models.celerite2_granulation_oscillation_rotation import Celerite2_Granulation_Oscillation_Rotation
 
 """
  model_requires_planets: all those models that requires AT LEAST one of the planets in the system must be listed here
@@ -158,6 +159,7 @@ define_type_to_class = {
     'gp_quasiperiodic_derivative': GaussianProcess_QuasiPeriodicActivity_Derivative,
     'gp_quasiperiodic_cosine': GaussianProcess_QuasiPeriodicCosineActivity,
     'celerite2_granulation_rotation': Celerite2_Granulation_Rotation,
+    'celerite2_granulation_oscillation_rotation': Celerite2_Granulation_Oscillation_Rotation,
     'celerite2_rotation': Celerite2_Rotation,
     'celerite2_matern32': Celerite2_Matern32,
     'celerite_matern32': Celerite_Matern32,
