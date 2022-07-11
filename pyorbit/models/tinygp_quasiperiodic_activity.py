@@ -88,7 +88,7 @@ class TinyGaussianProcess_QuasiPeriodicActivity(AbstractModel):
             x0 = dataset.x0
         else:
             x0 = x0_input
-        _, cond = self.gp[dataset.name_ref.condition(dataset.residuals, x0)
+        _, cond_gp = self.gp[dataset].name_ref.condition(dataset.residuals, x0)
         mu = cond_gp.mean
         std = np.sqrt(cond_gp.variance)
         if return_variance:
