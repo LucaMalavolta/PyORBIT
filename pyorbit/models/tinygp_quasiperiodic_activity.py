@@ -5,9 +5,21 @@ try:
     import jax
     jax.config.update("jax_enable_x64", True)
     import jax.numpy as jnp
-    import tinygp
+    from tinygp import kernels, GaussianProcess
+
 except:
     pass
+
+def _build_tinygp_quasiperiodic(params):
+    kernel = jnp.power(params['Hamp'], 2.0) \
+        * kernels.ExpSquared(scale=jnp.abs(params["Pdec"])) \
+            * kernels.ExpSineSquared(
+            scale=jnp.abs(params["Prot"]),
+            gamma=jnp.abs(params["gamma"]))
+
+    return GaussianProcess(
+        kernel, params['x0'], diag=jnp.abs(params['diag']), mean=0.0
+    )
 
 
 class TinyGaussianProcess_QuasiPeriodicActivity(AbstractModel):
@@ -25,7 +37,6 @@ class TinyGaussianProcess_QuasiPeriodicActivity(AbstractModel):
         try:
             import jax
             jax.config.update("jax_enable_x64", True)
-            import tinygp
         except ImportError:
             print("ERROR: tinygp or jax not installed, this will not work")
             quit()
@@ -43,52 +54,52 @@ class TinyGaussianProcess_QuasiPeriodicActivity(AbstractModel):
             'Hamp'  # Amplitude of the signal in the covariance matrix
         }
 
-        self.n_pams = 4
-
-        self.gp_pams_index = {
-            'Hamp': 0,  # amp2
-            'Pdec': 1,  # metric
-            'Oamp': 2,  # gamma
-            'Prot': 3  # ln_P
-        }
-
-        self.gp = {}
-
 
     @staticmethod
-    def _build_tinygp_quasiperiodic(variable_dict, diag, X):
+    @jax.jit
+    def _loss_tinygp(params):
+        gp = _build_tinygp_quasiperiodic(params)
+        return gp.log_probability(params['y'])
 
-        gamma = jnp.abs(1. / (2.*variable_dict['Oamp'] ** 2))
-        kernel = jnp.power(variable_dict['Hamp'], 2.0) \
-            * tinygp.kernels.ExpSquared(scale=jnp.abs(variable_dict["Pdec"])) \
-                * tinygp.kernels.ExpSineSquared(
-                scale=jnp.abs(variable_dict["Prot"]),
-                gamma=jnp.abs(1. / (2.*variable_dict['Oamp'] ** 2))),
+    def _residuals_tinygp(self, params):
+        gp = _build_tinygp_quasiperiodic(params)
+        _, cond_gp = gp.condition(params['y'], params['x0'])
+        return cond_gp
 
-        return tinygp.GaussianProcess(
-            kernel, X, diag=jnp.abs(diag), mean=0.0
-        )
+
 
 
     def lnlk_compute(self, variable_value, dataset):
-        """ 2 steps:
-           1) theta parameters must be converted in physical units (e.g. from logarithmic to linear spaces)
-           2) physical values must be converted to {\tt george} input parameters
-        """
-        diag = dataset.e ** 2.0 + dataset.jitter ** 2.0
-        self.gp[dataset.name_ref] = self._build_tinygp_quasiperiodic(variable_value, diag, dataset.x0)
-        return self.gp[dataset.name_ref].log_likelihood(dataset.residuals)
+        theta_dict =  dict(
+            gamma=1. / (2.*variable_value['Oamp'] ** 2),
+            Hamp=variable_value['Oamp'],
+            Pdec=variable_value['Oamp'],
+            Prot=variable_value['Oamp'],
+            diag=dataset.e ** 2.0 + dataset.jitter ** 2.0,
+            x0=dataset.x0,
+            y=dataset.residuals
+        )
+        return self._loss_tinygp(theta_dict)
+
 
     def sample_predict(self, variable_value, dataset, x0_input=None, return_covariance=False, return_variance=False):
-
-        diag = dataset.e ** 2.0 + dataset.jitter ** 2.0
-        self.gp[dataset.name_ref] = self._build_tinygp_quasiperiodic(variable_value, diag, dataset.x0)
 
         if x0_input is None:
             x0 = dataset.x0
         else:
             x0 = x0_input
-        _, cond_gp = self.gp[dataset].name_ref.condition(dataset.residuals, x0)
+        theta_dict =  dict(
+            gamma=1. / (2.*variable_value['Oamp'] ** 2),
+            Hamp=variable_value['Oamp'],
+            Pdec=variable_value['Oamp'],
+            Prot=variable_value['Oamp'],
+            diag=dataset.e ** 2.0 + dataset.jitter ** 2.0,
+            x0=x0,
+            y=dataset.residuals
+        )
+
+
+        cond_gp = self._residuals_tinygp(theta_dict)
         mu = cond_gp.mean
         std = np.sqrt(cond_gp.variance)
         if return_variance:
