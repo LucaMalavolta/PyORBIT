@@ -51,8 +51,8 @@ class Celerite2_Granulation_Oscillation_Rotation(AbstractModel):
         self.model_class = 'celerite2_granulation_rotation'
         self.internal_likelihood = True
 
-        self.list_pams_common = {}
-        self.list_pams_dataset = {}
+        self.list_pams_common = set()
+        self.list_pams_dataset = set()
 
         self.n_pams = 7
         self.Q_granulation = 1./np.sqrt(2.)

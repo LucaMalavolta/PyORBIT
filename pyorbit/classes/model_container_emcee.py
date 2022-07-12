@@ -17,7 +17,7 @@ class ModelContainerEmcee(ModelContainer):
                                  'multirun': None,
                                  'multirun_iter': 20,
                                  'shutdown_jitter': False,
-                                 'use_threading_pool': False
+                                 'use_threading_pool': True
                                 }
 
         self.pyde_parameters = {'ngen': 8000,
