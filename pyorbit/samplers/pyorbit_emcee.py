@@ -29,6 +29,7 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
     else:
         os.environ["OMP_NUM_THREADS"] = "{0:.0f}".format(omp_num_threads)
 
+
     optimize_dir_output = './' + config_in['output'] + '/optimize/'
     pyde_dir_output = './' + config_in['output'] + '/pyde/'
 
@@ -180,15 +181,15 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
     print('Nwalkers = ', mc.emcee_parameters['nwalkers'])
     print()
 
+
     if mc.emcee_parameters['version'] == '2':
         mc.emcee_parameters['use_threading_pool'] = False
 
-    if not mc.pyde_parameters.get('use_threading_pool', False):
-        mc.pyde_parameters['use_threading_pool'] = False
+    #if not mc.pyde_parameters.get('use_threading_pool', False):
+    #    mc.pyde_parameters['use_threading_pool'] = False
 
-    if not mc.emcee_parameters.get('use_threading_pool', False):
-        mc.emcee_parameters['use_threading_pool'] = False
-
+    #if not mc.emcee_parameters.get('use_threading_pool', False):
+    #    mc.emcee_parameters['use_threading_pool'] = False
 
     if reloaded_emcee:
         sys.stdout.flush()
