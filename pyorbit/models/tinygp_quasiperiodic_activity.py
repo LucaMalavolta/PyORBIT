@@ -67,14 +67,12 @@ class TinyGaussianProcess_QuasiPeriodicActivity(AbstractModel):
         return cond_gp
 
 
-
-
     def lnlk_compute(self, variable_value, dataset):
         theta_dict =  dict(
             gamma=1. / (2.*variable_value['Oamp'] ** 2),
-            Hamp=variable_value['Oamp'],
-            Pdec=variable_value['Oamp'],
-            Prot=variable_value['Oamp'],
+            Hamp=variable_value['Hamp'],
+            Pdec=variable_value['Pdec'],
+            Prot=variable_value['Prot'],
             diag=dataset.e ** 2.0 + dataset.jitter ** 2.0,
             x0=dataset.x0,
             y=dataset.residuals
@@ -90,9 +88,9 @@ class TinyGaussianProcess_QuasiPeriodicActivity(AbstractModel):
             x0 = x0_input
         theta_dict =  dict(
             gamma=1. / (2.*variable_value['Oamp'] ** 2),
-            Hamp=variable_value['Oamp'],
-            Pdec=variable_value['Oamp'],
-            Prot=variable_value['Oamp'],
+            Hamp=variable_value['Hamp'],
+            Pdec=variable_value['Pdec'],
+            Prot=variable_value['Prot'],
             diag=dataset.e ** 2.0 + dataset.jitter ** 2.0,
             x0=x0,
             y=dataset.residuals
