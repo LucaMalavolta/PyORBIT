@@ -91,6 +91,7 @@ from pyorbit.models.lightcurve_poly_detrending import LightcurvePolyDetrending, 
 
 from pyorbit.models.celerite2_granulation_oscillation_rotation import Celerite2_Granulation_Oscillation_Rotation
 from pyorbit.models.tinygp_quasiperiodic_activity import TinyGaussianProcess_QuasiPeriodicActivity
+from pyorbit.models.tinygp_multidimensional_quasiperiodic_activity import TinyGP_Multidimensional_QuasiPeriodicActivity
 
 """
  model_requires_planets: all those models that requires AT LEAST one of the planets in the system must be listed here
@@ -193,7 +194,8 @@ define_type_to_class = {
     'local_lightcurve_detrending': LocalLightcurveDetrending,
     'lightcurve_poly_detrending': LightcurvePolyDetrending,
     'local_lightcurve_poly_detrending': LocalLightcurvePolyDetrending,
-    'tinygp_quasiperiodic': TinyGaussianProcess_QuasiPeriodicActivity
+    'tinygp_quasiperiodic': TinyGaussianProcess_QuasiPeriodicActivity,
+    'tinygp_multidimensional_quasiperiodic': TinyGP_Multidimensional_QuasiPeriodicActivity
 }
 
 accepted_extensions = ['.yaml', '.yml', '.conf', '.config', '.input', ]
