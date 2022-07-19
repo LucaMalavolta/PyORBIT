@@ -4,6 +4,7 @@ numba >=0.55
 scipy >=1.8.1
 matplotlib >=3.5.2
 emcee >=3.1.2
+tinygp >=0.2.2
 ###### Requirements without Version Specifiers ######
 argparse
 pyyaml
