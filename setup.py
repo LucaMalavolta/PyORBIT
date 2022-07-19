@@ -11,7 +11,7 @@ long_description = (this_directory / "README.md").read_text()
 
 setup(
     name="pyorbit-package",
-    version='9.0.4',
+    version='9.0.5',
     author="Luca Malavolta",
 	author_email = 'luca.malavolta@unipd.it',
 	url = 'https://github.com/LucaMalavolta/PyORBIT',
@@ -39,15 +39,16 @@ setup(
     zip_safe=False,
     install_requires=[
         'numpy',
-        'numba',
-        'scipy',
+        'numba>=0.55',
+        'scipy>=1.8.1',
         'matplotlib',
         'argparse',
-        'emcee',
+        'emcee>=3.1.2',
         'pyyaml',
         'h5py',
         'tqdm',
         'pygtc',
+        'tinygp>=0.2.2'
     ],
     setup_requires=['setuptools']
 )
