@@ -118,14 +118,14 @@ class Celerite2_Granulation_Oscillation_Rotation(AbstractModel):
             i_kernels += 1
 
         for i_k in range(0, self.granulation_kernels):
-            if i_kernels == 0:
+            if i_kernels > 0:
                 kernel += terms.SHOTerm(sigma=1.0, rho=1.0, Q=self.Q_granulation)
             else:
                 kernel = terms.SHOTerm(sigma=1.0, rho=1.0, Q=self.Q_granulation)
             i_kernels += 1
 
         for i_k in range(0, self.oscillation_kernels):
-            if i_kernels == 0:
+            if i_kernels > 0:
                 kernel += terms.SHOTerm(sigma=1.0, rho=1.0, Q=2.0)
             else:
                 kernel = terms.SHOTerm(sigma=1.0, rho=1.0, Q=2.0)

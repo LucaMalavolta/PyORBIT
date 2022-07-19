@@ -293,7 +293,7 @@ class AbstractTransit(object):
     """ function for internal transformation of variables, to avoid if calls"""
     @staticmethod
     def _internal_transformation_mod00(variable_value):
-        """ this function transforms b and rho to i and a  """
+        """ this function transforms b and stellar density to i and a  """
         a = convert_rho_to_a(variable_value['P'], variable_value['density'])
         i = convert_b_to_i(
             variable_value['b'], variable_value['e'], variable_value['omega'], a)
@@ -308,7 +308,7 @@ class AbstractTransit(object):
 
     @staticmethod
     def _internal_transformation_mod02(variable_value):
-        """ this function transforms rho to a  """
+        """ this function transforms stellar density to a  """
         a = convert_rho_to_a(variable_value['P'], variable_value['density'])
         return a, variable_value['i']
 

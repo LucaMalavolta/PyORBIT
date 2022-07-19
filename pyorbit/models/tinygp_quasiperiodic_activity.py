@@ -10,6 +10,10 @@ try:
 except:
     pass
 
+
+__all__ = ['TinyGaussianProcess_QuasiPeriodicActivity']
+
+
 def _build_tinygp_quasiperiodic(params):
     kernel = jnp.power(params['Hamp'], 2.0) \
         * kernels.ExpSquared(scale=jnp.abs(params["Pdec"])) \
@@ -21,6 +25,16 @@ def _build_tinygp_quasiperiodic(params):
         kernel, params['x0'], diag=jnp.abs(params['diag']), mean=0.0
     )
 
+@jax.jit
+def _loss_tinygp(params):
+    gp = _build_tinygp_quasiperiodic(params)
+    return gp.log_probability(params['y'])
+
+@jax.jit
+def _residuals_tinygp(params):
+    gp = _build_tinygp_quasiperiodic(params)
+    _, cond_gp = gp.condition(params['y'], params['x0'])
+    return cond_gp
 
 class TinyGaussianProcess_QuasiPeriodicActivity(AbstractModel):
     ''' Three parameters out of four are the same for all the datasets, since they are related to
@@ -55,31 +69,17 @@ class TinyGaussianProcess_QuasiPeriodicActivity(AbstractModel):
         }
 
 
-    @staticmethod
-    @jax.jit
-    def _loss_tinygp(params):
-        gp = _build_tinygp_quasiperiodic(params)
-        return gp.log_probability(params['y'])
-
-    def _residuals_tinygp(self, params):
-        gp = _build_tinygp_quasiperiodic(params)
-        _, cond_gp = gp.condition(params['y'], params['x0'])
-        return cond_gp
-
-
-
-
     def lnlk_compute(self, variable_value, dataset):
         theta_dict =  dict(
             gamma=1. / (2.*variable_value['Oamp'] ** 2),
-            Hamp=variable_value['Oamp'],
-            Pdec=variable_value['Oamp'],
-            Prot=variable_value['Oamp'],
+            Hamp=variable_value['Hamp'],
+            Pdec=variable_value['Pdec'],
+            Prot=variable_value['Prot'],
             diag=dataset.e ** 2.0 + dataset.jitter ** 2.0,
             x0=dataset.x0,
             y=dataset.residuals
         )
-        return self._loss_tinygp(theta_dict)
+        return _loss_tinygp(theta_dict)
 
 
     def sample_predict(self, variable_value, dataset, x0_input=None, return_covariance=False, return_variance=False):
@@ -88,18 +88,19 @@ class TinyGaussianProcess_QuasiPeriodicActivity(AbstractModel):
             x0 = dataset.x0
         else:
             x0 = x0_input
+
         theta_dict =  dict(
             gamma=1. / (2.*variable_value['Oamp'] ** 2),
-            Hamp=variable_value['Oamp'],
-            Pdec=variable_value['Oamp'],
-            Prot=variable_value['Oamp'],
+            Hamp=variable_value['Hamp'],
+            Pdec=variable_value['Pdec'],
+            Prot=variable_value['Prot'],
             diag=dataset.e ** 2.0 + dataset.jitter ** 2.0,
             x0=x0,
             y=dataset.residuals
         )
 
 
-        cond_gp = self._residuals_tinygp(theta_dict)
+        cond_gp = _residuals_tinygp(theta_dict)
         mu = cond_gp.mean
         std = np.sqrt(cond_gp.variance)
         if return_variance:
