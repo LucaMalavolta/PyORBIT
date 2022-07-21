@@ -78,12 +78,12 @@ class AbstractTransit(object):
         """
         if self.use_semimajor_axis and self.use_inclination:
             self.retrieve_ai = self._internal_transformation_mod03
-        elif self.use_semimajor_axis:
+        elif self.use_inclination:
             if self.multivariate_mass_radius:
                 self.retrieve_ai = self._internal_transformation_mod07
             else:
                 self.retrieve_ai = self._internal_transformation_mod02
-        elif self.use_inclination:
+        elif self.use_semimajor_axis:
             self.retrieve_ai = self._internal_transformation_mod01
         else:
             if self.multivariate_mass_radius:
@@ -162,7 +162,7 @@ class AbstractTransit(object):
                 self.retrieve_Omega_Istar = self._internal_transformation_mod23
 
         """ Check if the activity model is included in the keyword list
-            If so, the angular rotation of the star and the stellar inclination 
+            If so, the angular rotation of the star and the stellar inclination
             are computed through the rotation period
         """
         rotationperiod_from_activity_names = [
@@ -367,12 +367,12 @@ class AbstractTransit(object):
     @staticmethod
     def _internal_transformation_mod20(variable_value):
         """ This function extracts from the variable_value dictionary
-            - 'v_sini': projected tangential velocity of the star 
+            - 'v_sini': projected tangential velocity of the star
             - 'radius': stellar radius in Solar units
             - 'i_star': inclination of the of stellar rotation axis
 
             into angular velocity Omega [rad/s] of the star
-            it returns the angular velocity Omega and the stellar inclination 
+            it returns the angular velocity Omega and the stellar inclination
 
         Args:
             variable_value (dict): dictionary with all the parameters of the current model
@@ -404,8 +404,8 @@ class AbstractTransit(object):
             float: inclination of the of stellar rotation axis, [degrees]
         """
 
-        sin_is =  variable_value['v_sini']  / (variable_value['radius'] * constants.Rsun) * (variable_value['rotation_period'] * constants.d2s)  / (2* np.pi)  
-        Omega = 2* np.pi / (variable_value['Prot'] * constants.d2s) 
+        sin_is =  variable_value['v_sini']  / (variable_value['radius'] * constants.Rsun) * (variable_value['rotation_period'] * constants.d2s)  / (2* np.pi)
+        Omega = 2* np.pi / (variable_value['Prot'] * constants.d2s)
 
         return Omega, np.arcsin(sin_is)/np.pi*180.
 
@@ -427,8 +427,8 @@ class AbstractTransit(object):
             float: inclination of the of stellar rotation axis, [degrees]
         """
 
-        sin_is =  variable_value['v_sini']  / (variable_value['radius'] * constants.Rsun) * (variable_value['Prot'] * constants.d2s)  / (2* np.pi)  
-        Omega = 2* np.pi / (variable_value['Prot'] * constants.d2s) 
+        sin_is =  variable_value['v_sini']  / (variable_value['radius'] * constants.Rsun) * (variable_value['Prot'] * constants.d2s)  / (2* np.pi)
+        Omega = 2* np.pi / (variable_value['Prot'] * constants.d2s)
 
         return Omega, np.arcsin(sin_is)/np.pi*180.
 
@@ -450,7 +450,7 @@ class AbstractTransit(object):
             float: inclination of the of stellar rotation axis, [degrees]
         """
 
-        sin_is =  variable_value['v_sini']  / (variable_value['radius'] * constants.Rsun) * (self.code_options['rotation_period'] * constants.d2s)  / (2* np.pi)  
-        Omega = 2* np.pi / (variable_value['Prot'] * constants.d2s) 
+        sin_is =  variable_value['v_sini']  / (variable_value['radius'] * constants.Rsun) * (self.code_options['rotation_period'] * constants.d2s)  / (2* np.pi)
+        Omega = 2* np.pi / (variable_value['Prot'] * constants.d2s)
 
         return Omega, np.arcsin(sin_is)/np.pi*180.
