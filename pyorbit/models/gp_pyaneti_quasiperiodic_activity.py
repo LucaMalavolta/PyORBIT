@@ -71,7 +71,15 @@ class GP_Pyaneti_QuasiPeriodicActivity(AbstractModel):
 
 
     def initialize_model(self, mc,  **kwargs):
-        pass
+        if kwargs.get('hyperparameters_condition', False):
+            self.hyper_condition = self._hypercond_01
+        else:
+            self.hyper_condition = self._hypercond_00
+
+        if kwargs.get('rotation_decay_condition', False):
+            self.rotdec_condition = self._hypercond_02
+        else:
+            self.rotdec_condition = self._hypercond_00
 
     def initialize_model_dataset(self, mc, dataset, **kwargs):
 
@@ -140,6 +148,10 @@ class GP_Pyaneti_QuasiPeriodicActivity(AbstractModel):
         self.internal_coefficients[d_ind] = [variable_value['con_amp'], variable_value['rot_amp']]
 
     def lnlk_compute(self):
+        if not self.hyper_condition(self.internal_variable_value):
+            return -np.inf
+        if not self.rotdec_condition(self.internal_variable_value):
+            return -np.inf
 
         self._gp_vars = np.empty(2*self._added_datasets + 3)
 
@@ -223,3 +235,19 @@ class GP_Pyaneti_QuasiPeriodicActivity(AbstractModel):
     def sample_conditional(self, dataset, x0_input=None):
         val, std = self.sample_predict(dataset, x0_input)
         return val
+
+    @staticmethod
+    def _hypercond_00(variable_value):
+        #Condition from Rajpaul 2017, Rajpaul+2021
+        return True
+
+    @staticmethod
+    def _hypercond_01(variable_value):
+        # Condition from Rajpaul 2017, Rajpaul+2021
+        # Taking into account that Pdec^2 = 2*lambda_2^2
+        return variable_value['Pdec']**2 > (3. / 4. / np.pi) * variable_value['Oamp']**2 * variable_value['Prot']**2 
+
+    @staticmethod
+    def _hypercond_02(variable_value):
+        #Condition on Rotation period and decay timescale
+        return variable_value['Pdec'] > 2. * variable_value['Prot']

@@ -59,6 +59,19 @@ class GaussianProcess_QuasiPeriodicActivity_Alternative(AbstractModel):
 
         return cov_matrix
 
+    def initialize_model(self, mc,  **kwargs):
+
+        if kwargs.get('hyperparameters_condition', False):
+            self.hyper_condition = self._hypercond_01
+        else:
+            self.hyper_condition = self._hypercond_00
+
+        if kwargs.get('rotation_decay_condition', False):
+            self.rotdec_condition = self._hypercond_02
+        else:
+            self.rotdec_condition = self._hypercond_00
+
+
     def initialize_model_dataset(self, mc, dataset, **kwargs):
 
         self._dist_t1[dataset.name_ref], self._dist_t2[dataset.name_ref] = \
@@ -68,6 +81,10 @@ class GaussianProcess_QuasiPeriodicActivity_Alternative(AbstractModel):
         return
 
     def lnlk_compute(self, variable_value, dataset):
+        if not self.hyper_condition(variable_value):
+            return -np.inf
+        if not self.rotdec_condition(variable_value):
+            return -np.inf
 
         env = dataset.e ** 2.0 + dataset.jitter ** 2.0
         cov_matrix = self._compute_cov_matrix(variable_value,
@@ -135,3 +152,19 @@ class GaussianProcess_QuasiPeriodicActivity_Alternative(AbstractModel):
 
         val, std = self.sample_predict(variable_value, dataset, x0_input)
         return val
+
+    @staticmethod
+    def _hypercond_00(variable_value):
+        #Condition from Rajpaul 2017, Rajpaul+2021
+        return True
+
+    @staticmethod
+    def _hypercond_01(variable_value):
+        # Condition from Rajpaul 2017, Rajpaul+2021
+        # Taking into account that Pdec^2 = 2*lambda_2^2
+        return variable_value['Pdec']**2 > (3. / 4. / np.pi) * variable_value['Oamp']**2 * variable_value['Prot']**2 
+
+    @staticmethod
+    def _hypercond_02(variable_value):
+        #Condition on Rotation period and decay timescale
+        return variable_value['Pdec'] > 2. * variable_value['Prot']

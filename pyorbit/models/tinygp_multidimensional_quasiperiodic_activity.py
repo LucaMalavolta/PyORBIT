@@ -212,6 +212,11 @@ class TinyGP_Multidimensional_QuasiPeriodicActivity(AbstractModel):
         self.internal_coeff_deriv[d_ind] = variable_value['rot_amp']
 
     def lnlk_compute(self):
+        if not self.hyper_condition(variable_value):
+            return -np.inf
+        if not self.rotdec_condition(variable_value):
+            return -np.inf
+
         theta_dict =  dict(
             gamma=1. / (2.*self.internal_variable_value['Oamp'] ** 2),
             Hamp=self.internal_variable_value['Hamp'],
@@ -267,3 +272,19 @@ class TinyGP_Multidimensional_QuasiPeriodicActivity(AbstractModel):
             return mu, std
         else:
             return mu
+
+    @staticmethod
+    def _hypercond_00(variable_value):
+        #Condition from Rajpaul 2017, Rajpaul+2021
+        return True
+
+    @staticmethod
+    def _hypercond_01(variable_value):
+        # Condition from Rajpaul 2017, Rajpaul+2021
+        # Taking into account that Pdec^2 = 2*lambda_2^2
+        return variable_value['Pdec']**2 > (3. / 4. / np.pi) * variable_value['Oamp']**2 * variable_value['Prot']**2 
+
+    @staticmethod
+    def _hypercond_02(variable_value):
+        #Condition on Rotation period and decay timescale
+        return variable_value['Pdec'] > 2. * variable_value['Prot']

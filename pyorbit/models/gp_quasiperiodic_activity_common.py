@@ -49,6 +49,7 @@ class GaussianProcess_QuasiPeriodicActivity_Common(AbstractModel):
 
         self.gp = {}
         self.internal_dataset = {'x0': [], 'yr': [], 'ej': []}
+        self.internal_variable_value = None
         self.internal_gp_pams = None
         self.use_HODLR = False
 
@@ -93,6 +94,16 @@ class GaussianProcess_QuasiPeriodicActivity_Common(AbstractModel):
 
         if 'use_HODLR' in kwargs:
             self.use_HODLR = kwargs['use_HODLR']
+
+        if kwargs.get('hyperparameters_condition', False):
+            self.hyper_condition = self._hypercond_01
+        else:
+            self.hyper_condition = self._hypercond_00
+
+        if kwargs.get('rotation_decay_condition', False):
+            self.rotdec_condition = self._hypercond_02
+        else:
+            self.rotdec_condition = self._hypercond_00
 
     def initialize_model_dataset(self, mc, dataset, **kwargs):
         self.define_kernel(dataset)
@@ -139,6 +150,7 @@ class GaussianProcess_QuasiPeriodicActivity_Common(AbstractModel):
             self.internal_dataset['x0'] = []
             self.internal_dataset['yr'] = []
             self.internal_dataset['ej'] = []
+            self.internal_variable_value = variable_value
             self.internal_gp_pams = self.convert_val2gp(variable_value)
 
         self.internal_dataset['x0'].extend(dataset.x0)
@@ -151,6 +163,10 @@ class GaussianProcess_QuasiPeriodicActivity_Common(AbstractModel):
            1) theta parameters must be converted in physical units (e.g. from logarithmic to linear spaces)
            2) physical values must be converted to {\tt george} input parameters
         """
+        if not self.hyper_condition(self.internal_variable_value):
+            return -np.inf
+        if not self.rotdec_condition(self.internal_variable_value):
+            return -np.inf
 
         self.gp.set_parameter_vector(self.internal_gp_pams)
         self.gp.compute(
@@ -178,3 +194,19 @@ class GaussianProcess_QuasiPeriodicActivity_Common(AbstractModel):
             return self.gp.sample_conditional(self.internal_dataset['yr'], dataset.x0)
         else:
             return self.gp.sample_conditional(self.internal_dataset['yr'], x0_input)
+
+    @staticmethod
+    def _hypercond_00(variable_value):
+        #Condition from Rajpaul 2017, Rajpaul+2021
+        return True
+
+    @staticmethod
+    def _hypercond_01(variable_value):
+        # Condition from Rajpaul 2017, Rajpaul+2021
+        # Taking into account that Pdec^2 = 2*lambda_2^2
+        return variable_value['Pdec']**2 > (3. / 4. / np.pi) * variable_value['Oamp']**2 * variable_value['Prot']**2 
+
+    @staticmethod
+    def _hypercond_02(variable_value):
+        #Condition on Rotation period and decay timescale
+        return variable_value['Pdec'] > 2. * variable_value['Prot']
