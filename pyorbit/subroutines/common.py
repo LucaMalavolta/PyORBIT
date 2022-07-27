@@ -269,16 +269,16 @@ def nested_sampling_prior_prepare(kind, bounds, pams, space):
         out_array = np.empty(6)
         out_array[0] = pams[0]
         out_array[1] = pams[1]
-        out_array[4] = (bounds[0] - pams[0]) / pams[1]
-        out_array[5] = (bounds[1] - pams[0]) / pams[1]
+        out_array[2] = (bounds[0] - pams[0]) / pams[1]
+        out_array[3] = (bounds[1] - pams[0]) / pams[1]
         return out_array
 
     elif kind in ['HalfGaussian', 'PositiveHalfGaussian']:
         out_array = np.empty(6)
         out_array[0] = pams[0]
         out_array[1] = pams[1]
-        out_array[4] = 0.00
-        out_array[5] = (bounds[1] - pams[0]) / pams[1]
+        out_array[2] = 0.00
+        out_array[3] = (bounds[1] - pams[0]) / pams[1]
         return out_array
 
     elif kind in ['NegativeHalfGaussian']:
@@ -326,10 +326,12 @@ def nested_sampling_prior_compute(val, kind, coeff, space):
     :return:
     """
 
+
     if kind == 'Uniform':
         return val * (coeff[1] - coeff[0]) + coeff[0]
 
     if kind in ['Gaussian', 'HalfGaussian', 'PositiveHalfGaussian', 'NegativeHalfGaussian']:
+
         x_new = stats.truncnorm.ppf(val, coeff[2], coeff[3]) * coeff[1] +  coeff[0]
 
         if space == 'Linear':

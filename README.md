@@ -3,7 +3,7 @@
 
 ### A code for exoplanet orbital parameters and stellar activity.
 ***
-### `PyORBIT` version 9.0 by Luca Malavolta - June 2022
+### `PyORBIT` version 9.0 by Luca Malavolta - July 2022
 
 **News**
 
@@ -15,6 +15,7 @@
   * Rossiter-McLaughlin through analytical formulation by [Ohta et al. 2005](https://ui.adsabs.harvard.edu/abs/2005ApJ...622.1118O/abstract).
   * Celerite/Celerite2 _standard_ models, now better organized.
   * Fit of individual time of transits (with automatic definition of boundaries) for TTV analysis.
+  * experimenting with `tinygp`
 
 * More options for parameters space exploration: `Linear`, `Log_Natural`, `Log_Base2`, `Log_Base10`.
 

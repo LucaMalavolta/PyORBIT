@@ -1,9 +1,12 @@
 ###### Requirements with Version Specifiers ######
-numpy >=1.18, <1.23
-numba >=0.55
+numpy >=1.22
+numba >=0.55.2
 scipy >=1.8.1
 matplotlib >=3.5.2
 emcee >=3.1.2
+astropy >=5.1
+astroquery >=0.4
+pyerfa >=2.0
 tinygp >=0.2.2
 ###### Requirements without Version Specifiers ######
 argparse
