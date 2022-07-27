@@ -41,7 +41,8 @@ class Batman_Transit_Eclipse_PhaseCurve(AbstractModel, AbstractTransit):
         }
 
         self.batman_params = None
-        self.batman_models = {}
+        self.batman_transit = {}
+        self.batman_eclipse = {}
         self.code_options = {
             'nthreads': 1,
             'initialization_counter': 5000
@@ -76,7 +77,7 @@ class Batman_Transit_Eclipse_PhaseCurve(AbstractModel, AbstractTransit):
         self.batman_params.u = np.ones(kwargs['limb_darkening_ncoeff'],
                                        dtype=np.double) * 0.1  # limb darkening coefficients
 
-        self.batman_options['initialization_counter'] = 5000
+        self.code_options['initialization_counter'] = 5000
 
     def initialize_model_dataset(self, mc, dataset, **kwargs):
 
@@ -88,15 +89,15 @@ class Batman_Transit_Eclipse_PhaseCurve(AbstractModel, AbstractTransit):
         self.batman_transit[dataset.name_ref] = \
             batman.TransitModel(self.batman_params,
                                 dataset.x0,
-                                supersample_factor=self.batman_options[dataset.name_ref]['sample_factor'],
-                                exp_time=self.batman_options[dataset.name_ref]['exp_time'],
+                                supersample_factor=self.code_options[dataset.name_ref]['sample_factor'],
+                                exp_time=self.code_options[dataset.name_ref]['exp_time'],
                                 nthreads=self.code_options['nthreads'])
 
         self.batman_eclipse[dataset.name_ref] = \
             batman.TransitModel(self.batman_params,
                                 dataset.x0,
-                                supersample_factor=self.batman_options[dataset.name_ref]['sample_factor'],
-                                exp_time=self.batman_options[dataset.name_ref]['exp_time'],
+                                supersample_factor=self.code_options[dataset.name_ref]['sample_factor'],
+                                exp_time=self.code_options[dataset.name_ref]['exp_time'],
                                 nthreads=self.code_options['nthreads'],
                                 transittype="secondary")
 
@@ -147,24 +148,24 @@ class Batman_Transit_Eclipse_PhaseCurve(AbstractModel, AbstractTransit):
         -> However, we estimated the optimal step size from random parameters, so at some point we'll need to
         reinitialize the model so that the correct step size is computed.
         """
-        if self.batman_options['initialization_counter'] > 1000:
-            self.batman_options['initialization_counter'] = 0
+        if self.code_options['initialization_counter'] > 1000:
+            self.code_options['initialization_counter'] = 0
 
             self.batman_eclipse[dataset.name_ref] = batman.TransitModel(self.batman_params,
                                             dataset.x0,
-                                            supersample_factor=self.batman_options[dataset.name_ref]['sample_factor'],
-                                            exp_time=self.batman_options[dataset.name_ref]['exp_time'],
+                                            supersample_factor=self.code_options[dataset.name_ref]['sample_factor'],
+                                            exp_time=self.code_options[dataset.name_ref]['exp_time'],
                                             nthreads=self.code_options['nthreads'],
                                             transittype="secondary")
 
             self.batman_transit[dataset.name_ref] = batman.TransitModel(self.batman_params,
                                                 dataset.x0,
-                                                supersample_factor=self.batman_options[dataset.name_ref]['sample_factor'],
-                                                exp_time=self.batman_options[dataset.name_ref]['exp_time'],
+                                                supersample_factor=self.code_options[dataset.name_ref]['sample_factor'],
+                                                exp_time=self.code_options[dataset.name_ref]['exp_time'],
                                                 nthreads=self.code_options['nthreads'])
 
         else:
-            self.batman_options['initialization_counter'] += 1
+            self.code_options['initialization_counter'] += 1
 
         if x0_input is None:
 
@@ -185,15 +186,15 @@ class Batman_Transit_Eclipse_PhaseCurve(AbstractModel, AbstractTransit):
 
             batman_eclipse = batman.TransitModel(self.batman_params,
                                 x0_input,
-                                supersample_factor=self.batman_options[dataset.name_ref]['sample_factor'],
-                                exp_time=self.batman_options[dataset.name_ref]['exp_time'],
+                                supersample_factor=self.code_options[dataset.name_ref]['sample_factor'],
+                                exp_time=self.code_options[dataset.name_ref]['exp_time'],
                                 nthreads=self.code_options['nthreads'],
                                 transittype="secondary")
 
             batman_transit = batman.TransitModel(self.batman_params,
                                                 x0_input,
-                                                supersample_factor=self.batman_options[dataset.name_ref]['sample_factor'],
-                                                exp_time=self.batman_options[dataset.name_ref]['exp_time'],
+                                                supersample_factor=self.code_options[dataset.name_ref]['sample_factor'],
+                                                exp_time=self.code_options[dataset.name_ref]['exp_time'],
                                                 nthreads=self.code_options['nthreads'])
 
             return (batman_eclipse.light_curve(self.batman_params)-1.) * phase_curve \
