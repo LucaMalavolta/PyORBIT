@@ -237,7 +237,7 @@ class TinyGP_Multidimensional_QuasiPeriodicActivity(AbstractModel):
             coeff_deriv=self.internal_coeff_deriv
         )
 
-        return self._loss_tinygp(theta_dict)
+        return _loss_tinygp(theta_dict)
 
 
     def sample_predict(self, dataset, x0_input=None, return_covariance=False, return_variance=False):
