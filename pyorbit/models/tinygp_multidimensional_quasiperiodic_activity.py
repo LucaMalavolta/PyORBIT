@@ -152,7 +152,16 @@ class TinyGP_Multidimensional_QuasiPeriodicActivity(AbstractModel):
 
 
     def initialize_model(self, mc,  **kwargs):
-        pass
+
+        if kwargs.get('hyperparameters_condition', False):
+            self.hyper_condition = self._hypercond_01
+        else:
+            self.hyper_condition = self._hypercond_00
+
+        if kwargs.get('rotation_decay_condition', False):
+            self.rotdec_condition = self._hypercond_02
+        else:
+            self.rotdec_condition = self._hypercond_00
 
     def initialize_model_dataset(self, mc, dataset, **kwargs):
 
