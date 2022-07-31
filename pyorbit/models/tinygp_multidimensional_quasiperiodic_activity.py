@@ -221,9 +221,9 @@ class TinyGP_Multidimensional_QuasiPeriodicActivity(AbstractModel):
         self.internal_coeff_deriv[d_ind] = variable_value['rot_amp']
 
     def lnlk_compute(self):
-        if not self.hyper_condition(variable_value):
+        if not self.hyper_condition(self.internal_variable_value):
             return -np.inf
-        if not self.rotdec_condition(variable_value):
+        if not self.rotdec_condition(self.internal_variable_value):
             return -np.inf
 
         theta_dict =  dict(
