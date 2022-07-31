@@ -228,7 +228,6 @@ class TinyGP_Multidimensional_QuasiPeriodicActivity(AbstractModel):
 
         theta_dict =  dict(
             gamma=1. / (2.*self.internal_variable_value['Oamp'] ** 2),
-            Hamp=self.internal_variable_value['Hamp'],
             Pdec=self.internal_variable_value['Pdec'],
             Prot=self.internal_variable_value['Prot'],
             diag=self._dataset_ej2,
@@ -264,7 +263,6 @@ class TinyGP_Multidimensional_QuasiPeriodicActivity(AbstractModel):
 
         theta_dict =  dict(
             gamma=1. / (2.*self.internal_variable_value['Oamp'] ** 2),
-            Hamp=self.internal_variable_value['Hamp'],
             Pdec=self.internal_variable_value['Pdec'],
             Prot=self.internal_variable_value['Prot'],
             diag=self._dataset_ej2,
