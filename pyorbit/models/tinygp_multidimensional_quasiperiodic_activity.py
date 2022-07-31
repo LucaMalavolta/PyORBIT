@@ -165,7 +165,7 @@ class TinyGP_Multidimensional_QuasiPeriodicActivity(AbstractModel):
                                     self._n_cov_matrix+dataset.n])
 
         self._dataset_x0 = np.append(self._dataset_x0, dataset.x0)
-        self._dataset_label = np.append(self._dataset_label, np.zero_like(dataset.x0)+ self._added_datasets)
+        self._dataset_label = np.append(self._dataset_label, np.zeros_like(dataset.x0)+ self._added_datasets)
         self._dataset_e2 = np.append(self._dataset_e2, dataset.e**2)
 
         self._dataset_names[dataset.name_ref] = self._added_datasets
@@ -223,7 +223,7 @@ class TinyGP_Multidimensional_QuasiPeriodicActivity(AbstractModel):
             Pdec=self.internal_variable_value['Pdec'],
             Prot=self.internal_variable_value['Prot'],
             diag=self._dataset_ej2,
-            X=self.X,
+            X=self._X,
             y=self._dataset_res,
             coeff_prime=self.internal_coeff_prime,
             coeff_deriv=self.internal_coeff_deriv
