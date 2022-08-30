@@ -11,6 +11,7 @@ h5py
 h5py
 numpy
 tqdm
+jaxlib
+jax
+tinygp
 pygtc
-
-
