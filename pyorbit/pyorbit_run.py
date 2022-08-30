@@ -31,6 +31,7 @@ def pyorbit_run():
         'emcee': ['emcee', 'MCMC', 'Emcee'],
         'zeus': ['zeus', 'ZEUS', 'Zeus', 'zeus-mcmc'],
         'dynesty': ['dynesty', 'DyNesty', 'Dynesty', 'DYNESTY'],
+        'nestle': ['nestle', 'Nestle', 'NESTLE', 'nelste'],
         'ultranest': ['ultranest', 'UltraNest', 'Ultranest', 'ULTRANEST', 'ultra','Unest'],
         'optimize': ['optimize', 'scipy', 'Optimize', 'OPTIMIZE'],
     }
@@ -49,6 +50,9 @@ def pyorbit_run():
 
     if sampler in sampler_keyword['dynesty']:
         pyorbit.pyorbit_dynesty(config_in)
+
+    if sampler in sampler_keyword['nestle']:
+        pyorbit.pyorbit_nestle(config_in)
 
     if sampler in sampler_keyword['ultranest']:
         pyorbit.pyorbit_ultranest(config_in)

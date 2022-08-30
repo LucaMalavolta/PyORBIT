@@ -9,8 +9,9 @@ from .samplers.pyorbit_zeus import *
 from .samplers.pyorbit_optimize import *
 from .samplers.pyorbit_polychord import *
 from .samplers.pyorbit_dynesty import *
+from .samplers.pyorbit_nestle import *
 from .samplers.pyorbit_ultranest import *
 from .samplers.pyorbit_multinest import *
 from .samplers.pyorbit_getresults import *
 
-__version__ = "9.0.9"
+__version__ = "9.0.10"

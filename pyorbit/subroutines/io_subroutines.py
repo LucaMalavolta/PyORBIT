@@ -205,6 +205,26 @@ def dynesty_results_maxevidence_load_from_cpickle(output_directory, prefix=''):
     results = pickle.load(open(output_directory + add_prefix + "results_maxevidence.p", "rb"))
     return results
 
+def nestle_results_save_to_cpickle(output_directory, results, prefix=None):
+    add_prefix = (prefix + '_' if prefix else '')
+    pickle.dump(results, open(output_directory + add_prefix + "results.p", "wb"))
+
+
+def nestle_results_load_from_cpickle(output_directory, prefix=''):
+    add_prefix = (prefix + '_' if prefix else '')
+    results = pickle.load(open(output_directory + add_prefix + "results.p", "rb"))
+    return results
+
+def nestle_results_maxevidence_save_to_cpickle(output_directory, results, prefix=None):
+    add_prefix = (prefix + '_' if prefix else '')
+    pickle.dump(results, open(output_directory + add_prefix + "results_maxevidence.p", "wb"))
+
+
+def nestle_results_maxevidence_load_from_cpickle(output_directory, prefix=''):
+    add_prefix = (prefix + '_' if prefix else '')
+    results = pickle.load(open(output_directory + add_prefix + "results_maxevidence.p", "rb"))
+    return results
+
 
 def ultranest_sampler_save_to_cpickle(output_directory, sampler, prefix=None):
     add_prefix = (prefix + '_' if prefix else '')
