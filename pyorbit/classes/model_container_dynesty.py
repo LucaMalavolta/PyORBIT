@@ -13,9 +13,10 @@ class ModelContainerDynesty(ModelContainer):
                                            'nthreads': 16,
                                            'include_priors': False,
                                            'dlogz':0.01,
-                                           'pfrac': 1.0,
+                                           'pfrac': 0.00,
                                            'sample': 'auto',
-                                           'bound': 'multi'}
+                                           'bound': 'multi',
+                                           'use_threading_pool':True }
 
         self.output_directory = None
 

@@ -82,45 +82,55 @@ def pyorbit_dynesty(config_in, input_datasets=None, return_output=None):
         print("ERROR: dynesty not installed, this will not work")
         quit()
 
-    # "Standard" nested sampling.
-    #print('Setting up the Standard Nested Sampling')
-    #sampler = dynesty.NestedSampler(mc.dynesty_call, mc.dynesty_priors, mc.ndim)
-    #print('Running Nested Sampling')
-    # sampler.run_nested()
-    #print('Getting the results')
-    #results = sampler.results
-    # print()
 
-    try:
-        dlogz=mc.nested_sampling_parameters['dlogz']
-    except:
-        dlogz = 0.01
+    dlogz = mc.nested_sampling_parameters.get('dlogz', 0.01)
+    use_threading_pool = mc.nested_sampling_parameters.get('use_threading_pool', True)
+    pfrac_value = mc.nested_sampling_parameters.get('pfrac', 0.000)
+    print('Using threading pool for dynesty:', use_threading_pool)
 
-    if mc.nested_sampling_parameters['pfrac'] > 1.0 or  mc.nested_sampling_parameters['pfrac'] < 0.0:
+
+    if pfrac_value > 1.0 or  pfrac_value < 0.0:
         print('Double run with 0/100 posterior/evidence split; then 100/0 posterior/evidence split')
         print()
-        pfrac = 0.00
+        pfrac = 0.000
 
-        with multiprocessing.Pool() as pool:
+        print('Setting up the Dynamic Nested Sampling, posterior/evidence split = {0:4.3f}'.format(pfrac))
+        print()
 
-            # "Dynamic" nested sampling.
-            print('Setting up the Dynamic Nested Sampling, posterior/evidence split = {0:4.3f}'.format(pfrac))
-            print()
+        if use_threading_pool:
+
+
+            with multiprocessing.Pool() as pool:
+
+                # "Dynamic" nested sampling.
+
+                dsampler_maxevidence = dynesty.DynamicNestedSampler(mc.dynesty_call,
+                                                        mc.dynesty_priors,
+                                                        mc.ndim,
+                                                        nlive=nlive,
+                                                        pool=pool,
+                                                        queue_size=nthreads,
+                                                        bound= mc.nested_sampling_parameters['bound'],
+                                                        sample= mc.nested_sampling_parameters['sample'],
+                                                        use_pool={
+                                                            'prior_transform': False},
+                                                        )
+                print('Running Dynamic Nested Sampling')
+                dsampler_maxevidence.run_nested(dlogz=dlogz, wt_kwargs={'pfrac': pfrac_value})
+                print()
+        else:
+
             dsampler_maxevidence = dynesty.DynamicNestedSampler(mc.dynesty_call,
                                                     mc.dynesty_priors,
                                                     mc.ndim,
                                                     nlive=nlive,
-                                                    pool=pool,
-                                                    dlogz=dlogz,
-                                                    queue_size=nthreads,
                                                     bound= mc.nested_sampling_parameters['bound'],
                                                     sample= mc.nested_sampling_parameters['sample'],
-                                                    use_pool={
-                                                        'prior_transform': False},
                                                     )
             print('Running Dynamic Nested Sampling')
-            dsampler_maxevidence.run_nested(wt_kwargs={'pfrac': pfrac})
+            dsampler_maxevidence.run_nested(dlogz=dlogz, wt_kwargs={'pfrac': pfrac_value})
             print()
+
         print()
 
         print('Getting the results')
@@ -143,42 +153,42 @@ def pyorbit_dynesty(config_in, input_datasets=None, return_output=None):
         """ A dummy file is created to let the cpulimit script to proceed with the next step"""
         dynesty_results_maxevidence_save_to_cpickle(mc.output_directory, results_maxevidence)
 
-        pfrac = 1.00
+        pfrac_value = 1.000
+
+    print('Setting up the Dynamic Nested Sampling, posterior/evidence split = {0:4.3f}'.format(pfrac_value))
+    print()
+
+    if use_threading_pool:
+
+        with multiprocessing.Pool() as pool:
+            dsampler = dynesty.DynamicNestedSampler(mc.dynesty_call,
+                                                    mc.dynesty_priors,
+                                                    mc.ndim,
+                                                    nlive=nlive,
+                                                    pool=pool,
+                                                    bound= mc.nested_sampling_parameters['bound'],
+                                                    sample= mc.nested_sampling_parameters['sample'],
+                                                    queue_size=nthreads,
+                                                    use_pool={
+                                                        'prior_transform': False},
+                                                    )
+
+            print('Running Dynamic Nested Sampling')
+            dsampler.run_nested(dlogz_init=dlogz, wt_kwargs={'pfrac': pfrac})
+            print()
     else:
-        pfrac = mc.nested_sampling_parameters['pfrac']
 
-    with multiprocessing.Pool() as pool:
-
-        # "Dynamic" nested sampling.
-        print('Setting up the Dynamic Nested Sampling, posterior/evidence split = {0:4.3f}'.format(pfrac))
-        print()
-        #dsampler = dynesty.DynamicNestedSampler(mc.dynesty_call,
-        #                                        mc.dynesty_priors,
-        #                                        mc.ndim,
-        #                                        nlive=nlive,
-        #                                        pool=pool,
-        #                                        queue_size=nthreads,
-        #                                        use_pool={
-        #                                            'prior_transform': False},
-        #                                        wt_kwargs={'pfrac': pfrac}
-        #                                        )
         dsampler = dynesty.DynamicNestedSampler(mc.dynesty_call,
                                                 mc.dynesty_priors,
                                                 mc.ndim,
                                                 nlive=nlive,
-                                                pool=pool,
-                                                #bounds='multi',
-                                                dlogz=dlogz,
                                                 bound= mc.nested_sampling_parameters['bound'],
-                                                sample= mc.nested_sampling_parameters['sample'],
-                                                queue_size=nthreads,
-                                                use_pool={
-                                                    'prior_transform': False},
-                                                )
+                                                sample= mc.nested_sampling_parameters['sample'])
 
         print('Running Dynamic Nested Sampling')
-        dsampler.run_nested(wt_kwargs={'pfrac': pfrac})
+        dsampler.run_nested(dlogz_init=dlogz, wt_kwargs={'pfrac': pfrac_value})
         print()
+
     print()
 
     print('Getting the results')
