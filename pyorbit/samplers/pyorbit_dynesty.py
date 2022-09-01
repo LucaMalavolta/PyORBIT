@@ -92,7 +92,7 @@ def pyorbit_dynesty(config_in, input_datasets=None, return_output=None):
     if pfrac_value > 1.0 or  pfrac_value < 0.0:
         print('Double run with 0/100 posterior/evidence split; then 100/0 posterior/evidence split')
         print()
-        pfrac = 0.000
+        pfrac_value = 0.000
 
         print('Setting up the Dynamic Nested Sampling, posterior/evidence split = {0:4.3f}'.format(pfrac))
         print()
@@ -174,7 +174,7 @@ def pyorbit_dynesty(config_in, input_datasets=None, return_output=None):
                                                     )
 
             print('Running Dynamic Nested Sampling')
-            dsampler.run_nested(dlogz_init=dlogz, wt_kwargs={'pfrac': pfrac})
+            dsampler.run_nested(dlogz_init=dlogz, wt_kwargs={'pfrac': pfrac_value})
             print()
     else:
 

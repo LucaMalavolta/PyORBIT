@@ -225,7 +225,7 @@ class GP_Multidimensional_QuasiPeriodicActivity(AbstractModel):
         Oamp2 = self.internal_variable_value['Oamp']**2
 
         len_diag = len(t_array)
-        cov_diag = np.empty(3*len_diag)
+        cov_diag = np.empty(self._added_datasets*len_diag)
         dist_t1, dist_t2 = np.zeros(len_diag), np.zeros(len_diag)
 
 
@@ -257,7 +257,7 @@ class GP_Multidimensional_QuasiPeriodicActivity(AbstractModel):
         Oamp2 = self.internal_variable_value['Oamp']**2
 
         len_t_array = len(t_array)
-        cov_matrix = np.empty([3*len_t_array, self._n_cov_matrix])
+        cov_matrix = np.empty([self._added_datasets*len_t_array, self._n_cov_matrix])
 
         for l_dataset in range(0, self._added_datasets):
             for m_dataset in range(0, self._added_datasets):
