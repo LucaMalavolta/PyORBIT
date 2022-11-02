@@ -195,16 +195,21 @@ class GP_Pyaneti_QuasiPeriodicActivity(AbstractModel):
         dataset_index = self._dataset_names[dataset.name_ref]
 
         if x0_input is None:
+            faster_computation = False
             t_predict = dataset.x0
             l_nstart, l_nend = self._dataset_nindex[dataset_index]
         else:
+            faster_computation = True
             t_predict = x0_input
             l_nstart, l_nend = len(x0_input)*dataset_index, len(x0_input)*(dataset_index+1)
 
         kernel_name = 'MQ' + repr(self._added_datasets)
         cov_matrix = pyaneti.covfunc(kernel_name,self._gp_vars,self._dataset_x0,self._dataset_x0)
 
-        Ks = self._compute_cov_Ks(t_predict)
+        if faster_computation:
+            Ks = self._compute_cov_Ks(t_predict)
+        else:
+            Ks = cov_matrix - np.diag(self._dataset_ej2)
 
         alpha = cho_solve(cho_factor(cov_matrix), self._dataset_res)
         mu = np.dot(Ks, alpha).flatten()
@@ -215,9 +220,11 @@ class GP_Pyaneti_QuasiPeriodicActivity(AbstractModel):
 
         B = None
         Ks = None
+        if faster_computation:
+            Kss = self._compute_cov_diag(t_predict)
+        else:
+            Kss = np.diag(cov_matrix)
         cov_matrix = None
-
-        Kss = self._compute_cov_diag(t_predict)
 
         std = np.sqrt(np.array(Kss - KsB_dot_diag).flatten())
 
