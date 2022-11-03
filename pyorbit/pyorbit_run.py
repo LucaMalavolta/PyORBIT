@@ -23,7 +23,7 @@ def pyorbit_run():
     sampler = args.sampler[0]
     file_conf = args.config_file[0]
 
-    config_in = pyorbit.yaml_parser(file_conf)
+    config_in = pyorbit.subroutines.input_parser.yaml_parser(file_conf)
 
     sampler_keyword = {
         'multinest':['multinest', 'MultiNest', 'multi'],
@@ -43,18 +43,23 @@ def pyorbit_run():
         pyorbit.pyorbit_zeus(config_in)
 
     if sampler in sampler_keyword['multinest']:
+        config_in = pyorbit.subroutines.input_parser.yaml_fix_nested(config_in)
         pyorbit.pyorbit_multinest(config_in)
 
     if sampler in sampler_keyword['polychord']:
+        config_in = pyorbit.subroutines.input_parser.yaml_fix_nested(config_in)
         pyorbit.pyorbit_polychord(config_in)
 
     if sampler in sampler_keyword['dynesty']:
+        config_in = pyorbit.subroutines.input_parser.yaml_fix_nested(config_in)
         pyorbit.pyorbit_dynesty(config_in)
 
     if sampler in sampler_keyword['nestle']:
+        config_in = pyorbit.subroutines.input_parser.yaml_fix_nested(config_in)
         pyorbit.pyorbit_nestle(config_in)
 
     if sampler in sampler_keyword['ultranest']:
+        config_in = pyorbit.subroutines.input_parser.yaml_fix_nested(config_in)
         pyorbit.pyorbit_ultranest(config_in)
 
     if sampler in sampler_keyword['optimize']:
