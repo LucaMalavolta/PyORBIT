@@ -11,7 +11,7 @@ import os
 import sys
 import multiprocessing
 
-__all__ = ["pyorbit_emcee", "yaml_parser"]
+__all__ = ["pyorbit_emcee"]
 
 
 def pyorbit_emcee(config_in, input_datasets=None, return_output=None):

@@ -8,7 +8,7 @@ from scipy import optimize
 import os
 
 
-__all__ = ["pyorbit_optimize", "yaml_parser"]
+__all__ = ["pyorbit_optimize"]
 
 
 def pyorbit_optimize(config_in, input_datasets=None, return_output=None):

@@ -9,7 +9,7 @@ import os
 import sys
 import argparse
 
-__all__ = ["pyorbit_polychord", "yaml_parser"]
+__all__ = ["pyorbit_polychord"]
 
 """
 def show(filepath):
