@@ -8,7 +8,7 @@ import os
 import sys
 import argparse
 
-__all__ = ["pyorbit_multinest", "yaml_parser"]
+__all__ = ["pyorbit_multinest"]
 
 """
 def show(filepath):

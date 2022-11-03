@@ -15,7 +15,7 @@ import numpy as np
 import multiprocessing
 import matplotlib.pyplot as plt
 
-__all__ = ["pyorbit_dynesty", "yaml_parser"]
+__all__ = ["pyorbit_dynesty"]
 
 """
 def show(filepath):

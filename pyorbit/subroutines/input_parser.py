@@ -14,7 +14,7 @@ from scipy.stats import gaussian_kde, multivariate_normal
 
 from pyorbit.subroutines.common import np, get_2darray_from_val
 
-__all__ = ["pars_input", "yaml_parser"]
+__all__ = ["pars_input", "yaml_parser", "yaml_fix_nested"]
 
 
 def yaml_parser(file_conf):
@@ -37,6 +37,54 @@ def yaml_parser(file_conf):
                 continue
 
         config_in['output'] = output_name
+
+    return config_in
+
+def yaml_fix_nested(config_in):
+
+    print()
+    print('Internal reformatting for Nested Sampling compatibility of priors')
+    common_conf = config_in['common']
+    if 'planets' in common_conf:
+        for planet_name in common_conf['planets']:
+
+            if common_conf['planets'][planet_name].get('orbit', 'keplerian') == 'circular':
+                continue
+
+            prev_parametrization = common_conf['planets'][planet_name].get('parametrization', 'Eastman2013')
+            if prev_parametrization[:5] == 'Stand':
+                continue
+
+            change_parametrization = False
+            if common_conf['planets'][planet_name].get('priors', False):
+                if 'e' in common_conf['planets'][planet_name]['priors'] or \
+                    'omega' in common_conf['planets'][planet_name]['priors']:
+                    change_parametrization = True
+
+            if change_parametrization:
+                if prev_parametrization[-5:] == 'Tcent':
+                    common_conf['planets'][planet_name]['parametrization'] = 'Standard_Tcent'
+                else:
+                    common_conf['planets'][planet_name]['parametrization'] = 'Standard'
+                print('    planet {0:s} - parametrization changed from {1:s} to {2:s}'.format(planet_name,
+                 prev_parametrization, common_conf['planets'][planet_name]['parametrization']))
+
+
+    if 'star' not in common_conf:
+        print()
+        return config_in
+
+    star_conf = config_in['common']['star']
+    for starpam_name in star_conf:
+        """ We assume that a prior on ld_c1 will be necessarily specified in a limb_darkening object"""
+        try:
+            if 'ld_c1' in star_conf[starpam_name]['priors']:
+                star_conf[starpam_name]['parametrization'] = 'Standard'
+                print('    LD {0:s} - LD parametrization changed to Standard'.format(starpam_name))
+        except:
+            pass
+
+    print()
 
     return config_in
 
