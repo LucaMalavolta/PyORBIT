@@ -152,7 +152,16 @@ class TinyGP_Multidimensional_QuasiPeriodicActivity(AbstractModel):
 
 
     def initialize_model(self, mc,  **kwargs):
-        pass
+
+        if kwargs.get('hyperparameters_condition', False):
+            self.hyper_condition = self._hypercond_01
+        else:
+            self.hyper_condition = self._hypercond_00
+
+        if kwargs.get('rotation_decay_condition', False):
+            self.rotdec_condition = self._hypercond_02
+        else:
+            self.rotdec_condition = self._hypercond_00
 
     def initialize_model_dataset(self, mc, dataset, **kwargs):
 
@@ -165,7 +174,7 @@ class TinyGP_Multidimensional_QuasiPeriodicActivity(AbstractModel):
                                     self._n_cov_matrix+dataset.n])
 
         self._dataset_x0 = np.append(self._dataset_x0, dataset.x0)
-        self._dataset_label = np.append(self._dataset_label, np.zero_like(dataset.x0)+ self._added_datasets)
+        self._dataset_label = np.append(self._dataset_label, np.zeros_like(dataset.x0)+ self._added_datasets)
         self._dataset_e2 = np.append(self._dataset_e2, dataset.e**2)
 
         self._dataset_names[dataset.name_ref] = self._added_datasets
@@ -212,19 +221,23 @@ class TinyGP_Multidimensional_QuasiPeriodicActivity(AbstractModel):
         self.internal_coeff_deriv[d_ind] = variable_value['rot_amp']
 
     def lnlk_compute(self):
+        if not self.hyper_condition(self.internal_variable_value):
+            return -np.inf
+        if not self.rotdec_condition(self.internal_variable_value):
+            return -np.inf
+
         theta_dict =  dict(
             gamma=1. / (2.*self.internal_variable_value['Oamp'] ** 2),
-            Hamp=self.internal_variable_value['Hamp'],
             Pdec=self.internal_variable_value['Pdec'],
             Prot=self.internal_variable_value['Prot'],
             diag=self._dataset_ej2,
-            X=self.X,
+            X=self._X,
             y=self._dataset_res,
             coeff_prime=self.internal_coeff_prime,
             coeff_deriv=self.internal_coeff_deriv
         )
 
-        return self._loss_tinygp(theta_dict)
+        return _loss_tinygp(theta_dict)
 
 
     def sample_predict(self, dataset, x0_input=None, return_covariance=False, return_variance=False):
@@ -250,7 +263,6 @@ class TinyGP_Multidimensional_QuasiPeriodicActivity(AbstractModel):
 
         theta_dict =  dict(
             gamma=1. / (2.*self.internal_variable_value['Oamp'] ** 2),
-            Hamp=self.internal_variable_value['Hamp'],
             Pdec=self.internal_variable_value['Pdec'],
             Prot=self.internal_variable_value['Prot'],
             diag=self._dataset_ej2,
@@ -267,3 +279,19 @@ class TinyGP_Multidimensional_QuasiPeriodicActivity(AbstractModel):
             return mu, std
         else:
             return mu
+
+    @staticmethod
+    def _hypercond_00(variable_value):
+        #Condition from Rajpaul 2017, Rajpaul+2021
+        return True
+
+    @staticmethod
+    def _hypercond_01(variable_value):
+        # Condition from Rajpaul 2017, Rajpaul+2021
+        # Taking into account that Pdec^2 = 2*lambda_2^2
+        return variable_value['Pdec']**2 > (3. / 4. / np.pi) * variable_value['Oamp']**2 * variable_value['Prot']**2 
+
+    @staticmethod
+    def _hypercond_02(variable_value):
+        #Condition on Rotation period and decay timescale
+        return variable_value['Pdec'] > 2. * variable_value['Prot']

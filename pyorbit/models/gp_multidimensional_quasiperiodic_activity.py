@@ -59,7 +59,15 @@ class GP_Multidimensional_QuasiPeriodicActivity(AbstractModel):
 
 
     def initialize_model(self, mc,  **kwargs):
-        pass
+        if kwargs.get('hyperparameters_condition', False):
+            self.hyper_condition = self._hypercond_01
+        else:
+            self.hyper_condition = self._hypercond_00
+
+        if kwargs.get('rotation_decay_condition', False):
+            self.rotdec_condition = self._hypercond_02
+        else:
+            self.rotdec_condition = self._hypercond_00
 
     def initialize_model_dataset(self, mc, dataset, **kwargs):
 
@@ -133,7 +141,6 @@ class GP_Multidimensional_QuasiPeriodicActivity(AbstractModel):
         self._dataset_res[d_nstart:d_nend] = dataset.residuals
 
         self.internal_coefficients[d_ind] = [variable_value['con_amp'], variable_value['rot_amp']]
-
 
     def _compute_distance(self, bjd0, bjd1):
         X0 = np.array([bjd0]).T
@@ -217,7 +224,7 @@ class GP_Multidimensional_QuasiPeriodicActivity(AbstractModel):
         Oamp2 = self.internal_variable_value['Oamp']**2
 
         len_diag = len(t_array)
-        cov_diag = np.empty(3*len_diag)
+        cov_diag = np.empty(self._added_datasets*len_diag)
         dist_t1, dist_t2 = np.zeros(len_diag), np.zeros(len_diag)
 
 
@@ -249,7 +256,7 @@ class GP_Multidimensional_QuasiPeriodicActivity(AbstractModel):
         Oamp2 = self.internal_variable_value['Oamp']**2
 
         len_t_array = len(t_array)
-        cov_matrix = np.empty([3*len_t_array, self._n_cov_matrix])
+        cov_matrix = np.empty([self._added_datasets*len_t_array, self._n_cov_matrix])
 
         for l_dataset in range(0, self._added_datasets):
             for m_dataset in range(0, self._added_datasets):
@@ -274,7 +281,6 @@ class GP_Multidimensional_QuasiPeriodicActivity(AbstractModel):
                         - Bl * Am * framework_GdG
 
                 cov_matrix[l_nstart:l_nend, m_nstart:m_nend] = k_lm
-                #cov_matrix[l_nstart:l_nend, m_nstart:m_nend] = matrix(k_lm)
 
         #cov_matrix += np.diag(self._nugget)
 
@@ -299,6 +305,10 @@ class GP_Multidimensional_QuasiPeriodicActivity(AbstractModel):
         return inv, detA, False
 
     def lnlk_compute(self):
+        if not self.hyper_condition(self.internal_variable_value):
+            return -np.inf
+        if not self.rotdec_condition(self.internal_variable_value):
+            return -np.inf
 
         cov_matrix = self._compute_cov_matrix()
 
@@ -329,14 +339,20 @@ class GP_Multidimensional_QuasiPeriodicActivity(AbstractModel):
         dataset_index = self._dataset_names[dataset.name_ref]
 
         if x0_input is None:
+            faster_computation = False
             t_predict = dataset.x0
             l_nstart, l_nend = self._dataset_nindex[dataset_index]
         else:
+            faster_computation = True
             t_predict = x0_input
             l_nstart, l_nend = len(x0_input)*dataset_index, len(x0_input)*(dataset_index+1)
 
         cov_matrix = self._compute_cov_matrix()
-        Ks = self._compute_cov_Ks(t_predict)
+
+        if faster_computation:
+            Ks = self._compute_cov_Ks(t_predict)
+        else:
+            Ks = cov_matrix - np.diag(self._dataset_ej2)
 
         alpha = cho_solve(cho_factor(cov_matrix), self._dataset_res)
         mu = np.dot(Ks, alpha).flatten()
@@ -347,9 +363,12 @@ class GP_Multidimensional_QuasiPeriodicActivity(AbstractModel):
 
         B = None
         Ks = None
-        cov_matrix = None
 
-        Kss = self._compute_cov_diag(t_predict)
+        if faster_computation:
+            Kss = self._compute_cov_diag(t_predict)
+        else:
+            Kss = np.diag(cov_matrix)
+        cov_matrix = None
 
         std = np.sqrt(np.array(Kss - KsB_dot_diag).flatten())
 
@@ -367,3 +386,19 @@ class GP_Multidimensional_QuasiPeriodicActivity(AbstractModel):
     def sample_conditional(self, dataset, x0_input=None):
         val, std = self.sample_predict(dataset, x0_input)
         return val
+
+    @staticmethod
+    def _hypercond_00(variable_value):
+        #Condition from Rajpaul 2017, Rajpaul+2021
+        return True
+
+    @staticmethod
+    def _hypercond_01(variable_value):
+        # Condition from Rajpaul 2017, Rajpaul+2021
+        # Taking into account that Pdec^2 = 2*lambda_2^2
+        return variable_value['Pdec']**2 > (3. / 4. / np.pi) * variable_value['Oamp']**2 * variable_value['Prot']**2 
+
+    @staticmethod
+    def _hypercond_02(variable_value):
+        #Condition on Rotation period and decay timescale
+        return variable_value['Pdec'] > 2. * variable_value['Prot']

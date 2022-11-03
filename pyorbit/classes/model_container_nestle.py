@@ -2,7 +2,7 @@ from pyorbit.subroutines.common import np, nested_sampling_prior_compute
 from pyorbit.classes.model_container_abstract import ModelContainer
 
 
-class ModelContainerDynesty(ModelContainer):
+class ModelContainerNestle(ModelContainer):
 
     def __init__(self):
         super(self.__class__, self).__init__()
@@ -13,14 +13,13 @@ class ModelContainerDynesty(ModelContainer):
                                            'nthreads': 16,
                                            'include_priors': False,
                                            'dlogz':0.01,
-                                           'pfrac': 0.00,
+                                           'pfrac': 1.0,
                                            'sample': 'auto',
-                                           'bound': 'multi',
-                                           'use_threading_pool':True }
+                                           'bound': 'multi'}
 
         self.output_directory = None
 
-    def dynesty_priors(self, cube):
+    def nestle_priors(self, cube):
         theta = np.zeros(len(cube), dtype=np.double)
 
         for i in range(0, len(cube)):
@@ -28,7 +27,7 @@ class ModelContainerDynesty(ModelContainer):
                 cube[i], self.priors[i][0], self.priors[i][2], self.spaces[i])
         return theta
 
-    def dynesty_call(self, theta):
+    def nestle_call(self, theta):
 
         chi_out = self(theta, self.include_priors)
 
