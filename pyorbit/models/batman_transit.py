@@ -45,7 +45,8 @@ class Batman_Transit(AbstractModel, AbstractTransit):
 
         self.code_options['nthreads'] = kwargs.get('nthreads', 1)
 
-        print(self.code_options['nthreads'])
+        print('Warning: OpenMP computation on batman temporaroly turned off ')
+        self.code_options['nthreads'] = 1
         self.batman_params = batman.TransitParams()
 
         """ Initialization with random transit parameters"""
@@ -133,9 +134,8 @@ class Batman_Transit(AbstractModel, AbstractTransit):
         """
 
         random_selector = np.random.randint(100)
-        #print('aaaaaaa')
-        #if self.code_options['initialization_counter'] > 1000:
-        if random_selector==50:
+
+        if random_selector == 50:
             self.batman_models[dataset.name_ref] = \
                 batman.TransitModel(self.batman_params,
                                     dataset.x0,

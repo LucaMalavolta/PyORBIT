@@ -49,7 +49,6 @@ class PyTransit_Transit_With_TTV_Ancillary(AbstractModel, AbstractTransit):
         self._prepare_limb_darkening_coefficients(mc, **kwargs)
 
         # Qui: leggere file con i tempi di transito e gli id
-        
 
         self.list_pams_common.discard('Tc')
         self.list_pams_dataset.update(['Tc'])

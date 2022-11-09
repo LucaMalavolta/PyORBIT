@@ -47,8 +47,9 @@ class Batman_Transit_With_TTV(AbstractModel, AbstractTransit):
         self._prepare_planetary_parameters(mc, **kwargs)
         self._prepare_limb_darkening_coefficients(mc, **kwargs)
 
-        if hasattr(kwargs, 'nthreads'):
-            self.code_options['nthreads'] = kwargs['nthreads']
+        self.code_options['nthreads'] = kwargs.get('nthreads', 1)
+        print('Warning: OpenMP computation on batman temporaroly turned off ')
+        self.code_options['nthreads'] = 1
 
         self.batman_params = batman.TransitParams()
 
