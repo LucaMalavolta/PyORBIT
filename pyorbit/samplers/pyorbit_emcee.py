@@ -68,6 +68,8 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
     print('reloaded_pyde: ', reloaded_pyde)
     print('reloaded_emcee: ', reloaded_emcee)
     print()
+    print('number of system threads:', omp_num_threads )
+    print()
 
     if reloaded_pyde or reloaded_emcee:
         previous_boundaries = mc.bounds
