@@ -354,6 +354,7 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
                         progress=True,
                         skip_initial_state_check=emcee_skip_check)
             else:
+                print('Warning: NOT using threading, pool, performances will be slower')
                 population, prob, state = sampler.run_mcmc(
                     population,
                     int(mc.emcee_parameters['nsave']),
@@ -402,6 +403,7 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
                     skip_initial_state_check=emcee_skip_check)
 
         else:
+            print('Warning: NOT using threading, pool, performances will be slower')
             population, prob, state = sampler.run_mcmc(
                 population,
                 nsteps_todo,
