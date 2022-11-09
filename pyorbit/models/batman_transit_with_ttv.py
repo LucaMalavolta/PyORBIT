@@ -47,8 +47,9 @@ class Batman_Transit_With_TTV(AbstractModel, AbstractTransit):
         self._prepare_planetary_parameters(mc, **kwargs)
         self._prepare_limb_darkening_coefficients(mc, **kwargs)
 
-        if hasattr(kwargs, 'nthreads'):
-            self.code_options['nthreads'] = kwargs['nthreads']
+        self.code_options['nthreads'] = kwargs.get('nthreads', 1)
+        print('Warning: OpenMP computation on batman temporaroly turned off ')
+        self.code_options['nthreads'] = 1
 
         self.batman_params = batman.TransitParams()
 
@@ -69,7 +70,6 @@ class Batman_Transit_With_TTV(AbstractModel, AbstractTransit):
         self.batman_params.u = np.ones(kwargs['limb_darkening_ncoeff'],
                                        dtype=np.double) * 0.1  # limb darkening coefficients
 
-        self.code_options['initialization_counter'] = 5000
 
         """ And now we remove the transit time from the common variables, and add it back as a dataset-specific variable """
 
@@ -138,17 +138,15 @@ class Batman_Transit_With_TTV(AbstractModel, AbstractTransit):
         so at some point we'll need to
         reinitialize the model so that the correct step size is computed.
         """
-        if self.code_options['initialization_counter'] > 1000:
-            self.code_options['initialization_counter'] = 0
+        random_selector = np.random.randint(100)
 
+        if random_selector == 50:
             self.batman_models[dataset.name_ref] = batman.TransitModel(self.batman_params,
                                                                        dataset.x0,
                                                                        supersample_factor=self.code_options[
                                                                            dataset.name_ref]['sample_factor'],
                                                                        exp_time=self.code_options[dataset.name_ref]['exp_time'],
                                                                        nthreads=self.code_options['nthreads'])
-        else:
-            self.code_options['initialization_counter'] += 1
 
         if x0_input is None:
             return self.batman_models[dataset.name_ref].light_curve(self.batman_params) - 1.

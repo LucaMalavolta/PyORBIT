@@ -35,10 +35,7 @@ class Batman_Transit(AbstractModel, AbstractTransit):
         """ Model-specifc variables, not declared in the abstract class """
         self.batman_params = None
         self.batman_models = {}
-        self.code_options = {
-            'nthreads': 1,
-            'initialization_counter': 5000
-        }
+        self.code_options = {}
         self.transit_time_boundaries = {}
 
     def initialize_model(self, mc, **kwargs):
@@ -46,9 +43,10 @@ class Batman_Transit(AbstractModel, AbstractTransit):
         self._prepare_planetary_parameters(mc, **kwargs)
         self._prepare_limb_darkening_coefficients(mc, **kwargs)
 
-        if hasattr(kwargs, 'nthreads'):
-            self.code_options['nthreads'] = kwargs['nthreads']
+        self.code_options['nthreads'] = kwargs.get('nthreads', 1)
 
+        print('Warning: OpenMP computation on batman temporaroly turned off ')
+        self.code_options['nthreads'] = 1
         self.batman_params = batman.TransitParams()
 
         """ Initialization with random transit parameters"""
@@ -74,13 +72,18 @@ class Batman_Transit(AbstractModel, AbstractTransit):
     def initialize_model_dataset(self, mc, dataset, **kwargs):
 
         self._prepare_dataset_options(mc, dataset, **kwargs)
+        #self.batman_models[dataset.name_ref] = \
+        #    batman.TransitModel(self.batman_params,
+        #                        dataset.x0,
+        #                        supersample_factor=self.code_options[dataset.name_ref]['sample_factor'],
+        #                        exp_time=self.code_options[dataset.name_ref]['exp_time'],
+        #                        nthreads=self.code_options['nthreads'])
         self.batman_models[dataset.name_ref] = \
             batman.TransitModel(self.batman_params,
                                 dataset.x0,
                                 supersample_factor=self.code_options[dataset.name_ref]['sample_factor'],
                                 exp_time=self.code_options[dataset.name_ref]['exp_time'],
                                 nthreads=self.code_options['nthreads'])
-
         """ Keep track of the boundaries of each dataset, so that the user do
         not have to write down the boundaries of each transit in case of TTV fit
         """
@@ -129,17 +132,16 @@ class Batman_Transit(AbstractModel, AbstractTransit):
         so at some point we'll need to reinitialize the model so that the
         correct step size is computed.
         """
-        if self.code_options['initialization_counter'] > 1000:
-            self.code_options['initialization_counter'] = 0
+
+        random_selector = np.random.randint(100)
+
+        if random_selector == 50:
             self.batman_models[dataset.name_ref] = \
                 batman.TransitModel(self.batman_params,
                                     dataset.x0,
                                     supersample_factor=self.code_options[dataset.name_ref]['sample_factor'],
                                     exp_time=self.code_options[dataset.name_ref]['exp_time'],
                                     nthreads=self.code_options['nthreads'])
-
-        else:
-            self.code_options['initialization_counter'] += 1
 
         if x0_input is None:
             return self.batman_models[dataset.name_ref].light_curve(self.batman_params) - 1.
