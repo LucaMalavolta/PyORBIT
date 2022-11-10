@@ -38,6 +38,11 @@ class Batman_Transit(AbstractModel, AbstractTransit):
         self.code_options = {}
         self.transit_time_boundaries = {}
 
+        self.dataset_x0 ={}
+        self.dataset_Tref = {}
+        #self.copied_dataset = True
+
+
     def initialize_model(self, mc, **kwargs):
 
         self._prepare_planetary_parameters(mc, **kwargs)
@@ -88,6 +93,9 @@ class Batman_Transit(AbstractModel, AbstractTransit):
         self.transit_time_boundaries[dataset.name_ref] = \
             [np.amin(dataset.x), np.amax(dataset.x)]
 
+        self.dataset_Tref[dataset.name_ref] = dataset.Tref
+        self.dataset_x0[dataset.name_ref] = dataset.x0
+
     def compute(self, variable_value, dataset, x0_input=None):
         """
         :param variable_value:
@@ -131,8 +139,8 @@ class Batman_Transit(AbstractModel, AbstractTransit):
         correct step size is computed.
         """
 
-        random_selector = np.random.randint(100)
-
+        #random_selector = np.random.randint(100)
+        random_selector = 100
         if random_selector == 50:
             self.batman_models[dataset.name_ref] = \
                 batman.TransitModel(self.batman_params,
@@ -150,6 +158,51 @@ class Batman_Transit(AbstractModel, AbstractTransit):
                                                   supersample_factor=self.code_options[
                                                       dataset.name_ref]['sample_factor'],
                                                   exp_time=self.code_options[dataset.name_ref]['exp_time'],
+                                                  nthreads=self.code_options['nthreads'])
+
+            return temporary_model.light_curve(self.batman_params) - 1.
+
+
+
+
+    def compute_test(self, variable_value, dataset_name, x0_input=None):
+        """
+        :param variable_value:
+        :param dataset:
+        :param x0_input:
+        :return:
+        """
+        #t1_start = process_time()
+
+        self.batman_params.a, self.batman_params.inc = self.retrieve_ai(
+            variable_value)
+        self.batman_params.t0 = self.retrieve_t0(variable_value, self.dataset_Tref[dataset_name])
+
+        self.batman_params.per = variable_value['P']  # orbital period
+        # planet radius (in units of stellar radii)
+        self.batman_params.rp = variable_value['R_Rs']
+        self.batman_params.ecc = variable_value['e']  # eccentricity
+        # longitude of periastron (in degrees)
+        self.batman_params.w = variable_value['omega']
+
+        random_selector = np.random.randint(100)
+        if random_selector == 50:
+            self.batman_models[dataset_name] = \
+                batman.TransitModel(self.batman_params,
+                                    self.dataset_x0[dataset_name],
+                                    supersample_factor=self.code_options[dataset_name]['sample_factor'],
+                                    exp_time=self.code_options[dataset_name]['exp_time'],
+                                    nthreads=self.code_options['nthreads'])
+
+        if x0_input is None:
+            return self.batman_models[dataset_name].light_curve(self.batman_params) - 1.
+
+        else:
+            temporary_model = batman.TransitModel(self.batman_params,
+                                                  x0_input,
+                                                  supersample_factor=self.code_options[
+                                                      dataset_name]['sample_factor'],
+                                                  exp_time=self.code_options[dataset_name]['exp_time'],
                                                   nthreads=self.code_options['nthreads'])
 
             return temporary_model.light_curve(self.batman_params) - 1.
