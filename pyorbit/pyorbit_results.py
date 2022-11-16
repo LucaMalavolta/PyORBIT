@@ -136,7 +136,7 @@ def pyorbit_results():
     print('Python version in use:')
     print(sys.version)
 
-    config_in = pyorbit.yaml_parser(file_conf)
+    config_in = pyorbit.subroutines.input_parser.yaml_parser(file_conf)
 
     pyorbit.pyorbit_getresults(config_in, sampler_name, plot_dictionary)
     #pyorbit.pyorbit_getresults_getdist(config_in, sampler, plot_dictionary)
