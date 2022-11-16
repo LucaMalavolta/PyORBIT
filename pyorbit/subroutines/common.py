@@ -19,7 +19,6 @@ try:
 except:
     pass
 
-
 # old base 2 logarithm
 def get_var_log(var, fix, i):
     if len(np.shape(var)) == 1:

@@ -10,10 +10,12 @@ import pyorbit.subroutines.results_analysis as results_analysis
 import os
 import sys
 import multiprocessing
+from schwimmbad import MPIPool
 
-__all__ = ["pyorbit_emcee"]
+__all__ = ["pyorbit_emcee_mpi"]
 
-def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
+
+def pyorbit_emcee_mpi(config_in, input_datasets=None, return_output=None):
 
     try:
         import emcee
@@ -27,6 +29,7 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
         os.environ["OMP_NUM_THREADS"] = omp_num_threads
     else:
         os.environ["OMP_NUM_THREADS"] = "{0:.0f}".format(omp_num_threads)
+
 
     optimize_dir_output = './' + config_in['output'] + '/optimize/'
     pyde_dir_output = './' + config_in['output'] + '/pyde/'
@@ -182,15 +185,6 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
     print()
 
 
-    if mc.emcee_parameters['version'] == '2':
-        mc.emcee_parameters['use_threading_pool'] = False
-
-    #if not mc.pyde_parameters.get('use_threading_pool', False):
-    #    mc.pyde_parameters['use_threading_pool'] = False
-
-    #if not mc.emcee_parameters.get('use_threading_pool', False):
-    #    mc.emcee_parameters['use_threading_pool'] = False
-
     if reloaded_emcee:
         sys.stdout.flush()
         pass
@@ -262,31 +256,23 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
         if not os.path.exists(mc.pyde_dir_output):
             os.makedirs(mc.pyde_dir_output)
 
-        print('Using threading pool for PyDE:',
-            mc.pyde_parameters['use_threading_pool'])
-
         print('PyDE running')
         sys.stdout.flush()
 
-        if mc.pyde_parameters['use_threading_pool']:
-            with multiprocessing.Pool() as pool:
+        with MPIPool() as pool:
+            if not pool.is_master():
+                pool.wait()
+                sys.exit(0)
 
-                de = DiffEvol(
-                    mc,
-                    mc.bounds,
-                    mc.emcee_parameters['nwalkers'],
-                    maximize=True,
-                    pool=pool)
-
-                de.optimize(int(mc.pyde_parameters['ngen']))
-        else:
             de = DiffEvol(
                 mc,
                 mc.bounds,
                 mc.emcee_parameters['nwalkers'],
-                maximize=True)
+                maximize=True,
+                pool=pool)
 
             de.optimize(int(mc.pyde_parameters['ngen']))
+
 
         population = de.population
         starting_point = np.median(population, axis=0)
@@ -326,7 +312,6 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
     print('emcee version: ', emcee.__version__)
     if mc.emcee_parameters['version'] == '2':
         print('WARNING: upgrading to version 3 is strongly advised')
-    print('Using threading pool for emcee:', mc.emcee_parameters.get('use_threading_pool', False))
     print()
 
     if reloaded_emcee:
@@ -343,17 +328,12 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
 
         for i in range(0, niter):
 
-            if mc.emcee_parameters['use_threading_pool']:
-                with multiprocessing.Pool() as pool:
-                    sampler.pool = pool
-                    population, prob, state = sampler.run_mcmc(
-                        population,
-                        int(mc.emcee_parameters['nsave']),
-                        thin=mc.emcee_parameters['thin'],
-                        rstate0=state,
-                        progress=True,
-                        skip_initial_state_check=emcee_skip_check)
-            else:
+            with MPIPool() as pool:
+                if not pool.is_master():
+                    pool.wait()
+                    sys.exit(0)
+
+                sampler.pool = pool
                 population, prob, state = sampler.run_mcmc(
                     population,
                     int(mc.emcee_parameters['nsave']),
@@ -365,8 +345,8 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
             sampled += mc.emcee_parameters['nsave']
             theta_dict = results_analysis.get_theta_dictionary(mc)
             emcee_save_to_cpickle(mc, starting_point, population,
-                                  prob, state, sampler, theta_dict,
-                                  samples=sampled)
+                                    prob, state, sampler, theta_dict,
+                                    samples=sampled)
 
             flatchain = emcee_flatchain(
                 sampler.chain,
@@ -390,26 +370,18 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
             state, sampler = emcee_simpler_load_from_cpickle(emcee_dir_output)
 
     else:
-        if mc.emcee_parameters['use_threading_pool']:
-            with multiprocessing.Pool() as pool:
-                sampler.pool = pool
-                population, prob, state = sampler.run_mcmc(
-                    population,
-                    nsteps_todo,
-                    thin=mc.emcee_parameters['thin'],
-                    rstate0=state,
-                    progress=True,
-                    skip_initial_state_check=emcee_skip_check)
-
-        else:
-            print('Warning: NOT using threading, pool, performances will be slower')
+        with MPIPool() as pool:
+            if not pool.is_master():
+                pool.wait()
+                sys.exit(0)
+            sampler.pool = pool
             population, prob, state = sampler.run_mcmc(
                 population,
                 nsteps_todo,
                 thin=mc.emcee_parameters['thin'],
                 rstate0=state,
                 progress=True,
-                    skip_initial_state_check=emcee_skip_check)
+                skip_initial_state_check=emcee_skip_check)
 
         sampled += nsteps_todo
 

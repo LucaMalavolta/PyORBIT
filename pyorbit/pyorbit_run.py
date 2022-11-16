@@ -29,6 +29,7 @@ def pyorbit_run():
         'multinest':['multinest', 'MultiNest', 'multi'],
         'polychord':['polychord', 'PolyChord', 'polychrod', 'poly'],
         'emcee': ['emcee', 'MCMC', 'Emcee'],
+        'emcee_mpi': ['emcee_MPI', 'MCMC_MPI', 'Emcee_MPI','emcee_mpi', 'MCMC_mpi', 'Emcee_mpi'],
         'zeus': ['zeus', 'ZEUS', 'Zeus', 'zeus-mcmc'],
         'dynesty': ['dynesty', 'DyNesty', 'Dynesty', 'DYNESTY'],
         'nestle': ['nestle', 'Nestle', 'NESTLE', 'nelste'],
@@ -38,6 +39,9 @@ def pyorbit_run():
 
     if sampler in sampler_keyword['emcee']:
         pyorbit.pyorbit_emcee(config_in)
+
+    if sampler in sampler_keyword['emcee_mpi']:
+        pyorbit.pyorbit_emcee_mpi(config_in)
 
     if sampler in sampler_keyword['zeus']:
         pyorbit.pyorbit_zeus(config_in)

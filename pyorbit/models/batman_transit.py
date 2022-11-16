@@ -38,6 +38,11 @@ class Batman_Transit(AbstractModel, AbstractTransit):
         self.code_options = {}
         self.transit_time_boundaries = {}
 
+        self.dataset_x0 ={}
+        self.dataset_Tref = {}
+        #self.copied_dataset = True
+
+
     def initialize_model(self, mc, **kwargs):
 
         self._prepare_planetary_parameters(mc, **kwargs)
@@ -45,8 +50,6 @@ class Batman_Transit(AbstractModel, AbstractTransit):
 
         self.code_options['nthreads'] = kwargs.get('nthreads', 1)
 
-        print('Warning: OpenMP computation on batman temporaroly turned off ')
-        self.code_options['nthreads'] = 1
         self.batman_params = batman.TransitParams()
 
         """ Initialization with random transit parameters"""
@@ -133,8 +136,8 @@ class Batman_Transit(AbstractModel, AbstractTransit):
         correct step size is computed.
         """
 
-        random_selector = np.random.randint(100)
-
+        #random_selector = np.random.randint(100)
+        random_selector = 100
         if random_selector == 50:
             self.batman_models[dataset.name_ref] = \
                 batman.TransitModel(self.batman_params,

@@ -55,6 +55,7 @@ def pyorbit_results():
         'emcee': ['emcee', 'MCMC', 'Emcee'],
         'dynesty': ['dynesty', 'DyNesty', 'Dynesty', 'DYNESTY'],
         'ultranest': ['ultranest', 'UltraNest', 'Ultranest', 'ULTRANEST', 'ultra','Unest'],
+        'emcee_mpi': ['emcee_MPI', 'MCMC_MPI', 'Emcee_MPI','emcee_mpi', 'MCMC_mpi', 'Emcee_mpi'],
         #'optimize': ['optimize', 'scipy', 'Optimize', 'OPTIMIZE'],
     }
 
@@ -135,7 +136,7 @@ def pyorbit_results():
     print('Python version in use:')
     print(sys.version)
 
-    config_in = pyorbit.yaml_parser(file_conf)
+    config_in = pyorbit.subroutines.input_parser.yaml_parser(file_conf)
 
     pyorbit.pyorbit_getresults(config_in, sampler_name, plot_dictionary)
     #pyorbit.pyorbit_getresults_getdist(config_in, sampler, plot_dictionary)

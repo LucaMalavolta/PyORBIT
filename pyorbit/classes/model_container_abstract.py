@@ -1,4 +1,5 @@
 from pyorbit.subroutines.common import *
+import time
 
 __all__ = ["ModelContainer"]
 
@@ -318,9 +319,8 @@ class ModelContainer(object):
                     dataset.normalization_model = np.ones(dataset.n, dtype=np.double)
 
                 if self.models[model_name].unitary_model:
-                #if getattr(self.models[model_name], 'unitary_model', False):
                     dataset.unitary_model += self.models[model_name].compute(
-                        variable_values, dataset)
+                    variable_values, dataset)
                 elif self.models[model_name].normalization_model:
                     dataset.normalization_model *= self.models[model_name].compute(
                         variable_values, dataset)
