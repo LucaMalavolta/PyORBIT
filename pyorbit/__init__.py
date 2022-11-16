@@ -15,4 +15,4 @@ from .samplers.pyorbit_ultranest import *
 from .samplers.pyorbit_multinest import *
 from .samplers.pyorbit_getresults import *
 
-__version__ = "9.0.17"
+__version__ = "9.0.18"
