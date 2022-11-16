@@ -67,51 +67,38 @@ class Batman_Transit_TTV_Subset(AbstractModel, AbstractTransit):
         self.batman_params.u = np.ones(kwargs['limb_darkening_ncoeff'],
                                        dtype=np.double) * 0.1  # limb darkening coefficients
 
-
         """ And now we remove the transit time from the common variables, and add it back as a dataset-specific variable """
 
         self.list_pams_common.discard('Tc')
-        self.list_pams_dataset.update(['Tc'])
+        # self.list_pams_dataset.update(['Tc'])
 
     def initialize_model_dataset(self, mc, dataset, **kwargs):
-
-        if not dataset.submodel_flag:
-            return
-
-
-        for i_sub in range(0, dataset.submodel_flag):
-
-            var_original = 'poly_c'+repr(i_order)
-            var_subset = 'poly_sub'+repr(i_sub)+'_c'+repr(i_order)
-
-            self._subset_transfer_priors(mc, dataset, var_original, var_subset)
-
-            sub_dataset = dataset.x[(dataset.submodel_id==i_sub)]
-
-            self.bounds[dataset.name_ref].update({var_subset: var_update})
-
-
-
-
         """ Reading some code-specific keywords from the configuration file"""
         self._prepare_dataset_options(mc, dataset, **kwargs)
 
-        self.batman_models[dataset.name_ref] = \
-            batman.TransitModel(self.batman_params,
-                                dataset.x0,
-                                supersample_factor=self.code_options[dataset.name_ref]['sample_factor'],
-                                exp_time=self.code_options[dataset.name_ref]['exp_time'],
-                                nthreads=self.code_options['nthreads'])
+        for i_sub in range(0, dataset.submodel_flag):
 
-    def define_special_variable_properties(self,
-                                           ndim,
-                                           output_lists,
-                                           dataset_name,
-                                           var):
+            var_original = 'Tc'
+            var_subset = 'Tc_'+repr(i_sub)
 
-        if var == 'Tc' and (var not in self.bounds[dataset_name]):
-            self.bounds[dataset_name][var] = self.code_options[dataset_name]['Tc_boundaries']
-        return ndim, output_lists, False
+            self._subset_transfer_priors(mc, dataset, var_original, var_subset)
+
+            sub_dataset = dataset.x[(dataset.submodel_id == i_sub)]
+
+            if kwargs[dataset.name_ref].get('boundaries', False):
+                var_update = kwargs[dataset.name_ref]['boundaries'].get(
+                    var_subset, [min(sub_dataset), max(sub_dataset)])
+            elif kwargs.get('boundaries', False):
+                var_update = kwargs['boundaries'].get(var_subset, [min(sub_dataset), max(sub_dataset)])
+
+            self.bounds[dataset.name_ref].update({var_subset: var_update})
+
+            self.batman_models[dataset.name_ref + '_'+repr(i_sub)] = \
+                batman.TransitModel(self.batman_params,
+                                    sub_dataset,
+                                    supersample_factor=self.code_options[dataset.name_ref]['sample_factor'],
+                                    exp_time=self.code_options[dataset.name_ref]['exp_time'],
+                                    nthreads=self.code_options['nthreads'])
 
     def compute(self, variable_value, dataset, x0_input=None):
         """
@@ -157,12 +144,23 @@ class Batman_Transit_TTV_Subset(AbstractModel, AbstractTransit):
 
         random_selector = np.random.randint(1000)
         if random_selector == 50:
-            self.batman_models[dataset.name_ref] = batman.TransitModel(self.batman_params,
-                                                                       dataset.x0,
-                                                                       supersample_factor=self.code_options[
-                                                                           dataset.name_ref]['sample_factor'],
-                                                                       exp_time=self.code_options[dataset.name_ref]['exp_time'],
-                                                                       nthreads=self.code_options['nthreads'])
+
+            for i_sub in range(0, dataset.submodel_flag):
+
+                var_subset = 'Tc_'+repr(i_sub)
+                self.batman_params.t0 = variable_value[var_subset] - dataset.Tref
+
+                sel_data = (dataset.submodel_id == i_sub)
+
+                self.batman_models[dataset.name_ref + '_'+repr(i_sub)] = \
+                    batman.TransitModel(self.batman_params,
+                                        dataset.x0[(dataset.submodel_id == i_sub)],
+                                        supersample_factor=self.code_options[
+                                            dataset.name_ref]['sample_factor'],
+                                        exp_time=self.code_options[dataset.name_ref]['exp_time'],
+                                        nthreads=self.code_options['nthreads'])
+
+                # AAAAAAAAAAAAAAAAA
 
         if x0_input is None:
             return self.batman_models[dataset.name_ref].light_curve(self.batman_params) - 1.
