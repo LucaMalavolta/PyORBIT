@@ -170,7 +170,7 @@ class Batman_Transit_Eclipse_PhaseCurve(AbstractModel, AbstractTransit):
         -> However, we estimated the optimal step size from random parameters, so at some point we'll need to
         reinitialize the model so that the correct step size is computed.
         """
-        random_selector = np.random.randint(100)
+        random_selector = np.random.randint(1000)
 
         if random_selector == 50:
 

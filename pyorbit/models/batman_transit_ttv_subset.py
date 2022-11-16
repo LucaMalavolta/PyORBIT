@@ -10,7 +10,7 @@ except ImportError:
     pass
 
 
-class Batman_Transit_With_TTV(AbstractModel, AbstractTransit):
+class Batman_Transit_TTV_Subset(AbstractModel, AbstractTransit):
 
     def __init__(self, *args, **kwargs):
         # this calls all constructors up to AbstractModel
@@ -74,6 +74,25 @@ class Batman_Transit_With_TTV(AbstractModel, AbstractTransit):
         self.list_pams_dataset.update(['Tc'])
 
     def initialize_model_dataset(self, mc, dataset, **kwargs):
+
+        if not dataset.submodel_flag:
+            return
+
+
+        for i_sub in range(0, dataset.submodel_flag):
+
+            var_original = 'poly_c'+repr(i_order)
+            var_subset = 'poly_sub'+repr(i_sub)+'_c'+repr(i_order)
+
+            self._subset_transfer_priors(mc, dataset, var_original, var_subset)
+
+            sub_dataset = dataset.x[(dataset.submodel_id==i_sub)]
+
+            self.bounds[dataset.name_ref].update({var_subset: var_update})
+
+
+
+
         """ Reading some code-specific keywords from the configuration file"""
         self._prepare_dataset_options(mc, dataset, **kwargs)
 
