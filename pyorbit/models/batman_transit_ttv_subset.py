@@ -143,34 +143,45 @@ class Batman_Transit_TTV_Subset(AbstractModel, AbstractTransit):
         """
 
         random_selector = np.random.randint(1000)
-        if random_selector == 50:
-
-            for i_sub in range(0, dataset.submodel_flag):
-
-                var_subset = 'Tc_'+repr(i_sub)
-                self.batman_params.t0 = variable_value[var_subset] - dataset.Tref
-
-                sel_data = (dataset.submodel_id == i_sub)
-
-                self.batman_models[dataset.name_ref + '_'+repr(i_sub)] = \
-                    batman.TransitModel(self.batman_params,
-                                        dataset.x0[(dataset.submodel_id == i_sub)],
-                                        supersample_factor=self.code_options[
-                                            dataset.name_ref]['sample_factor'],
-                                        exp_time=self.code_options[dataset.name_ref]['exp_time'],
-                                        nthreads=self.code_options['nthreads'])
-
-                # AAAAAAAAAAAAAAAAA
 
         if x0_input is None:
-            return self.batman_models[dataset.name_ref].light_curve(self.batman_params) - 1.
-
+            y_output = np.zeros(dataset.n)
         else:
-            temporary_model = batman.TransitModel(self.batman_params,
-                                                  x0_input,
-                                                  supersample_factor=self.code_options[
-                                                      dataset.name_ref]['sample_factor'],
-                                                  exp_time=self.code_options[dataset.name_ref]['exp_time'],
-                                                  nthreads=self.code_options['nthreads'])
+            y_output = x0_input * 0.
 
-            return temporary_model.light_curve(self.batman_params) - 1.
+
+        for i_sub in range(0,dataset.submodel_flag):
+
+            var_subset = 'Tc_'+repr(i_sub)
+            self.batman_params.t0 = variable_value[var_subset] - dataset.Tref
+
+
+            if x0_input is None:
+                sel_data = (dataset.submodel_id==i_sub)
+
+                if random_selector == 50:
+                    self.batman_models[dataset.name_ref + '_'+repr(i_sub)] = \
+                        batman.TransitModel(self.batman_params,
+                                            dataset.x0[sel_data],
+                                            supersample_factor=self.code_options[
+                                                dataset.name_ref]['sample_factor'],
+                                            exp_time=self.code_options[dataset.name_ref]['exp_time'],
+                                            nthreads=self.code_options['nthreads'])
+
+                y_output[sel_data] = self.batman_models[dataset.name_ref+ '_'+repr(i_sub)].light_curve(self.batman_params) - 1.
+
+
+            else:
+                original_dataset = dataset.x0[(dataset.submodel_id==i_sub)]
+                sel_data = (x0_input >= np.amin(original_dataset)) &  (x0_input <= np.amax(original_dataset))
+
+                temporary_model = batman.TransitModel(self.batman_params,
+                                            x0_input[sel_data],
+                                            supersample_factor=self.code_options[
+                                                dataset.name_ref]['sample_factor'],
+                                            exp_time=self.code_options[dataset.name_ref]['exp_time'],
+                                            nthreads=self.code_options['nthreads'])
+
+                y_output[sel_data] = temporary_model.light_curve(self.batman_params) - 1.
+
+        return y_output
