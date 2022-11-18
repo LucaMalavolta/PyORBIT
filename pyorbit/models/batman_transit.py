@@ -136,8 +136,7 @@ class Batman_Transit(AbstractModel, AbstractTransit):
         correct step size is computed.
         """
 
-        #random_selector = np.random.randint(100)
-        random_selector = 100
+        random_selector = np.random.randint(1000)
         if random_selector == 50:
             self.batman_models[dataset.name_ref] = \
                 batman.TransitModel(self.batman_params,

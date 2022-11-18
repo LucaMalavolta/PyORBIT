@@ -34,6 +34,7 @@ from pyorbit.models.pytransit_transit_with_ttv import PyTransit_Transit_With_TTV
 
 from pyorbit.models.batman_transit import Batman_Transit
 from pyorbit.models.batman_transit_with_ttv import Batman_Transit_With_TTV
+from pyorbit.models.batman_transit_ttv_subset import Batman_Transit_TTV_Subset
 from pyorbit.models.batman_transit_secondary_phasecurve import Batman_Transit_Eclipse_PhaseCurve
 from pyorbit.models.spiderman_thermal import Spiderman_Thermal
 
@@ -99,8 +100,10 @@ from pyorbit.models.tinygp_multidimensional_quasiperiodic_activity import TinyGP
  single_planet_model: the model is associated to a specific planet, e.g., time of transits
 """
 
-model_requires_planets = ['radial_velocities',
-                          'rv_planets', 'batman_transit', 'pytransit_transit', 'batman_transit_with_ttv',
+model_requires_planets = ['radial_velocities' 'rv_planets',
+                           'batman_transit', 'pytransit_transit',
+                           'batman_transit_with_ttv', 'pytransit_transit_with_ttv',
+                           'subset_batman_transit_ttv', 'batman_transit_ttv_subset',
                           'rossitermclaughlin_ohta',
                           'spiderman_thermal', 'batman_transit_eclipse_phasecurve']
 single_planet_model = ['Tc_planets', 'transit_times']
@@ -149,6 +152,8 @@ define_type_to_class = {
     'pytransit_transit': PyTransit_Transit,
     'pytransit_transit_with_ttv': PyTransit_Transit_With_TTV,
     'batman_transit': Batman_Transit,
+    'batman_transit_ttv_subset': Batman_Transit_TTV_Subset,
+    'subset_batman_transit_ttv': Batman_Transit_TTV_Subset,
     'batman_transit_with_ttv': Batman_Transit_With_TTV,
     'batman_transit_eclipse_phasecurve': Batman_Transit_Eclipse_PhaseCurve,
     'spiderman_thermal': Spiderman_Thermal,
@@ -172,6 +177,7 @@ define_type_to_class = {
     'polynomial_trend': PolynomialTrend,
     'local_polynomial_trend': LocalPolynomialTrend,
     'subset_polynomial_trend': SubsetPolynomialTrend,
+    'polynomial_trend_subset': SubsetPolynomialTrend,
     'common_offset': Offset,
     'common_jitter': Jitter,
     'harmonics': Harmonics,
