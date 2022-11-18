@@ -90,6 +90,8 @@ class Batman_Transit_TTV_Subset(AbstractModel, AbstractTransit):
                     var_subset, [min(sub_dataset), max(sub_dataset)])
             elif kwargs.get('boundaries', False):
                 var_update = kwargs['boundaries'].get(var_subset, [min(sub_dataset), max(sub_dataset)])
+            else:
+                var_update = [min(sub_dataset), max(sub_dataset)]
 
             self.bounds[dataset.name_ref].update({var_subset: var_update})
 
@@ -110,7 +112,6 @@ class Batman_Transit_TTV_Subset(AbstractModel, AbstractTransit):
 
         self.batman_params.a, self.batman_params.inc = self.retrieve_ai(
             variable_value)
-        self.batman_params.t0 = self.retrieve_t0(variable_value, dataset.Tref)
 
         self.batman_params.per = variable_value['P']  # orbital period
         # planet radius (in units of stellar radii)

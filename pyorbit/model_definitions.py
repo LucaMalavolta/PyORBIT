@@ -100,8 +100,10 @@ from pyorbit.models.tinygp_multidimensional_quasiperiodic_activity import TinyGP
  single_planet_model: the model is associated to a specific planet, e.g., time of transits
 """
 
-model_requires_planets = ['radial_velocities',
-                          'rv_planets', 'batman_transit', 'pytransit_transit', 'batman_transit_with_ttv',
+model_requires_planets = ['radial_velocities' 'rv_planets',
+                           'batman_transit', 'pytransit_transit',
+                           'batman_transit_with_ttv', 'pytransit_transit_with_ttv',
+                           'subset_batman_transit_ttv', 'batman_transit_ttv_subset',
                           'rossitermclaughlin_ohta',
                           'spiderman_thermal', 'batman_transit_eclipse_phasecurve']
 single_planet_model = ['Tc_planets', 'transit_times']

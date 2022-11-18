@@ -620,7 +620,6 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, reload_ze
             mc.models[model_name] = define_type_to_class[model_type](model_name, common_ref)
 
             """ Check if we need to add the limb darkening parameters to the model"""
-            print(mc.models[model_name].model_class)
             if mc.models[model_name].model_class in model_requires_limbdarkening:
 
                 try:
