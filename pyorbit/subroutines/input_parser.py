@@ -191,6 +191,7 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, reload_ze
                     if submodel_conf.get('kind', submodel_name) == 'star_parameters':
                         bounds_space_priors_starts_fixed(
                             mc, mc.common_models[submodel_name], submodel_conf)
+
         return
     """ End of snippet dedicated to the reloading of parameters that are not involved in the fit procedure"""
 

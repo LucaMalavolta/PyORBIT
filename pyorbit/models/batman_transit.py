@@ -4,6 +4,7 @@ import pyorbit.subroutines.constants as constants
 import pyorbit.subroutines.kepler_exo as kepler_exo
 from pyorbit.models.abstract_model import AbstractModel
 from pyorbit.models.abstract_transit import AbstractTransit
+import multiprocessing
 
 try:
     import batman
@@ -42,13 +43,21 @@ class Batman_Transit(AbstractModel, AbstractTransit):
         self.dataset_Tref = {}
         #self.copied_dataset = True
 
-
     def initialize_model(self, mc, **kwargs):
 
         self._prepare_planetary_parameters(mc, **kwargs)
         self._prepare_limb_darkening_coefficients(mc, **kwargs)
 
         self.code_options['nthreads'] = kwargs.get('nthreads', 1)
+        try:
+            import multiprocessing
+            if self.code_options['nthreads'] > multiprocessing.cpu_count():
+                print('Batman nthreads automatically lowered to the maximum CPU count')
+                self.code_options['nthreads'] = multiprocessing.cpu_count()
+        except:
+            self.code_options['nthreads'] = 1
+
+        #self.code_options['nthreads'] = 10
 
         self.batman_params = batman.TransitParams()
 
