@@ -35,6 +35,7 @@ from pyorbit.models.pytransit_transit_with_ttv import PyTransit_Transit_With_TTV
 from pyorbit.models.batman_transit import Batman_Transit
 from pyorbit.models.batman_transit_with_ttv import Batman_Transit_With_TTV
 from pyorbit.models.batman_transit_ttv_subset import Batman_Transit_TTV_Subset
+from pyorbit.models.batman_transit_ttv_subset_faster import Batman_Transit_TTV_Subset_Faster
 from pyorbit.models.batman_transit_secondary_phasecurve import Batman_Transit_Eclipse_PhaseCurve
 from pyorbit.models.spiderman_thermal import Spiderman_Thermal
 
@@ -154,6 +155,8 @@ define_type_to_class = {
     'batman_transit': Batman_Transit,
     'batman_transit_ttv_subset': Batman_Transit_TTV_Subset,
     'subset_batman_transit_ttv': Batman_Transit_TTV_Subset,
+    'batman_transit_ttv_subset_faster': Batman_Transit_TTV_Subset_Faster,
+    'subset_batman_transit_ttv_faster': Batman_Transit_TTV_Subset_Faster,
     'batman_transit_with_ttv': Batman_Transit_With_TTV,
     'batman_transit_eclipse_phasecurve': Batman_Transit_Eclipse_PhaseCurve,
     'spiderman_thermal': Spiderman_Thermal,
