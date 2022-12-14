@@ -109,8 +109,8 @@ from pyorbit.models.tinygp_multidimensional_quasiperiodic_activity import TinyGP
 #                          'rossitermclaughlin_ohta',
 #                          'spiderman_thermal', 'batman_transit_eclipse_phasecurve']
 
-single_planet_model = ['Tc_planets', 'transit_times']
-transit_time_model = ['Tc_planets', 'transit_times']
+single_planet_model = ['transit_time_keplerian', 'transit_time_dynamical']
+transit_time_model = ['transit_time_keplerian', 'transit_time_dynamical']
 
 model_requires_planets = ['rv_keplerian', 'rv_dynamical',
                           'transit', 'transit_eclipse_phasecurve', 'eclipse_phasecurve'
