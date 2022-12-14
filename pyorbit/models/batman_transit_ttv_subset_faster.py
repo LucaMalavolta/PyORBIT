@@ -196,5 +196,5 @@ class Batman_Transit_TTV_Subset_Faster(AbstractModel, AbstractTransit):
                                                 self.model_lightcurve_x0,
                                             supersample_factor=self.code_options[dataset_name_ref]['sample_factor'],
                                             exp_time=self.code_options[dataset_name_ref]['exp_time'],
-                                            nthreads=self.code_options['nthreads')]
+                                            nthreads=self.code_options['nthreads'])
         return
