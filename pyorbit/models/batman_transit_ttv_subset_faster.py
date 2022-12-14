@@ -139,16 +139,19 @@ class Batman_Transit_TTV_Subset_Faster(AbstractModel, AbstractTransit):
         reinitialize the model so that the correct step size is computed.
         """
 
-        random_selector = np.random.randint(1000)
-
         if x0_input is None:
             y_output = np.zeros(dataset.n)
         else:
             y_output = x0_input * 0.
 
-        #if random_selector == 50:
-        #    self._compute_interpolated_model()
-        self._compute_interpolated_model(dataset.name_ref)
+        if not self.use_inclination:
+            if variable_value['b'] > 1. + variable_value['R_Rs']/2. :
+                return y_output
+
+
+        random_selector = np.random.randint(1000)
+        if random_selector == 50:
+            self._compute_interpolated_model(dataset.name_ref)
 
         model_lightcurve_y0 = self.batman_model.light_curve(self.batman_params) - 1.
         interpolation_function = interpolate.interp1d(self.model_lightcurve_x0, model_lightcurve_y0, kind='linear', fill_value=0.0000)
