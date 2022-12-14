@@ -46,8 +46,13 @@ class Batman_Transit_TTV_Subset_Faster(AbstractModel, AbstractTransit):
         self._prepare_limb_darkening_coefficients(mc, **kwargs)
 
         self.code_options['nthreads'] = kwargs.get('nthreads', 1)
-        print('Warning: OpenMP computation on batman temporaroly turned off ')
-        self.code_options['nthreads'] = 1
+        try:
+            import multiprocessing
+            if self.code_options['nthreads'] > multiprocessing.cpu_count():
+                print('Batman nthreads automatically lowered to the maximum CPU count')
+                self.code_options['nthreads'] = multiprocessing.cpu_count()
+        except:
+            self.code_options['nthreads'] = 1
 
         self.batman_params = batman.TransitParams()
 
