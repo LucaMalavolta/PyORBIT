@@ -53,8 +53,15 @@ class Batman_Transit_Eclipse_PhaseCurve(AbstractModel, AbstractTransit):
         self._prepare_planetary_parameters(mc, **kwargs)
         self._prepare_limb_darkening_coefficients(mc, **kwargs)
 
-        print('Warning: OpenMP computation on batman temporaroly turned off ')
-        self.code_options['nthreads'] = 1
+        self.code_options['nthreads'] = kwargs.get('nthreads', 1)
+        try:
+            import multiprocessing
+            if self.code_options['nthreads'] > multiprocessing.cpu_count():
+                print('Batman nthreads automatically lowered to the maximum CPU count')
+                self.code_options['nthreads'] = multiprocessing.cpu_count()
+        except:
+            self.code_options['nthreads'] = 1
+
         self.batman_params = batman.TransitParams()
 
         if kwargs.get('nightside_emission', True):
