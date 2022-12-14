@@ -232,7 +232,12 @@ class ModelContainer(object):
 
     def __call__(self, theta, include_priors=True):
 
+        #start = time.time()
+
         log_priors, log_likelihood = self.log_priors_likelihood(theta)
+
+        #end = time.time()
+        #print("Computation took {0:.16f} seconds".format(end - start))
 
         if self.include_priors and include_priors:
             return log_priors + log_likelihood
