@@ -146,10 +146,12 @@ class Batman_Transit_TTV_Subset_Faster(AbstractModel, AbstractTransit):
         else:
             y_output = x0_input * 0.
 
-        if random_selector == 50:
-            self._compute_interpolated_model()
+        #if random_selector == 50:
+        #    self._compute_interpolated_model()
+        self._compute_interpolated_model(dataset.name_ref)
+
         model_lightcurve_y0 = self.batman_model.light_curve(self.batman_params) - 1.
-        interpolation_function = interpolate.interp1d(self.model_lightcurve_x0, model_lightcurve_y0, kind='linear')
+        interpolation_function = interpolate.interp1d(self.model_lightcurve_x0, model_lightcurve_y0, kind='linear', fill_value=0.0000)
 
         for i_sub in range(0,dataset.submodel_flag):
 
@@ -160,13 +162,14 @@ class Batman_Transit_TTV_Subset_Faster(AbstractModel, AbstractTransit):
                 sel_data = (dataset.submodel_id==i_sub)
 
 
-                sel_in_transit = (np.abs(dataset.x0- T0) < self.maximum_transit_time) & sel_data
-                sel_out_transit = (np.abs(dataset.x0- T0) >= self.maximum_transit_time) & sel_data
+                sel_in_transit = (np.abs(dataset.x0- T0) < self.maximum_transit_time*0.95 ) & sel_data
+                sel_out_transit = (np.abs(dataset.x0- T0) >= self.maximum_transit_time*0.95 ) & sel_data
 
                 y_output[sel_out_transit] = 0.00
-                y_output[sel_in_transit] = interpolation_function(dataset.x0[sel_data] - T0)
+                y_output[sel_in_transit] =  interpolation_function(dataset.x0[sel_in_transit] - T0)
 
             else:
+                self.batman_params.t0 = T0
                 original_dataset = dataset.x0[(dataset.submodel_id==i_sub)]
                 sel_data = (x0_input >= np.amin(original_dataset)) &  (x0_input <= np.amax(original_dataset))
 

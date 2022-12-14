@@ -489,7 +489,7 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, reload_ze
             model_type = model_name
 
         """ some models requires one or more planets, with some specific properties"""
-        if mc.models[model_name].model_class in model_requires_planets + single_planet_model:
+        if model_type in model_requires_planets or model_type in single_planet_model:
 
             """ radial_velocities and transits are just wrappers for the planets to be actually included in the model, so we
                 substitute it with the individual planets in the list"""
@@ -514,7 +514,7 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, reload_ze
 
             """ Let's avoid some dumb user using the planet names to name the models"""
 
-            if mc.models[model_name].model_class in model_requires_planets:
+            if model_type in model_requires_planets:
                 """ For each dataset we check if the current model is included in the list of models.
                     We then remove the generic model name  and include all the planet-specific  model names
                 """
@@ -549,7 +549,7 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, reload_ze
 
                     mc.models[model_name_exp].model_conf = model_conf.copy()
 
-                if mc.models[model_name_exp].model_class in transit_time_model:
+                if model_type in transit_time_model:
 
                     for dataset_name, dataset in mc.dataset_dict.items():
                         if planet_name in mc.dynamical_dict and \
@@ -647,11 +647,6 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, reload_ze
             #    common_name = 'star_parameters'
             #mc.models[model_name].common_ref.append(common_name)
             #mc.models[model_name].stellar_ref = common_name
-
-
-
-
-
 
 
             """ A model can be exclusively unitary, additive, or normalization.

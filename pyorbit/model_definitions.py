@@ -101,20 +101,17 @@ from pyorbit.models.tinygp_multidimensional_quasiperiodic_activity import TinyGP
  single_planet_model: the model is associated to a specific planet, e.g., time of transits
 """
 
-# model_requires_planets = ['radial_velocities', 'rv_planets',
-#                           'batman_transit', 'pytransit_transit',
-#                           'batman_transit_with_ttv', 'pytransit_transit_with_ttv',
-#                           'subset_batman_transit_ttv', 'batman_transit_ttv_subset',
-#                           'subset_batman_transit_faster_ttv', 'batman_transit_ttv_subset_faster',
-#                          'rossitermclaughlin_ohta',
-#                          'spiderman_thermal', 'batman_transit_eclipse_phasecurve']
+model_requires_planets = ['radial_velocities', 'rv_planets',
+                          'batman_transit', 'pytransit_transit',
+                          'batman_transit_with_ttv', 'pytransit_transit_with_ttv',
+                          'subset_batman_transit_ttv', 'batman_transit_ttv_subset',
+                          'subset_batman_transit_faster_ttv', 'batman_transit_ttv_subset_faster',
+                         'rossitermclaughlin_ohta',
+                         'spiderman_thermal', 'batman_transit_eclipse_phasecurve']
 
-single_planet_model = ['transit_time_keplerian', 'transit_time_dynamical']
-transit_time_model = ['transit_time_keplerian', 'transit_time_dynamical']
+single_planet_model = ['Tc_planets', 'transit_times']
+transit_time_model = ['Tc_planets', 'transit_times']
 
-model_requires_planets = ['rv_keplerian', 'rv_dynamical',
-                          'transit', 'transit_eclipse_phasecurve', 'eclipse_phasecurve'
-                          'rossiter_mclaughlin']
 model_requires_limbdarkening = ['transit',
                                 'transit_eclipse_phasecurve',
                                 'spectral_rotation',
