@@ -182,7 +182,7 @@ class Batman_Transit_TTV_Subset_Faster(AbstractModel, AbstractTransit):
         return y_output
 
 
-    def _compute_interpolated_model(self, dataset_name_ref)
+    def _compute_interpolated_model(self, dataset_name_ref):
         # compute the maximum transit time duration, assuming b=0 and i=90°
         self.maximum_transit_time = self.batman_params.per / np.pi \
                     * np.arcsin(1./self.batman_params.a *
