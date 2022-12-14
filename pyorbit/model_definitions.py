@@ -162,7 +162,7 @@ define_type_to_class = {
     'batman_transit_ttv_subset': Batman_Transit_TTV_Subset,
     'subset_batman_transit_ttv': Batman_Transit_TTV_Subset,
     'batman_transit_ttv_subset_faster': Batman_Transit_TTV_Subset_Faster,
-    'subset_batman_transit_ttv_faster': Batman_Transit_TTV_Subset_Faster,
+    'subset_batman_transit_faster_ttv': Batman_Transit_TTV_Subset_Faster,
     'batman_transit_with_ttv': Batman_Transit_With_TTV,
     'batman_transit_eclipse_phasecurve': Batman_Transit_Eclipse_PhaseCurve,
     'spiderman_thermal': Spiderman_Thermal,
