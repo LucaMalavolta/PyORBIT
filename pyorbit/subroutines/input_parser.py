@@ -649,11 +649,6 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, reload_ze
             #mc.models[model_name].stellar_ref = common_name
 
 
-
-
-
-
-
             """ A model can be exclusively unitary, additive, or normalization.
                 How the individual model are combined to provided the final model is embedded in the Dataset class
             """

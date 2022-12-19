@@ -35,6 +35,10 @@ from pyorbit.models.pytransit_transit_with_ttv import PyTransit_Transit_With_TTV
 from pyorbit.models.batman_transit import Batman_Transit
 from pyorbit.models.batman_transit_with_ttv import Batman_Transit_With_TTV
 from pyorbit.models.batman_transit_ttv_subset import Batman_Transit_TTV_Subset
+from pyorbit.models.batman_transit_ttv_subset_faster import Batman_Transit_TTV_Subset_Faster
+
+from pyorbit.models.batman_transit_rprs_subset import Batman_Transit_RpRs_Subset
+
 from pyorbit.models.batman_transit_secondary_phasecurve import Batman_Transit_Eclipse_PhaseCurve
 from pyorbit.models.spiderman_thermal import Spiderman_Thermal
 
@@ -101,13 +105,16 @@ from pyorbit.models.tinygp_multidimensional_quasiperiodic_activity import TinyGP
 """
 
 model_requires_planets = ['radial_velocities', 'rv_planets',
-                           'batman_transit', 'pytransit_transit',
-                           'batman_transit_with_ttv', 'pytransit_transit_with_ttv',
-                           'subset_batman_transit_ttv', 'batman_transit_ttv_subset',
-                          'rossitermclaughlin_ohta',
-                          'spiderman_thermal', 'batman_transit_eclipse_phasecurve']
+                          'batman_transit', 'pytransit_transit',
+                          'batman_transit_with_ttv', 'pytransit_transit_with_ttv',
+                          'subset_batman_transit_ttv', 'batman_transit_ttv_subset',
+                          'subset_batman_transit_faster_ttv', 'batman_transit_ttv_subset_faster',
+                         'rossitermclaughlin_ohta',
+                         'spiderman_thermal', 'batman_transit_eclipse_phasecurve']
+
 single_planet_model = ['Tc_planets', 'transit_times']
 transit_time_model = ['Tc_planets', 'transit_times']
+
 model_requires_limbdarkening = ['transit',
                                 'transit_eclipse_phasecurve',
                                 'spectral_rotation',
@@ -154,7 +161,11 @@ define_type_to_class = {
     'batman_transit': Batman_Transit,
     'batman_transit_ttv_subset': Batman_Transit_TTV_Subset,
     'subset_batman_transit_ttv': Batman_Transit_TTV_Subset,
+    'batman_transit_ttv_subset_faster': Batman_Transit_TTV_Subset_Faster,
+    'subset_batman_transit_faster_ttv': Batman_Transit_TTV_Subset_Faster,
     'batman_transit_with_ttv': Batman_Transit_With_TTV,
+    'batman_transit_rprs_subset': Batman_Transit_RpRs_Subset,
+    'subset_batman_transit_rprs': Batman_Transit_RpRs_Subset,
     'batman_transit_eclipse_phasecurve': Batman_Transit_Eclipse_PhaseCurve,
     'spiderman_thermal': Spiderman_Thermal,
     'gp_framework_quasiperiodic': GP_Framework_QuasiPeriodicActivity,

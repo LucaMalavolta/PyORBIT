@@ -135,6 +135,11 @@ class Batman_Transit(AbstractModel, AbstractTransit):
         for var, i_var in self.ldvars.items():
             self.batman_params.u[i_var] = variable_value[var]
 
+        if not self.use_inclination:
+            if variable_value['b'] > 1. + variable_value['R_Rs']/2. :
+                return 0.00
+
+
         """
         From the batman manual:
         Reinitializing the model is by far the slowest component of batman,

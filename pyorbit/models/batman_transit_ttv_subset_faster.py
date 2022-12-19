@@ -3,6 +3,7 @@ import pyorbit.subroutines.constants as constants
 import pyorbit.subroutines.kepler_exo as kepler_exo
 from pyorbit.models.abstract_model import AbstractModel
 from pyorbit.models.abstract_transit import AbstractTransit
+from scipy import interpolate
 
 try:
     import batman
@@ -10,7 +11,7 @@ except ImportError:
     pass
 
 
-class Batman_Transit_TTV_Subset(AbstractModel, AbstractTransit):
+class Batman_Transit_TTV_Subset_Faster(AbstractModel, AbstractTransit):
 
     def __init__(self, *args, **kwargs):
         # this calls all constructors up to AbstractModel
@@ -100,12 +101,7 @@ class Batman_Transit_TTV_Subset(AbstractModel, AbstractTransit):
 
             self.bounds[dataset.name_ref].update({var_subset: var_update})
 
-            self.batman_models[dataset.name_ref + '_'+repr(i_sub)] = \
-                batman.TransitModel(self.batman_params,
-                                    sub_dataset,
-                                    supersample_factor=self.code_options[dataset.name_ref]['sample_factor'],
-                                    exp_time=self.code_options[dataset.name_ref]['exp_time'],
-                                    nthreads=self.code_options['nthreads'])
+        self._compute_interpolated_model(dataset.name_ref)
 
     def compute(self, variable_value, dataset, x0_input=None):
         """
@@ -148,8 +144,6 @@ class Batman_Transit_TTV_Subset(AbstractModel, AbstractTransit):
         reinitialize the model so that the correct step size is computed.
         """
 
-        random_selector = np.random.randint(1000)
-
         if x0_input is None:
             y_output = np.zeros(dataset.n)
         else:
@@ -160,29 +154,30 @@ class Batman_Transit_TTV_Subset(AbstractModel, AbstractTransit):
                 return y_output
 
 
+        random_selector = np.random.randint(1000)
+        if random_selector == 50:
+            self._compute_interpolated_model(dataset.name_ref)
+
+        model_lightcurve_y0 = self.batman_model.light_curve(self.batman_params) - 1.
+        interpolation_function = interpolate.interp1d(self.model_lightcurve_x0, model_lightcurve_y0, kind='linear', fill_value=0.0000)
 
         for i_sub in range(0,dataset.submodel_flag):
 
             var_subset = 'Tc_'+repr(i_sub)
-            self.batman_params.t0 = variable_value[var_subset] - dataset.Tref
-
+            T0 = variable_value[var_subset] - dataset.Tref
 
             if x0_input is None:
                 sel_data = (dataset.submodel_id==i_sub)
 
-                if random_selector == 50:
-                    self.batman_models[dataset.name_ref + '_'+repr(i_sub)] = \
-                        batman.TransitModel(self.batman_params,
-                                            dataset.x0[sel_data],
-                                            supersample_factor=self.code_options[
-                                                dataset.name_ref]['sample_factor'],
-                                            exp_time=self.code_options[dataset.name_ref]['exp_time'],
-                                            nthreads=self.code_options['nthreads'])
 
-                y_output[sel_data] = self.batman_models[dataset.name_ref+ '_'+repr(i_sub)].light_curve(self.batman_params) - 1.
+                sel_in_transit = (np.abs(dataset.x0- T0) < self.maximum_transit_time*0.95 ) & sel_data
+                sel_out_transit = (np.abs(dataset.x0- T0) >= self.maximum_transit_time*0.95 ) & sel_data
 
+                y_output[sel_out_transit] = 0.00
+                y_output[sel_in_transit] =  interpolation_function(dataset.x0[sel_in_transit] - T0)
 
             else:
+                self.batman_params.t0 = T0
                 original_dataset = dataset.x0[(dataset.submodel_id==i_sub)]
                 sel_data = (x0_input >= np.amin(original_dataset)) &  (x0_input <= np.amax(original_dataset))
 
@@ -196,3 +191,21 @@ class Batman_Transit_TTV_Subset(AbstractModel, AbstractTransit):
                 y_output[sel_data] = temporary_model.light_curve(self.batman_params) - 1.
 
         return y_output
+
+
+    def _compute_interpolated_model(self, dataset_name_ref):
+        # compute the maximum transit time duration, assuming b=0 and i=90°
+        self.maximum_transit_time = self.batman_params.per / np.pi \
+                    * np.arcsin(1./self.batman_params.a *
+                                np.sqrt((1. + self.batman_params.rp)**2))
+
+        # initialize batman assuming a central time of transit equal to zero and a cadence of 1 minuto
+        self.batman_params.t0 = 0.
+        self.model_lightcurve_x0 = np.arange(-self.maximum_transit_time, self.maximum_transit_time, 1. / 1440.)
+
+        self.batman_model = batman.TransitModel(self.batman_params,
+                                                self.model_lightcurve_x0,
+                                            supersample_factor=self.code_options[dataset_name_ref]['sample_factor'],
+                                            exp_time=self.code_options[dataset_name_ref]['exp_time'],
+                                            nthreads=self.code_options['nthreads'])
+        return

@@ -10,7 +10,7 @@ except ImportError:
     pass
 
 
-class Batman_Transit_TTV_Subset(AbstractModel, AbstractTransit):
+class Batman_Transit_RpRs_Subset(AbstractModel, AbstractTransit):
 
     def __init__(self, *args, **kwargs):
         # this calls all constructors up to AbstractModel
@@ -30,16 +30,18 @@ class Batman_Transit_TTV_Subset(AbstractModel, AbstractTransit):
             'R_Rs',  # planet radius (in units of stellar radii)
         }
 
+        """ Model-specifc variables, not declared in the abstract class """
         self.batman_params = None
         self.batman_models = {}
         self.code_options = {}
+
+        self.dataset_x0 ={}
+        self.dataset_Tref = {}
 
         """ Dataset-specific time of transit boundaries are stored here"""
         self.transit_time_boundaries = {}
 
     def initialize_model(self, mc, **kwargs):
-        """ Force the use of the central time of transit"""
-        self.use_time_of_transit = True
 
         self._prepare_planetary_parameters(mc, **kwargs)
         self._prepare_limb_darkening_coefficients(mc, **kwargs)
@@ -72,9 +74,9 @@ class Batman_Transit_TTV_Subset(AbstractModel, AbstractTransit):
         self.batman_params.u = np.ones(kwargs['limb_darkening_ncoeff'],
                                        dtype=np.double) * 0.1  # limb darkening coefficients
 
-        """ And now we remove the transit time from the common variables, and add it back as a dataset-specific variable """
+        """ And now we remove the planetary radius from the common variables, and add it back as a dataset-specific variable """
 
-        self.list_pams_common.discard('Tc')
+        self.list_pams_common.discard('R_Rs')
         # self.list_pams_dataset.update(['Tc'])
 
     def initialize_model_dataset(self, mc, dataset, **kwargs):
@@ -83,20 +85,19 @@ class Batman_Transit_TTV_Subset(AbstractModel, AbstractTransit):
 
         for i_sub in range(0, dataset.submodel_flag):
 
-            var_original = 'Tc'
-            var_subset = 'Tc_'+repr(i_sub)
+            var_original = 'R_Rs'
+            var_subset = 'R_Rs_'+repr(i_sub)
 
             self._subset_transfer_priors(mc, dataset, var_original, var_subset)
 
             sub_dataset = dataset.x[(dataset.submodel_id == i_sub)]
 
             if kwargs[dataset.name_ref].get('boundaries', False):
-                var_update = kwargs[dataset.name_ref]['boundaries'].get(
-                    var_subset, [min(sub_dataset), max(sub_dataset)])
+                var_update = kwargs[dataset.name_ref]['boundaries'].get(var_subset, [0.00001, 0.5])
             elif kwargs.get('boundaries', False):
-                var_update = kwargs['boundaries'].get(var_subset, [min(sub_dataset), max(sub_dataset)])
+                var_update = kwargs['boundaries'].get(var_subset, [0.00001, 0.5])
             else:
-                var_update = [min(sub_dataset), max(sub_dataset)]
+                var_update = [0.00001, 0.5]
 
             self.bounds[dataset.name_ref].update({var_subset: var_update})
 
@@ -117,10 +118,10 @@ class Batman_Transit_TTV_Subset(AbstractModel, AbstractTransit):
 
         self.batman_params.a, self.batman_params.inc = self.retrieve_ai(
             variable_value)
+        self.batman_params.t0 = self.retrieve_t0(variable_value, dataset.Tref)
 
         self.batman_params.per = variable_value['P']  # orbital period
         # planet radius (in units of stellar radii)
-        self.batman_params.rp = variable_value['R_Rs']
         self.batman_params.ecc = variable_value['e']  # eccentricity
         # longitude of periastron (in degrees)
         self.batman_params.w = variable_value['omega']
@@ -155,16 +156,17 @@ class Batman_Transit_TTV_Subset(AbstractModel, AbstractTransit):
         else:
             y_output = x0_input * 0.
 
-        if not self.use_inclination:
-            if variable_value['b'] > 1. + variable_value['R_Rs']/2. :
-                return y_output
-
 
 
         for i_sub in range(0,dataset.submodel_flag):
 
-            var_subset = 'Tc_'+repr(i_sub)
-            self.batman_params.t0 = variable_value[var_subset] - dataset.Tref
+            var_subset = 'R_Rs_'+repr(i_sub)
+            self.batman_params.rp = variable_value[var_subset]
+
+
+            if not self.use_inclination:
+                if variable_value['b'] > 1. + var_subset/2. :
+                    return y_output
 
 
             if x0_input is None:

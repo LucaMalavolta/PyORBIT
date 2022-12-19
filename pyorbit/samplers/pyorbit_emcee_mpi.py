@@ -10,7 +10,6 @@ import pyorbit.subroutines.results_analysis as results_analysis
 import os
 import sys
 import multiprocessing
-from schwimmbad import MPIPool
 
 __all__ = ["pyorbit_emcee_mpi"]
 
@@ -21,6 +20,12 @@ def pyorbit_emcee_mpi(config_in, input_datasets=None, return_output=None):
         import emcee
     except:
         print("ERROR: emcee not installed, this will not work")
+        quit()
+
+    try:
+        from schwimmbad import MPIPool
+    except:
+        print("ERROR: schwimmbad not installed, this will not work")
         quit()
 
     # Check how many CPU threads (I guess) should be used
