@@ -97,3 +97,18 @@ These priors can be applied to any of the parameters (it's up to the user to cho
 The user can choice between `Linear` and `Logarithmic`. Note that in the second case the parameter space is transformed into base-2 logarithm.
 
 Most of the information can be found in [Malavolta et al. (2016)](https://ui.adsabs.harvard.edu//#abs/2016A&A...588A.118M/abstract) and [Malavolta et al. (2018)](https://ui.adsabs.harvard.edu//#abs/2018AJ....155..107M/abstract).
+
+**Papers using PyORBIT**
+
+- GAPS XXXVII. A precise density measurement of the young ultra-short period planet TOI-1807 b [Nardiello et al. (2022)](https://ui.adsabs.harvard.edu/abs/2022A%26A...664A.163N/abstract)
+- Investigating the architecture and internal structure of the TOI-561 system planets with CHEOPS, HARPS-N, and TESS [Lacedelli et al. (2022)](https://ui.adsabs.harvard.edu/abs/2022MNRAS.511.4551L/abstract)
+- Independent validation of the temperate Super-Earth HD79211 b using HARPS-N [DiTommaso et al. (2022)](https://ui.adsabs.harvard.edu/abs/2022arXiv221012211D/abstract)
+- Multi-mask least-squares deconvolution: extracting RVs using tailored masks [Lienhard et al. (2022)](https://ui.adsabs.harvard.edu/abs/2022MNRAS.513.5328L/abstract)
+- Kepler-102: Masses and Compositions for a Super-Earth and Sub-Neptune Orbiting an Active Star [Brinkman et al. (2022)](https://ui.adsabs.harvard.edu/abs/2022arXiv221105196B/abstract)
+- TIC 257060897b: An inflated, low-density, hot-Jupiter transiting a rapidly evolving subgiant star [Montalto et al. (2022)](https://ui.adsabs.harvard.edu/abs/2022MNRAS.509.2908M/abstract)
+- A PSF-based Approach to TESS High quality data Of Stellar clusters (PATHOS) - IV. Candidate exoplanets around stars in open clusters: frequency and age-planetary radius distribution [Nardiello et al. (2021)](https://ui.adsabs.harvard.edu/abs/2021MNRAS.505.3767N/abstract)
+- An unusually low density ultra-short period super-Earth and three mini-Neptunes around the old star TOI-561 [Lacedelli et al. (2021)](https://ui.adsabs.harvard.edu/abs/2021MNRAS.501.4148L/abstract)
+- K2-111: an old system with two planets in near-resonance [Mortier et al. (2020)](https://ui.adsabs.harvard.edu/abs/2020MNRAS.499.5004M/abstract)
+- GAPS XXIX. No detection of reflected light from 51 Peg b using optical high-resolution spectroscopy [Scandariato et al. (2021)](https://ui.adsabs.harvard.edu/abs/2021A%26A...646A.159S/abstract)
+- GAPS XXVIII. A pair of hot-Neptunes orbiting the young star TOI-942 [Carleo et al. (2021)](https://ui.adsabs.harvard.edu/abs/2021A%26A...645A..71C/abstract)
+And many more I had no time to include here...

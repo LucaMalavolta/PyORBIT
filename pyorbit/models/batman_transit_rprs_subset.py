@@ -165,7 +165,7 @@ class Batman_Transit_RpRs_Subset(AbstractModel, AbstractTransit):
 
 
             if not self.use_inclination:
-                if variable_value['b'] > 1. + var_subset/2. :
+                if variable_value['b'] > 1. + var_subset :
                     return y_output
 
 

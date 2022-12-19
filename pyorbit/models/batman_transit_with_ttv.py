@@ -133,7 +133,7 @@ class Batman_Transit_With_TTV(AbstractModel, AbstractTransit):
             self.batman_params.u[i_var] = variable_value[var]
 
         if not self.use_inclination:
-            if variable_value['b'] > 1. + variable_value['R_Rs']/2. :
+            if variable_value['b'] > 1. + variable_value['R_Rs'] :
                 return 0.00
 
 
