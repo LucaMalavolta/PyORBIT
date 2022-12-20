@@ -111,4 +111,5 @@ Most of the information can be found in [Malavolta et al. (2016)](https://ui.ads
 - K2-111: an old system with two planets in near-resonance [Mortier et al. (2020)](https://ui.adsabs.harvard.edu/abs/2020MNRAS.499.5004M/abstract)
 - GAPS XXIX. No detection of reflected light from 51 Peg b using optical high-resolution spectroscopy [Scandariato et al. (2021)](https://ui.adsabs.harvard.edu/abs/2021A%26A...646A.159S/abstract)
 - GAPS XXVIII. A pair of hot-Neptunes orbiting the young star TOI-942 [Carleo et al. (2021)](https://ui.adsabs.harvard.edu/abs/2021A%26A...645A..71C/abstract)
+
 And many more I had no time to include here...
