@@ -7,6 +7,5 @@ blah bla
 
 ```{toctree}
 :maxdepth: 1
-configuration_file/prepare_common
-configuration_file/prepare_input
+results_interpretation/terminal_output
 ```
