@@ -62,6 +62,8 @@ Documentation is still work in progress!
 installation
 prepare_datasets
 prepare_yaml
+common_objects
+models
 GitHub Repository <https://github.com/LucaMalavolta/PyORBIT>
 ```
 
