@@ -22,6 +22,6 @@ To have a glance at how a configuration file looks like, check the .. _documenta
 
 ```{toctree}
 :maxdepth: 1
-configuration_file/prepare_common
 configuration_file/prepare_input
+configuration_file/prepare_common
 ```
