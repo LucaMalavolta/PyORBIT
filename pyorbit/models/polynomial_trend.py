@@ -80,6 +80,103 @@ class PolynomialTrend(AbstractModel):
             return polynomial.polyval((x0_input+dataset.Tref-variable_value['x_zero'])/self.time_interval, coeff)
 
 
+class SharedPolynomialTrend(AbstractModel):
+
+    default_common = 'polynomial_trend'
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self.model_class = 'polynomial_trend'
+
+        self.list_pams_common = {'x_zero'}
+
+        self.order = 1
+        self.starting_order = 1
+
+        """
+        The x-intercept must be defined within the interval of at least one dataset,
+        otherwise there will be a degeneracy between the offset parameter and the coefficients
+        of the polynomial
+        """
+        self.x_zero = None
+        self.common_poly_ref = None
+
+        self.time_interval = 1.000000000
+        self.variable_amplitude = True
+        self.time_offset = False
+        self.count_dataset = 0
+
+
+    def initialize_model(self, mc, **kwargs):
+
+        self.order = kwargs.get('order', 1)
+
+        """ The user may decide to include the 0th order anyway - be aware of correlations with dataset offset!"""
+        if kwargs.get('include_zero_point', False):
+            self.starting_order = 0
+
+        """ The user may decide to compute the polynomial parameters over a different time interval
+            useful for long-term with very slow variations over a single day
+        """
+        self.time_interval = kwargs.get('time_interval', 1.000000000)
+
+        """ If the polynomial is used as normalization factor, the first order must be included"""
+        if self.normalization_model:
+            self.starting_order = 0
+
+        """ A polynome with amplitude variable according to the dataset under analysis"""
+        self.variable_amplitude = kwargs.get('variable_amplitude', False)
+        if self.variable_amplitude:
+            self.starting_order = 2
+            self.list_pams_dataset.update(['poly_amp'])
+
+        self.time_offset = kwargs.get('time_offset', False)
+
+        for i_order in range(self.starting_order, self.order+1):
+            var = 'poly_c'+repr(i_order)
+            self.list_pams_common.update([var])
+
+        for common_ref in self.common_ref:
+            if mc.common_models[common_ref].model_class == 'polynomial_trend':
+                self.common_poly_ref = common_ref
+                break
+
+    def initialize_model_dataset(self, mc, dataset, **kwargs):
+
+        try:
+            mc.common_models[self.common_poly_ref].fix_list['x_zero'] = np.asarray([kwargs['x_zero'], 0.0000], dtype=np.double)
+        except (KeyError, ValueError):
+            if self.time_offset and self.count_dataset > 0:
+                self.list_pams_dataset.update(['x_offset'])
+            elif np.amin(dataset.x) < mc.Tref < np.amax(dataset.x):
+                self.x_zero = mc.Tref
+            elif not self.x_zero:
+                self.x_zero = np.average(dataset.x)
+            mc.common_models[self.common_poly_ref].fix_list['x_zero'] = np.asarray([self.x_zero, 0.0000])
+
+    def compute(self, variable_value, dataset, x0_input=None):
+
+        coeff = np.zeros(self.order+1)
+
+        if 'x_offset' in variable_value:
+            x_offset = variable_value['x_offset']
+        else:
+            x_offset = 0
+
+        for i_order in range(self.starting_order, self.order+1):
+            var = 'poly_c'+repr(i_order)
+            coeff[i_order] = variable_value[var]
+
+        """ In our array, coefficient are sorted from the lowest degree to the higher
+        Numpy Polynomials requires the inverse order (from high to small) as input"""
+
+        if x0_input is None:
+            return variable_value['poly_amp'] * polynomial.polyval((dataset.x-variable_value['x_zero']-x_offset)/self.time_interval, coeff)
+        else:
+            return variable_value['poly_amp'] * polynomial.polyval((x0_input+dataset.Tref-variable_value['x_zero']-x_offset)/self.time_interval, coeff)
+
+
 class LocalPolynomialTrend(AbstractModel):
 
     default_common = 'polynomial_trend'

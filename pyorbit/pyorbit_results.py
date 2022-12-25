@@ -14,6 +14,7 @@ def pyorbit_results():
     parser.add_argument('-wp', type=str, nargs='?', default=False, help='Write samples for orbital parameters')
     parser.add_argument('-ws', type=str, nargs='?', default=False, help='Write all samples')
     parser.add_argument('-c', type=str, nargs='?', default=False, help='Save chains plots')
+    parser.add_argument('-a', type=str, nargs='?', default=False, help='Save ACF plots')
     parser.add_argument('-ln', type=str, nargs='?', default=False, help='Save ln_prob chain plot')
     parser.add_argument('-t', type=str, nargs='?', default=False, help='Compute and save Gelman-Rubin traces')
     parser.add_argument('-fc', type=str, nargs='?', default=False, help='Save full correlation plot - it may be slow!')
@@ -30,6 +31,8 @@ def pyorbit_results():
         'write_models': False,
         'write_planet_samples': False,
         'write_all_samples': False,
+        'print_acf': True,
+        'plot_acf': False,
         'chains': False,
         'traces': False,
         'lnprob_chain': False,
@@ -82,6 +85,9 @@ def pyorbit_results():
         plot_dictionary['write_planet_samples'] = True
     if args.ws is not False:
         plot_dictionary['write_all_samples'] = True
+    if args.a is not False :
+        plot_dictionary['print_acf'] = True
+        plot_dictionary['plot_acf'] = True
     if args.c is not False :
         plot_dictionary['chains'] = True
     if args.t is not False:
@@ -108,6 +114,8 @@ def pyorbit_results():
         plot_dictionary['plot_models'] = True
         plot_dictionary['write_models'] = True
         plot_dictionary['lnprob_chain'] = True
+        plot_dictionary['print_acf'] = True
+        plot_dictionary['plot_acf'] = True
         plot_dictionary['chains'] = True
         plot_dictionary['traces'] = True
         plot_dictionary['full_correlation'] = True
@@ -125,6 +133,8 @@ def pyorbit_results():
 
     if sampler_name in unchained_samplers:
         plot_dictionary['lnprob_chain'] = False
+        plot_dictionary['print_acf'] = False
+        plot_dictionary['plot_acf'] = False
         plot_dictionary['chains'] = False
         plot_dictionary['traces'] = False
         plot_dictionary['P_versus_lnprob'] = True

@@ -110,9 +110,8 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
         print(' Nwalkers = {}'.format(mc.emcee_parameters['nwalkers']))
         print()
         print(' Steps: {}'.format(nsteps))
-
-        results_analysis.print_integrated_ACF(
-            sampler_chain, theta_dictionary, nthin)
+        print()
+                
 
     if sampler_name == 'zeus':
 
@@ -171,8 +170,8 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
         print()
         print(' Steps: {}'.format(nsteps))
 
-        results_analysis.print_integrated_ACF(
-            sampler_chain, theta_dictionary, nthin)
+        #results_analysis.print_integrated_ACF(
+        #    sampler_chain, theta_dictionary, nthin)
 
 
     if sampler_name == 'multinest':
@@ -527,6 +526,7 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
     print()
     print(' Median log_priors     = {}'.format(med_log_priors))
     print(' Median log_likelihood = {}'.format(med_log_likelihood))
+    print()
     print(' Median BIC  (using likelihood) = {}'.format(BIC))
     print(' Median AIC  (using likelihood) = {}'.format(AIC))
     print(' Median AICc (using likelihood) = {}'.format(AICc))
@@ -550,6 +550,7 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
     print()
     print(' MAP log_priors     = {}'.format(MAP_log_priors))
     print(' MAP log_likelihood = {}'.format(MAP_log_likelihood))
+    print()
     print(' MAP BIC  (using likelihood) = {}'.format(BIC))
     print(' MAP AIC  (using likelihood) = {}'.format(AIC))
     print(' MAP AICc (using likelihood) = {}'.format(AICc))
@@ -575,6 +576,47 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
 
     print()
     print('****************************************************************************************************')
+    print()    
+
+    if plot_dictionary['print_acf']:
+
+        i_sampler, acf_trace, acf_diff, converged = \
+        results_analysis.print_integrated_ACF(
+            sampler_chain, theta_dictionary, nthin)
+
+        if i_sampler is not None and plot_dictionary['plot_acf']:
+
+            print(' Plotting the ACF... ')
+
+            os.system('mkdir -p ' + dir_output + 'acf')
+            for theta_name, ii in theta_dictionary.items():
+                file_name = dir_output + 'acf/' + \
+                    repr(ii) + '_' + theta_name + '_values.png'
+                fig = plt.figure(figsize=(12, 12))
+                plt.scatter(i_sampler, acf_trace[:,ii] , s=5, c='C0')
+                plt.axvline(nburnin / nthin, c='C1', label='burn-in')
+                plt.axvline(converged[ii] / nthin, c='C2', label='convergence')
+                plt.legend()
+                plt.savefig(file_name, bbox_inches='tight', dpi=300)
+                plt.close(fig)
+
+                file_name = dir_output + 'acf/' + \
+                    repr(ii) + '_' + theta_name + '_variation.png'
+                fig = plt.figure(figsize=(12, 12))
+                plt.scatter(i_sampler, acf_diff[:,ii], s=5, c='C0')
+                plt.axhline(0.01, c='C3', label='var. threshold')
+                plt.axvline(nburnin / nthin, c='C1', label='burn-in')
+                plt.axvline(converged[ii] /nthin, c='C2', label='convergence')
+                plt.yscale('log')
+                plt.legend()
+                plt.savefig(file_name, bbox_inches='tight', dpi=300)
+                plt.close(fig)
+            
+            print()
+
+        sys.stdout.flush()
+
+    print('****************************************************************************************************')
     print('****************************************************************************************************')
     print()
     print(' Confidence intervals (median value, 34.135th percentile from the median on the left and right side)')
@@ -595,6 +637,7 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
     print()
 
     sys.stdout.flush()
+
 
     # Computation of all the planetary variables
     planet_variables_med = results_analysis.get_planet_variables(
@@ -688,6 +731,7 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
         print()
         sys.stdout.flush()
         corner_plot = None
+
 
     if plot_dictionary['chains']:
 

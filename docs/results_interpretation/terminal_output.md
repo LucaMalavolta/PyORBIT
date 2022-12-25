@@ -94,6 +94,12 @@ reported above and the (minimum) value for the burn-in.
 | ... | ... | ...| ... | ... |
 
 
+- sample variable: the variable explored by the sampler (it may be different
+  from the physical variables of the model)
+- ACF: the integrated autocorrelation time, computed on the thinned chains. 
+- ACF*nthin: the integrated autocorrelation time, in units of sampler steps
+- converged at: number of sampler steps at which the chain 
+
 ```{code} bash
 All the chains are longer than 50\*ACF, but some are shorter than 100\*ACF
 PyORBIT should keep running for at least     34713 more steps to reach 100\*ACF

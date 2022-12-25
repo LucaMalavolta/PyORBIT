@@ -83,7 +83,7 @@ from pyorbit.models.normalization_factor import NormalizationFactor, LocalNormal
 
 from pyorbit.models.rossitermclaughlin_ohta import RossiterMcLaughling_Ohta
 
-from pyorbit.models.polynomial_trend import PolynomialTrend, LocalPolynomialTrend, SubsetPolynomialTrend
+from pyorbit.models.polynomial_trend import PolynomialTrend, SharedPolynomialTrend, LocalPolynomialTrend, SubsetPolynomialTrend
 
 from pyorbit.models.spectral_rotation import SpectralRotation, SubsetSpectralRotation, SubsetSpectralRotationPolynomial
 
@@ -186,6 +186,7 @@ define_type_to_class = {
     'local_correlation': LocalCorrelation,
     'correlation': LocalCorrelation,
     'polynomial_trend': PolynomialTrend,
+    'shared_polynomial_trend': SharedPolynomialTrend,
     'local_polynomial_trend': LocalPolynomialTrend,
     'subset_polynomial_trend': SubsetPolynomialTrend,
     'polynomial_trend_subset': SubsetPolynomialTrend,

@@ -13,6 +13,22 @@ class CommonPolynomialTrend(AbstractCommon):
                 'spaces': 'Linear',
                 'fixed' : 0.00,
                 'unit': 'as input',
+            },
+        'x_offset': # reference value of the polynomial
+            {
+                'bounds': [-1e09, 1e09],
+                'priors': ['Uniform', []],
+                'spaces': 'Linear',
+                'fixed' : 0.00,
+                'unit': 'as input',
+            },
+        'poly_amp': # reference value of the polynomial
+            {
+                'bounds': [-1e09, 1e09],
+                'priors': ['Uniform', []],
+                'spaces': 'Linear',
+                'fixed' : 0.00,
+                'unit': 'as input',
             }
     }
 
@@ -25,6 +41,9 @@ class CommonPolynomialTrend(AbstractCommon):
                 'fixed' : 0.00,
                 'unit': 'poly order '+repr(i_pol),
         }
+
+
+
 
     default_fixed = {}
 
