@@ -43,8 +43,6 @@ class CommonPolynomialTrend(AbstractCommon):
         }
 
 
-
-
     default_fixed = {}
 
     recenter_pams = {}
