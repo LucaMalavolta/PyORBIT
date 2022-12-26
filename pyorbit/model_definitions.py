@@ -8,6 +8,8 @@ from pyorbit.common.common_jitter import CommonJitter
 
 from pyorbit.common.harmonics import CommonHarmonics
 
+from pyorbit.common.sinusoid import CommonSinusoid
+
 from pyorbit.common.dilution_factor import CommonDilutionFactor
 from pyorbit.common.normalization_factor import CommonNormalizationFactor
 from pyorbit.common.star_parameters import CommonStarParameters
@@ -75,7 +77,7 @@ from pyorbit.models.correlation import LocalCorrelation
 from pyorbit.models.correlated_jitter import LocalCorrelatedJitter
 from pyorbit.models.common_offset import Offset
 from pyorbit.models.common_jitter import Jitter
-from pyorbit.models.sinusoid_common_period import SinusoidCommonPeriod
+from pyorbit.models.sinusoid import Sinusoid, LocalSinusoid, SinusoidCommonPeriod, SinusoidVariableAmplitude
 from pyorbit.models.harmonics import Harmonics
 
 from pyorbit.models.dilution_factor import DilutionFactor, LocalDilutionFactor
@@ -193,7 +195,10 @@ define_type_to_class = {
     'common_offset': Offset,
     'common_jitter': Jitter,
     'harmonics': Harmonics,
+    'sinusoid': Sinusoid,
+    'local_sinusoid': LocalSinusoid,
     'sinusoid_common_period': SinusoidCommonPeriod,
+    'sinusoid_polynomial_modulation': SinusoidPolynomialModulation,
     'dilution_factor': DilutionFactor,
     'local_dilution_factor': LocalDilutionFactor,
     'normalization_factor': NormalizationFactor,

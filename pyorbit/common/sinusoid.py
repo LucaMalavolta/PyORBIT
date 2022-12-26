@@ -1,11 +1,44 @@
 from pyorbit.subroutines.common import *
 from pyorbit.common.abstract_common import *
 
-class CommonPolynomialTrend(AbstractCommon):
+class CommonSinusoid(AbstractCommon):
+    """
+    Inherited class from AbstractCommon
 
-    model_class = 'polynomial_trend'
+    """
+
+    model_class = 'sinusoid'
 
     parameters_dictionary = {
+        'sine_period': # Orbital period of the planet
+            {
+                'bounds': [0.4, 100000.0],
+                'priors': ['Uniform', []],
+                'spaces': 'Log_Base2',
+                'fixed' : None,
+                'unit': 'days',
+            },
+        'sine_amp': 
+            {
+                'bounds': [0.001, 2000.0],
+                'priors': ['Uniform', []],
+                'spaces': 'Log_Base2',
+                'fixed' : None,
+            },
+        'sine_phase':
+            {
+                'bounds': [0.0, 1000.0],
+                'priors': ['Uniform', []],
+                'spaces': 'Linear',
+                'fixed' : None,
+            },
+        'sine_offset':
+            {
+                'bounds': [0.0, 360.],
+                'priors': ['Uniform', []],
+                'spaces': 'Linear',
+                'fixed' : 0.0000,
+            },
         'x_zero': # reference value of the polynomial
             {
                 'bounds': [-1e09, 1e09],
@@ -42,9 +75,5 @@ class CommonPolynomialTrend(AbstractCommon):
                 'unit': 'poly order '+repr(i_pol),
         }
 
+    recenter_pams = {'sine_phase', 'sine_offset'}
 
-
-
-    default_fixed = {}
-
-    recenter_pams = {}

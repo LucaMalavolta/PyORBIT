@@ -24,7 +24,7 @@ class PolynomialTrend(AbstractModel):
         self.x_zero = None
         self.common_poly_ref = None
 
-        self.time_interval = 1.000000000
+        self.time_interval = 1.0000000
 
 
     def initialize_model(self, mc, **kwargs):
@@ -126,10 +126,10 @@ class SharedPolynomialTrend(AbstractModel):
             self.starting_order = 0
 
         """ A polynome with amplitude variable according to the dataset under analysis"""
-        self.variable_amplitude = kwargs.get('variable_amplitude', False)
+        self.variable_amplitude = kwargs.get('variable_amplitude', True)
         if self.variable_amplitude:
-            self.starting_order = 2
-            self.list_pams_dataset.update(['poly_amp'])
+            self.starting_order = 1
+            self.list_pams_dataset.update(['poly_factor'])
 
         self.time_offset = kwargs.get('time_offset', False)
 
@@ -147,13 +147,21 @@ class SharedPolynomialTrend(AbstractModel):
         try:
             mc.common_models[self.common_poly_ref].fix_list['x_zero'] = np.asarray([kwargs['x_zero'], 0.0000], dtype=np.double)
         except (KeyError, ValueError):
-            if self.time_offset and self.count_dataset > 0:
-                self.list_pams_dataset.update(['x_offset'])
-            elif np.amin(dataset.x) < mc.Tref < np.amax(dataset.x):
+            if np.amin(dataset.x) < mc.Tref < np.amax(dataset.x):
                 self.x_zero = mc.Tref
             elif not self.x_zero:
                 self.x_zero = np.average(dataset.x)
             mc.common_models[self.common_poly_ref].fix_list['x_zero'] = np.asarray([self.x_zero, 0.0000])
+
+        if self.time_offset and self.count_dataset > 0:
+            self.list_pams_dataset.update(['x_offset'])
+        self.count_dataset  += 1
+
+        if self.normalization_model:
+            mc.common_models[self.common_poly_ref].fix_list['poly_c0'] = np.asarray([1.000000, 0.0000])
+        else:
+            mc.common_models[self.common_poly_ref].fix_list['poly_c1'] = np.asarray([1.000000, 0.0000])
+
 
     def compute(self, variable_value, dataset, x0_input=None):
 
@@ -172,9 +180,9 @@ class SharedPolynomialTrend(AbstractModel):
         Numpy Polynomials requires the inverse order (from high to small) as input"""
 
         if x0_input is None:
-            return variable_value['poly_amp'] * polynomial.polyval((dataset.x-variable_value['x_zero']-x_offset)/self.time_interval, coeff)
+            return variable_value['poly_factor'] * polynomial.polyval((dataset.x-variable_value['x_zero']-x_offset)/self.time_interval, coeff)
         else:
-            return variable_value['poly_amp'] * polynomial.polyval((x0_input+dataset.Tref-variable_value['x_zero']-x_offset)/self.time_interval, coeff)
+            return variable_value['poly_factor'] * polynomial.polyval((x0_input+dataset.Tref-variable_value['x_zero']-x_offset)/self.time_interval, coeff)
 
 
 class LocalPolynomialTrend(AbstractModel):
