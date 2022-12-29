@@ -204,5 +204,14 @@ Two rows of asteriks delimits the end of this section
  [previous section](#associated_errors)
 
 This section is divided in three groups:
-- Statistics on the posterior of the sampler variables: 
-- Statistics on the physical parameters obtained from the posteriors samples 
+
+- *Statistics on the posterior of the sampler parameters*: the direct output of the
+  sampler. If the parameters have been parametrized (including exploration in
+  logarithmic  space), the values displayed here
+  may not be physically meaningful.
+- *Statistics on the physical parameters obtained from the posteriors samples*:
+  posterior distribution of the physical parameters (i.e., before
+  reparametrizaion) as they should appear in the physical model. If no
+  reparametrizaion has been applied to a given parameter, the physical posterior will be ideantical
+  to the sampler posterior.
+- *AAA* 
