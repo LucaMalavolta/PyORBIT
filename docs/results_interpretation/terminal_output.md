@@ -28,28 +28,30 @@ emcee version:  3.1.2
  Steps: 50000
 ```
 
-### Associated errors
+### Associated errors {#associated_errors}
 
 Associated errors are computed using the 15.865th and the 84.135th percentiles of
 the distribution. The median value of the distribution (50th percentile) is then subtracted from
 these two values. For clarity, these values are always followed by the string
-`(15-84 p)`. 
+`(15-84 p)`.
 The follwing value:
 
 ```{code} bash
 jitter_0             25.641528         -1.200384         1.372232 (15-84 p)
 ```
 
-reads as $j = 25.6_{-1.2}^{+1.4}$.
-The associated error is not provided for the starting point of the MCMC analysis or MAP values.
+reads as $\mathrm{jitter}_0 = 25.6_{-1.2}^{+1.4} ms^{-1}$ in case of radial
+velocities. 
 
 ```{note}
-The code will not try to format the output according to the Significant figures of a measurement.
+The code will not try to format the output according to the significant figures of a measurement. Unit measurements and priors will not be displayed, at least for now. 
 ```
 
+The associated error is not provided for the starting point of the MCMC analysis
+or the MAP values.
 
 
-### Aurocorrelation analysis
+### Basic model selection 
 
 The code provides the *log-probability* function, with its two components (the
 *plog-riors* and the *log-likelihood*) explicitely reported right below.
@@ -61,10 +63,12 @@ The code provides the *log-probability* function, with its two components (the
  Median log_likelihood = -136.37527830557443
 ```
 
-
 The code computes the Bayesian Information Criterion (BIC), the Akaike
-Information Criterion (AIC) and the AIC with a correction for small sample sizes (AIC)
-Formally, these three criteria should be computed using the **
+Information Criterion (AIC) and the AIC with a correction for small sample sizes
+(AIC). These values are computed using the medina value of the log-probability / log-likelihood.
+Formally, these three criteria should be computed using the *log-likelihood*,
+but I'vee seen several cases where the *log-probability* is used instead. The
+appropriate choice is left to the user.
 
 ```{code} bash
 
@@ -75,6 +79,15 @@ Formally, these three criteria should be computed using the **
  Median BIC  (using posterior)  = 711.2495084064296
  Median AIC  (using posterior)  = 654.0894228886198
  Median AICc (using posterior)  = 654.7105832981761
+```
+
+The *maximum a posteriori* (MAP) set of parameters is computed by picking the
+sampling corresponding to the maximum value of the log-probability distribution. 
+As in the previous steps, different model selection criteria using either the
+log-likelihood or the log-probability are reported here, with the difference
+that now the corresponding *MAP* value is used rather then the corresponding *median* value. 
+
+```{code} bash
 
  MAP log_priors     = -177.66943313873546
  MAP log_likelihood = -136.28166552722797
@@ -86,11 +99,18 @@ Formally, these three criteria should be computed using the **
  MAP BIC  (using posterior)  = 711.0622828497367
  MAP AIC  (using posterior)  = 653.9021973319268
  MAP AICc (using posterior)  = 654.5233577414831
-
- AIC suggested over AICs because NDATA (   600.000000 ) > 40 * NDIM (    13.000000 )
 ```
 
+Finally, the code provides a suggestion regarding the use of either AIC or AICc 
+following the standard definition
 
+```{code} bash
+ AIC suggested over AICs because NDATA (   600 ) > 40 * NDIM (    13 )
+```
+
+```{warning}
+No check over the applicability of BIS/AIC/AICc is performed! Be sure that the underlying assumtpions are valid in your specific case. 
+```
 
 ### Aurocorrelation analysis
 
@@ -170,7 +190,19 @@ PyORBIT should keep running for at least     34713 more steps to reach 100\*ACF
 Suggested value for burnin:  2064
 ```
 
-
 ```{admonition} Don't rely too much on the ACF
 From my personal experience, when the analysis of light curve is involved the ACF analysis wil suggest you to keep running the sampler even if corvengence has been reached.
 ```
+
+Two rows of asteriks delimits the end of this section
+
+### Confidence intervals of the parameters
+
+ Confidence intervals of the posteriors are provided 34.135th
+ percentiles from the median on the left and right sides, in addition to the
+ median as well, as specified in the
+ [previous section](#associated_errors)
+
+This section is divided in three groups:
+- Statistics on the posterior of the sampler variables: 
+- Statistics on the physical parameters obtained from the posteriors samples 

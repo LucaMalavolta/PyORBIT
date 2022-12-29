@@ -568,11 +568,11 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
     if mc.ndata < 40 * mc.ndim:
         print()
         print(
-            ' AICc suggested over AIC because NDATA ( {0:12f} ) < 40 * NDIM ( {1:12f} )'.format(mc.ndata, mc.ndim))
+            ' AICc suggested over AIC because NDATA ( {0:.0f} ) < 40 * NDIM ( {1:.0f} )'.format(mc.ndata, mc.ndim))
     else:
         print()
         print(
-            ' AIC suggested over AICs because NDATA ( {0:12f} ) > 40 * NDIM ( {1:12f} )'.format(mc.ndata, mc.ndim))
+            ' AIC suggested over AICs because NDATA ( {0:.0f} ) > 40 * NDIM ( {1:.0f} )'.format(mc.ndata, mc.ndim))
 
     print()
     print('****************************************************************************************************')
@@ -621,7 +621,7 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
     print()
     print(' Confidence intervals (median value, 34.135th percentile from the median on the left and right side)')
 
-    planet_variables = results_analysis.results_resumen(
+    planet_parameters = results_analysis.results_resumen(
         mc, flat_chain, chain_med=chain_MAP, return_samples=True)
 
     print()
@@ -639,14 +639,14 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
     sys.stdout.flush()
 
 
-    # Computation of all the planetary variables
-    planet_variables_med = results_analysis.get_planet_variables(
+    # Computation of all the planetary parameters
+    planet_parameters_med = results_analysis.get_planet_parameters(
         mc, chain_med[:, 0])
-    star_variables = results_analysis.get_stellar_parameters(
+    star_parameters = results_analysis.get_stellar_parameters(
         mc, chain_med[:, 0])
 
-    planet_variables_MAP = results_analysis.get_planet_variables(mc, chain_MAP)
-    star_variables_MAP = results_analysis.get_stellar_parameters(mc, chain_MAP, warnings=False)
+    planet_parameters_MAP = results_analysis.get_planet_parameters(mc, chain_MAP)
+    star_parameters_MAP = results_analysis.get_stellar_parameters(mc, chain_MAP, warnings=False)
 
     if plot_dictionary['lnprob_chain'] or plot_dictionary['chains']:
 
@@ -701,7 +701,7 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
                 g = plots.getSubplotPlotter()
                 g.settings.num_plot_contours = 6
                 g.triangle_plot(samples, filled=True)
-                g.export(dir_output + "all_internal_variables_corner_getdist.pdf")
+                g.export(dir_output + "all_internal_parameters_corner_getdist.pdf")
 
             except AttributeError:
                 print(' Something went wrong when plotting the coner plot with GetDist')
@@ -714,7 +714,7 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
             print('Plotting full_correlation plot with Corner')
             fig = corner.corner(
                 corner_plot['samples'], labels=corner_plot['labels'], truths=corner_plot['truths'])
-            fig.savefig(dir_output + "all_internal_variables_corner_dfm.pdf",
+            fig.savefig(dir_output + "all_internal_parameters_corner_dfm.pdf",
                         bbox_inches='tight', dpi=300)
             plt.close(fig)
 
@@ -724,7 +724,7 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
             GTC = pygtc.plotGTC(chains=corner_plot['samples'],
                                 paramNames=corner_plot['labels'],
                                 truths=corner_plot['truths'],
-                                plotName=dir_output + "all_internal_variables_corner_pygtc.pdf")
+                                plotName=dir_output + "all_internal_parameters_corner_pygtc.pdf")
             GTC = None
         print()
         print('****************************************************************************************************')
@@ -796,19 +796,19 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
                 'labels': [],
                 'truths': []
             }
-            variable_values = common_model.convert(flat_chain)
-            variable_median = common_model.convert(chain_med[:, 0])
+            parameter_values = common_model.convert(flat_chain)
+            parameter_median = common_model.convert(chain_med[:, 0])
 
-            if len(variable_median) < 1.:
+            if len(parameter_median) < 1.:
                 continue
 
             """
             Check if the eccentricity and argument of pericenter were set as free parameters or fixed by simply
             checking the size of their distribution
             """
-            for var in variable_values.keys():
-                if np.size(variable_values[var]) == 1:
-                    variable_values[var] = variable_values[var] * \
+            for var in parameter_values.keys():
+                if np.size(parameter_values[var]) == 1:
+                    parameter_values[var] = parameter_values[var] * \
                         np.ones(n_samplings)
                 else:
                     corner_plot['var_list'].append(var)
@@ -817,9 +817,9 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
             corner_plot['labels'] = []
             corner_plot['truths'] = []
             for var_i, var in enumerate(corner_plot['var_list']):
-                corner_plot['samples'].extend([variable_values[var]])
+                corner_plot['samples'].extend([parameter_values[var]])
                 corner_plot['labels'].append(var)
-                corner_plot['truths'].append(variable_median[var])
+                corner_plot['truths'].append(parameter_median[var])
 
             """ Check if the semi-amplitude K is among the parameters that
                 have been fitted. If so, it computes the corresponding
@@ -872,26 +872,26 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
                 print('     Dataset: ', dataset_name, '    model: ',
                       model_name, ' corner plot  starting ')
 
-                variable_values = dataset.convert(flat_chain)
-                variable_median = dataset.convert(chain_med[:, 0])
+                parameter_values = dataset.convert(flat_chain)
+                parameter_median = dataset.convert(chain_med[:, 0])
 
                 for common_ref in mc.models[model_name].common_ref:
-                    variable_values.update(
+                    parameter_values.update(
                         mc.common_models[common_ref].convert(flat_chain))
-                    variable_median.update(
+                    parameter_median.update(
                         mc.common_models[common_ref].convert(chain_med[:, 0]))
 
-                variable_values.update(
+                parameter_values.update(
                     mc.models[model_name].convert(flat_chain, dataset_name))
-                variable_median.update(mc.models[model_name].convert(
+                parameter_median.update(mc.models[model_name].convert(
                     chain_med[:, 0], dataset_name))
 
-                for var_i, var in enumerate(variable_values):
-                    if np.size(variable_values[var]) <= 1:
+                for var_i, var in enumerate(parameter_values):
+                    if np.size(parameter_values[var]) <= 1:
                         continue
-                    corner_plot['samples'].extend([variable_values[var]])
+                    corner_plot['samples'].extend([parameter_values[var]])
                     corner_plot['labels'].append(var)
-                    corner_plot['truths'].append(variable_median[var])
+                    corner_plot['truths'].append(parameter_median[var])
 
 
                 try:
@@ -925,32 +925,32 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
 
     if plot_dictionary['write_planet_samples']:
 
-        print(' Saving the planet variable samplings to files (with plots)')
+        print(' Saving the planet parameter samplings to files (with plots)')
 
         samples_dir = dir_output + '/planet_samples/'
         os.system('mkdir -p ' + samples_dir)
         sys.stdout.flush()
 
-        for common_ref, variable_values in planet_variables.items():
-            for variable_name, variable in variable_values.items():
+        for common_ref, parameter_values in planet_parameters.items():
+            for parameter_name, parameter in parameter_values.items():
 
-                rad_filename = samples_dir + common_ref + '_' + variable_name
+                rad_filename = samples_dir + common_ref + '_' + parameter_name
                 fileout = open(rad_filename + '.dat', 'w')
-                for val in variable:
+                for val in parameter:
                     fileout.write('{0:.12f} \n'.format(val))
                 fileout.close()
 
                 try:
                     fig = plt.figure(figsize=(10, 10))
-                    plt.hist(variable, bins=50, color='C0',
+                    plt.hist(parameter, bins=50, color='C0',
                              alpha=0.75, zorder=0)
 
                     perc0, perc1, perc2 = np.percentile(
-                        variable, [15.865, 50, 84.135], axis=0)
+                        parameter, [15.865, 50, 84.135], axis=0)
 
-                    plt.axvline(planet_variables_med[common_ref][variable_name], color='C1', zorder=1,
+                    plt.axvline(planet_parameters_med[common_ref][parameter_name], color='C1', zorder=1,
                                 label='Median-corresponding value')
-                    plt.axvline(planet_variables_MAP[common_ref][variable_name], color='C2', zorder=1,
+                    plt.axvline(planet_parameters_MAP[common_ref][parameter_name], color='C2', zorder=1,
                                 label='MAP-corresponding value')
                     plt.axvline(perc1, color='C3', zorder=2,
                                 label='Median of the distribution')
@@ -958,7 +958,7 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
                                 label='15.865th and 84.135th percentile')
                     plt.axvline(perc2, color='C4', zorder=2)
                     plt.xlabel(
-                        re.sub('_', '-', variable_name + '_' + common_ref))
+                        re.sub('_', '-', parameter_name + '_' + common_ref))
                     plt.legend()
                     plt.ticklabel_format(useOffset=False)
                     plt.savefig(rad_filename + '.png',
@@ -966,7 +966,7 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
                     plt.close(fig)
                 except:
                     print(
-                        '   Error while producing the histogram plot for variable ', variable_name)
+                        '   Error while producing the histogram plot for parameter ', parameter_name)
 
         print()
         print('****************************************************************************************************')
@@ -975,7 +975,7 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
 
     if plot_dictionary['write_all_samples']:
 
-        print(' Saving all the variable samplings to files (with plots)')
+        print(' Saving all the parameter samplings to files (with plots)')
 
         samples_dir = dir_output + '/all_samples/'
         os.system('mkdir -p ' + samples_dir)
@@ -1012,14 +1012,14 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
                             label='15.865th and 84.135th percentile')
                 plt.axvline(perc2, color='C4', zorder=2)
                 plt.xlabel(re.sub('_', '-', 'theta: ' +
-                                  repr(th) + ' variable: ' + theta_name))
+                                  repr(th) + ' parameter: ' + theta_name))
                 plt.legend()
                 plt.ticklabel_format(useOffset=False)
                 plt.savefig(rad_filename + '.png',
                             bbox_inches='tight', dpi=300)
                 plt.close(fig)
             except:
-                print('   Error while producing the histogram plot for sample variable {0:s} (id: {1:5.0f})'.format(
+                print('   Error while producing the histogram plot for sample parameter {0:s} (id: {1:5.0f})'.format(
                     theta_name, th))
 
         print()
@@ -1040,7 +1040,7 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
         kinds = {}
 
         P_minimum = 2.0  # this temporal range will be divided in 20 subsets
-        for key_name, key_val in planet_variables_med.items():
+        for key_name, key_val in planet_parameters_med.items():
             P_minimum = min(key_val.get('P', 2.0), P_minimum)
 
         for dataset_name, dataset in mc.dataset_dict.items():
@@ -1192,12 +1192,12 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
                 file_keyword = prepend_keyword + 'model_files'
 
                 if prepend_keyword == '':
-                    planet_vars = planet_variables_med
-                    # star_vars = star_variables # leaving here, it could be useful for the future
+                    planet_vars = planet_parameters_med
+                    # star_vars = star_parameters # leaving here, it could be useful for the future
                     chain_ref = chain_med[:, 0]
                 elif prepend_keyword == 'MAP_':
-                    planet_vars = planet_variables_MAP
-                    # star_vars = star_variables_MAP
+                    planet_vars = planet_parameters_MAP
+                    # star_vars = star_parameters_MAP
                     chain_ref = chain_MAP
 
                 dir_models = dir_output + file_keyword + '/'
@@ -1310,28 +1310,28 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
                             due to limb darkening, exposure times, etc.
                             """
 
-                            variable_values = {}
+                            parameter_values = {}
                             for common_ref in mc.models[model_name].common_ref:
-                                variable_values.update(
+                                parameter_values.update(
                                     mc.common_models[common_ref].convert(chain_ref))
-                            variable_values.update(
+                            parameter_values.update(
                                 mc.models[model_name].convert(chain_ref, dataset_name))
 
                             fileout = open(
                                 dir_models + dataset_name + '_' + model_name + '_oversampled.dat', 'w')
 
                             x_range = np.arange(
-                                -variable_values['P']/2., variable_values['P']/2., 0.001)
+                                -parameter_values['P']/2., parameter_values['P']/2., 0.001)
                             try:
-                                delta_T = variable_values['Tc']-dataset.Tref
+                                delta_T = parameter_values['Tc']-dataset.Tref
                             except KeyError:
-                                delta_T = kepler_exo.kepler_phase2Tc_Tref(variable_values['P'],
-                                                                          variable_values['mean_long'],
-                                                                          variable_values['e'],
-                                                                          variable_values['omega'])
+                                delta_T = kepler_exo.kepler_phase2Tc_Tref(parameter_values['P'],
+                                                                          parameter_values['mean_long'],
+                                                                          parameter_values['e'],
+                                                                          parameter_values['omega'])
 
                             y_plot = mc.models[model_name].compute(
-                                variable_values, dataset, x_range+delta_T)
+                                parameter_values, dataset, x_range+delta_T)
 
                             fileout.write('descriptor Tc_folded  mod \n')
                             for x, mod in zip(x_range, y_plot):
@@ -1409,91 +1409,91 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
         print(' Writing Veusz-compatible files for personalized corner plots')
 
         # Transit times are too lenghty for the 'tiny' corner plot, so we apply a reduction to their value
-        variable_with_offset = {}
+        parameter_with_offset = {}
 
         veusz_dir = dir_output + '/Veuz_plot/'
         if not os.path.exists(veusz_dir):
             os.makedirs(veusz_dir)
 
-        all_variables_list = {}
+        all_parameters_list = {}
         for dataset_name, dataset in mc.dataset_dict.items():
-            variable_values = dataset.convert(flat_chain)
+            parameter_values = dataset.convert(flat_chain)
 
-            for variable_name, variable in variable_values.items():
-                all_variables_list[dataset_name +
-                                   '_' + variable_name] = variable
+            for parameter_name, parameter in parameter_values.items():
+                all_parameters_list[dataset_name +
+                                   '_' + parameter_name] = parameter
 
             for model_name in dataset.models:
-                variable_values = mc.models[model_name].convert(
+                parameter_values = mc.models[model_name].convert(
                     flat_chain, dataset_name)
-                for variable_name, variable in variable_values.items():
-                    all_variables_list[dataset_name + '_' +
-                                       model_name + '_' + variable_name] = variable
+                for parameter_name, parameter in parameter_values.items():
+                    all_parameters_list[dataset_name + '_' +
+                                       model_name + '_' + parameter_name] = parameter
 
         for model_name, model in mc.common_models.items():
-            variable_values = model.convert(flat_chain)
+            parameter_values = model.convert(flat_chain)
 
-            for variable_name, variable in variable_values.items():
+            for parameter_name, parameter in parameter_values.items():
 
-                all_variables_list[model.common_ref +
-                                   '_' + variable_name] = variable
-                #print(variable_name, variable)
+                all_parameters_list[model.common_ref +
+                                   '_' + parameter_name] = parameter
+                #print(parameter_name, parameter)
                 # Special treatment for transit time, since ti can be very long but yet very precise, making
                 # the axis of corner plot quite messy
-                if variable_name == 'Tc':
-                    offset = np.median(variable)
-                    variable_with_offset[model.common_ref +
-                                         '_' + variable_name] = offset
-                    all_variables_list[model.common_ref +
-                                       '_' + variable_name] -= offset
+                if parameter_name == 'Tc':
+                    offset = np.median(parameter)
+                    parameter_with_offset[model.common_ref +
+                                         '_' + parameter_name] = offset
+                    all_parameters_list[model.common_ref +
+                                       '_' + parameter_name] -= offset
 
                 # Let's save omega in degrees, in the range 0-360
-                if variable_name == 'o':
-                    odeg = variable * 180 / np.pi
+                if parameter_name == 'o':
+                    odeg = parameter * 180 / np.pi
                     try:
                         sel = (odeg < 0.000)
                         odeg[sel] += 360.00
                     except TypeError:
                         if odeg < 0.000:
                             odeg += 360.00
-                    all_variables_list[model.common_ref +
-                                       '_' + variable_name + 'deg'] = odeg
+                    all_parameters_list[model.common_ref +
+                                       '_' + parameter_name + 'deg'] = odeg
 
-        for common_ref, variable_values in planet_variables.items():
-            for variable_name, variable in variable_values.items():
+        for common_ref, parameter_values in planet_parameters.items():
+            for parameter_name, parameter in parameter_values.items():
 
-                # Skipping the variables that have been already included in all_variables_list
-                if common_ref + '_' + variable_name in all_variables_list:
+                # Skipping the parameters that have been already included in all_parameters_list
+                if common_ref + '_' + parameter_name in all_parameters_list:
                     continue
 
-                all_variables_list[common_ref + '_' + variable_name] = variable
+                all_parameters_list[common_ref + '_' + parameter_name] = parameter
 
-                if variable_name == 'Tc':
-                    offset = np.median(variable)
-                    variable_with_offset[common_ref +
-                                         '_' + variable_name] = offset
-                    all_variables_list[common_ref +
-                                       '_' + variable_name] -= offset
+                if parameter_name == 'Tc':
+                    offset = np.median(parameter)
+                    parameter_with_offset[common_ref +
+                                         '_' + parameter_name] = offset
+                    all_parameters_list[common_ref +
+                                       '_' + parameter_name] -= offset
 
-                if variable_name == 'o':
-                    odeg = variable * 180 / np.pi
+                if parameter_name == 'o':
+                    odeg = parameter * 180 / np.pi
                     sel = (odeg < 0.000)
                     odeg[sel] += 360.00
-                    all_variables_list[common_ref + '_' +
-                                       variable_name + 'deg'] = odeg
+                    all_parameters_list[common_ref + '_' +
+                                       parameter_name + 'deg'] = odeg
 
         text_file = open(veusz_dir + "veusz_offsets.txt", "w")
-        for variable_name, offset_value in variable_with_offset.items():
+        for parameter_name, offset_value in parameter_with_offset.items():
             text_file.write('{0:s} {1:16.9f}'.format(
-                variable_name, offset_value))
+                parameter_name, offset_value))
         text_file.close()
 
-        n_int = len(all_variables_list)
+        n_int = len(all_parameters_list)
         output_plan = np.zeros([n_samplings, n_int], dtype=np.double)
         output_names = []
-        for var_index, variable_name in enumerate(all_variables_list):
-            output_plan[:, var_index] = all_variables_list[variable_name]
-            output_names.extend([variable_name])
+        for var_index, parameter_name in enumerate(all_parameters_list):
+            output_plan[:, var_index] = all_parameters_list[parameter_name]
+            output_names.extend([parameter_name])
 
         plot_truths = np.percentile(
             output_plan[:, :], [15.865, 50, 84.135], axis=0)
@@ -1612,10 +1612,10 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
         fig = plt.figure(figsize=(10, 10))
 
         ii = 0
-        for common_ref, variable_values in planet_variables.items():
-            if 'P' in variable_values:
+        for common_ref, parameter_values in planet_parameters.items():
+            if 'P' in parameter_values:
 
-                plt.scatter(variable_values['P'],
+                plt.scatter(parameter_values['P'],
                             flat_lnprob, s=2, c='C'+repr(ii))
                 ii += 1
 

@@ -5,7 +5,7 @@ import pyorbit.subroutines.kepler_exo as kepler_exo
 
 from tqdm import tqdm
 
-__all__ = ["results_resumen", "results_derived", "get_planet_variables", "get_theta_dictionary", "get_model",
+__all__ = ["results_resumen", "results_derived", "get_planet_parameters", "get_theta_dictionary", "get_model",
            "print_theta_bounds", "print_dictionary", "get_stellar_parameters", "print_integrated_ACF"]
 
 
@@ -22,11 +22,11 @@ def results_resumen(mc, theta,
     print()
     print('====================================================================================================')
     if skip_theta:
-        print('     Boundaries of the sampler variables     ')
+        print('     Boundaries of the sampler parameters     ')
     elif is_starting_point:
         print('     Starting point of the sample/optimization routines    ')
     else:
-        print('     Statistics on the posterior of the sampler variables     ')
+        print('     Statistics on the posterior of the sampler parameters     ')
 
     print('====================================================================================================')
     print()
@@ -94,7 +94,7 @@ def results_resumen(mc, theta,
     print('====================================================================================================')
     print()
 
-    returned_samples = get_planet_variables(mc, theta, verbose=True)
+    returned_samples = get_planet_parameters(mc, theta, verbose=True)
 
     if compute_lnprob:
         print()
@@ -242,10 +242,10 @@ def get_stellar_parameters(mc, theta, warnings=True, stellar_ref=None):
 
 
 def results_derived(mc, theta):
-    _ = get_planet_variables(mc, theta, verbose=True)
+    _ = get_planet_parameters(mc, theta, verbose=True)
 
 
-def get_planet_variables(mc, theta, verbose=False):
+def get_planet_parameters(mc, theta, verbose=False):
     """
     Derived parameters from the Common Models are listed
 
