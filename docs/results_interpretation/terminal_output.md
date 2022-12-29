@@ -28,6 +28,70 @@ emcee version:  3.1.2
  Steps: 50000
 ```
 
+### Associated errors
+
+Associated errors are computed using the 15.865th and the 84.135th percentiles of
+the distribution. The median value of the distribution (50th percentile) is then subtracted from
+these two values. For clarity, these values are always followed by the string
+`(15-84 p)`. 
+The follwing value:
+
+```{code} bash
+jitter_0             25.641528         -1.200384         1.372232 (15-84 p)
+```
+
+reads as $j = 25.6_{-1.2}^{+1.4}$.
+The associated error is not provided for the starting point of the MCMC analysis or MAP values.
+
+```{note}
+The code will not try to format the output according to the Significant figures of a measurement.
+```
+
+
+
+### Aurocorrelation analysis
+
+The code provides the *log-probability* function, with its two components (the
+*plog-riors* and the *log-likelihood*) explicitely reported right below.
+
+```{code} bash
+ LN posterior:  -319.565121      -2.851297     2.207220 (15-84 p)
+
+ Median log_priors     = -177.66943313873546
+ Median log_likelihood = -136.37527830557443
+```
+
+
+The code computes the Bayesian Information Criterion (BIC), the Akaike
+Information Criterion (AIC) and the AIC with a correction for small sample sizes (AIC)
+Formally, these three criteria should be computed using the **
+
+```{code} bash
+
+ Median BIC  (using likelihood) = 355.9106421289588
+ Median AIC  (using likelihood) = 298.75055661114885
+ Median AICc (using likelihood) = 299.37171702070515
+
+ Median BIC  (using posterior)  = 711.2495084064296
+ Median AIC  (using posterior)  = 654.0894228886198
+ Median AICc (using posterior)  = 654.7105832981761
+
+ MAP log_priors     = -177.66943313873546
+ MAP log_likelihood = -136.28166552722797
+
+ MAP BIC  (using likelihood) = 355.7234165722658
+ MAP AIC  (using likelihood) = 298.56333105445594
+ MAP AICc (using likelihood) = 299.18449146401224
+
+ MAP BIC  (using posterior)  = 711.0622828497367
+ MAP AIC  (using posterior)  = 653.9021973319268
+ MAP AICc (using posterior)  = 654.5233577414831
+
+ AIC suggested over AICs because NDATA (   600.000000 ) > 40 * NDIM (    13.000000 )
+```
+
+
+
 ### Aurocorrelation analysis
 
 If the posteriors have been computed using `emcee`, an autocorrelation analysis

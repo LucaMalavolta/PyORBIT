@@ -20,17 +20,17 @@ class CommonSinusoid(AbstractCommon):
             },
         'sine_amp': 
             {
-                'bounds': [0.001, 2000.0],
+                'bounds': [-1e09, 1e09],
                 'priors': ['Uniform', []],
-                'spaces': 'Log_Base2',
+                'spaces': 'Linear',
                 'fixed' : None,
             },
         'sine_phase':
             {
-                'bounds': [0.0, 1000.0],
+                'bounds': [0.0, 360.0],
                 'priors': ['Uniform', []],
                 'spaces': 'Linear',
-                'fixed' : None,
+                'fixed' : 0.0000,
             },
         'sine_offset':
             {

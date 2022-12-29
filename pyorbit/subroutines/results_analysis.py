@@ -827,6 +827,10 @@ def print_integrated_ACF(sampler_chain, theta_dict, nthin):
 
     swapped_chains = np.swapaxes(sampler_chain, 1, 0)
 
+    print()
+    print('Computing the autocorrelation time of the chains')
+
+
     try:
         tolerance = 50
         integrated_ACF = integrated_time(
@@ -926,7 +930,6 @@ def print_integrated_ACF(sampler_chain, theta_dict, nthin):
         still_required_100[~still_required_100_flag] = 0
         
         print()
-        print('Computing the autocorrelation time of the chains')
         print('Reference thinning used in the analysis:', nthin)
         print(
             'Step length used in the analysis: {0:d}*nthin = {1:d}'.format(acf_len, acf_len*nthin))

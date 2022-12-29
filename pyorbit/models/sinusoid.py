@@ -2,6 +2,7 @@ from pyorbit.subroutines.common import *
 from pyorbit.subroutines.constants import *
 from pyorbit.models.abstract_model import *
 from pyorbit.models.abstract_model import *
+from numpy.polynomial import polynomial
 
 
 """
@@ -35,7 +36,7 @@ class Sinusoid(AbstractModel):
         if x0_input is None:
             return variable_value['sine_amp'] * np.sin(dataset.x0/variable_value['sine_period'] - variable_value['sine_phase']*deg2rad )
         else:
-            return variable_value['sine_amp'] * np.sin(x0_inputvariable_value['sine_period'] - variable_value['sine_phase']*deg2rad )
+            return variable_value['sine_amp'] * np.sin(x0_input/variable_value['sine_period'] - variable_value['sine_phase']*deg2rad )
 
 
 
@@ -58,7 +59,7 @@ class LocalSinusoid(AbstractModel):
         if x0_input is None:
             return variable_value['sine_amp'] * np.sin(dataset.x0/variable_value['sine_period'] - variable_value['sine_phase']*deg2rad )
         else:
-            return variable_value['sine_amp'] * np.sin(x0_inputvariable_value['sine_period'] - variable_value['sine_phase']*deg2rad )
+            return variable_value['sine_amp'] * np.sin(x0_input/variable_value['sine_period'] - variable_value['sine_phase']*deg2rad )
 
 
 class SinusoidCommonPeriod(AbstractModel):
@@ -90,7 +91,7 @@ class SinusoidCommonPeriod(AbstractModel):
             #                                0.00,
             #                                np.pi/2.)
         else:
-            return variable_value['sine_amp'] * np.sin(x0_inputvariable_value['sine_period'] - variable_value['sine_phase']*deg2rad )
+            return variable_value['sine_amp'] * np.sin(x0_input/variable_value['sine_period'] - variable_value['sine_phase']*deg2rad )
 
             #return kepler_exo.kepler_RV_T0P(x0_input,
             #                                variable_value['f'],
@@ -121,7 +122,7 @@ class SinusoidPolynomialModulation(AbstractModel):
         }
 
         self.order = 1
-        self.starting_order = 1
+        self.starting_order = 0
 
         """
         The x-intercept must be defined within the interval of at least one dataset,
@@ -136,8 +137,6 @@ class SinusoidPolynomialModulation(AbstractModel):
         self.count_dataset = 0
 
 
-
-
     def initialize_model(self, mc, **kwargs):
 
         self.order = kwargs.get('order', 1)
@@ -150,10 +149,6 @@ class SinusoidPolynomialModulation(AbstractModel):
             useful for long-term with very slow variations over a single day
         """
         self.time_interval = kwargs.get('time_interval', 1.000000000)
-
-        """ If the polynomial is used as normalization factor, the first order must be included"""
-        if self.normalization_model:
-            self.starting_order = 0
 
         self.time_offset = kwargs.get('time_offset', False)
 
@@ -181,10 +176,8 @@ class SinusoidPolynomialModulation(AbstractModel):
             self.list_pams_dataset.update(['x_offset'])
         self.count_dataset  += 1
 
-        if self.normalization_model:
-            mc.common_models[self.common_poly_ref].fix_list['poly_c0'] = np.asarray([1.000000, 0.0000])
-        else:
-            mc.common_models[self.common_poly_ref].fix_list['poly_c1'] = np.asarray([1.000000, 0.0000])
+        mc.common_models[self.common_poly_ref].fix_list['poly_c0'] = np.asarray([1.000000, 0.0000])
+        #mc.common_models[self.common_poly_ref].fix_list['poly_c1'] = np.asarray([1.000000, 0.0000])
 
 
     def compute(self, variable_value, dataset, x0_input=None):
@@ -207,5 +200,5 @@ class SinusoidPolynomialModulation(AbstractModel):
 
         else:
             return variable_value['sine_amp'] \
-                * np.sin(x0_inputvariable_value['sine_period'] - variable_value['sine_phase']*deg2rad ) \
-                * variable_value['poly_factor'] * polynomial.polyval((x0_input+dataset.Tref-variable_value['x_zero']-x_offset)/self.time_interval, coeff)
+                * np.sin(x0_input/variable_value['sine_period'] - variable_value['sine_phase']*deg2rad ) \
+                * polynomial.polyval((x0_input+dataset.Tref-variable_value['x_zero']-x_offset)/self.time_interval, coeff)

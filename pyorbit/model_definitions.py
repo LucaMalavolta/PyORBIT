@@ -77,7 +77,7 @@ from pyorbit.models.correlation import LocalCorrelation
 from pyorbit.models.correlated_jitter import LocalCorrelatedJitter
 from pyorbit.models.common_offset import Offset
 from pyorbit.models.common_jitter import Jitter
-from pyorbit.models.sinusoid import Sinusoid, LocalSinusoid, SinusoidCommonPeriod, SinusoidVariableAmplitude
+from pyorbit.models.sinusoid import Sinusoid, LocalSinusoid, SinusoidCommonPeriod, SinusoidPolynomialModulation
 from pyorbit.models.harmonics import Harmonics
 
 from pyorbit.models.dilution_factor import DilutionFactor, LocalDilutionFactor
@@ -129,6 +129,7 @@ define_common_type_to_class = {
     'polynomial_trend': CommonPolynomialTrend,
     'common_offset': CommonOffset,
     'common_jitter': CommonJitter,
+    'sinusoid': CommonSinusoid,
     'harmonics': CommonHarmonics,
     'ld_linear': LimbDarkening_Linear,
     'ld_quadratic': LimbDarkening_Quadratic,

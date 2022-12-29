@@ -132,6 +132,8 @@ class SharedPolynomialTrend(AbstractModel):
             self.list_pams_dataset.update(['poly_factor'])
 
         self.time_offset = kwargs.get('time_offset', False)
+        if self.time_offset:
+            self.list_pams_dataset.update(['x_offset'])
 
         for i_order in range(self.starting_order, self.order+1):
             var = 'poly_c'+repr(i_order)
@@ -153,8 +155,8 @@ class SharedPolynomialTrend(AbstractModel):
                 self.x_zero = np.average(dataset.x)
             mc.common_models[self.common_poly_ref].fix_list['x_zero'] = np.asarray([self.x_zero, 0.0000])
 
-        if self.time_offset and self.count_dataset > 0:
-            self.list_pams_dataset.update(['x_offset'])
+        if self.count_dataset == 0:
+            self.fix_list[dataset.name_ref]['x_offset'] = np.asarray([0.0000, 0.0000])
         self.count_dataset  += 1
 
         if self.normalization_model:
