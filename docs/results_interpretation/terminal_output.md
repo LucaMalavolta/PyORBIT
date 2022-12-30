@@ -210,8 +210,109 @@ This section is divided in three groups:
   logarithmic  space), the values displayed here
   may not be physically meaningful.
 - *Statistics on the physical parameters obtained from the posteriors samples*:
-  posterior distribution of the physical parameters (i.e., before
+  confidence intervals of the physical parameters (i.e., before
   reparametrizaion) as they should appear in the physical model. If no
-  reparametrizaion has been applied to a given parameter, the physical posterior will be ideantical
-  to the sampler posterior.
-- *AAA* 
+  reparametrizaion has been applied to a given parameter, the *physical* posterior will be ideantical
+  to the *sampler* posterior.
+- *Statistics on the derived parameters obtained from the posteriors samples*:
+  confidence intervals of those parameters that are not directly involved in the
+  optimization procedure, but are derived from the model parameters through an
+  analytical transformation. 
+
+Let's take an example involving the determination of a planetary radius though
+light curve fitting:
+
+#### Confidence intervals of the parameters
+
+```{code} bash
+====================================================================================================
+     Statistics on the posterior of the sampler variables
+====================================================================================================
+
+----- common model:  b
+P                0     -2.157173      -0.000002      0.000002 (15-84 p) ([-2.251539, -2.058894])
+Tc               1  59144.616223      -0.000286      0.000285 (15-84 p) ([59144.600000, 59144.630000])
+b                2      0.483160      -0.041884      0.034602 (15-84 p) ([ 0.000000,  2.000000])
+R_Rs             3      0.020650      -0.000464      0.000448 (15-84 p) ([ 0.000010,  0.500000])
+sre_coso         4      0.016803      -0.199241      0.192704 (15-84 p) ([-1.000000,  1.000000])
+sre_sino         5      0.059049      -0.212933      0.198307 (15-84 p) ([-1.000000,  1.000000])
+```
+
+When reporting the sampler results, the name of the parameter is followed by a
+number indicating its position in the array of parameters passed to the
+optimization algorithm. These numbers are for internal use only (they my change
+from run to run), but they can be useful to check the dimensionality of the
+problem. At the end of the line, the boundaries of the parameters are reported:
+these boundaries can be assigned by the users (as in the case of *P* and *Tc*)
+or internally defined (as for *b* and *R_Rs*).
+<!---
+I should include a page in the documentation where the theta_parameters dictionary is detailed 
+-->
+In this example you can see that the orbital period *P* is negative: this is not
+an error, as the parameter is being explored in logarithmic space (specifically,
+Log2) and not in Natural base.
+Note also that eccentricity $e$ and argument of pericenter $\omega$ are
+parametried as $\sqrt{e} \sin \omega$ (*sre_sino*) and $\sqrt{e} \cos \omega$
+(*sre_coso*) following
+[Eastman et al. 2013](https://ui.adsabs.harvard.edu/abs/2013PASP..125...83E/abstract).
+**I should make priors and spaces more explicit at
+output**
+
+
+#### Statistics on the physical parameters obtained from the posteriors samples
+
+```{code} bash
+====================================================================================================
+     Statistics on the physical parameters obtained from the posteriors samples
+====================================================================================================
+
+----- common model:  b
+P                 2.241951e-01     -3.188571e-07     2.983407e-07 (15-84 p)
+Tc                59144.616223         -0.000286         0.000285 (15-84 p)
+b                     0.483160         -0.041884         0.034602 (15-84 p)
+R_Rs                  0.020650         -0.000464         0.000448 (15-84 p)
+e                     0.060706         -0.042746         0.066179 (15-84 p)
+omega               122.589193        -86.415897       136.651806 (15-84 p)
+```
+
+The main difference with respect to the previous table is that the columns of
+the parameter index and the parameter boundaries are not listed here, as not all
+the parameters may have been directly involved in the optizimation procedure.
+The orbital period *P* is now espressed in the correct unit (days) as it has
+been converted from logarithmic to natural space. 
+, while the
+other parameters *b*, *Tc*, and *R_Rs* are identical as they did not go through
+any transformation. 
+The *argument of pericenter* (*omega*) and the eccentricity *e* are now
+explicitely reported, as they are the actual parameters of the physical model.
+
+In the case of a circular orbit, *sre_sino* and *sre_coso* would not be listed
+in the sampler parameters output, while the eccentricity *e* and the argument of
+pericenter *\omega* would be listed as *fixed parameters* and without confidence
+interval, as the model still require these terms although they are not involved
+in the optimization procedure. 
+
+```{code} bash
+...
+e                 0.000000e+00
+omega                90.000000
+...
+```
+
+#### Statistics on the derived parameters obtained from the posteriors samples
+
+```{code} bash
+====================================================================================================
+     Statistics on the derived parameters obtained from the posteriors samples
+====================================================================================================
+
+----- common model:  b
+a_Rs                  2.150072         -0.021830         0.021366 (15-84 p)
+i                    77.018467         -1.040808         1.206541 (15-84 p)
+mean_long           102.186949         -0.370244         0.392672 (15-84 p)
+R_Rj                  0.125422         -0.002961         0.002917 (15-84 p)
+R_Re                  1.405843         -0.033195         0.032702 (15-84 p)
+T_41                  0.031653         -0.000485         0.000543 (15-84 p)
+T_32                  0.029880         -0.000534         0.000604 (15-84 p)
+a_AU_(rho,R)          0.006241         -0.000080         0.000080 (15-84 p)
+```
