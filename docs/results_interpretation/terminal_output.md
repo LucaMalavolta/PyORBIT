@@ -1,8 +1,8 @@
 (terminal_output)=
 
-# Interpreting PyORBIT_Results output
+# Interpreting `results` terminal output
 
-PyORBIT_Results will produce several files depending on the flags provided at
+PyORBIT_results will produce several files depending on the flags provided at
 runtime. The terminal output is always present
 
 ## Terminal output
@@ -213,7 +213,8 @@ This section is divided in three groups:
   optimization procedure, but are derived from the model parameters through an
   analytical transformation.
 
-
+The scheme will be repeated two times: once to print the confidence intervals of
+sampler/model/derived parameters, and again to print the corresponding MAP values.
 
 
 Let's take an example involving the determination of a planetary radius though
@@ -332,9 +333,11 @@ confidence intervals are computed on newly generated distribution.
 For this reason, the median of a model parameter may not correspond to the
 direct conversion of the median of the sampler parameters. Using the example
 shown before:
+
 $$\sqrt{e} \sin{\omega} = 0.017 \\
-\sqrt{e} \cos{\omega} = 0.059 \\
-e_{\mathrm{sampler}} = (\sqrt{e} \sin{\omega})^2 + (\sqrt{e} \cos{\omega} )^2 = 0.004
-$$
+  \sqrt{e} \cos{\omega} = 0.059$$
+$$e_{\mathrm{sampler}} = (\sqrt{e} \sin{\omega})^2 + (\sqrt{e} \cos{\omega} )^2
+  = 0.004$$
+
 While the reported median value for the eccentricity in the model parameters section is
 $e = 0.061$ .
