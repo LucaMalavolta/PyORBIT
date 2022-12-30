@@ -2,7 +2,7 @@
 
 # Interpreting PyORBIT_Results output
 
-PyORBIT_Results will produced several files depending on the flags provided at
+PyORBIT_Results will produce several files depending on the flags provided at
 runtime. The terminal output is always present
 
 ## Terminal output
@@ -54,7 +54,7 @@ or the MAP values.
 ### Basic model selection
 
 The code provides the *log-probability* function, with its two components (the
-*plog-riors* and the *log-likelihood*) explicitly reported right below.
+*log-priors* and the *log-likelihood*) explicitly reported right below.
 
 ```text
  LN posterior:  -319.565121      -2.851297     2.207220 (15-84 p)
@@ -65,9 +65,9 @@ The code provides the *log-probability* function, with its two components (the
 
 The code computes the Bayesian Information Criterion (BIC), the Akaike
 Information Criterion (AIC) and the AIC with a correction for small sample sizes
-(AIC). These values are computed using the medina value of the log-probability / log-likelihood.
+(AIC). These values are computed using the median value of the log-probability / log-likelihood.
 Formally, these three criteria should be computed using the *log-likelihood*,
-but I'vee seen several cases where the *log-probability* is used instead. The
+but I've seen several cases where the *log-probability* is used instead. The
 appropriate choice is left to the user.
 
 ```text
@@ -84,7 +84,7 @@ The *maximum a posteriori* (MAP) set of parameters is computed by picking the
 sampling corresponding to the maximum value of the log-probability distribution. 
 As in the previous steps, different model selection criteria using either the
 log-likelihood or the log-probability are reported here, with the difference
-that now the corresponding *MAP* value is used rather then the corresponding *median* value. 
+that now the corresponding *MAP* value is used rather than the corresponding *median* value. 
 
 ```text
  MAP log_priors     = -177.66943313873546
@@ -193,9 +193,9 @@ Two rows of asterisks delimit the end of this section
 
 ### Confidence intervals of the parameters
 
- Confidence intervals of the posteriors are provided 34.135th
- percentiles from the median on the left and right sides, in addition to the
- median as well, as specified in the [previous section](#confidence-intervals).
+Confidence intervals of the posteriors are provided 34.135th
+percentiles from the median on the left and right sides, in addition to the
+median as well, as specified in the [previous section](#confidence-intervals).
 
 This section is divided in three groups:
 
@@ -205,13 +205,16 @@ This section is divided in three groups:
   may not be physically meaningful.
 - *Statistics on the model parameters obtained from the posteriors samples*:
   confidence intervals of the model parameters (i.e., before
-  reparametrization) as they should appear in the physical model. If no
+  re parametrization) as they should appear in the physical model. If no
   reparametrization has been applied to a given parameter, the *model* posterior
   will be identical to the *sampler* posterior.
 - *Statistics on the derived parameters obtained from the posteriors samples*:
   confidence intervals of those parameters that are not directly involved in the
   optimization procedure, but are derived from the model parameters through an
-  analytical transformation. 
+  analytical transformation.
+
+
+
 
 Let's take an example involving the determination of a planetary radius though
 light curve fitting:
@@ -281,7 +284,7 @@ explicitly reported, as they are the actual parameters of the physical model.
 
 In the case of a circular orbit, *sre_sino* and *sre_coso* would not be listed
 in the sampler parameters output, while the eccentricity *e* and the argument of
-pericenter *\omega* would be listed as *fixed parameters* and without confidence
+periastron *\omega* would be listed as *fixed parameters* and without confidence
 interval, as the model still require these terms although they are not involved
 in the optimization procedure. 
 
@@ -313,7 +316,7 @@ a_AU_(rho,R)          0.006241         -0.000080         0.000080 (15-84 p)
 This table looks a lot like the *physical parameters* table, the main difference
 with the difference that these values are either obtained though internal
 transformation of the physical parameters, as in the case of the scaled
-semi-major axis *a_Rs* or the  orbital inclination *i*, or using some external
+semi-major axis *a_Rs* or the orbital inclination *i*, or using some external
 parameters, as the planetary radius in Jupiter radii *R_Rj*  and Earth radii
 *R_Re*, both requiring a prior on the stellar radius which is however not
 involved in the optimization procedure.
@@ -334,5 +337,4 @@ $$\sqrt{e} \sin{\omega} = 0.017 \\
 e_{\mathrm{sampler}} = (\sqrt{e} \sin{\omega})^2 + (\sqrt{e} \cos{\omega} )^2 = 0.004
 $$
 While the reported median value for the eccentricity in the model parameters section is
-$e = 0.061$ . 
-
+$e = 0.061$ .
