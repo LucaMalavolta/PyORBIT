@@ -9,8 +9,7 @@ runtime. The terminal output is always present
 
 First thing you will get is a list of a few characteristics of your system
 
-```{code} bash
-
+```
 PyORBIT v9.0.20
 
 Python version in use:
