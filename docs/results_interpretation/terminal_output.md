@@ -130,7 +130,7 @@ The chains are more than 50 times longer than the ACF, the estimate can be trust
 
 If the chains are too short, the `tolerance` parameter (i.e., the minimum number
 of autocorrelation times needed to trust the estimate) will be lowered to 20,
-with a warning a warning and a(likely overestimated) suggestion for the appropriate chain length.
+with a warning and a(likely overestimated) suggestion for the appropriate chain length.
 
 ```text
 ***** WARNING ******
