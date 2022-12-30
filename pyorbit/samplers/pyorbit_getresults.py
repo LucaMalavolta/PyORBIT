@@ -184,7 +184,7 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
 
         mc.model_setup()
         mc.initialize_logchi2()
-        results_analysis.results_resumen(mc, None, skip_theta=True)
+        results_analysis.results_summary(mc, None, skip_theta=True)
 
         theta_dictionary = results_analysis.get_theta_dictionary(mc)
 
@@ -218,7 +218,7 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
 
         mc.model_setup()
         mc.initialize_logchi2()
-        results_analysis.results_resumen(mc, None, skip_theta=True)
+        results_analysis.results_summary(mc, None, skip_theta=True)
 
         theta_dictionary = results_analysis.get_theta_dictionary(mc)
 
@@ -255,7 +255,7 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
 
         mc.model_setup()
         mc.initialize_logchi2()
-        results_analysis.results_resumen(mc, None, skip_theta=True)
+        results_analysis.results_summary(mc, None, skip_theta=True)
 
         theta_dictionary = results_analysis.get_theta_dictionary(mc)
 
@@ -434,7 +434,7 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
 
         mc.model_setup()
         mc.initialize_logchi2()
-        results_analysis.results_resumen(mc, None, skip_theta=True)
+        results_analysis.results_summary(mc, None, skip_theta=True)
 
         with open(dir_input + 'info/results.json') as f:
             results = json.load(f)
@@ -621,7 +621,7 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
     print()
     print(' Confidence intervals (median value, 34.135th percentile from the median on the left and right side)')
 
-    planet_parameters = results_analysis.results_resumen(
+    planet_parameters = results_analysis.results_summary(
         mc, flat_chain, chain_med=chain_MAP, return_samples=True)
 
     print()
@@ -630,7 +630,7 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
     print(' Parameters corresponding to the Maximum a Posteriori probability ( {} )'.format(lnprob_MAP))
     print()
 
-    results_analysis.results_resumen(mc, chain_MAP)
+    results_analysis.results_summary(mc, chain_MAP)
 
     print()
     print('****************************************************************************************************')

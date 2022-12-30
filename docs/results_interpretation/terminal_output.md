@@ -9,8 +9,8 @@ runtime. The terminal output is always present
 
 First thing you will get is a list of a few characteristics of your system
 
-```
-PyORBIT v9.0.20
+```text
+PyORBIT v9.1.0
 
 Python version in use:
 3.9.12 (main, Apr  5 2022, 06:56:58)
@@ -27,35 +27,36 @@ emcee version:  3.1.2
  Steps: 50000
 ```
 
-### Associated errors {#associated_errors}
+### Confidence intervals
 
-Associated errors are computed using the 15.865th and the 84.135th percentiles of
-the distribution. The median value of the distribution (50th percentile) is then subtracted from
+Confidence intervals and/or associated errors are computed using the 15.865th
+and the 84.135th percentiles of the distribution. The median value of the
+distribution (50th percentile) is then subtracted from
 these two values. For clarity, these values are always followed by the string
 `(15-84 p)`.
-The follwing value:
+The following values:
 
-```{code} bash
+```text
 jitter_0             25.641528         -1.200384         1.372232 (15-84 p)
 ```
 
-reads as $\mathrm{jitter}_0 = 25.6_{-1.2}^{+1.4} ms^{-1}$ in case of radial
-velocities. 
+read as $\mathrm{jitter}_0 = 25.6_{-1.2}^{+1.4} ms^{-1}$ (in case of radial
+velocities). 
 
 ```{note}
-The code will not try to format the output according to the significant figures of a measurement. Unit measurements and priors will not be displayed, at least for now. 
+The code will not try to format the output according to the significant figures of a measurement. Unit measurements and priors will not be displayed, at least for now.
 ```
 
 The associated error is not provided for the starting point of the MCMC analysis
 or the MAP values.
 
 
-### Basic model selection 
+### Basic model selection
 
 The code provides the *log-probability* function, with its two components (the
-*plog-riors* and the *log-likelihood*) explicitely reported right below.
+*plog-riors* and the *log-likelihood*) explicitly reported right below.
 
-```{code} bash
+```text
  LN posterior:  -319.565121      -2.851297     2.207220 (15-84 p)
 
  Median log_priors     = -177.66943313873546
@@ -69,8 +70,7 @@ Formally, these three criteria should be computed using the *log-likelihood*,
 but I'vee seen several cases where the *log-probability* is used instead. The
 appropriate choice is left to the user.
 
-```{code} bash
-
+```text
  Median BIC  (using likelihood) = 355.9106421289588
  Median AIC  (using likelihood) = 298.75055661114885
  Median AICc (using likelihood) = 299.37171702070515
@@ -86,8 +86,7 @@ As in the previous steps, different model selection criteria using either the
 log-likelihood or the log-probability are reported here, with the difference
 that now the corresponding *MAP* value is used rather then the corresponding *median* value. 
 
-```{code} bash
-
+```text
  MAP log_priors     = -177.66943313873546
  MAP log_likelihood = -136.28166552722797
 
@@ -103,15 +102,15 @@ that now the corresponding *MAP* value is used rather then the corresponding *me
 Finally, the code provides a suggestion regarding the use of either AIC or AICc 
 following the standard definition
 
-```{code} bash
+```text
  AIC suggested over AICs because NDATA (   600 ) > 40 * NDIM (    13 )
 ```
 
 ```{warning}
-No check over the applicability of BIS/AIC/AICc is performed! Be sure that the underlying assumtpions are valid in your specific case. 
+No check over the applicability of BIS/AIC/AICc is performed! Be sure that the underlying assumptions are valid in your specific case.
 ```
 
-### Aurocorrelation analysis
+### Autocorrelation analysis
 
 If the posteriors have been computed using `emcee`, an autocorrelation analysis
 is performed automatically using the methods implemented in the sampler. For
@@ -120,29 +119,25 @@ convergence
 page](https://emcee.readthedocs.io/en/stable/tutorials/autocorr/#autocorr) from
 the `emcee` documentation.
 
-
 `PyORBIT` will first compute the *integrated autocorrelation time* for each
 variable using the built-in method in `emcee`. This method automatically check
 if the chains are long enough for a reliable autocorrelation analysis.
 If everything is fine, you'll get this message:
 
-```{code} bash
-
+```text
 The chains are more than 50 times longer than the ACF, the estimate can be trusted
-
 ```
 
 If the chains are too short, the `tolerance` parameter (i.e., the minimum number
 of autocorrelation times needed to trust the estimate) will be lowered to 20,
 with a warning a warning and a(likely overestimated) suggestion for the appropriate chain length.
 
-```{code} bash
-
+```text
 ***** WARNING ******
 The integrated autocorrelation time cannot be reliably estimated likely the chains are too short, and ACF analysis is not fully reliable
 emcee.autocorr.integrated_time tolerance lowered to 20
 If you still get a warning, you should drop these results entirely
-Chains too shoort to apply convergence criteria
+Chains too short to apply convergence criteria
 They should be at least 2800*nthin = 280000
  ```
 
@@ -150,7 +145,7 @@ The maximum value of the integrated time is then used as step length (or step
 size) in the following analysis
 
 
-```{code} bash
+```text
 Computing the autocorrelation time of the chains
 Reference thinning used in the analysis: 100
 Step length used in the analysis: 13*nthin = 1300
@@ -158,7 +153,7 @@ Step length used in the analysis: 13*nthin = 1300
 
 The convergence criteria are clearly stated out, for your benefit:
 
-```{code} bash
+```text
 Convergence criteria: less than 1% variation in ACF after 50 times the integrated ACF
 At least 50*ACF after convergence, 100*ACF would be ideal
 Negative values: not converged yet
@@ -168,7 +163,7 @@ Finally, you'll get a (badly formatted) table to identify misbehaving variables,
 and a suggestion regarding the number of steps required to satisfy the criterion 
 reported above and the (minimum) value for the burn-in.
 
-| sample variable          | ACF | ACF*nthin  | converged at  |  nteps/ACF |
+| sampler parameter       | ACF | ACF*nthin  | converged at  |  nteps/ACF |
 | :--------------        | :-------- | :--------  | :--------  | :-------- |
 | RVdata_offset_0      |   8.441  |    844.1  |      764     |    117.6 |
 | RVdata_jitter_0      |  12.740  |   1274.0  |     2064     |     76.9 |
@@ -176,31 +171,31 @@ reported above and the (minimum) value for the burn-in.
 | BISdata_jitter_0     |   9.140  |    914.0  |      764     |    108.6 |
 | ... | ... | ...| ... | ... |
 
+Legend:
 
-- sample variable: the variable explored by the sampler (it may be different
-  from the physical variables of the model)
+- sampler parameter: the parameter explored by the sampler (it may be different
+  from the parameter of the model)
 - ACF: the integrated autocorrelation time, computed on the thinned chains. 
 - ACF*nthin: the integrated autocorrelation time, in units of sampler steps
 - converged at: number of sampler steps at which the chain 
 
-```{code} bash
+```text
 All the chains are longer than 50\*ACF, but some are shorter than 100\*ACF
 PyORBIT should keep running for at least     34713 more steps to reach 100\*ACF
 Suggested value for burnin:  2064
 ```
 
 ```{admonition} Don't rely too much on the ACF
-From my personal experience, when the analysis of light curve is involved the ACF analysis wil suggest you to keep running the sampler even if corvengence has been reached.
+From my personal experience, when the analysis of light curve is involved the ACF analysis wil suggest you to keep running the sampler even if convergence has been reached.
 ```
 
-Two rows of asteriks delimits the end of this section
+Two rows of asterisks delimit the end of this section
 
 ### Confidence intervals of the parameters
 
  Confidence intervals of the posteriors are provided 34.135th
  percentiles from the median on the left and right sides, in addition to the
- median as well, as specified in the
- [previous section](#associated_errors)
+ median as well, as specified in the [previous section](#confidence-intervals).
 
 This section is divided in three groups:
 
@@ -208,11 +203,11 @@ This section is divided in three groups:
   sampler. If the parameters have been parametrized (including exploration in
   logarithmic  space), the values displayed here
   may not be physically meaningful.
-- *Statistics on the physical parameters obtained from the posteriors samples*:
-  confidence intervals of the physical parameters (i.e., before
-  reparametrizaion) as they should appear in the physical model. If no
-  reparametrizaion has been applied to a given parameter, the *physical* posterior will be ideantical
-  to the *sampler* posterior.
+- *Statistics on the model parameters obtained from the posteriors samples*:
+  confidence intervals of the model parameters (i.e., before
+  reparametrization) as they should appear in the physical model. If no
+  reparametrization has been applied to a given parameter, the *model* posterior
+  will be identical to the *sampler* posterior.
 - *Statistics on the derived parameters obtained from the posteriors samples*:
   confidence intervals of those parameters that are not directly involved in the
   optimization procedure, but are derived from the model parameters through an
@@ -221,9 +216,9 @@ This section is divided in three groups:
 Let's take an example involving the determination of a planetary radius though
 light curve fitting:
 
-#### Confidence intervals of the parameters
+#### Statistics on the posterior of the sampler variables
 
-```{code} bash
+```text
 ====================================================================================================
      Statistics on the posterior of the sampler variables
 ====================================================================================================
@@ -251,16 +246,15 @@ In this example you can see that the orbital period *P* is negative: this is not
 an error, as the parameter is being explored in logarithmic space (specifically,
 Log2) and not in Natural base.
 Note also that eccentricity $e$ and argument of pericenter $\omega$ are
-parametried as $\sqrt{e} \sin \omega$ (*sre_sino*) and $\sqrt{e} \cos \omega$
+parametrized as $\sqrt{e} \sin \omega$ (*sre_sino*) and $\sqrt{e} \cos \omega$
 (*sre_coso*) following
 [Eastman et al. 2013](https://ui.adsabs.harvard.edu/abs/2013PASP..125...83E/abstract).
 **I should make priors and spaces more explicit at
 output**
 
+#### Statistics on the model parameters obtained from the posteriors samples
 
-#### Statistics on the physical parameters obtained from the posteriors samples
-
-```{code} bash
+```text
 ====================================================================================================
      Statistics on the physical parameters obtained from the posteriors samples
 ====================================================================================================
@@ -276,14 +270,14 @@ omega               122.589193        -86.415897       136.651806 (15-84 p)
 
 The main difference with respect to the previous table is that the columns of
 the parameter index and the parameter boundaries are not listed here, as not all
-the parameters may have been directly involved in the optizimation procedure.
-The orbital period *P* is now espressed in the correct unit (days) as it has
+the parameters may have been directly involved in the optimization procedure.
+The orbital period *P* is now expressed in the correct unit (days) as it has
 been converted from logarithmic to natural space. 
 , while the
 other parameters *b*, *Tc*, and *R_Rs* are identical as they did not go through
 any transformation. 
 The *argument of pericenter* (*omega*) and the eccentricity *e* are now
-explicitely reported, as they are the actual parameters of the physical model.
+explicitly reported, as they are the actual parameters of the physical model.
 
 In the case of a circular orbit, *sre_sino* and *sre_coso* would not be listed
 in the sampler parameters output, while the eccentricity *e* and the argument of
@@ -291,7 +285,7 @@ pericenter *\omega* would be listed as *fixed parameters* and without confidence
 interval, as the model still require these terms although they are not involved
 in the optimization procedure. 
 
-```{code} bash
+```text
 ...
 e                 0.000000e+00
 omega                90.000000
@@ -300,7 +294,7 @@ omega                90.000000
 
 #### Statistics on the derived parameters obtained from the posteriors samples
 
-```{code} bash
+```text
 ====================================================================================================
      Statistics on the derived parameters obtained from the posteriors samples
 ====================================================================================================
@@ -315,3 +309,30 @@ T_41                  0.031653         -0.000485         0.000543 (15-84 p)
 T_32                  0.029880         -0.000534         0.000604 (15-84 p)
 a_AU_(rho,R)          0.006241         -0.000080         0.000080 (15-84 p)
 ```
+
+This table looks a lot like the *physical parameters* table, the main difference
+with the difference that these values are either obtained though internal
+transformation of the physical parameters, as in the case of the scaled
+semi-major axis *a_Rs* or the  orbital inclination *i*, or using some external
+parameters, as the planetary radius in Jupiter radii *R_Rj*  and Earth radii
+*R_Re*, both requiring a prior on the stellar radius which is however not
+involved in the optimization procedure.
+
+### Note on reparametrization and transformation of parameters
+
+Median values and confidence intervals for model and derived parameters are
+computed directly on the transformed posterior, rather than on the reported
+values for of the sampler parameters. In other words, each set of parameters
+from the posterior distribution is converted into the model/derived parameters,
+generating a new distribution for each new parameter, then the median and the
+confidence intervals are computed on newly generated distribution.
+For this reason, the median of a model parameter may not correspond to the
+direct conversion of the median of the sampler parameters. Using the example
+shown before:
+$$\sqrt{e} \sin{\omega} = 0.017 \\
+\sqrt{e} \cos{\omega} = 0.059 \\
+e_{\mathrm{sampler}} = (\sqrt{e} \sin{\omega})^2 + (\sqrt{e} \cos{\omega} )^2 = 0.004
+$$
+While the reported median value for the eccentricity in the model parameters section is
+$e = 0.061$ . 
+

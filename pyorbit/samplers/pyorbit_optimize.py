@@ -48,7 +48,7 @@ def pyorbit_optimize(config_in, input_datasets=None, return_output=None):
         print('   {0:15s}:  {1}'.format(key_name, key_val))
 
     print()
-    results_analysis.results_resumen(mc, mc.starting_point, compute_lnprob=False, is_starting_point=True)
+    results_analysis.results_summary(mc, mc.starting_point, compute_lnprob=False, is_starting_point=True)
 
 
     optimize_results = optimize.minimize(
@@ -62,7 +62,7 @@ def pyorbit_optimize(config_in, input_datasets=None, return_output=None):
 
     if optimize_results['success']:
 
-        results_analysis.results_resumen(mc, output_results, compute_lnprob=True)
+        results_analysis.results_summary(mc, output_results, compute_lnprob=True)
 
         theta_dict = results_analysis.get_theta_dictionary(mc)
         starting_point_save_to_cpickle(optimize_dir_output, output_results, mc.bounds, theta_dict)

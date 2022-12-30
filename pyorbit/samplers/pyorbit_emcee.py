@@ -105,13 +105,13 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
             print('Original starting point of emcee:')
             print()
 
-            results_analysis.results_resumen(
+            results_analysis.results_summary(
                 mc, starting_point, compute_lnprob=True, is_starting_point=True)
 
             print('emcee results:')
             print()
 
-            results_analysis.results_resumen(mc, flatchain)
+            results_analysis.results_summary(mc, flatchain)
 
             print()
             print('emcee completed')
@@ -156,7 +156,7 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
         mc.boundaries_setup()
         mc.initialize_logchi2()
 
-        results_analysis.results_resumen(mc, None, skip_theta=True)
+        results_analysis.results_summary(mc, None, skip_theta=True)
 
         mc.pyde_dir_output = pyde_dir_output
         mc.emcee_dir_output = emcee_dir_output
@@ -314,7 +314,7 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
         print('Original starting point of emcee:')
         print()
 
-    results_analysis.results_resumen(
+    results_analysis.results_summary(
         mc, starting_point, compute_lnprob=True, is_starting_point=True)
     sys.stdout.flush()
 
@@ -378,7 +378,7 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
                 theta_dict,
                 mc.emcee_parameters['thin'])
 
-            results_analysis.results_resumen(mc, flatchain)
+            results_analysis.results_summary(mc, flatchain)
 
             print()
             print(sampled, '  steps completed, average lnprob:, ', np.median(prob))
@@ -428,7 +428,7 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
             theta_dict,
             mc.emcee_parameters['thin'])
 
-        results_analysis.results_resumen(mc, flatchain)
+        results_analysis.results_summary(mc, flatchain)
 
     print()
     print('emcee completed')

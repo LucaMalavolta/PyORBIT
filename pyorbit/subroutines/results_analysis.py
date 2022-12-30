@@ -5,11 +5,11 @@ import pyorbit.subroutines.kepler_exo as kepler_exo
 
 from tqdm import tqdm
 
-__all__ = ["results_resumen", "results_derived", "get_planet_parameters", "get_theta_dictionary", "get_model",
+__all__ = ["results_summary", "results_derived", "get_planet_parameters", "get_theta_dictionary", "get_model",
            "print_theta_bounds", "print_dictionary", "get_stellar_parameters", "print_integrated_ACF"]
 
 
-def results_resumen(mc, theta,
+def results_summary(mc, theta,
                     skip_theta=False,
                     compute_lnprob=False,
                     chain_med=False,
@@ -51,9 +51,9 @@ def results_resumen(mc, theta,
 
     print('====================================================================================================')
     if is_starting_point:
-        print('     Starting point projected onto the physical space     ')
+        print('     Starting point projected onto the model parameter space     ')
     else:
-        print('     Statistics on the physical parameters obtained from the posteriors samples     ')
+        print('     Statistics on the model parameters obtained from the posteriors samples     ')
     print('====================================================================================================')
     print()
 
@@ -939,7 +939,7 @@ def print_integrated_ACF(sampler_chain, theta_dict, nthin):
         print('At least 50*ACF after convergence, 100*ACF would be ideal')
         print('Negative values: not converged yet')
         print()
-        print('   sample variable                |    ACF   | ACF*nthin | converged at | nsteps/ACF | to 100*ACF')
+        print('   sampler parameter              |    ACF   | ACF*nthin | converged at | nsteps/ACF | to 100*ACF')
         print('                                  |          |           |              |            | ')
 
         for key_name, key_val in theta_dict.items():
@@ -975,7 +975,7 @@ PyORBIT should keep running for about {0:.0f} more steps to reach 100*ACF""".for
         return i_sampler, acf_trace, acf_diff, acf_converged_at
 
     else:
-        print("Chains too shoort to apply convergence criteria")
+        print("Chains too short to apply convergence criteria")
         print(
             "They should be at least {0:d}*nthin = {1:d}".format(50*acf_len, 50*acf_len*nthin))
         print()
