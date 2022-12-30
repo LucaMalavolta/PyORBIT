@@ -5,11 +5,11 @@ import pyorbit.subroutines.kepler_exo as kepler_exo
 
 from tqdm import tqdm
 
-__all__ = ["results_resumen", "results_derived", "get_planet_variables", "get_theta_dictionary", "get_model",
+__all__ = ["results_summary", "results_derived", "get_planet_parameters", "get_theta_dictionary", "get_model",
            "print_theta_bounds", "print_dictionary", "get_stellar_parameters", "print_integrated_ACF"]
 
 
-def results_resumen(mc, theta,
+def results_summary(mc, theta,
                     skip_theta=False,
                     compute_lnprob=False,
                     chain_med=False,
@@ -22,11 +22,11 @@ def results_resumen(mc, theta,
     print()
     print('====================================================================================================')
     if skip_theta:
-        print('     Boundaries of the sampler variables     ')
+        print('     Boundaries of the sampler parameters     ')
     elif is_starting_point:
         print('     Starting point of the sample/optimization routines    ')
     else:
-        print('     Statistics on the posterior of the sampler variables     ')
+        print('     Statistics on the posterior of the sampler parameters     ')
 
     print('====================================================================================================')
     print()
@@ -51,9 +51,9 @@ def results_resumen(mc, theta,
 
     print('====================================================================================================')
     if is_starting_point:
-        print('     Starting point projected onto the physical space     ')
+        print('     Starting point projected onto the model parameter space     ')
     else:
-        print('     Statistics on the physical parameters obtained from the posteriors samples     ')
+        print('     Statistics on the model parameters obtained from the posteriors samples     ')
     print('====================================================================================================')
     print()
 
@@ -94,7 +94,7 @@ def results_resumen(mc, theta,
     print('====================================================================================================')
     print()
 
-    returned_samples = get_planet_variables(mc, theta, verbose=True)
+    returned_samples = get_planet_parameters(mc, theta, verbose=True)
 
     if compute_lnprob:
         print()
@@ -242,10 +242,10 @@ def get_stellar_parameters(mc, theta, warnings=True, stellar_ref=None):
 
 
 def results_derived(mc, theta):
-    _ = get_planet_variables(mc, theta, verbose=True)
+    _ = get_planet_parameters(mc, theta, verbose=True)
 
 
-def get_planet_variables(mc, theta, verbose=False):
+def get_planet_parameters(mc, theta, verbose=False):
     """
     Derived parameters from the Common Models are listed
 
@@ -827,6 +827,10 @@ def print_integrated_ACF(sampler_chain, theta_dict, nthin):
 
     swapped_chains = np.swapaxes(sampler_chain, 1, 0)
 
+    print()
+    print('Computing the autocorrelation time of the chains')
+
+
     try:
         tolerance = 50
         integrated_ACF = integrated_time(
@@ -847,7 +851,7 @@ def print_integrated_ACF(sampler_chain, theta_dict, nthin):
         print()
         print('Old version of emcee, this function is not implemented')
         print()
-        return
+        return None, None, None, None
 
     """ computing the autocorrelation time every 1000 steps, skipping the first 5000 """
 
@@ -859,12 +863,12 @@ def print_integrated_ACF(sampler_chain, theta_dict, nthin):
     except:
         print('Error in computing max integrated ACF, skipped ')
         print()
-        return
+        return None, None, None, None
 
     if acf_len==0:
         print('Error in computing integrated ACF, chains too short, skipped ')
         print()
-        return
+        return None, None, None, None
 
     c = 5
 
@@ -872,9 +876,15 @@ def print_integrated_ACF(sampler_chain, theta_dict, nthin):
 
         acf_previous = np.ones(n_dim)
         acf_current = np.ones(n_dim)
-        acf_converged_at = np.zeros(n_dim, dtype=np.int16) - 1
+        acf_counter = np.zeros(n_dim, dtype=np.int64)
+        acf_converged_at = np.zeros(n_dim, dtype=np.int64) - 1
 
-        for i_sam in range(acf_len*3, n_sam, acf_len):
+        i_sampler = np.arange(acf_len*3, n_sam, acf_len, dtype=np.int64)
+
+        acf_trace = np.zeros([len(i_sampler), n_dim])
+        acf_diff = np.zeros([len(i_sampler), n_dim])
+
+        for id_sam, i_sam in enumerate(i_sampler):
 
             acf_previous = 1.*acf_current
             integrated_part = np.zeros(i_sam)
@@ -891,22 +901,35 @@ def print_integrated_ACF(sampler_chain, theta_dict, nthin):
                 window = auto_window(taus, c)
                 acf_current[i_dim] = taus[window]
 
-            acf_current[acf_current < 0.1] = 0.1
-            sel = (i_sam > integrated_ACF*tolerance) & (np.abs(acf_current -
-                                                               acf_previous)/acf_current < 0.01) & (acf_converged_at < 0.)
-            acf_converged_at[sel] = i_sam * nthin
+            acf_trace[id_sam, :] = acf_current * 1.
+            acf_diff[id_sam, :] = np.abs(acf_current-acf_previous)/acf_current
 
-            if np.sum((acf_converged_at > 0), dtype=np.int16) == n_dim:
-                break
+            converged = (i_sam > integrated_ACF*tolerance) \
+                & (acf_diff[id_sam, :] < 0.01) \
+                & (acf_converged_at < 0.)
 
+            acf_counter[converged] += 1
+
+            converged_stable = (converged) & (acf_counter == 5)
+
+            acf_converged_at[converged_stable] = i_sam * nthin
+
+            #if np.sum((acf_converged_at > 0), dtype=np.int64) == n_dim:
+            #    break
+
+
+        acf_converged_flag = (acf_converged_at>0)
         how_many_ACT = (n_sam - acf_converged_at/nthin)/integrated_ACF
         how_many_ACT[(acf_converged_at < 0)] = -1
 
         still_required_050 = (50-how_many_ACT)*(nthin*integrated_ACF)
+        still_required_050_flag = (still_required_050 > 0)
+        still_required_050[~still_required_050_flag] = 0
         still_required_100 = (100-how_many_ACT)*(nthin*integrated_ACF)
-
+        still_required_100_flag = (still_required_100 > 0)
+        still_required_100[~still_required_100_flag] = 0
+        
         print()
-        print('Computing the autocorrelation time of the chains')
         print('Reference thinning used in the analysis:', nthin)
         print(
             'Step length used in the analysis: {0:d}*nthin = {1:d}'.format(acf_len, acf_len*nthin))
@@ -916,40 +939,45 @@ def print_integrated_ACF(sampler_chain, theta_dict, nthin):
         print('At least 50*ACF after convergence, 100*ACF would be ideal')
         print('Negative values: not converged yet')
         print()
-        print('          sample variable      |    ACF   | ACF*nthin | converged at | nteps/ACF ')
-        print('                               |          |           |              |           ')
+        print('   sampler parameter              |    ACF   | ACF*nthin | converged at | nsteps/ACF | to 100*ACF')
+        print('                                  |          |           |              |            | ')
 
         for key_name, key_val in theta_dict.items():
-            print('          {0:20s} | {1:7.3f}  | {2:8.1f}  |  {3:7.0f}     |  {4:7.1f}   '.format(key_name,
-                                                                                                    integrated_ACF[key_val],
+            print('   {0:30s} | {1:7.2f}  | {2:8.0f}  |  {3:7.0f}     |  {4:6.0f}    | {5:7.0f} '.format(key_name,
+                                                                                                   integrated_ACF[key_val],
                                                                                                     integrated_ACF[key_val] *
                                                                                                     nthin,
                                                                                                     acf_converged_at[key_val],
-                                                                                                    how_many_ACT[key_val]))
+                                                                                                    how_many_ACT[key_val],
+                                                                                                    still_required_100[key_val]))
 
         print()
 
-        if np.sum((acf_converged_at > 0), dtype=np.int16) == n_dim:
-            if np.sum(how_many_ACT > 100, dtype=np.int16) == n_dim:
+        if np.sum((acf_converged_at > 0), dtype=np.int64) == n_dim:
+            if np.sum(how_many_ACT > 100, dtype=np.int64) == n_dim:
                 print('All the chains are longer than 100*ACF ')
-            elif (np.sum(how_many_ACT > 50, dtype=np.int16) == n_dim):
+            elif (np.sum(how_many_ACT > 50, dtype=np.int64) == n_dim):
                 print("""All the chains are longer than 50*ACF, but some are shorter than 100*ACF
-PyORBIT should keep running for at least {0:9.0f} more steps to reach 100*ACF""".format(np.amax(still_required_100)))
+PyORBIT should keep running for about {0:.0f} more steps to reach 100*ACF""".format(np.average(still_required_100[still_required_100_flag])))
             else:
-                print("""All the chains have converged, but PyORBIT should keep running for at least:
-{0:9.0f} more steps to reach 50*ACF
-{1:9.0f} more steps to reach 100*ACF""".format(np.amax(still_required_050), np.amax(still_required_100)))
+                print("""All the chains have converged, but PyORBIT should keep running for about:
+{0:.0f} more steps to reach 50*ACF, 
+{1:.0f} more steps to reach 100*ACF""".format(np.average(still_required_050[still_required_050_flag]), np.average(still_required_100[still_required_100_flag])))
 
-            print('Suggested value for burnin: ', np.amax(acf_converged_at))
+            print('Suggested value for burnin: {0:.0f}'.format(np.average(acf_converged_at)))
 
         else:
             print(' {0:5.0f} chains have not converged yet, keep going '.format(
-                np.sum((acf_converged_at < 0), dtype=np.int16)))
+                np.sum((acf_converged_at < 0), dtype=np.int64)))
 
         print()
 
+        return i_sampler, acf_trace, acf_diff, acf_converged_at
+
     else:
-        print("Chains too shoort to apply convergence criteria")
+        print("Chains too short to apply convergence criteria")
         print(
             "They should be at least {0:d}*nthin = {1:d}".format(50*acf_len, 50*acf_len*nthin))
         print()
+
+        return None, None, None, None

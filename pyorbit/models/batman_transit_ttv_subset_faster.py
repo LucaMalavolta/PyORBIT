@@ -150,7 +150,7 @@ class Batman_Transit_TTV_Subset_Faster(AbstractModel, AbstractTransit):
             y_output = x0_input * 0.
 
         if not self.use_inclination:
-            if variable_value['b'] > 1. + variable_value['R_Rs']/2. :
+            if variable_value['b'] > 1. + variable_value['R_Rs'] :
                 return y_output
 
 

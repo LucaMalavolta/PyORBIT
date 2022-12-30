@@ -8,6 +8,8 @@ from pyorbit.common.common_jitter import CommonJitter
 
 from pyorbit.common.harmonics import CommonHarmonics
 
+from pyorbit.common.sinusoid import CommonSinusoid
+
 from pyorbit.common.dilution_factor import CommonDilutionFactor
 from pyorbit.common.normalization_factor import CommonNormalizationFactor
 from pyorbit.common.star_parameters import CommonStarParameters
@@ -75,7 +77,7 @@ from pyorbit.models.correlation import LocalCorrelation
 from pyorbit.models.correlated_jitter import LocalCorrelatedJitter
 from pyorbit.models.common_offset import Offset
 from pyorbit.models.common_jitter import Jitter
-from pyorbit.models.sinusoid_common_period import SinusoidCommonPeriod
+from pyorbit.models.sinusoid import Sinusoid, LocalSinusoid, SinusoidCommonPeriod, SinusoidPolynomialModulation
 from pyorbit.models.harmonics import Harmonics
 
 from pyorbit.models.dilution_factor import DilutionFactor, LocalDilutionFactor
@@ -83,7 +85,7 @@ from pyorbit.models.normalization_factor import NormalizationFactor, LocalNormal
 
 from pyorbit.models.rossitermclaughlin_ohta import RossiterMcLaughling_Ohta
 
-from pyorbit.models.polynomial_trend import PolynomialTrend, LocalPolynomialTrend, SubsetPolynomialTrend
+from pyorbit.models.polynomial_trend import PolynomialTrend, SharedPolynomialTrend, LocalPolynomialTrend, SubsetPolynomialTrend
 
 from pyorbit.models.spectral_rotation import SpectralRotation, SubsetSpectralRotation, SubsetSpectralRotationPolynomial
 
@@ -127,6 +129,7 @@ define_common_type_to_class = {
     'polynomial_trend': CommonPolynomialTrend,
     'common_offset': CommonOffset,
     'common_jitter': CommonJitter,
+    'sinusoid': CommonSinusoid,
     'harmonics': CommonHarmonics,
     'ld_linear': LimbDarkening_Linear,
     'ld_quadratic': LimbDarkening_Quadratic,
@@ -186,13 +189,17 @@ define_type_to_class = {
     'local_correlation': LocalCorrelation,
     'correlation': LocalCorrelation,
     'polynomial_trend': PolynomialTrend,
+    'shared_polynomial_trend': SharedPolynomialTrend,
     'local_polynomial_trend': LocalPolynomialTrend,
     'subset_polynomial_trend': SubsetPolynomialTrend,
     'polynomial_trend_subset': SubsetPolynomialTrend,
     'common_offset': Offset,
     'common_jitter': Jitter,
     'harmonics': Harmonics,
+    'sinusoid': Sinusoid,
+    'local_sinusoid': LocalSinusoid,
     'sinusoid_common_period': SinusoidCommonPeriod,
+    'sinusoid_polynomial_modulation': SinusoidPolynomialModulation,
     'dilution_factor': DilutionFactor,
     'local_dilution_factor': LocalDilutionFactor,
     'normalization_factor': NormalizationFactor,

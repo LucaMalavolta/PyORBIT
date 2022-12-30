@@ -97,13 +97,13 @@ def pyorbit_zeus(config_in, input_datasets=None, return_output=None):
             print('Original starting point of zeus:')
             print()
 
-            results_analysis.results_resumen(
+            results_analysis.results_summary(
                 mc, starting_point, compute_lnprob=True, is_starting_point=True)
 
             print('zeus results:')
             print()
 
-            results_analysis.results_resumen(mc, flatchain)
+            results_analysis.results_summary(mc, flatchain)
 
             print()
             print('zeus completed')
@@ -148,7 +148,7 @@ def pyorbit_zeus(config_in, input_datasets=None, return_output=None):
         mc.boundaries_setup()
         mc.initialize_logchi2()
 
-        results_analysis.results_resumen(mc, None, skip_theta=True)
+        results_analysis.results_summary(mc, None, skip_theta=True)
 
         mc.pyde_dir_output = pyde_dir_output
         mc.zeus_dir_output = zeus_dir_output
@@ -296,7 +296,7 @@ def pyorbit_zeus(config_in, input_datasets=None, return_output=None):
         print('Original starting point of zeus:')
         print()
 
-    results_analysis.results_resumen(
+    results_analysis.results_summary(
         mc, starting_point, compute_lnprob=True, is_starting_point=True)
     sys.stdout.flush()
 
@@ -357,7 +357,7 @@ def pyorbit_zeus(config_in, input_datasets=None, return_output=None):
         theta_dict,
         mc.zeus_parameters['thin'])
 
-    results_analysis.results_resumen(mc, flatchain)
+    results_analysis.results_summary(mc, flatchain)
 
     print()
     print('zeus completed')

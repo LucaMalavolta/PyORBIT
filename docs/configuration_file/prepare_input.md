@@ -22,8 +22,8 @@ Datasets are grouped under the input section:
 - ``kind``: the kind of dataset provided. This label is used only by specific models that requires a special treatment with respect to standard datasets, i.e. central times of transits must be tagged with the ``Tcent`` data type.
 - ``models``: list of models' labels to be used to analyze the dataset. If only one model is specified, it can be written on the same line without the ``-`` sign.
 
-Dataset kinds
-+++++++++++++
+## Dataset kinds
+
 The following datasets are recognized by the code. In the majority of the cases, the way the dataset is treated depends on the specified models. A list of aliases is defined to circumvent the most common typos (and to avoid checking the documentation every time...).
 
 - ``RV``: radial velocities. Aliases: ``RV``, ``RVs``, ``rv``, ``rvs``.

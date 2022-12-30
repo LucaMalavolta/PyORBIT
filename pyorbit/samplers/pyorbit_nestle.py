@@ -58,7 +58,7 @@ def pyorbit_nestle(config_in, input_datasets=None, return_output=None):
 
     mc.starting_points_setup()
 
-    results_analysis.results_resumen(mc, None, skip_theta=True)
+    results_analysis.results_summary(mc, None, skip_theta=True)
 
     nthreads = mc.nested_sampling_parameters['nthreads']
 
