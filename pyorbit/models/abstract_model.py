@@ -57,12 +57,12 @@ class AbstractModel(object):
         self.planet_ref = common_ref
         self.stellar_ref = 'star_parameters'
 
-        self.variable_sampler = {}
+        self.sampler_parameters = {}
 
         self.transformation = {}
-        self.variable_index = {}
+        self.parameter_index = {}
         self.bounds = {}
-        self.variables = {}
+        self.parameters = {}
 
         self.starts = {}
 
@@ -81,7 +81,7 @@ class AbstractModel(object):
         self.model_conf = None
 
         self.multivariate_priors = {}
-        self.multivariate_vars = {}
+        self.multivariate_pars = {}
         self.multivariate_func = {}
         self.multivariate_med = {}
         self.multivariate_cov = {}
@@ -103,14 +103,14 @@ class AbstractModel(object):
     def initialize_model_dataset(self, mc, dataset, **kwargs):
         pass
 
-    def define_special_variable_properties(self,
+    def define_special_parameter_properties(self,
                                            ndim,
                                            output_lists,
                                            dataset_name,
                                            var):
         return ndim, output_lists, False
 
-    def define_variable_properties(self, ndim, output_lists, dataset_name):
+    def define_parameter_properties(self, ndim, output_lists, dataset_name):
         """[summary]
             Boundaries are defined in this class, where all the dataset-related
             variables are stored. Bounds and parameter index CANNOT be defined
@@ -127,8 +127,8 @@ class AbstractModel(object):
         """
 
         self.transformation[dataset_name] = {}
-        self.variable_index[dataset_name] = {}
-        self.variable_sampler[dataset_name] = {}
+        self.parameter_index[dataset_name] = {}
+        self.sampler_parameters[dataset_name] = {}
 
         if dataset_name not in self.bounds.keys():
             self.bounds[dataset_name] = {}
@@ -138,7 +138,7 @@ class AbstractModel(object):
 
         for var in self.list_pams_dataset:
             ndim, output_lists, applied = \
-                self.define_special_variable_properties(
+                self.define_special_parameter_properties(
                     ndim, output_lists, dataset_name, var)
             if applied:
                 continue
@@ -152,7 +152,7 @@ class AbstractModel(object):
             if var in self.fix_list[dataset_name]:
 
                 self.transformation[dataset_name][var] = get_fix_val
-                self.variable_index[dataset_name][var] = self.nfix
+                self.parameter_index[dataset_name][var] = self.nfix
                 self.prior_kind[dataset_name][var] = 'None'
                 self.prior_pams[dataset_name][var] = []
 
@@ -207,8 +207,8 @@ class AbstractModel(object):
                      self.prior_pams[dataset_name][var],
                      nested_coeff])
 
-                self.variable_index[dataset_name][var] = ndim
-                self.variable_sampler[dataset_name][var] = ndim
+                self.parameter_index[dataset_name][var] = ndim
+                self.sampler_parameter[dataset_name][var] = ndim
                 ndim += 1
 
         return ndim, output_lists
@@ -236,7 +236,7 @@ class AbstractModel(object):
                 start_converted = np.log10(self.starts[dataset_name][var])
             elif self.spaces[dataset_name][var] == 'Logarithmic':
                 start_converted = np.log2(self.starts[dataset_name][var])
-            starting_point[self.variable_sampler[dataset_name]
+            starting_point[self.sampler_parameters[dataset_name]
                            [var]] = start_converted
 
     def convert(self, theta, dataset_name):
@@ -246,7 +246,7 @@ class AbstractModel(object):
 
         for var in self.list_pams_dataset:
             variable_value[var] = self.transformation[dataset_name][var](
-                theta, self.fixed, self.variable_index[dataset_name][var])
+                theta, self.fixed, self.parameter_index[dataset_name][var])
         return variable_value
 
     def return_priors(self, theta, dataset_name):
@@ -258,9 +258,9 @@ class AbstractModel(object):
         """
 
         if getattr(self, 'multivariate_priors', False):
-            if len(set(self.multivariate_vars[dataset_name]) & set(self.list_pams_dataset[dataset_name])) > 0:
+            if len(set(self.multivariate_pars[dataset_name]) & set(self.list_pams_dataset[dataset_name])) > 0:
                 multi_var = [variable_value[ii]
-                             for ii in self.multivariate_vars[dataset_name]]
+                             for ii in self.multivariate_pars[dataset_name]]
                 pdf = self.multivariate_func[dataset_name].pdf(multi_var)
                 if pdf > 0:
                     prior_out += np.log(
@@ -268,13 +268,13 @@ class AbstractModel(object):
                 else:
                     return -np.inf
             else:
-                self.multivariate_vars[dataset_name] = []
+                self.multivariate_pars[dataset_name] = []
         else:
-            self.multivariate_vars = {dataset_name: []}
+            self.multivariate_pars = {dataset_name: []}
 
         for var in self.list_pams_dataset:
 
-            if var in self.multivariate_vars[dataset_name]:
+            if var in self.multivariate_pars[dataset_name]:
                 continue
 
             prior_out += giveback_priors(
@@ -296,8 +296,8 @@ class AbstractModel(object):
     def index_recenter_bounds(self, dataset_name):
         ind_list = []
         for var in list(set(self.recenter_pams_dataset)
-                        & set(self.variable_sampler[dataset_name])):
-            ind_list.append(self.variable_sampler[dataset_name][var])
+                        & set(self.sampler_parameters[dataset_name])):
+            ind_list.append(self.sampler_parameters[dataset_name][var])
 
         return ind_list
 

@@ -80,17 +80,17 @@ class TinyGaussianProcess_QuasiPeriodicActivity(AbstractModel):
         else:
             self.rotdec_condition = self._hypercond_00
 
-    def lnlk_compute(self, variable_value, dataset):
-        if not self.hyper_condition(variable_value):
+    def lnlk_compute(self, parameter_values, dataset):
+        if not self.hyper_condition(parameter_values):
             return -np.inf
-        if not self.rotdec_condition(variable_value):
+        if not self.rotdec_condition(parameter_values):
             return -np.inf
 
         theta_dict =  dict(
-            gamma=1. / (2.*variable_value['Oamp'] ** 2),
-            Hamp=variable_value['Hamp'],
-            Pdec=variable_value['Pdec'],
-            Prot=variable_value['Prot'],
+            gamma=1. / (2.*parameter_values['Oamp'] ** 2),
+            Hamp=parameter_values['Hamp'],
+            Pdec=parameter_values['Pdec'],
+            Prot=parameter_values['Prot'],
             diag=dataset.e ** 2.0 + dataset.jitter ** 2.0,
             x0=dataset.x0,
             y=dataset.residuals
@@ -98,7 +98,7 @@ class TinyGaussianProcess_QuasiPeriodicActivity(AbstractModel):
         return _loss_tinygp(theta_dict)
 
 
-    def sample_predict(self, variable_value, dataset, x0_input=None, return_covariance=False, return_variance=False):
+    def sample_predict(self, parameter_values, dataset, x0_input=None, return_covariance=False, return_variance=False):
 
         if x0_input is None:
             x0 = dataset.x0
@@ -106,10 +106,10 @@ class TinyGaussianProcess_QuasiPeriodicActivity(AbstractModel):
             x0 = x0_input
 
         theta_dict =  dict(
-            gamma=1. / (2.*variable_value['Oamp'] ** 2),
-            Hamp=variable_value['Hamp'],
-            Pdec=variable_value['Pdec'],
-            Prot=variable_value['Prot'],
+            gamma=1. / (2.*parameter_values['Oamp'] ** 2),
+            Hamp=parameter_values['Hamp'],
+            Pdec=parameter_values['Pdec'],
+            Prot=parameter_values['Prot'],
             diag=dataset.e ** 2.0 + dataset.jitter ** 2.0,
             x0=x0,
             y=dataset.residuals
@@ -125,17 +125,18 @@ class TinyGaussianProcess_QuasiPeriodicActivity(AbstractModel):
             return mu
 
     @staticmethod
-    def _hypercond_00(variable_value):
+    def _hypercond_00(parameter_values):
         #Condition from Rajpaul 2017, Rajpaul+2021
         return True
 
     @staticmethod
-    def _hypercond_01(variable_value):
+    def _hypercond_01(parameter_values):
         # Condition from Rajpaul 2017, Rajpaul+2021
         # Taking into account that Pdec^2 = 2*lambda_2^2
-        return variable_value['Pdec']**2 > (3. / 4. / np.pi) * variable_value['Oamp']**2 * variable_value['Prot']**2 
+        return parameter_values['Pdec']**2 > (3. / 4. / np.pi) * parameter_values['Oamp']**2 * parameter_values['Prot']**2 
 
     @staticmethod
-    def _hypercond_02(variable_value):
+    def _hypercond_02(parameter_values):
         #Condition on Rotation period and decay timescale
-        return variable_value['Pdec'] > 2. * variable_value['Prot']
+        return parameter_values['Pdec'] > 2. * parameter_values['Prot']
+

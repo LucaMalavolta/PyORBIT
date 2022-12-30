@@ -4,19 +4,6 @@ from pyorbit.models.abstract_model import *
 from pyorbit.models.abstract_model import *
 from numpy.polynomial import polynomial
 
-
-"""
-New changes:
-    mc.variables  is now called  mc.transformation
-    mv.var_list  is now called  mc.variable_index
-
-    variable_index is the third argument of transformation
-    it identifies which values from theta must be taken to convert the variable_sampler values to the physical parameter
-
-    variable_sampler associate the value in theta to their label in the sampler spaces
-"""
-
-
 class Sinusoid(AbstractModel):
 
     default_common = 'sinusoid'
@@ -32,11 +19,11 @@ class Sinusoid(AbstractModel):
             'sine_phase'
         }
 
-    def compute(self, variable_value, dataset, x0_input=None):
+    def compute(self, parameter_values, dataset, x0_input=None):
         if x0_input is None:
-            return variable_value['sine_amp'] * np.sin(dataset.x0/variable_value['sine_period'] - variable_value['sine_phase']*deg2rad )
+            return parameter_values['sine_amp'] * np.sin(dataset.x0/parameter_values['sine_period'] - parameter_values['sine_phase']*deg2rad )
         else:
-            return variable_value['sine_amp'] * np.sin(x0_input/variable_value['sine_period'] - variable_value['sine_phase']*deg2rad )
+            return parameter_values['sine_amp'] * np.sin(x0_input/parameter_values['sine_period'] - parameter_values['sine_phase']*deg2rad )
 
 
 
@@ -55,11 +42,11 @@ class LocalSinusoid(AbstractModel):
             'sine_phase'
         }
 
-    def compute(self, variable_value, dataset, x0_input=None):
+    def compute(self, parameter_values, dataset, x0_input=None):
         if x0_input is None:
-            return variable_value['sine_amp'] * np.sin(dataset.x0/variable_value['sine_period'] - variable_value['sine_phase']*deg2rad )
+            return parameter_values['sine_amp'] * np.sin(dataset.x0/parameter_values['sine_period'] - parameter_values['sine_phase']*deg2rad )
         else:
-            return variable_value['sine_amp'] * np.sin(x0_input/variable_value['sine_period'] - variable_value['sine_phase']*deg2rad )
+            return parameter_values['sine_amp'] * np.sin(x0_input/parameter_values['sine_period'] - parameter_values['sine_phase']*deg2rad )
 
 
 class SinusoidCommonPeriod(AbstractModel):
@@ -80,9 +67,9 @@ class SinusoidCommonPeriod(AbstractModel):
             'sine_phase'
         }
 
-    def compute(self, variable_value, dataset, x0_input=None):
+    def compute(self, parameter_values, dataset, x0_input=None):
         if x0_input is None:
-            return variable_value['sine_amp'] * np.sin(dataset.x0/variable_value['sine_period'] - variable_value['sine_phase']*deg2rad )
+            return parameter_values['sine_amp'] * np.sin(dataset.x0/parameter_values['sine_period'] - parameter_values['sine_phase']*deg2rad )
 
             #return kepler_exo.kepler_RV_T0P(dataset.x0,
             #                                variable_value['f'],
@@ -91,7 +78,7 @@ class SinusoidCommonPeriod(AbstractModel):
             #                                0.00,
             #                                np.pi/2.)
         else:
-            return variable_value['sine_amp'] * np.sin(x0_input/variable_value['sine_period'] - variable_value['sine_phase']*deg2rad )
+            return parameter_values['sine_amp'] * np.sin(x0_input/parameter_values['sine_period'] - parameter_values['sine_phase']*deg2rad )
 
             #return kepler_exo.kepler_RV_T0P(x0_input,
             #                                variable_value['f'],
@@ -153,8 +140,8 @@ class SinusoidPolynomialModulation(AbstractModel):
         self.time_offset = kwargs.get('time_offset', False)
 
         for i_order in range(self.starting_order, self.order+1):
-            var = 'poly_c'+repr(i_order)
-            self.list_pams_common.update([var])
+            par = 'poly_c'+repr(i_order)
+            self.list_pams_common.update([par])
 
         for common_ref in self.common_ref:
             if mc.common_models[common_ref].model_class == 'sinusoid':
@@ -180,25 +167,25 @@ class SinusoidPolynomialModulation(AbstractModel):
         #mc.common_models[self.common_poly_ref].fix_list['poly_c1'] = np.asarray([1.000000, 0.0000])
 
 
-    def compute(self, variable_value, dataset, x0_input=None):
+    def compute(self, parameter_values, dataset, x0_input=None):
 
         coeff = np.zeros(self.order+1)
 
-        if 'x_offset' in variable_value:
-            x_offset = variable_value['x_offset']
+        if 'x_offset' in parameter_values:
+            x_offset = parameter_values['x_offset']
         else:
             x_offset = 0
 
         for i_order in range(self.starting_order, self.order+1):
-            var = 'poly_c'+repr(i_order)
-            coeff[i_order] = variable_value[var]
+            par = 'poly_c'+repr(i_order)
+            coeff[i_order] = parameter_values[par]
 
         if x0_input is None:
-            return variable_value['sine_amp'] \
-                * np.sin(dataset.x0/variable_value['sine_period'] - variable_value['sine_phase']*deg2rad ) \
-                * polynomial.polyval((dataset.x-variable_value['x_zero']-x_offset)/self.time_interval, coeff)
+            return parameter_values['sine_amp'] \
+                * np.sin(dataset.x0/parameter_values['sine_period'] - parameter_values['sine_phase']*deg2rad ) \
+                * polynomial.polyval((dataset.x-parameter_values['x_zero']-x_offset)/self.time_interval, coeff)
 
         else:
-            return variable_value['sine_amp'] \
-                * np.sin(x0_input/variable_value['sine_period'] - variable_value['sine_phase']*deg2rad ) \
-                * polynomial.polyval((x0_input+dataset.Tref-variable_value['x_zero']-x_offset)/self.time_interval, coeff)
+            return parameter_values['sine_amp'] \
+                * np.sin(x0_input/parameter_values['sine_period'] - parameter_values['sine_phase']*deg2rad ) \
+                * polynomial.polyval((x0_input+dataset.Tref-parameter_values['x_zero']-x_offset)/self.time_interval, coeff)

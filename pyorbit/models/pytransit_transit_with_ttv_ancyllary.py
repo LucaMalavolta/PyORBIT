@@ -64,7 +64,7 @@ class PyTransit_Transit_With_TTV_Ancillary(AbstractModel, AbstractTransit):
                                                          exptimes=self.code_options[dataset.name_ref]['exp_time'],
                                                          nsamples=self.code_options[dataset.name_ref]['sample_factor'])
 
-    def define_special_variable_properties(self,
+    def define_special_parameter_properties(self,
                                            ndim,
                                            output_lists,
                                            dataset_name,

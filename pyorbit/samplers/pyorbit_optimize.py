@@ -53,7 +53,7 @@ def pyorbit_optimize(config_in, input_datasets=None, return_output=None):
 
     optimize_results = optimize.minimize(
         mc.negative_log_priors_likelihood,  # we minimize the negative loglikelyhood (including priors)
-        mc.starting_point,  # initial variable parameters
+        mc.starting_point,  # initial parameters parameters
         method=mc.optimize_parameters['method'],
         options=mc.optimize_options
     )

@@ -1,4 +1,6 @@
 from pyorbit.subroutines.common import *
+from packaging.version import parse as parse_version
+import pyorbit
 import time
 
 __all__ = ["ModelContainer"]
@@ -9,6 +11,8 @@ class ModelContainer(object):
     """
 
     def __init__(self):
+
+        self.pyorbit_version = pyorbit.__version__
 
         # FIXME: change the renaming and link directly the variables in constants module
 
@@ -93,18 +97,18 @@ class ModelContainer(object):
                         self.common_models[common_ref].default_spaces)
                     model.default_priors.update(
                         self.common_models[common_ref].default_priors)
-                    self.ndim, output_lists = self.common_models[common_ref].define_variable_properties(
+                    self.ndim, output_lists = self.common_models[common_ref].define_parameter_properties(
                         self.ndim, output_lists, model.list_pams_common)
 
             else:
                 pass
 
         for dataset_name, dataset in self.dataset_dict.items():
-            self.ndim, output_lists = dataset.define_variable_properties(
+            self.ndim, output_lists = dataset.define_parameter_properties(
                 self.ndim, output_lists, dataset.list_pams)
 
             for model_name in dataset.models:
-                self.ndim, output_lists = self.models[model_name].define_variable_properties(
+                self.ndim, output_lists = self.models[model_name].define_parameter_properties(
                     self.ndim, output_lists, dataset.name_ref)
 
         self.bounds = np.asarray(output_lists['bounds'])
@@ -153,7 +157,7 @@ class ModelContainer(object):
 
                 """ Step 1: retrieve the planet period"""
                 period = model.transformation['P'](theta, model.fixed,
-                                                   model.variable_index['P'])
+                                                   model.parameters_index['P'])
 
                 """ Step 2: save the all planet periods into a list"""
                 period_storage.extend([period])
@@ -164,10 +168,10 @@ class ModelContainer(object):
                     # print('    ', model_name, self.ordered_planets[model_name], period_storage_ordered)
 
                 """ Step 4: check if the eccentricity is within the given range"""
-                if 'e' in model.variable_index:
+                if 'e' in model.parameters_index:
                     e = model.transformation['e'](theta,
                                                   model.fixed,
-                                                  model.variable_index['e'])
+                                                  model.parameters_index['e'])
 
                     if not model.bounds['e'][0] <= e < model.bounds['e'][1]:
                         # print('eccentricity>1')
@@ -175,39 +179,39 @@ class ModelContainer(object):
                         return False
 
                 """ Step 5: check if the impact parameter is below 1 + Rp/Rs """
-                if 'b' in model.variable_index and 'R' in model.variable_index:
+                if 'b' in model.parameters_index and 'R_Rs' in model.parameters_index:
                     b = model.transformation['b'](theta,
                                                   model.fixed,
-                                                  model.variable_index['b'])
-                    R = model.transformation['R'](theta,
+                                                  model.parameters_index['b'])
+                    R = model.transformation['R_Rs'](theta,
                                                   model.fixed,
-                                                  model.variable_index['R'])
+                                                  model.parameters_index['R_Rs'])
                     if not b <= 1 + R:
                         return False
 
                 """ Step 6 eclipse depth must be greater than the amplitude of
                 phase variation (during the eclipse we only have the stellar line) """
-                if 'phase_amp' in model.variable_index and 'delta_occ' in model.variable_index:
+                if 'phase_amp' in model.parameters_index and 'delta_occ' in model.parameters_index:
                     phase_amp = model.transformation['delta_occ'](theta,
                                                   model.fixed,
-                                                  model.variable_index['phase_amp'])
+                                                  model.parameters_index['phase_amp'])
                     delta_occ = model.transformation['delta_occ'](theta,
                                                   model.fixed,
-                                                  model.variable_index['delta_occ'])
+                                                  model.parameters_index['delta_occ'])
                     if phase_amp > delta_occ: return False
 
 
-        """ Step 6 eclipse depth must be greater than the amplitude of
-        phase variation (during the eclipse we only have the stellar line) """
-        for dataset_name, dataset in self.dataset_dict.items():
-            if 'phase_amp' in dataset.variable_index and 'delta_occ' in dataset.variable_index:
-                phase_amp = dataset.transformation['delta_occ'](theta,
-                                                dataset.fixed,
-                                                dataset.variable_index['phase_amp'])
-                delta_occ = dataset.transformation['delta_occ'](theta,
-                                                dataset.fixed,
-                                                dataset.variable_index['delta_occ'])
-                if phase_amp > delta_occ: return False
+        #""" Step 6 eclipse depth must be greater than the amplitude of
+        #phase variation (during the eclipse we only have the stellar line) """
+        #for dataset_name, dataset in self.dataset_dict.items():
+        #    if 'phase_amp' in dataset.parameters_index and 'delta_occ' in dataset.parameters_index:
+        #        phase_amp = dataset.transformation['delta_occ'](theta,
+        #                                        dataset.fixed,
+        #                                        dataset.parameters_index['phase_amp'])
+        #        delta_occ = dataset.transformation['delta_occ'](theta,
+        #                                        dataset.fixed,
+        #                                        dataset.parameters_index['delta_occ'])
+        #        if phase_amp > delta_occ: return False
 
         """ Step 7 check for overlapping periods (within 2.5% arbitrarily chosen)"""
         for i_n, i_v in enumerate(period_storage):
@@ -418,3 +422,20 @@ class ModelContainer(object):
                     average_pops, 10e-12, n_pop)
 
         return population
+
+    def check_backward_compatibility(self):
+
+        if parse_version(getattr(self, 'pyorbit_version', '9.0.22')) < parse_version('9.1.0'):
+            print('Back-compatibility with version < 9.0 activated \n')
+            for model_name, model in self.common_models.items():
+                model.parameter_index = model.variable_index
+                model.sampler_parameters = model.variable_sampler
+
+            for model_name, model in self.models.items():
+                model.parameter_index = model.variable_index
+                model.sampler_parameters = model.variable_sampler
+
+            for dataset_name, dataset in self.dataset_dict.items():
+                dataset.parameter_index = dataset.variable_index
+                dataset.sampler_parameters = dataset.variable_sampler
+

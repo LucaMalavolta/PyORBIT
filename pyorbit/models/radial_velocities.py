@@ -17,12 +17,12 @@ except ImportError:
 """
 New changes:
     mc.variables  is now called  mc.transformation
-    mv.var_list  is now called  mc.variable_index
+    mv.var_list  is now called  mc.parameter_index
 
-    variable_index is the third argument of transformation
-    it identifies which values from theta must be taken to convert the variable_sampler values to the physical parameter
+    parameter_index is the third argument of transformation
+    it identifies which values from theta must be taken to convert the sampler_parameters values to the physical parameter
 
-    variable_sampler associate the value in theta to their label in the sampler spaces
+    sampler_parameters associate the value in theta to their label in the sampler spaces
 """
 
 

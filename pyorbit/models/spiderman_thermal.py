@@ -61,11 +61,11 @@ class Spiderman_Thermal(AbstractModel, AbstractTransit):
         self.spiderman_params.thermal = True
 
 
-    def compute(self, variable_value, dataset, x0_input=None):
+    def compute(self, parameter_values, dataset, x0_input=None):
         """[summary]
 
         Args:
-            variable_value ([type]): [description]
+            parameter_values ([type]): [description]
             dataset ([type]): [description]
             x0_input ([type], optional): [description]. Defaults to None.
         """
@@ -74,15 +74,15 @@ class Spiderman_Thermal(AbstractModel, AbstractTransit):
             from the priors
         """
 
-        stellar_radius = self.retrieve_radius(variable_value)
-        self.spiderman_params.T_s = self.retrieve_temperature(variable_value)
+        stellar_radius = self.retrieve_radius(parameter_values)
+        self.spiderman_params.T_s = self.retrieve_temperature(parameter_values)
 
-        self.spiderman_params.per = variable_value['P']  # orbital period
+        self.spiderman_params.per = parameter_values['P']  # orbital period
         # planet radius (in units of stellar radii)
-        self.spiderman_params.rp = variable_value['R_Rs']
-        self.spiderman_params.ecc = variable_value['e']  # eccentricity
+        self.spiderman_params.rp = parameter_values['R_Rs']
+        self.spiderman_params.ecc = parameter_values['e']  # eccentricity
         # argument of periastron (in degrees)
-        self.spiderman_params.w = variable_value['omega']
+        self.spiderman_params.w = parameter_values['omega']
 
         self.spiderman_params.l1 = self.code_options[dataset.name_ref]['l1']
         self.spiderman_params.l2 = self.code_options[dataset.name_ref]['l2']
@@ -95,9 +95,9 @@ class Spiderman_Thermal(AbstractModel, AbstractTransit):
                                                             self.spiderman_params.T_s,
                                                             self.spiderman_params.a_abs)
 
-        self.spiderman_params.albedo = variable_value['albedo']
-        self.spiderman_params.redist = variable_value['redist']
-        #self.spiderman_params.insol = variable_value['insol']
+        self.spiderman_params.albedo = parameter_values['albedo']
+        self.spiderman_params.redist = parameter_values['redist']
+        #self.spiderman_params.insol = parameter_values['insol']
 
         if x0_input is None:
             if self.spiderman_params.a < 1.0: return dataset.x0 * 0.

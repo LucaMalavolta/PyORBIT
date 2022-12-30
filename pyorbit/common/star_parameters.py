@@ -93,25 +93,25 @@ class CommonStarParameters(AbstractCommon):
 
     recenter_pams = set()
 
-    def define_special_variable_properties(self, ndim, output_lists, var):
+    def define_special_parameter_properties(self, ndim, output_lists, pam):
 
-        if not(var == "mass" or var == "radius") or \
-            not ('mass' in self.multivariate_vars
-                and 'radius' in self.multivariate_vars
+        if not(pam == "mass" or pam == "radius") or \
+            not ('mass' in self.multivariate_pams
+                and 'radius' in self.multivariate_pams
                 and self.multivariate_priors) \
             or 'mass' in self.fix_list \
             or 'radius' in self.fix_list \
-            or 'mass' in self.variable_sampler \
-            or 'radius' in self.variable_sampler:
+            or 'mass' in self.sampler_parameters \
+            or 'radius' in self.sampler_parameters:
             return ndim, output_lists, False
 
         self.transformation['mass'] = get_var_val
-        self.variable_index['mass'] = ndim
+        self.parameter_index['mass'] = ndim
         self.transformation['radius'] = get_var_val
-        self.variable_index['radius'] = ndim + 1
+        self.parameter_index['radius'] = ndim + 1
 
         self.transformation['density'] = get_2var_rho
-        self.variable_index['density'] = [ndim, ndim + 1]
+        self.parameter_index['density'] = [ndim, ndim + 1]
         variable_list = ['mass', 'radius']
 
         for var in variable_list:
@@ -136,7 +136,7 @@ class CommonStarParameters(AbstractCommon):
             output_lists['spaces'].append(self.spaces[var])
             output_lists['priors'].append([self.prior_kind[var], self.prior_pams[var], nested_coeff])
 
-            self.variable_sampler[var] = ndim
+            self.sampler_parameters[var] = ndim
             ndim += 1
 
         for var in ['density']:

@@ -55,6 +55,7 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
         mc, starting_point, population, prob, state, \
             sampler_chain, sampler_lnprobability, sampler_acceptance_fraction, _, _ = \
             emcee_load_from_cpickle(dir_input)
+        mc.check_backward_compatibility()
 
         if hasattr(mc.emcee_parameters, 'version'):
             emcee_version = mc.emcee_parameters['version'][0]
@@ -111,7 +112,6 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
         print()
         print(' Steps: {}'.format(nsteps))
         print()
-                
 
     if sampler_name == 'zeus':
 
@@ -122,6 +122,7 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
         mc, starting_point, population, prob, state, \
             sampler_chain, sampler_lnprobability, sampler_acceptance_fraction, _, _ = \
             zeus_load_from_cpickle(dir_input)
+        mc.check_backward_compatibility()
 
         pars_input(config_in, mc, reload_zeus=True)
 
@@ -181,6 +182,7 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
         os.system('mkdir -p ' + dir_output)
 
         mc = nested_sampling_load_from_cpickle(dir_input)
+        mc.check_backward_compatibility()
 
         mc.model_setup()
         mc.initialize_logchi2()
@@ -213,6 +215,7 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
         os.system('mkdir -p ' + dir_output)
 
         mc = nested_sampling_load_from_cpickle(dir_input)
+        mc.check_backward_compatibility()
 
         # pars_input(config_in, mc)
 
@@ -252,6 +255,7 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
         os.system('mkdir -p ' + dir_output)
 
         mc = nested_sampling_load_from_cpickle(dir_input)
+        mc.check_backward_compatibility()
 
         mc.model_setup()
         mc.initialize_logchi2()
@@ -429,8 +433,8 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
         os.system('mkdir -p ' + dir_output)
 
 
-
         mc = nested_sampling_load_from_cpickle(dir_input)
+        mc.check_backward_compatibility()
 
         mc.model_setup()
         mc.initialize_logchi2()
@@ -576,7 +580,7 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
 
     print()
     print('****************************************************************************************************')
-    print()    
+    print()
 
     if plot_dictionary['print_acf']:
 
@@ -675,13 +679,13 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
         }
 
         i_corner = 0
-        for var, var_dict in theta_dictionary.items():
-            corner_plot['samples'][:, i_corner] = flat_chain[:, var_dict]
+        for par, par_dict in theta_dictionary.items():
+            corner_plot['samples'][:, i_corner] = flat_chain[:, par_dict]
             if len(theta_dictionary) > 10:
-                corner_plot['labels'].append(repr(var_dict))
+                corner_plot['labels'].append(repr(par_dict))
             else:
-                corner_plot['labels'].append(re.sub('_', '-', var))
-            corner_plot['truths'].append(chain_med[var_dict, 0])
+                corner_plot['labels'].append(re.sub('_', '-', par))
+            corner_plot['truths'].append(chain_med[par_dict, 0])
             i_corner += 1
 
         corner_plot['samples'][:, -1] = flat_lnprob[:]
@@ -791,7 +795,7 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
             print('     Common model: ', common_name)
 
             corner_plot = {
-                'var_list': [],
+                'par_list': [],
                 'samples': [],
                 'labels': [],
                 'truths': []
@@ -806,20 +810,20 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
             Check if the eccentricity and argument of pericenter were set as free parameters or fixed by simply
             checking the size of their distribution
             """
-            for var in parameter_values.keys():
-                if np.size(parameter_values[var]) == 1:
-                    parameter_values[var] = parameter_values[var] * \
+            for par in parameter_values.keys():
+                if np.size(parameter_values[par]) == 1:
+                    parameter_values[par] = parameter_values[par] * \
                         np.ones(n_samplings)
                 else:
-                    corner_plot['var_list'].append(var)
+                    corner_plot['par_list'].append(par)
 
             corner_plot['samples'] = []
             corner_plot['labels'] = []
             corner_plot['truths'] = []
-            for var_i, var in enumerate(corner_plot['var_list']):
-                corner_plot['samples'].extend([parameter_values[var]])
-                corner_plot['labels'].append(var)
-                corner_plot['truths'].append(parameter_median[var])
+            for par_i, par in enumerate(corner_plot['par_list']):
+                corner_plot['samples'].extend([parameter_values[par]])
+                corner_plot['labels'].append(par)
+                corner_plot['truths'].append(parameter_median[par])
 
             """ Check if the semi-amplitude K is among the parameters that
                 have been fitted. If so, it computes the corresponding
@@ -886,12 +890,12 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
                 parameter_median.update(mc.models[model_name].convert(
                     chain_med[:, 0], dataset_name))
 
-                for var_i, var in enumerate(parameter_values):
-                    if np.size(parameter_values[var]) <= 1:
+                for par_i, par in enumerate(parameter_values):
+                    if np.size(parameter_values[par]) <= 1:
                         continue
-                    corner_plot['samples'].extend([parameter_values[var]])
-                    corner_plot['labels'].append(var)
-                    corner_plot['truths'].append(parameter_median[var])
+                    corner_plot['samples'].extend([parameter_values[par]])
+                    corner_plot['labels'].append(par)
+                    corner_plot['truths'].append(parameter_median[par])
 
 
                 try:
@@ -1192,11 +1196,11 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
                 file_keyword = prepend_keyword + 'model_files'
 
                 if prepend_keyword == '':
-                    planet_vars = planet_parameters_med
+                    planet_pars = planet_parameters_med
                     # star_vars = star_parameters # leaving here, it could be useful for the future
                     chain_ref = chain_med[:, 0]
                 elif prepend_keyword == 'MAP_':
-                    planet_vars = planet_parameters_MAP
+                    planet_pars = planet_parameters_MAP
                     # star_vars = star_parameters_MAP
                     chain_ref = chain_MAP
 
@@ -1220,26 +1224,26 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
                             np.size(bjd_plot[dataset_name]['x_plot']))
 
                         for common_ref in mc.models[model_name].common_ref:
-                            if common_ref in planet_vars:
-                                if 'P' in planet_vars[common_ref]:
+                            if common_ref in planet_pars:
+                                if 'P' in planet_pars[common_ref]:
                                     phase = (dataset.x0 /
-                                             planet_vars[common_ref]['P']) % 1
+                                             planet_pars[common_ref]['P']) % 1
                                     phase_plot = ((bjd_plot[dataset_name]['x_plot'] - mc.Tref) /
-                                                  planet_vars[common_ref]['P']) % 1
-                                    if 'Tc' in planet_vars[common_ref]:
-                                        tc_folded = (dataset.x - planet_vars[common_ref]['Tc']
-                                                     + planet_vars[common_ref]['P'] / 2.) \
-                                            % planet_vars[common_ref]['P'] \
-                                            - planet_vars[common_ref]['P'] / 2.
-                                        tc_folded_plot = (bjd_plot[dataset_name]['x_plot'] - planet_vars[common_ref][
+                                                  planet_pars[common_ref]['P']) % 1
+                                    if 'Tc' in planet_pars[common_ref]:
+                                        tc_folded = (dataset.x - planet_pars[common_ref]['Tc']
+                                                     + planet_pars[common_ref]['P'] / 2.) \
+                                            % planet_pars[common_ref]['P'] \
+                                            - planet_pars[common_ref]['P'] / 2.
+                                        tc_folded_plot = (bjd_plot[dataset_name]['x_plot'] - planet_pars[common_ref][
                                             'Tc']
-                                            + planet_vars[common_ref]['P'] / 2.) \
-                                            % planet_vars[common_ref]['P'] \
-                                            - planet_vars[common_ref]['P'] / 2.
+                                            + planet_pars[common_ref]['P'] / 2.) \
+                                            % planet_pars[common_ref]['P'] \
+                                            - planet_pars[common_ref]['P'] / 2.
                                     else:
-                                        tc_folded = dataset.x0 % planet_vars[common_ref]['P']
+                                        tc_folded = dataset.x0 % planet_pars[common_ref]['P']
                                         tc_folded_plot = (bjd_plot[dataset_name]['x_plot'] - mc.Tref) % \
-                                            planet_vars[common_ref]['P']
+                                            planet_pars[common_ref]['P']
 
                         fileout.write(
                             'descriptor BJD Tc_folded pha val,+- sys mod full val_compare,+- res,+- jit \n')
@@ -1346,15 +1350,15 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
                         fileout.write('{0:f} {1:f} \n'.format(x, mod))
                     fileout.close()
 
-                for model in planet_vars:
+                for model in planet_pars:
                     try:
 
                         RV_out = kepler_exo.kepler_RV_T0P(bjd_plot['full']['x_plot']-mc.Tref,
-                                                          planet_vars[model]['mean_long'],
-                                                          planet_vars[model]['P'],
-                                                          planet_vars[model]['K'],
-                                                          planet_vars[model]['e'],
-                                                          planet_vars[model]['omega'])
+                                                          planet_pars[model]['mean_long'],
+                                                          planet_pars[model]['P'],
+                                                          planet_pars[model]['K'],
+                                                          planet_pars[model]['e'],
+                                                          planet_pars[model]['omega'])
                         fileout = open(
                             dir_models + 'RV_planet_' + model + '_kep.dat', 'w')
                         fileout.write('descriptor x_range  m_kepler \n')
@@ -1363,12 +1367,12 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
                         fileout.close()
 
                         x_range = np.arange(-1.50, 1.50, 0.001)
-                        RV_out = kepler_exo.kepler_RV_T0P(x_range * planet_vars[model]['P'],
-                                                          planet_vars[model]['mean_long'],
-                                                          planet_vars[model]['P'],
-                                                          planet_vars[model]['K'],
-                                                          planet_vars[model]['e'],
-                                                          planet_vars[model]['omega'])
+                        RV_out = kepler_exo.kepler_RV_T0P(x_range * planet_pars[model]['P'],
+                                                          planet_pars[model]['mean_long'],
+                                                          planet_pars[model]['P'],
+                                                          planet_pars[model]['K'],
+                                                          planet_pars[model]['e'],
+                                                          planet_pars[model]['omega'])
                         fileout = open(
                             dir_models + 'RV_planet_' + model + '_pha.dat', 'w')
                         fileout.write('descriptor x_phase m_phase \n')
@@ -1377,16 +1381,16 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
                         fileout.close()
 
                         x_range = np.arange(-1.50, 1.50, 0.001)
-                        if 'Tc' in planet_vars[model]:
+                        if 'Tc' in planet_pars[model]:
                             Tc_range = x_range * \
-                                planet_vars[model]['P'] + \
-                                planet_vars[model]['Tc'] - mc.Tref
+                                planet_pars[model]['P'] + \
+                                planet_pars[model]['Tc'] - mc.Tref
                             RV_out = kepler_exo.kepler_RV_T0P(Tc_range,
-                                                              planet_vars[model]['mean_long'],
-                                                              planet_vars[model]['P'],
-                                                              planet_vars[model]['K'],
-                                                              planet_vars[model]['e'],
-                                                              planet_vars[model]['omega'])
+                                                              planet_pars[model]['mean_long'],
+                                                              planet_pars[model]['P'],
+                                                              planet_pars[model]['K'],
+                                                              planet_pars[model]['e'],
+                                                              planet_pars[model]['omega'])
                             fileout = open(
                                 dir_models + 'RV_planet_' + model + '_Tcf.dat', 'w')
                             fileout.write('descriptor Tc_phase m_phase \n')
@@ -1491,8 +1495,8 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
         n_int = len(all_parameters_list)
         output_plan = np.zeros([n_samplings, n_int], dtype=np.double)
         output_names = []
-        for var_index, parameter_name in enumerate(all_parameters_list):
-            output_plan[:, var_index] = all_parameters_list[parameter_name]
+        for par_index, parameter_name in enumerate(all_parameters_list):
+            output_plan[:, par_index] = all_parameters_list[parameter_name]
             output_names.extend([parameter_name])
 
         plot_truths = np.percentile(

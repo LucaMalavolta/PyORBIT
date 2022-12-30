@@ -90,7 +90,7 @@ class Batman_Transit_With_TTV(AbstractModel, AbstractTransit):
                                 exp_time=self.code_options[dataset.name_ref]['exp_time'],
                                 nthreads=self.code_options['nthreads'])
 
-    def define_special_variable_properties(self,
+    def define_special_parameter_properties(self,
                                            ndim,
                                            output_lists,
                                            dataset_name,
