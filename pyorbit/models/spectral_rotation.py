@@ -47,7 +47,7 @@ class SpectralRotation(AbstractModel):
 
     def compute(self, parameter_values, dataset, x0_input=None):
         """
-        :param variable_value:
+        :param parameter_values:
         :param dataset:
         :param x0_input:
         :return:

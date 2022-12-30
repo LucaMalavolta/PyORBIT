@@ -14,17 +14,6 @@ try:
 except ImportError:
     pass
 
-"""
-New changes:
-    mc.variables  is now called  mc.transformation
-    mv.var_list  is now called  mc.parameter_index
-
-    parameter_index is the third argument of transformation
-    it identifies which values from theta must be taken to convert the sampler_parameters values to the physical parameter
-
-    sampler_parameters associate the value in theta to their label in the sampler spaces
-"""
-
 
 class RVkeplerian(AbstractModel):
 
@@ -58,38 +47,38 @@ class RVkeplerian(AbstractModel):
         else:
             self.list_pams_common.update(['K'])
 
-    def compute(self, variable_value, dataset, x0_input=None):
+    def compute(self, parameter_values, dataset, x0_input=None):
 
         if self.use_time_of_transit:
-            mean_long = kepler_exo.kepler_Tc2phase_Tref(variable_value['P'],
-                                                variable_value['Tc'] - dataset.Tref,
-                                                variable_value['e'],
-                                                variable_value['omega'])
+            mean_long = kepler_exo.kepler_Tc2phase_Tref(parameter_values['P'],
+                                                parameter_values['Tc'] - dataset.Tref,
+                                                parameter_values['e'],
+                                                parameter_values['omega'])
         else:
-            mean_long = variable_value['mean_long']
+            mean_long = parameter_values['mean_long']
 
         if self.use_mass_for_planets:
 
-            K = kepler_exo.kepler_K1(variable_value['mass'],
-                                     variable_value['M_Me'] / constants.Msear, variable_value['P'], variable_value['i'],
-                                     variable_value['e'])
+            K = kepler_exo.kepler_K1(parameter_values['mass'],
+                                     parameter_values['M_Me'] / constants.Msear, parameter_values['P'], parameter_values['i'],
+                                     parameter_values['e'])
         else:
-            K = variable_value['K']
+            K = parameter_values['K']
 
         if x0_input is None:
             return kepler_exo.kepler_RV_T0P(dataset.x0,
                                             mean_long,
-                                            variable_value['P'],
+                                            parameter_values['P'],
                                             K,
-                                            variable_value['e'],
-                                            variable_value['omega'])
+                                            parameter_values['e'],
+                                            parameter_values['omega'])
         else:
             return kepler_exo.kepler_RV_T0P(x0_input,
                                             mean_long,
-                                            variable_value['P'],
+                                            parameter_values['P'],
                                             K,
-                                            variable_value['e'],
-                                            variable_value['omega'])
+                                            parameter_values['e'],
+                                            parameter_values['omega'])
 
 
 class RVdynamical(AbstractModel):
@@ -130,8 +119,6 @@ class RVdynamical(AbstractModel):
         else:
             self.list_pams_common.update(['mean_long'])
 
-    #def compute(self, variable_value, dataset, x0_input=None):
-    #    return dataset.external_model
 
 class TransitTimeKeplerian(AbstractModel):
     model_class = 'transit_time_keplerian'
@@ -156,22 +143,22 @@ class TransitTimeKeplerian(AbstractModel):
             self.list_pams_common.update(['omega'])
             # mean longitude = argument of pericenter + mean anomaly at Tref
 
-    def compute(self, variable_value, dataset, x0_input=None):
+    def compute(self, parameter_values, dataset, x0_input=None):
 
         if self.use_time_of_transit:
-            delta_T = variable_value['Tc'] - \
-                np.floor((variable_value['Tc'] - dataset.Tref) / variable_value['P']) * variable_value['P']
+            delta_T = parameter_values['Tc'] - \
+                np.floor((parameter_values['Tc'] - dataset.Tref) / parameter_values['P']) * parameter_values['P']
         else:
             delta_T = dataset.Tref + \
-                      kepler_exo.kepler_phase2Tc_Tref(variable_value['P'],
-                                                      variable_value['mean_long'],
-                                                      variable_value['e'],
-                                                      variable_value['omega'])
+                      kepler_exo.kepler_phase2Tc_Tref(parameter_values['P'],
+                                                      parameter_values['mean_long'],
+                                                      parameter_values['e'],
+                                                      parameter_values['omega'])
 
         if x0_input is None:
-            return np.floor(dataset.x0 / variable_value['P']) * variable_value['P'] + delta_T
+            return np.floor(dataset.x0 / parameter_values['P']) * parameter_values['P'] + delta_T
         else:
-            return np.floor(x0_input / variable_value['P']) * variable_value['P'] + delta_T
+            return np.floor(x0_input / parameter_values['P']) * parameter_values['P'] + delta_T
 
 
 class TransitTimeDynamical(AbstractModel):
