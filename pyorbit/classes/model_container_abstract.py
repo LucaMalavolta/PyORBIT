@@ -272,8 +272,8 @@ class ModelContainer(object):
             logchi2_gp_model = None
 
             dataset.model_reset()
-            variable_values = dataset.convert(theta)
-            dataset.compute(variable_values)
+            parameter_values = dataset.convert(theta)
+            dataset.compute(parameter_values)
 
             log_priors += dataset.return_priors(theta)
 
@@ -287,20 +287,20 @@ class ModelContainer(object):
                 log_priors += self.models[model_name].return_priors(
                     theta, dataset_name)
 
-                variable_values = {}
+                parameter_values = {}
                 for common_ref in self.models[model_name].common_ref:
-                    variable_values.update(
+                    parameter_values.update(
                         self.common_models[common_ref].convert(theta))
 
                 # try:
                 #    """ Taking the parameter values from the common models"""
                 #    for common_ref in self.models[model_name].common_ref:
-                #        variable_values.update(self.common_models[common_ref].convert(theta))
+                #        Translohr.update(self.common_models[common_ref].convert(theta))
                 # except:
                 #    """ This model has no common model reference, i.e., it is strictly connected to the dataset"""
                 #    pass
 
-                variable_values.update(
+                parameter_values.update(
                     self.models[model_name].convert(theta, dataset_name))
 
                 """ residuals will be computed following the definition in Dataset class
@@ -313,7 +313,7 @@ class ModelContainer(object):
                 # if getattr(self.models[model_name], 'model_class', None) is 'common_jitter':
                 if getattr(self.models[model_name], 'jitter_model', False):
                     dataset.jitter += self.models[model_name].compute(
-                        variable_values, dataset)
+                        parameter_values, dataset)
                     continue
 
                 if getattr(dataset, 'dynamical', False):
@@ -324,13 +324,13 @@ class ModelContainer(object):
 
                 if self.models[model_name].unitary_model:
                     dataset.unitary_model += self.models[model_name].compute(
-                    variable_values, dataset)
+                    parameter_values, dataset)
                 elif self.models[model_name].normalization_model:
                     dataset.normalization_model *= self.models[model_name].compute(
-                        variable_values, dataset)
+                        parameter_values, dataset)
                 else:
                     dataset.additive_model += self.models[model_name].compute(
-                        variable_values, dataset)
+                        parameter_values, dataset)
 
             dataset.compute_model()
             dataset.compute_residuals()
@@ -341,24 +341,24 @@ class ModelContainer(object):
 
             if logchi2_gp_model:
 
-                variable_values = {}
+                parameter_values = {}
                 for common_ref in self.models[logchi2_gp_model].common_ref:
-                    variable_values.update(
+                    parameter_values.update(
                         self.common_models[common_ref].convert(theta))
 
-                variable_values.update(
+                parameter_values.update(
                     self.models[logchi2_gp_model].convert(theta, dataset_name))
 
                 """ GP Log-likelihood is not computed now because a single matrix must be
                     computed with the joint dataset"""
                 if hasattr(self.models[logchi2_gp_model], 'delayed_lnlk_computation'):
 
-                    self.models[logchi2_gp_model].add_internal_dataset(variable_values, dataset)
+                    self.models[logchi2_gp_model].add_internal_dataset(parameter_values, dataset)
                     if logchi2_gp_model not in delayed_lnlk_computation:
                         delayed_lnlk_computation.append(logchi2_gp_model)
                 else:
                     log_likelihood += self.models[logchi2_gp_model].lnlk_compute(
-                        variable_values, dataset)
+                        parameter_values, dataset)
             else:
                 log_likelihood += dataset.model_logchi2()
 
@@ -378,8 +378,8 @@ class ModelContainer(object):
             return log_priors, log_likelihood
 
     def recenter_bounds(self, pop_mean, recenter=True):
-        # This function recenters the bounds limits for circular variables
-        # Also, it extends the range of a variable if the output of PyDE is a fixed number
+        # This function recenters the bounds limits for circular parameters
+        # Also, it extends the range of a parameter if the output of PyDE is a fixed number
 
         ind_list = []
 
@@ -410,10 +410,10 @@ class ModelContainer(object):
         n_pop = np.size(population, axis=0)
 
         if ind_list:
-            for var_ind in ind_list:
-                fix_sel = (population[:, var_ind] <= self.bounds[var_ind, 0]) | (
-                    population[:, var_ind] >= self.bounds[var_ind, 1])
-                population[fix_sel, var_ind] = pop_mean[var_ind]
+            for par_ind in ind_list:
+                fix_sel = (population[:, par_ind] <= self.bounds[par_ind, 0]) | (
+                    population[:, par_ind] >= self.bounds[par_ind, 1])
+                population[fix_sel, par_ind] = pop_mean[par_ind]
 
         for ii in range(0, self.ndim):
             if np.amax(population[:, ii]) - np.amin(population[:, ii]) < 10e-14:

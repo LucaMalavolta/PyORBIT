@@ -74,26 +74,26 @@ class PyTransit_Transit_With_TTV_Ancillary(AbstractModel, AbstractTransit):
             self.bounds[dataset_name][par] = self.code_options[dataset_name]['Tc_boundaries']
         return ndim, output_lists, False
 
-    def compute(self, parameter_variables, dataset, x0_input=None):
+    def compute(self, parameter_values, dataset, x0_input=None):
         """
-        :param variable_value:
+        :param parameter_values:
         :param dataset:
         :param x0_input:
         :return:
         """
 
-        pams_a, pams_i = self.retrieve_ai(parameter_variables)
-        pams_t0 = self.retrieve_t0(parameter_variables, dataset.Tref)
-        omega_rad = parameter_variables['omega'] / 180. * np.pi
+        pams_a, pams_i = self.retrieve_ai(parameter_values)
+        pams_t0 = self.retrieve_t0(parameter_values, dataset.Tref)
+        omega_rad = parameter_values['omega'] / 180. * np.pi
 
         for par, i_par in self.ldvars.items():
-            self.ld_vars[i_par] = parameter_variables[par]
+            self.ld_vars[i_par] = parameter_values[par]
 
         if x0_input is None:
             return self.pytransit_models[dataset.name_ref].evaluate_ps(
-                parameter_variables['R_Rs'],
+                parameter_values['R_Rs'],
                 self.ld_vars,
-                pams_t0, parameter_variables['P'], pams_a, pams_i, parameter_variables['e'], omega_rad) - 1.
+                pams_t0, parameter_values['P'], pams_a, pams_i, parameter_values['e'], omega_rad) - 1.
 
         else:
             self.pytransit_plot[dataset.name_ref].set_data(x0_input,
@@ -101,6 +101,6 @@ class PyTransit_Transit_With_TTV_Ancillary(AbstractModel, AbstractTransit):
                                                            nsamples=self.code_options[dataset.name_ref]['sample_factor'])
 
             return self.pytransit_plot[dataset.name_ref].evaluate_ps(
-                parameter_variables['R_Rs'],
+                parameter_values['R_Rs'],
                 self.ld_vars,
-                pams_t0, parameter_variables['P'], pams_a, pams_i, parameter_variables['e'], omega_rad) - 1.
+                pams_t0, parameter_values['P'], pams_a, pams_i, parameter_values['e'], omega_rad) - 1.
