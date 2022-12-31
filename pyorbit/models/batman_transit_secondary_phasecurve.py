@@ -121,28 +121,28 @@ class Batman_Transit_Eclipse_PhaseCurve(AbstractModel, AbstractTransit):
                                 nthreads=self.code_options['nthreads'],
                                 transittype="secondary")
 
-    def compute(self, variable_value, dataset, x0_input=None):
+    def compute(self, parameter_values, dataset, x0_input=None):
         """
-        :param variable_value:
+        :param parameter_values:
         :param dataset:
         :param x0_input:
         :return:
         """
         #t1_start = process_time()
 
-        pams_a, pams_i = self.retrieve_ai(variable_value)
-        pams_t0 = self.retrieve_t0(variable_value, dataset.Tref)
+        pams_a, pams_i = self.retrieve_ai(parameter_values)
+        pams_t0 = self.retrieve_t0(parameter_values, dataset.Tref)
 
         self.batman_params.a = pams_a
         self.batman_params.inc = pams_i
         self.batman_params.t0 = pams_t0
 
-        self.batman_params.per = variable_value['P']  # orbital period
+        self.batman_params.per = parameter_values['P']  # orbital period
         # planet radius (in units of stellar radii)
-        self.batman_params.rp = variable_value['R_Rs']
-        self.batman_params.ecc = variable_value['e']  # eccentricity
+        self.batman_params.rp = parameter_values['R_Rs']
+        self.batman_params.ecc = parameter_values['e']  # eccentricity
         # longitude of periastron (in degrees)
-        self.batman_params.w = variable_value['omega']
+        self.batman_params.w = parameter_values['omega']
 
         """
         print 'a    ', self.batman_params.a
@@ -154,21 +154,21 @@ class Batman_Transit_Eclipse_PhaseCurve(AbstractModel, AbstractTransit):
         print 'w    ', self.batman_params.w
         print 'u    ', self.batman_params.u
         """
-        for var, i_var in self.ldvars.items():
-            self.batman_params.u[i_var] = variable_value[var]
+        for par, i_par in self.ldvars.items():
+            self.batman_params.u[i_par] = parameter_values[par]
 
         if self.nightside_emission:
-            self.batman_params.fp = variable_value['delta_occ']
+            self.batman_params.fp = parameter_values['delta_occ']
         else:
-            self.batman_params.fp = variable_value['phase_amp']
+            self.batman_params.fp = parameter_values['phase_amp']
 
         if self.phase_offset:
-            phase_offset = variable_value['phase_off']/180.*np.pi
+            phase_offset = parameter_values['phase_off']/180.*np.pi
         else:
             phase_offset = 0.000
 
         self.batman_params.t_secondary = self.batman_params.t0 + self.batman_params.per / 2.
-        amplitude_sin = variable_value['phase_amp']
+        amplitude_sin = parameter_values['phase_amp']
 
         """
         From the batman manual:

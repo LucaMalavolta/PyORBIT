@@ -142,26 +142,26 @@ class GaussianProcess_QuasiPeriodicActivity(AbstractModel):
         self.gp[dataset.name_ref].compute(dataset.x0, env)
         return
 
-    def lnlk_compute(self, variable_value, dataset):
+    def lnlk_compute(self, parameter_values, dataset):
         """ 2 steps:
            1) theta parameters must be converted in physical units (e.g. from logarithmic to linear spaces)
            2) physical values must be converted to {\tt george} input parameters
         """
-        if not self.hyper_condition(variable_value):
+        if not self.hyper_condition(parameter_values):
             return -np.inf
-        if not self.rotdec_condition(variable_value):
+        if not self.rotdec_condition(parameter_values):
             return -np.inf
 
-        gp_pams = self.convert_val2gp(variable_value)
+        gp_pams = self.convert_val2gp(parameter_values)
         env = np.sqrt(dataset.e ** 2.0 + dataset.jitter ** 2.0)
         self.gp[dataset.name_ref].set_parameter_vector(gp_pams)
         self.gp[dataset.name_ref].compute(dataset.x0, env)
 
         return self.gp[dataset.name_ref].log_likelihood(dataset.residuals, quiet=True)
 
-    def sample_predict(self, variable_value, dataset, x0_input=None, return_covariance=False, return_variance=False):
+    def sample_predict(self, parameter_values, dataset, x0_input=None, return_covariance=False, return_variance=False):
 
-        gp_pams = self.convert_val2gp(variable_value)
+        gp_pams = self.convert_val2gp(parameter_values)
 
         env = np.sqrt(dataset.e ** 2.0 + dataset.jitter ** 2.0)
         self.gp[dataset.name_ref].set_parameter_vector(gp_pams)
@@ -171,9 +171,9 @@ class GaussianProcess_QuasiPeriodicActivity(AbstractModel):
         else:
             return self.gp[dataset.name_ref].predict(dataset.residuals, x0_input, return_cov=return_covariance, return_var=return_variance)
 
-    def sample_conditional(self, variable_value, dataset, x0_input=None):
+    def sample_conditional(self, parameter_values, dataset, x0_input=None):
 
-        gp_pams = self.convert_val2gp(variable_value)
+        gp_pams = self.convert_val2gp(parameter_values)
 
         env = np.sqrt(dataset.e ** 2.0 + dataset.jitter ** 2.0)
         self.gp[dataset.name_ref].set_parameter_vector(gp_pams)
@@ -184,17 +184,18 @@ class GaussianProcess_QuasiPeriodicActivity(AbstractModel):
             return self.gp[dataset.name_ref].sample_conditional(dataset.residuals, x0_input)
 
     @staticmethod
-    def _hypercond_00(variable_value):
+    def _hypercond_00(parameter_values):
         #Condition from Rajpaul 2017, Rajpaul+2021
         return True
 
     @staticmethod
-    def _hypercond_01(variable_value):
+    def _hypercond_01(parameter_values):
         # Condition from Rajpaul 2017, Rajpaul+2021
         # Taking into account that Pdec^2 = 2*lambda_2^2
-        return variable_value['Pdec']**2 > (3. / 4. / np.pi) * variable_value['Oamp']**2 * variable_value['Prot']**2 
+        return parameter_values['Pdec']**2 > (3. / 4. / np.pi) * parameter_values['Oamp']**2 * parameter_values['Prot']**2 
 
     @staticmethod
-    def _hypercond_02(variable_value):
+    def _hypercond_02(parameter_values):
         #Condition on Rotation period and decay timescale
-        return variable_value['Pdec'] > 2. * variable_value['Prot']
+        return parameter_values['Pdec'] > 2. * parameter_values['Prot']
+

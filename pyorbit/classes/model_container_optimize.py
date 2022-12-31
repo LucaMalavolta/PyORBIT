@@ -7,7 +7,6 @@ class ModelContainerOptimize(ModelContainer):
     def __init__(self):
         super(self.__class__, self).__init__()
 
-        """ pyde/emcee variabless """
         self.optimize_dir_output = None
         self.optimize_parameters = {'method': 'Nelder-Mead',
                                     'maxiter': 1000000.0,

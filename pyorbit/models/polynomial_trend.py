@@ -45,8 +45,8 @@ class PolynomialTrend(AbstractModel):
             self.starting_order = 0
 
         for i_order in range(self.starting_order, self.order+1):
-            var = 'poly_c'+repr(i_order)
-            self.list_pams_common.update([var])
+            par = 'poly_c'+repr(i_order)
+            self.list_pams_common.update([par])
 
         for common_ref in self.common_ref:
             if mc.common_models[common_ref].model_class == 'polynomial_trend':
@@ -64,20 +64,20 @@ class PolynomialTrend(AbstractModel):
                 self.x_zero = np.average(dataset.x)
             mc.common_models[self.common_poly_ref].fix_list['x_zero'] = np.asarray([self.x_zero, 0.0000])
 
-    def compute(self, variable_value, dataset, x0_input=None):
+    def compute(self, parameter_values, dataset, x0_input=None):
 
         coeff = np.zeros(self.order+1)
         for i_order in range(self.starting_order, self.order+1):
-            var = 'poly_c'+repr(i_order)
-            coeff[i_order] = variable_value[var]
+            par = 'poly_c'+repr(i_order)
+            coeff[i_order] = parameter_values[par]
 
         """ In our array, coefficient are sorted from the lowest degree to the higher
         Numpy Polynomials requires the inverse order (from high to small) as input"""
 
         if x0_input is None:
-            return polynomial.polyval((dataset.x-variable_value['x_zero'])/self.time_interval, coeff)
+            return polynomial.polyval((dataset.x-parameter_values['x_zero'])/self.time_interval, coeff)
         else:
-            return polynomial.polyval((x0_input+dataset.Tref-variable_value['x_zero'])/self.time_interval, coeff)
+            return polynomial.polyval((x0_input+dataset.Tref-parameter_values['x_zero'])/self.time_interval, coeff)
 
 
 class SharedPolynomialTrend(AbstractModel):
@@ -136,8 +136,8 @@ class SharedPolynomialTrend(AbstractModel):
             self.list_pams_dataset.update(['x_offset'])
 
         for i_order in range(self.starting_order, self.order+1):
-            var = 'poly_c'+repr(i_order)
-            self.list_pams_common.update([var])
+            par = 'poly_c'+repr(i_order)
+            self.list_pams_common.update([par])
 
         for common_ref in self.common_ref:
             if mc.common_models[common_ref].model_class == 'polynomial_trend':
@@ -165,26 +165,26 @@ class SharedPolynomialTrend(AbstractModel):
             mc.common_models[self.common_poly_ref].fix_list['poly_c1'] = np.asarray([1.000000, 0.0000])
 
 
-    def compute(self, variable_value, dataset, x0_input=None):
+    def compute(self, parameter_values, dataset, x0_input=None):
 
         coeff = np.zeros(self.order+1)
 
-        if 'x_offset' in variable_value:
-            x_offset = variable_value['x_offset']
+        if 'x_offset' in parameter_values:
+            x_offset = parameter_values['x_offset']
         else:
             x_offset = 0
 
         for i_order in range(self.starting_order, self.order+1):
-            var = 'poly_c'+repr(i_order)
-            coeff[i_order] = variable_value[var]
+            par = 'poly_c'+repr(i_order)
+            coeff[i_order] = parameter_values[par]
 
         """ In our array, coefficient are sorted from the lowest degree to the higher
         Numpy Polynomials requires the inverse order (from high to small) as input"""
 
         if x0_input is None:
-            return variable_value['poly_factor'] * polynomial.polyval((dataset.x-variable_value['x_zero']-x_offset)/self.time_interval, coeff)
+            return parameter_values['poly_factor'] * polynomial.polyval((dataset.x-parameter_values['x_zero']-x_offset)/self.time_interval, coeff)
         else:
-            return variable_value['poly_factor'] * polynomial.polyval((x0_input+dataset.Tref-variable_value['x_zero']-x_offset)/self.time_interval, coeff)
+            return parameter_values['poly_factor'] * polynomial.polyval((x0_input+dataset.Tref-parameter_values['x_zero']-x_offset)/self.time_interval, coeff)
 
 
 class LocalPolynomialTrend(AbstractModel):
@@ -230,8 +230,8 @@ class LocalPolynomialTrend(AbstractModel):
             self.starting_order = 0
 
         for i_order in range(self.starting_order, self.order+1):
-            var = 'poly_c'+repr(i_order)
-            self.list_pams_dataset.update([var])
+            par = 'poly_c'+repr(i_order)
+            self.list_pams_dataset.update([par])
 
     def initialize_model_dataset(self, mc, dataset, **kwargs):
 
@@ -244,33 +244,33 @@ class LocalPolynomialTrend(AbstractModel):
                 self.x_zero[dataset.name_ref] = np.average(dataset.x)
             self.fix_list[dataset.name_ref]['x_zero'] = np.asarray([self.x_zero[dataset.name_ref], 0.0000])
 
-    def compute(self, variable_value, dataset, x0_input=None):
+    def compute(self, parameter_values, dataset, x0_input=None):
 
         coeff = np.zeros(self.order+1)
         for i_order in range(self.starting_order, self.order+1):
-            var = 'poly_c'+repr(i_order)
-            coeff[i_order] = variable_value[var]
+            par = 'poly_c'+repr(i_order)
+            coeff[i_order] = parameter_values[par]
 
         """ In our array, coefficient are sorted from the lowest degree to the highest """
 
         if x0_input is None:
-            return polynomial.polyval((dataset.x-variable_value['x_zero'])/self.time_interval, coeff)
+            return polynomial.polyval((dataset.x-parameter_values['x_zero'])/self.time_interval, coeff)
         else:
-            return polynomial.polyval((x0_input+dataset.Tref-variable_value['x_zero'])/self.time_interval, coeff)
+            return polynomial.polyval((x0_input+dataset.Tref-parameter_values['x_zero'])/self.time_interval, coeff)
 
-    def compute_alt(self, variable_value, dataset, x0_input=None):
+    def compute_alt(self, parameter_values, dataset, x0_input=None):
 
         coeff = np.zeros(self.order+1)
         for i_order in range(self.starting_order, self.order+1):
-            var = 'poly_c'+repr(i_order)
-            coeff[-1-i_order] = variable_value[var]
+            par = 'poly_c'+repr(i_order)
+            coeff[-1-i_order] = parameter_values[par]
 
         """ In our array, coefficient are sorted from the lowest degree to the highest """
 
         if x0_input is None:
-            return self._polyval(coeff, (dataset.x-variable_value['x_zero'])/self.time_interval)
+            return self._polyval(coeff, (dataset.x-parameter_values['x_zero'])/self.time_interval)
         else:
-            return self._polyval(coeff, (x0_input+dataset.Tref-variable_value['x_zero'])/self.time_interval)
+            return self._polyval(coeff, (x0_input+dataset.Tref-parameter_values['x_zero'])/self.time_interval)
 
     def _polyval(p, x):
         y = np.zeros(x.shape, dtype=float)
@@ -329,27 +329,27 @@ class SubsetPolynomialTrend(AbstractModel):
         for i_sub in range(0, dataset.submodel_flag):
 
             for i_order in range(self.starting_order, self.order+1):
-                var_original = 'poly_c'+repr(i_order)
-                var_subset = 'poly_sub'+repr(i_sub)+'_c'+repr(i_order)
+                par_original = 'poly_c'+repr(i_order)
+                par_subset = 'poly_sub'+repr(i_sub)+'_c'+repr(i_order)
 
-                self._subset_transfer_priors(mc, dataset, var_original, var_subset)
+                self._subset_transfer_priors(mc, dataset, par_original, par_subset)
 
             sub_dataset = dataset.x[(dataset.submodel_id==i_sub)]
 
-            var_original = 'x_zero'
-            var_subset = 'x_zero_sub'+repr(i_sub)
+            par_original = 'x_zero'
+            par_subset = 'x_zero_sub'+repr(i_sub)
             try:
-                xzero_ref = kwargs[var_subset] * 1.
-                self.fix_list[dataset.name_ref][var_subset] = np.asarray([kwargs[var_subset], 0.0000], dtype=np.double)
+                xzero_ref = kwargs[par_subset] * 1.
+                self.fix_list[dataset.name_ref][par_subset] = np.asarray([kwargs[par_subset], 0.0000], dtype=np.double)
             except (KeyError, ValueError):
                 xzero_ref = np.average(sub_dataset)
 
-            self.fix_list[dataset.name_ref][var_subset] = np.asarray([xzero_ref, 0.0000])
+            self.fix_list[dataset.name_ref][par_subset] = np.asarray([xzero_ref, 0.0000])
 
-            self._subset_transfer_priors(mc, dataset, var_original, var_subset)
+            self._subset_transfer_priors(mc, dataset, par_original, par_subset)
 
 
-    def compute(self, variable_value, dataset, x0_input=None):
+    def compute(self, parameter_values, dataset, x0_input=None):
 
         if x0_input is None:
             y_output = np.zeros(dataset.n)
@@ -361,18 +361,18 @@ class SubsetPolynomialTrend(AbstractModel):
         for i_sub in range(0,dataset.submodel_flag):
 
             x_zero_var = 'x_zero_sub'+repr(i_sub)
-            x_input = xd_input-variable_value[x_zero_var]
+            x_input = xd_input-parameter_values[x_zero_var]
 
             coeff = np.zeros(self.order+1)
             """ In our array, coefficient are sorted from the lowest degree to the highest """
             for i_order in range(self.starting_order, self.order+1):
-                var = 'poly_sub'+repr(i_sub)+'_c'+repr(i_order)
-                coeff[i_order] = variable_value[var]
+                par = 'poly_sub'+repr(i_sub)+'_c'+repr(i_order)
+                coeff[i_order] = parameter_values[par]
 
             if x0_input is None:
                 sel_data = (dataset.submodel_id==i_sub)
             else:
-                original_dataset = dataset.x[(dataset.submodel_id==i_sub)] -variable_value[x_zero_var]
+                original_dataset = dataset.x[(dataset.submodel_id==i_sub)] -parameter_values[x_zero_var]
                 sel_data = (x_input >= np.amin(original_dataset)) &  (x_input <= np.amax(original_dataset))
             y_output[sel_data] = polynomial.polyval(x_input[sel_data]/self.time_interval, coeff)
 

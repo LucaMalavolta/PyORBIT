@@ -16,15 +16,15 @@ class DilutionFactor(AbstractModel):
             'd_factor',  # Dilution factor, expressed as all_other_stars / star_A ratio of flux
         }
 
-    def compute(self, variable_value, dataset, x0_input=None):
+    def compute(self, parameter_values, dataset, x0_input=None):
         """
 
-        :param variable_value:
+        :param parameter_values:
         :param dataset:
         :param x0_input:
         :return:
         """
-        return np.asarray(variable_value['d_factor'])
+        return np.asarray(parameter_values['d_factor'])
 
 
 class LocalDilutionFactor(AbstractModel):
@@ -41,12 +41,12 @@ class LocalDilutionFactor(AbstractModel):
             'd_factor',  # Dilution factor, expressed as all_other_stars / star_A ratio of flux
         }
 
-    def compute(self, variable_value, dataset, x0_input=None):
+    def compute(self, parameter_values, dataset, x0_input=None):
         """
 
-        :param variable_value:
+        :param parameter_values
         :param dataset:
         :param x0_input:
         :return:
         """
-        return np.asarray(variable_value['d_factor'])
+        return np.asarray(parameter_values['d_factor'])

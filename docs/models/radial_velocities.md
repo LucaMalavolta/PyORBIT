@@ -9,9 +9,9 @@
 
 | Name        | Parameter | Common?  | Definition  | Notes |
 | :---        | :-------- | :-------------  | :-----  | :---- |
-| P      | Orbital planets                      | common | ``planets``     | |
-| K      | Radial velocity semiamplitude        | common | ``planets``     | |
-| mean_long | Mean longitude of the orbit, assuming $\Omega=0$ | common | ``planets`` | (1) |
+| P      | orbital period of the planet | common | ``planets``     | |
+| K      | Radial velocity semiamplitude | common | ``planets``     | |
+| mean_long | mean longitude of the orbit, assuming $\Omega=0$ | common | ``planets`` | (1) |
 | Tc     | Central time of transit              | common | ``planets``     | (2)|
 | e      | eccentricity of the orbit  | common | ``planets`` | (3) |
 | omega  | argument of pericenter of the *planet* $\omega_p$  | common |  ``planets`` | (3) |

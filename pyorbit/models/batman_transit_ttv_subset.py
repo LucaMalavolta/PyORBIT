@@ -72,7 +72,7 @@ class Batman_Transit_TTV_Subset(AbstractModel, AbstractTransit):
         self.batman_params.u = np.ones(kwargs['limb_darkening_ncoeff'],
                                        dtype=np.double) * 0.1  # limb darkening coefficients
 
-        """ And now we remove the transit time from the common variables, and add it back as a dataset-specific variable """
+        """ And now we remove the transit time from the common parameters, and add it back as a dataset-specific parameter """
 
         self.list_pams_common.discard('Tc')
         # self.list_pams_dataset.update(['Tc'])
@@ -83,22 +83,22 @@ class Batman_Transit_TTV_Subset(AbstractModel, AbstractTransit):
 
         for i_sub in range(0, dataset.submodel_flag):
 
-            var_original = 'Tc'
-            var_subset = 'Tc_'+repr(i_sub)
+            par_original = 'Tc'
+            par_subset = 'Tc_'+repr(i_sub)
 
-            self._subset_transfer_priors(mc, dataset, var_original, var_subset)
+            self._subset_transfer_priors(mc, dataset, par_original, par_subset)
 
             sub_dataset = dataset.x[(dataset.submodel_id == i_sub)]
 
             if kwargs[dataset.name_ref].get('boundaries', False):
-                var_update = kwargs[dataset.name_ref]['boundaries'].get(
-                    var_subset, [min(sub_dataset), max(sub_dataset)])
+                par_update = kwargs[dataset.name_ref]['boundaries'].get(
+                    par_subset, [min(sub_dataset), max(sub_dataset)])
             elif kwargs.get('boundaries', False):
-                var_update = kwargs['boundaries'].get(var_subset, [min(sub_dataset), max(sub_dataset)])
+                par_update = kwargs['boundaries'].get(par_subset, [min(sub_dataset), max(sub_dataset)])
             else:
-                var_update = [min(sub_dataset), max(sub_dataset)]
+                par_update = [min(sub_dataset), max(sub_dataset)]
 
-            self.bounds[dataset.name_ref].update({var_subset: var_update})
+            self.bounds[dataset.name_ref].update({par_subset: par_update})
 
             self.batman_models[dataset.name_ref + '_'+repr(i_sub)] = \
                 batman.TransitModel(self.batman_params,
@@ -107,23 +107,23 @@ class Batman_Transit_TTV_Subset(AbstractModel, AbstractTransit):
                                     exp_time=self.code_options[dataset.name_ref]['exp_time'],
                                     nthreads=self.code_options['nthreads'])
 
-    def compute(self, variable_value, dataset, x0_input=None):
+    def compute(self, parameter_values, dataset, x0_input=None):
         """
-        :param variable_value:
+        :param parameter_values:
         :param dataset:
         :param x0_input:
         :return:
         """
 
         self.batman_params.a, self.batman_params.inc = self.retrieve_ai(
-            variable_value)
+            parameter_values)
 
-        self.batman_params.per = variable_value['P']  # orbital period
+        self.batman_params.per = parameter_values['P']  # orbital period
         # planet radius (in units of stellar radii)
-        self.batman_params.rp = variable_value['R_Rs']
-        self.batman_params.ecc = variable_value['e']  # eccentricity
+        self.batman_params.rp = parameter_values['R_Rs']
+        self.batman_params.ecc = parameter_values['e']  # eccentricity
         # longitude of periastron (in degrees)
-        self.batman_params.w = variable_value['omega']
+        self.batman_params.w = parameter_values['omega']
 
         """
         print 'a    ', self.batman_params.a
@@ -135,8 +135,8 @@ class Batman_Transit_TTV_Subset(AbstractModel, AbstractTransit):
         print 'w    ', self.batman_params.w
         print 'u    ', self.batman_params.u
         """
-        for var, i_var in self.ldvars.items():
-            self.batman_params.u[i_var] = variable_value[var]
+        for par, i_par in self.ldvars.items():
+            self.batman_params.u[i_par] = parameter_values[par]
 
         """
         From the batman manual:
@@ -156,15 +156,15 @@ class Batman_Transit_TTV_Subset(AbstractModel, AbstractTransit):
             y_output = x0_input * 0.
 
         if not self.use_inclination:
-            if variable_value['b'] > 1. + variable_value['R_Rs'] :
+            if parameter_values['b'] > 1. + parameter_values['R_Rs'] :
                 return y_output
 
 
 
         for i_sub in range(0,dataset.submodel_flag):
 
-            var_subset = 'Tc_'+repr(i_sub)
-            self.batman_params.t0 = variable_value[var_subset] - dataset.Tref
+            par_subset = 'Tc_'+repr(i_sub)
+            self.batman_params.t0 = parameter_values[par_subset] - dataset.Tref
 
 
             if x0_input is None:

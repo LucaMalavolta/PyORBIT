@@ -30,7 +30,7 @@ class Batman_Transit_RpRs_Subset(AbstractModel, AbstractTransit):
             'R_Rs',  # planet radius (in units of stellar radii)
         }
 
-        """ Model-specifc variables, not declared in the abstract class """
+        """ Model-specifc parameters, not declared in the abstract class """
         self.batman_params = None
         self.batman_models = {}
         self.code_options = {}
@@ -74,7 +74,7 @@ class Batman_Transit_RpRs_Subset(AbstractModel, AbstractTransit):
         self.batman_params.u = np.ones(kwargs['limb_darkening_ncoeff'],
                                        dtype=np.double) * 0.1  # limb darkening coefficients
 
-        """ And now we remove the planetary radius from the common variables, and add it back as a dataset-specific variable """
+        """ And now we remove the planetary radius from the common parameters, and add it back as a dataset-specific parameter """
 
         self.list_pams_common.discard('R_Rs')
         # self.list_pams_dataset.update(['Tc'])
@@ -85,21 +85,21 @@ class Batman_Transit_RpRs_Subset(AbstractModel, AbstractTransit):
 
         for i_sub in range(0, dataset.submodel_flag):
 
-            var_original = 'R_Rs'
-            var_subset = 'R_Rs_'+repr(i_sub)
+            par_original = 'R_Rs'
+            par_subset = 'R_Rs_'+repr(i_sub)
 
-            self._subset_transfer_priors(mc, dataset, var_original, var_subset)
+            self._subset_transfer_priors(mc, dataset, par_original, par_subset)
 
             sub_dataset = dataset.x[(dataset.submodel_id == i_sub)]
 
             if kwargs[dataset.name_ref].get('boundaries', False):
-                var_update = kwargs[dataset.name_ref]['boundaries'].get(var_subset, [0.00001, 0.5])
+                par_update = kwargs[dataset.name_ref]['boundaries'].get(par_subset, [0.00001, 0.5])
             elif kwargs.get('boundaries', False):
-                var_update = kwargs['boundaries'].get(var_subset, [0.00001, 0.5])
+                par_update = kwargs['boundaries'].get(par_subset, [0.00001, 0.5])
             else:
-                var_update = [0.00001, 0.5]
+                par_update = [0.00001, 0.5]
 
-            self.bounds[dataset.name_ref].update({var_subset: var_update})
+            self.bounds[dataset.name_ref].update({par_subset: par_update})
 
             self.batman_models[dataset.name_ref + '_'+repr(i_sub)] = \
                 batman.TransitModel(self.batman_params,
@@ -108,23 +108,23 @@ class Batman_Transit_RpRs_Subset(AbstractModel, AbstractTransit):
                                     exp_time=self.code_options[dataset.name_ref]['exp_time'],
                                     nthreads=self.code_options['nthreads'])
 
-    def compute(self, variable_value, dataset, x0_input=None):
+    def compute(self, parameter_values, dataset, x0_input=None):
         """
-        :param variable_value:
+        :param parameter_values:
         :param dataset:
         :param x0_input:
         :return:
         """
 
         self.batman_params.a, self.batman_params.inc = self.retrieve_ai(
-            variable_value)
-        self.batman_params.t0 = self.retrieve_t0(variable_value, dataset.Tref)
+            parameter_values)
+        self.batman_params.t0 = self.retrieve_t0(parameter_values, dataset.Tref)
 
-        self.batman_params.per = variable_value['P']  # orbital period
+        self.batman_params.per = parameter_values['P']  # orbital period
         # planet radius (in units of stellar radii)
-        self.batman_params.ecc = variable_value['e']  # eccentricity
+        self.batman_params.ecc = parameter_values['e']  # eccentricity
         # longitude of periastron (in degrees)
-        self.batman_params.w = variable_value['omega']
+        self.batman_params.w = parameter_values['omega']
 
         """
         print 'a    ', self.batman_params.a
@@ -136,8 +136,8 @@ class Batman_Transit_RpRs_Subset(AbstractModel, AbstractTransit):
         print 'w    ', self.batman_params.w
         print 'u    ', self.batman_params.u
         """
-        for var, i_var in self.ldvars.items():
-            self.batman_params.u[i_var] = variable_value[var]
+        for par, i_par in self.ldvars.items():
+            self.batman_params.u[i_par] = parameter_values[par]
 
         """
         From the batman manual:
@@ -160,12 +160,12 @@ class Batman_Transit_RpRs_Subset(AbstractModel, AbstractTransit):
 
         for i_sub in range(0,dataset.submodel_flag):
 
-            var_subset = 'R_Rs_'+repr(i_sub)
-            self.batman_params.rp = variable_value[var_subset]
+            par_subset = 'R_Rs_'+repr(i_sub)
+            self.batman_params.rp = parameter_values[par_subset]
 
 
             if not self.use_inclination:
-                if variable_value['b'] > 1. + var_subset :
+                if parameter_values['b'] > 1. + par_subset :
                     return y_output
 
 

@@ -61,56 +61,56 @@ class RossiterMcLaughling_Ohta(AbstractModel, AbstractTransit):
             print(' this model accepts only linear limb-darkening coefficients')
             print()
 
-    def compute(self, variable_value, dataset, x0_input=None):
+    def compute(self, parameter_values, dataset, x0_input=None):
         """
-        :param variable_value:
+        :param parameter_values:
         :param dataset:
         :param x0_input:
         :return:
         """
         #t1_start = process_time()
 
-        var_a, var_i = self.retrieve_ai(variable_value)
-        var_tc = self.retrieve_t0(variable_value, dataset.Tref)
-        var_Omega, var_Is = self.retrieve_Omega_Istar(variable_value)
+        par_a, par_i = self.retrieve_ai(parameter_values)
+        par_tc = self.retrieve_t0(parameter_values, dataset.Tref)
+        par_Omega, par_Is = self.retrieve_Omega_Istar(parameter_values)
 
         if self.orbit == 'circular':
-            self.rm_ohta.assignValue({"a": var_a,
-                            "lambda": variable_value['lambda']/180.*np.pi,
-                            "epsilon": variable_value['ld_c1'],
-                            "P": variable_value['P'],
-                            "T0": var_tc,
-                            "i": var_i/180.*np.pi,
-                            "Is": var_Is/180.*np.pi,
-                            "Omega": var_Omega,
-                            "gamma": variable_value['R_Rs']})
+            self.rm_ohta.assignValue({"a": par_a,
+                            "lambda": parameter_values['lambda']/180.*np.pi,
+                            "epsilon": parameter_values['ld_c1'],
+                            "P": parameter_values['P'],
+                            "T0": par_tc,
+                            "i": par_i/180.*np.pi,
+                            "Is": par_Is/180.*np.pi,
+                            "Omega": par_Omega,
+                            "gamma": parameter_values['R_Rs']})
         else:
 
             if self.use_time_of_transit:
-                Tperi  = kepler_exo.kepler_Tc2Tperi_Tref(variable_value['P'],
-                                                         var_tc,
-                                                         variable_value['e'],
-                                                         variable_value['omega'])
+                Tperi  = kepler_exo.kepler_Tc2Tperi_Tref(parameter_values['P'],
+                                                         par_tc,
+                                                         parameter_values['e'],
+                                                         parameter_values['omega'])
             else:
-                Tperi  = kepler_exo.kepler_phase2Tperi_Tref(variable_value['P'],
-                                                         variable_value['mean_long'],
-                                                         variable_value['e'],
-                                                         variable_value['omega'])
+                Tperi  = kepler_exo.kepler_phase2Tperi_Tref(parameter_values['P'],
+                                                         parameter_values['mean_long'],
+                                                         parameter_values['e'],
+                                                         parameter_values['omega'])
 
-            self.rm_ohta.assignValue({"a": var_a,
-                "lambda": variable_value['lambda']/180.*np.pi,
-                "epsilon": variable_value['ld_c1'],
-                "P": variable_value['P'],
+            self.rm_ohta.assignValue({"a": par_a,
+                "lambda": parameter_values['lambda']/180.*np.pi,
+                "epsilon": parameter_values['ld_c1'],
+                "P": parameter_values['P'],
                 "tau": Tperi,
-                "i": var_i/180.*np.pi,
-                "w": variable_value['omega']/180.*np.pi-np.pi,
-                "e":variable_value['e'],
-                "Is": var_Is/180.*np.pi,
-                "Omega": var_Omega,
-                "gamma": variable_value['R_Rs']})
+                "i": par_i/180.*np.pi,
+                "w": parameter_values['omega']/180.*np.pi-np.pi,
+                "e":parameter_values['e'],
+                "Is": par_Is/180.*np.pi,
+                "Omega": par_Omega,
+                "gamma": parameter_values['R_Rs']})
 
         if x0_input is None:
-            return self.rm_ohta.evaluate(dataset.x0) * variable_value['radius'] * constants.Rsun * 1000.
+            return self.rm_ohta.evaluate(dataset.x0) * parameter_values['radius'] * constants.Rsun * 1000.
         else:
-            return self.rm_ohta.evaluate(x0_input) * variable_value['radius'] * constants.Rsun * 1000.
+            return self.rm_ohta.evaluate(x0_input) * parameter_values['radius'] * constants.Rsun * 1000.
 

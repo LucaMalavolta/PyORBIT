@@ -84,7 +84,7 @@ class LimbDarkening_2Pam(AbstractCommon):
 
         self.parametrization = 'Standard'
 
-    def define_special_variable_properties(self, ndim, output_lists, var):
+    def define_special_parameter_properties(self, ndim, output_lists, var):
         """
 
         :param ndim:
@@ -98,20 +98,20 @@ class LimbDarkening_2Pam(AbstractCommon):
             return ndim, output_lists, False
 
         for var_check in ['ld_c1', 'ld_c2', 'ld_q1', 'ld_q2']:
-            if var_check in self.variable_sampler:
+            if var_check in self.sampler_parameters:
                 return ndim, output_lists, False
 
         if self.parametrization[:8] == 'Standard':
             self.transformation['ld_c1'] = get_var_val
-            self.variable_index['ld_c1'] = ndim
+            self.parameter_index['ld_c1'] = ndim
             self.transformation['ld_c2'] = get_var_val
-            self.variable_index['ld_c2'] = ndim + 1
+            self.parameter_index['ld_c2'] = ndim + 1
             variable_list = ['ld_c1', 'ld_c2']
         else:
             self.transformation['ld_c1'] = get_2var_c1
-            self.variable_index['ld_c1'] = [ndim, ndim + 1]
+            self.parameter_index['ld_c1'] = [ndim, ndim + 1]
             self.transformation['ld_c2'] = get_2var_c2
-            self.variable_index['ld_c2'] = [ndim, ndim + 1]
+            self.parameter_index['ld_c2'] = [ndim, ndim + 1]
             variable_list = ['ld_q1', 'ld_q2']
 
         for var in variable_list:
@@ -135,7 +135,7 @@ class LimbDarkening_2Pam(AbstractCommon):
             output_lists['priors'].append(
                 [self.prior_kind[var], self.prior_pams[var], nested_coeff])
 
-            self.variable_sampler[var] = ndim
+            self.sampler_parameters[var] = ndim
             ndim += 1
 
         for var in ['ld_c1', 'ld_c2']:
@@ -158,9 +158,9 @@ class LimbDarkening_2Pam(AbstractCommon):
         if var_sampler == 'ld_q1' or var_sampler == 'ld_q2':
 
             if 'ld_c1' in self.starts and 'ld_c2' in self.starts:
-                starting_point[self.variable_sampler['ld_q1']] = \
+                starting_point[self.sampler_parameters['ld_q1']] = \
                     self.starts['ld_c1']**2 + self.starts['ld_c2']**2
-                starting_point[self.variable_sampler['ld_q2']] = \
+                starting_point[self.sampler_parameters['ld_q2']] = \
                     self.starts['ld_c1'] / \
                     (self.starts['ld_c1'] + self.starts['ld_c2'])/2.0
 

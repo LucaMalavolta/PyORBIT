@@ -16,7 +16,7 @@ class Celerite_Rotation(AbstractModel):
     from Foreman-Mackey+2017 and exoplanet, but keeping the notation of
     the semi-periodic goerge kernel used in PyORBIT
     differently from the example provided in the paper, here the terms are passed in the linear space already. It will
-    the job of the sampler to convert from Logarithmic to Linear space for those variables that the user has decided
+    the job of the sampler to convert from Logarithmic to Linear space for those parameters that the user has decided
     to explore in logarithmic space
 
     Args:
@@ -118,12 +118,12 @@ class Celerite_Rotation(AbstractModel):
         self.gp[dataset.name_ref].compute(dataset.x0, env)
         return
 
-    def lnlk_compute(self, variable_value, dataset):
+    def lnlk_compute(self, parameter_values, dataset):
         """ 2 steps:
            1) theta parameters must be converted in physical units (e.g. from logarithmic to linear spaces)
            2) physical values must be converted to {\tt george} input parameters
         """
-        gp_pams = self.convert_val2gp(variable_value)
+        gp_pams = self.convert_val2gp(parameter_values)
 
         env = np.sqrt(dataset.e ** 2.0 + dataset.jitter ** 2.0)
         self.gp[dataset.name_ref].set_parameter_vector(gp_pams)
@@ -131,9 +131,9 @@ class Celerite_Rotation(AbstractModel):
 
         return self.gp[dataset.name_ref].log_likelihood(dataset.residuals)
 
-    def sample_predict(self, variable_value, dataset, x0_input=None, return_covariance=False, return_variance=False):
+    def sample_predict(self, parameter_values, dataset, x0_input=None, return_covariance=False, return_variance=False):
 
-        gp_pams = self.convert_val2gp(variable_value)
+        gp_pams = self.convert_val2gp(parameter_values)
 
         env = np.sqrt(dataset.e ** 2.0 + dataset.jitter ** 2.0)
         self.gp[dataset.name_ref].set_parameter_vector(gp_pams)
@@ -144,9 +144,9 @@ class Celerite_Rotation(AbstractModel):
         else:
             return self.gp[dataset.name_ref].predict(dataset.residuals, x0_input, return_cov=return_covariance, return_var=return_variance)
 
-    def sample_conditional(self, variable_value, dataset,  x0_input=None):
+    def sample_conditional(self, parameter_values, dataset,  x0_input=None):
 
-        gp_pams = self.convert_val2gp(variable_value)
+        gp_pams = self.convert_val2gp(parameter_values)
 
         env = np.sqrt(dataset.e ** 2.0 + dataset.jitter ** 2.0)
         self.gp[dataset.name_ref].set_parameter_vector(gp_pams)

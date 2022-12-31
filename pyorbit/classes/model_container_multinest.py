@@ -49,7 +49,7 @@ class ModelContainerMultiNest(ModelContainer):
 
 
     def multinest_call(self, theta1, ndim, nparams):
-        # Workaround for variable selection: if a variable as null index
+        # Workaround for parameter selection: if a parameter as null index
         # (i.e. it has not been included in the model)
         # the numpy array will give back an empty list, the ctype will give back an error
         theta = np.empty(ndim)

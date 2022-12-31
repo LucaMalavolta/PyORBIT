@@ -74,7 +74,7 @@ class Batman_Transit_With_TTV(AbstractModel, AbstractTransit):
                                        dtype=np.double) * 0.1  # limb darkening coefficients
 
 
-        """ And now we remove the transit time from the common variables, and add it back as a dataset-specific variable """
+        """ And now we remove the transit time from the common parameters, and add it back as a dataset-specific parameter """
 
         self.list_pams_common.discard('Tc')
         self.list_pams_dataset.update(['Tc'])
@@ -90,34 +90,34 @@ class Batman_Transit_With_TTV(AbstractModel, AbstractTransit):
                                 exp_time=self.code_options[dataset.name_ref]['exp_time'],
                                 nthreads=self.code_options['nthreads'])
 
-    def define_special_variable_properties(self,
+    def define_special_parameter_properties(self,
                                            ndim,
                                            output_lists,
                                            dataset_name,
-                                           var):
+                                           par):
 
-        if var == 'Tc' and (var not in self.bounds[dataset_name]):
-            self.bounds[dataset_name][var] = self.code_options[dataset_name]['Tc_boundaries']
+        if par == 'Tc' and (par not in self.bounds[dataset_name]):
+            self.bounds[dataset_name][par] = self.code_options[dataset_name]['Tc_boundaries']
         return ndim, output_lists, False
 
-    def compute(self, variable_value, dataset, x0_input=None):
+    def compute(self, parameter_values, dataset, x0_input=None):
         """
-        :param variable_value:
+        :param parameter_values:
         :param dataset:
         :param x0_input:
         :return:
         """
 
         self.batman_params.a, self.batman_params.inc = self.retrieve_ai(
-            variable_value)
-        self.batman_params.t0 = self.retrieve_t0(variable_value, dataset.Tref)
+            parameter_values)
+        self.batman_params.t0 = self.retrieve_t0(parameter_values, dataset.Tref)
 
-        self.batman_params.per = variable_value['P']  # orbital period
+        self.batman_params.per = parameter_values['P']  # orbital period
         # planet radius (in units of stellar radii)
-        self.batman_params.rp = variable_value['R_Rs']
-        self.batman_params.ecc = variable_value['e']  # eccentricity
+        self.batman_params.rp = parameter_values['R_Rs']
+        self.batman_params.ecc = parameter_values['e']  # eccentricity
         # longitude of periastron (in degrees)
-        self.batman_params.w = variable_value['omega']
+        self.batman_params.w = parameter_values['omega']
 
         """
         print 'a    ', self.batman_params.a
@@ -129,11 +129,11 @@ class Batman_Transit_With_TTV(AbstractModel, AbstractTransit):
         print 'w    ', self.batman_params.w
         print 'u    ', self.batman_params.u
         """
-        for var, i_var in self.ldvars.items():
-            self.batman_params.u[i_var] = variable_value[var]
+        for par, i_par in self.ldvars.items():
+            self.batman_params.u[i_par] = parameter_values[par]
 
         if not self.use_inclination:
-            if variable_value['b'] > 1. + variable_value['R_Rs'] :
+            if parameter_values['b'] > 1. + parameter_values['R_Rs'] :
                 return 0.00
 
 

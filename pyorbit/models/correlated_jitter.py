@@ -64,19 +64,19 @@ class LocalCorrelatedJitter(AbstractModel):
             self.fix_list[dataset_asc.name_ref]['x_zero'] = np.asarray([np.amin(self.x_vals[self.x_mask]), 0.0000], dtype=np.double)
 
         for i_order in range(1, self.order+1):
-            var = 'c'+repr(i_order)
-            self.list_pams_dataset.update(var)
-            self.default_bounds.update({var: [0.0, 10**6]})
-            self.default_spaces.update({var: 'Linear'})
-            self.default_priors.update({var: ['Uniform', []]})
+            par = 'c'+repr(i_order)
+            self.list_pams_dataset.update(par)
+            self.default_bounds.update({par: [0.0, 10**6]})
+            self.default_spaces.update({par: 'Linear'})
+            self.default_priors.update({par: ['Uniform', []]})
 
-    def compute(self, variable_value, dataset, x0_input=None):
+    def compute(self, parameter_values, dataset, x0_input=None):
 
         coeff = np.zeros(self.order+1)
         for i_order in range(1, self.order+1):
-            var = 'c'+repr(i_order)
-            coeff[i_order] = variable_value[var]
-        x_zero = variable_value['x_zero']
+            par = 'c'+repr(i_order)
+            coeff[i_order] = parameter_values[par]
+        x_zero = parameter_values['x_zero']
 
         """ In our array, coefficient are sorted from the lowest degree to the higher
         This is the order accepted by NumPy.polynomial.polynomial.polyval ,

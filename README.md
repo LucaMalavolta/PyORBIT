@@ -3,11 +3,18 @@
 
 ### A code for exoplanet orbital parameters and stellar activity.
 ***
-### `PyORBIT` version 9.0.21 by Luca Malavolta - December 2022
+### `PyORBIT` version 9.1 by Luca Malavolta - December 2022
 
 **News**
 
-* PyORBIT will use the correct parametrization when a prior is assigned to a parameter and nested sampling is used (NS do not allow to assign priors to derived parameters).
+* Minor changes:
+  * `dataset_variables` and `common_variables` changed to `dataset_parameters`
+    and `common_parameters`
+  * New models added
+  * All instances named `variables` renamed to `parameters` for internal
+    consistency. Backward compatibility ensured by new method in `model_container_abstract`
+
+* `PyORBIT` will use the correct parametrization when a prior is assigned to a parameter and nested sampling is used (NS do not allow to assign priors to derived parameters).
 
 * Many new models are now available
   * Multidimensional Gaussian Process (also known as GP Framework, [Rajpaul et al. 2015](https://ui.adsabs.harvard.edu/abs/2015MNRAS.452.2269R/abstract), [Barragán et al. 2022](https://ui.adsabs.harvard.edu/abs/2022MNRAS.509..866B/abstract)).

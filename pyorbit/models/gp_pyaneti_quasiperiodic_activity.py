@@ -43,7 +43,7 @@ class GP_Pyaneti_QuasiPeriodicActivity(AbstractModel):
         }
 
 
-        self.internal_variable_value = None
+        self.internal_parameter_values = None
         self._dist_t1 = None
         self._dist_t2 = None
         self._added_datasets = 0
@@ -135,9 +135,9 @@ class GP_Pyaneti_QuasiPeriodicActivity(AbstractModel):
     #    # Prot, Pdec, Oamp
     #    return
 
-    def add_internal_dataset(self, variable_value, dataset):
+    def add_internal_dataset(self, parameter_values, dataset):
 
-        self.internal_variable_value = variable_value
+        self.internal_parameter_values = parameter_values
 
         d_ind = self._dataset_names[dataset.name_ref]
         d_nstart, d_nend = self._dataset_nindex[d_ind]
@@ -145,29 +145,29 @@ class GP_Pyaneti_QuasiPeriodicActivity(AbstractModel):
         self._dataset_ej2[d_nstart:d_nend] = self._dataset_e2[d_nstart:d_nend] + dataset.jitter**2.0
         self._dataset_res[d_nstart:d_nend] = dataset.residuals
 
-        self.internal_coefficients[d_ind] = [variable_value['con_amp'], variable_value['rot_amp']]
+        self.internal_coefficients[d_ind] = [parameter_values['con_amp'], parameter_values['rot_amp']]
 
     def lnlk_compute(self):
-        if not self.hyper_condition(self.internal_variable_value):
+        if not self.hyper_condition(self.internal_parameter_values):
             return -np.inf
-        if not self.rotdec_condition(self.internal_variable_value):
+        if not self.rotdec_condition(self.internal_parameter_values):
             return -np.inf
 
-        self._gp_vars = np.empty(2*self._added_datasets + 3)
+        self._gp_pars = np.empty(2*self._added_datasets + 3)
 
         for l_dataset in range(0, self._added_datasets):
-            self._gp_vars[2*l_dataset], self._gp_vars[2*l_dataset+1], = self.internal_coefficients[l_dataset]
+            self._gp_pars[2*l_dataset], self._gp_pars[2*l_dataset+1], = self.internal_coefficients[l_dataset]
 
-        self._gp_vars[-3] = self.internal_variable_value['Pdec']
-        self._gp_vars[-2] = self.internal_variable_value['Oamp']
-        self._gp_vars[-1] = self.internal_variable_value['Prot']
+        self._gp_pars[-3] = self.internal_parameter_values['Pdec']
+        self._gp_pars[-2] = self.internal_parameter_values['Oamp']
+        self._gp_pars[-1] = self.internal_parameter_values['Prot']
 
         kernel_name = 'MQ' + repr(self._added_datasets)
         fake_ljitter = np.zeros(self._n_cov_matrix)
         fake_jitter = np.zeros(1)
 
 
-        output = pyaneti.nll_gp(self._gp_vars,
+        output = pyaneti.nll_gp(self._gp_pars,
                                 kernel_name,
                                 self._dataset_x0,
                                 self._dataset_res,
@@ -204,7 +204,7 @@ class GP_Pyaneti_QuasiPeriodicActivity(AbstractModel):
             l_nstart, l_nend = len(x0_input)*dataset_index, len(x0_input)*(dataset_index+1)
 
         kernel_name = 'MQ' + repr(self._added_datasets)
-        cov_matrix = pyaneti.covfunc(kernel_name,self._gp_vars,self._dataset_x0,self._dataset_x0)
+        cov_matrix = pyaneti.covfunc(kernel_name,self._gp_pars,self._dataset_x0,self._dataset_x0)
 
         if faster_computation:
             Ks = self._compute_cov_Ks(t_predict)
@@ -244,17 +244,17 @@ class GP_Pyaneti_QuasiPeriodicActivity(AbstractModel):
         return val
 
     @staticmethod
-    def _hypercond_00(variable_value):
+    def _hypercond_00(parameter_values):
         #Condition from Rajpaul 2017, Rajpaul+2021
         return True
 
     @staticmethod
-    def _hypercond_01(variable_value):
+    def _hypercond_01(parameter_values):
         # Condition from Rajpaul 2017, Rajpaul+2021
         # Taking into account that Pdec^2 = 2*lambda_2^2
-        return variable_value['Pdec']**2 > (3. / 4. / np.pi) * variable_value['Oamp']**2 * variable_value['Prot']**2 
+        return parameter_values['Pdec']**2 > (3. / 4. / np.pi) * parameter_values['Oamp']**2 * parameter_values['Prot']**2 
 
     @staticmethod
-    def _hypercond_02(variable_value):
+    def _hypercond_02(parameter_values):
         #Condition on Rotation period and decay timescale
-        return variable_value['Pdec'] > 2. * variable_value['Prot']
+        return parameter_values['Pdec'] > 2. * parameter_values['Prot']

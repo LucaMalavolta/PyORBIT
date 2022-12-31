@@ -60,21 +60,21 @@ class RossiterMcLaughling_Starry(AbstractModel, AbstractTransit):
         #    print(' this model accepts only linear limb-darkening coefficients')
         #    print()
 
-    def compute(self, variable_value, dataset, x0_input=None):
+    def compute(self, parameter_values, dataset, x0_input=None):
         """
-        :param variable_value:
+        :param parameter_values:
         :param dataset:
         :param x0_input:
         :return:
         """
         #t1_start = process_time()
 
-        Omega = variable_value['v_sini'] / (variable_value['radius'] *
-                                            constants.Rsun) / np.cos(variable_value['i_star']/180.*np.pi)
+        Omega = parameter_values['v_sini'] / (parameter_values['radius'] *
+                                            constants.Rsun) / np.cos(parameter_values['i_star']/180.*np.pi)
 
-        veq = Omega * variable_value['radius'] * constants.Rsun
-        veq = variable_value['v_sini'] / \
-            np.cos(variable_value['i_star']/180.*np.pi) * 1000.  # (m/s)
+        veq = Omega * parameter_values['radius'] * constants.Rsun
+        veq = parameter_values['v_sini'] / \
+            np.cos(parameter_values['i_star']/180.*np.pi) * 1000.  # (m/s)
 
         # a = 6.7                       # Semi major axis [stellar radii]
         # lambda_ang = 7.2/180.0*np.pi  # Sky-projected angle between stellar rotation axis and normal of orbit plane [rad]
@@ -147,50 +147,50 @@ class RossiterMcLaughling_Starry(AbstractModel, AbstractTransit):
         flux = sys.flux(time)
         rv = sys.rv(time)
 
-        var_a, var_i = self.retrieve_ai(variable_value)
-        var_tc = self.retrieve_t0(variable_value, dataset.Tref)
+        var_a, var_i = self.retrieve_ai(parameter_values)
+        var_tc = self.retrieve_t0(parameter_values, dataset.Tref)
 
-        Omega = variable_value['v_sini'] / (variable_value['radius'] *
-                                            constants.Rsun) / np.cos(variable_value['i_star']/180.*np.pi)
+        Omega = parameter_values['v_sini'] / (parameter_values['radius'] *
+                                            constants.Rsun) / np.cos(parameter_values['i_star']/180.*np.pi)
 
         if self.orbit == 'circular':
             self.rm_ohta.assignValue({"a": var_a,
-                                      "lambda": variable_value['o_star'],
-                                      "epsilon": variable_value['ld_c1'],
-                                      "P": variable_value['P'],
+                                      "lambda": parameter_values['o_star'],
+                                      "epsilon": parameter_values['ld_c1'],
+                                      "P": parameter_values['P'],
                                       "T0": var_tc,
                                       "i": var_i/180.*np.pi,
-                                      "Is": variable_value['i_star']/180.*np.pi,
+                                      "Is": parameter_values['i_star']/180.*np.pi,
                                       "Omega": Omega/180.*np.pi,
-                                      "gamma": variable_value['R_Rs']})
+                                      "gamma": parameter_values['R_Rs']})
         else:
 
             if self.use_time_of_transit:
-                Tperi = kepler_exo.kepler_Tc2Tperi_Tref(variable_value['P'],
+                Tperi = kepler_exo.kepler_Tc2Tperi_Tref(parameter_values['P'],
                                                         var_tc,
-                                                        variable_value['e'],
-                                                        variable_value['omega'])
+                                                        parameter_values['e'],
+                                                        parameter_values['omega'])
             else:
-                Tperi = kepler_exo.kepler_phase2Tperi_Tref(variable_value['P'],
-                                                           variable_value['f'],
-                                                           variable_value['e'],
-                                                           variable_value['omega'])
+                Tperi = kepler_exo.kepler_phase2Tperi_Tref(parameter_values['P'],
+                                                           parameter_values['f'],
+                                                           parameter_values['e'],
+                                                           parameter_values['omega'])
 
             self.rm_ohta.assignValue({"a": var_a,
-                                      "lambda": variable_value['o_star'],
-                                      "epsilon": variable_value['ld_c1'],
-                                      "P": variable_value['P'],
+                                      "lambda": parameter_values['o_star'],
+                                      "epsilon": parameter_values['ld_c1'],
+                                      "P": parameter_values['P'],
                                       "tau": Tperi,
-                                      "i": variable_value['i']/180.*np.pi,
-                                      "w": variable_value['omega']/180.*np.pi-np.pi,
-                                      "e": variable_value['e'],
-                                      "Is": variable_value['i_star']/180.*np.pi,
+                                      "i": parameter_values['i']/180.*np.pi,
+                                      "w": parameter_values['omega']/180.*np.pi-np.pi,
+                                      "e": parameter_values['e'],
+                                      "Is": parameter_values['i_star']/180.*np.pi,
                                       "Omega": Omega/180.*np.pi,
-                                      "gamma": variable_value['R_Rs']})
+                                      "gamma": parameter_values['R_Rs']})
 
         if x0_input is None:
-            return self.rm_ohta(dataset.x0) * variable_value['radius'] * constants.Rsun * 1000.
+            return self.rm_ohta(dataset.x0) * parameter_values['radius'] * constants.Rsun * 1000.
         else:
-            return self.rm_ohta(x0_input) * variable_value['radius'] * constants.Rsun * 1000.
+            return self.rm_ohta(x0_input) * parameter_values['radius'] * constants.Rsun * 1000.
 
     '''
