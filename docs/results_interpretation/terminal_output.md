@@ -339,5 +339,5 @@ $$\sqrt{e} \sin{\omega} = 0.017 \\
 $$e_{\mathrm{sampler}} = (\sqrt{e} \sin{\omega})^2 + (\sqrt{e} \cos{\omega} )^2
   = 0.004$$
 
-While the reported median value for the eccentricity in the model parameters
+while the reported median value for the eccentricity in the model parameters
 section is $e = 0.061$.

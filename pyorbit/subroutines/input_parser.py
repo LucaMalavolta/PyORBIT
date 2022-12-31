@@ -317,7 +317,7 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, reload_ze
 
                     if mc.common_models[planet_name].parametrization[-5:] == 'Tcent' or \
                             mc.common_models[planet_name].parametrization[-5:] == 'Tc':
-                        print('Using Central Time of Transit instead of phase')
+                        print('Using Central Time of Transit instead of mean longitude')
                         mc.common_models[planet_name].use_time_of_transit = True
 
                 except:
@@ -350,7 +350,7 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, reload_ze
 
                 try:
                     mc.common_models[planet_name].use_time_of_transit = planet_conf['use_time_of_transit']
-                    print('Using Central Time of Transit instead of phase: {}'.format(
+                    print('Using Central Time of Transit instead of mean longitude: {}'.format(
                         planet_conf['use_time_of_transit']))
                 except:
                     # False by default
