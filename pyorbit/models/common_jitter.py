@@ -39,5 +39,5 @@ class Jitter(AbstractModel):
         dataset.shutdown_jitter()
         return
 
-    def compute(self, variable_value, dataset, x0_input=None):
-        return variable_value['jitter']
+    def compute(self, parameter_values, dataset, x0_input=None):
+        return parameter_values['jitter']

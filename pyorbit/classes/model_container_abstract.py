@@ -65,7 +65,7 @@ class ModelContainer(object):
                 model_conf = model.model_conf
 
             model.initialize_model(self, **model_conf)
-            model.change_variable_status(self, **model_conf)
+            model.change_parameter_status(self, **model_conf)
 
             for dataset_name in list(set(model_conf) & set(self.dataset_dict)):
                 model.initialize_model_dataset(
@@ -157,7 +157,7 @@ class ModelContainer(object):
 
                 """ Step 1: retrieve the planet period"""
                 period = model.transformation['P'](theta, model.fixed,
-                                                   model.parameters_index['P'])
+                                                   model.parameter_index['P'])
 
                 """ Step 2: save the all planet periods into a list"""
                 period_storage.extend([period])
@@ -168,10 +168,10 @@ class ModelContainer(object):
                     # print('    ', model_name, self.ordered_planets[model_name], period_storage_ordered)
 
                 """ Step 4: check if the eccentricity is within the given range"""
-                if 'e' in model.parameters_index:
+                if 'e' in model.parameter_index:
                     e = model.transformation['e'](theta,
                                                   model.fixed,
-                                                  model.parameters_index['e'])
+                                                  model.parameter_index['e'])
 
                     if not model.bounds['e'][0] <= e < model.bounds['e'][1]:
                         # print('eccentricity>1')
@@ -179,38 +179,38 @@ class ModelContainer(object):
                         return False
 
                 """ Step 5: check if the impact parameter is below 1 + Rp/Rs """
-                if 'b' in model.parameters_index and 'R_Rs' in model.parameters_index:
+                if 'b' in model.parameter_index and 'R_Rs' in model.parameter_index:
                     b = model.transformation['b'](theta,
                                                   model.fixed,
-                                                  model.parameters_index['b'])
+                                                  model.parameter_index['b'])
                     R = model.transformation['R_Rs'](theta,
                                                   model.fixed,
-                                                  model.parameters_index['R_Rs'])
+                                                  model.parameter_index['R_Rs'])
                     if not b <= 1 + R:
                         return False
 
                 """ Step 6 eclipse depth must be greater than the amplitude of
                 phase variation (during the eclipse we only have the stellar line) """
-                if 'phase_amp' in model.parameters_index and 'delta_occ' in model.parameters_index:
+                if 'phase_amp' in model.parameter_index and 'delta_occ' in model.parameter_index:
                     phase_amp = model.transformation['delta_occ'](theta,
                                                   model.fixed,
-                                                  model.parameters_index['phase_amp'])
+                                                  model.parameter_index['phase_amp'])
                     delta_occ = model.transformation['delta_occ'](theta,
                                                   model.fixed,
-                                                  model.parameters_index['delta_occ'])
+                                                  model.parameter_index['delta_occ'])
                     if phase_amp > delta_occ: return False
 
 
         #""" Step 6 eclipse depth must be greater than the amplitude of
         #phase variation (during the eclipse we only have the stellar line) """
         #for dataset_name, dataset in self.dataset_dict.items():
-        #    if 'phase_amp' in dataset.parameters_index and 'delta_occ' in dataset.parameters_index:
+        #    if 'phase_amp' in dataset.parameter_index and 'delta_occ' in dataset.parameter_index:
         #        phase_amp = dataset.transformation['delta_occ'](theta,
         #                                        dataset.fixed,
-        #                                        dataset.parameters_index['phase_amp'])
+        #                                        dataset.parameter_index['phase_amp'])
         #        delta_occ = dataset.transformation['delta_occ'](theta,
         #                                        dataset.fixed,
-        #                                        dataset.parameters_index['delta_occ'])
+        #                                        dataset.parameter_index['delta_occ'])
         #        if phase_amp > delta_occ: return False
 
         """ Step 7 check for overlapping periods (within 2.5% arbitrarily chosen)"""

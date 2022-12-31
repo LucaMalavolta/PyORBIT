@@ -33,7 +33,7 @@ class GP_Framework_QuasiPeriodicActivity(AbstractModel):
             'Br'
         }
 
-        self.internal_variable_value = None
+        self.internal_parameter_values = None
         self._x0 = None
         self._nx0 = None
         self._3x0 = None
@@ -114,9 +114,9 @@ class GP_Framework_QuasiPeriodicActivity(AbstractModel):
         return
 
     """
-    def add_internal_dataset(self, variable_value, dataset, reset_status):
+    def add_internal_dataset(self, parameter_values, dataset, reset_status):
 
-        self.internal_gp_pams = self.convert_val2gp(variable_value)
+        self.internal_gp_pams = self.convert_val2gp(parameter_values)
 
         if dataset.kind == 'RV':
             self._rv_x = dataset.x0
@@ -144,9 +144,9 @@ class GP_Framework_QuasiPeriodicActivity(AbstractModel):
 
     """
 
-    def add_internal_dataset(self, variable_value, dataset):
+    def add_internal_dataset(self, parameter_values, dataset):
 
-        self.internal_variable_value = variable_value
+        self.internal_parameter_values = parameter_values
 
         if dataset.kind == 'RV':
             self._3ej[:self._nx0] = np.sqrt(
@@ -190,28 +190,28 @@ class GP_Framework_QuasiPeriodicActivity(AbstractModel):
             else:
                 dist_t1, dist_t2 = self._compute_distance(bjd0, bjd1)
 
-        Vc = self.internal_variable_value['Vc']
-        Vr = self.internal_variable_value['Vr']
-        Lc = self.internal_variable_value['Lc']
-        Bc = self.internal_variable_value['Bc']
-        Br = self.internal_variable_value['Br']
+        Vc = self.internal_parameter_values['Vc']
+        Vr = self.internal_parameter_values['Vr']
+        Lc = self.internal_parameter_values['Lc']
+        Bc = self.internal_parameter_values['Bc']
+        Br = self.internal_parameter_values['Br']
 
         """ Notice the difference in the factor 2 of the decay time scale
             between Grunblatt+2015 (used for the "standard" GP model of PyORBIT) and Rajpaul+2015"""
 
         # this is faster than computing val**4 several times
-        Pdec2 = self.internal_variable_value['Pdec']**2
-        Prot2 = self.internal_variable_value['Prot']**2
-        Oamp2 = self.internal_variable_value['Oamp']**2
+        Pdec2 = self.internal_parameter_values['Pdec']**2
+        Prot2 = self.internal_parameter_values['Prot']**2
+        Oamp2 = self.internal_parameter_values['Oamp']**2
         pi2 = np.pi * np.pi
 
-        phi = 2. * np.pi * dist_t1 / self.internal_variable_value['Prot']
+        phi = 2. * np.pi * dist_t1 / self.internal_parameter_values['Prot']
         sin_phi = np.sin(phi)
 
         framework_GG = np.exp((-(np.sin(phi / 2.)) ** 2.) / (2.0 * Oamp2)) \
             * np.exp(- dist_t2 / (2 * Pdec2))
 
-        framework_GdG = framework_GG * (- (np.pi * sin_phi / (2 * self.internal_variable_value['Prot'] * Oamp2))
+        framework_GdG = framework_GG * (- (np.pi * sin_phi / (2 * self.internal_parameter_values['Prot'] * Oamp2))
                                         - dist_t1 / Pdec2)
 
         framework_dGdG = framework_GG * (- (pi2 * sin_phi ** 2) / (4. * Prot2 * Oamp2 * Oamp2)
@@ -292,9 +292,9 @@ class GP_Framework_QuasiPeriodicActivity(AbstractModel):
         return inv, detA, False
 
     def lnlk_compute(self):
-        if not self.hyper_condition(self.internal_variable_value):
+        if not self.hyper_condition(self.internal_parameter_values):
             return -np.inf
-        if not self.rotdec_condition(self.internal_variable_value):
+        if not self.rotdec_condition(self.internal_parameter_values):
             return -np.inf
 
         cov_matrix = self._compute_cov_matrix(add_diagonal_errors=True)
@@ -380,17 +380,17 @@ class GP_Framework_QuasiPeriodicActivity(AbstractModel):
         return val
 
     @staticmethod
-    def _hypercond_00(variable_value):
+    def _hypercond_00(parameter_values):
         #Condition from Rajpaul 2017, Rajpaul+2021
         return True
 
     @staticmethod
-    def _hypercond_01(variable_value):
+    def _hypercond_01(parameter_values):
         # Condition from Rajpaul 2017, Rajpaul+2021
         # Taking into account that Pdec^2 = 2*lambda_2^2
-        return variable_value['Pdec']**2 > (3. / 4. / np.pi) * variable_value['Oamp']**2 * variable_value['Prot']**2 
+        return parameter_values['Pdec']**2 > (3. / 4. / np.pi) * parameter_values['Oamp']**2 * parameter_values['Prot']**2 
 
     @staticmethod
-    def _hypercond_02(variable_value):
+    def _hypercond_02(parameter_values):
         #Condition on Rotation period and decay timescale
-        return variable_value['Pdec'] > 2. * variable_value['Prot']
+        return parameter_values['Pdec'] > 2. * parameter_values['Prot']

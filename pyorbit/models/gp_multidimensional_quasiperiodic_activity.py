@@ -32,7 +32,7 @@ class GP_Multidimensional_QuasiPeriodicActivity(AbstractModel):
         }
 
 
-        self.internal_variable_value = None
+        self.internal_parameter_values = None
         self._dist_t1 = None
         self._dist_t2 = None
         self._added_datasets = 0
@@ -130,9 +130,9 @@ class GP_Multidimensional_QuasiPeriodicActivity(AbstractModel):
     #    # Prot, Pdec, Oamp
     #    return
 
-    def add_internal_dataset(self, variable_value, dataset):
+    def add_internal_dataset(self, parameter_values, dataset):
 
-        self.internal_variable_value = variable_value
+        self.internal_parameter_values = parameter_values
 
         d_ind = self._dataset_names[dataset.name_ref]
         d_nstart, d_nend = self._dataset_nindex[d_ind]
@@ -140,7 +140,7 @@ class GP_Multidimensional_QuasiPeriodicActivity(AbstractModel):
         self._dataset_ej2[d_nstart:d_nend] = self._dataset_e2[d_nstart:d_nend] + dataset.jitter**2.0
         self._dataset_res[d_nstart:d_nend] = dataset.residuals
 
-        self.internal_coefficients[d_ind] = [variable_value['con_amp'], variable_value['rot_amp']]
+        self.internal_coefficients[d_ind] = [parameter_values['con_amp'], parameter_values['rot_amp']]
 
     def _compute_distance(self, bjd0, bjd1):
         X0 = np.array([bjd0]).T
@@ -175,10 +175,10 @@ class GP_Multidimensional_QuasiPeriodicActivity(AbstractModel):
             between Grunblatt+2015 (used for the "standard" GP model of PyORBIT) and Rajpaul+2015"""
 
         # this is faster than computing val**4 several times
-        Prot = self.internal_variable_value['Prot']
-        Pdec2 = self.internal_variable_value['Pdec']**2
-        Prot2 = self.internal_variable_value['Prot']**2
-        Oamp2 = self.internal_variable_value['Oamp']**2
+        Prot = self.internal_parameter_values['Prot']
+        Pdec2 = self.internal_parameter_values['Pdec']**2
+        Prot2 = self.internal_parameter_values['Prot']**2
+        Oamp2 = self.internal_parameter_values['Oamp']**2
 
         cov_matrix = np.empty([self._n_cov_matrix, self._n_cov_matrix])
 
@@ -218,10 +218,10 @@ class GP_Multidimensional_QuasiPeriodicActivity(AbstractModel):
             between Grunblatt+2015 (used for the "standard" GP model of PyORBIT) and Rajpaul+2015"""
 
         # this is faster than computing val**4 several times
-        Prot = self.internal_variable_value['Prot']
-        Pdec2 = self.internal_variable_value['Pdec']**2
-        Prot2 = self.internal_variable_value['Prot']**2
-        Oamp2 = self.internal_variable_value['Oamp']**2
+        Prot = self.internal_parameter_values['Prot']
+        Pdec2 = self.internal_parameter_values['Pdec']**2
+        Prot2 = self.internal_parameter_values['Prot']**2
+        Oamp2 = self.internal_parameter_values['Oamp']**2
 
         len_diag = len(t_array)
         cov_diag = np.empty(self._added_datasets*len_diag)
@@ -250,10 +250,10 @@ class GP_Multidimensional_QuasiPeriodicActivity(AbstractModel):
             between Grunblatt+2015 (used for the "standard" GP model of PyORBIT) and Rajpaul+2015"""
 
         # this is faster than computing val**4 several times
-        Prot = self.internal_variable_value['Prot']
-        Pdec2 = self.internal_variable_value['Pdec']**2
-        Prot2 = self.internal_variable_value['Prot']**2
-        Oamp2 = self.internal_variable_value['Oamp']**2
+        Prot = self.internal_parameter_values['Prot']
+        Pdec2 = self.internal_parameter_values['Pdec']**2
+        Prot2 = self.internal_parameter_values['Prot']**2
+        Oamp2 = self.internal_parameter_values['Oamp']**2
 
         len_t_array = len(t_array)
         cov_matrix = np.empty([self._added_datasets*len_t_array, self._n_cov_matrix])
@@ -305,9 +305,9 @@ class GP_Multidimensional_QuasiPeriodicActivity(AbstractModel):
         return inv, detA, False
 
     def lnlk_compute(self):
-        if not self.hyper_condition(self.internal_variable_value):
+        if not self.hyper_condition(self.internal_parameter_values):
             return -np.inf
-        if not self.rotdec_condition(self.internal_variable_value):
+        if not self.rotdec_condition(self.internal_parameter_values):
             return -np.inf
 
         cov_matrix = self._compute_cov_matrix()
@@ -388,17 +388,17 @@ class GP_Multidimensional_QuasiPeriodicActivity(AbstractModel):
         return val
 
     @staticmethod
-    def _hypercond_00(variable_value):
+    def _hypercond_00(parameter_values):
         #Condition from Rajpaul 2017, Rajpaul+2021
         return True
 
     @staticmethod
-    def _hypercond_01(variable_value):
+    def _hypercond_01(parameter_values):
         # Condition from Rajpaul 2017, Rajpaul+2021
         # Taking into account that Pdec^2 = 2*lambda_2^2
-        return variable_value['Pdec']**2 > (3. / 4. / np.pi) * variable_value['Oamp']**2 * variable_value['Prot']**2 
+        return parameter_values['Pdec']**2 > (3. / 4. / np.pi) * parameter_values['Oamp']**2 * parameter_values['Prot']**2 
 
     @staticmethod
-    def _hypercond_02(variable_value):
+    def _hypercond_02(parameter_values):
         #Condition on Rotation period and decay timescale
-        return variable_value['Pdec'] > 2. * variable_value['Prot']
+        return parameter_values['Pdec'] > 2. * parameter_values['Prot']

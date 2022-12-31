@@ -142,7 +142,7 @@ class Celerite2_Granulation_Oscillation_Rotation(AbstractModel):
         self.gp[dataset.name_ref].compute(dataset.x0, diag=diag)
         return
 
-    def lnlk_compute(self, variable_value, dataset):
+    def lnlk_compute(self, parameter_values, dataset):
         """
         In celerite2 the old function "set_parameter_vector" has been removed
         and the kernel has to be defined every time
@@ -150,33 +150,33 @@ class Celerite2_Granulation_Oscillation_Rotation(AbstractModel):
         self.gp[dataset.name_ref].mean = 0.
         i_kernels = 0
         if self.rotation_kernels == 1:
-            kernel = terms.RotationTerm(sigma=variable_value['rot_sigma'],
-                                period=variable_value['Prot'],
-                                Q0=variable_value['rot_Q0'],
-                                dQ=variable_value['rot_deltaQ'],
-                                f=variable_value['rot_fmix'])
+            kernel = terms.RotationTerm(sigma=parameter_values['rot_sigma'],
+                                period=parameter_values['Prot'],
+                                Q0=parameter_values['rot_Q0'],
+                                dQ=parameter_values['rot_deltaQ'],
+                                f=parameter_values['rot_fmix'])
             i_kernels += 1
 
         for i_k in range(0, self.granulation_kernels):
             if i_kernels > 0:
-                kernel += terms.SHOTerm(sigma=variable_value['grn_k'+repr(i_k) + '_sigma'],
-                                                         rho=variable_value['grn_k'+repr(i_k) + '_period'],
+                kernel += terms.SHOTerm(sigma=parameter_values['grn_k'+repr(i_k) + '_sigma'],
+                                                         rho=parameter_values['grn_k'+repr(i_k) + '_period'],
                                                          Q=self.Q_granulation)
             else:
-                kernel = terms.SHOTerm(sigma=variable_value['grn_k'+repr(i_k) + '_sigma'],
-                                                         rho=variable_value['grn_k'+repr(i_k) + '_period'],
+                kernel = terms.SHOTerm(sigma=parameter_values['grn_k'+repr(i_k) + '_sigma'],
+                                                         rho=parameter_values['grn_k'+repr(i_k) + '_period'],
                                                          Q=self.Q_granulation)
             i_kernels += 1
 
         for i_k in range(0, self.oscillation_kernels):
             if i_kernels > 0:
-                kernel += terms.SHOTerm(sigma=variable_value['osc_k'+repr(i_k) + '_sigma'],
-                                                         rho=variable_value['osc_k'+repr(i_k) + '_period'],
-                                                         Q=variable_value['osc_k'+repr(i_k) + '_Q0'])
+                kernel += terms.SHOTerm(sigma=parameter_values['osc_k'+repr(i_k) + '_sigma'],
+                                                         rho=parameter_values['osc_k'+repr(i_k) + '_period'],
+                                                         Q=parameter_values['osc_k'+repr(i_k) + '_Q0'])
             else:
-                kernel = terms.SHOTerm(sigma=variable_value['osc_k'+repr(i_k) + '_sigma'],
-                                                         rho=variable_value['osc_k'+repr(i_k) + '_period'],
-                                                         Q=variable_value['osc_k'+repr(i_k) + '_Q0'])
+                kernel = terms.SHOTerm(sigma=parameter_values['osc_k'+repr(i_k) + '_sigma'],
+                                                         rho=parameter_values['osc_k'+repr(i_k) + '_period'],
+                                                         Q=parameter_values['osc_k'+repr(i_k) + '_Q0'])
             i_kernels += 1
 
 
@@ -186,39 +186,39 @@ class Celerite2_Granulation_Oscillation_Rotation(AbstractModel):
 
         return self.gp[dataset.name_ref].log_likelihood(dataset.residuals)
 
-    def sample_predict(self, variable_value, dataset, x0_input=None, return_covariance=False, return_variance=False):
+    def sample_predict(self, parameter_values, dataset, x0_input=None, return_covariance=False, return_variance=False):
 
         self.gp[dataset.name_ref].mean = 0.
 
         i_kernels = 0
         if self.rotation_kernels == 1:
-            kernel = terms.RotationTerm(sigma=variable_value['rot_sigma'],
-                                period=variable_value['Prot'],
-                                Q0=variable_value['rot_Q0'],
-                                dQ=variable_value['rot_deltaQ'],
-                                f=variable_value['rot_fmix'])
+            kernel = terms.RotationTerm(sigma=parameter_values['rot_sigma'],
+                                period=parameter_values['Prot'],
+                                Q0=parameter_values['rot_Q0'],
+                                dQ=parameter_values['rot_deltaQ'],
+                                f=parameter_values['rot_fmix'])
             i_kernels += 1
 
         for i_k in range(0, self.granulation_kernels):
             if i_kernels > 0:
-                kernel += terms.SHOTerm(sigma=variable_value['grn_k'+repr(i_k) + '_sigma'],
-                                                         rho=variable_value['grn_k'+repr(i_k) + '_period'],
+                kernel += terms.SHOTerm(sigma=parameter_values['grn_k'+repr(i_k) + '_sigma'],
+                                                         rho=parameter_values['grn_k'+repr(i_k) + '_period'],
                                                          Q=self.Q_granulation)
             else:
-                kernel = terms.SHOTerm(sigma=variable_value['grn_k'+repr(i_k) + '_sigma'],
-                                                         rho=variable_value['grn_k'+repr(i_k) + '_period'],
+                kernel = terms.SHOTerm(sigma=parameter_values['grn_k'+repr(i_k) + '_sigma'],
+                                                         rho=parameter_values['grn_k'+repr(i_k) + '_period'],
                                                          Q=self.Q_granulation)
             i_kernels += 1
 
         for i_k in range(0, self.oscillation_kernels):
             if i_kernels > 0:
-                kernel += terms.SHOTerm(sigma=variable_value['osc_k'+repr(i_k) + '_sigma'],
-                                                         rho=variable_value['osc_k'+repr(i_k) + '_period'],
-                                                         Q=variable_value['osc_k'+repr(i_k) + '_Q0'])
+                kernel += terms.SHOTerm(sigma=parameter_values['osc_k'+repr(i_k) + '_sigma'],
+                                                         rho=parameter_values['osc_k'+repr(i_k) + '_period'],
+                                                         Q=parameter_values['osc_k'+repr(i_k) + '_Q0'])
             else:
-                kernel = terms.SHOTerm(sigma=variable_value['osc_k'+repr(i_k) + '_sigma'],
-                                                         rho=variable_value['osc_k'+repr(i_k) + '_period'],
-                                                         Q=variable_value['osc_k'+repr(i_k) + '_Q0'])
+                kernel = terms.SHOTerm(sigma=parameter_values['osc_k'+repr(i_k) + '_sigma'],
+                                                         rho=parameter_values['osc_k'+repr(i_k) + '_period'],
+                                                         Q=parameter_values['osc_k'+repr(i_k) + '_Q0'])
             i_kernels += 1
 
 
@@ -231,38 +231,38 @@ class Celerite2_Granulation_Oscillation_Rotation(AbstractModel):
         else:
             return self.gp[dataset.name_ref].predict(dataset.residuals, x0_input, return_cov=return_covariance, return_var=return_variance)
 
-    def sample_conditional(self, variable_value, dataset,  x0_input=None):
+    def sample_conditional(self, parameter_values, dataset,  x0_input=None):
 
         self.gp[dataset.name_ref].mean = 0.
         i_kernels = 0
         if self.rotation_kernels == 1:
-            kernel = terms.RotationTerm(sigma=variable_value['rot_sigma'],
-                                period=variable_value['Prot'],
-                                Q0=variable_value['rot_Q0'],
-                                dQ=variable_value['rot_deltaQ'],
-                                f=variable_value['rot_fmix'])
+            kernel = terms.RotationTerm(sigma=parameter_values['rot_sigma'],
+                                period=parameter_values['Prot'],
+                                Q0=parameter_values['rot_Q0'],
+                                dQ=parameter_values['rot_deltaQ'],
+                                f=parameter_values['rot_fmix'])
             i_kernels += 1
 
         for i_k in range(0, self.granulation_kernels):
             if i_kernels > 0:
-                kernel += terms.SHOTerm(sigma=variable_value['grn_k'+repr(i_k) + '_sigma'],
-                                                         rho=variable_value['grn_k'+repr(i_k) + '_period'],
+                kernel += terms.SHOTerm(sigma=parameter_values['grn_k'+repr(i_k) + '_sigma'],
+                                                         rho=parameter_values['grn_k'+repr(i_k) + '_period'],
                                                          Q=self.Q_granulation)
             else:
-                kernel = terms.SHOTerm(sigma=variable_value['grn_k'+repr(i_k) + '_sigma'],
-                                                         rho=variable_value['grn_k'+repr(i_k) + '_period'],
+                kernel = terms.SHOTerm(sigma=parameter_values['grn_k'+repr(i_k) + '_sigma'],
+                                                         rho=parameter_values['grn_k'+repr(i_k) + '_period'],
                                                          Q=self.Q_granulation)
             i_kernels += 1
 
         for i_k in range(0, self.oscillation_kernels):
             if i_kernels > 0:
-                kernel += terms.SHOTerm(sigma=variable_value['osc_k'+repr(i_k) + '_sigma'],
-                                                         rho=variable_value['osc_k'+repr(i_k) + '_period'],
-                                                         Q=variable_value['osc_k'+repr(i_k) + '_Q0'])
+                kernel += terms.SHOTerm(sigma=parameter_values['osc_k'+repr(i_k) + '_sigma'],
+                                                         rho=parameter_values['osc_k'+repr(i_k) + '_period'],
+                                                         Q=parameter_values['osc_k'+repr(i_k) + '_Q0'])
             else:
-                kernel = terms.SHOTerm(sigma=variable_value['osc_k'+repr(i_k) + '_sigma'],
-                                                         rho=variable_value['osc_k'+repr(i_k) + '_period'],
-                                                         Q=variable_value['osc_k'+repr(i_k) + '_Q0'])
+                kernel = terms.SHOTerm(sigma=parameter_values['osc_k'+repr(i_k) + '_sigma'],
+                                                         rho=parameter_values['osc_k'+repr(i_k) + '_period'],
+                                                         Q=parameter_values['osc_k'+repr(i_k) + '_Q0'])
             i_kernels += 1
 
 
