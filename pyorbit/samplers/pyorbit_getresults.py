@@ -42,7 +42,7 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
         from getdist import plots, MCSamples
 
     # plt.rc('font', **{'family': 'serif', 'serif': ['Computer Modern Roman']})
-    plt.rcParams["font.family"] = "Times New Roman"
+    # plt.rcParams["font.family"] = "Times New Roman"
 
     oversampled_models = plot_dictionary['oversampled_models']
 
