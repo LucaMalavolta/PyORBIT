@@ -54,6 +54,10 @@ class Batman_Transit_With_TTV(AbstractModel, AbstractTransit):
         except:
             self.code_options['nthreads'] = 1
 
+        if not batman.openmp.detect():
+            print('OpenMP not supported, batman nthreads automatically lowered to 1')
+            self.code_options['nthreads'] = 1
+
         self.batman_params = batman.TransitParams()
 
         """ Initialization with random transit parameters"""
