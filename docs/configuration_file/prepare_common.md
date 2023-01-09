@@ -1,6 +1,6 @@
 (prepare_common)=
 
-# Include common parameters
+# Include common objects
 
 The physical *objects* of your system must be included in the ``common`` section. The name of the section derives from the fact each specific model required to model a given dataset will rely on physical parameters of planets and star (and more...) that are shared with all the other models eventually employed. For example, a simultaneous fit of a radial velocity curve and a transit light curve will be characterized by a single period for the planet of interest.
 

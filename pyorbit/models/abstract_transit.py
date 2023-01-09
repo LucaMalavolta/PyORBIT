@@ -36,9 +36,9 @@ class AbstractTransit(object):
     def _prepare_planetary_parameters(self, mc, **kwargs):
 
         try:
-            multivariate_vars = mc.common_models[self.stellar_ref].multivariate_vars
+            multivariate_pars = mc.common_models[self.stellar_ref].multivariate_pars
         except AttributeError:
-            multivariate_vars = []
+            multivariate_pars = []
 
         """ Default parametrization uses the stellar density and the impact
             parameter, it is possible to switch back to scaled semi-major axis and
@@ -49,7 +49,7 @@ class AbstractTransit(object):
             self.list_pams_common.update(['a_Rs'])
             self.use_semimajor_axis = True
         else:
-            if 'mass' in multivariate_vars and 'radius' in multivariate_vars:
+            if 'mass' in multivariate_pars and 'radius' in multivariate_pars:
                 self.list_pams_common.update(['mass'])
                 self.list_pams_common.update(['radius'])
                 self.multivariate_mass_radius = True
@@ -205,9 +205,9 @@ class AbstractTransit(object):
         self.limb_darkening_model = kwargs['limb_darkening_model']
         self.ld_vars = [0.00] * kwargs['limb_darkening_ncoeff']
         for i_coeff in range(1, kwargs['limb_darkening_ncoeff'] + 1):
-            var = 'ld_c' + repr(i_coeff)
-            self.ldvars[var] = i_coeff - 1
-            self.list_pams_common.update([var])
+            par = 'ld_c' + repr(i_coeff)
+            self.ldvars[par] = i_coeff - 1
+            self.list_pams_common.update([par])
 
     def _prepare_dataset_options(self, mc, dataset, **kwargs):
 
@@ -290,83 +290,83 @@ class AbstractTransit(object):
         self.code_options[dataset.name_ref]['Tc_boundaries'] = tc_boundaries
 
 
-    """ function for internal transformation of variables, to avoid if calls"""
+    """ function for internal transformation of parameters, to avoid if calls"""
     @staticmethod
-    def _internal_transformation_mod00(variable_value):
+    def _internal_transformation_mod00(parameter_values):
         """ this function transforms b and stellar density to i and a  """
-        a = convert_rho_to_a(variable_value['P'], variable_value['density'])
+        a = convert_rho_to_a(parameter_values['P'], parameter_values['density'])
         i = convert_b_to_i(
-            variable_value['b'], variable_value['e'], variable_value['omega'], a)
+            parameter_values['b'], parameter_values['e'], parameter_values['omega'], a)
         return a, i
 
     @staticmethod
-    def _internal_transformation_mod01(variable_value):
+    def _internal_transformation_mod01(parameter_values):
         """ this function transforms b to i"""
         i = convert_b_to_i(
-            variable_value['b'], variable_value['e'], variable_value['omega'], variable_value['a_Rs'])
-        return variable_value['a_Rs'], i
+            parameter_values['b'], parameter_values['e'], parameter_values['omega'], parameter_values['a_Rs'])
+        return parameter_values['a_Rs'], i
 
     @staticmethod
-    def _internal_transformation_mod02(variable_value):
+    def _internal_transformation_mod02(parameter_values):
         """ this function transforms stellar density to a  """
-        a = convert_rho_to_a(variable_value['P'], variable_value['density'])
-        return a, variable_value['i']
+        a = convert_rho_to_a(parameter_values['P'], parameter_values['density'])
+        return a, parameter_values['i']
 
     @staticmethod
-    def _internal_transformation_mod03(variable_value):
+    def _internal_transformation_mod03(parameter_values):
         """ no transformation needed  """
-        return variable_value['a_Rs'], variable_value['i']
+        return parameter_values['a_Rs'], parameter_values['i']
 
     @staticmethod
-    def _internal_transformation_mod04(variable_value, Tref):
+    def _internal_transformation_mod04(parameter_values, Tref):
         """ this function transforms Tc into Tc- Tref t"""
-        return variable_value['Tc'] - Tref
+        return parameter_values['Tc'] - Tref
 
     @staticmethod
-    def _internal_transformation_mod05(variable_value, Tref):
+    def _internal_transformation_mod05(parameter_values, Tref):
         """ this function transforms phase into Tc- Tref t"""
-        return kepler_exo.kepler_phase2Tc_Tref(variable_value['P'],
-                                               variable_value['mean_long'],
-                                               variable_value['e'],
-                                               variable_value['omega'])
+        return kepler_exo.kepler_phase2Tc_Tref(parameter_values['P'],
+                                               parameter_values['mean_long'],
+                                               parameter_values['e'],
+                                               parameter_values['omega'])
 
     @staticmethod
-    def _internal_transformation_mod06(variable_value):
+    def _internal_transformation_mod06(parameter_values):
         """ this function transforms b, mass, radius to i and a
             it replaces _internal_transformation_mod00 when mass & radius
             multivariate are used
         """
-        rho = variable_value['mass']/variable_value['radius']**3
-        a = convert_rho_to_a(variable_value['P'], rho)
+        rho = parameter_values['mass']/parameter_values['radius']**3
+        a = convert_rho_to_a(parameter_values['P'], rho)
         i = convert_b_to_i(
-            variable_value['b'], variable_value['e'], variable_value['omega'], a)
+            parameter_values['b'], parameter_values['e'], parameter_values['omega'], a)
         return a, i
 
     @staticmethod
-    def _internal_transformation_mod07(variable_value):
+    def _internal_transformation_mod07(parameter_values):
         """ this function transforms P,mass, radius to a
             it replaces _internal_transformation_mod02 when mass & radius
             multivariate are used
         """
-        rho = variable_value['mass']/variable_value['radius']**3
-        a = convert_rho_to_a(variable_value['P'], rho)
-        return a, variable_value['i']
+        rho = parameter_values['mass']/parameter_values['radius']**3
+        a = convert_rho_to_a(parameter_values['P'], rho)
+        return a, parameter_values['i']
 
-    def _internal_transformation_mod10(self, variable_value):
+    def _internal_transformation_mod10(self, parameter_values):
         return self.code_options['radius']
 
-    def _internal_transformation_mod11(self, variable_value):
-        return variable_value['radius']
+    def _internal_transformation_mod11(self, parameter_values):
+        return parameter_values['radius']
 
-    def _internal_transformation_mod12(self, variable_value):
+    def _internal_transformation_mod12(self, parameter_values):
         return self.code_options['temperature']
 
-    def _internal_transformation_mod13(self, variable_value):
-        return variable_value['temperature']
+    def _internal_transformation_mod13(self, parameter_values):
+        return parameter_values['temperature']
 
     @staticmethod
-    def _internal_transformation_mod20(variable_value):
-        """ This function extracts from the variable_value dictionary
+    def _internal_transformation_mod20(parameter_values):
+        """ This function extracts from the parameter_values dictionary
             - 'v_sini': projected tangential velocity of the star
             - 'radius': stellar radius in Solar units
             - 'i_star': inclination of the of stellar rotation axis
@@ -375,20 +375,20 @@ class AbstractTransit(object):
             it returns the angular velocity Omega and the stellar inclination
 
         Args:
-            variable_value (dict): dictionary with all the parameters of the current model
+            parameter_values (dict): dictionary with all the parameters of the current model
 
         Returns:
             float: angular velocity Omega in [rad/s]
             float: inclination of the of stellar rotation axis, [degrees]
         """
 
-        Omega = variable_value['v_sini'] / (variable_value['radius'] * constants.Rsun) / np.sin(variable_value['i_star']/180.*np.pi)
+        Omega = parameter_values['v_sini'] / (parameter_values['radius'] * constants.Rsun) / np.sin(parameter_values['i_star']/180.*np.pi)
 
-        return Omega, variable_value['i_star']
+        return Omega, parameter_values['i_star']
 
     @staticmethod
-    def _internal_transformation_mod21(variable_value):
-        """ This function extracts from the variable_value dictionary
+    def _internal_transformation_mod21(parameter_values):
+        """ This function extracts from the parameter_values dictionary
             - 'v_sini': projected tangential velocity of the star
             - 'radius': stellar radius in Solar units
             - 'rotation_period': rotational period of the star from the stellar model
@@ -397,21 +397,21 @@ class AbstractTransit(object):
             it returns the angular velocity Omega and the stellar inclination
 
         Args:
-            variable_value (dict): dictionary with all the parameters of the current model
+            parameter_values (dict): dictionary with all the parameters of the current model
 
         Returns:
             float: angular velocity Omega, [rad/s]
             float: inclination of the of stellar rotation axis, [degrees]
         """
 
-        sin_is =  variable_value['v_sini']  / (variable_value['radius'] * constants.Rsun) * (variable_value['rotation_period'] * constants.d2s)  / (2* np.pi)
-        Omega = 2* np.pi / (variable_value['Prot'] * constants.d2s)
+        sin_is =  parameter_values['v_sini']  / (parameter_values['radius'] * constants.Rsun) * (parameter_values['rotation_period'] * constants.d2s)  / (2* np.pi)
+        Omega = 2* np.pi / (parameter_values['Prot'] * constants.d2s)
 
         return Omega, np.arcsin(sin_is)/np.pi*180.
 
     @staticmethod
-    def _internal_transformation_mod22(variable_value):
-        """ This function extracts from the variable_value dictionary
+    def _internal_transformation_mod22(parameter_values):
+        """ This function extracts from the parameter_values dictionary
             - 'v_sini': projected tangential velocity of the star
             - 'radius': stellar radius in Solar units
             - 'Prot': rotational period of the star from the activity model
@@ -420,20 +420,20 @@ class AbstractTransit(object):
             it returns the angular velocity Omega and the stellar inclination
 
         Args:
-            variable_value (dict): dictionary with all the parameters of the current model
+            parameter_values (dict): dictionary with all the parameters of the current model
 
         Returns:
             float: angular velocity Omega, [rad/s]
             float: inclination of the of stellar rotation axis, [degrees]
         """
 
-        sin_is =  variable_value['v_sini']  / (variable_value['radius'] * constants.Rsun) * (variable_value['Prot'] * constants.d2s)  / (2* np.pi)
-        Omega = 2* np.pi / (variable_value['Prot'] * constants.d2s)
+        sin_is =  parameter_values['v_sini']  / (parameter_values['radius'] * constants.Rsun) * (parameter_values['Prot'] * constants.d2s)  / (2* np.pi)
+        Omega = 2* np.pi / (parameter_values['Prot'] * constants.d2s)
 
         return Omega, np.arcsin(sin_is)/np.pi*180.
 
-    def _internal_transformation_mod23(self, variable_value):
-        """ This function extracts from the variable_value dictionary
+    def _internal_transformation_mod23(self, parameter_values):
+        """ This function extracts from the parameter_values dictionary
             - 'v_sini': projected tangential velocity of the star
             - 'radius': stellar radius in Solar units
             in addition, it takes from self.code_options
@@ -443,14 +443,14 @@ class AbstractTransit(object):
             it returns the angular velocity Omega and the stellar inclination
 
         Args:
-            variable_value (dict): dictionary with all the parameters of the current model
+            parameter_values (dict): dictionary with all the parameters of the current model
 
         Returns:
             float: angular velocity Omega, [rad/s]
             float: inclination of the of stellar rotation axis, [degrees]
         """
 
-        sin_is =  variable_value['v_sini']  / (variable_value['radius'] * constants.Rsun) * (self.code_options['rotation_period'] * constants.d2s)  / (2* np.pi)
-        Omega = 2* np.pi / (variable_value['Prot'] * constants.d2s)
+        sin_is =  parameter_values['v_sini']  / (parameter_values['radius'] * constants.Rsun) * (self.code_options['rotation_period'] * constants.d2s)  / (2* np.pi)
+        Omega = 2* np.pi / (parameter_values['Prot'] * constants.d2s)
 
         return Omega, np.arcsin(sin_is)/np.pi*180.

@@ -16,16 +16,16 @@ class NormalizationFactor(AbstractModel):
             'n_factor',  # Normalization factor, expressed as all_other_stars / star_A ratio of flux
             }
 
-    def compute(self, variable_value, dataset, x0_input=None):
+    def compute(self, parameter_values, dataset, x0_input=None):
 
         """
 
-        :param variable_value:
+        :param parameter_values:
         :param dataset:
         :param x0_input:
         :return:
         """
-        return np.asarray(variable_value['n_factor'])
+        return np.asarray(parameter_values['n_factor'])
 
 class LocalNormalizationFactor(AbstractModel):
 
@@ -42,16 +42,16 @@ class LocalNormalizationFactor(AbstractModel):
             'n_factor',  # Normalization factor, expressed as all_other_stars / star_A ratio of flux
             }
 
-    def compute(self, variable_value, dataset, x0_input=None):
+    def compute(self, parameter_values, dataset, x0_input=None):
 
         """
 
-        :param variable_value:
+        :param parameter_values:
         :param dataset:
         :param x0_input:
         :return:
         """
-        return np.asarray(variable_value['n_factor'])
+        return np.asarray(parameter_values['n_factor'])
 
 
 class SubsetNormalizationFactor(AbstractModel):
@@ -73,15 +73,15 @@ class SubsetNormalizationFactor(AbstractModel):
             return
 
         for i_sub in range(0,dataset.submodel_flag):
-            var_original = 'n_factor'
-            var_subset = 'n_factor_sub'+repr(i_sub)
-            self._subset_transfer_priors(mc, dataset, var_original, var_subset)
+            par_original = 'n_factor'
+            par_subset = 'n_factor_sub'+repr(i_sub)
+            self._subset_transfer_priors(mc, dataset, par_original, par_subset)
 
-    def compute(self, variable_value, dataset, x0_input=None):
+    def compute(self, parameter_values, dataset, x0_input=None):
 
         """
 
-        :param variable_value:
+        :param parameter_values:
         :param dataset:
         :param x0_input:
         :return:
@@ -92,9 +92,9 @@ class SubsetNormalizationFactor(AbstractModel):
             one_array = np.ones(dataset.n)
 
             for i_sub in range(0,dataset.submodel_flag):
-                var = 'n_factor_sub'+repr(i_sub)
+                par = 'n_factor_sub'+repr(i_sub)
                 sel_data = (dataset.submodel_id==i_sub)
-                y_output[sel_data] = one_array[sel_data] * variable_value[var]
+                y_output[sel_data] = one_array[sel_data] * parameter_values[par]
 
             return y_output
         else:

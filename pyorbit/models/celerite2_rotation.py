@@ -17,7 +17,7 @@ class Celerite2_Rotation(AbstractModel):
     from Foreman-Mackey+2017 and exoplanet, but keeping the notation of
     the semi-periodic goerge kernel used in PyORBIT
     differently from the example provided in the paper, here the terms are passed in the linear space already. It will
-    the job of the sampler to convert from Logarithmic to Linear space for those variables that the user has decided
+    the job of the sampler to convert from Logarithmic to Linear space for those parameters that the user has decided
     to explore in logarithmic space
 
     Args:
@@ -81,31 +81,31 @@ class Celerite2_Rotation(AbstractModel):
         self.gp[dataset.name_ref].compute(dataset.x0, diag=diag)
         return
 
-    def lnlk_compute(self, variable_value, dataset):
+    def lnlk_compute(self, parameter_values, dataset):
         """
         In celerite2 the old function "set_parameter_vector" has been removed
         and the kernel has to be defined every time
         """
         self.gp[dataset.name_ref].mean = 0.
-        self.gp[dataset.name_ref].kernel = terms.RotationTerm(sigma=variable_value['rot_sigma'],
-                                 period=variable_value['Prot'],
-                                 Q0=variable_value['rot_Q0'],
-                                 dQ=variable_value['rot_deltaQ'],
-                                 f=variable_value['rot_fmix'])
+        self.gp[dataset.name_ref].kernel = terms.RotationTerm(sigma=parameter_values['rot_sigma'],
+                                 period=parameter_values['Prot'],
+                                 Q0=parameter_values['rot_Q0'],
+                                 dQ=parameter_values['rot_deltaQ'],
+                                 f=parameter_values['rot_fmix'])
 
         diag = dataset.e ** 2.0 + dataset.jitter ** 2.0
         self.gp[dataset.name_ref].compute(dataset.x0, diag=diag, quiet=True)
 
         return self.gp[dataset.name_ref].log_likelihood(dataset.residuals)
 
-    def sample_predict(self, variable_value, dataset, x0_input=None, return_covariance=False, return_variance=False):
+    def sample_predict(self, parameter_values, dataset, x0_input=None, return_covariance=False, return_variance=False):
 
         self.gp[dataset.name_ref].mean = 0.
-        self.gp[dataset.name_ref].kernel = terms.RotationTerm(sigma=variable_value['rot_sigma'],
-                                 period=variable_value['Prot'],
-                                 Q0=variable_value['rot_Q0'],
-                                 dQ=variable_value['rot_deltaQ'],
-                                 f=variable_value['rot_fmix'])
+        self.gp[dataset.name_ref].kernel = terms.RotationTerm(sigma=parameter_values['rot_sigma'],
+                                 period=parameter_values['Prot'],
+                                 Q0=parameter_values['rot_Q0'],
+                                 dQ=parameter_values['rot_deltaQ'],
+                                 f=parameter_values['rot_fmix'])
 
         diag = dataset.e ** 2.0 + dataset.jitter ** 2.0
         self.gp[dataset.name_ref].compute(dataset.x0, diag=diag, quiet=True)
@@ -115,14 +115,14 @@ class Celerite2_Rotation(AbstractModel):
         else:
             return self.gp[dataset.name_ref].predict(dataset.residuals, x0_input, return_cov=return_covariance, return_var=return_variance)
 
-    def sample_conditional(self, variable_value, dataset,  x0_input=None):
+    def sample_conditional(self, parameter_values, dataset,  x0_input=None):
 
         self.gp[dataset.name_ref].mean = 0.
-        self.gp[dataset.name_ref].kernel = terms.RotationTerm(sigma=variable_value['rot_sigma'],
-                                 period=variable_value['Prot'],
-                                 Q0=variable_value['rot_Q0'],
-                                 dQ=variable_value['rot_deltaQ'],
-                                 f=variable_value['rot_fmix'])
+        self.gp[dataset.name_ref].kernel = terms.RotationTerm(sigma=parameter_values['rot_sigma'],
+                                 period=parameter_values['Prot'],
+                                 Q0=parameter_values['rot_Q0'],
+                                 dQ=parameter_values['rot_deltaQ'],
+                                 f=parameter_values['rot_fmix'])
 
         diag = dataset.e ** 2.0 + dataset.jitter ** 2.0
         self.gp[dataset.name_ref].compute(dataset.x0, diag=diag, quiet=True)

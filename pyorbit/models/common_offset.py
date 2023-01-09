@@ -38,5 +38,5 @@ class Offset(AbstractModel):
         dataset.shutdown_offset()
         return
 
-    def compute(self, variable_value, dataset, x0_input=None):
-        return variable_value['offset']
+    def compute(self, parameter_values, dataset, x0_input=None):
+        return parameter_values['offset']

@@ -1,4 +1,6 @@
 from pyorbit.subroutines.common import *
+from packaging.version import parse as parse_version
+import pyorbit
 import time
 
 __all__ = ["ModelContainer"]
@@ -9,6 +11,8 @@ class ModelContainer(object):
     """
 
     def __init__(self):
+
+        self.pyorbit_version = pyorbit.__version__
 
         # FIXME: change the renaming and link directly the variables in constants module
 
@@ -61,7 +65,7 @@ class ModelContainer(object):
                 model_conf = model.model_conf
 
             model.initialize_model(self, **model_conf)
-            model.change_variable_status(self, **model_conf)
+            model.change_parameter_status(self, **model_conf)
 
             for dataset_name in list(set(model_conf) & set(self.dataset_dict)):
                 model.initialize_model_dataset(
@@ -93,18 +97,18 @@ class ModelContainer(object):
                         self.common_models[common_ref].default_spaces)
                     model.default_priors.update(
                         self.common_models[common_ref].default_priors)
-                    self.ndim, output_lists = self.common_models[common_ref].define_variable_properties(
+                    self.ndim, output_lists = self.common_models[common_ref].define_parameter_properties(
                         self.ndim, output_lists, model.list_pams_common)
 
             else:
                 pass
 
         for dataset_name, dataset in self.dataset_dict.items():
-            self.ndim, output_lists = dataset.define_variable_properties(
+            self.ndim, output_lists = dataset.define_parameter_properties(
                 self.ndim, output_lists, dataset.list_pams)
 
             for model_name in dataset.models:
-                self.ndim, output_lists = self.models[model_name].define_variable_properties(
+                self.ndim, output_lists = self.models[model_name].define_parameter_properties(
                     self.ndim, output_lists, dataset.name_ref)
 
         self.bounds = np.asarray(output_lists['bounds'])
@@ -153,7 +157,7 @@ class ModelContainer(object):
 
                 """ Step 1: retrieve the planet period"""
                 period = model.transformation['P'](theta, model.fixed,
-                                                   model.variable_index['P'])
+                                                   model.parameter_index['P'])
 
                 """ Step 2: save the all planet periods into a list"""
                 period_storage.extend([period])
@@ -164,10 +168,10 @@ class ModelContainer(object):
                     # print('    ', model_name, self.ordered_planets[model_name], period_storage_ordered)
 
                 """ Step 4: check if the eccentricity is within the given range"""
-                if 'e' in model.variable_index:
+                if 'e' in model.parameter_index:
                     e = model.transformation['e'](theta,
                                                   model.fixed,
-                                                  model.variable_index['e'])
+                                                  model.parameter_index['e'])
 
                     if not model.bounds['e'][0] <= e < model.bounds['e'][1]:
                         # print('eccentricity>1')
@@ -175,39 +179,39 @@ class ModelContainer(object):
                         return False
 
                 """ Step 5: check if the impact parameter is below 1 + Rp/Rs """
-                if 'b' in model.variable_index and 'R' in model.variable_index:
+                if 'b' in model.parameter_index and 'R_Rs' in model.parameter_index:
                     b = model.transformation['b'](theta,
                                                   model.fixed,
-                                                  model.variable_index['b'])
-                    R = model.transformation['R'](theta,
+                                                  model.parameter_index['b'])
+                    R = model.transformation['R_Rs'](theta,
                                                   model.fixed,
-                                                  model.variable_index['R'])
+                                                  model.parameter_index['R_Rs'])
                     if not b <= 1 + R:
                         return False
 
                 """ Step 6 eclipse depth must be greater than the amplitude of
                 phase variation (during the eclipse we only have the stellar line) """
-                if 'phase_amp' in model.variable_index and 'delta_occ' in model.variable_index:
+                if 'phase_amp' in model.parameter_index and 'delta_occ' in model.parameter_index:
                     phase_amp = model.transformation['delta_occ'](theta,
                                                   model.fixed,
-                                                  model.variable_index['phase_amp'])
+                                                  model.parameter_index['phase_amp'])
                     delta_occ = model.transformation['delta_occ'](theta,
                                                   model.fixed,
-                                                  model.variable_index['delta_occ'])
+                                                  model.parameter_index['delta_occ'])
                     if phase_amp > delta_occ: return False
 
 
-        """ Step 6 eclipse depth must be greater than the amplitude of
-        phase variation (during the eclipse we only have the stellar line) """
-        for dataset_name, dataset in self.dataset_dict.items():
-            if 'phase_amp' in dataset.variable_index and 'delta_occ' in dataset.variable_index:
-                phase_amp = dataset.transformation['delta_occ'](theta,
-                                                dataset.fixed,
-                                                dataset.variable_index['phase_amp'])
-                delta_occ = dataset.transformation['delta_occ'](theta,
-                                                dataset.fixed,
-                                                dataset.variable_index['delta_occ'])
-                if phase_amp > delta_occ: return False
+        #""" Step 6 eclipse depth must be greater than the amplitude of
+        #phase variation (during the eclipse we only have the stellar line) """
+        #for dataset_name, dataset in self.dataset_dict.items():
+        #    if 'phase_amp' in dataset.parameter_index and 'delta_occ' in dataset.parameter_index:
+        #        phase_amp = dataset.transformation['delta_occ'](theta,
+        #                                        dataset.fixed,
+        #                                        dataset.parameter_index['phase_amp'])
+        #        delta_occ = dataset.transformation['delta_occ'](theta,
+        #                                        dataset.fixed,
+        #                                        dataset.parameter_index['delta_occ'])
+        #        if phase_amp > delta_occ: return False
 
         """ Step 7 check for overlapping periods (within 2.5% arbitrarily chosen)"""
         for i_n, i_v in enumerate(period_storage):
@@ -273,8 +277,8 @@ class ModelContainer(object):
             logchi2_gp_model = None
 
             dataset.model_reset()
-            variable_values = dataset.convert(theta)
-            dataset.compute(variable_values)
+            parameter_values = dataset.convert(theta)
+            dataset.compute(parameter_values)
 
             log_priors += dataset.return_priors(theta)
 
@@ -288,20 +292,20 @@ class ModelContainer(object):
                 log_priors += self.models[model_name].return_priors(
                     theta, dataset_name)
 
-                variable_values = {}
+                parameter_values = {}
                 for common_ref in self.models[model_name].common_ref:
-                    variable_values.update(
+                    parameter_values.update(
                         self.common_models[common_ref].convert(theta))
 
                 # try:
                 #    """ Taking the parameter values from the common models"""
                 #    for common_ref in self.models[model_name].common_ref:
-                #        variable_values.update(self.common_models[common_ref].convert(theta))
+                #        Translohr.update(self.common_models[common_ref].convert(theta))
                 # except:
                 #    """ This model has no common model reference, i.e., it is strictly connected to the dataset"""
                 #    pass
 
-                variable_values.update(
+                parameter_values.update(
                     self.models[model_name].convert(theta, dataset_name))
 
                 """ residuals will be computed following the definition in Dataset class
@@ -314,7 +318,7 @@ class ModelContainer(object):
                 # if getattr(self.models[model_name], 'model_class', None) is 'common_jitter':
                 if getattr(self.models[model_name], 'jitter_model', False):
                     dataset.jitter += self.models[model_name].compute(
-                        variable_values, dataset)
+                        parameter_values, dataset)
                     continue
 
                 if getattr(dataset, 'dynamical', False):
@@ -325,13 +329,13 @@ class ModelContainer(object):
 
                 if self.models[model_name].unitary_model:
                     dataset.unitary_model += self.models[model_name].compute(
-                    variable_values, dataset)
+                    parameter_values, dataset)
                 elif self.models[model_name].normalization_model:
                     dataset.normalization_model *= self.models[model_name].compute(
-                        variable_values, dataset)
+                        parameter_values, dataset)
                 else:
                     dataset.additive_model += self.models[model_name].compute(
-                        variable_values, dataset)
+                        parameter_values, dataset)
 
             dataset.compute_model()
             dataset.compute_residuals()
@@ -342,24 +346,24 @@ class ModelContainer(object):
 
             if logchi2_gp_model:
 
-                variable_values = {}
+                parameter_values = {}
                 for common_ref in self.models[logchi2_gp_model].common_ref:
-                    variable_values.update(
+                    parameter_values.update(
                         self.common_models[common_ref].convert(theta))
 
-                variable_values.update(
+                parameter_values.update(
                     self.models[logchi2_gp_model].convert(theta, dataset_name))
 
                 """ GP Log-likelihood is not computed now because a single matrix must be
                     computed with the joint dataset"""
                 if hasattr(self.models[logchi2_gp_model], 'delayed_lnlk_computation'):
 
-                    self.models[logchi2_gp_model].add_internal_dataset(variable_values, dataset)
+                    self.models[logchi2_gp_model].add_internal_dataset(parameter_values, dataset)
                     if logchi2_gp_model not in delayed_lnlk_computation:
                         delayed_lnlk_computation.append(logchi2_gp_model)
                 else:
                     log_likelihood += self.models[logchi2_gp_model].lnlk_compute(
-                        variable_values, dataset)
+                        parameter_values, dataset)
             else:
                 log_likelihood += dataset.model_logchi2()
 
@@ -379,8 +383,8 @@ class ModelContainer(object):
             return log_priors, log_likelihood
 
     def recenter_bounds(self, pop_mean, recenter=True):
-        # This function recenters the bounds limits for circular variables
-        # Also, it extends the range of a variable if the output of PyDE is a fixed number
+        # This function recenters the bounds limits for circular parameters
+        # Also, it extends the range of a parameter if the output of PyDE is a fixed number
 
         ind_list = []
 
@@ -411,10 +415,10 @@ class ModelContainer(object):
         n_pop = np.size(population, axis=0)
 
         if ind_list:
-            for var_ind in ind_list:
-                fix_sel = (population[:, var_ind] <= self.bounds[var_ind, 0]) | (
-                    population[:, var_ind] >= self.bounds[var_ind, 1])
-                population[fix_sel, var_ind] = pop_mean[var_ind]
+            for par_ind in ind_list:
+                fix_sel = (population[:, par_ind] <= self.bounds[par_ind, 0]) | (
+                    population[:, par_ind] >= self.bounds[par_ind, 1])
+                population[fix_sel, par_ind] = pop_mean[par_ind]
 
         for ii in range(0, self.ndim):
             if np.amax(population[:, ii]) - np.amin(population[:, ii]) < 10e-14:
@@ -423,3 +427,20 @@ class ModelContainer(object):
                     average_pops, 10e-12, n_pop)
 
         return population
+
+    def check_backward_compatibility(self):
+
+        if parse_version(getattr(self, 'pyorbit_version', '9.0.22')) < parse_version('9.1.0'):
+            print('Back-compatibility with version < 9.0 activated \n')
+            for model_name, model in self.common_models.items():
+                model.parameter_index = model.variable_index
+                model.sampler_parameters = model.variable_sampler
+
+            for model_name, model in self.models.items():
+                model.parameter_index = model.variable_index
+                model.sampler_parameters = model.variable_sampler
+
+            for dataset_name, dataset in self.dataset_dict.items():
+                dataset.parameter_index = dataset.variable_index
+                dataset.sampler_parameters = dataset.variable_sampler
+

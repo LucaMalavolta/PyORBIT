@@ -8,6 +8,8 @@ from pyorbit.common.common_jitter import CommonJitter
 
 from pyorbit.common.harmonics import CommonHarmonics
 
+from pyorbit.common.sinusoid import CommonSinusoid
+
 from pyorbit.common.dilution_factor import CommonDilutionFactor
 from pyorbit.common.normalization_factor import CommonNormalizationFactor
 from pyorbit.common.star_parameters import CommonStarParameters
@@ -36,6 +38,9 @@ from pyorbit.models.batman_transit import Batman_Transit
 from pyorbit.models.batman_transit_with_ttv import Batman_Transit_With_TTV
 from pyorbit.models.batman_transit_ttv_subset import Batman_Transit_TTV_Subset
 from pyorbit.models.batman_transit_ttv_subset_faster import Batman_Transit_TTV_Subset_Faster
+
+from pyorbit.models.batman_transit_rprs_subset import Batman_Transit_RpRs_Subset
+
 from pyorbit.models.batman_transit_secondary_phasecurve import Batman_Transit_Eclipse_PhaseCurve
 from pyorbit.models.spiderman_thermal import Spiderman_Thermal
 
@@ -72,7 +77,7 @@ from pyorbit.models.correlation import LocalCorrelation
 from pyorbit.models.correlated_jitter import LocalCorrelatedJitter
 from pyorbit.models.common_offset import Offset
 from pyorbit.models.common_jitter import Jitter
-from pyorbit.models.sinusoid_common_period import SinusoidCommonPeriod
+from pyorbit.models.sinusoid import Sinusoid, LocalSinusoid, SinusoidCommonPeriod, SinusoidPolynomialModulation
 from pyorbit.models.harmonics import Harmonics
 
 from pyorbit.models.dilution_factor import DilutionFactor, LocalDilutionFactor
@@ -80,7 +85,7 @@ from pyorbit.models.normalization_factor import NormalizationFactor, LocalNormal
 
 from pyorbit.models.rossitermclaughlin_ohta import RossiterMcLaughling_Ohta
 
-from pyorbit.models.polynomial_trend import PolynomialTrend, LocalPolynomialTrend, SubsetPolynomialTrend
+from pyorbit.models.polynomial_trend import PolynomialTrend, SharedPolynomialTrend, LocalPolynomialTrend, SubsetPolynomialTrend
 
 from pyorbit.models.spectral_rotation import SpectralRotation, SubsetSpectralRotation, SubsetSpectralRotationPolynomial
 
@@ -124,6 +129,7 @@ define_common_type_to_class = {
     'polynomial_trend': CommonPolynomialTrend,
     'common_offset': CommonOffset,
     'common_jitter': CommonJitter,
+    'sinusoid': CommonSinusoid,
     'harmonics': CommonHarmonics,
     'ld_linear': LimbDarkening_Linear,
     'ld_quadratic': LimbDarkening_Quadratic,
@@ -161,6 +167,8 @@ define_type_to_class = {
     'batman_transit_ttv_subset_faster': Batman_Transit_TTV_Subset_Faster,
     'subset_batman_transit_faster_ttv': Batman_Transit_TTV_Subset_Faster,
     'batman_transit_with_ttv': Batman_Transit_With_TTV,
+    'batman_transit_rprs_subset': Batman_Transit_RpRs_Subset,
+    'subset_batman_transit_rprs': Batman_Transit_RpRs_Subset,
     'batman_transit_eclipse_phasecurve': Batman_Transit_Eclipse_PhaseCurve,
     'spiderman_thermal': Spiderman_Thermal,
     'gp_framework_quasiperiodic': GP_Framework_QuasiPeriodicActivity,
@@ -181,13 +189,17 @@ define_type_to_class = {
     'local_correlation': LocalCorrelation,
     'correlation': LocalCorrelation,
     'polynomial_trend': PolynomialTrend,
+    'shared_polynomial_trend': SharedPolynomialTrend,
     'local_polynomial_trend': LocalPolynomialTrend,
     'subset_polynomial_trend': SubsetPolynomialTrend,
     'polynomial_trend_subset': SubsetPolynomialTrend,
     'common_offset': Offset,
     'common_jitter': Jitter,
     'harmonics': Harmonics,
+    'sinusoid': Sinusoid,
+    'local_sinusoid': LocalSinusoid,
     'sinusoid_common_period': SinusoidCommonPeriod,
+    'sinusoid_polynomial_modulation': SinusoidPolynomialModulation,
     'dilution_factor': DilutionFactor,
     'local_dilution_factor': LocalDilutionFactor,
     'normalization_factor': NormalizationFactor,

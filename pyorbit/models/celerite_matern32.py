@@ -57,13 +57,13 @@ class Celerite_Matern32(AbstractModel):
         self.gp[dataset.name_ref].compute(dataset.x0, env)
         return
 
-    def lnlk_compute(self, variable_value, dataset):
+    def lnlk_compute(self, parameter_values, dataset):
         """ 2 steps:
            1) theta parameters must be converted in physical units (e.g. from logarithmic to linear spaces)
            2) physical values must be converted to {\tt george} input parameters
         """
         gp_pams = np.asarray(
-            [np.log10(variable_value['matern32_sigma']), np.log10(variable_value['matern32_rho'])])
+            [np.log10(parameter_values['matern32_sigma']), np.log10(parameter_values['matern32_rho'])])
 
         env = np.sqrt(dataset.e ** 2.0 + dataset.jitter ** 2.0)
         self.gp[dataset.name_ref].set_parameter_vector(gp_pams)
@@ -71,10 +71,10 @@ class Celerite_Matern32(AbstractModel):
 
         return self.gp[dataset.name_ref].log_likelihood(dataset.residuals)
 
-    def sample_predict(self, variable_value, dataset, x0_input=None, return_covariance=False, return_variance=False):
+    def sample_predict(self, parameter_values, dataset, x0_input=None, return_covariance=False, return_variance=False):
 
         gp_pams = np.asarray(
-            [np.log10(variable_value['matern32_sigma']), np.log10(variable_value['matern32_rho'])])
+            [np.log10(parameter_values['matern32_sigma']), np.log10(parameter_values['matern32_rho'])])
 
         env = np.sqrt(dataset.e ** 2.0 + dataset.jitter ** 2.0)
         self.gp[dataset.name_ref].set_parameter_vector(gp_pams)
@@ -85,10 +85,10 @@ class Celerite_Matern32(AbstractModel):
         else:
             return self.gp[dataset.name_ref].predict(dataset.residuals, x0_input, return_cov=return_covariance, return_var=return_variance)
 
-    def sample_conditional(self, variable_value, dataset,  x0_input=None):
+    def sample_conditional(self, parameter_values, dataset,  x0_input=None):
 
         gp_pams = np.asarray(
-            [np.log10(variable_value['matern32_sigma']), np.log10(variable_value['matern32_rho'])])
+            [np.log10(parameter_values['matern32_sigma']), np.log10(parameter_values['matern32_rho'])])
 
         env = np.sqrt(dataset.e ** 2.0 + dataset.jitter ** 2.0)
         self.gp[dataset.name_ref].set_parameter_vector(gp_pams)

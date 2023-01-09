@@ -7,7 +7,7 @@ class CommonPlanets(AbstractCommon):
     Inherited class from AbstractCommon
 
     For computational reason it is better to fit :math:`\sqrt{e}\sin{\omega}` and :math:`\sqrt{e}\cos{\omega}`.
-    :func:`define_special_variable_properties` and :func:`define_special_starting_point` must be redefined
+    :func:`define_special_parameter_properties` and :func:`define_special_starting_point` must be redefined
 
     Attributes:
         :model_class (string): identify the kind of class
@@ -214,7 +214,7 @@ class CommonPlanets(AbstractCommon):
         self.period_average = None
         # Variable used only by TRADES
 
-    def define_special_variable_properties(self, ndim, output_lists, var):
+    def define_special_parameter_properties(self, ndim, output_lists, var):
         """ Boundaries definition for eccentricity :math:`e` and argument of pericenter :math:`\omega`
 
         The internal variable to be fitted are :math:`\sqrt{e}\sin{\omega}` and :math:`\sqrt{e}\cos{\omega}`.
@@ -250,29 +250,29 @@ class CommonPlanets(AbstractCommon):
             return ndim, output_lists, False
 
         for var_check in ['e', 'omega', 'e_coso', 'e_sino', 'sre_coso', 'sre_sino']:
-            if var_check in self.variable_sampler:
+            if var_check in self.sampler_parameters:
                 return ndim, output_lists, False
 
         if self.parametrization[:8] == 'Standard':
             self.transformation['e'] = get_var_val
-            self.variable_index['e'] = ndim
+            self.parameter_index['e'] = ndim
             self.transformation['omega'] = get_var_val
-            self.variable_index['omega'] = ndim + 1
+            self.parameter_index['omega'] = ndim + 1
             variable_list = ['e', 'omega']
 
         else:
             if self.parametrization[:8] == 'Ford2006':
                 self.transformation['e'] = get_2var_e
-                self.variable_index['e'] = [ndim, ndim + 1]
+                self.parameter_index['e'] = [ndim, ndim + 1]
                 variable_list = ['e_coso', 'e_sino']
             else:
                 # 'Eastman2013' is the standard choice
                 self.transformation['e'] = get_2var_sre
-                self.variable_index['e'] = [ndim, ndim + 1]
+                self.parameter_index['e'] = [ndim, ndim + 1]
                 variable_list = ['sre_coso', 'sre_sino']
 
             self.transformation['omega'] = get_2var_o
-            self.variable_index['omega'] = [ndim, ndim + 1]
+            self.parameter_index['omega'] = [ndim, ndim + 1]
 
         for var in variable_list:
 
@@ -296,7 +296,7 @@ class CommonPlanets(AbstractCommon):
             output_lists['spaces'].append(self.spaces[var])
             output_lists['priors'].append([self.prior_kind[var], self.prior_pams[var], nested_coeff])
 
-            self.variable_sampler[var] = ndim
+            self.sampler_parameters[var] = ndim
             ndim += 1
 
         for var in ['e', 'omega']:
@@ -332,28 +332,28 @@ class CommonPlanets(AbstractCommon):
 
             if 'e' in self.starts and 'omega' in self.starts:
 
-                starting_point[self.variable_sampler['sre_coso']] = \
+                starting_point[self.sampler_parameters['sre_coso']] = \
                     np.sqrt(self.starts['e']) * np.cos(self.starts['omega'])
-                starting_point[self.variable_sampler['sre_sino']] = \
+                starting_point[self.sampler_parameters['sre_sino']] = \
                     np.sqrt(self.starts['e']) * np.sin(self.starts['omega'])
 
             elif 'sre_coso' in self.starts and 'sre_sino' in self.starts:
-                starting_point[self.variable_sampler['sre_coso']] = self.starts['sre_coso']
-                starting_point[self.variable_sampler['sre_coso']] = self.starts['sre_sino']
+                starting_point[self.sampler_parameters['sre_coso']] = self.starts['sre_coso']
+                starting_point[self.sampler_parameters['sre_coso']] = self.starts['sre_sino']
 
             return True
 
         if var_sampler == 'e_coso' or var_sampler=='e_sino':
 
             if 'e' in self.starts and 'omega' in self.starts:
-                starting_point[self.variable_sampler['e_coso']] = \
+                starting_point[self.sampler_parameters['e_coso']] = \
                     self.starts['e'] * np.cos(self.starts['omega'])
-                starting_point[self.variable_sampler['e_sino']] = \
+                starting_point[self.sampler_parameters['e_sino']] = \
                     self.starts['e'] * np.sin(self.starts['omega'])
 
             elif 'e_coso' in self.starts and 'e_sino' in self.starts:
-                starting_point[self.variable_sampler['e_coso']] = self.starts['e_coso']
-                starting_point[self.variable_sampler['e_coso']] = self.starts['e_sino']
+                starting_point[self.sampler_parameters['e_coso']] = self.starts['e_coso']
+                starting_point[self.sampler_parameters['e_coso']] = self.starts['e_sino']
 
             return True
 
@@ -362,10 +362,10 @@ class CommonPlanets(AbstractCommon):
     def special_fix_population(self, population):
 
         n_pop = np.size(population, axis=0)
-        if 'e_sino' in self.variable_sampler and \
-           'e_coso' in self.variable_sampler:
-                e_sino_list = self.variable_sampler['e_sino']
-                e_coso_list = self.variable_sampler['e_coso']
+        if 'e_sino' in self.sampler_parameters and \
+           'e_coso' in self.sampler_parameters:
+                e_sino_list = self.sampler_parameters['e_sino']
+                e_coso_list = self.sampler_parameters['e_coso']
                 e_pops = np.sqrt(population[:, e_sino_list] ** 2 + population[:, e_coso_list] ** 2)
                 o_pops = np.arctan2(population[:, e_sino_list], population[:, e_coso_list], dtype=np.double)
                 # e_mean = (self[planet_name].bounds['e'][0] +
@@ -378,10 +378,10 @@ class CommonPlanets(AbstractCommon):
                         population[ii, e_sino_list] = e_random * np.sin(o_pops[ii])
                         population[ii, e_coso_list] = e_random * np.cos(o_pops[ii])
 
-        if 'sre_sino' in self.variable_sampler and \
-           'sre_coso' in self.variable_sampler:
-                sre_sino_list = self.variable_sampler['sre_sino']
-                sre_coso_list = self.variable_sampler['sre_coso']
+        if 'sre_sino' in self.sampler_parameters and \
+           'sre_coso' in self.sampler_parameters:
+                sre_sino_list = self.sampler_parameters['sre_sino']
+                sre_coso_list = self.sampler_parameters['sre_coso']
                 e_pops = population[:, sre_sino_list] ** 2 + population[:, sre_coso_list] ** 2
                 o_pops = np.arctan2(population[:, sre_sino_list], population[:, sre_coso_list], dtype=np.double)
                 # e_mean = (self[planet_name].bounds['e'][0] +

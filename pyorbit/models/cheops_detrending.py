@@ -60,8 +60,8 @@ class CheopsDetrending(AbstractModel):
 
         if kwargs.get('fit_roll_angle', True):
 
-            for var in self.roll_angle_parameters:
-                self.list_pams_dataset.update([var])
+            for par in self.roll_angle_parameters:
+                self.list_pams_dataset.update([par])
 
             self.retrieve_roll_angle = self._retrieve_roll_angle_mod01
         else:
@@ -113,82 +113,82 @@ class CheopsDetrending(AbstractModel):
                   fill_value=(self.cheops_instrumental[dataset.name_ref][diag_name][0],self.cheops_instrumental[dataset.name_ref][diag_name][-1]))
 
 
-    def compute(self, variable_value, dataset, x0_input=None):
+    def compute(self, parameter_values, dataset, x0_input=None):
 
         if x0_input is None:
 
-            trend = variable_value['dfdbg']* self.cheops_instrumental[dataset.name_ref]['bg']
+            trend = parameter_values['dfdbg']* self.cheops_instrumental[dataset.name_ref]['bg']
 
-            trend += variable_value['dfdcontam']* self.cheops_instrumental[dataset.name_ref]['contam']
+            trend += parameter_values['dfdcontam']* self.cheops_instrumental[dataset.name_ref]['contam']
 
-            trend += variable_value['dfdsmear']* self.cheops_instrumental[dataset.name_ref]['smear']
+            trend += parameter_values['dfdsmear']* self.cheops_instrumental[dataset.name_ref]['smear']
 
             trend += self.cheops_instrumental[dataset.name_ref]['ramp'] * self.cheops_instrumental[dataset.name_ref]['deltaT'] /1e6
 
-            trend += variable_value['dfdx']* self.cheops_instrumental[dataset.name_ref]['xoff'] \
-                + variable_value['d2fdx2']*self.cheops_instrumental[dataset.name_ref]['xoff']**2
+            trend += parameter_values['dfdx']* self.cheops_instrumental[dataset.name_ref]['xoff'] \
+                + parameter_values['d2fdx2']*self.cheops_instrumental[dataset.name_ref]['xoff']**2
 
-            trend += variable_value['dfdy']* self.cheops_instrumental[dataset.name_ref]['yoff'] \
-                + variable_value['d2fdy2'] * self.cheops_instrumental[dataset.name_ref]['yoff']**2
-            trend += variable_value['d2fdxdy'] \
+            trend += parameter_values['dfdy']* self.cheops_instrumental[dataset.name_ref]['yoff'] \
+                + parameter_values['d2fdy2'] * self.cheops_instrumental[dataset.name_ref]['yoff']**2
+            trend += parameter_values['d2fdxdy'] \
                 * self.cheops_instrumental[dataset.name_ref]['xoff'] \
                 * self.cheops_instrumental[dataset.name_ref]['yoff']
 
-            trend += self.retrieve_trend(variable_value, dataset.x)
-            trend += self.retrieve_roll_angle(variable_value, self.cheops_instrumental[dataset.name_ref]['sinphi'], self.cheops_instrumental[dataset.name_ref]['cosphi'])
+            trend += self.retrieve_trend(parameter_values, dataset.x)
+            trend += self.retrieve_roll_angle(parameter_values, self.cheops_instrumental[dataset.name_ref]['sinphi'], self.cheops_instrumental[dataset.name_ref]['cosphi'])
             #if self.fit_roll_angle:
-            #    trend += variable_value['dfdsinphi']*self.cheops_instrumental[dataset.name_ref]['sinphi'] \
-            #        + variable_value['dfdcosphi']*self.cheops_instrumental[dataset.name_ref]['cosphi']
-            #    trend += variable_value['dfdsin2phi']*(2*self.cheops_instrumental[dataset.name_ref]['sinphi']*self.cheops_instrumental[dataset.name_ref]['cosphi'])
-            #    trend += variable_value['dfdcos2phi']*(2*self.cheops_instrumental[dataset.name_ref]['cosphi']**2 - 1)
-            #    trend += variable_value['dfdsin3phi']*(3*self.cheops_instrumental[dataset.name_ref]['sinphi'] - 4* self.cheops_instrumental[dataset.name_ref]['sinphi']**3)
-            #    trend += variable_value['dfdcos3phi']*(4*self.cheops_instrumental[dataset.name_ref]['cosphi']**3 - 3*self.cheops_instrumental[dataset.name_ref]['cosphi'])
+            #    trend += parameter_values['dfdsinphi']*self.cheops_instrumental[dataset.name_ref]['sinphi'] \
+            #        + parameter_values['dfdcosphi']*self.cheops_instrumental[dataset.name_ref]['cosphi']
+            #    trend += parameter_values['dfdsin2phi']*(2*self.cheops_instrumental[dataset.name_ref]['sinphi']*self.cheops_instrumental[dataset.name_ref]['cosphi'])
+            #    trend += parameter_values['dfdcos2phi']*(2*self.cheops_instrumental[dataset.name_ref]['cosphi']**2 - 1)
+            #    trend += parameter_values['dfdsin3phi']*(3*self.cheops_instrumental[dataset.name_ref]['sinphi'] - 4* self.cheops_instrumental[dataset.name_ref]['sinphi']**3)
+            #    trend += parameter_values['dfdcos3phi']*(4*self.cheops_instrumental[dataset.name_ref]['cosphi']**3 - 3*self.cheops_instrumental[dataset.name_ref]['cosphi'])
 
         else:
             t = x0_input + dataset.Tref
-            trend = variable_value['dfdbg']* self.cheops_interpolated[dataset.name_ref]['bg'](t)
+            trend = parameter_values['dfdbg']* self.cheops_interpolated[dataset.name_ref]['bg'](t)
 
-            trend += variable_value['dfdcontam']* self.cheops_interpolated[dataset.name_ref]['contam'](t)
+            trend += parameter_values['dfdcontam']* self.cheops_interpolated[dataset.name_ref]['contam'](t)
 
-            trend += variable_value['dfdsmear']* self.cheops_interpolated[dataset.name_ref]['smear'](t)
+            trend += parameter_values['dfdsmear']* self.cheops_interpolated[dataset.name_ref]['smear'](t)
 
             trend += self.cheops_interpolated[dataset.name_ref]['ramp'](t) * self.cheops_interpolated[dataset.name_ref]['deltaT'](t) /1e6
 
-            trend += variable_value['dfdx']* self.cheops_interpolated[dataset.name_ref]['xoff'](t) + variable_value['d2fdx2']*self.cheops_interpolated[dataset.name_ref]['xoff'](t)**2
+            trend += parameter_values['dfdx']* self.cheops_interpolated[dataset.name_ref]['xoff'](t) + parameter_values['d2fdx2']*self.cheops_interpolated[dataset.name_ref]['xoff'](t)**2
 
-            trend += variable_value['dfdy']* self.cheops_interpolated[dataset.name_ref]['yoff'](t) + variable_value['d2fdy2'] * self.cheops_interpolated[dataset.name_ref]['yoff'](t)**2
-            trend += variable_value['d2fdxdy'] * self.cheops_interpolated[dataset.name_ref]['xoff'](t) * self.cheops_interpolated[dataset.name_ref]['yoff'](t)
+            trend += parameter_values['dfdy']* self.cheops_interpolated[dataset.name_ref]['yoff'](t) + parameter_values['d2fdy2'] * self.cheops_interpolated[dataset.name_ref]['yoff'](t)**2
+            trend += parameter_values['d2fdxdy'] * self.cheops_interpolated[dataset.name_ref]['xoff'](t) * self.cheops_interpolated[dataset.name_ref]['yoff'](t)
 
-            trend += self.retrieve_trend(variable_value, t)
-            trend += self.retrieve_roll_angle(variable_value, self.cheops_interpolated[dataset.name_ref]['sinphi'](t), self.cheops_interpolated[dataset.name_ref]['cosphi'](t))
+            trend += self.retrieve_trend(parameter_values, t)
+            trend += self.retrieve_roll_angle(parameter_values, self.cheops_interpolated[dataset.name_ref]['sinphi'](t), self.cheops_interpolated[dataset.name_ref]['cosphi'](t))
 
         return trend
 
     @staticmethod
-    def _retrieve_roll_angle_mod00(variable_value, sinphi, cosphi):
+    def _retrieve_roll_angle_mod00(parameter_values, sinphi, cosphi):
         # internal_dictionary = self.cheops_instrumental[dataset.name_ref]
         return 0.000
 
     @staticmethod
-    def _retrieve_roll_angle_mod01(variable_value, sinphi, cosphi):
+    def _retrieve_roll_angle_mod01(parameter_values, sinphi, cosphi):
         # internal_dictionary = self.cheops_instrumental[dataset.name_ref]
-        return variable_value['dfdsinphi']*sinphi \
-                    + variable_value['dfdcosphi']*cosphi \
-                    + variable_value['dfdsin2phi']*(2*sinphi*cosphi) \
-                    + variable_value['dfdcos2phi']*(2*cosphi**2 - 1) \
-                    + variable_value['dfdsin3phi']*(3*sinphi - 4* sinphi**3) \
-                    + variable_value['dfdcos3phi']*(4*cosphi**3 - 3*cosphi)
+        return parameter_values['dfdsinphi']*sinphi \
+                    + parameter_values['dfdcosphi']*cosphi \
+                    + parameter_values['dfdsin2phi']*(2*sinphi*cosphi) \
+                    + parameter_values['dfdcos2phi']*(2*cosphi**2 - 1) \
+                    + parameter_values['dfdsin3phi']*(3*sinphi - 4* sinphi**3) \
+                    + parameter_values['dfdcos3phi']*(4*cosphi**3 - 3*cosphi)
 
     @staticmethod
-    def _retrieve_trend_mod00(variable_value, t):
+    def _retrieve_trend_mod00(parameter_values, t):
         return 0.000
 
     @staticmethod
-    def _retrieve_trend_mod01(variable_value, t):
+    def _retrieve_trend_mod01(parameter_values, t):
         dt = t - np.median(t)
-        return variable_value['dfdt'] *dt
+        return parameter_values['dfdt'] *dt
 
     @staticmethod
-    def _retrieve_trend_mod02(variable_value, t):
+    def _retrieve_trend_mod02(parameter_values, t):
         dt = t - np.median(t)
-        return variable_value['dfdt'] *dt +  variable_value['d2fdt2'] *dt**2
+        return parameter_values['dfdt'] *dt +  parameter_values['d2fdt2'] *dt**2

@@ -48,14 +48,14 @@ class GaussianProcess_QuasiPeriodicCosineActivity(AbstractModel):
         #return spatial.distance.cdist(X0, X1, lambda u, v: v-u), \
         #    spatial.distance.cdist(X0, X1, 'sqeuclidean')
 
-    def _compute_cov_matrix(self, variable_value, dist_t1, dist_t2, diagonal_env=None):
+    def _compute_cov_matrix(self, parameter_values, dist_t1, dist_t2, diagonal_env=None):
 
-        cov_matrix = np.exp(- dist_t2 / (2*variable_value['Pdec']**2)) \
-            * (variable_value['Hamp']**2 *
-               np.exp(- np.sin(np.pi * dist_t1 / variable_value['Prot']) ** 2.
-                      / (2.0 * variable_value['Oamp']**2))
-                + variable_value['Camp']**2
-                * np.cos(4 * np.pi * dist_t1 / variable_value['Prot']))
+        cov_matrix = np.exp(- dist_t2 / (2*parameter_values['Pdec']**2)) \
+            * (parameter_values['Hamp']**2 *
+               np.exp(- np.sin(np.pi * dist_t1 / parameter_values['Prot']) ** 2.
+                      / (2.0 * parameter_values['Oamp']**2))
+                + parameter_values['Camp']**2
+                * np.cos(4 * np.pi * dist_t1 / parameter_values['Prot']))
 
         if diagonal_env is not None:
             cov_matrix += np.diag(diagonal_env)
@@ -82,15 +82,15 @@ class GaussianProcess_QuasiPeriodicCosineActivity(AbstractModel):
 
         return
 
-    def lnlk_compute(self, variable_value, dataset):
+    def lnlk_compute(self, parameter_values, dataset):
 
-        if not self.hyper_condition(variable_value):
+        if not self.hyper_condition(parameter_values):
             return -np.inf
-        if not self.rotdec_condition(variable_value):
+        if not self.rotdec_condition(parameter_values):
             return -np.inf
 
         env = dataset.e ** 2.0 + dataset.jitter ** 2.0
-        cov_matrix = self._compute_cov_matrix(variable_value,
+        cov_matrix = self._compute_cov_matrix(parameter_values,
                                               self._dist_t1[dataset.name_ref],
                                               self._dist_t2[dataset.name_ref],
                                               diagonal_env=env)
@@ -113,10 +113,10 @@ class GaussianProcess_QuasiPeriodicCosineActivity(AbstractModel):
         output = -0.5 * (log2_npi + chi2 + det_A)
         return output
 
-    def sample_predict(self, variable_value, dataset, x0_input=None, return_covariance=False, return_variance=False):
+    def sample_predict(self, parameter_values, dataset, x0_input=None, return_covariance=False, return_variance=False):
 
         env = dataset.e ** 2.0 + dataset.jitter ** 2.0
-        cov_matrix = self._compute_cov_matrix(variable_value,
+        cov_matrix = self._compute_cov_matrix(parameter_values,
                                               self._dist_t1[dataset.name_ref],
                                               self._dist_t2[dataset.name_ref],
                                               diagonal_env=env)
@@ -131,13 +131,13 @@ class GaussianProcess_QuasiPeriodicCosineActivity(AbstractModel):
             crossed_t1 = self._dist_t1[dataset.name_ref]
             crossed_t2 = self._dist_t2[dataset.name_ref]
 
-        Ks = self._compute_cov_matrix(variable_value, crossed_t1, crossed_t2)
+        Ks = self._compute_cov_matrix(parameter_values, crossed_t1, crossed_t2)
 
         alpha = cho_solve(cho_factor(cov_matrix), dataset.residuals)
         mu = np.dot(Ks, alpha).flatten()
         (s, d) = np.linalg.slogdet(cov_matrix)
 
-        Kss = self._compute_cov_matrix(variable_value, predict_t1, predict_t2)
+        Kss = self._compute_cov_matrix(parameter_values, predict_t1, predict_t2)
 
         B = cho_solve(cho_factor(cov_matrix), Ks.T)
         std = np.sqrt(np.array(np.diag(Kss - np.dot(Ks, B))).flatten())
@@ -151,23 +151,23 @@ class GaussianProcess_QuasiPeriodicCosineActivity(AbstractModel):
         else:
             return mu
 
-    def sample_conditional(self, variable_value, dataset, x0_input=None):
+    def sample_conditional(self, parameter_values, dataset, x0_input=None):
 
-        val, std = self.sample_predict(variable_value, dataset, x0_input)
+        val, std = self.sample_predict(parameter_values, dataset, x0_input)
         return val
 
     @staticmethod
-    def _hypercond_00(variable_value):
+    def _hypercond_00(parameter_values):
         #Condition from Rajpaul 2017, Rajpaul+2021
         return True
 
     @staticmethod
-    def _hypercond_01(variable_value):
+    def _hypercond_01(parameter_values):
         # Condition from Rajpaul 2017, Rajpaul+2021
         # Taking into account that Pdec^2 = 2*lambda_2^2
-        return variable_value['Pdec']**2 > (3. / 4. / np.pi) * variable_value['Oamp']**2 * variable_value['Prot']**2 
+        return parameter_values['Pdec']**2 > (3. / 4. / np.pi) * parameter_values['Oamp']**2 * parameter_values['Prot']**2 
 
     @staticmethod
-    def _hypercond_02(variable_value):
+    def _hypercond_02(parameter_values):
         #Condition on Rotation period and decay timescale
-        return variable_value['Pdec'] > 2. * variable_value['Prot']
+        return parameter_values['Pdec'] > 2. * parameter_values['Prot']

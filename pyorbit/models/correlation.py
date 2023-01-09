@@ -33,8 +33,8 @@ class LocalCorrelation(AbstractModel):
 
 
         for i_order in range(self.starting_order, self.order+1):
-            var = 'corr_c'+repr(i_order)
-            self.list_pams_dataset.update([var])
+            par = 'corr_c'+repr(i_order)
+            self.list_pams_dataset.update([par])
 
 
     def initialize_model_dataset(self, mc, dataset, **kwargs):
@@ -46,12 +46,12 @@ class LocalCorrelation(AbstractModel):
             self.fix_list[dataset.name_ref]['x_zero'] = np.asarray(
                 [np.median(dataset.ancillary[self.correlated_val]), 0.0000], dtype=np.double)
 
-    def compute(self, variable_value, dataset, x0_input=None):
+    def compute(self, parameter_values, dataset, x0_input=None):
 
         coeff = np.zeros(self.order+1)
         for i_order in range(self.starting_order, self.order+1):
-            var = 'corr_c'+repr(i_order)
-            coeff[i_order] = variable_value[var]
+            par = 'corr_c'+repr(i_order)
+            coeff[i_order] = parameter_values[par]
 
         """ In our array, coefficient are sorted from the lowest degree to the higher
         This is the order accepted by NumPy.polynomial.polynomial.polyval ,
@@ -59,6 +59,6 @@ class LocalCorrelation(AbstractModel):
         """
         if x0_input is None:
             return polynomial.polyval(
-                dataset.ancillary[self.correlated_val] - variable_value['x_zero'],coeff)
+                dataset.ancillary[self.correlated_val] - parameter_values['x_zero'],coeff)
         else:
             return 0.00

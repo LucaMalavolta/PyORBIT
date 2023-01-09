@@ -5,11 +5,11 @@ import pyorbit.subroutines.kepler_exo as kepler_exo
 
 from tqdm import tqdm
 
-__all__ = ["results_resumen", "results_derived", "get_planet_variables", "get_theta_dictionary", "get_model",
+__all__ = ["results_summary", "results_derived", "get_planet_parameters", "get_theta_dictionary", "get_model",
            "print_theta_bounds", "print_dictionary", "get_stellar_parameters", "print_integrated_ACF"]
 
 
-def results_resumen(mc, theta,
+def results_summary(mc, theta,
                     skip_theta=False,
                     compute_lnprob=False,
                     chain_med=False,
@@ -22,28 +22,28 @@ def results_resumen(mc, theta,
     print()
     print('====================================================================================================')
     if skip_theta:
-        print('     Boundaries of the sampler variables     ')
+        print('     Boundaries of the sampler parameters     ')
     elif is_starting_point:
         print('     Starting point of the sample/optimization routines    ')
     else:
-        print('     Statistics on the posterior of the sampler variables     ')
+        print('     Statistics on the posterior of the sampler parameters     ')
 
     print('====================================================================================================')
     print()
     for dataset_name, dataset in mc.dataset_dict.items():
         print('----- dataset: ', dataset_name)
-        print_theta_bounds(dataset.variable_sampler,
+        print_theta_bounds(dataset.sampler_parameters,
                            theta, mc.bounds, skip_theta)
 
         for model_name in dataset.models:
             print('---------- ', dataset_name,
                   '     ----- model: ', model_name)
             print_theta_bounds(
-                mc.models[model_name].variable_sampler[dataset_name], theta, mc.bounds, skip_theta)
+                mc.models[model_name].sampler_parameters[dataset_name], theta, mc.bounds, skip_theta)
 
     for model_name, model in mc.common_models.items():
         print('----- common model: ', model_name)
-        print_theta_bounds(model.variable_sampler,
+        print_theta_bounds(model.sampler_parameters,
                            theta, mc.bounds, skip_theta)
 
     if skip_theta:
@@ -51,40 +51,39 @@ def results_resumen(mc, theta,
 
     print('====================================================================================================')
     if is_starting_point:
-        print('     Starting point projected onto the physical space     ')
+        print('     Starting point projected onto the model parameter space     ')
     else:
-        print('     Statistics on the physical parameters obtained from the posteriors samples     ')
+        print('     Statistics on the model parameters obtained from the posteriors samples     ')
     print('====================================================================================================')
     print()
 
     for dataset_name, dataset in mc.dataset_dict.items():
         print('----- dataset: ', dataset_name)
-        variable_values = dataset.convert(theta)
-        print_dictionary(variable_values)
+        parameter_values = dataset.convert(theta)
+        print_dictionary(parameter_values)
 
         print()
         for model_name in dataset.models:
             print('---------- ', dataset_name,
                   '     ----- model: ', model_name)
-            variable_values = mc.models[model_name].convert(
+            parameter_values = mc.models[model_name].convert(
                 theta, dataset_name)
-            print_dictionary(variable_values)
+            print_dictionary(parameter_values)
 
     for model_name, model in mc.common_models.items():
         print('----- common model: ', model_name)
-        variable_values = model.convert(theta)
+        parameter_values = model.convert(theta)
         if chain_med is not False:
             recenter_pams = {}
-            variable_values_med = model.convert(chain_med)
+            parameter_values_med = model.convert(chain_med)
 
-            # for var in list(set(mc.recenter_pams_dataset) & set(mc.variable_sampler[dataset_name])):
-            for var in list(set(model.recenter_pams) & set(variable_values_med)):
-                recenter_pams[var] = [variable_values_med[var],
-                                      model.default_bounds[var][1] - model.default_bounds[var][0]]
-            print_dictionary(variable_values, recenter=recenter_pams)
+            for par in list(set(model.recenter_pams) & set(parameter_values_med)):
+                recenter_pams[par] = [parameter_values_med[par],
+                                      model.default_bounds[par][1] - model.default_bounds[par][0]]
+            print_dictionary(parameter_values, recenter=recenter_pams)
 
         else:
-            print_dictionary(variable_values)
+            print_dictionary(parameter_values)
 
     print('====================================================================================================')
     if is_starting_point:
@@ -94,7 +93,7 @@ def results_resumen(mc, theta,
     print('====================================================================================================')
     print()
 
-    returned_samples = get_planet_variables(mc, theta, verbose=True)
+    returned_samples = get_planet_parameters(mc, theta, verbose=True)
 
     if compute_lnprob:
         print()
@@ -242,10 +241,10 @@ def get_stellar_parameters(mc, theta, warnings=True, stellar_ref=None):
 
 
 def results_derived(mc, theta):
-    _ = get_planet_variables(mc, theta, verbose=True)
+    _ = get_planet_parameters(mc, theta, verbose=True)
 
 
-def get_planet_variables(mc, theta, verbose=False):
+def get_planet_parameters(mc, theta, verbose=False):
     """
     Derived parameters from the Common Models are listed
 
@@ -258,17 +257,17 @@ def get_planet_variables(mc, theta, verbose=False):
     except:
         n_samplings = 1
 
-    planet_variables = {}
+    planet_parameters = {}
 
     for common_name, common_model in mc.common_models.items():
-        variable_values = common_model.convert(theta)
-        derived_variables = {}
+        parameter_values = common_model.convert(theta)
+        derived_parameters = {}
 
         if common_model.model_class == 'planet':
 
             stellar_ref = getattr(common_model, 'stellar_ref', None)
 
-            stellar_values = get_stellar_parameters(mc,
+            stellar_parameters = get_stellar_parameters(mc,
                                                     theta,
                                                     warnings=False,
                                                     stellar_ref=stellar_ref)
@@ -282,147 +281,147 @@ def get_planet_variables(mc, theta, verbose=False):
             checking the size of their distribution
             """
 
-            for var in variable_values.keys():
-                if np.size(variable_values[var]) == 1:
-                    variable_values[var] = variable_values[var] * \
+            for par in parameter_values.keys():
+                if np.size(parameter_values[par]) == 1:
+                    parameter_values[par] = parameter_values[par] * \
                         np.ones(n_samplings)
 
-            if 'a_Rs' not in variable_values.keys() and 'density' in stellar_values.keys():
-                derived_variables['a_Rs'] = True
-                variable_values['a_Rs'] = convert_rho_to_a(variable_values['P'],
-                                                        stellar_values['density'])
+            if 'a_Rs' not in parameter_values.keys() and 'density' in stellar_parameters.keys():
+                derived_parameters['a_Rs'] = True
+                parameter_values['a_Rs'] = convert_rho_to_a(parameter_values['P'],
+                                                        stellar_parameters['density'])
 
-            if 'i' not in variable_values.keys():
-                derived_variables['i'] = True
+            if 'i' not in parameter_values.keys():
+                derived_parameters['i'] = True
                 if 'i' in common_model.fix_list:
 
                     if verbose:
                         print('Inclination randomized to {0:3.2f} +- {1:3.2f} deg'.format(
                               common_model.fix_list['i'][0], common_model.fix_list['i'][1]))
-                    variable_values['i'] = np.random.normal(common_model.fix_list['i'][0],
+                    parameter_values['i'] = np.random.normal(common_model.fix_list['i'][0],
                                                             common_model.fix_list['i'][1],
                                                             size=n_samplings)
-                elif 'b' in variable_values.keys() and 'a_Rs' in variable_values.keys():
-                    variable_values['i'] = convert_b_to_i(variable_values['b'],
-                                                          variable_values['e'],
-                                                          variable_values['omega'],
-                                                          variable_values['a_Rs'])
+                elif 'b' in parameter_values.keys() and 'a_Rs' in parameter_values.keys():
+                    parameter_values['i'] = convert_b_to_i(parameter_values['b'],
+                                                          parameter_values['e'],
+                                                          parameter_values['omega'],
+                                                          parameter_values['a_Rs'])
                 else:
                     print('Inclination fixed to 90 deg!')
-                    variable_values['i'] = 90.00 * np.ones(n_samplings)
+                    parameter_values['i'] = 90.00 * np.ones(n_samplings)
                     remove_i = True
 
-            if 'K' in variable_values.keys() and 'mass' in stellar_values.keys():
-                M_Msun = kepler_exo.get_planet_mass(variable_values['P'],
-                                                                  variable_values['K'],
-                                                                  variable_values['e'],
-                                                                  stellar_values['mass']) \
-                    / np.sin(np.radians(variable_values['i']))
+            if 'K' in parameter_values.keys() and 'mass' in stellar_parameters.keys():
+                M_Msun = kepler_exo.get_planet_mass(parameter_values['P'],
+                                                                  parameter_values['K'],
+                                                                  parameter_values['e'],
+                                                                  stellar_parameters['mass']) \
+                    / np.sin(np.radians(parameter_values['i']))
 
-                variable_values['M_Mj'] =M_Msun * constants.Msjup
-                derived_variables['M_Mj'] = True
+                parameter_values['M_Mj'] =M_Msun * constants.Msjup
+                derived_parameters['M_Mj'] = True
 
-                variable_values['M_Me']  =M_Msun * constants.Msear
-                derived_variables['M_Me'] = True
+                parameter_values['M_Me']  =M_Msun * constants.Msear
+                derived_parameters['M_Me'] = True
 
-            elif 'M_Me' in variable_values.keys() and 'mass' in stellar_values.keys():
-                derived_variables['K'] = True
-                derived_variables['K'] = kepler_exo.kepler_K1(stellar_values['mass'],
-                                                              variable_values['M_Me'] /
+            elif 'M_Me' in parameter_values.keys() and 'mass' in stellar_parameters.keys():
+                derived_parameters['K'] = True
+                derived_parameters['K'] = kepler_exo.kepler_K1(stellar_parameters['mass'],
+                                                              parameter_values['M_Me'] /
                                                               constants.Msear,
-                                                              variable_values['P'],
-                                                              variable_values['i'],
-                                                              variable_values['e'])
+                                                              parameter_values['P'],
+                                                              parameter_values['i'],
+                                                              parameter_values['e'])
 
-                variable_values['M_Mj'] = variable_values['M_Me'] * \
+                parameter_values['M_Mj'] = parameter_values['M_Me'] * \
                     (constants.Msjup/constants.Msear)
-                derived_variables['M_Mj'] = True
+                derived_parameters['M_Mj'] = True
 
 
-            if 'Tc' in variable_values.keys():
-                if 'e' in variable_values:
-                    derived_variables['mean_long'] = True
-                    variable_values['mean_long'] = kepler_exo.kepler_Tc2phase_Tref(variable_values['P'],
-                                                                           variable_values['Tc'] -
+            if 'Tc' in parameter_values.keys():
+                if 'e' in parameter_values:
+                    derived_parameters['mean_long'] = True
+                    parameter_values['mean_long'] = kepler_exo.kepler_Tc2phase_Tref(parameter_values['P'],
+                                                                           parameter_values['Tc'] -
                                                                            mc.Tref,
-                                                                           variable_values['e'],
-                                                                           variable_values['omega'])
+                                                                           parameter_values['e'],
+                                                                           parameter_values['omega'])
 
-            elif 'mean_long' in variable_values.keys():
-                derived_variables['Tc'] = True
-                variable_values['Tc'] = mc.Tref + kepler_exo.kepler_phase2Tc_Tref(variable_values['P'],
-                                                                                  variable_values['mean_long'],
-                                                                                  variable_values['e'],
-                                                                                  variable_values['omega'])
+            elif 'mean_long' in parameter_values.keys():
+                derived_parameters['Tc'] = True
+                parameter_values['Tc'] = mc.Tref + kepler_exo.kepler_phase2Tc_Tref(parameter_values['P'],
+                                                                                  parameter_values['mean_long'],
+                                                                                  parameter_values['e'],
+                                                                                  parameter_values['omega'])
 
-            if 'R_Rs' in variable_values.keys() and 'radius' in stellar_values.keys():
-                variable_values['R_Rj'] = variable_values['R_Rs'] * \
-                    constants.Rsjup * stellar_values['radius']
-                derived_variables['R_Rj'] = True
+            if 'R_Rs' in parameter_values.keys() and 'radius' in stellar_parameters.keys():
+                parameter_values['R_Rj'] = parameter_values['R_Rs'] * \
+                    constants.Rsjup * stellar_parameters['radius']
+                derived_parameters['R_Rj'] = True
 
-                variable_values['R_Re'] = variable_values['R_Rs'] * \
-                    constants.Rsear * stellar_values['radius']
-                derived_variables['R_Re'] = True
+                parameter_values['R_Re'] = parameter_values['R_Rs'] * \
+                    constants.Rsear * stellar_parameters['radius']
+                derived_parameters['R_Re'] = True
 
             if remove_i:
-                del variable_values['i']
+                del parameter_values['i']
 
             try:
-                k = variable_values['R_Rs']
+                k = parameter_values['R_Rs']
 
-                variable_values['T_41'] = variable_values['P'] / np.pi \
-                    * np.arcsin(1./variable_values['a_Rs'] *
-                                np.sqrt((1. + k)**2 - variable_values['b']**2)
-                                / np.sin(variable_values['i']*constants.deg2rad))
-                derived_variables['T_41'] = True
+                parameter_values['T_41'] = parameter_values['P'] / np.pi \
+                    * np.arcsin(1./parameter_values['a_Rs'] *
+                                np.sqrt((1. + k)**2 - parameter_values['b']**2)
+                                / np.sin(parameter_values['i']*constants.deg2rad))
+                derived_parameters['T_41'] = True
 
-                variable_values['T_32'] = variable_values['P'] / np.pi \
-                    * np.arcsin(1./variable_values['a_Rs'] *
-                                np.sqrt((1. - k)**2 - variable_values['b']**2)
-                                / np.sin(variable_values['i']*constants.deg2rad))
-                derived_variables['T_32'] = True
+                parameter_values['T_32'] = parameter_values['P'] / np.pi \
+                    * np.arcsin(1./parameter_values['a_Rs'] *
+                                np.sqrt((1. - k)**2 - parameter_values['b']**2)
+                                / np.sin(parameter_values['i']*constants.deg2rad))
+                derived_parameters['T_32'] = True
 
             except:
                 pass
 
             try:
-                derived_variables['a_AU_(M)'] = True
-                variable_values['a_AU_(M)'] = convert_PMsMp_to_a(
-                    variable_values['P'],
-                    stellar_values['mass'],
-                    variable_values['M_Me'])
+                derived_parameters['a_AU_(M)'] = True
+                parameter_values['a_AU_(M)'] = convert_PMsMp_to_a(
+                    parameter_values['P'],
+                    stellar_parameters['mass'],
+                    parameter_values['M_Me'])
             except (KeyError, ValueError):
                 pass
 
             try:
-                derived_variables['a_AU_(rho,R)'] = True
-                variable_values['a_AU_(rho,R)'] = convert_ars_to_a(
-                    variable_values['a_Rs'],
-                    stellar_values['radius'])
+                derived_parameters['a_AU_(rho,R)'] = True
+                parameter_values['a_AU_(rho,R)'] = convert_ars_to_a(
+                    parameter_values['a_Rs'],
+                    stellar_parameters['radius'])
             except (KeyError, ValueError):
                 pass
 
             try:
-                derived_variables['insol'] = True
-                variable_values['insol]'] = \
+                derived_parameters['insol'] = True
+                parameter_values['insol]'] = \
                     convert_RTaAU_to_insol(
-                        stellar_values['radius'],
-                        stellar_values['temperature'],
-                        variable_values['a_AU_(rho,R)']
+                        stellar_parameters['radius'],
+                        stellar_parameters['temperature'],
+                        parameter_values['a_AU_(rho,R)']
                     )
             except (KeyError, ValueError):
                 pass
 
-            planet_variables[common_name] = variable_values.copy()
+            planet_parameters[common_name] = parameter_values.copy()
 
-            for var in planet_variables[common_name].keys():
-                if var not in derived_variables.keys():
-                    del variable_values[var]
+            for par in planet_parameters[common_name].keys():
+                if par not in derived_parameters.keys():
+                    del parameter_values[par]
 
             if verbose:
-                print_dictionary(variable_values)
+                print_dictionary(parameter_values)
 
-    return planet_variables
+    return planet_parameters
 
 
 def get_theta_dictionary(mc):
@@ -430,24 +429,24 @@ def get_theta_dictionary(mc):
 
     theta_dictionary = {}
     for dataset_name, dataset in mc.dataset_dict.items():
-        for var, i in dataset.variable_sampler.items():
+        for par, i in dataset.sampler_parameters.items():
             try:
-                theta_dictionary[dataset_name + '_' + var] = i
+                theta_dictionary[dataset_name + '_' + par] = i
             except:
-                theta_dictionary[repr(dataset_name) + '_' + var] = i
+                theta_dictionary[repr(dataset_name) + '_' + par] = i
 
         for model_name in dataset.models:
-            for var, i in mc.models[model_name].variable_sampler[dataset_name].items():
+            for par, i in mc.models[model_name].sampler_parameters[dataset_name].items():
                 try:
                     theta_dictionary[dataset_name +
-                                     '_' + model_name + '_' + var] = i
+                                     '_' + model_name + '_' + par] = i
                 except:
                     theta_dictionary[repr(dataset_name) +
-                                     '_' + model_name + '_' + var] = i
+                                     '_' + model_name + '_' + par] = i
 
     for model_name, model in mc.common_models.items():
-        for var, i in model.variable_sampler.items():
-            theta_dictionary[model.common_ref + '_' + var] = i
+        for par, i in model.sampler_parameters.items():
+            theta_dictionary[model.common_ref + '_' + par] = i
 
     return theta_dictionary
 
@@ -479,32 +478,27 @@ def get_model(mc, theta, bjd_dict):
         external_model = np.zeros(np.size(x0_plot))
         normalization_model = None
 
-        variable_values = dataset.convert(theta)
-        dataset.compute(variable_values)
+        parameter_values = dataset.convert(theta)
+        dataset.compute(parameter_values)
 
         for model_name in dataset.models:
-            variable_values = {}
+            parameter_values = {}
 
             for common_ref in mc.models[model_name].common_ref:
-                variable_values.update(
+                parameter_values.update(
                     mc.common_models[common_ref].convert(theta))
 
-            # try:
-            #    for common_ref in mc.models[model_name].common_ref:
-            #        variable_values.update(mc.common_models[common_ref].convert(theta))
-            # except:
-            #    continue
-            variable_values.update(
+            parameter_values.update(
                 mc.models[model_name].convert(theta, dataset_name))
 
             if getattr(mc.models[model_name], 'jitter_model', False):
                 dataset.jitter += mc.models[model_name].compute(
-                    variable_values, dataset)
+                    parameter_values, dataset)
                 continue
 
             if getattr(mc.models[model_name], 'systematic_model', False):
                 dataset.additive_model += mc.models[model_name].compute(
-                    variable_values, dataset)
+                    parameter_values, dataset)
 
         model_out[dataset_name]['systematics'] = dataset.additive_model.copy()
         model_out[dataset_name]['jitter'] = dataset.jitter.copy()
@@ -524,11 +518,11 @@ def get_model(mc, theta, bjd_dict):
 
         for model_name in dataset.models:
 
-            variable_values = {}
+            parameter_values = {}
             for common_ref in mc.models[model_name].common_ref:
-                variable_values.update(
+                parameter_values.update(
                     mc.common_models[common_ref].convert(theta))
-            variable_values.update(
+            parameter_values.update(
                 mc.models[model_name].convert(theta, dataset_name))
 
             if getattr(mc.models[model_name], 'internal_likelihood', False):
@@ -542,16 +536,16 @@ def get_model(mc, theta, bjd_dict):
                 model_x0[dataset_name]['dynamical'] = dynamical_output_x0[dataset_name].copy()
 
             model_out[dataset_name][model_name] = mc.models[model_name].compute(
-                variable_values, dataset)
+                parameter_values, dataset)
 
             if getattr(mc.models[model_name], 'time_independent_model', False):
                 model_x0[dataset_name][model_name] = np.zeros(
                     np.size(x0_plot), dtype=np.double)
                 model_out[dataset_name]['time_independent'] += mc.models[model_name].compute(
-                    variable_values, dataset)
+                    parameter_values, dataset)
             else:
                 model_x0[dataset_name][model_name] = mc.models[model_name].compute(
-                    variable_values, dataset, x0_plot)
+                    parameter_values, dataset, x0_plot)
 
             if getattr(mc.models[model_name], 'systematic_model', False):
                 continue
@@ -595,26 +589,25 @@ def get_model(mc, theta, bjd_dict):
          that's because for the GP to work we need to know the _deterministic_ part of the model
          (i.e. the theoretical values you get when you feed your model with the parameter values) """
         if logchi2_gp_model:
-            variable_values = {}
+            parameter_values = {}
             try:
                 for common_ref in mc.models[logchi2_gp_model].common_ref:
-                    variable_values.update(
+                    parameter_values.update(
                         mc.common_models[common_ref].convert(theta))
             except:
                 pass
 
-            variable_values.update(
+            parameter_values.update(
                 mc.models[logchi2_gp_model].convert(theta, dataset.name_ref))
 
             if hasattr(mc.models[logchi2_gp_model], 'delayed_lnlk_computation'):
-                mc.models[logchi2_gp_model].add_internal_dataset(variable_values, dataset)
+                mc.models[logchi2_gp_model].add_internal_dataset(parameter_values, dataset)
                 delayed_lnlk_computation[dataset.name_ref] = logchi2_gp_model
 
             else:
 
                 model_out[dataset_name][logchi2_gp_model] = \
-                    mc.models[logchi2_gp_model].sample_predict(variable_values, dataset)
-                    #mc.models[logchi2_gp_model].sample_conditional(variable_values, dataset)
+                    mc.models[logchi2_gp_model].sample_predict(parameter_values, dataset)
                 model_out[dataset_name]['complete'] += model_out[dataset_name][logchi2_gp_model]
 
                 """ Attempt to avoid RAM overflow
@@ -647,7 +640,7 @@ def get_model(mc, theta, bjd_dict):
 
                         x0_out[id_start:id_end], x0_var[id_start:id_end] = \
                             mc.models[logchi2_gp_model].sample_predict(
-                            variable_values, dataset, x0_temp, return_variance=True)
+                            parameter_values, dataset, x0_temp, return_variance=True)
 
                         if id_end < 0: break
 
@@ -660,7 +653,7 @@ def get_model(mc, theta, bjd_dict):
 
                     x0_out, x0_var = \
                     mc.models[logchi2_gp_model].sample_predict(
-                        variable_values, dataset, x0_plot, return_variance=True)
+                        parameter_values, dataset, x0_plot, return_variance=True)
 
                 model_x0[dataset_name][logchi2_gp_model] = x0_out
 
@@ -670,7 +663,7 @@ def get_model(mc, theta, bjd_dict):
 
     for dataset_name, logchi2_gp_model in delayed_lnlk_computation.items():
 
-        """ variable_values is embedded in mc.dataset_dict[dataset_name]
+        """ parameter_values is embedded in mc.dataset_dict[dataset_name]
             dictionary
         """
         model_out[dataset_name][logchi2_gp_model] = \
@@ -755,67 +748,67 @@ def print_theta_bounds(i_dict, theta, bounds, skip_theta=False):
     format_string_long = '{0:12s}  {1:4d}  {2:12f}   {3:12f}  {4:12f} (15-84 p) ([{5:9f}, {6:9f}])'
     format_string_notheta = '{0:12s}  {1:4d}  ([{2:10f}, {3:10f}])'
 
-    for var, i in i_dict.items():
+    for par, i in i_dict.items():
 
         if skip_theta:
             print(format_string_notheta.format(
-                var, i, bounds[i, 0], bounds[i, 1]))
+                par, i, bounds[i, 0], bounds[i, 1]))
         elif len(np.shape(theta)) == 2:
 
             theta_med = compute_value_sigma(theta[:, i])
             print(
-                format_string_long.format(var, i, theta_med[0], theta_med[2], theta_med[1], bounds[i, 0], bounds[i, 1]))
+                format_string_long.format(par, i, theta_med[0], theta_med[2], theta_med[1], bounds[i, 0], bounds[i, 1]))
         else:
             print(format_string.format(
-                var, i, theta[i], bounds[i, 0], bounds[i, 1]))
+                par, i, theta[i], bounds[i, 0], bounds[i, 1]))
     print()
 
 
-def print_dictionary(variable_values, recenter=[]):
+def print_dictionary(parameter_values, recenter=[]):
     format_string = '{0:12s}   {1:15f} '
     format_string_long = '{0:12s}   {1:15f}   {2:15f}  {3:15f} (15-84 p)'
     format_string_exp = '{0:12s}   {1:15e} '
     format_string_long_exp = '{0:12s}   {1:15e}   {2:15e}  {3:15e} (15-84 p)'
     format_boundary = 0.000010
 
-    for var_names, var_vals in variable_values.items():
-        if np.size(var_vals) > 1:
-            if var_names in recenter:
+    for par_names, par_vals in parameter_values.items():
+        if np.size(par_vals) > 1:
+            if par_names in recenter:
                 move_back = (
-                    var_vals > recenter[var_names][0] + recenter[var_names][1] / 2.)
+                    par_vals > recenter[par_names][0] + recenter[par_names][1] / 2.)
                 move_forw = (
-                    var_vals < recenter[var_names][0] - recenter[var_names][1] / 2.)
-                var_vals_recentered = var_vals.copy()
-                var_vals_recentered[move_back] -= recenter[var_names][1]
-                var_vals_recentered[move_forw] += recenter[var_names][1]
+                    par_vals < recenter[par_names][0] - recenter[par_names][1] / 2.)
+                par_vals_recentered = par_vals.copy()
+                par_vals_recentered[move_back] -= recenter[par_names][1]
+                par_vals_recentered[move_forw] += recenter[par_names][1]
                 perc0, perc1, perc2 = np.percentile(
-                    var_vals_recentered, [15.865, 50, 84.135], axis=0)
+                    par_vals_recentered, [15.865, 50, 84.135], axis=0)
 
             else:
                 perc0, perc1, perc2 = np.percentile(
-                    var_vals, [15.865, 50, 84.135], axis=0)
+                    par_vals, [15.865, 50, 84.135], axis=0)
 
             if np.abs(perc1) < format_boundary or \
                     np.abs(perc0 - perc1) < format_boundary or \
                     np.abs(perc2 - perc1) < format_boundary:
                 print(format_string_long_exp.format(
-                    var_names, perc1, perc0 - perc1, perc2 - perc1))
+                    par_names, perc1, perc0 - perc1, perc2 - perc1))
             else:
                 print(format_string_long.format(
-                    var_names, perc1, perc0 - perc1, perc2 - perc1))
+                    par_names, perc1, perc0 - perc1, perc2 - perc1))
 
         else:
             try:
-                if np.abs(var_vals[0]) < format_boundary:
-                    print(format_string_exp.format(var_names, var_vals[0]))
+                if np.abs(par_vals[0]) < format_boundary:
+                    print(format_string_exp.format(par_names, par_vals[0]))
                 else:
-                    print(format_string.format(var_names, var_vals[0]))
+                    print(format_string.format(par_names, par_vals[0]))
 
             except:
-                if np.abs(var_vals) < format_boundary:
-                    print(format_string_exp.format(var_names, var_vals))
+                if np.abs(par_vals) < format_boundary:
+                    print(format_string_exp.format(par_names, par_vals))
                 else:
-                    print(format_string.format(var_names, var_vals))
+                    print(format_string.format(par_names, par_vals))
 
     print()
 
@@ -826,6 +819,10 @@ def print_integrated_ACF(sampler_chain, theta_dict, nthin):
     # if not emcee.__version__[0] == '3': return
 
     swapped_chains = np.swapaxes(sampler_chain, 1, 0)
+
+    print()
+    print('Computing the autocorrelation time of the chains')
+
 
     try:
         tolerance = 50
@@ -847,7 +844,7 @@ def print_integrated_ACF(sampler_chain, theta_dict, nthin):
         print()
         print('Old version of emcee, this function is not implemented')
         print()
-        return
+        return None, None, None, None
 
     """ computing the autocorrelation time every 1000 steps, skipping the first 5000 """
 
@@ -859,12 +856,12 @@ def print_integrated_ACF(sampler_chain, theta_dict, nthin):
     except:
         print('Error in computing max integrated ACF, skipped ')
         print()
-        return
+        return None, None, None, None
 
     if acf_len==0:
         print('Error in computing integrated ACF, chains too short, skipped ')
         print()
-        return
+        return None, None, None, None
 
     c = 5
 
@@ -872,9 +869,15 @@ def print_integrated_ACF(sampler_chain, theta_dict, nthin):
 
         acf_previous = np.ones(n_dim)
         acf_current = np.ones(n_dim)
-        acf_converged_at = np.zeros(n_dim, dtype=np.int16) - 1
+        acf_counter = np.zeros(n_dim, dtype=np.int64)
+        acf_converged_at = np.zeros(n_dim, dtype=np.int64) - 1
 
-        for i_sam in range(acf_len*3, n_sam, acf_len):
+        i_sampler = np.arange(acf_len*3, n_sam, acf_len, dtype=np.int64)
+
+        acf_trace = np.zeros([len(i_sampler), n_dim])
+        acf_diff = np.zeros([len(i_sampler), n_dim])
+
+        for id_sam, i_sam in enumerate(i_sampler):
 
             acf_previous = 1.*acf_current
             integrated_part = np.zeros(i_sam)
@@ -891,22 +894,35 @@ def print_integrated_ACF(sampler_chain, theta_dict, nthin):
                 window = auto_window(taus, c)
                 acf_current[i_dim] = taus[window]
 
-            acf_current[acf_current < 0.1] = 0.1
-            sel = (i_sam > integrated_ACF*tolerance) & (np.abs(acf_current -
-                                                               acf_previous)/acf_current < 0.01) & (acf_converged_at < 0.)
-            acf_converged_at[sel] = i_sam * nthin
+            acf_trace[id_sam, :] = acf_current * 1.
+            acf_diff[id_sam, :] = np.abs(acf_current-acf_previous)/acf_current
 
-            if np.sum((acf_converged_at > 0), dtype=np.int16) == n_dim:
-                break
+            converged = (i_sam > integrated_ACF*tolerance) \
+                & (acf_diff[id_sam, :] < 0.01) \
+                & (acf_converged_at < 0.)
 
+            acf_counter[converged] += 1
+
+            converged_stable = (converged) & (acf_counter == 5)
+
+            acf_converged_at[converged_stable] = i_sam * nthin
+
+            #if np.sum((acf_converged_at > 0), dtype=np.int64) == n_dim:
+            #    break
+
+
+        acf_converged_flag = (acf_converged_at>0)
         how_many_ACT = (n_sam - acf_converged_at/nthin)/integrated_ACF
         how_many_ACT[(acf_converged_at < 0)] = -1
 
         still_required_050 = (50-how_many_ACT)*(nthin*integrated_ACF)
+        still_required_050_flag = (still_required_050 > 0)
+        still_required_050[~still_required_050_flag] = 0
         still_required_100 = (100-how_many_ACT)*(nthin*integrated_ACF)
-
+        still_required_100_flag = (still_required_100 > 0)
+        still_required_100[~still_required_100_flag] = 0
+        
         print()
-        print('Computing the autocorrelation time of the chains')
         print('Reference thinning used in the analysis:', nthin)
         print(
             'Step length used in the analysis: {0:d}*nthin = {1:d}'.format(acf_len, acf_len*nthin))
@@ -916,40 +932,45 @@ def print_integrated_ACF(sampler_chain, theta_dict, nthin):
         print('At least 50*ACF after convergence, 100*ACF would be ideal')
         print('Negative values: not converged yet')
         print()
-        print('          sample variable      |    ACF   | ACF*nthin | converged at | nteps/ACF ')
-        print('                               |          |           |              |           ')
+        print('   sampler parameter              |    ACF   | ACF*nthin | converged at | nsteps/ACF | to 100*ACF')
+        print('                                  |          |           |              |            | ')
 
         for key_name, key_val in theta_dict.items():
-            print('          {0:20s} | {1:7.3f}  | {2:8.1f}  |  {3:7.0f}     |  {4:7.1f}   '.format(key_name,
-                                                                                                    integrated_ACF[key_val],
+            print('   {0:30s} | {1:7.2f}  | {2:8.0f}  |  {3:7.0f}     |  {4:6.0f}    | {5:7.0f} '.format(key_name,
+                                                                                                   integrated_ACF[key_val],
                                                                                                     integrated_ACF[key_val] *
                                                                                                     nthin,
                                                                                                     acf_converged_at[key_val],
-                                                                                                    how_many_ACT[key_val]))
+                                                                                                    how_many_ACT[key_val],
+                                                                                                    still_required_100[key_val]))
 
         print()
 
-        if np.sum((acf_converged_at > 0), dtype=np.int16) == n_dim:
-            if np.sum(how_many_ACT > 100, dtype=np.int16) == n_dim:
+        if np.sum((acf_converged_at > 0), dtype=np.int64) == n_dim:
+            if np.sum(how_many_ACT > 100, dtype=np.int64) == n_dim:
                 print('All the chains are longer than 100*ACF ')
-            elif (np.sum(how_many_ACT > 50, dtype=np.int16) == n_dim):
+            elif (np.sum(how_many_ACT > 50, dtype=np.int64) == n_dim):
                 print("""All the chains are longer than 50*ACF, but some are shorter than 100*ACF
-PyORBIT should keep running for at least {0:9.0f} more steps to reach 100*ACF""".format(np.amax(still_required_100)))
+PyORBIT should keep running for about {0:.0f} more steps to reach 100*ACF""".format(np.average(still_required_100[still_required_100_flag])))
             else:
-                print("""All the chains have converged, but PyORBIT should keep running for at least:
-{0:9.0f} more steps to reach 50*ACF
-{1:9.0f} more steps to reach 100*ACF""".format(np.amax(still_required_050), np.amax(still_required_100)))
+                print("""All the chains have converged, but PyORBIT should keep running for about:
+{0:.0f} more steps to reach 50*ACF, 
+{1:.0f} more steps to reach 100*ACF""".format(np.average(still_required_050[still_required_050_flag]), np.average(still_required_100[still_required_100_flag])))
 
-            print('Suggested value for burnin: ', np.amax(acf_converged_at))
+            print('Suggested value for burnin: {0:.0f}'.format(np.average(acf_converged_at)))
 
         else:
             print(' {0:5.0f} chains have not converged yet, keep going '.format(
-                np.sum((acf_converged_at < 0), dtype=np.int16)))
+                np.sum((acf_converged_at < 0), dtype=np.int64)))
 
         print()
 
+        return i_sampler, acf_trace, acf_diff, acf_converged_at
+
     else:
-        print("Chains too shoort to apply convergence criteria")
+        print("Chains too short to apply convergence criteria")
         print(
             "They should be at least {0:d}*nthin = {1:d}".format(50*acf_len, 50*acf_len*nthin))
         print()
+
+        return None, None, None, None

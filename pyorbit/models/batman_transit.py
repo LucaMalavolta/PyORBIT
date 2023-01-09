@@ -33,7 +33,7 @@ class Batman_Transit(AbstractModel, AbstractTransit):
             'R_Rs',  # planet radius (in units of stellar radii)
         }
 
-        """ Model-specifc variables, not declared in the abstract class """
+        """ Model-specifc parameters, not declared in the abstract class """
         self.batman_params = None
         self.batman_models = {}
         self.code_options = {}
@@ -102,9 +102,9 @@ class Batman_Transit(AbstractModel, AbstractTransit):
         self.transit_time_boundaries[dataset.name_ref] = \
             [np.amin(dataset.x), np.amax(dataset.x)]
 
-    def compute(self, variable_value, dataset, x0_input=None):
+    def compute(self, parameter_values, dataset, x0_input=None):
         """
-        :param variable_value:
+        :param parameter_values:
         :param dataset:
         :param x0_input:
         :return:
@@ -112,15 +112,15 @@ class Batman_Transit(AbstractModel, AbstractTransit):
         #t1_start = process_time()
 
         self.batman_params.a, self.batman_params.inc = self.retrieve_ai(
-            variable_value)
-        self.batman_params.t0 = self.retrieve_t0(variable_value, dataset.Tref)
+            parameter_values)
+        self.batman_params.t0 = self.retrieve_t0(parameter_values, dataset.Tref)
 
-        self.batman_params.per = variable_value['P']  # orbital period
+        self.batman_params.per = parameter_values['P']  # orbital period
         # planet radius (in units of stellar radii)
-        self.batman_params.rp = variable_value['R_Rs']
-        self.batman_params.ecc = variable_value['e']  # eccentricity
+        self.batman_params.rp = parameter_values['R_Rs']
+        self.batman_params.ecc = parameter_values['e']  # eccentricity
         # longitude of periastron (in degrees)
-        self.batman_params.w = variable_value['omega']
+        self.batman_params.w = parameter_values['omega']
 
         """
         print 'a    ', self.batman_params.a
@@ -132,11 +132,11 @@ class Batman_Transit(AbstractModel, AbstractTransit):
         print 'w    ', self.batman_params.w
         print 'u    ', self.batman_params.u
         """
-        for var, i_var in self.ldvars.items():
-            self.batman_params.u[i_var] = variable_value[var]
+        for par, i_par in self.ldvars.items():
+            self.batman_params.u[i_par] = parameter_values[par]
 
         if not self.use_inclination:
-            if variable_value['b'] > 1. + variable_value['R_Rs']/2. :
+            if parameter_values['b'] > 1. + parameter_values['R_Rs']/2. :
                 return 0.00
 
 
