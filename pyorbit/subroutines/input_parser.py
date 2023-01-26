@@ -721,8 +721,9 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, reload_ze
     elif ordering_dict:
         mc.ordered_planets = ordering_dict
     if mc.ordered_planets:
+        min_plan = 1
         for p_name, p_order in  mc.ordered_planets.items():
-            min_plan = min(1, p_order)
+            min_plan = min(min_plan, p_order)
         if min_plan == 1:
             for p_name in  mc.ordered_planets:
                 mc.ordered_planets[p_name] -=1
