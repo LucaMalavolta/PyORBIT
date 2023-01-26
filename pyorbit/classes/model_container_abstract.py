@@ -165,7 +165,7 @@ class ModelContainer(object):
                 """ Step 3: save the period of the planet in the ordered list"""
                 if model_name in self.ordered_planets:
                     period_storage_ordered[self.ordered_planets[model_name]] = period
-                    # print('    ', model_name, self.ordered_planets[model_name], period_storage_ordered)
+                    #print('    ', model_name, self.ordered_planets[model_name], period_storage_ordered)
 
                 """ Step 4: check if the eccentricity is within the given range"""
                 if 'e' in model.parameter_index:
