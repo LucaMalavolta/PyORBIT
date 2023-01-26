@@ -141,7 +141,7 @@ class Batman_Transit(AbstractModel, AbstractTransit):
 
         if not self.use_inclination:
             if parameter_values['b'] > 1. + parameter_values['R_Rs']/2. :
-                return 0.00
+                return -1000000000.00000
 
 
         """
