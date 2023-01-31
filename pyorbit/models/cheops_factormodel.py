@@ -38,16 +38,46 @@ class CheopsFactorModel(AbstractModel):
         }
 
         self.cheops_diagnostics = {
-            'roll_angle': 'None',
-            'ramp': 'max', # ???
-            'smear': 'max',
-            'deltaT': 'None',
-            'xoff': 'range',
-            'yoff': 'range',
-            'bg': 'max',
-            'contam': 'max',
-            'sinphi': 'None',
-            'cosphi': 'None'
+            'roll_angle': {
+                'scale': 'None',
+                'pams': []
+                },
+            'ramp': {
+                'scale': 'max',
+                'pams': []
+                },  # ???
+            'smear': {
+                'scale': 'max',
+                'pams': ['dfdsmear']
+                },
+            'deltaT': {
+                'scale': 'None',
+                'pams': []
+                },
+            'xoff': {
+                'scale': 'range',
+                'pams': ['dfdx', 'd2fdx2','d2fdxdy']
+                },
+            'yoff': {
+                'scale': 'range',
+                'pams': ['dfdy', 'd2fdy2','d2fdxdy']
+                },
+            'bg': {
+                'scale': 'max',
+                'pams': ['dfdbg']
+                },
+            'contam': {
+                'scale': 'max',
+                'pams': ['dfdcontam']
+                },
+            'sinphi': {
+                'scale': 'None',
+                'pams': ['dfdsinphi','dfdsin2phi','dfdsin3phi']
+                },
+            'cosphi': {
+                'scale': 'None',
+                'pams': ['dfdcosphi','dfdsin2phi','dfdcos2phi','dfdcos3phi' ]
+                }
         }
 
         self.cheops_instrumental = {}
@@ -86,13 +116,13 @@ class CheopsFactorModel(AbstractModel):
         if 'cosphi' not in dataset.ancillary.dtype.names:
             dataset.ancillary = append_fields(dataset.ancillary, 'cosphi', np.cos(dataset.ancillary["roll_angle"]/180.*np.pi))
 
-        for diag_name, diag_scale in self.cheops_diagnostics.items():
+        for diag_name, diag_dict in self.cheops_diagnostics.items():
             if diag_name in dataset.ancillary.dtype.names:
-                if diag_scale == 'max':
+                if diag_dict['scale'] == 'max':
                     self.cheops_instrumental[dataset.name_ref][diag_name] = \
                         (dataset.ancillary[diag_name] - np.amin(dataset.ancillary[diag_name])) \
                             / np.ptp(dataset.ancillary[diag_name])
-                elif diag_scale == 'range':
+                elif diag_dict['scale'] == 'range':
                     self.cheops_instrumental[dataset.name_ref][diag_name] = \
                         ( 2 * dataset.ancillary[diag_name]
                         - (np.amin(dataset.ancillary[diag_name]) + np.amax(dataset.ancillary[diag_name]))) \
@@ -101,6 +131,8 @@ class CheopsFactorModel(AbstractModel):
                     self.cheops_instrumental[dataset.name_ref][diag_name] = dataset.ancillary[diag_name]
                 print()
             else:
+                for pams_fixed  in diag_dict['pams']:
+                    self.fix_list[dataset.name_ref][pams_fixed] = np.asarray([0.000000, 0.0000])
                 self.cheops_instrumental[dataset.name_ref][diag_name] = np.zeros_like(dataset.ancillary['time'])
 
             self.cheops_interpolated[dataset.name_ref][diag_name] =interp1d(
