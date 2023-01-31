@@ -634,7 +634,7 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
     print(' Parameters corresponding to the Maximum a Posteriori probability ( {} )'.format(lnprob_MAP))
     print()
 
-    results_analysis.results_summary(mc, chain_MAP)
+    results_analysis.results_summary(mc, chain_MAP, is_MAP=True)
 
     print()
     print('****************************************************************************************************')
