@@ -309,7 +309,6 @@ class ModelContainer(object):
 
                 """ residuals will be computed following the definition in Dataset class
                 """
-
                 if getattr(self.models[model_name], 'residual_analysis', False):
                     compute_gp_residuals = True
                     if dataset_name == self.models[model_name].dependent:
@@ -393,7 +392,8 @@ class ModelContainer(object):
             it must be coomputed after any other model has been removed from the
             independent variable, if not provided as ancillary dataset
         """
-        for model_name in residuals_analysis[model_name]:
+        for model_name in residuals_analysis:
+            print(model_name, residuals_analysis)
             parameter_values =  residuals_analysis[model_name]
             independent_dataset = self.dataset_dict[self.models[model_name].independent]
             dependent_dataset = self.dataset_dict[self.models[model_name].dependent]
