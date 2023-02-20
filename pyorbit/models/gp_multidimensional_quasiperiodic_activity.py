@@ -27,8 +27,8 @@ class GP_Multidimensional_QuasiPeriodicActivity(AbstractModel):
             'Oamp',  # Granulation of activity
         }
         self.list_pams_dataset = {
-            'rot_amp', # Amplitude of the covariance matrix
-            'con_amp' # Amplitude of the first derivative of the covariance matrix
+            'rot_amp', # Amplitude of the first derivative of the covariance matrix
+            'con_amp' # Amplitude of the covariance matrix 
         }
 
 
