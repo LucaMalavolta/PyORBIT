@@ -314,19 +314,29 @@ class ModelContainer(object):
 
                 """ residuals will be computed following the definition in Dataset class
                 """
-                if getattr(self.models[model_name], 'residual_analysis', False):
-                    compute_gp_residuals = True
-                    if dataset_name == self.models[model_name].dependent:
-                        skip_loglikelihood = True
-                        residuals_analysis[model_name] = {
-                            'parameter_values': parameter_values,
-                            'gp_model': None,
-                            'gp_parameters': None
-                        }
+                if getattr(self.models[model_name], 'residuals_analysis', False):
+
+                    skip_loglikelihood = True
+                    if self.models[model_name].gp_before_correlation:
+                        compute_gp_residuals = True
+
+
+                    try:
+                        residuals_analysis[model_name]['parameter_values'] = parameter_values
+                    except:
+                        residuals_analysis[model_name] = {'parameter_values': parameter_values}
+
+                    if dataset_name == self.models[model_name].x_dataset:
+                        residuals_dataset_label = 'x'
+                        residuals_analysis[model_name]['x_gp_model'] = None
+                        residuals_analysis[model_name]['x_gp_parameters'] = None
                     else:
-                        """ Subtract the priors previously added, as this model
-                        is not affecting the dataset """
+                        """ Subtract the priors previously added, to avoid including the priors twice """
                         log_priors -= self.models[model_name].return_priors(theta, dataset_name)
+
+                        residuals_dataset_label = 'y'
+                        residuals_analysis[model_name]['y_gp_model'] = None
+                        residuals_analysis[model_name]['y_gp_parameters'] = None
                     continue
 
 
@@ -381,34 +391,46 @@ class ModelContainer(object):
                     if logchi2_gp_model not in delayed_lnlk_computation:
                         delayed_lnlk_computation.append(logchi2_gp_model)
                 elif skip_loglikelihood:
-                    residuals_analysis[model_name]['gp_model'] = logchi2_gp_model
-                    residuals_analysis[model_name]['gp_parameters'] = parameter_values
+                    residuals_analysis[model_name][residuals_dataset_label+'_gp_model'] = logchi2_gp_model
+                    residuals_analysis[model_name][residuals_dataset_label+'_gp_parameters'] = parameter_values
                 else:
                     log_likelihood += self.models[logchi2_gp_model].lnlk_compute(
                         parameter_values, dataset)
 
                 if compute_gp_residuals:
                     dataset.residuals_for_regression -= self.models[logchi2_gp_model].sample_predict(parameter_values, dataset)
+                    residuals_analysis[model_name][residuals_dataset_label+'_gp_model'] = None
 
             elif not skip_loglikelihood:
                 log_likelihood += dataset.model_logchi2()
 
-        """ Correlation between residuals of two datasets
+        """ Correlation between residuals of two datasets through orthogonal distance regression
             it must be coomputed after any other model has been removed from the
             independent variable, if not provided as ancillary dataset
         """
         for model_name in residuals_analysis:
             print(model_name, residuals_analysis)
             parameter_values =  residuals_analysis[model_name]
-            independent_dataset = self.dataset_dict[self.models[model_name].independent]
-            dependent_dataset = self.dataset_dict[self.models[model_name].dependent]
-            dependent_dataset.residuals -= self.models[model_name].compute(parameter_values, dependent_dataset, independent_dataset)
-            if residuals_analysis[model_name]['gp_model']:
-                logchi2_gp_model = residuals_analysis[model_name]['gp_model']
-                parameter_values = residuals_analysis[model_name]['gp_parameters']
-                log_likelihood += self.models[logchi2_gp_model].lnlk_compute(parameter_values, dependent_dataset)
+            x_dataset = self.dataset_dict[self.models[model_name].x_dataset]
+            y_dataset = self.dataset_dict[self.models[model_name].y_dataset]
+            modelout_xx, modelout_yy = self.models[model_name].compute(parameter_values, x_dataset, y_dataset)
+
+            x_dataset.residuals -= modelout_xx
+            if residuals_analysis[model_name]['x_gp_model']:
+                logchi2_gp_model = residuals_analysis[model_name]['x_gp_model']
+                parameter_values = residuals_analysis[model_name]['x_gp_parameters']
+                log_likelihood += self.models[logchi2_gp_model].lnlk_compute(parameter_values, x_dataset)
             else:
-                log_likelihood += dataset.model_logchi2()
+                log_likelihood += x_dataset.model_logchi2()
+
+            y_dataset.residuals -= modelout_yy
+            if residuals_analysis[model_name]['y_gp_model']:
+                logchi2_gp_model = residuals_analysis[model_name]['y_gp_model']
+                parameter_values = residuals_analysis[model_name]['y_gp_parameters']
+                log_likelihood += self.models[logchi2_gp_model].lnlk_compute(parameter_values, y_dataset)
+            else:
+                log_likelihood += y_dataset.model_logchi2()
+
 
         """ In case there is more than one GP model """
         for logchi2_gp_model in delayed_lnlk_computation:
