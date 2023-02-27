@@ -259,6 +259,7 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, reload_ze
             if ancill in dataset_conf:
                 mc.dataset_dict[dataset_name].convert_ancillary_from_file(dataset_conf[ancill])
 
+    ordering_dict = {}
 
     for model_name, model_conf in conf_common.items():
 
@@ -362,6 +363,12 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, reload_ze
                         planet_conf['use_mass_for_planets']))
                 except:
                     # False by default
+                    pass
+
+                try:
+                    if planet_conf['ordering'] >=0:
+                        ordering_dict[planet_name] = planet_conf['ordering']
+                except:
                     pass
 
                 print()
@@ -711,6 +718,15 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, reload_ze
 
     if 'ordered_planets' in conf_parameters:
         mc.ordered_planets = conf_parameters['ordered_planets']
+    elif ordering_dict:
+        mc.ordered_planets = ordering_dict
+    if mc.ordered_planets:
+        min_plan = 1
+        for p_name, p_order in  mc.ordered_planets.items():
+            min_plan = min(min_plan, p_order)
+        if min_plan == 1:
+            for p_name in  mc.ordered_planets:
+                mc.ordered_planets[p_name] -=1
 
     if 'Tref' in conf_parameters:
         mc.Tref = np.asarray(conf_parameters['Tref'])

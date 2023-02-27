@@ -57,6 +57,10 @@ class Batman_Transit(AbstractModel, AbstractTransit):
         except:
             self.code_options['nthreads'] = 1
 
+        if not batman.openmp.detect():
+            print('OpenMP not supported, batman nthreads automatically lowered to 1')
+            self.code_options['nthreads'] = 1
+
         #self.code_options['nthreads'] = 10
 
         self.batman_params = batman.TransitParams()
@@ -137,7 +141,7 @@ class Batman_Transit(AbstractModel, AbstractTransit):
 
         if not self.use_inclination:
             if parameter_values['b'] > 1. + parameter_values['R_Rs']/2. :
-                return 0.00
+                return -1000000000.00000
 
 
         """

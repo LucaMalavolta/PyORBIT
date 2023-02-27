@@ -7,7 +7,8 @@ runtime. The terminal output is always present
 
 ## Terminal output
 
-First thing you will get is a list of a few characteristics of your system
+First thing you will get is a list of a few characteristics of your system. This
+section may change depending on your computer configuration and the employed sampler.
 
 ```text
 PyORBIT v9.1.0
@@ -27,7 +28,10 @@ emcee version:  3.1.2
  Steps: 50000
 ```
 
-### Confidence intervals
+If you used the `-all` flag, you will get several log messages regarding the status
+of plot preparation and plot printing. Those are detailed in the corresponding section.
+
+## Confidence intervals
 
 Confidence intervals and/or associated errors are computed using the 15.865th
 and the 84.135th percentiles of the distribution. The median value of the
@@ -51,7 +55,7 @@ The associated error is not provided for the starting point of the MCMC analysis
 or the MAP values.
 
 
-### Basic model selection
+## Basic model selection
 
 The code provides the *log-probability* function, with its two components (the
 *log-priors* and the *log-likelihood*) explicitly reported right below.
@@ -110,9 +114,9 @@ following the standard definition
 No check over the applicability of BIS/AIC/AICc is performed! Be sure that the underlying assumptions are valid in your specific case.
 ```
 
-### Autocorrelation analysis
+## Autocorrelation analysis
 
-If the posteriors have been computed using `emcee`, an autocorrelation analysis
+If the posteriors have been computed using an MCMC sampler, as `emcee`, an autocorrelation analysis
 is performed automatically using the methods implemented in the sampler. For
 more information, please check the [Autocorrelation analysis and
 convergence
@@ -191,7 +195,7 @@ From my personal experience, when the analysis of light curve is involved the AC
 
 Two rows of asterisks delimit the end of this section
 
-### Confidence intervals of the parameters
+## Confidence intervals of the parameters
 
 Confidence intervals of the posteriors are provided 34.135th
 percentiles from the median on the left and right sides, in addition to the
@@ -220,7 +224,7 @@ sampler/model/derived parameters, and again to print the corresponding MAP value
 Let's take an example involving the determination of a planetary radius though
 light curve fitting:
 
-#### Statistics on the posterior of the sampler variables
+### Statistics on the posterior of the sampler variables
 
 ```text
 ====================================================================================================
@@ -256,7 +260,7 @@ parametrized as $\sqrt{e} \sin \omega$ (*sre_sino*) and $\sqrt{e} \cos \omega$
 **I should make priors and spaces more explicit at
 output**
 
-#### Statistics on the model parameters obtained from the posteriors samples
+### Statistics on the model parameters obtained from the posteriors samples
 
 ```text
 ====================================================================================================
@@ -296,7 +300,7 @@ omega                90.000000
 ...
 ```
 
-#### Statistics on the derived parameters obtained from the posteriors samples
+### Statistics on the derived parameters obtained from the posteriors samples
 
 ```text
 ====================================================================================================
@@ -322,7 +326,21 @@ parameters, as the planetary radius in Jupiter radii *R_Rj*  and Earth radii
 *R_Re*, both requiring a prior on the stellar radius which is however not
 involved in the optimization procedure.
 
-### Note on reparametrization and transformation of parameters
+## Differences between MCMC and nested sampling outputs
+
+The output described above applies to MCMC samplers. Nested sampling algorithms
+will have slightly different output:
+
+- Autocorrelation function analysis will not be performed.
+- An extra step reporting the boundary of the parameters will be printed.
+- A short summary with the confidence interval for the Bayesian evidence may be printed.
+- Some additional plots may be produced according to the methods implemented in
+  the specific sampler.
+
+The additional outputs follow closely the examples reported in the
+documentation of each sampler, so they will not be detailed here.
+
+## Note on reparametrization and transformation of parameters
 
 Median values and confidence intervals for model and derived parameters are
 computed directly on the transformed posterior, rather than on the reported

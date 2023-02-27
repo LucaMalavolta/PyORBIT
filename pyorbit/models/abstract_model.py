@@ -208,7 +208,7 @@ class AbstractModel(object):
                      nested_coeff])
 
                 self.parameter_index[dataset_name][par] = ndim
-                self.sampler_parameter[dataset_name][par] = ndim
+                self.sampler_parameters[dataset_name][par] = ndim
                 ndim += 1
 
         return ndim, output_lists
