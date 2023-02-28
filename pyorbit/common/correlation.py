@@ -112,3 +112,15 @@ class CommonCorrelation(AbstractCommon):
     }
 
     recenter_pams = {}
+
+
+
+
+class CommonComplexCorrelation(CommonCorrelation):
+    """
+    Inherited class from AbstractCommon
+
+    Attributes:
+        :model_class (string): identify the kind of class
+    """
+    model_class = 'complex_correlation'

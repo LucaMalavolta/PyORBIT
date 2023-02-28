@@ -409,8 +409,7 @@ class ModelContainer(object):
             independent variable, if not provided as ancillary dataset
         """
         for model_name in residuals_analysis:
-            print(model_name, residuals_analysis)
-            parameter_values =  residuals_analysis[model_name]
+            parameter_values =  residuals_analysis[model_name]['parameter_values']
             x_dataset = self.dataset_dict[self.models[model_name].x_dataset]
             y_dataset = self.dataset_dict[self.models[model_name].y_dataset]
             modelout_xx, modelout_yy = self.models[model_name].compute(parameter_values, x_dataset, y_dataset)
