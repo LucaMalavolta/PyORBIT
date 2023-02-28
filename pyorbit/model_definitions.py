@@ -22,8 +22,7 @@ from pyorbit.common.limb_darkening import LimbDarkening_Linear, \
     LimbDarkening_NonLinear
 
 from pyorbit.common.cheops_modelling import CommonCheopsModelling
-from pyorbit.common.correlation import CommonCorrelation
-
+from pyorbit.common.correlation import CommonCorrelation, CommonComplexCorrelation
 from pyorbit.common.lightcurve_detrending import CommonLightcurveDetrending
 
 from pyorbit.models.radial_velocities import \
@@ -75,6 +74,7 @@ from pyorbit.models.celerite_matern32_common import Celerite_Matern32_Common
 
 from pyorbit.models.correlation import LocalCorrelation
 from pyorbit.models.correlated_jitter import LocalCorrelatedJitter
+from pyorbit.models.complex_correlation import ComplexCorrelation
 from pyorbit.models.common_offset import Offset
 from pyorbit.models.common_jitter import Jitter
 from pyorbit.models.sinusoid import Sinusoid, LocalSinusoid, SinusoidCommonPeriod, SinusoidPolynomialModulation
@@ -143,6 +143,7 @@ define_common_type_to_class = {
     'star_parameters': CommonStarParameters,
     'cheops_modelling': CommonCheopsModelling,
     'correlation': CommonCorrelation,
+    'complex_correlation': CommonComplexCorrelation,
     'lightcurve_detrending': CommonLightcurveDetrending,
 }
 
@@ -188,6 +189,7 @@ define_type_to_class = {
     'celerite_rotation': Celerite_Rotation,
     'local_correlation': LocalCorrelation,
     'correlation': LocalCorrelation,
+    'complex_correlation': ComplexCorrelation,
     'polynomial_trend': PolynomialTrend,
     'shared_polynomial_trend': SharedPolynomialTrend,
     'local_polynomial_trend': LocalPolynomialTrend,

@@ -13,6 +13,7 @@ import multiprocessing
 
 __all__ = ["pyorbit_emcee"]
 
+
 def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
 
     try:
@@ -30,7 +31,6 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
 
     optimize_dir_output = './' + config_in['output'] + '/optimize/'
     pyde_dir_output = './' + config_in['output'] + '/pyde/'
-
     emcee_dir_output = './' + config_in['output'] + '/emcee/'
 
     reloaded_optimize = False
@@ -181,7 +181,6 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
     print('Nwalkers = ', mc.emcee_parameters['nwalkers'])
     print()
 
-
     if mc.emcee_parameters['version'] == '2':
         mc.emcee_parameters['use_threading_pool'] = False
 
@@ -190,7 +189,6 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
 
     #if not mc.emcee_parameters.get('use_threading_pool', False):
     #    mc.emcee_parameters['use_threading_pool'] = False
-
     if reloaded_emcee:
         sys.stdout.flush()
         pass
