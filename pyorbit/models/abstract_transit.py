@@ -405,7 +405,7 @@ class AbstractTransit(object):
         """
 
         sin_is =  parameter_values['v_sini']  / (parameter_values['radius'] * constants.Rsun) * (parameter_values['rotation_period'] * constants.d2s)  / (2* np.pi)
-        Omega = 2* np.pi / (parameter_values['Prot'] * constants.d2s)
+        Omega = 2* np.pi / (parameter_values['rotation_period'] * constants.d2s)
 
         return Omega, np.arcsin(sin_is)/np.pi*180.
 
@@ -451,6 +451,6 @@ class AbstractTransit(object):
         """
 
         sin_is =  parameter_values['v_sini']  / (parameter_values['radius'] * constants.Rsun) * (self.code_options['rotation_period'] * constants.d2s)  / (2* np.pi)
-        Omega = 2* np.pi / (parameter_values['Prot'] * constants.d2s)
+        Omega = 2* np.pi / (self.code_options['rotation_period'] * constants.d2s)
 
         return Omega, np.arcsin(sin_is)/np.pi*180.

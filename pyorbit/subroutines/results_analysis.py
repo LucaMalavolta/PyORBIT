@@ -14,10 +14,17 @@ def results_summary(mc, theta,
                     compute_lnprob=False,
                     chain_med=False,
                     return_samples=False,
-                    is_starting_point=False):
+                    is_starting_point=False,
+                    is_MAP=False):
     # Function with two goals:
     # * Unfold and print out the output from theta
     # * give back a parameter name associated to each value in the result array
+
+    if is_starting_point or is_MAP:
+        fixed_warning = False
+    else:
+        fixed_warning = True
+
 
     print()
     print('====================================================================================================')
@@ -60,7 +67,7 @@ def results_summary(mc, theta,
     for dataset_name, dataset in mc.dataset_dict.items():
         print('----- dataset: ', dataset_name)
         parameter_values = dataset.convert(theta)
-        print_dictionary(parameter_values)
+        print_dictionary(parameter_values, fixed_warning=fixed_warning)
 
         print()
         for model_name in dataset.models:
@@ -68,7 +75,7 @@ def results_summary(mc, theta,
                   '     ----- model: ', model_name)
             parameter_values = mc.models[model_name].convert(
                 theta, dataset_name)
-            print_dictionary(parameter_values)
+            print_dictionary(parameter_values, fixed_warning=fixed_warning)
 
     for model_name, model in mc.common_models.items():
         print('----- common model: ', model_name)
@@ -80,10 +87,10 @@ def results_summary(mc, theta,
             for par in list(set(model.recenter_pams) & set(parameter_values_med)):
                 recenter_pams[par] = [parameter_values_med[par],
                                       model.default_bounds[par][1] - model.default_bounds[par][0]]
-            print_dictionary(parameter_values, recenter=recenter_pams)
+            print_dictionary(parameter_values, recenter=recenter_pams, fixed_warning=fixed_warning)
 
         else:
-            print_dictionary(parameter_values)
+            print_dictionary(parameter_values, fixed_warning=fixed_warning)
 
     print('====================================================================================================')
     if is_starting_point:
@@ -419,7 +426,7 @@ def get_planet_parameters(mc, theta, verbose=False):
                     del parameter_values[par]
 
             if verbose:
-                print_dictionary(parameter_values)
+                print_dictionary(parameter_values, fixed_warning=False)
 
     return planet_parameters
 
@@ -756,6 +763,9 @@ def print_theta_bounds(i_dict, theta, bounds, skip_theta=False):
         elif len(np.shape(theta)) == 2:
 
             theta_med = compute_value_sigma(theta[:, i])
+            s0, s1 = return_significant_figures(theta_med[0], theta_med[2], theta_med[1])
+            format_string_long = '{0:12s}  {1:4d}  {2:12.'+repr(max(s0,s1))+'f} {3:12.'+repr(s0)+'f} {4:12.'+repr(s1)+'f} (15-84 p) ([{5:9f}, {6:9f}])'
+
             print(
                 format_string_long.format(par, i, theta_med[0], theta_med[2], theta_med[1], bounds[i, 0], bounds[i, 1]))
         else:
@@ -764,12 +774,60 @@ def print_theta_bounds(i_dict, theta, bounds, skip_theta=False):
     print()
 
 
-def print_dictionary(parameter_values, recenter=[]):
-    format_string = '{0:12s}   {1:15f} '
-    format_string_long = '{0:12s}   {1:15f}   {2:15f}  {3:15f} (15-84 p)'
-    format_string_exp = '{0:12s}   {1:15e} '
-    format_string_long_exp = '{0:12s}   {1:15e}   {2:15e}  {3:15e} (15-84 p)'
-    format_boundary = 0.000010
+def return_significant_figures(perc0, perc1=None, perc2=None, are_percentiles=False):
+
+        if perc1==None and perc2==None:
+            if np.isnan(perc0):
+                return 0
+
+            abs_value = np.abs(perc0)
+            if abs_value > 10.:
+                return 6
+            elif  abs_value > 1:
+                return 6
+            elif abs_value == 0:
+                return 2
+            else:
+                return 6
+                #x1 = np.log10(abs_value)
+                #return int(np.ceil(abs(x1))+1)
+
+        elif perc2==None:
+            if np.isnan(perc0) or np.isnan(perc1):
+                return 0
+            value_err = np.abs(perc1)
+
+            if value_err > 10. or value_err > 10.:
+                return 0
+            elif  value_err > 1. or value_err > 1.:
+                return 1
+            else:
+                x0 = np.log10(value_err)
+                return int(np.ceil(abs(x0))+1)
+        else:
+            if np.isnan(perc0) or np.isnan(perc1) or np.isnan(perc2):
+                return 2, 2
+
+            if are_percentiles:
+                minus_err = np.abs(perc0 - perc1)
+                plus_err = np.abs(perc2 - perc1)
+            else:
+                minus_err = np.abs(perc1)
+                plus_err = np.abs(perc2)
+
+            if minus_err > 10. or plus_err > 10.:
+                return 0, 0
+            elif  minus_err > 1. or plus_err > 1.:
+                return 1, 1
+            else:
+                x0 = np.log10(minus_err)
+                x1 = np.log10(plus_err)
+                s0 = int(np.ceil(abs(x0))+1)
+                s1 = int(np.ceil(abs(x1))+1)
+                return s0, s1
+
+def print_dictionary(parameter_values, recenter=[], fixed_warning=True):
+    format_boundary = 0.00001
 
     for par_names, par_vals in parameter_values.items():
         if np.size(par_vals) > 1:
@@ -788,27 +846,37 @@ def print_dictionary(parameter_values, recenter=[]):
                 perc0, perc1, perc2 = np.percentile(
                     par_vals, [15.865, 50, 84.135], axis=0)
 
+            s0, s1 = return_significant_figures(perc0, perc1, perc2, are_percentiles=True)
+
             if np.abs(perc1) < format_boundary or \
                     np.abs(perc0 - perc1) < format_boundary or \
                     np.abs(perc2 - perc1) < format_boundary:
+
+                format_string_long_exp = '{0:12s}   {1:15e} {2:12.2e} {3:12.2e} (15-84 p)'
+
                 print(format_string_long_exp.format(
                     par_names, perc1, perc0 - perc1, perc2 - perc1))
             else:
+
+                format_string_long = '{0:12s}   {1:15.'+repr(max(s0,s1))+'f} {2:12.'+repr(s0)+'f} {3:12.'+repr(s1)+'f} (15-84 p)'
+
                 print(format_string_long.format(
                     par_names, perc1, perc0 - perc1, perc2 - perc1))
 
         else:
-            try:
-                if np.abs(par_vals[0]) < format_boundary:
-                    print(format_string_exp.format(par_names, par_vals[0]))
-                else:
-                    print(format_string.format(par_names, par_vals[0]))
 
+            try:
+                par_temp = par_vals[0]
             except:
-                if np.abs(par_vals) < format_boundary:
-                    print(format_string_exp.format(par_names, par_vals))
-                else:
-                    print(format_string.format(par_names, par_vals))
+                par_temp = par_vals
+
+            s0 = return_significant_figures(par_temp)
+            if fixed_warning:
+                format_string = '{0:12s}   {1:15.'+repr(s0)+'f}      [fixed]'
+            else:
+                format_string = '{0:12s}   {1:15.'+repr(s0)+'f} '
+
+            print(format_string.format(par_names, par_temp))
 
     print()
 
