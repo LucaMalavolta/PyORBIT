@@ -815,16 +815,24 @@ def return_significant_figures(perc0, perc1=None, perc2=None, are_percentiles=Fa
                 minus_err = np.abs(perc1)
                 plus_err = np.abs(perc2)
 
-            if minus_err > 10. or plus_err > 10.:
-                return 0, 0
-            elif  minus_err > 1. or plus_err > 1.:
-                return 1, 1
+
+            if minus_err > 10.:
+                sig_minus = 0
+            elif minus_err > 1.:
+                sig_minus = 1
             else:
                 x0 = np.log10(minus_err)
-                x1 = np.log10(plus_err)
-                s0 = int(np.ceil(abs(x0))+1)
-                s1 = int(np.ceil(abs(x1))+1)
-                return s0, s1
+                sig_minus = int(np.ceil(abs(x0))+1)
+
+            if plus_err > 10.:
+                sig_plus = 0
+            elif plus_err > 1.:
+                sig_plus = 1
+            else:
+                x0 = np.log10(plus_err)
+                sig_plus = int(np.ceil(abs(x0))+1)
+
+            return sig_minus, sig_plus
 
 def print_dictionary(parameter_values, recenter=[], fixed_warning=True):
     format_boundary = 0.00001
