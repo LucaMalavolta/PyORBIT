@@ -68,6 +68,7 @@ class ModelContainer(object):
             model.change_parameter_status(self, **model_conf)
 
             for dataset_name in list(set(model_conf) & set(self.dataset_dict)):
+                print(dataset_name)
                 model.initialize_model_dataset(
                     self, self.dataset_dict[dataset_name], **model_conf)
 

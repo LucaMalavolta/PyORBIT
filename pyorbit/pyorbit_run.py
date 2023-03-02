@@ -26,6 +26,7 @@ def pyorbit_run():
     config_in = pyorbit.subroutines.input_parser.yaml_parser(file_conf)
 
     sampler_keyword = {
+        'pyde': ['pyde', 'PyDE', 'pyDE', 'global', 'global_solution', 'global_optimization'],
         'multinest':['multinest', 'MultiNest', 'multi'],
         'polychord':['polychord', 'PolyChord', 'polychrod', 'poly'],
         'emcee': ['emcee', 'MCMC', 'Emcee'],
@@ -36,6 +37,9 @@ def pyorbit_run():
         'ultranest': ['ultranest', 'UltraNest', 'Ultranest', 'ULTRANEST', 'ultra','Unest'],
         'optimize': ['optimize', 'scipy', 'Optimize', 'OPTIMIZE'],
     }
+
+    if sampler in sampler_keyword['pyde']:
+        pyorbit.pyorbit_pyde(config_in)
 
     if sampler in sampler_keyword['emcee']:
         pyorbit.pyorbit_emcee(config_in)
