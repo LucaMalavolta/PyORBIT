@@ -39,20 +39,6 @@ class CheopsDetrending(AbstractModel):
         }
 
         self.cheops_diagnostics = {
-            'roll_angle': 'None',
-            'ramp': 'max', # ???
-            'smear': 'max',
-            'deltaT': 'None',
-            'xoff': 'range',
-            'yoff': 'range',
-            'bg': 'max',
-            'contam': 'max',
-            'sinphi': 'None',
-            'cosphi': 'None'
-        }
-
-
-        self.cheops_diagnostics = {
             'roll_angle': {
                 'scale': 'None',
                 'pams': []
