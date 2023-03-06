@@ -16,6 +16,8 @@ class ModelContainerDynesty(ModelContainer):
                                            'pfrac': 0.00,
                                            'sample': 'auto',
                                            'bound': 'multi',
+                                           'default': False,
+                                           'use_default': False,
                                            'use_threading_pool':True }
 
         self.output_directory = None
