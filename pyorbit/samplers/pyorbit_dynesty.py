@@ -86,6 +86,8 @@ def pyorbit_dynesty(config_in, input_datasets=None, return_output=None):
     dlogz = mc.nested_sampling_parameters.get('dlogz', 0.01)
     use_threading_pool = mc.nested_sampling_parameters.get('use_threading_pool', True)
     pfrac_value = mc.nested_sampling_parameters.get('pfrac', 0.000)
+    use_default = (mc.nested_sampling_parameters.get('default', False) | mc.nested_sampling_parameters.get('use_default', False))
+
     print('Using threading pool for dynesty:', use_threading_pool)
 
 
@@ -155,8 +157,15 @@ def pyorbit_dynesty(config_in, input_datasets=None, return_output=None):
 
         pfrac_value = 1.000
 
-    print('Setting up the Dynamic Nested Sampling, posterior/evidence split = {0:4.3f}'.format(pfrac_value))
-    print()
+    if use_default:
+        print('Setting up the Dynamic Nested Sampling, number of live points = {0:6.0f}'.format(nlive))
+        print('Using default Dynesty hyperparameters')
+        print()
+    else:
+        print('Setting up the Dynamic Nested Sampling, number of live points = {0:6.0f}'.format(nlive))
+        print('                                        posterior/evidence split = {0:4.3f}'.format(pfrac_value))
+        print('                                        inizial stopping criterio = {0:5.4f}'.format(dlogz))
+        print()
 
     if use_threading_pool:
 
@@ -174,7 +183,10 @@ def pyorbit_dynesty(config_in, input_datasets=None, return_output=None):
                                                     )
 
             print('Running Dynamic Nested Sampling')
-            dsampler.run_nested(dlogz_init=dlogz, wt_kwargs={'pfrac': pfrac_value})
+            if use_default:
+                dsampler.run_nested()
+            else:
+                dsampler.run_nested(dlogz_init=dlogz, wt_kwargs={'pfrac': pfrac_value})
             print()
     else:
 
@@ -185,8 +197,11 @@ def pyorbit_dynesty(config_in, input_datasets=None, return_output=None):
                                                 bound= mc.nested_sampling_parameters['bound'],
                                                 sample= mc.nested_sampling_parameters['sample'])
 
-        print('Running Dynamic Nested Sampling')
-        dsampler.run_nested(dlogz_init=dlogz, wt_kwargs={'pfrac': pfrac_value})
+        print('Running Dynamic Nested Sampling without parallelization')
+        if use_default:
+            dsampler.run_nested()
+        else:
+            dsampler.run_nested(dlogz_init=dlogz, wt_kwargs={'pfrac': pfrac_value})
         print()
 
     print()
