@@ -267,7 +267,6 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
 
         try:
             results = dynesty_results_maxevidence_load_from_cpickle(dir_input)
-            pfrac = 0.00
             print('Model evidence from dynesty run with posterior/evidence split = {0:4.3f}'.format(pfrac))
 
             labels_array = [None] * len(theta_dictionary)
@@ -333,6 +332,7 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
             print()
             print('Summary - statistical+sampling errors - \n=======\n'+res)
         except AttributeError:
+            print()
             print('Computation of statistical+sampling errors skipped - workaround after dynesty>1.2 update')
 
 
@@ -404,6 +404,12 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
         chain_MAP, lnprob_MAP = common.pick_MAP_parameters(
             flat_chain, flat_lnprob)
 
+        chain_sampleMED, lnprob_sampleMED = common.pick_sampleMED_parameters(
+            flat_chain, flat_lnprob)
+
+
+        print(chain_sampleMED)
+        print(lnprob_sampleMED)
         #data_in = np.genfromtxt(dir_input + 'post_equal_weights.dat')
         #flat_lnprob = data_in[:, -1]
         #flat_chain = data_in[:, :-1]
