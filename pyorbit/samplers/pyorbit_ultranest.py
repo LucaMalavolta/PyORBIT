@@ -56,7 +56,7 @@ def pyorbit_ultranest(config_in, input_datasets=None, return_output=None):
 
     mc.starting_points_setup()
 
-    results_analysis.results_summary(mc, None, skip_theta=True)
+    results_analysis.print_bayesian_info(mc)
 
     theta_dictionary = results_analysis.get_theta_dictionary(mc)
     labels_array = [None] * len(theta_dictionary)

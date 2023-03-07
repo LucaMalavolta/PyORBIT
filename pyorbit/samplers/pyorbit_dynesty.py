@@ -57,7 +57,7 @@ def pyorbit_dynesty(config_in, input_datasets=None, return_output=None):
 
     mc.starting_points_setup()
 
-    results_analysis.results_summary(mc, None, skip_theta=True)
+    results_analysis.print_bayesian_info(mc)
 
     nthreads = mc.nested_sampling_parameters['nthreads']
 
