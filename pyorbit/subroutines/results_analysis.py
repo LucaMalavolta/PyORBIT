@@ -782,7 +782,7 @@ def get_model(mc, theta, bjd_dict):
         return model_out, model_x0
 
 
-def print_theta_bounds(i_dict, theta, bounds, skip_theta=False):
+def print_theta_bounds(i_dict, theta, bounds):
     format_string = '{0:12s}  {1:4d}  {2:12f} ([{3:10f}, {4:10f}])'
     format_string_long = '{0:12s}  {1:4d}  {2:12f}   {3:12f}  {4:12f} (15-84 p) ([{5:9f}, {6:9f}])'
 
@@ -792,31 +792,6 @@ def print_theta_bounds(i_dict, theta, bounds, skip_theta=False):
             theta_med = compute_value_sigma(theta[:, i])
             s0, s1 = return_significant_figures(theta_med[0], theta_med[2], theta_med[1])
             format_string_long = '{0:12s}  {1:4d}  {2:12.'+repr(max(s0,s1))+'f} {3:12.'+repr(s0)+'f} {4:12.'+repr(s1)+'f} (15-84 p) ([{5:9f}, {6:9f}])'
-
-            print(
-                format_string_long.format(par, i, theta_med[0], theta_med[2], theta_med[1], bounds[i, 0], bounds[i, 1]))
-        else:
-            print(format_string.format(
-                par, i, theta[i], bounds[i, 0], bounds[i, 1]))
-    print()
-
-
-def print_theta_info(i_dict, theta, bounds, spaces, priors, skip_theta=False):
-    format_string = '{0:12s}  {1:4d}  {2:12f} ([{3:10f}, {4:10f}])'
-    format_string_long = '{0:12s}  {1:4d}  {2:12f}   {3:12f}  {4:12f} (15-84 p) ([{5:9f}, {6:9f}])'
-    format_string_notheta = '{0:12s}  id:{1:4d}  s:{2:11s} b:[{3:12.4f}, {4:12.4f}]   p:{5:s}  '
-
-    for par, i in i_dict.items():
-
-        if skip_theta:
-            print(format_string_notheta.format(
-                par, i, spaces[i], bounds[i, 0], bounds[i, 1],priors[i][0]), priors[i][1])
-
-
-        elif len(np.shape(theta)) == 2:
-            theta_med = compute_value_sigma(theta[:, i])
-            s0, s1 = return_significant_figures(theta_med[0], theta_med[2], theta_med[1])
-            format_string_long = '{0:12s}  {1:4d}  {2:12.'+repr(max(s0,s1))+'f} {3:12.'+repr(s0)+'f} {4:12.'+repr(s1)+'f} (15-84 p)   b:[{5:8.3f}, {6:8.3f}]'
 
             print(
                 format_string_long.format(par, i, theta_med[0], theta_med[2], theta_med[1], bounds[i, 0], bounds[i, 1]))

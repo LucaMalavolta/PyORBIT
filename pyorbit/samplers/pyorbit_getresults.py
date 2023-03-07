@@ -537,7 +537,6 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
         print()
         print(' Samples: {}'.format(n_samplings))
 
-
     print()
     print(' LN posterior: {0:12f}   {1:12f} {2:12f} (15-84 p) '.format(
         lnprob_med[0], lnprob_med[2], lnprob_med[1]))
