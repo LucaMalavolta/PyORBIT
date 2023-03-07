@@ -7,6 +7,8 @@
 
 **News**
 
+* Imrpoved output: `spaces`, `bounds`, and `priors` explicitely written out at runtime
+
 * Minor changes:
   * `dataset_variables` and `common_variables` changed to `dataset_parameters`
     and `common_parameters`
