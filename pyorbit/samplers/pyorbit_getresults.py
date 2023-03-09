@@ -649,6 +649,7 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
     print('****************************************************************************************************')
     print()
     print(' Confidence intervals (median value, 34.135th percentile from the median on the left and right side)')
+    print()
 
     planet_parameters = results_analysis.results_summary(
         mc, flat_chain, chain_med=chain_MAP, return_samples=True)
