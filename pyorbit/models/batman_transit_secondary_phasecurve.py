@@ -1,7 +1,5 @@
 
-from pyorbit.subroutines.common import np, convert_rho_to_a, convert_b_to_i
-import pyorbit.subroutines.constants as constants
-import pyorbit.subroutines.kepler_exo as kepler_exo
+from pyorbit.subroutines.common import np
 from pyorbit.models.abstract_model import AbstractModel
 from pyorbit.models.abstract_transit import AbstractTransit
 
@@ -62,9 +60,9 @@ class Batman_Transit_Eclipse_PhaseCurve(AbstractModel, AbstractTransit):
         except:
             self.code_options['nthreads'] = 1
 
-        if not batman.openmp.detect():
-            print('OpenMP not supported, batman nthreads automatically lowered to 1')
-            self.code_options['nthreads'] = 1
+        #if not batman.openmp.detect():
+        #    print('OpenMP not supported, batman nthreads automatically lowered to 1')
+        #    self.code_options['nthreads'] = 1
 
         self.batman_params = batman.TransitParams()
 

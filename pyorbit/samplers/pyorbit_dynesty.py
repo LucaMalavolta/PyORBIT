@@ -167,7 +167,7 @@ def pyorbit_dynesty(config_in, input_datasets=None, return_output=None):
     else:
         print('Setting up the Dynamic Nested Sampling, number of live points = {0:6.0f}'.format(nlive))
         print('                                        posterior/evidence split = {0:4.3f}'.format(pfrac_value))
-        print('                                        inizial stopping criterio = {0:5.4f}'.format(dlogz))
+        print('                                        inizial stopping criterion = {0:5.4f}'.format(dlogz))
         print()
 
     if use_threading_pool:

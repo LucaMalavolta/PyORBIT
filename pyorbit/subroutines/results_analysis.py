@@ -30,8 +30,6 @@ def print_bayesian_info(mc):
         for model_name in dataset.models:
             if len(mc.models[model_name].sampler_parameters[dataset_name])==0: continue
             print('----- dataset: {0:25s} ----- model: {1:30s}'.format(dataset_name,model_name))
-            print(mc.models[model_name].prior_kind)
-            print(mc.models[model_name].prior_pams)
             print_analysis_info(mc.models[model_name].sampler_parameters[dataset_name],
                                 mc.bounds,
                                 mc.spaces,
