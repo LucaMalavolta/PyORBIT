@@ -59,8 +59,8 @@ class Celerite2_SHO(AbstractModel):
             if kwargs.get(dict_name, False):
                 self.list_pams_common.update(['Prot'])
                 self.list_pams_common.update(['Pdec'])
-                self.list_pams_common.discard(['sho_period'])
-                self.list_pams_common.discard(['sho_tau'])
+                self.list_pams_common.discard('sho_period')
+                self.list_pams_common.discard('sho_tau')
                 self.retrieve_rho_tau = self._internal_transformation_mod01
 
 
@@ -89,7 +89,7 @@ class Celerite2_SHO(AbstractModel):
         rho, tau = self.retrieve_rho_tau(parameter_values)
 
         self.gp[dataset.name_ref].mean = 0.
-        self.gp[dataset.name_ref].kernel = celerite2.terms.SHOTerm(rho=rho, tau=tau, sigma=parameter_values['sho_sigma']),
+        self.gp[dataset.name_ref].kernel = celerite2.terms.SHOTerm(rho=rho, tau=tau, sigma=parameter_values['sho_sigma'])
 
         diag = dataset.e ** 2.0 + dataset.jitter ** 2.0
         self.gp[dataset.name_ref].compute(dataset.x0, diag=diag, quiet=True)
@@ -126,9 +126,10 @@ class Celerite2_SHO(AbstractModel):
         else:
             return self.gp[dataset.name_ref].sample_conditional(dataset.residuals, x0_input)
 
-
+    @staticmethod
     def _internal_transformation_mod00(parameter_values):
         return  parameter_values['sho_period'], parameter_values['sho_tau']
 
+    @staticmethod
     def _internal_transformation_mod01(parameter_values):
         return  parameter_values['Prot'], parameter_values['Pdec']
