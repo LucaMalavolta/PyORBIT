@@ -50,6 +50,7 @@ class Celerite2_SHO(AbstractModel):
 
         change_variable_names = [
             'use_GPquasiperiod_notation',
+            'use_GPquasiperiodic_notation',
             'use_Prot_Pdec_notation',
             'use_Prot_Pdec'
         ]
