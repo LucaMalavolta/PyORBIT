@@ -89,6 +89,14 @@ class CommonStarParameters(AbstractCommon):
                 'fixed' : 0.0,
                 'unit': 'km/s',
             },
+        'veq_star':
+            {
+                'bounds': [0.00, 70.],
+                'priors': ['Uniform', []],
+                'spaces': 'Linear',
+                'fixed' : 1.6,
+                'unit': 'km/s',
+            },
     }
 
     recenter_pams = set()

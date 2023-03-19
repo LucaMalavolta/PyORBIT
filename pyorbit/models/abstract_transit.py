@@ -20,6 +20,7 @@ class AbstractTransit(object):
         self.use_stellar_radius = False
         self.use_stellar_temperature = False
         self.use_stellar_period = False
+        self.use_equatorial_velocity = False
         self.stellar_period_from_activity = False
 
         self.limb_darkening_model = None
@@ -137,9 +138,14 @@ class AbstractTransit(object):
         """ check if the stellar_rotation has to be used as parameter """
         self.use_stellar_period = kwargs.get('use_stellar_period', self.use_stellar_period)
 
-
         """ check if the stellar_inclination has to be used as parameter """
         self.use_stellar_inclination = kwargs.get('use_stellar_inclination', self.use_stellar_inclination)
+
+        """ check if the equatorial velocity has to be used as parameter """
+        self.use_equatorial_velocity = kwargs.get('use_equatorial_velocity', self.use_equatorial_velocity)
+        if self.use_equatorial_velocity:
+            self.list_pams_common.discard('v_sini')
+            self.list_pams_common.update(['veq_star'])
 
 
         """ Check if the stellar rotation period is given as a starting value
@@ -159,7 +165,10 @@ class AbstractTransit(object):
                 self.code_options['rotation_period'] = kwargs[dict_name]
                 self.use_stellar_period = False
                 self.use_stellar_inclination = False
-                self.retrieve_Omega_Istar = self._internal_transformation_mod23
+                if self.use_equatorial_velocity:
+                    self.retrieve_Omega_Istar = self._internal_transformation_mod23
+                else:
+                    self.retrieve_Omega_Istar = self._internal_transformation_mod23
 
         """ Check if the activity model is included in the keyword list
             If so, the angular rotation of the star and the stellar inclination
@@ -186,7 +195,7 @@ class AbstractTransit(object):
                 self.retrieve_Omega_Istar = self._internal_transformation_mod22
 
         if self.use_stellar_period and self.use_stellar_inclination:
-            print('Error in Stellar model  inside Transit model definition ')
+            print('Error in Stellar model inside Transit model definition ')
             print('It is not possibile to have both stellar_period and stellar_inclination as free parameters')
             quit()
 
@@ -454,3 +463,49 @@ class AbstractTransit(object):
         Omega = 2* np.pi / (self.code_options['rotation_period'] * constants.d2s)
 
         return Omega, np.arcsin(sin_is)/np.pi*180.
+
+    @staticmethod
+    def _internal_transformation_mod32(parameter_values):
+        """ This function extracts from the parameter_values dictionary
+            - 'v_sini': projected tangential velocity of the star
+            - 'radius': stellar radius in Solar units
+            - 'Prot': rotational period of the star from the activity model
+
+            into angular velocity Omega [rad/s] of the star
+            it returns the angular velocity Omega and the stellar inclination
+
+        Args:
+            parameter_values (dict): dictionary with all the parameters of the current model
+
+        Returns:
+            float: angular velocity Omega, [rad/s]
+            float: inclination of the of stellar rotation axis, [degrees]
+        """
+
+        sin_is =  parameter_values['v_sini']  / (parameter_values['radius'] * constants.Rsun) * (parameter_values['Prot'] * constants.d2s)  / (2* np.pi)
+        Omega = 2* np.pi / (parameter_values['Prot'] * constants.d2s)
+
+        return Omega, np.arcsin(sin_is)/np.pi*180.
+
+
+    @staticmethod
+    def _internal_transformation_mod33(parameter_values):
+        """ This function extracts from the parameter_values dictionary
+            - 'veq_star': equatorial velocity of the star
+            - 'radius': stellar radius in Solar units
+            - 'i_star': inclination of the of stellar rotation axis
+
+            into angular velocity Omega [rad/s] of the star
+            it returns the angular velocity Omega and the stellar inclination
+
+        Args:
+            parameter_values (dict): dictionary with all the parameters of the current model
+
+        Returns:
+            float: angular velocity Omega in [rad/s]
+            float: inclination of the of stellar rotation axis, [degrees]
+        """
+
+        Omega = parameter_values['veq_star'] / (parameter_values['radius'] * constants.Rsun)
+
+        return Omega, parameter_values['i_star']
