@@ -386,6 +386,15 @@ def pick_MAP_parameters(samples, lnprob):
         print('ERROR!!! ')
         return None
 
+def pick_sampleMED_parameters(samples, lnprob):
+    pams_perc = np.percentile(samples, [15.865, 50, 84.135], axis=0)
+    dist_array = 0.0
+    for i_pam in range(0, len(samples[0,:])):
+        #dist_array += ((samples[:, i_pam]-pams_perc[1, i_pam])/(pams_perc[2,i_pam]-pams_perc[0,i_pam]))**2
+        dist_array += ((samples[:, i_pam]-pams_perc[1, i_pam])/(np.ptp(samples[:, i_pam])))**2
+
+    id_val = np.argmin(dist_array)
+    return samples[id_val, :], lnprob[id_val]
 
 def convert_rho_to_a(P, rho):
 

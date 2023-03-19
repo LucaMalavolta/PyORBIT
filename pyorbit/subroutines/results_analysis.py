@@ -5,8 +5,46 @@ import pyorbit.subroutines.kepler_exo as kepler_exo
 
 from tqdm import tqdm
 
-__all__ = ["results_summary", "results_derived", "get_planet_parameters", "get_theta_dictionary", "get_model",
+__all__ = ["print_bayesian_info", "results_summary", "results_derived", "get_planet_parameters", "get_theta_dictionary", "get_model",
            "print_theta_bounds", "print_dictionary", "get_stellar_parameters", "print_integrated_ACF"]
+
+
+def print_bayesian_info(mc):
+
+    print()
+    print('====================================================================================================')
+    print('     Ids, spaces (s), boundaries (b) and priors (p) of the sampler parameters     ')
+    print('====================================================================================================')
+    print()
+    for dataset_name, dataset in mc.dataset_dict.items():
+
+        print('----- dataset: ', dataset_name)
+
+        print_analysis_info(dataset.sampler_parameters,
+                            mc.bounds,
+                            mc.spaces,
+                            mc.priors,
+                            dataset.prior_kind,
+                            dataset.prior_pams)
+
+        for model_name in dataset.models:
+            if len(mc.models[model_name].sampler_parameters[dataset_name])==0: continue
+            print('----- dataset: {0:25s} ----- model: {1:30s}'.format(dataset_name,model_name))
+            print_analysis_info(mc.models[model_name].sampler_parameters[dataset_name],
+                                mc.bounds,
+                                mc.spaces,
+                                mc.priors,
+                                mc.models[model_name].prior_kind[dataset_name],
+                                mc.models[model_name].prior_pams[dataset_name])
+
+    for model_name, model in mc.common_models.items():
+        print('----- common model: ', model_name)
+        print_analysis_info(model.sampler_parameters,
+                            mc.bounds,
+                            mc.spaces,
+                            mc.priors,
+                            model.prior_kind,
+                            model.prior_pams)
 
 
 def results_summary(mc, theta,
@@ -26,35 +64,30 @@ def results_summary(mc, theta,
         fixed_warning = True
 
 
-    print()
     print('====================================================================================================')
-    if skip_theta:
-        print('     Boundaries of the sampler parameters     ')
-    elif is_starting_point:
+    if is_starting_point:
         print('     Starting point of the sample/optimization routines    ')
     else:
         print('     Statistics on the posterior of the sampler parameters     ')
 
     print('====================================================================================================')
     print()
+
     for dataset_name, dataset in mc.dataset_dict.items():
+
         print('----- dataset: ', dataset_name)
-        print_theta_bounds(dataset.sampler_parameters,
-                           theta, mc.bounds, skip_theta)
+        print_theta_bounds(dataset.sampler_parameters, theta, mc.bounds)
+
 
         for model_name in dataset.models:
-            print('---------- ', dataset_name,
-                  '     ----- model: ', model_name)
-            print_theta_bounds(
-                mc.models[model_name].sampler_parameters[dataset_name], theta, mc.bounds, skip_theta)
+            if len(mc.models[model_name].sampler_parameters[dataset_name])==0: continue
+            print('----- dataset: {0:25s} ----- model: {1:30s}'.format(dataset_name,model_name))
+            print_theta_bounds(mc.models[model_name].sampler_parameters[dataset_name], theta, mc.bounds)
 
     for model_name, model in mc.common_models.items():
         print('----- common model: ', model_name)
-        print_theta_bounds(model.sampler_parameters,
-                           theta, mc.bounds, skip_theta)
+        print_theta_bounds(model.sampler_parameters, theta, mc.bounds)
 
-    if skip_theta:
-        return
 
     print('====================================================================================================')
     if is_starting_point:
@@ -71,10 +104,10 @@ def results_summary(mc, theta,
 
         print()
         for model_name in dataset.models:
-            print('---------- ', dataset_name,
-                  '     ----- model: ', model_name)
             parameter_values = mc.models[model_name].convert(
                 theta, dataset_name)
+            if len(parameter_values)==0: continue
+            print('----- dataset: {0:25s} ----- model: {1:30s}'.format(dataset_name,model_name))
             print_dictionary(parameter_values, fixed_warning=fixed_warning)
 
     for model_name, model in mc.common_models.items():
@@ -750,21 +783,15 @@ def get_model(mc, theta, bjd_dict):
         return model_out, model_x0
 
 
-def print_theta_bounds(i_dict, theta, bounds, skip_theta=False):
-    format_string = '{0:12s}  {1:4d}  {2:12f} ([{3:10f}, {4:10f}])'
-    format_string_long = '{0:12s}  {1:4d}  {2:12f}   {3:12f}  {4:12f} (15-84 p) ([{5:9f}, {6:9f}])'
-    format_string_notheta = '{0:12s}  {1:4d}  ([{2:10f}, {3:10f}])'
+def print_theta_bounds(i_dict, theta, bounds):
+    format_string = '{0:12s}  {1:4d}  {2:12f} [{3:10.4f}, {4:10.4f}]'
 
     for par, i in i_dict.items():
-
-        if skip_theta:
-            print(format_string_notheta.format(
-                par, i, bounds[i, 0], bounds[i, 1]))
-        elif len(np.shape(theta)) == 2:
+        if len(np.shape(theta)) == 2:
 
             theta_med = compute_value_sigma(theta[:, i])
             s0, s1 = return_significant_figures(theta_med[0], theta_med[2], theta_med[1])
-            format_string_long = '{0:12s}  {1:4d}  {2:12.'+repr(max(s0,s1))+'f} {3:12.'+repr(s0)+'f} {4:12.'+repr(s1)+'f} (15-84 p) ([{5:9f}, {6:9f}])'
+            format_string_long = '{0:12s}  {1:4d}  {2:12.'+repr(max(s0,s1))+'f} {3:12.'+repr(s0)+'f} {4:12.'+repr(s1)+'f}   (15-84 p)   [{5:10.4f}, {6:10.4f}]'
 
             print(
                 format_string_long.format(par, i, theta_med[0], theta_med[2], theta_med[1], bounds[i, 0], bounds[i, 1]))
@@ -772,6 +799,22 @@ def print_theta_bounds(i_dict, theta, bounds, skip_theta=False):
             print(format_string.format(
                 par, i, theta[i], bounds[i, 0], bounds[i, 1]))
     print()
+
+
+def print_analysis_info(i_dict, bounds, spaces, priors, additional_kind, additonal_pams):
+    format_string_v1 = '{0:12s}  id:{1:4d}  s:{2:11s} b:[{3:12.4f}, {4:12.4f}]   p:{5:s}  '
+    format_string_v2 = '{0:12s}  derived (no id, space, bound) {1:25s} p:{2:s}  '
+
+    for par, i in i_dict.items():
+        print(format_string_v1.format(
+                par, i, spaces[i], bounds[i, 0], bounds[i, 1],priors[i][0]), priors[i][1])
+
+    for par in additional_kind:
+        if par not in i_dict:
+            print(format_string_v2.format(par, '', additional_kind[par]), additonal_pams[par])
+
+    print()
+
 
 
 def return_significant_figures(perc0, perc1=None, perc2=None, are_percentiles=False):
@@ -856,9 +899,10 @@ def print_dictionary(parameter_values, recenter=[], fixed_warning=True):
 
             s0, s1 = return_significant_figures(perc0, perc1, perc2, are_percentiles=True)
 
+            """
             if np.abs(perc1) < format_boundary or \
                     np.abs(perc0 - perc1) < format_boundary or \
-                    np.abs(perc2 - perc1) < format_boundary:
+                    np.abs(perc2 - perc1) < format_boundary:#0
 
                 format_string_long_exp = '{0:12s}   {1:15e} {2:12.2e} {3:12.2e} (15-84 p)'
 
@@ -871,6 +915,11 @@ def print_dictionary(parameter_values, recenter=[], fixed_warning=True):
                 print(format_string_long.format(
                     par_names, perc1, perc0 - perc1, perc2 - perc1))
 
+            """
+            format_string_long = '{0:12s}   {1:15.'+repr(max(s0,s1))+'f} {2:12.'+repr(s0)+'f} {3:12.'+repr(s1)+'f}    (15-84 p)'
+
+            print(format_string_long.format(par_names, perc1, perc0 - perc1, perc2 - perc1))
+
         else:
 
             try:
@@ -880,7 +929,7 @@ def print_dictionary(parameter_values, recenter=[], fixed_warning=True):
 
             s0 = return_significant_figures(par_temp)
             if fixed_warning:
-                format_string = '{0:12s}   {1:15.'+repr(s0)+'f}      [fixed]'
+                format_string = '{0:12s}   {1:15.'+repr(s0)+'f}                              [fixed]'
             else:
                 format_string = '{0:12s}   {1:15.'+repr(s0)+'f} '
 

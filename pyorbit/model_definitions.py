@@ -67,6 +67,7 @@ from pyorbit.models.gp_quasiperiodic_activity_derivative import \
 from pyorbit.models.celerite2_granulation_rotation import Celerite2_Granulation_Rotation
 from pyorbit.models.celerite2_rotation import Celerite2_Rotation
 from pyorbit.models.celerite2_matern32 import Celerite2_Matern32
+from pyorbit.models.celerite2_sho import Celerite2_SHO
 
 from pyorbit.models.celerite_rotation import Celerite_Rotation
 from pyorbit.models.celerite_matern32 import Celerite_Matern32
@@ -184,6 +185,7 @@ define_type_to_class = {
     'celerite2_granulation_oscillation_rotation': Celerite2_Granulation_Oscillation_Rotation,
     'celerite2_rotation': Celerite2_Rotation,
     'celerite2_matern32': Celerite2_Matern32,
+    'celerite2_sho': Celerite2_SHO,
     'celerite_matern32': Celerite_Matern32,
     'celerite_matern32_common': Celerite_Matern32_Common,
     'celerite_rotation': Celerite_Rotation,

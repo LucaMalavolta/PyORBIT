@@ -1,9 +1,6 @@
-from pyorbit.subroutines.common import np, convert_rho_to_a, convert_b_to_i
-import pyorbit.subroutines.constants as constants
-import pyorbit.subroutines.kepler_exo as kepler_exo
+from pyorbit.subroutines.common import np
 from pyorbit.models.abstract_model import AbstractModel
 from pyorbit.models.abstract_transit import AbstractTransit
-import multiprocessing
 
 try:
     import batman
@@ -54,9 +51,9 @@ class Batman_Transit_With_TTV(AbstractModel, AbstractTransit):
         except:
             self.code_options['nthreads'] = 1
 
-        if not batman.openmp.detect():
-            print('OpenMP not supported, batman nthreads automatically lowered to 1')
-            self.code_options['nthreads'] = 1
+        #if not batman.openmp.detect():
+        #    print('OpenMP not supported, batman nthreads automatically lowered to 1')
+        #    self.code_options['nthreads'] = 1
 
         self.batman_params = batman.TransitParams()
 
@@ -136,9 +133,9 @@ class Batman_Transit_With_TTV(AbstractModel, AbstractTransit):
         for par, i_par in self.ldvars.items():
             self.batman_params.u[i_par] = parameter_values[par]
 
-        if not self.use_inclination:
-            if parameter_values['b'] > 1. + parameter_values['R_Rs'] :
-                return 0.00
+        #if not self.use_inclination:
+        #    if parameter_values['b'] > 1. + parameter_values['R_Rs'] :
+        #        return 0.00
 
 
         """

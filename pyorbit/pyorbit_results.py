@@ -21,6 +21,7 @@ def pyorbit_results():
     parser.add_argument('-cc', type=str, nargs='?', default=False, help='Save corner plots of common parameters')
     parser.add_argument('-dc', type=str, nargs='?', default=False, help='Save individual corner plots of reach dataset')
     parser.add_argument('-v', type=str, nargs='?', default=False, help='Write Veusz files for corner plot')
+    parser.add_argument('-ddp', type=str, nargs='?', default=False, help='Save dynesty default plots')
     parser.add_argument('-all_corners', type=str, nargs='?', default=False, help='Do all the corner plots')
     parser.add_argument('-all', type=str, nargs='?', default=False, help='Active all flags')
     parser.add_argument('-dfm_corner', type=str, nargs='?', default=False, help='Use DFM corner script for corner plots')
@@ -43,6 +44,7 @@ def pyorbit_results():
         'use_corner': False,
         'veuz_corner_files': False,
         'P_versus_lnprob': False,
+        'dynesty_default_plots': False,
         'oversampled_models': ['transit',
                                'eclipse',
                                'phasecurve',
@@ -100,6 +102,8 @@ def pyorbit_results():
         plot_dictionary['dataset_corner'] = True
     if args.cc is not False:
         plot_dictionary['common_corner'] = True
+    if args.ddp is not False:
+        plot_dictionary['dynesty_default_plots'] = True
     if args.v is not False:
         plot_dictionary['veuz_corner_files'] = True
     if args.getdist_corner is not False :
@@ -121,6 +125,7 @@ def pyorbit_results():
         plot_dictionary['full_correlation'] = True
         plot_dictionary['common_corner'] = True
         plot_dictionary['dataset_corner'] = True
+        plot_dictionary['dynesty_default_plots'] = True
         #plot_dictionary['veuz_corner_files'] = True
         plot_dictionary['write_planet_samples'] = True
         plot_dictionary['write_all_samples'] = True

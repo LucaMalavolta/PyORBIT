@@ -3,9 +3,13 @@
 
 ### A code for exoplanet orbital parameters and stellar activity.
 ***
-### `PyORBIT` version 9.1 by Luca Malavolta - December 2022
+### `PyORBIT` version 9.1 by Luca Malavolta - March 2023
 
 **News**
+
+* Added celerite2 SHO term
+
+* Improved output: `spaces`, `bounds`, and `priors` explicitely written out at runtime
 
 * Minor changes:
   * `dataset_variables` and `common_variables` changed to `dataset_parameters`

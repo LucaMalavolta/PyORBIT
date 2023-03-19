@@ -88,6 +88,9 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
         mc.model_setup()
         mc.initialize_logchi2()
 
+        results_analysis.print_bayesian_info(mc)
+
+
         results_analysis.print_integrated_ACF(
             sampler_chain, theta_dict, mc.emcee_parameters['thin'])
 
@@ -156,7 +159,7 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
         mc.boundaries_setup()
         mc.initialize_logchi2()
 
-        results_analysis.results_summary(mc, None, skip_theta=True)
+        results_analysis.print_bayesian_info(mc)
 
         mc.pyde_dir_output = pyde_dir_output
         mc.emcee_dir_output = emcee_dir_output

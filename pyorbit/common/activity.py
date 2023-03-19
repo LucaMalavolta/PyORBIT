@@ -48,6 +48,30 @@ class CommonActivity(AbstractCommon):
                 'unit': 'as input',
             },
         #celerite 2 parameters
+        'sho_period': # undamped period of the granulation
+            {
+                'bounds': [1.0, 1000.0],
+                'priors': ['Uniform', []],
+                'spaces': 'Linear',
+                'fixed' : None,
+                'unit': 'days',
+            },
+        'sho_tau': # the standard deviation of the process
+            {
+                'bounds': [0.00000001, 1000000.0],
+                'priors': ['Uniform', []],
+                'spaces': 'Log_Base2',
+                'fixed' : None,
+                'unit': 'as input',
+            },
+        'sho_sigma': # the standard deviation of the process
+            {
+                'bounds': [0.00000001, 1000000.0],
+                'priors': ['Uniform', []],
+                'spaces': 'Log_Base2',
+                'fixed' : None,
+                'unit': 'as input',
+            },
         'grn_period': # undamped period of the granulation
             {
                 'bounds': [1.0, 1000.0],

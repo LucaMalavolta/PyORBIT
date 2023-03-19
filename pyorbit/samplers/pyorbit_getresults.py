@@ -95,7 +95,11 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
 
         lnprob_med = common.compute_value_sigma(flat_lnprob)
         chain_med = common.compute_value_sigma(flat_chain)
+
         chain_MAP, lnprob_MAP = common.pick_MAP_parameters(
+            flat_chain, flat_lnprob)
+
+        chain_sampleMED, lnprob_sampleMED = common.pick_sampleMED_parameters(
             flat_chain, flat_lnprob)
 
         n_samplings, n_pams = np.shape(flat_chain)
@@ -156,7 +160,11 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
 
         lnprob_med = common.compute_value_sigma(flat_lnprob)
         chain_med = common.compute_value_sigma(flat_chain)
+
         chain_MAP, lnprob_MAP = common.pick_MAP_parameters(
+            flat_chain, flat_lnprob)
+
+        chain_sampleMED, lnprob_sampleMED = common.pick_sampleMED_parameters(
             flat_chain, flat_lnprob)
 
         n_samplings, n_pams = np.shape(flat_chain)
@@ -186,7 +194,6 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
 
         mc.model_setup()
         mc.initialize_logchi2()
-        results_analysis.results_summary(mc, None, skip_theta=True)
 
         theta_dictionary = results_analysis.get_theta_dictionary(mc)
 
@@ -198,7 +205,11 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
 
         lnprob_med = common.compute_value_sigma(flat_lnprob)
         chain_med = common.compute_value_sigma(flat_chain)
+
         chain_MAP, lnprob_MAP = common.pick_MAP_parameters(
+            flat_chain, flat_lnprob)
+
+        chain_sampleMED, lnprob_sampleMED = common.pick_sampleMED_parameters(
             flat_chain, flat_lnprob)
 
         print()
@@ -221,7 +232,6 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
 
         mc.model_setup()
         mc.initialize_logchi2()
-        results_analysis.results_summary(mc, None, skip_theta=True)
 
         theta_dictionary = results_analysis.get_theta_dictionary(mc)
 
@@ -236,6 +246,9 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
         chain_med = common.compute_value_sigma(flat_chain)
 
         chain_MAP, lnprob_MAP = common.pick_MAP_parameters(
+            flat_chain, flat_lnprob)
+
+        chain_sampleMED, lnprob_sampleMED = common.pick_sampleMED_parameters(
             flat_chain, flat_lnprob)
 
         print()
@@ -259,7 +272,6 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
 
         mc.model_setup()
         mc.initialize_logchi2()
-        results_analysis.results_summary(mc, None, skip_theta=True)
 
         theta_dictionary = results_analysis.get_theta_dictionary(mc)
 
@@ -267,7 +279,7 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
 
         try:
             results = dynesty_results_maxevidence_load_from_cpickle(dir_input)
-            pfrac = 0.00
+            pfrac = 0.000
             print('Model evidence from dynesty run with posterior/evidence split = {0:4.3f}'.format(pfrac))
 
             labels_array = [None] * len(theta_dictionary)
@@ -275,33 +287,36 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
                 labels_array[key_value] = re.sub('_', '-', key_name)
             print(results)
 
-            print()
-            # Plot a summary of the run.
-            try:
-                print('Plot a summary of the run.')
-                rfig, raxes = dyplot.runplot(results)
-                rfig.savefig(dir_output + 'dynesty_results_maxevidence_summary.pdf', bbox_inches='tight', dpi=300)
-                plt.close(rfig)
-            except:
-                print('Unable to plot a summary of the run using the internal dynesty routine - skipped')
 
-            # Plot traces and 1-D marginalized posteriors.
-            try:
-                print('Plot traces and 1-D marginalized posteriors.')
-                tfig, taxes = dyplot.traceplot(results, labels=labels_array)
-                tfig.savefig(dir_output + 'dynesty_results_maxevidence_traceplot.pdf', bbox_inches='tight', dpi=300)
-                plt.close(tfig)
-            except:
-                print('Unable to plot traces and 1-D marginalized posteriors using the internal dynesty routine - skipped')
+            if plot_dictionary['dynesty_default_plots']:
+                print()
 
-            # Plot the 2-D marginalized posteriors.
-            try:
-                print('Plot the 2-D marginalized posteriors.')
-                cfig, caxes = dyplot.cornerplot(results, labels=labels_array)
-                cfig.savefig(dir_output + 'dynesty_results_maxevidence_cornerplot.pdf', bbox_inches='tight', dpi=300)
-                plt.close(cfig)
-            except:
-                print('Unable to plot the 2-D marginalized posteriors using the internal dynesty routine - skipped')
+                # Plot a summary of the run.
+                try:
+                    print('Plot a summary of the run.')
+                    rfig, raxes = dyplot.runplot(results)
+                    rfig.savefig(dir_output + 'dynesty_results_maxevidence_summary.pdf', bbox_inches='tight', dpi=300)
+                    plt.close(rfig)
+                except:
+                    print('Unable to plot a summary of the run using the internal dynesty routine - skipped')
+
+                # Plot traces and 1-D marginalized posteriors.
+                try:
+                    print('Plot traces and 1-D marginalized posteriors.')
+                    tfig, taxes = dyplot.traceplot(results, labels=labels_array)
+                    tfig.savefig(dir_output + 'dynesty_results_maxevidence_traceplot.pdf', bbox_inches='tight', dpi=300)
+                    plt.close(tfig)
+                except:
+                    print('Unable to plot traces and 1-D marginalized posteriors using the internal dynesty routine - skipped')
+
+                # Plot the 2-D marginalized posteriors.
+                try:
+                    print('Plot the 2-D marginalized posteriors.')
+                    cfig, caxes = dyplot.cornerplot(results, labels=labels_array)
+                    cfig.savefig(dir_output + 'dynesty_results_maxevidence_cornerplot.pdf', bbox_inches='tight', dpi=300)
+                    plt.close(cfig)
+                except:
+                    print('Unable to plot the 2-D marginalized posteriors using the internal dynesty routine - skipped')
 
             pfrac = 1.00
 
@@ -333,6 +348,7 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
             print()
             print('Summary - statistical+sampling errors - \n=======\n'+res)
         except AttributeError:
+            print()
             print('Computation of statistical+sampling errors skipped - workaround after dynesty>1.2 update')
 
 
@@ -343,36 +359,37 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
         for key_name, key_value in theta_dictionary.items():
             labels_array[key_value] = re.sub('_', '-', key_name)
 
-        print()
+        if plot_dictionary['dynesty_default_plots']:
+            print()
 
-        # Plot a summary of the run.
-        try:
-            print('Plot a summary of the run.')
-            #span= [(0.0, 2100.0), (0.0, 1.05), (0.0, 0.10444691225380567), (0.0, 1000)]
-            #rfig, raxes = dyplot.runplot(results, span=span)
-            rfig, raxes = dyplot.runplot(results)
-            rfig.savefig(dir_output + 'dynesty_results_summary.pdf', bbox_inches='tight', dpi=300)
-            plt.close(rfig)
-        except:
-            print('Unable to plot a summary of the run using the internal dynesty routine - skipped')
+            # Plot a summary of the run.
+            try:
+                print('Plot a summary of the run.')
+                #span= [(0.0, 2100.0), (0.0, 1.05), (0.0, 0.10444691225380567), (0.0, 1000)]
+                #rfig, raxes = dyplot.runplot(results, span=span)
+                rfig, raxes = dyplot.runplot(results)
+                rfig.savefig(dir_output + 'dynesty_results_summary.pdf', bbox_inches='tight', dpi=300)
+                plt.close(rfig)
+            except:
+                print('Unable to plot a summary of the run using the internal dynesty routine - skipped')
 
-        # Plot traces and 1-D marginalized posteriors.
-        try:
-            print('Plot traces and 1-D marginalized posteriors.')
-            tfig, taxes = dyplot.traceplot(results, labels=labels_array)
-            tfig.savefig(dir_output + 'dynesty_results_traceplot.pdf', bbox_inches='tight', dpi=300)
-            plt.close(tfig)
-        except:
-            print('Unable to plot traces and 1-D marginalized posteriors using the internal dynesty routine - skipped')
+            # Plot traces and 1-D marginalized posteriors.
+            try:
+                print('Plot traces and 1-D marginalized posteriors.')
+                tfig, taxes = dyplot.traceplot(results, labels=labels_array)
+                tfig.savefig(dir_output + 'dynesty_results_traceplot.pdf', bbox_inches='tight', dpi=300)
+                plt.close(tfig)
+            except:
+                print('Unable to plot traces and 1-D marginalized posteriors using the internal dynesty routine - skipped')
 
-        # Plot the 2-D marginalized posteriors.
-        try:
-            print('Plot the 2-D marginalized posteriors.')
-            cfig, caxes = dyplot.cornerplot(results, labels=labels_array)
-            cfig.savefig(dir_output + 'dynesty_results_cornerplot.pdf', bbox_inches='tight', dpi=300)
-            plt.close(cfig)
-        except:
-            print('Unable to plot the 2-D marginalized posteriors using the internal dynesty routine - skipped')
+            # Plot the 2-D marginalized posteriors.
+            try:
+                print('Plot the 2-D marginalized posteriors.')
+                cfig, caxes = dyplot.cornerplot(results, labels=labels_array)
+                cfig.savefig(dir_output + 'dynesty_results_cornerplot.pdf', bbox_inches='tight', dpi=300)
+                plt.close(cfig)
+            except:
+                print('Unable to plot the 2-D marginalized posteriors using the internal dynesty routine - skipped')
 
         # Extract sampling results.
         samples = results.samples  # samples
@@ -402,6 +419,9 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
         chain_med = common.compute_value_sigma(flat_chain)
 
         chain_MAP, lnprob_MAP = common.pick_MAP_parameters(
+            flat_chain, flat_lnprob)
+
+        chain_sampleMED, lnprob_sampleMED = common.pick_sampleMED_parameters(
             flat_chain, flat_lnprob)
 
         #data_in = np.genfromtxt(dir_input + 'post_equal_weights.dat')
@@ -438,7 +458,6 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
 
         mc.model_setup()
         mc.initialize_logchi2()
-        results_analysis.results_summary(mc, None, skip_theta=True)
 
         with open(dir_input + 'info/results.json') as f:
             results = json.load(f)
@@ -480,6 +499,9 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
         chain_MAP, lnprob_MAP = common.pick_MAP_parameters(
             flat_chain, flat_lnprob)
 
+        chain_sampleMED, lnprob_sampleMED = common.pick_sampleMED_parameters(
+            flat_chain, flat_lnprob)
+
         un_lnprob_MAP = results['maximum_likelihood']['logl']
         un_chain_MAP = results['maximum_likelihood']['point']
 
@@ -514,7 +536,6 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
         print(' Dimensions: {}'.format(mc.ndim))
         print()
         print(' Samples: {}'.format(n_samplings))
-
 
     print()
     print(' LN posterior: {0:12f}   {1:12f} {2:12f} (15-84 p) '.format(
@@ -615,15 +636,20 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
                 plt.legend()
                 plt.savefig(file_name, bbox_inches='tight', dpi=300)
                 plt.close(fig)
-            
+
             print()
 
         sys.stdout.flush()
+
+    results_analysis.print_bayesian_info(mc)
+    print()
+
 
     print('****************************************************************************************************')
     print('****************************************************************************************************')
     print()
     print(' Confidence intervals (median value, 34.135th percentile from the median on the left and right side)')
+    print()
 
     planet_parameters = results_analysis.results_summary(
         mc, flat_chain, chain_med=chain_MAP, return_samples=True)
@@ -636,9 +662,19 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
 
     results_analysis.results_summary(mc, chain_MAP, is_MAP=True)
 
+
     print()
     print('****************************************************************************************************')
     print()
+    print(' Parameters corresponding to the sample closest to the median values ( {} )'.format(lnprob_sampleMED))
+    print()
+
+    results_analysis.results_summary(mc, chain_sampleMED, is_MAP=True)
+
+    print()
+    print('****************************************************************************************************')
+    print()
+
 
     sys.stdout.flush()
 
@@ -651,6 +687,9 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
 
     planet_parameters_MAP = results_analysis.get_planet_parameters(mc, chain_MAP)
     star_parameters_MAP = results_analysis.get_stellar_parameters(mc, chain_MAP, warnings=False)
+
+    planet_parameters_sampleMED = results_analysis.get_planet_parameters(mc, chain_sampleMED)
+    star_parameters_sampleMED = results_analysis.get_stellar_parameters(mc, chain_sampleMED, warnings=False)
 
     if plot_dictionary['lnprob_chain'] or plot_dictionary['chains']:
 
@@ -956,6 +995,8 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
                                 label='Median-corresponding value')
                     plt.axvline(planet_parameters_MAP[common_ref][parameter_name], color='C2', zorder=1,
                                 label='MAP-corresponding value')
+                    plt.axvline(planet_parameters_sampleMED[common_ref][parameter_name], color='C5', zorder=1,
+                                label='sampleMED-corresponding value')
                     plt.axvline(perc1, color='C3', zorder=2,
                                 label='Median of the distribution')
                     plt.axvline(perc0, color='C4', zorder=2,
@@ -1010,6 +1051,8 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
                             label='Median-corresponding value')
                 plt.axvline(chain_MAP[th], color='C2', zorder=1,
                             label='MAP-corresponding value')
+                plt.axvline(chain_sampleMED[th], color='C5', zorder=1,
+                            label='sampleMED-corresponding value')
                 plt.axvline(perc1, color='C3', zorder=2,
                             label='Median of the distribution')
                 plt.axvline(perc0, color='C4', zorder=2,
@@ -1112,6 +1155,8 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
             mc, chain_med[:, 0], bjd_plot)
         bjd_plot['MAP_model_out'], bjd_plot['MAP_model_x'] = results_analysis.get_model(
             mc, chain_MAP, bjd_plot)
+        bjd_plot['sampleMED_model_out'], bjd_plot['sampleMED_model_x'] = results_analysis.get_model(
+            mc, chain_sampleMED, bjd_plot)
 
         if plot_dictionary['plot_models']:
             print(' Writing the plots ')
@@ -1150,19 +1195,22 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
                                  mc.dataset_dict[dataset_name].y
                                  - bjd_plot['model_out'][dataset_name]['systematics']
                                  - bjd_plot['model_out'][dataset_name]['time_independent'],
-                                 color='C0', zorder=4, s=16)
+                                 color='C0', zorder=20, s=16)
                     ax_0.errorbar(mc.dataset_dict[dataset_name].x,
                                   mc.dataset_dict[dataset_name].y
                                   - bjd_plot['model_out'][dataset_name]['systematics']
                                   - bjd_plot['model_out'][dataset_name]['time_independent'],
                                   yerr=error_bars,
-                                  color='C0', fmt='o', ms=0, zorder=3, alpha=0.5)
+                                  color='C0', fmt='o', ms=0, zorder=19, alpha=0.5)
                     ax_0.plot(bjd_plot[dataset_name]['x_plot'], bjd_plot['model_x'][dataset_name]['complete'],
                               label='Median-corresponding model',
-                              color='C1', zorder=2)
+                              color='C1', zorder=10)
                     ax_0.plot(bjd_plot[dataset_name]['x_plot'], bjd_plot['MAP_model_x'][dataset_name]['complete'],
                               label='MAP-corresponding model',
-                              color='C2', zorder=1)
+                              color='C2', zorder=9)
+                    ax_0.plot(bjd_plot[dataset_name]['x_plot'], bjd_plot['sampleMED_model_x'][dataset_name]['complete'],
+                              label='sampleMED-corresponding model',
+                              color='C5', zorder=8)
 
                     ax_0.set_ylabel('Same as input data')
                     ax_0.legend()
@@ -1170,12 +1218,32 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
                     ax_1.scatter(mc.dataset_dict[dataset_name].x,
                                  mc.dataset_dict[dataset_name].y -
                                  bjd_plot['model_out'][dataset_name]['complete'],
-                                 color='C0', zorder=4, s=16)
+                                 color='C1', zorder=10, s=16, label='Median residuals')
                     ax_1.errorbar(mc.dataset_dict[dataset_name].x,
                                   mc.dataset_dict[dataset_name].y -
                                   bjd_plot['model_out'][dataset_name]['complete'],
                                   yerr=error_bars,
-                                  color='C0', fmt='o', ms=0, zorder=3, alpha=0.5)
+                                  color='C1', fmt='o', ms=0, zorder=7, alpha=0.5)
+
+                    ax_1.scatter(mc.dataset_dict[dataset_name].x,
+                                 mc.dataset_dict[dataset_name].y -
+                                 bjd_plot['MAP_model_out'][dataset_name]['complete'],
+                                 color='C2', zorder=9, s=16, label='MAP residuals')
+                    ax_1.errorbar(mc.dataset_dict[dataset_name].x,
+                                  mc.dataset_dict[dataset_name].y -
+                                  bjd_plot['MAP_model_out'][dataset_name]['complete'],
+                                  yerr=error_bars,
+                                  color='C2', fmt='o', ms=0, zorder=6, alpha=0.5)
+
+                    ax_1.scatter(mc.dataset_dict[dataset_name].x,
+                                 mc.dataset_dict[dataset_name].y -
+                                 bjd_plot['sampleMED_model_out'][dataset_name]['complete'],
+                                 color='C5', zorder=8, s=16, label='sampleMED residuals')
+                    ax_1.errorbar(mc.dataset_dict[dataset_name].x,
+                                  mc.dataset_dict[dataset_name].y -
+                                  bjd_plot['sampleMED_model_out'][dataset_name]['complete'],
+                                  yerr=error_bars,
+                                  color='C5', fmt='o', ms=0, zorder=5, alpha=0.5)
                     ax_1.axhline(0.0, color='k', alpha=0.5, zorder=0)
 
                     ax_1.set_xlabel('Time [d] (offset as the input data)')
@@ -1187,7 +1255,7 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
 
         if plot_dictionary['write_models']:
 
-            for prepend_keyword in ['', 'MAP_']:
+            for prepend_keyword in ['', 'MAP_', 'sampleMED_']:
 
                 print(' Writing the ', prepend_keyword, 'data files ')
 
@@ -1203,6 +1271,11 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
                     planet_pars = planet_parameters_MAP
                     # star_vars = star_parameters_MAP
                     chain_ref = chain_MAP
+                elif prepend_keyword == 'sampleMED_':
+                    planet_pars = planet_parameters_sampleMED
+                    # star_vars = star_parameters_MAP
+                    chain_ref = chain_sampleMED
+
 
                 dir_models = dir_output + file_keyword + '/'
                 os.system('mkdir -p ' + dir_models)
