@@ -253,11 +253,12 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, reload_ze
             include the dataset names
          """
         if 'ancillary_name' in dataset_conf:
-            mc.dataset_dict[dataset_name].ancillary = input_datasets[dataset_conf['ancillary_name']]
+            #mc.dataset_dict[dataset_name].ancillary = input_datasets[dataset_conf['ancillary_name']]
+            mc.dataset_dict[dataset_name].append_ancillary(input_datasets[dataset_conf['ancillary_name']], input_array=True)
 
         for ancill in ['ancillary_file', 'ancillary', 'ancillary_data', 'ancillary_dataset']:
             if ancill in dataset_conf:
-                mc.dataset_dict[dataset_name].convert_ancillary_from_file(dataset_conf[ancill])
+                mc.dataset_dict[dataset_name].append_ancillary(dataset_conf[ancill])
 
     ordering_dict = {}
 

@@ -2,7 +2,7 @@ from pyorbit.subroutines.common import np
 from pyorbit.common.abstract_common import AbstractCommon
 from pyorbit.model_definitions import datatype_definition
 
-
+from numpy.lib.recfunctions import append_fields, drop_fields
 
 class Dataset(AbstractCommon):
 
@@ -76,11 +76,65 @@ class Dataset(AbstractCommon):
         # read ancillary data from txt file
         self.ancillary = np.genfromtxt(input_file, names=True)
 
-    def convert_dataset_from_file(self, input_file):
-        data = np.atleast_2d(np.loadtxt(input_file))
 
-        data_input = np.zeros([np.size(data, axis=0), 6], dtype=np.double) - 1.
-        data_input[:, :np.size(data, axis=1)] = data[:, :]
+    def append_ancillary(self, input_file, input_array=False):
+        """ Function to either read an ancillary file or pass the value of another
+        dataset as ancillary
+
+        we define as ancillary every dataset required to
+        model some effect (usually, instrumental) but not object of modelling
+        itself (i.e., the dataset does not enter in the log-likelihhod)
+        Added in PyORBIT 9.2
+
+        Args:
+            input_file (string): name of the file, absolute or relative path
+            data_input: True if the input_file is actually a ndarray
+        """
+
+        if not input_array:
+            # read ancillary data from txt file when it is not passed as a ndarray
+            input_array = np.genfromtxt(input_file, names=True)
+
+        if self.ancillary:
+            # Data ancillary has been already defined when reading the main files
+            # we take the keywords from the file and add them to the existing
+            for name in input_array.dtype.names:
+                try:
+                    self.ancillary = drop_fields(self.ancillary, name)
+                    self.ancillary = append_fields(self.ancillary, name, input_array[name])
+                except ValueError:
+                    print('The ancillary input array is not a structured array')
+                    print('https://numpy.org/doc/stable/user/basics.rec.html')
+                    quit()
+        else:
+            self.ancillary = input_array.copy()
+
+
+    def convert_dataset_from_file(self, input_file):
+
+        """ Robust data reading, now encompassing the case of ancillary data
+        columns embedded in the main file"""
+
+        data0 = np.atleast_2d(np.loadtxt(input_file))
+        data1 = np.genfromtxt(input_file, names=True)
+        data_input = np.zeros([np.size(data0, axis=0), 6], dtype=np.double) - 1.
+
+        if np.shape(data0)[0] == np.shape(data1)[0]:
+            for i_name, v_name in enumerate(data1.dtype.names):
+                if i_name<3:
+                    data_input[:, 0] = data1[v_name]
+                elif v_name == 'jit' or v_name=='jitter':
+                    data_input[:, 4] = data1[v_name]
+                elif v_name == 'off' or v_name=='offset':
+                    data_input[:, 4] = data1[v_name]
+                elif v_name == 'sub' or v_name=='subset':
+                    data_input[:, 5] = data1[v_name]
+                else:
+                    self.ancillary = data1.copy()
+        else:
+            """ Fall back to previous behaviour of the code"""
+            data_input[:, :np.size(data0, axis=1)] = data0[:, :]
+
         return data_input
 
     def define_dataset_base(self, data_input, update=False,
