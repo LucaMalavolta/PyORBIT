@@ -31,6 +31,7 @@ class AbstractTransit(object):
         self.retrieve_radius = None
         self.retrieve_temperature = None
         self.retrieve_Omega_Istar = None
+        self.retrieve_Istar = None
 
         self.multivariate_mass_radius = False
         self.code_options = {}
@@ -170,10 +171,13 @@ class AbstractTransit(object):
 
         if self.use_stellar_rotation and self.use_stellar_inclination:
             self.retrieve_Omega_Istar = self._internal_transformation_mod22
+            self.retrieve_Istar = self._internal_transformation_mod30
         elif self.use_stellar_rotation:
             self.retrieve_Omega_Istar = self._internal_transformation_mod21
+            self.retrieve_Istar = self._internal_transformation_mod31
         else:
             self.retrieve_Omega_Istar = self._internal_transformation_mod20
+            self.retrieve_Istar = self._internal_transformation_mod30
 
 
     def _prepare_limb_darkening_coefficients(self, mc, **kwargs):
@@ -405,4 +409,38 @@ class AbstractTransit(object):
         Omega = 2* np.pi / rotation_period
 
         return Omega, np.arcsin(sin_is)/np.pi*180.
+
+    @staticmethod
+    def _internal_transformation_mod30(parameter_values):
+        """ This function extracts from the parameter_values dictionary
+            - 'i_star': inclination of the of stellar rotation axis
+            it returns the stellar inclination
+
+        Args:
+            parameter_values (dict): dictionary with all the parameters of the current model
+
+        Returns:
+            float: inclination of the of stellar rotation axis, [degrees]
+        """
+        return  parameter_values['i_star']
+
+    def _internal_transformation_mod31(self, parameter_values):
+        """ This function extracts from the parameter_values dictionary
+            - 'v_sini': projected tangential velocity of the star
+            - 'radius': stellar radius in Solar units
+            - 'rotation_period': rotational period of the star from the stellar or activity model
+
+            into angular velocity Omega [rad/s] of the star
+            it returns the angular velocity Omega and the stellar inclination
+
+        Args:
+            parameter_values (dict): dictionary with all the parameters of the current model
+
+        Returns:
+            float: angular velocity Omega, [rad/s]
+            float: inclination of the of stellar rotation axis, [degrees]
+        """
+        rotation_period = parameter_values[self.code_options['rotation_keyword']] * constants.d2s
+        sin_is =  parameter_values['v_sini']  / (parameter_values['radius'] * constants.Rsun) * (rotation_period)  / (2* np.pi)
+        return np.arcsin(sin_is)/np.pi*180.
 

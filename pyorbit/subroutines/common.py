@@ -180,6 +180,14 @@ def get_2var_vsini(var, fix, i):
         out = var[:, i[0]] * np.sin(var[:, i[1]]* constants.deg2rad)
     return out
 
+def get_2var_veq_rot_radius(var, fix, i):
+    # first parameter: v_eq
+    # second parameter: p_rot
+    if len(np.shape(var)) == 1:
+        out = var[i[0]] * (var[i[1]] * constants.d2s / (2*np.pi) / constants.Rsun)
+    else:
+        out = var[:, i[0]] * (var[:, i[1]]* constants.d2s / (2*np.pi) / constants.Rsun)
+    return out
 
 
 

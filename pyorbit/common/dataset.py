@@ -122,9 +122,9 @@ class Dataset(AbstractCommon):
         if np.shape(data0)[0] == np.shape(data1)[0]:
             for i_name, v_name in enumerate(data1.dtype.names):
                 if i_name<3:
-                    data_input[:, 0] = data1[v_name]
+                    data_input[:, i_name] = data1[v_name]
                 elif v_name == 'jit' or v_name=='jitter':
-                    data_input[:, 4] = data1[v_name]
+                    data_input[:, 3] = data1[v_name]
                 elif v_name == 'off' or v_name=='offset':
                     data_input[:, 4] = data1[v_name]
                 elif v_name == 'sub' or v_name=='subset':

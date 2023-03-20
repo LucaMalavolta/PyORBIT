@@ -30,7 +30,7 @@ class RossiterMcLaughling_Reloaded(AbstractModel, AbstractTransit):
 
         self.use_stellar_radius = False
         self.use_stellar_rotation = False
-        self.use_stellar_inclination = True
+        self.use_stellar_inclination = False
         self.use_equatorial_velocity = False
         self.use_differential_rotation = False
 
@@ -44,9 +44,17 @@ class RossiterMcLaughling_Reloaded(AbstractModel, AbstractTransit):
         if self.use_differential_rotation:
 
             self.use_equatorial_velocity = True
+            self.use_stellar_inclination = True
             self.list_pams_common.discard('v_sini')
             self.list_pams_common.update(['veq_star', 'i_star', 'alpha_rotation'])
             mc.common_models[self.stellar_ref].use_equatorial_velocity =  True
+
+            """ If stellar rotation is provided as a prior or as the outcome of the fit,
+                the code will check if the derived stellar radius is consistent with the prior
+            """
+            self.use_stellar_rotation = kwargs.get('use_stellar_rotation', self.use_stellar_rotation)
+            if self.use_stellar_rotation:
+                mc.common_models[self.stellar_ref].use_stellar_rotation =  True
 
 
         self._prepare_planetary_parameters(mc, **kwargs)
@@ -87,6 +95,10 @@ class RossiterMcLaughling_Reloaded(AbstractModel, AbstractTransit):
 
 
     def compute(self, parameter_values, dataset, x0_input=None):
+
+        if 'v_sini' not in parameter_values:
+            parameter_values['v_sini'] = parameter_values['veq_star'] * np.sin(parameter_values['i_star']*constants.deg2rad)
+
         """
         :param parameter_values:
         :param dataset:
@@ -95,9 +107,9 @@ class RossiterMcLaughling_Reloaded(AbstractModel, AbstractTransit):
         """
         #t1_start = process_time()
 
-        _, par_i = self.retrieve_ai(parameter_values)
+        par_a, par_i = self.retrieve_ai(parameter_values)
         par_tc = self.retrieve_t0(parameter_values, dataset.Tref)
-        _, par_Is = self.retrieve_Omega_Istar(parameter_values)
+        par_Is = self.retrieve_Istar(parameter_values)
         par_tc = self.retrieve_t0(parameter_values, dataset.Tref)
         par_lamba = parameter_values['lambda'] * constants.deg2rad
 
@@ -117,7 +129,7 @@ class RossiterMcLaughling_Reloaded(AbstractModel, AbstractTransit):
             print('ERROR: Selected limb darkening law not implemented')
             quit()
 
-        self.star_grid['I'][self.star_grid['outside']] = 0.000
+        star_grid_I[self.star_grid['outside']] = 0.000
 
         """ Intensity normalization"""
         star_grid_I /= np.sum(star_grid_I)
@@ -160,14 +172,15 @@ class RossiterMcLaughling_Reloaded(AbstractModel, AbstractTransit):
 
         """ working arrays for Eq. 1 and 9 of Cegla+2016"""
         star_grid_muI = star_grid_I * self.star_grid['mu']
-        star_grid_v_starI = star_grid_I * self.star_grid_v_star
+        star_grid_v_starI = star_grid_I * star_grid_v_star
 
-        if x0_input:
-            bjd = x0_input + dataset.Tref
-            exptime = np.ones_like(bjd) * np.mean(dataset.ancyllary['exptime'])
-        else:
+        if x0_input is None:
             bjd = dataset.x
-            exptime = dataset.ancyllary['exptime']
+            exptime = dataset.ancillary['exptime']
+
+        else:
+            bjd = x0_input + dataset.Tref
+            exptime = np.ones_like(bjd) * np.mean(dataset.ancillary['exptime'])
 
         #eclipsed_flux = np.zeros_like(bjd)
         #mean_mu = np.zeros_like(bjd)
@@ -191,16 +204,17 @@ class RossiterMcLaughling_Reloaded(AbstractModel, AbstractTransit):
                 parameter_values['P'],
                 parameter_values['e'],
                 omega_rad,
-                parameter_values['a_Rs'])
+                par_a)
 
             """ planet position during its orbital motion, in unit of stellar radius"""
             # Following Murray+Correia 2011 , with the argument of the ascending node set to zero.
             # 1) the ascending node coincide with the X axis
             # 2) the reference plance coincide with the plane of the sky
 
-            planet_position_xp = -orbital_distance_ratio * (np.cos(omega_rad + true_anomaly)),
-            planet_position_yp = orbital_distance_ratio * (np.sin(omega_rad + true_anomaly) * np.cos(inclination_rad)),
+            planet_position_xp = -orbital_distance_ratio * (np.cos(omega_rad + true_anomaly))
+            planet_position_yp = orbital_distance_ratio * (np.sin(omega_rad + true_anomaly) * np.cos(inclination_rad))
             planet_position_zp = orbital_distance_ratio * (np.sin(inclination_rad) * np.sin(omega_rad + true_anomaly))
+
 
             # projected distance of the planet's center to the stellar center
             planet_position_rp = np.sqrt(planet_position_xp**2  + planet_position_yp**2)

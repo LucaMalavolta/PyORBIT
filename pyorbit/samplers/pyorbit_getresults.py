@@ -1117,7 +1117,8 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
                     step_size = np.min(
                         bjd_plot[dataset_name]['range'] / dataset.n / 10.)
             else:
-                step_size = P_minimum / 20.
+                step_size =  min(P_minimum / 20., bjd_plot[dataset_name]['range'] / dataset.n / 10.)
+
 
             bjd_plot[dataset_name]['x_plot'] = \
                 np.arange(bjd_plot[dataset_name]['start'],
@@ -1137,10 +1138,13 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
                 bjd_plot['full']['range'] = bjd_plot['full']['end'] - \
                     bjd_plot['full']['start']
 
+
+        step_size =  min(P_minimum / 20., bjd_plot['full']['range'] / dataset.n / 10.)
+
         bjd_plot['full']['start'] -= bjd_plot['full']['range'] * 0.50
         bjd_plot['full']['end'] += bjd_plot['full']['range'] * 0.50
         bjd_plot['full']['x_plot'] = np.arange(
-            bjd_plot['full']['start'], bjd_plot['full']['end'], P_minimum / 20.)
+            bjd_plot['full']['start'], bjd_plot['full']['end'], step_size)
         bjd_plot['full']['x0_plot'] = bjd_plot['full']['x_plot'] - mc.Tref
 
         # Special cases
@@ -1202,6 +1206,7 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
                                   - bjd_plot['model_out'][dataset_name]['time_independent'],
                                   yerr=error_bars,
                                   color='C0', fmt='o', ms=0, zorder=19, alpha=0.5)
+
                     ax_0.plot(bjd_plot[dataset_name]['x_plot'], bjd_plot['model_x'][dataset_name]['complete'],
                               label='Median-corresponding model',
                               color='C1', zorder=10)

@@ -101,6 +101,8 @@ from pyorbit.models.celerite2_granulation_oscillation_rotation import Celerite2_
 from pyorbit.models.tinygp_quasiperiodic_activity import TinyGaussianProcess_QuasiPeriodicActivity
 from pyorbit.models.tinygp_multidimensional_quasiperiodic_activity import TinyGP_Multidimensional_QuasiPeriodicActivity
 
+from pyorbit.models.rossitermclaughlin_reloaded import RossiterMcLaughling_Reloaded
+
 """
  model_requires_planets: all those models that requires AT LEAST one of the planets in the system must be listed here
     this is the case for dataset that contains the signature of multiple planets, e.g., RVs or transit light curve
@@ -112,7 +114,7 @@ model_requires_planets = ['radial_velocities', 'rv_planets',
                           'batman_transit_with_ttv', 'pytransit_transit_with_ttv',
                           'subset_batman_transit_ttv', 'batman_transit_ttv_subset',
                           'subset_batman_transit_faster_ttv', 'batman_transit_ttv_subset_faster',
-                         'rossitermclaughlin_ohta',
+                         'rossitermclaughlin_ohta', 'rossitermclaughlin_reloaded',
                          'spiderman_thermal', 'batman_transit_eclipse_phasecurve']
 
 single_planet_model = ['Tc_planets', 'transit_times']
@@ -223,7 +225,8 @@ define_type_to_class = {
     'lightcurve_poly_detrending': LightcurvePolyDetrending,
     'local_lightcurve_poly_detrending': LocalLightcurvePolyDetrending,
     'tinygp_quasiperiodic': TinyGaussianProcess_QuasiPeriodicActivity,
-    'tinygp_multidimensional_quasiperiodic': TinyGP_Multidimensional_QuasiPeriodicActivity
+    'tinygp_multidimensional_quasiperiodic': TinyGP_Multidimensional_QuasiPeriodicActivity,
+    'rossitermclaughlin_reloaded': RossiterMcLaughling_Reloaded,
 }
 
 accepted_extensions = ['.yaml', '.yml', '.conf', '.config', '.input', ]

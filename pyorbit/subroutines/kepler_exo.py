@@ -17,7 +17,7 @@ import pyorbit.subroutines.constants as constants
 #       Newton-Raphson iteration to extend the applicability of this
 #       function to higher eccentricities
 
-__all__ = ["kepler_K1", "kepler_RV", "kepler_Tc2phase_Tref", "kepler_phase2Tc_Tref", "get_planet_mass"]
+__all__ = ["kepler_K1", "kepler_RV", "kepler_Tc2phase_Tref", "kepler_phase2Tc_Tref", "get_planet_mass", "kepler_true_anomaly_orbital_distance"]
 
 
 def f0_keplerE(ecan_tmp, ecc, mx):
@@ -282,3 +282,30 @@ def get_planet_mass(P, K, e, Mstar, approximation_limit=30.):
         print('Computing planetary mass under the approximation M_planet << M_star (threshold at {0:3.1f} Me)'.format(approximation_limit))
 
     return M_approx
+
+def kepler_true_anomaly_orbital_distance(BJD0, Tcent0, Period, e0, omega0, a_sm):
+    # BJD0 is given as BJD-T0, where T0 is arbitrarily defined by the user
+    # Tperi_ is substituted by _phase_, which is the phase of the orbit where
+    #        BJD0+T0+phase*Period = Tperi
+    # omega = argument of pericenter
+
+    phase = kepler_Tc2phase_Tref(Period, Tcent0, e0, omega0)
+
+    omega = np.asarray(omega0, dtype=np.double)
+    e = np.asarray(e0, dtype=np.double)
+    MeAn = 2. * np.pi * (1. + ((BJD0 / Period) + (phase - omega0) / (2 * np.pi)) % 1.)
+
+    if abs(e0) < 1e-3:
+        TrAn = np.asarray(MeAn, dtype=np.double)
+        e = np.asarray(0., dtype=np.double)
+        r_orb = a_sm
+    else:
+        if e0 < 0.:
+            e = -1 * e
+            omega += np.pi
+
+        # Eccentric Anomaly
+        EccAn = kepler_E(MeAn, e)
+        TrAn = 2. * np.arctan(np.sqrt((1.0 + e) / (1.0 - e)) * np.tan(EccAn / 2.0))
+        r_orb = a_sm * (1. - e ** 2) / (1. + e * np.cos(TrAn))
+    return TrAn, r_orb

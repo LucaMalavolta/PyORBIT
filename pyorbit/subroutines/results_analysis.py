@@ -1046,7 +1046,7 @@ def print_integrated_ACF(sampler_chain, theta_dict, nthin):
         still_required_100 = (100-how_many_ACT)*(nthin*integrated_ACF)
         still_required_100_flag = (still_required_100 > 0)
         still_required_100[~still_required_100_flag] = 0
-        
+
         print()
         print('Reference thinning used in the analysis:', nthin)
         print(
@@ -1079,7 +1079,7 @@ def print_integrated_ACF(sampler_chain, theta_dict, nthin):
 PyORBIT should keep running for about {0:.0f} more steps to reach 100*ACF""".format(np.average(still_required_100[still_required_100_flag])))
             else:
                 print("""All the chains have converged, but PyORBIT should keep running for about:
-{0:.0f} more steps to reach 50*ACF, 
+{0:.0f} more steps to reach 50*ACF,
 {1:.0f} more steps to reach 100*ACF""".format(np.average(still_required_050[still_required_050_flag]), np.average(still_required_100[still_required_100_flag])))
 
             print('Suggested value for burnin: {0:.0f}'.format(np.average(acf_converged_at)))

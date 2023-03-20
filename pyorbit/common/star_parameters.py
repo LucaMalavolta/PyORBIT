@@ -97,7 +97,7 @@ class CommonStarParameters(AbstractCommon):
                 'fixed' : 1.6,
                 'unit': 'km/s',
             },
-        'alpha_rotation': 
+        'alpha_rotation':
             {
                 'bounds': [0.00, 1.00],
                 'priors': ['Uniform', []],
@@ -122,15 +122,27 @@ class CommonStarParameters(AbstractCommon):
         skip_first_parametrization = False
         skip_second_parametrization = False
 
-        if not(pam == "v_sini" and self.use_equatorial_velocity):
-            skip_first_parametrization = True
-
-        for var_check in ['v_sini', 'veq_star', 'i_star']:
-            if var_check in self.sampler_parameters:
+        if self.use_equatorial_velocity and self.use_stellar_rotation:
+            if not(pam == "veq_star" or pam == 'i_star' or pam == 'rotation_period'):
                 skip_first_parametrization = True
 
-        if 'v_sini' in self.fix_list:
-            skip_first_parametrization = True
+            for var_check in ['v_sini', 'veq_star', 'i_star', 'radius', 'rotation_period']:
+                if var_check in self.sampler_parameters:
+                    skip_first_parametrization = True
+
+            if 'v_sini' in self.fix_list or 'radius' in self.fix_list:
+                skip_first_parametrization = True
+
+        elif self.use_equatorial_velocity:
+            if not(pam == "veq_star" or pam == 'i_star'):
+                skip_first_parametrization = True
+
+            for var_check in ['v_sini', 'veq_star', 'i_star']:
+                if var_check in self.sampler_parameters:
+                    skip_first_parametrization = True
+
+            if 'v_sini' in self.fix_list:
+                skip_first_parametrization = True
 
 
         if not(pam == "mass" or pam == "radius") or \
@@ -147,7 +159,6 @@ class CommonStarParameters(AbstractCommon):
         if skip_first_parametrization and skip_second_parametrization:
             return ndim, output_lists, False
 
-
         if not skip_first_parametrization:
             self.transformation['veq_star'] = get_var_val
             self.parameter_index['veq_star'] = ndim
@@ -156,8 +167,19 @@ class CommonStarParameters(AbstractCommon):
 
             self.transformation['v_sini'] = get_2var_vsini
             self.parameter_index['v_sini'] = [ndim, ndim + 1]
-            variable_list = ['veq_star', 'i_star']
 
+            if self.use_stellar_rotation:
+                self.transformation['rotation_period'] = get_var_val
+                self.parameter_index['rotation_period'] = ndim + 2
+
+                self.transformation['radius'] = get_2var_veq_rot_radius
+                self.parameter_index['radius'] = [ndim, ndim + 2]
+
+                parameter_list = ['veq_star', 'i_star', 'rotation_period']
+                derived_list = ['v_sini', 'radius']
+            else:
+                parameter_list = ['veq_star', 'i_star']
+                derived_list = ['v_sini']
 
         if not skip_second_parametrization:
             self.transformation['mass'] = get_var_val
@@ -167,44 +189,45 @@ class CommonStarParameters(AbstractCommon):
 
             self.transformation['density'] = get_2var_rho
             self.parameter_index['density'] = [ndim, ndim + 1]
-            variable_list = ['mass', 'radius']
+            parameter_list = ['mass', 'radius']
+            derived_list = ['density']
 
-        for var in variable_list:
+        for pam in parameter_list:
 
-            if var not in self.bounds:
-                self.bounds[var] = self.default_bounds[var]
+            if pam not in self.bounds:
+                self.bounds[pam] = self.default_bounds[pam]
 
-            if var not in self.spaces:
-                self.spaces[var] = self.default_spaces[var]
+            if pam not in self.spaces:
+                self.spaces[pam] = self.default_spaces[pam]
 
-            output_lists['bounds'].append(self.bounds[var])
+            output_lists['bounds'].append(self.bounds[pam])
 
-            if var not in self.prior_pams:
-                self.prior_kind[var] = self.default_priors[var][0]
-                self.prior_pams[var] = self.default_priors[var][1]
+            if pam not in self.prior_pams:
+                self.prior_kind[pam] = self.default_priors[pam][0]
+                self.prior_pams[pam] = self.default_priors[pam][1]
 
-            nested_coeff = nested_sampling_prior_prepare(self.prior_kind[var],
+            nested_coeff = nested_sampling_prior_prepare(self.prior_kind[pam],
                                                           output_lists['bounds'][-1],
-                                                          self.prior_pams[var],
-                                                          self.spaces[var])
+                                                          self.prior_pams[pam],
+                                                          self.spaces[pam])
 
-            output_lists['spaces'].append(self.spaces[var])
-            output_lists['priors'].append([self.prior_kind[var], self.prior_pams[var], nested_coeff])
+            output_lists['spaces'].append(self.spaces[pam])
+            output_lists['priors'].append([self.prior_kind[pam], self.prior_pams[pam], nested_coeff])
 
-            self.sampler_parameters[var] = ndim
+            self.sampler_parameters[pam] = ndim
             ndim += 1
 
-        for var in ['density']:
-            if var not in self.bounds:
-                self.bounds[var] = self.default_bounds[var]
+        for pam in derived_list:
+            if pam not in self.bounds:
+                self.bounds[pam] = self.default_bounds[pam]
 
-            if var not in self.prior_pams:
+            if pam not in self.prior_pams:
 
-                if var in self.bounds:
-                    self.prior_pams[var] = self.bounds[var]
+                if pam in self.bounds:
+                    self.prior_pams[pam] = self.bounds[pam]
                 else:
-                    self.prior_pams[var] = self.default_bounds[var]
+                    self.prior_pams[pam] = self.default_bounds[pam]
 
-                self.prior_kind[var] = 'Uniform'
+                self.prior_kind[pam] = 'Uniform'
 
         return ndim, output_lists, True
