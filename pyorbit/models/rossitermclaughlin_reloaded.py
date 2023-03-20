@@ -28,18 +28,39 @@ class RossiterMcLaughling_Reloaded(AbstractModel, AbstractTransit):
             'v_sini' # projected rotational velocity of the star
         }
 
-        self.use_stellar_radius = True
-        self.use_stellar_period = True
-        self.use_stellar_inclination = False
+        self.use_stellar_radius = False
+        self.use_stellar_rotation = False
+        self.use_stellar_inclination = True
+        self.use_equatorial_velocity = False
+        self.use_differential_rotation = False
 
         self.star_grid = {}   # write an empty dictionary
 
 
     def initialize_model(self, mc, **kwargs):
 
+        """ check if the differential rotation should be included in the model"""
+        self.use_differential_rotation = kwargs.get('use_differential_rotation', self.use_differential_rotation)
+        if self.use_differential_rotation:
+
+            self.use_equatorial_velocity = True
+            self.list_pams_common.discard('v_sini')
+            self.list_pams_common.update(['veq_star', 'i_star', 'alpha_rotation'])
+            mc.common_models[self.stellar_ref].use_equatorial_velocity =  True
+
+
         self._prepare_planetary_parameters(mc, **kwargs)
         self._prepare_star_parameters(mc, **kwargs)
         self._prepare_limb_darkening_coefficients(mc, **kwargs)
+
+
+        if mc.common_models[self.planet_ref].use_time_of_transit:
+            self.list_pams_common.update(['Tc'])
+            self.use_time_of_transit = True
+            # Copying the property to the class for faster access
+        else:
+            self.list_pams_common.update(['mean_long'])
+
 
         #start filling the dictionary with relevant parameters
         self.star_grid['n_grid'] = kwargs.get('star_ngrid', 51 )
@@ -74,11 +95,9 @@ class RossiterMcLaughling_Reloaded(AbstractModel, AbstractTransit):
         """
         #t1_start = process_time()
 
-        
-
-        par_a, par_i = self.retrieve_ai(parameter_values)
+        _, par_i = self.retrieve_ai(parameter_values)
         par_tc = self.retrieve_t0(parameter_values, dataset.Tref)
-        par_Omega, par_Is = self.retrieve_Omega_Istar(parameter_values)
+        _, par_Is = self.retrieve_Omega_Istar(parameter_values)
         par_tc = self.retrieve_t0(parameter_values, dataset.Tref)
         par_lamba = parameter_values['lambda'] * constants.deg2rad
 
@@ -92,7 +111,7 @@ class RossiterMcLaughling_Reloaded(AbstractModel, AbstractTransit):
             for par, i_par in self.ldvars.items():
                 ld_par[i_par] = parameter_values[par]
 
-            self.star_grid['I'] = 1 - ld_par[0]*(1. - self.star_grid['mu']) \
+            star_grid_I = 1 - ld_par[0]*(1. - self.star_grid['mu']) \
                 - ld_par[1]*(1. - self.star_grid['mu'])**2
         else:
             print('ERROR: Selected limb darkening law not implemented')
@@ -101,61 +120,66 @@ class RossiterMcLaughling_Reloaded(AbstractModel, AbstractTransit):
         self.star_grid['I'][self.star_grid['outside']] = 0.000
 
         """ Intensity normalization"""
-        self.star_grid['I0'] = np.sum(self.star_grid['I'])
-        self.star_grid['I'] /= self.star_grid['I0']
+        star_grid_I /= np.sum(star_grid_I)
 
-        self.star_grid['x_ortho'] = self.star_grid['xc'] * np.cos(par_lamba) \
+        star_grid_x_ortho = self.star_grid['xc'] * np.cos(par_lamba) \
             - self.star_grid['yc'] * np.sin(par_lamba)  # orthogonal distances from the spin-axis
-        self.star_grid['y_ortho'] = self.star_grid['xc'] * np.sin(par_lamba) \
+        star_grid_y_ortho = self.star_grid['xc'] * np.sin(par_lamba) \
             + self.star_grid['yc'] * np.cos(par_lamba)
 
 
-        star_grid['r_ortho'] = np.sqrt(star_grid['x_ortho'] ** 2 + star_grid['y_ortho'] ** 2)
-        star_grid['z_ortho'] = np.zeros([star_grid['n_grid'], star_grid['n_grid']],
-                                        dtype=np.double)  # initialization of the matrix
-        star_grid['z_ortho'][star_grid['inside']] = np.sqrt(
-            1. -star_grid['r_ortho'][star_grid['inside']] ** 2)
+        star_grid_r_ortho = np.sqrt(star_grid_x_ortho ** 2 + star_grid_y_ortho** 2)
+        star_grid_z_ortho = star_grid_r_ortho * 0.  # initialization of the matrix
+        star_grid_z_ortho[self.star_grid['inside']] = np.sqrt(
+            1. -star_grid_r_ortho[self.star_grid['inside']] ** 2)
 
-        """ rotate the coordinate system around the x_ortho axis by an agle: """
-        star_grid['beta'] = (np.pi / 2.) - par_Is * constants.deg2rad
+        if self.use_differential_rotation:
 
+            """ rotate the coordinate system around the x_ortho axis by an agle: """
+            star_grid_beta = (np.pi / 2.) - par_Is * constants.deg2rad
 
+            """ orthogonal distance from the stellar equator """
+            ### Equation 7 in Cegla+2016
+            star_grid_yp_ortho = star_grid_z_ortho * np.sin(star_grid_beta) \
+                + star_grid_y_ortho * np.cos(star_grid_beta)
 
-        """ orthogonal distance from the stellar equator """
-        ### Equation 7 in Cegla+2016
-        star_grid['yp_ortho'] = star_grid['z_ortho'] * np.sin(star_grid['beta']) \
-            + star_grid['y_ortho'] * np.cos(star_grid['beta'])
+            ### Equation 6 in Cegla+2016
+            #star_grid_zp_ortho = star_grid_z_ortho * np.cos(star_grid_beta) \
+            #    + star_grid_y_ortho * np.sin(star_grid_beta)
 
-        ### Equation 6 in Cegla+2016
-        star_grid['zp_ortho'] = star_grid['z_ortho'] * np.cos(star_grid['beta']) \
-            + star_grid['y_ortho'] * np.sin(star_grid['beta'])
+            """ stellar rotational velocity for a given position """
+            # differential rotation is included considering a sun-like law
+            star_grid_v_star = star_grid_x_ortho * parameter_values['v_sini'] * (
+                1. -parameter_values['alpha_rotation'] * star_grid_yp_ortho ** 2)
+            # Null velocity for points outside the stellar surface
+        else:
+            star_grid_v_star = star_grid_x_ortho * parameter_values['v_sini']
 
+        star_grid_v_star[self.star_grid['outside']] = 0.0
 
-        """ stellar rotational velocity for a given position """
-        # differential rotation is included considering a sun-like law
-        star_grid['v_star'] = star_grid['x_ortho'] * star_dict['vsini'] * (
-            1. -star_dict['alpha'] * star_grid['yp_ortho'] ** 2)
-        # Null velocity for points outside the stellar surface
-        star_grid['v_star'][star_grid['outside']] = 0.0
 
         """ working arrays for Eq. 1 and 9 of Cegla+2016"""
-        star_grid['muI'] = star_grid['I'] * star_grid['mu']
-        star_grid['v_starI'] = star_grid['I'] * star_grid['v_star']
+        star_grid_muI = star_grid_I * self.star_grid['mu']
+        star_grid_v_starI = star_grid_I * self.star_grid_v_star
 
+        if x0_input:
+            bjd = x0_input + dataset.Tref
+            exptime = np.ones_like(bjd) * np.mean(dataset.ancyllary['exptime'])
+        else:
+            bjd = dataset.x
+            exptime = dataset.ancyllary['exptime']
 
-
-        eclipsed_flux = np.zeros_like(bjd)
-        mean_mu = np.zeros_like(bjd)
+        #eclipsed_flux = np.zeros_like(bjd)
+        #mean_mu = np.zeros_like(bjd)
         mean_vstar =  np.zeros_like(bjd)
 
         for i_obs, bjd_value in enumerate(bjd):
-            n_oversampling = int(exptime[i_obs] / star_grid['time_step'])
+            n_oversampling = int(exptime[i_obs] / self.star_grid['time_step'])
 
             """recomputing the oversampling steps to homogeneously cover the
             full integration time """
             if n_oversampling % 2 == 0:
                 n_oversampling += 1
-                delta_step = exptime[i_obs] / n_oversampling / 86400.
 
             half_time = exptime[i_obs] / 2 / 86400.
 
@@ -173,89 +197,38 @@ class RossiterMcLaughling_Reloaded(AbstractModel, AbstractTransit):
             # Following Murray+Correia 2011 , with the argument of the ascending node set to zero.
             # 1) the ascending node coincide with the X axis
             # 2) the reference plance coincide with the plane of the sky
-            planet_position = {
-                'xp': -orbital_distance_ratio * (np.cos(omega_rad + true_anomaly)),
-                'yp': orbital_distance_ratio * (np.sin(omega_rad + true_anomaly) * np.cos(inclination_rad)),
-                'zp': orbital_distance_ratio * (np.sin(inclination_rad) * np.sin(omega_rad + true_anomaly))
-            }
+
+            planet_position_xp = -orbital_distance_ratio * (np.cos(omega_rad + true_anomaly)),
+            planet_position_yp = orbital_distance_ratio * (np.sin(omega_rad + true_anomaly) * np.cos(inclination_rad)),
+            planet_position_zp = orbital_distance_ratio * (np.sin(inclination_rad) * np.sin(omega_rad + true_anomaly))
+
             # projected distance of the planet's center to the stellar center
-            planet_position['rp'] = np.sqrt(planet_position['xp']**2  + planet_position['yp']**2)
+            planet_position_rp = np.sqrt(planet_position_xp**2  + planet_position_yp**2)
 
             # iterating on the sub-exposures
             I_sum = 0.00
             muI_sum = 0.00
             vstarI_sum = 0.00
 
-            for j, zeta in enumerate(planet_position['zp']):
+            for j, zeta in enumerate(planet_position_zp):
 
-                if zeta > 0 and planet_position['rp'][j] < 1. + planet_dict['Rp_Rs']:
+                if zeta > 0 and planet_position_rp[j] < 1. + parameter_values['R_Rs']:
                     # the planet is in the foreground or inside the stellar disk, continue
                     # adjustment: computation is performed even if only part of the planet is shadowing the star
 
-                    rd = np.sqrt((planet_position['xp'][j] - star_grid['xc']) ** 2 +
-                                    (planet_position['yp'][j] - star_grid['yc']) ** 2)
+                    rd = np.sqrt((planet_position_xp[j] - self.star_grid['xc']) ** 2 +
+                                    (planet_position_yp[j] - self.star_grid['yc']) ** 2)
 
                     """ Seelction of the portion of stars covered by the planet"""
-                    sel_eclipsed = (rd <= planet_dict['Rp_Rs']) & star_grid['inside']
+                    sel_eclipsed = (rd <= parameter_values['R_Rs']) & self.star_grid['inside']
 
-                    I_sum +=  np.sum(star_grid['I'][sel_eclipsed])
-                    muI_sum +=  np.sum(star_grid['muI'][sel_eclipsed])
-                    vstarI_sum += np.sum(star_grid['v_starI'][sel_eclipsed])
+                    I_sum +=  np.sum(star_grid_I[sel_eclipsed])
+                    muI_sum +=  np.sum(star_grid_muI[sel_eclipsed])
+                    vstarI_sum += np.sum(star_grid_v_starI[sel_eclipsed])
 
             if muI_sum > 0:
-                eclipsed_flux[i_obs] = I_sum/n_oversampling
-                mean_mu[i_obs] = muI_sum/I_sum
+                #eclipsed_flux[i_obs] = I_sum/n_oversampling
+                #mean_mu[i_obs] = muI_sum/I_sum
                 mean_vstar[i_obs] = vstarI_sum/I_sum
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-        if self.orbit == 'circular':
-            self.rm_ohta.assignValue({"a": par_a,
-                            "lambda": parameter_values['lambda']/180.*np.pi,
-                            "epsilon": parameter_values['ld_c1'],
-                            "P": parameter_values['P'],
-                            "T0": par_tc,
-                            "i": par_i/180.*np.pi,
-                            "Is": par_Is/180.*np.pi,
-                            "Omega": par_Omega,
-                            "gamma": parameter_values['R_Rs']})
-        else:
-
-            if self.use_time_of_transit:
-                Tperi  = kepler_exo.kepler_Tc2Tperi_Tref(parameter_values['P'],
-                                                         par_tc,
-                                                         parameter_values['e'],
-                                                         parameter_values['omega'])
-            else:
-                Tperi  = kepler_exo.kepler_phase2Tperi_Tref(parameter_values['P'],
-                                                         parameter_values['mean_long'],
-                                                         parameter_values['e'],
-                                                         parameter_values['omega'])
-
-            self.rm_ohta.assignValue({"a": par_a,
-                "lambda": parameter_values['lambda']/180.*np.pi,
-                "epsilon": parameter_values['ld_c1'],
-                "P": parameter_values['P'],
-                "tau": Tperi,
-                "i": par_i/180.*np.pi,
-                "w": parameter_values['omega']/180.*np.pi-np.pi,
-                "e":parameter_values['e'],
-                "Is": par_Is/180.*np.pi,
-                "Omega": par_Omega,
-                "gamma": parameter_values['R_Rs']})
-
-        if x0_input is None:
-            return self.rm_ohta.evaluate(dataset.x0) * parameter_values['radius'] * constants.Rsun * 1000.
-        else:
-            return self.rm_ohta.evaluate(x0_input) * parameter_values['radius'] * constants.Rsun * 1000.
+        return mean_vstar

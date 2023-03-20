@@ -33,7 +33,6 @@ def get_var_exp(var, fix, i):
     else:
         return np.exp2(var[:, i], dtype=np.double)
 
-
 def get_var_log_base2(var, fix, i):
     if len(np.shape(var)) == 1:
         return np.log2(var[i], dtype=np.double)
@@ -164,6 +163,23 @@ def get_2var_rho(var, fix, i):
         mass = var[:, i[0]]
         radius = var[:, i[1]]
     return mass/radius**3
+
+
+def get_2var_product(var, fix, i):
+    if len(np.shape(var)) == 1:
+        out = var[i[0]] * var[i[1]]
+    else:
+        out = var[:, i[0]] * var[:, i[1]]
+    return out
+
+
+def get_2var_vsini(var, fix, i):
+    if len(np.shape(var)) == 1:
+        out = var[i[0]] * np.sin(var[i[1]] * constants.deg2rad)
+    else:
+        out = var[:, i[0]] * np.sin(var[:, i[1]]* constants.deg2rad)
+    return out
+
 
 
 

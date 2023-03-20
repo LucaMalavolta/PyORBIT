@@ -35,7 +35,7 @@ class RossiterMcLaughling_Ohta(AbstractModel, AbstractTransit):
         }
 
         self.use_stellar_radius = True
-        self.use_stellar_period = True
+        self.use_stellar_rotation = True
         self.use_stellar_inclination = False
 
         self.rm_ohta = None

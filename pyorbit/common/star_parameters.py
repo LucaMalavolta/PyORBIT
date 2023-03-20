@@ -89,7 +89,7 @@ class CommonStarParameters(AbstractCommon):
                 'fixed' : 0.0,
                 'unit': 'km/s',
             },
-        'veq_star':
+        'veq_star': #equatorial velocity of the star
             {
                 'bounds': [0.00, 70.],
                 'priors': ['Uniform', []],
@@ -97,11 +97,41 @@ class CommonStarParameters(AbstractCommon):
                 'fixed' : 1.6,
                 'unit': 'km/s',
             },
+        'alpha_rotation': 
+            {
+                'bounds': [0.00, 1.00],
+                'priors': ['Uniform', []],
+                'spaces': 'Linear',
+                'fixed' : 1.6,
+                'unit': 'unit',
+            },
+
     }
+
+
+    def __init__(self, *args, **kwargs):
+        super(CommonStarParameters, self).__init__(*args, **kwargs)
+
+        self.use_equatorial_velocity = True
+
 
     recenter_pams = set()
 
     def define_special_parameter_properties(self, ndim, output_lists, pam):
+
+        skip_first_parametrization = False
+        skip_second_parametrization = False
+
+        if not(pam == "v_sini" and self.use_equatorial_velocity):
+            skip_first_parametrization = True
+
+        for var_check in ['v_sini', 'veq_star', 'i_star']:
+            if var_check in self.sampler_parameters:
+                skip_first_parametrization = True
+
+        if 'v_sini' in self.fix_list:
+            skip_first_parametrization = True
+
 
         if not(pam == "mass" or pam == "radius") or \
             not ('mass' in self.multivariate_pams
@@ -111,16 +141,33 @@ class CommonStarParameters(AbstractCommon):
             or 'radius' in self.fix_list \
             or 'mass' in self.sampler_parameters \
             or 'radius' in self.sampler_parameters:
+            skip_second_parametrization = True
+
+
+        if skip_first_parametrization and skip_second_parametrization:
             return ndim, output_lists, False
 
-        self.transformation['mass'] = get_var_val
-        self.parameter_index['mass'] = ndim
-        self.transformation['radius'] = get_var_val
-        self.parameter_index['radius'] = ndim + 1
 
-        self.transformation['density'] = get_2var_rho
-        self.parameter_index['density'] = [ndim, ndim + 1]
-        variable_list = ['mass', 'radius']
+        if not skip_first_parametrization:
+            self.transformation['veq_star'] = get_var_val
+            self.parameter_index['veq_star'] = ndim
+            self.transformation['i_star'] = get_var_val
+            self.parameter_index['i_star'] = ndim + 1
+
+            self.transformation['v_sini'] = get_2var_vsini
+            self.parameter_index['v_sini'] = [ndim, ndim + 1]
+            variable_list = ['veq_star', 'i_star']
+
+
+        if not skip_second_parametrization:
+            self.transformation['mass'] = get_var_val
+            self.parameter_index['mass'] = ndim
+            self.transformation['radius'] = get_var_val
+            self.parameter_index['radius'] = ndim + 1
+
+            self.transformation['density'] = get_2var_rho
+            self.parameter_index['density'] = [ndim, ndim + 1]
+            variable_list = ['mass', 'radius']
 
         for var in variable_list:
 
