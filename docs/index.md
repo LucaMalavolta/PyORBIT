@@ -5,7 +5,8 @@
 --->
 
 [![GitHub][github-badge]][github-link]
-[![PyPi version](https://badgen.net/pypi/v/pip/)](https://pypi.org/project/pyorbit-package)
+[![PyPI version fury.io](https://badge.fury.io/py/pyorbit-package.svg)](https://pypi.python.org/pypi/pyprbot-package/)
+
 
 
 ``PyORBIT`` is a robust, versatile framework for the characterization of planetary systems.
@@ -53,6 +54,7 @@ Feel free to submit your retrofitting acronym!
 [github-badge]: https://img.shields.io/badge/GitHub-PyORBIT-blue
 [github-link]: https://github.com/LucaMalavolta/PyORBIT
 
+
 ```{admonition} Be careful
 Documentation is still work in progress!
 ```
@@ -98,5 +100,7 @@ GitHub Repository <https://github.com/LucaMalavolta/PyORBIT>
   * :ref:`search`
 
 --->
+
+[![forthebadge made-with-python](http://ForTheBadge.com/images/badges/made-with-python.svg)](https://www.python.org/)
 
 This documentation has been rendered using the [Sphinx Book Theme](https://sphinx-book-theme.readthedocs.io/) and the [Myst parser](https://myst-parser.readthedocs.io/)
