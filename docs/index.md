@@ -5,6 +5,8 @@
 --->
 
 [![GitHub][github-badge]][github-link]
+[![PyPi version](https://badgen.net/pypi/v/pip/)](https://pypi.org/project/pyorbit-package)
+
 
 ``PyORBIT`` is a robust, versatile framework for the characterization of planetary systems.
 With ``PyORBIT`` you can model light curves, radial velocities, activity indexes and transit time variations.
@@ -68,7 +70,7 @@ results_interpretation
 GitHub Repository <https://github.com/LucaMalavolta/PyORBIT>
 ```
 
-<!--- 
+<!---
 ```{eval-rst}
 .. toctree::
    :maxdepth: 2
