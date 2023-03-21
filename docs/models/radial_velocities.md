@@ -2,10 +2,31 @@
 
 # Planetary RV signal
 
+A Keplerian model for non-interacting planets
+
 - model name: ``radial_velocities``
 - required common objects : ``planets`` , ``star``
 
-### Model parameters 
+### Keywords
+
+There are no keywords defined for this model, all the relevant information are inherited from the planet common model
+
+### Example
+
+```yaml
+models:
+  radial_velocities:
+    planets:
+     - b
+```
+
+#```{tip}
+#Planets are automatically assigned to the `star` model when there is only one stellar object #specified in the model
+#```
+
+### Model parameters
+
+The following parameters will be inherited from the common model (column *Common?: common*) or a different value will be assigned for each dataset (column *Common?: dataset*)
 
 | Name        | Parameter | Common?  | Definition  | Notes |
 | :---        | :-------- | :-------------  | :-----  | :---- |
@@ -27,7 +48,3 @@ Notes:
   3. ``Standard`` parametrization only
   4. ``Ford2006`` parametrization only
   5. ``Eastman2013`` parametrization only
-
-### Keywords
-
-to be defined

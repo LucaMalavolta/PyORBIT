@@ -5,7 +5,7 @@
 These models will use a mixture of *common parameters* and *dataset-specific
 parameters* to model a dataset
 
-```{note} 
+```{note}
 All the parameters are inherited from the *common models*, where the boundaries and other properties are defined. The distinction between *common parameter* and *dataset parameter* happen at this stage and can be changed for each model
 ```
 
@@ -13,4 +13,5 @@ All the parameters are inherited from the *common models*, where the boundaries 
 ```{toctree}
 :maxdepth: 1
 models/radial_velocities
+models/abstract_transit
 ```
