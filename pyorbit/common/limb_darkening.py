@@ -84,6 +84,15 @@ class LimbDarkening_2Pam(AbstractCommon):
 
         self.parametrization = 'Standard'
 
+    def initialize_model(self, mc, **kwargs):
+
+        self.parametrization =  kwargs.get('parametrization', self.parametrization)
+        if self.parametrization in self.parametrization_list:
+            print('Using limb darkening coefficient parametrization: ', self.parametrization)
+        else:
+            print('ERROR in configuration file - limb darkening: parametrization not supported')
+            quit()
+
     def define_special_parameter_properties(self, ndim, output_lists, var):
         """
 

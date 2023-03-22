@@ -72,9 +72,11 @@ class AbstractTransit(object):
         if mc.common_models[self.planet_ref].use_time_of_transit:
             self.list_pams_common.update(['Tc'])
             self.use_time_of_transit = True
+            self.retrieve_t0 = self._internal_transformation_mod04
             # Copying the property to the class for faster access
         else:
             self.list_pams_common.update(['mean_long'])
+            self.retrieve_t0 = self._internal_transformation_mod05
             # mean longitude = argument of pericenter + mean anomaly at Tref
 
         """ The appropriate function for variable conversion is stored internally
@@ -94,10 +96,6 @@ class AbstractTransit(object):
             else:
                 self.retrieve_ai = self._internal_transformation_mod00
 
-        if self.use_time_of_transit:
-            self.retrieve_t0 = self._internal_transformation_mod04
-        else:
-            self.retrieve_t0 = self._internal_transformation_mod05
 
     def _prepare_star_parameters(self, mc, **kwargs):
         """ Additional stellar parameters,
@@ -135,12 +133,6 @@ class AbstractTransit(object):
         if self.use_stellar_temperature:
             self.list_pams_common.update(['temperature'])
             self.retrieve_temperature = self._internal_transformation_mod13
-
-        """ check if the stellar_rotation has to be used as parameter """
-        self.use_stellar_rotation = kwargs.get('use_stellar_rotation', self.use_stellar_rotation)
-
-        """ check if the stellar_inclination has to be used as parameter """
-        self.use_stellar_inclination = kwargs.get('use_stellar_inclination', self.use_stellar_inclination)
 
         """ Check if the stellar rotation period is given as a starting value
             If so, the angular rotation of the star and the stellar inclination

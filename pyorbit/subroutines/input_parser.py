@@ -284,97 +284,16 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, reload_ze
                     mc, mc.common_models[planet_name], planet_conf)
 
                 try:
-                    if planet_conf['orbit'] in mc.common_models[planet_name].orbit_list:
-
-                        #mc.planet_dict[planet_name] = planet_conf['orbit']
-                        mc.common_models[planet_name].orbit = planet_conf['orbit']
-
-                        print('Using orbital model: ',
-                              mc.common_models[planet_name].orbit)
-
-                        if planet_conf['orbit'] == 'circular':
-                            mc.common_models[planet_name].fix_list['e'] = np.asarray(
-                                [0.000, 0.0000], dtype=np.double)
-                            mc.common_models[planet_name].fix_list['omega'] = np.asarray(
-                                [90.0, 0.0000], dtype=np.double)
-                        if planet_conf['orbit'] == 'dynamical':
-                            mc.dynamical_dict[planet_name] = True
-                    else:
-                        #mc.planet_dict[planet_name] = mc.common_models[planet_name].orbit
-                        print('Orbital model not recognized, switching to: ',
-                              mc.common_models[planet_name].orbit)
-                except:
-                    #mc.planet_dict[planet_name] = mc.common_models[planet_name].orbit
-                    print('Using default orbital model: ',
-                          mc.common_models[planet_name].orbit)
-
-                try:
-                    if planet_conf['parametrization'] in mc.common_models[planet_name].parametrization_list:
-                        mc.common_models[planet_name].parametrization = planet_conf['parametrization']
-                        print('Using orbital parametrization: ',
-                              mc.common_models[planet_name].parametrization)
-                    else:
-                        print('Orbital parametrization not recognized, switching to: ',
-                              mc.common_models[planet_name].parametrization)
-
-                    if mc.common_models[planet_name].parametrization[-5:] == 'Tcent' or \
-                            mc.common_models[planet_name].parametrization[-5:] == 'Tc':
-                        print('Using Central Time of Transit instead of mean longitude')
-                        mc.common_models[planet_name].use_time_of_transit = True
-
-                except:
-                    print('Using default orbital parametrization: ',
-                          mc.common_models[planet_name].parametrization)
-
-                try:
-                    mc.common_models[planet_name].use_inclination = planet_conf['use_inclination']
-                    print('Inclination will be included as free parameter: ',
-                          planet_conf['use_inclination'])
-                except:
-                    for key in ['boundaries', 'spaces', 'priors', 'starts', 'fixed']:
-                        if key in planet_conf and 'i' in planet_conf[key]:
-                            mc.common_models[planet_name].use_inclination = True
-                            print(
-                                'Inclination will be included as free parameter: ', True)
-                    # False by default, unless the user has specified some of its properties
-
-                try:
-                    mc.common_models[planet_name].use_semimajor_axis = planet_conf['use_semimajor_axis']
-                    print('Semi-major axis will be included as free parameter: {}'.format(
-                        planet_conf['use_inclination']))
-                except:
-                    for key in ['boundaries', 'spaces', 'priors', 'starts', 'fixed']:
-                        if key in planet_conf and 'a' in planet_conf[key]:
-                            mc.common_models[planet_name].use_semimajor_axis = True
-                            print(
-                                'Semi-major axis will be included as free parameter: ', True)
-                    # False by default, unless the user has specified some of its properties
-
-                try:
-                    mc.common_models[planet_name].use_time_of_transit = planet_conf['use_time_of_transit']
-                    print('Using Central Time of Transit instead of mean longitude: {}'.format(
-                        planet_conf['use_time_of_transit']))
-                except:
-                    # False by default
-                    pass
-
-                try:
-                    mc.common_models[planet_name].use_mass_for_planets = planet_conf['use_mass_for_planets']
-                    print('Using planetary mass instead of RV semiamplitude: '.format(
-                        planet_conf['use_mass_for_planets']))
-                except:
-                    # False by default
-                    pass
-
-                try:
                     if planet_conf['ordering'] >=0:
                         ordering_dict[planet_name] = planet_conf['ordering']
                 except:
                     pass
 
-                print()
+                mc.common_models[planet_name].model_conf = planet_conf.copy()
 
-        elif model_name == 'star':
+        elif model_name == 'star' or model_name=='stars':
+
+            """ stellar models can be gathered under a specific label"""
 
             for conf_name, star_conf in model_conf.items():
                 if 'type' in star_conf:
@@ -386,39 +305,15 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, reload_ze
                 else:
                     model_type = conf_name
 
-                """
-                Two ways to include the limb darkening:
-                    1) just specify its properties, if all data has been gathered with the same filter
-                    2) include different models, for dataset obtained with different filters
-                """
+                mc.common_models[conf_name] = define_common_type_to_class[model_type](conf_name)
+                bounds_space_priors_starts_fixed(mc, mc.common_models[conf_name], star_conf)
 
-                dict_copy = model_conf[conf_name].copy()
+                """ Automatic detection of common models without dataset-specific parameters"""
+                for dataset_name, dataset in mc.dataset_dict.items():
+                    if conf_name in dataset.models and not (conf_name in conf_models):
+                        conf_models[conf_name] = {'common': conf_name}
 
-                for key in ['type', 'kind','model', 'priors', 'spaces', 'boundaries', 'starts', 'fixed', 'parametrization']:
-                    if key in dict_copy:
-                        del dict_copy[key]
-
-                if len(dict_copy) == 0:
-                    dict_copy = {conf_name: model_conf[conf_name].copy()}
-
-                for key_name, key_vals in dict_copy.items():
-                    mc.common_models[key_name] = define_common_type_to_class[model_type](
-                        key_name)
-                    bounds_space_priors_starts_fixed(
-                        mc, mc.common_models[key_name], key_vals)
-
-                    """ Automatic detection of common models without dataset-specific parameters"""
-                    for dataset_name, dataset in mc.dataset_dict.items():
-                        if key_name in dataset.models and not (key_name in conf_models):
-                            conf_models[key_name] = {'common': key_name}
-
-                    try:
-                        if key_vals['parametrization'] in mc.common_models[key_name].parametrization_list:
-                            mc.common_models[key_name].parametrization = key_vals['parametrization']
-                            print('Using limb darkening coefficient parametrization: ',
-                                  mc.common_models[key_name].parametrization)
-                    except:
-                        continue
+                mc.common_models[conf_name].model_conf = star_conf.copy()
 
         else:
 
@@ -517,8 +412,7 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, reload_ze
                 except:
                     planet_list = np.atleast_1d(model_conf['common']).tolist()
                 model_name_original = [model_name for pl_name in planet_list]
-                model_name_expanded = [model_name +
-                                       '_' + pl_name for pl_name in planet_list]
+                model_name_expanded = [model_name + '_' + pl_name for pl_name in planet_list]
 
             """ Let's avoid some dumb user using the planet names to name the models"""
 
@@ -540,6 +434,10 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, reload_ze
                     mc.models[model_name_exp] = \
                         define_type_to_class[model_type][mc.common_models[planet_name].orbit](
                             model_name_exp, planet_name)
+
+                    # TODO
+                    # ! this part will stop working now that most definitions have been moved to 
+                    # ! mc.common_models[conf_name].model_initialize
 
                     if keplerian_approximation:
                         """ override default model from input file, to apply keplerian approximation """

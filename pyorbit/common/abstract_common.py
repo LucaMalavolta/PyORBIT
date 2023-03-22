@@ -65,6 +65,9 @@ class AbstractCommon(object):
                 self.default_spaces[par_name] = par_dict['spaces']
                 self.default_fixed[par_name] = par_dict['fixed']
 
+    def initialize_model(self, mc, **kwargs):
+        pass
+
     def define_special_parameter_properties(self, ndim, output_lists, var):
         return ndim, output_lists, False
 

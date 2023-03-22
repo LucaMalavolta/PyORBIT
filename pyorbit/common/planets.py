@@ -214,6 +214,51 @@ class CommonPlanets(AbstractCommon):
         self.period_average = None
         # Variable used only by TRADES
 
+    def initialize_model(self, mc, **kwargs):
+
+        self.orbit = kwargs.get('orbit', self.orbit)
+        if self.orbit in self.orbit_list:
+            print('Using orbital model: ', self.orbit)
+
+            if self.orbit == 'circular':
+                self.fix_list['e'] = np.asarray([0.000, 0.0000], dtype=np.double)
+                self.fix_list['omega'] = np.asarray([90.0, 0.0000], dtype=np.double)
+            if self.orbit == 'dynamical': mc.dynamical_dict[self.common_ref] = True
+
+        else:
+            print('ERROR in configuration file - orbital model: not supported')
+            quit()
+
+
+        self.parametrization = kwargs.get('parametrization', self.parametrization)
+        if self.parametrization in self.parametrization_list:
+            print('Using orbital parametrization: ', self.parametrization)
+
+            if self.parametrization[-5:] == 'Tcent' or self.parametrization[-5:] == 'Tc':
+                self.use_time_of_transit = True
+        else:
+            print('ERROR in configuration file - orbital model: not supported')
+            quit()
+
+        self.use_inclination = kwargs.get('use_inclination', self.use_inclination)
+        if self.use_inclination :
+            print('Inclination replacing impact parameter as a free parameter: ', True)
+
+        self.use_semimajor_axis = kwargs.get('use_semimajor_axis', self.use_semimajor_axis)
+        if self.use_semimajor_axis :
+            print('Semi-major axis replacing stellar density as a free parameter: ', True)
+
+        self.use_mass_for_planets = kwargs.get('use_mass_for_planets', self.use_mass_for_planets)
+        if self.use_mass_for_planets :
+            print('Planetary mass replacing RV semi-amplitude as a free parameter: ', True)
+
+        self.use_time_of_transit = kwargs.get('use_time_of_transit', self.use_time_of_transit)
+        if self.use_time_of_transit :
+            print('Time of transit replacing mean longitude as a free parameter: ', True)
+
+        print()
+
+
     def define_special_parameter_properties(self, ndim, output_lists, var):
         """ Boundaries definition for eccentricity :math:`e` and argument of pericenter :math:`\omega`
 

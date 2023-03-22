@@ -57,6 +57,14 @@ class ModelContainer(object):
 
         # First step: setting up the correct associations between models and dataset
 
+        for model_name, model in self.common_models.items():
+            if not model.model_conf:
+                model_conf = {}
+            else:
+                model_conf = model.model_conf
+
+            model.initialize_model(self, **model_conf)
+
         for model_name, model in self.models.items():
 
             if not model.model_conf:
@@ -64,6 +72,7 @@ class ModelContainer(object):
             else:
                 model_conf = model.model_conf
 
+            print(model_conf)
             model.initialize_model(self, **model_conf)
             model.change_parameter_status(self, **model_conf)
 

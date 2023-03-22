@@ -107,20 +107,44 @@ class CommonStarParameters(AbstractCommon):
             },
 
     }
+    recenter_pams = set()
 
 
     def __init__(self, *args, **kwargs):
         super(CommonStarParameters, self).__init__(*args, **kwargs)
 
-        self.use_equatorial_velocity = True
+        self.use_equatorial_velocity = False
+        self.use_stellar_rotation = False
+        self.use_stellar_inclination = False
+        self.use_differential_rotation = False
 
+    def initialize_model(self, mc, **kwargs):
 
-    recenter_pams = set()
+        self.use_equatorial_velocity = kwargs.get('use_equatorial_velocity', self.use_equatorial_velocity)
+
+        """ check if the stellar_inclination has to be used as parameter """
+        self.use_stellar_inclination = kwargs.get('use_stellar_inclination', self.use_stellar_inclination)
+
+        """ check if the stellar_rotation has to be used as parameter """
+        self.use_stellar_rotation = kwargs.get('use_stellar_rotation', self.use_stellar_rotation)
+        self.use_differential_rotation = kwargs.get('use_differential_rotation', self.use_differential_rotation)
+
+        self.use_differential_rotation = kwargs.get('use_differential_rotation', self.use_differential_rotation)
+        if self.use_differential_rotation:
+            print('Differential rotation in model switched on: ')
+            print(' - Equatorial velocity and stellar inclination as independent parameters ')
+            print(' - Check on rotational period, unless otherwise specified ')
+
+            self.use_equatorial_velocity = True
+            self.use_stellar_inclination = True
+
+            self.use_stellar_rotation = kwargs.get('use_stellar_rotation', True)
 
     def define_special_parameter_properties(self, ndim, output_lists, pam):
 
         skip_first_parametrization = False
         skip_second_parametrization = False
+
 
         if self.use_equatorial_velocity and self.use_stellar_rotation:
             if not(pam == "veq_star" or pam == 'i_star' or pam == 'rotation_period'):

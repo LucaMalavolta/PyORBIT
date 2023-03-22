@@ -39,23 +39,17 @@ class RossiterMcLaughling_Reloaded(AbstractModel, AbstractTransit):
 
     def initialize_model(self, mc, **kwargs):
 
-        """ check if the differential rotation should be included in the model"""
-        self.use_differential_rotation = kwargs.get('use_differential_rotation', self.use_differential_rotation)
-        if self.use_differential_rotation:
 
-            self.use_equatorial_velocity = True
-            self.use_stellar_inclination = True
+        """ check if the differential rotation should be included in the model"""
+        if mc.common_models[self.stellar_ref].use_differential_rotation:
             self.list_pams_common.discard('v_sini')
             self.list_pams_common.update(['veq_star', 'i_star', 'alpha_rotation'])
             mc.common_models[self.stellar_ref].use_equatorial_velocity =  True
+            mc.common_models[self.stellar_ref].use_stellar_inclination =  True
 
             """ If stellar rotation is provided as a prior or as the outcome of the fit,
                 the code will check if the derived stellar radius is consistent with the prior
             """
-            self.use_stellar_rotation = kwargs.get('use_stellar_rotation', self.use_stellar_rotation)
-            if self.use_stellar_rotation:
-                mc.common_models[self.stellar_ref].use_stellar_rotation =  True
-
 
         self._prepare_planetary_parameters(mc, **kwargs)
         self._prepare_star_parameters(mc, **kwargs)
