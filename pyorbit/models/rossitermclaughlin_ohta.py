@@ -32,6 +32,8 @@ class RossiterMcLaughling_Ohta(AbstractModel, AbstractTransit):
             'lambda', # Sky-projected angle between stellar rotation axis and normal of orbit plane [deg]
             'R_Rs',  # planet radius (in units of stellar radii)
             'v_sini' # projected rotational velocity of the star
+            'rotation_period' # rotational period of the star
+            'radius' # radius of the star
         }
 
         self.compute_Omega_rotation = True
@@ -70,6 +72,13 @@ class RossiterMcLaughling_Ohta(AbstractModel, AbstractTransit):
 
         self.update_parameter_values(parameter_values, dataset.Tref)
 
+        parameter_values['i_star'] = np.arcsin(parameter_values['v_sini']  / (parameter_values['radius'] * constants.Rsun) * (parameter_values['rotation_period'] * constants.d2s)  / (2* np.pi)) * constants.rad2deg
+        try:
+            parameter_values['Omega_rotation'] = 2* np.pi / ( parameter_values['rotation_period'] * constants.d2s)
+        except:
+            parameter_values['Omega_rotation'] = parameter_values['v_sini'] / (parameter_values['radius'] * constants.Rsun) / np.sin(parameter_values['i_star'] * constants.deg2rad)
+
+
         if self.orbit == 'circular':
             self.rm_ohta.assignValue({"a": parameter_values['a_Rs'],
                             "lambda": parameter_values['lambda']/180.*np.pi,
@@ -84,7 +93,7 @@ class RossiterMcLaughling_Ohta(AbstractModel, AbstractTransit):
 
             if self.use_time_of_transit:
                 Tperi  = kepler_exo.kepler_Tc2Tperi_Tref(parameter_values['P'],
-                                                         par_tc,
+                                                         parameter_values['Tc'] - dataset.Tref,
                                                          parameter_values['e'],
                                                          parameter_values['omega'])
             else:
@@ -98,11 +107,11 @@ class RossiterMcLaughling_Ohta(AbstractModel, AbstractTransit):
                 "epsilon": parameter_values['ld_c1'],
                 "P": parameter_values['P'],
                 "tau": Tperi,
-                "i": par_i/180.*np.pi,
+                "i": parameter_values['i'] *constants.deg2rad,
                 "w": parameter_values['omega']/180.*np.pi-np.pi,
                 "e":parameter_values['e'],
-                "Is": par_Is/180.*np.pi,
-                "Omega": par_Omega,
+                "Is": parameter_values['i_star']*constants.deg2rad,
+                "Omega": parameter_values['Omega_rotation'],
                 "gamma": parameter_values['R_Rs']})
 
         if x0_input is None:

@@ -146,27 +146,28 @@ class CommonStarParameters(AbstractCommon):
         skip_second_parametrization = False
 
 
-        if self.use_equatorial_velocity and self.use_stellar_rotation:
-            if not(pam == "veq_star" or pam == 'i_star' or pam == 'rotation_period'):
-                skip_first_parametrization = True
-
-            for var_check in ['v_sini', 'veq_star', 'i_star', 'radius', 'rotation_period']:
-                if var_check in self.sampler_parameters:
+        if self.use_equatorial_velocity and self.use_stellar_inclination:
+            if self.use_stellar_rotation:
+                if not(pam == "veq_star" or pam == 'i_star' or pam == 'rotation_period'):
                     skip_first_parametrization = True
 
-            if 'v_sini' in self.fix_list or 'radius' in self.fix_list:
-                skip_first_parametrization = True
+                for var_check in ['v_sini', 'veq_star', 'i_star', 'radius', 'rotation_period']:
+                    if var_check in self.sampler_parameters:
+                        skip_first_parametrization = True
 
-        elif self.use_equatorial_velocity:
-            if not(pam == "veq_star" or pam == 'i_star'):
-                skip_first_parametrization = True
-
-            for var_check in ['v_sini', 'veq_star', 'i_star']:
-                if var_check in self.sampler_parameters:
+                if 'v_sini' in self.fix_list or 'radius' in self.fix_list:
                     skip_first_parametrization = True
 
-            if 'v_sini' in self.fix_list:
-                skip_first_parametrization = True
+            else:
+                if not(pam == "veq_star" or pam == 'i_star'):
+                    skip_first_parametrization = True
+
+                for var_check in ['v_sini', 'veq_star', 'i_star']:
+                    if var_check in self.sampler_parameters:
+                        skip_first_parametrization = True
+
+                if 'v_sini' in self.fix_list:
+                    skip_first_parametrization = True
 
 
         if not(pam == "mass" or pam == "radius") or \

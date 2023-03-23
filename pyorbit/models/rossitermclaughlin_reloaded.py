@@ -28,20 +28,16 @@ class RossiterMcLaughling_Reloaded(AbstractModel, AbstractTransit):
             'v_sini' # projected rotational velocity of the star
         }
 
-        self.use_stellar_radius = False
-        self.use_stellar_rotation = False
-        self.use_stellar_inclination = False
-        self.use_equatorial_velocity = False
-        self.use_differential_rotation = False
-
         self.star_grid = {}   # write an empty dictionary
 
 
     def initialize_model(self, mc, **kwargs):
 
+        self.use_differential_rotation = kwargs.get('use_differential_rotation', mc.common_models[self.stellar_ref].use_differential_rotation)
+
 
         """ check if the differential rotation should be included in the model"""
-        if mc.common_models[self.stellar_ref].use_differential_rotation:
+        if self.use_differential_rotation:
             self.list_pams_common.discard('v_sini')
             self.list_pams_common.update(['veq_star', 'i_star', 'alpha_rotation'])
             mc.common_models[self.stellar_ref].use_equatorial_velocity =  True
@@ -97,9 +93,9 @@ class RossiterMcLaughling_Reloaded(AbstractModel, AbstractTransit):
         :param x0_input:
         :return:
         """
+        self.update_parameter_values(parameter_values, dataset.Tref)
 
-        par_Is = self.retrieve_Istar(parameter_values)
-
+        istar_rad = parameter_values['i_star'] * constants.deg2rad
         lambda_rad = parameter_values['lambda'] * constants.deg2rad
         inclination_rad = parameter_values['i'] * constants.deg2rad
         omega_rad = parameter_values['omega'] * constants.deg2rad
@@ -136,7 +132,7 @@ class RossiterMcLaughling_Reloaded(AbstractModel, AbstractTransit):
         if self.use_differential_rotation:
 
             """ rotate the coordinate system around the x_ortho axis by an agle: """
-            star_grid_beta = (np.pi / 2.) - par_Is * constants.deg2rad
+            star_grid_beta = (np.pi / 2.) - istar_rad
 
             """ orthogonal distance from the stellar equator """
             ### Equation 7 in Cegla+2016
