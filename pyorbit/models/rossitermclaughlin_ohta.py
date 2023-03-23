@@ -34,9 +34,7 @@ class RossiterMcLaughling_Ohta(AbstractModel, AbstractTransit):
             'v_sini' # projected rotational velocity of the star
         }
 
-        self.use_stellar_radius = True
-        self.use_stellar_rotation = True
-        self.use_stellar_inclination = False
+        self.compute_Omega_rotation = True
 
         self.rm_ohta = None
 
@@ -70,19 +68,17 @@ class RossiterMcLaughling_Ohta(AbstractModel, AbstractTransit):
         """
         #t1_start = process_time()
 
-        par_a, par_i = self.retrieve_ai(parameter_values)
-        par_tc = self.retrieve_t0(parameter_values, dataset.Tref)
-        par_Omega, par_Is = self.retrieve_Omega_Istar(parameter_values)
+        self.update_parameter_values(parameter_values, dataset.Tref)
 
         if self.orbit == 'circular':
-            self.rm_ohta.assignValue({"a": par_a,
+            self.rm_ohta.assignValue({"a": parameter_values['a_Rs'],
                             "lambda": parameter_values['lambda']/180.*np.pi,
                             "epsilon": parameter_values['ld_c1'],
                             "P": parameter_values['P'],
-                            "T0": par_tc,
-                            "i": par_i/180.*np.pi,
-                            "Is": par_Is/180.*np.pi,
-                            "Omega": par_Omega,
+                            "T0": parameter_values['Tc'] - dataset.Tref,
+                            "i": parameter_values['i'] *constants.deg2rad,
+                            "Is": parameter_values['i_star']*constants.deg2rad,
+                            "Omega": parameter_values['Omega_rotation'],
                             "gamma": parameter_values['R_Rs']})
         else:
 

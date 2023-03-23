@@ -21,12 +21,14 @@ class AbstractTransit(object):
 
         """ This keywors is specific to Rossiter-McLaughlin analysis"""
         self.compute_Omega_rotation = False
+        self.compute_star_inclination = False
+        self.compute_vsini = False
 
         """ Keywords inherited from Star_parameter common model (with switched logical sign)"""
-        self.use_stellar_rotation = False
-        self.use_stellar_inclination = False
-        self.use_equatorial_velocity = False
-        self.use_rotation_from_activity = False
+        #self.use_stellar_rotation = False
+        #self.use_stellar_inclination = False
+        #self.use_equatorial_velocity = False
+        #self.use_rotation_from_activity = False
 
         """ Some models just want fixed values for stellar raddi and temperature"""
         self.fixed_stellar_radius = False
@@ -75,8 +77,6 @@ class AbstractTransit(object):
 
         if mc.common_models[self.planet_ref].use_time_of_transit:
             self.list_pams_common.update(['Tc'])
-            self.retrieve_t0 = self._internal_transformation_mod04
-            # Copying the property to the class for faster access
         else:
             self.list_pams_common.update(['mean_long'])
             self.compute_time_of_transit = True
@@ -84,35 +84,50 @@ class AbstractTransit(object):
 
 
     def _prepare_star_parameters(self, mc, **kwargs):
-        """ Additional stellar parameters,
-            check if the stellar radius and effect temperature are provided as
-            fixed values or not.
-            As in version 9., only used by spiderman models
+        """ Additional stellar parameters
+            in 9.2 the possibility of fixing a parameter for a specific model
+            may be suppressed
         """
 
-        stellarradius_names = [
+        if mc.common_models[self.planet_ref].use_stellar_inclination:
+            self.list_pams_common.update(['i_star'])
+        else:
+            self.compute_star_inclination = True
+
+        if mc.common_models[self.planet_ref].use_equatorial_velocity:
+            self.list_pams_common.update(['veq_star'])
+        else:
+            self.compute_equatorial_velocity = True
+
+        if mc.common_models[self.planet_ref].use_stellar_rotation:
+            self.list_pams_common.update(['rotation_period'])
+        else:
+            self.compute_rotation_period = True
+
+
+        stellar_radius_names = [
             'stellar_radius',
             'radius',
             'star_radius'
         ]
 
-        for dict_name in stellarradius_names:
+        for dict_name in stellar_radius_names:
             if kwargs.get(dict_name, False):
                 self.code_options['radius'] = kwargs[dict_name]
                 self.list_pams_common.discard('radius')
                 self.fixed_stellar_radius = True
 
-        effectivetemperature_names = [
+        effective_temperature_names = [
             'teff',
             'temperature',
             'eff_temperature'
             'temperature_eff'
         ]
-        for dict_name in effectivetemperature_names:
+        for dict_name in effective_temperature_names:
             if kwargs.get(dict_name, False):
                 self.code_options['temperature'] = kwargs[dict_name]
                 self.list_pams_common.discard('temperature')
-                self.fixed_stellar_temperature = False
+                self.fixed_stellar_temperature = True
 
         """ Check if the stellar rotation period is given as a starting value
             If so, the angular rotation of the star and the stellar inclination
@@ -120,7 +135,7 @@ class AbstractTransit(object):
         """
 
         self.code_options['rotation_keyword'] = 'rotation_period'
-        rotationperiod_names =[
+        rotation_period_names =[
             'rotation_period',
             'rotational_period',
             'stellar_period',
@@ -136,20 +151,23 @@ class AbstractTransit(object):
             'star_period_from_activity',
             'rotation_period_from_activity'
         ]
-        for dict_name in rotationperiod_names:
+        for dict_name in rotation_period_names:
             if kwargs.get(dict_name, False):
-                self.code_options['rotation_keyword'] = kwargs[dict_name]
-                self.use_stellar_rotation = True
+                self.code_options['rotation_period'] = kwargs[dict_name]
+                self.list_pams_common.discard('rotation_period')
+                self.fixed_stellar_rotation = True
 
-        if self.use_stellar_rotation and self.use_stellar_inclination:
-            self.retrieve_Omega_Istar = self._internal_transformation_mod22
-            self.retrieve_Istar = self._internal_transformation_mod30
-        elif self.use_stellar_rotation:
-            self.retrieve_Omega_Istar = self._internal_transformation_mod21
-            self.retrieve_Istar = self._internal_transformation_mod31
-        else:
-            self.retrieve_Omega_Istar = self._internal_transformation_mod20
-            self.retrieve_Istar = self._internal_transformation_mod30
+
+
+        #if self.use_stellar_rotation and self.use_stellar_inclination:
+        #    self.retrieve_Omega_Istar = self._internal_transformation_mod22
+        #    self.retrieve_Istar = self._internal_transformation_mod30
+        #elif self.use_stellar_rotation:
+        #    self.retrieve_Omega_Istar = self._internal_transformation_mod21
+        #    self.retrieve_Istar = self._internal_transformation_mod31
+        #else:
+        #    self.retrieve_Omega_Istar = self._internal_transformation_mod20
+        #    self.retrieve_Istar = self._internal_transformation_mod30
 
 
     def _prepare_limb_darkening_coefficients(self, mc, **kwargs):
@@ -273,16 +291,32 @@ class AbstractTransit(object):
             parameter_values['temperature'] = self.code_options['temperature']
 
         # TODO
-        # ! dowble check this section 
+        # ! doble check this section
         if self.compute_star_inclination:
-            parameter_values['i_star'] = np.arcsin(parameter_values['v_sini']  / (parameter_values['radius'] * constants.Rsun) * (parameter_values['rotation_period'] * constants.d2s)  / (2* np.pi)) * constants.rad2deg
+            if self.compute_equatorial_velocity:
+                parameter_values['i_star'] = np.arcsin(parameter_values['v_sini']  / (parameter_values['radius'] * constants.Rsun) * (parameter_values['rotation_period'] * constants.d2s)  / (2* np.pi)) * constants.rad2deg
+                parameter_values['veq_star'] = parameter_values['v_sini']  / parameter_values['i_star']
+            else:
+                parameter_values['i_star'] = np.arcsin(parameter_values['v_sini']  / parameter_values['veq_star']) * constants.deg2rad
+
+        else:
 
         if self.compute_Omega_rotation:
             try:
-                parameter_values['Omega_rotation'] = parameter_values['v_sini'] / (parameter_values['radius'] * constants.Rsun) / np.sin(parameter_values['i_star'] * constants.deg2rad)
-            except:
                 parameter_values['Omega_rotation'] = 2* np.pi / ( parameter_values['rotation_period'] * constants.d2s)
+            except:
+                parameter_values['Omega_rotation'] = parameter_values['v_sini'] / (parameter_values['radius'] * constants.Rsun) / np.sin(parameter_values['i_star'] * constants.deg2rad)
 
+
+        if self.use_stellar_rotation and self.use_stellar_inclination:
+            self.retrieve_Omega_Istar = self._internal_transformation_mod22
+            self.retrieve_Istar = self._internal_transformation_mod30
+        elif self.use_stellar_rotation:
+            self.retrieve_Omega_Istar = self._internal_transformation_mod21
+            self.retrieve_Istar = self._internal_transformation_mod31
+        else:
+            self.retrieve_Omega_Istar = self._internal_transformation_mod20
+            self.retrieve_Istar = self._internal_transformation_mod30
 
 
     @staticmethod
