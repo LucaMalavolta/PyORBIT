@@ -1,4 +1,4 @@
-from pyorbit.subroutines.common import np, convert_rho_to_a, convert_b_to_i
+from pyorbit.subroutines.common import np, convert_rho_to_ars, convert_b_to_i
 import pyorbit.subroutines.constants as constants
 import pyorbit.subroutines.kepler_exo as kepler_exo
 
@@ -14,24 +14,28 @@ class AbstractTransit(object):
         self.ld_ncoeff = 2
         self.parametrization = 'Standard'
 
-        self.use_semimajor_axis = False
-        self.use_inclination = False
-        self.use_time_of_transit = False
-        self.use_stellar_radius = False
-        self.use_stellar_temperature = False
+        """ Keywords inherited from Planet common model (with switched logical sign)"""
+        self.compute_semimajor_axis = True
+        self.compute_inclination = True
+        self.compute_time_of_transit = False
+
+        """ This keywors is specific to Rossiter-McLaughlin analysis"""
+        self.compute_Omega_rotation = False
+
+        """ Keywords inherited from Star_parameter common model (with switched logical sign)"""
         self.use_stellar_rotation = False
         self.use_stellar_inclination = False
         self.use_equatorial_velocity = False
         self.use_rotation_from_activity = False
 
+        """ Some models just want fixed values for stellar raddi and temperature"""
+        self.fixed_stellar_radius = False
+        self.fixed_stellar_temperature = False
+
         self.limb_darkening_model = None
 
-        self.retrieve_ai = None
-        self.retrieve_t0 = None
-        self.retrieve_radius = None
-        self.retrieve_temperature = None
-        self.retrieve_Omega_Istar = None
-        self.retrieve_Istar = None
+        #self.retrieve_Omega_Istar = None
+        #self.retrieve_Istar = None
 
         self.multivariate_mass_radius = False
         self.code_options = {}
@@ -50,7 +54,7 @@ class AbstractTransit(object):
         if mc.common_models[self.planet_ref].use_semimajor_axis:
             """ a is the semi-major axis (in units of stellar radii) """
             self.list_pams_common.update(['a_Rs'])
-            self.use_semimajor_axis = True
+            self.compute_semimajor_axis = False
         else:
             if 'mass' in multivariate_pars and 'radius' in multivariate_pars:
                 self.list_pams_common.update(['mass'])
@@ -64,37 +68,19 @@ class AbstractTransit(object):
         if mc.common_models[self.planet_ref].use_inclination:
             """ i is the orbital inclination (in degrees) """
             self.list_pams_common.update(['i'])
-            self.use_inclination = True
+            self.compute_inclination = False
         else:
             """ b is the impact parameter """
             self.list_pams_common.update(['b'])
 
         if mc.common_models[self.planet_ref].use_time_of_transit:
             self.list_pams_common.update(['Tc'])
-            self.use_time_of_transit = True
             self.retrieve_t0 = self._internal_transformation_mod04
             # Copying the property to the class for faster access
         else:
             self.list_pams_common.update(['mean_long'])
-            self.retrieve_t0 = self._internal_transformation_mod05
+            self.compute_time_of_transit = True
             # mean longitude = argument of pericenter + mean anomaly at Tref
-
-        """ The appropriate function for variable conversion is stored internally
-        """
-        if self.use_semimajor_axis and self.use_inclination:
-            self.retrieve_ai = self._internal_transformation_mod03
-        elif self.use_inclination:
-            if self.multivariate_mass_radius:
-                self.retrieve_ai = self._internal_transformation_mod07
-            else:
-                self.retrieve_ai = self._internal_transformation_mod02
-        elif self.use_semimajor_axis:
-            self.retrieve_ai = self._internal_transformation_mod01
-        else:
-            if self.multivariate_mass_radius:
-                self.retrieve_ai = self._internal_transformation_mod06
-            else:
-                self.retrieve_ai = self._internal_transformation_mod00
 
 
     def _prepare_star_parameters(self, mc, **kwargs):
@@ -113,11 +99,8 @@ class AbstractTransit(object):
         for dict_name in stellarradius_names:
             if kwargs.get(dict_name, False):
                 self.code_options['radius'] = kwargs[dict_name]
-                self.use_stellar_radius = False
-                self.retrieve_radius = self._internal_transformation_mod10
-        if self.use_stellar_radius:
-            self.list_pams_common.update(['radius'])
-            self.retrieve_radius = self._internal_transformation_mod11
+                self.list_pams_common.discard('radius')
+                self.fixed_stellar_radius = True
 
         effectivetemperature_names = [
             'teff',
@@ -128,11 +111,8 @@ class AbstractTransit(object):
         for dict_name in effectivetemperature_names:
             if kwargs.get(dict_name, False):
                 self.code_options['temperature'] = kwargs[dict_name]
-                self.use_stellar_temperature = False
-                self.retrieve_temperature = self._internal_transformation_mod12
-        if self.use_stellar_temperature:
-            self.list_pams_common.update(['temperature'])
-            self.retrieve_temperature = self._internal_transformation_mod13
+                self.list_pams_common.discard('temperature')
+                self.fixed_stellar_temperature = False
 
         """ Check if the stellar rotation period is given as a starting value
             If so, the angular rotation of the star and the stellar inclination
@@ -263,79 +243,47 @@ class AbstractTransit(object):
         self.code_options[dataset.name_ref]['Tc_boundaries'] = tc_boundaries
 
 
-    """ function for internal transformation of parameters, to avoid if calls"""
-    @staticmethod
-    def _internal_transformation_mod00(parameter_values):
-        """ this function transforms b and stellar density to i and a  """
-        a = convert_rho_to_a(parameter_values['P'], parameter_values['density'])
-        i = convert_b_to_i(
-            parameter_values['b'], parameter_values['e'], parameter_values['omega'], a)
-        return a, i
+    """ function for internal transformation of parameters """
 
-    @staticmethod
-    def _internal_transformation_mod01(parameter_values):
-        """ this function transforms b to i"""
-        i = convert_b_to_i(
+    def update_parameter_values(self, parameter_values, Tref):
+        if 'v_sini' not in parameter_values:
+            parameter_values['v_sini'] = parameter_values['veq_star'] * np.sin(parameter_values['i_star']*constants.deg2rad)
+
+        #t1_start = process_time()
+        if self.multivariate_mass_radius:
+            parameter_values['density'] = parameter_values['mass']/parameter_values['radius']**3
+
+        if self.compute_semimajor_axis:
+            parameter_values['a_Rs'] = convert_rho_to_ars(parameter_values['P'], parameter_values['density'])
+
+        if self.compute_inclination:
+            parameter_values['i'] = convert_b_to_i(
             parameter_values['b'], parameter_values['e'], parameter_values['omega'], parameter_values['a_Rs'])
-        return parameter_values['a_Rs'], i
 
-    @staticmethod
-    def _internal_transformation_mod02(parameter_values):
-        """ this function transforms stellar density to a  """
-        a = convert_rho_to_a(parameter_values['P'], parameter_values['density'])
-        return a, parameter_values['i']
-
-    @staticmethod
-    def _internal_transformation_mod03(parameter_values):
-        """ no transformation needed  """
-        return parameter_values['a_Rs'], parameter_values['i']
-
-    @staticmethod
-    def _internal_transformation_mod04(parameter_values, Tref):
-        """ this function transforms Tc into Tc- Tref t"""
-        return parameter_values['Tc'] - Tref
-
-    @staticmethod
-    def _internal_transformation_mod05(parameter_values, Tref):
-        """ this function transforms phase into Tc- Tref t"""
-        return kepler_exo.kepler_phase2Tc_Tref(parameter_values['P'],
+        if self.compute_time_of_transit:
+            parameter_values['Tc']= kepler_exo.kepler_phase2Tc_Tref(parameter_values['P'],
                                                parameter_values['mean_long'],
                                                parameter_values['e'],
-                                               parameter_values['omega'])
+                                               parameter_values['omega']) + Tref
 
-    @staticmethod
-    def _internal_transformation_mod06(parameter_values):
-        """ this function transforms b, mass, radius to i and a
-            it replaces _internal_transformation_mod00 when mass & radius
-            multivariate are used
-        """
-        rho = parameter_values['mass']/parameter_values['radius']**3
-        a = convert_rho_to_a(parameter_values['P'], rho)
-        i = convert_b_to_i(
-            parameter_values['b'], parameter_values['e'], parameter_values['omega'], a)
-        return a, i
+        if self.fixed_stellar_radius:
+            parameter_values['radius'] = self.code_options['radius']
 
-    @staticmethod
-    def _internal_transformation_mod07(parameter_values):
-        """ this function transforms P,mass, radius to a
-            it replaces _internal_transformation_mod02 when mass & radius
-            multivariate are used
-        """
-        rho = parameter_values['mass']/parameter_values['radius']**3
-        a = convert_rho_to_a(parameter_values['P'], rho)
-        return a, parameter_values['i']
+        if self.fixed_stellar_temperature:
+            parameter_values['temperature'] = self.code_options['temperature']
 
-    def _internal_transformation_mod10(self, parameter_values):
-        return self.code_options['radius']
+        # TODO
+        # ! dowble check this section 
+        if self.compute_star_inclination:
+            parameter_values['i_star'] = np.arcsin(parameter_values['v_sini']  / (parameter_values['radius'] * constants.Rsun) * (parameter_values['rotation_period'] * constants.d2s)  / (2* np.pi)) * constants.rad2deg
 
-    def _internal_transformation_mod11(self, parameter_values):
-        return parameter_values['radius']
+        if self.compute_Omega_rotation:
+            try:
+                parameter_values['Omega_rotation'] = parameter_values['v_sini'] / (parameter_values['radius'] * constants.Rsun) / np.sin(parameter_values['i_star'] * constants.deg2rad)
+            except:
+                parameter_values['Omega_rotation'] = 2* np.pi / ( parameter_values['rotation_period'] * constants.d2s)
 
-    def _internal_transformation_mod12(self, parameter_values):
-        return self.code_options['temperature']
 
-    def _internal_transformation_mod13(self, parameter_values):
-        return parameter_values['temperature']
 
     @staticmethod
     def _internal_transformation_mod20(parameter_values):
@@ -355,7 +303,7 @@ class AbstractTransit(object):
             float: inclination of the of stellar rotation axis, [degrees]
         """
 
-        Omega = parameter_values['v_sini'] / (parameter_values['radius'] * constants.Rsun) / np.sin(parameter_values['i_star']/180.*np.pi)
+        Omega = parameter_values['v_sini'] / (parameter_values['radius'] * constants.Rsun) / np.sin(parameter_values['i_star']*constants.deg2rad)
 
         return Omega, parameter_values['i_star']
 

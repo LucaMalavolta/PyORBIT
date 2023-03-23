@@ -2,7 +2,7 @@ from pyorbit.subroutines.common import np
 import pyorbit.subroutines.constants as constants
 import pyorbit.subroutines.kepler_exo as kepler_exo
 from pyorbit.models.abstract_model import AbstractModel
-from pyorbit.models.abstract_transit import AbstractTransit
+from pyorbit.models.abstract_transit import *
 
 try:
     from PyAstronomy import modelSuite as PyAstroModelSuite
@@ -90,8 +90,6 @@ class RossiterMcLaughling_Reloaded(AbstractModel, AbstractTransit):
 
     def compute(self, parameter_values, dataset, x0_input=None):
 
-        if 'v_sini' not in parameter_values:
-            parameter_values['v_sini'] = parameter_values['veq_star'] * np.sin(parameter_values['i_star']*constants.deg2rad)
 
         """
         :param parameter_values:
@@ -99,15 +97,11 @@ class RossiterMcLaughling_Reloaded(AbstractModel, AbstractTransit):
         :param x0_input:
         :return:
         """
-        #t1_start = process_time()
 
-        par_a, par_i = self.retrieve_ai(parameter_values)
-        par_tc = self.retrieve_t0(parameter_values, dataset.Tref)
         par_Is = self.retrieve_Istar(parameter_values)
-        par_tc = self.retrieve_t0(parameter_values, dataset.Tref)
-        par_lamba = parameter_values['lambda'] * constants.deg2rad
 
-        inclination_rad = par_i * constants.deg2rad
+        lambda_rad = parameter_values['lambda'] * constants.deg2rad
+        inclination_rad = parameter_values['i'] * constants.deg2rad
         omega_rad = parameter_values['omega'] * constants.deg2rad
 
 
@@ -128,10 +122,10 @@ class RossiterMcLaughling_Reloaded(AbstractModel, AbstractTransit):
         """ Intensity normalization"""
         star_grid_I /= np.sum(star_grid_I)
 
-        star_grid_x_ortho = self.star_grid['xc'] * np.cos(par_lamba) \
-            - self.star_grid['yc'] * np.sin(par_lamba)  # orthogonal distances from the spin-axis
-        star_grid_y_ortho = self.star_grid['xc'] * np.sin(par_lamba) \
-            + self.star_grid['yc'] * np.cos(par_lamba)
+        star_grid_x_ortho = self.star_grid['xc'] * np.cos(lambda_rad) \
+            - self.star_grid['yc'] * np.sin(lambda_rad)  # orthogonal distances from the spin-axis
+        star_grid_y_ortho = self.star_grid['xc'] * np.sin(lambda_rad) \
+            + self.star_grid['yc'] * np.cos(lambda_rad)
 
 
         star_grid_r_ortho = np.sqrt(star_grid_x_ortho ** 2 + star_grid_y_ortho** 2)
@@ -194,11 +188,11 @@ class RossiterMcLaughling_Reloaded(AbstractModel, AbstractTransit):
 
             true_anomaly, orbital_distance_ratio = kepler_exo.kepler_true_anomaly_orbital_distance(
                 bjd_oversampling - dataset.Tref,
-                par_tc,
+                parameter_values['Tc']-dataset.Tref,
                 parameter_values['P'],
                 parameter_values['e'],
                 omega_rad,
-                par_a)
+                parameter_values['a_Rs'])
 
             """ planet position during its orbital motion, in unit of stellar radius"""
             # Following Murray+Correia 2011 , with the argument of the ascending node set to zero.

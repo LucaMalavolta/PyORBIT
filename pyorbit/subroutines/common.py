@@ -15,11 +15,13 @@ try:
         sys.path.insert(0, '/Users/malavolta/Astro/CODE/trades/pytrades/')
     else:
         sys.path.insert(0, '/home/malavolta/CODE/others/trades/pytrades/')
-    #from pytrades_lib import pytrades
+    # from pytrades_lib import pytrades
 except:
     pass
 
 # old base 2 logarithm
+
+
 def get_var_log(var, fix, i):
     if len(np.shape(var)) == 1:
         return np.log2(var[i], dtype=np.double)
@@ -32,6 +34,7 @@ def get_var_exp(var, fix, i):
         return np.exp2(var[i], dtype=np.double)
     else:
         return np.exp2(var[:, i], dtype=np.double)
+
 
 def get_var_log_base2(var, fix, i):
     if len(np.shape(var)) == 1:
@@ -177,8 +180,9 @@ def get_2var_vsini(var, fix, i):
     if len(np.shape(var)) == 1:
         out = var[i[0]] * np.sin(var[i[1]] * constants.deg2rad)
     else:
-        out = var[:, i[0]] * np.sin(var[:, i[1]]* constants.deg2rad)
+        out = var[:, i[0]] * np.sin(var[:, i[1]] * constants.deg2rad)
     return out
+
 
 def get_2var_veq_rot_radius(var, fix, i):
     # first parameter: v_eq
@@ -186,13 +190,11 @@ def get_2var_veq_rot_radius(var, fix, i):
     if len(np.shape(var)) == 1:
         out = var[i[0]] * (var[i[1]] * constants.d2s / (2*np.pi) / constants.Rsun)
     else:
-        out = var[:, i[0]] * (var[:, i[1]]* constants.d2s / (2*np.pi) / constants.Rsun)
+        out = var[:, i[0]] * (var[:, i[1]] * constants.d2s / (2*np.pi) / constants.Rsun)
     return out
 
 
-
 def giveback_priors(kind, bounds, pams, val):
-
     """ The code is supposed to give -np.inf log-likelihood when the
     parameters are outside the boundaries,
     so this case is not encompassed in the definition of the priors """
@@ -205,18 +207,18 @@ def giveback_priors(kind, bounds, pams, val):
         return 0.00
 
     if kind == 'Gaussian':
-        #return np.log(stats.norm.pdf(val, loc=pams[0], scale=pams[1]))
+        # return np.log(stats.norm.pdf(val, loc=pams[0], scale=pams[1]))
         return -(val - pams[0]) ** 2 / (2 * pams[1] ** 2) - 0.5 * np.log(2*np.pi) - np.log(pams[1])
 
-    if kind == 'HalfGaussian' or kind=='PositiveHalfGaussian':
-        #return -(val - pams[0]) ** 2 / (2 * pams[1] ** 2)
+    if kind == 'HalfGaussian' or kind == 'PositiveHalfGaussian':
+        # return -(val - pams[0]) ** 2 / (2 * pams[1] ** 2)
         if val >= pams[0]:
             return np.log(2*stats.norm.pdf(val, loc=pams[0], scale=pams[1]))
         else:
             return -np.inf
 
     if kind == 'NegativeHalfGaussian':
-        #return -(val - pams[0]) ** 2 / (2 * pams[1] ** 2)
+        # return -(val - pams[0]) ** 2 / (2 * pams[1] ** 2)
         if val <= pams[0]:
             return np.log(2*stats.norm.pdf(val, loc=pams[0], scale=pams[1]))
         else:
@@ -239,7 +241,7 @@ def giveback_priors(kind, bounds, pams, val):
         """ bounds[1] = e_max
             pams[0] = sigma_2 (suggested 0.2)
         """
-        return np.log((val/pams[0]**2 * np.exp(-0.5 *(val/pams[0])**2))/(1. - np.exp(-0.5*(bounds[1]/pams[0])**2)))
+        return np.log((val/pams[0]**2 * np.exp(-0.5 * (val/pams[0])**2))/(1. - np.exp(-0.5*(bounds[1]/pams[0])**2)))
 
     if kind == "WhiteNoisePrior":
         """ bounds[1] = noise_max (99 m/s)
@@ -247,7 +249,7 @@ def giveback_priors(kind, bounds, pams, val):
         """
         return np.log(1./(pams[0]*(1.0 + val/pams[0])) * 1.0/np.log(1.0+bounds[1]/pams[0]))
 
-    if kind == 'BetaDistribution' or kind=='Beta':
+    if kind == 'BetaDistribution' or kind == 'Beta':
         return np.log(stats.beta.pdf((val-bounds[0])/(bounds[1]-bounds[0]), pams[0], pams[1]))
 
 
@@ -349,13 +351,12 @@ def nested_sampling_prior_compute(val, kind, coeff, space):
     :return:
     """
 
-
     if kind == 'Uniform':
         return val * (coeff[1] - coeff[0]) + coeff[0]
 
     if kind in ['Gaussian', 'HalfGaussian', 'PositiveHalfGaussian', 'NegativeHalfGaussian']:
 
-        x_new = stats.truncnorm.ppf(val, coeff[2], coeff[3]) * coeff[1] +  coeff[0]
+        x_new = stats.truncnorm.ppf(val, coeff[2], coeff[3]) * coeff[1] + coeff[0]
 
         if space == 'Linear':
             return x_new
@@ -390,8 +391,8 @@ def compute_value_sigma(samples):
         sample_med[2] = sample_tmp[0] - sample_tmp[1]
 
     elif np.size(np.shape(samples)) == 2:
-        sample_med = np.asarray(list(map(lambda v: (v[1], v[2] - v[1], v[1] - v[0]),
-                                   zip(*np.percentile(samples, [15.865, 50, 84.135], axis=0)))))
+        sample_med = np.asarray(
+            list(map(lambda v: (v[1], v[2] - v[1], v[1] - v[0]), zip(*np.percentile(samples, [15.865, 50, 84.135], axis=0)))))
 
     else:
         print('ERROR!!! ')
@@ -410,37 +411,44 @@ def pick_MAP_parameters(samples, lnprob):
         print('ERROR!!! ')
         return None
 
+
 def pick_sampleMED_parameters(samples, lnprob):
     pams_perc = np.percentile(samples, [15.865, 50, 84.135], axis=0)
     dist_array = 0.0
-    for i_pam in range(0, len(samples[0,:])):
-        #dist_array += ((samples[:, i_pam]-pams_perc[1, i_pam])/(pams_perc[2,i_pam]-pams_perc[0,i_pam]))**2
+    for i_pam in range(0, len(samples[0, :])):
+        # dist_array += ((samples[:, i_pam]-pams_perc[1, i_pam])/(pams_perc[2,i_pam]-pams_perc[0,i_pam]))**2
         dist_array += ((samples[:, i_pam]-pams_perc[1, i_pam])/(np.ptp(samples[:, i_pam])))**2
 
     id_val = np.argmin(dist_array)
     return samples[id_val, :], lnprob[id_val]
 
-def convert_rho_to_a(P, rho):
+
+def convert_rho_to_ars(P, rho):
 
     return np.power(constants.Gsi * (constants.d2s * constants.d2s) * (P**2)
                     * rho * constants.rho_Sun / (3. * np.pi), 1./3.)
 
+
 def convert_ars_to_a(a, Rs):
     return a * Rs * constants.RsunAU
+
 
 def convert_PMsMp_to_a(P, Ms, Mp):
     # planet mass in solar masses
     # output in Astronomical Units
     return np.power(P**2 * constants.Giau * (Ms + Mp/constants.Msear) / (2 * np.pi)**2., 1./3.)
 
-def convert_b_to_i(b,e,o,a):
+
+def convert_b_to_i(b, e, o, a):
 
     rho_e = (1. - e ** 2) / (1. + e * np.sin(o))
     arccos_argument = b / a / rho_e
-    if np.size(arccos_argument)<=1:
+    if np.size(arccos_argument) <= 1:
 
-        if arccos_argument > 1.: arccos_argument=1
-        if arccos_argument < -1.: arccos_argument=-1
+        if arccos_argument > 1.:
+            arccos_argument = 1
+        if arccos_argument < -1.:
+            arccos_argument = -1
     else:
         arccos_argument = [1. if b > 1. else b for b in arccos_argument]
         arccos_argument = [-1. if b < -1. else b for b in arccos_argument]

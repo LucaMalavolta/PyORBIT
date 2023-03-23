@@ -1,7 +1,5 @@
 
-from pyorbit.subroutines.common import np, convert_rho_to_a, convert_b_to_i
-import pyorbit.subroutines.constants as constants
-import pyorbit.subroutines.kepler_exo as kepler_exo
+from pyorbit.subroutines.common import np
 from pyorbit.models.abstract_model import AbstractModel
 from pyorbit.models.abstract_transit import AbstractTransit
 

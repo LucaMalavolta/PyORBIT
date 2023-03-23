@@ -328,7 +328,7 @@ def get_planet_parameters(mc, theta, verbose=False):
 
             if 'a_Rs' not in parameter_values.keys() and 'density' in stellar_parameters.keys():
                 derived_parameters['a_Rs'] = True
-                parameter_values['a_Rs'] = convert_rho_to_a(parameter_values['P'],
+                parameter_values['a_Rs'] = convert_rho_to_ars(parameter_values['P'],
                                                         stellar_parameters['density'])
 
             if 'i' not in parameter_values.keys():

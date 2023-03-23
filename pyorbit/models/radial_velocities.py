@@ -449,7 +449,7 @@ class DynamicalIntegrator:
                                        dict_pams['omega'],
                                        dict_pams['a_Rs'])
                 else:
-                    a_temp = convert_rho_to_a(dict_pams['P'], star_pams['density'])
+                    a_temp = convert_rho_to_ars(dict_pams['P'], star_pams['density'])
                     self.dynamical_set['pams']['i'][n_plan] = \
                         convert_b_to_i(dict_pams['b'],
                                        dict_pams['e'],
@@ -661,7 +661,7 @@ class DynamicalIntegrator:
                                        dict_pams['omega'],
                                        dict_pams['a_Rs'])
                 else:
-                    a_temp = convert_rho_to_a(dict_pams['P'], star_pams['density'])
+                    a_temp = convert_rho_to_ars(dict_pams['P'], star_pams['density'])
                     i_temp = \
                         convert_b_to_i(dict_pams['b'],
                                        dict_pams['e'],
