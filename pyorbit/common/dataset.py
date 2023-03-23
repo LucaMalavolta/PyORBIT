@@ -77,7 +77,7 @@ class Dataset(AbstractCommon):
         self.ancillary = np.genfromtxt(input_file, names=True)
 
 
-    def append_ancillary(self, input_file, input_array=False):
+    def append_ancillary(self, input_file, input_array=False, input_array_str=False):
         """ Function to either read an ancillary file or pass the value of another
         dataset as ancillary
 
@@ -94,20 +94,35 @@ class Dataset(AbstractCommon):
         if not input_array:
             # read ancillary data from txt file when it is not passed as a ndarray
             input_array = np.genfromtxt(input_file, names=True)
+            #! reading as string if needed - the selection of columns to be
+            #! considered as string must happen inside the model
+            input_array_str =np.genfromtxt(input_file, dtype=str)
+
+        self.ancillary_str_index = {}
 
         if self.ancillary:
             # Data ancillary has been already defined when reading the main files
             # we take the keywords from the file and add them to the existing
-            for name in input_array.dtype.names:
+            for iname, name in enumerate(input_array.dtype.names):
                 try:
                     self.ancillary = drop_fields(self.ancillary, name)
                     self.ancillary = append_fields(self.ancillary, name, input_array[name])
+
+                    self.ancillary_str_index[name] = iname
+
+
                 except ValueError:
                     print('The ancillary input array is not a structured array')
                     print('https://numpy.org/doc/stable/user/basics.rec.html')
                     quit()
         else:
             self.ancillary = input_array.copy()
+            self.ancillary_str = input_array_str.copy()
+
+            for iname, name in enumerate(input_array.dtype.names):
+                self.ancillary_str_index[name] = iname
+        #!new 
+
 
 
     def convert_dataset_from_file(self, input_file):
