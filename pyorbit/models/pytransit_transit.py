@@ -1,5 +1,5 @@
 
-from pyorbit.subroutines.common import np
+from pyorbit.subroutines.common import np, constants
 from pyorbit.models.abstract_model import AbstractModel
 from pyorbit.models.abstract_transit import AbstractTransit
 
@@ -47,8 +47,8 @@ class PyTransit_Transit(AbstractModel, AbstractTransit):
             self.pytransit_plot[dataset.name_ref] = QuadraticModel()
 
         self.pytransit_models[dataset.name_ref].set_data(dataset.x0,
-                                                         exptimes=self.code_options[dataset.name_ref]['exp_time'],
-                                                         nsamples=self.code_options[dataset.name_ref]['sample_factor'])
+                                                            exptimes=self.code_options[dataset.name_ref]['exp_time'],
+                                                            nsamples=self.code_options[dataset.name_ref]['sample_factor'])
 
     def compute(self, parameter_values, dataset, x0_input=None):
         """
@@ -58,9 +58,7 @@ class PyTransit_Transit(AbstractModel, AbstractTransit):
         :return:
         """
 
-        pams_a, pams_i = self.retrieve_ai(parameter_values)
-        pams_t0 = self.retrieve_t0(parameter_values, dataset.Tref)
-        omega_rad = parameter_values['omega'] / 180. * np.pi
+        self.update_parameter_values(parameter_values, dataset.Tref)
 
         for par, i_par in self.ldvars.items():
             self.ld_vars[i_par] = parameter_values[par]
@@ -69,14 +67,24 @@ class PyTransit_Transit(AbstractModel, AbstractTransit):
             return self.pytransit_models[dataset.name_ref].evaluate_ps(
                 parameter_values['R_Rs'],
                 self.ld_vars,
-                pams_t0, parameter_values['P'], pams_a, pams_i, parameter_values['e'], omega_rad) - 1.
+                parameter_values['Tc'] - dataset.Tref,
+                parameter_values['P'],
+                parameter_values['a_Rs'],
+                parameter_values['i'],
+                parameter_values['e'],
+                parameter_values['omega'] * constants.deg2rad) - 1.
 
         else:
             self.pytransit_plot[dataset.name_ref].set_data(x0_input,
-                                                           exptimes=self.code_options[dataset.name_ref]['exp_time'],
-                                                           nsamples=self.code_options[dataset.name_ref]['sample_factor'])
+                                                            exptimes=self.code_options[dataset.name_ref]['exp_time'],
+                                                            nsamples=self.code_options[dataset.name_ref]['sample_factor'])
 
             return self.pytransit_plot[dataset.name_ref].evaluate_ps(
                 parameter_values['R_Rs'],
                 self.ld_vars,
-                pams_t0, parameter_values['P'], pams_a, pams_i, parameter_values['e'], omega_rad) - 1.
+                parameter_values['Tc'] - dataset.Tref,
+                parameter_values['P'],
+                parameter_values['a_Rs'],
+                parameter_values['i'],
+                parameter_values['e'],
+                parameter_values['omega'] * constants.deg2rad) - 1.

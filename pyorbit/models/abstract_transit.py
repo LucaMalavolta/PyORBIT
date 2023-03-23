@@ -157,18 +157,6 @@ class AbstractTransit(object):
                 self.fixed_stellar_rotation = True
 
 
-
-        #if self.use_stellar_rotation and self.use_stellar_inclination:
-        #    self.retrieve_Omega_Istar = self._internal_transformation_mod22
-        #    self.retrieve_Istar = self._internal_transformation_mod30
-        #elif self.use_stellar_rotation:
-        #    self.retrieve_Omega_Istar = self._internal_transformation_mod21
-        #    self.retrieve_Istar = self._internal_transformation_mod31
-        #else:
-        #    self.retrieve_Omega_Istar = self._internal_transformation_mod20
-        #    self.retrieve_Istar = self._internal_transformation_mod30
-
-
     def _prepare_limb_darkening_coefficients(self, mc, **kwargs):
         """ Setting up the limb darkening calculation"""
 

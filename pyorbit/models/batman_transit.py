@@ -109,10 +109,11 @@ class Batman_Transit(AbstractModel, AbstractTransit):
         :return:
         """
         #t1_start = process_time()
+        self.update_parameter_values(parameter_values, dataset.Tref)
 
-        self.batman_params.a, self.batman_params.inc = self.retrieve_ai(
-            parameter_values)
-        self.batman_params.t0 = self.retrieve_t0(parameter_values, dataset.Tref)
+        self.batman_params.a = parameter_values['a_Rs']
+        self.batman_params.inc = parameter_values['i']
+        self.batman_params.t0 = parameter_values['Tc'] - dataset.Tref
 
         self.batman_params.per = parameter_values['P']  # orbital period
         # planet radius (in units of stellar radii)

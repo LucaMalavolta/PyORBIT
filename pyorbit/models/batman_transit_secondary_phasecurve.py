@@ -132,12 +132,11 @@ class Batman_Transit_Eclipse_PhaseCurve(AbstractModel, AbstractTransit):
         """
         #t1_start = process_time()
 
-        pams_a, pams_i = self.retrieve_ai(parameter_values)
-        pams_t0 = self.retrieve_t0(parameter_values, dataset.Tref)
+        self.update_parameter_values(parameter_values, dataset.Tref)
 
-        self.batman_params.a = pams_a
-        self.batman_params.inc = pams_i
-        self.batman_params.t0 = pams_t0
+        self.batman_params.a = parameter_values['a_Rs']
+        self.batman_params.inc = parameter_values['i']
+        self.batman_params.t0 = parameter_values['Tc'] - dataset.Tref
 
         self.batman_params.per = parameter_values['P']  # orbital period
         # planet radius (in units of stellar radii)
