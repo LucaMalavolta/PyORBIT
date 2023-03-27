@@ -54,6 +54,30 @@ class PyTransit_Transit_With_TTV_Ancillary(AbstractModel, AbstractTransit):
 
         column_selection = self.ancillary_str_index['planet']
         planet_selection = (dataset.ancillary_str[:,column_selection] == self.planet_ref )
+        self.Tc_number = int(np.sum(planet_selection))
+
+        """ extracting the central time of transit and the transit duration 
+        for the planet under analysis"""
+        Tc_selected = dataset.ancillary['transit_time'][planet_selection]
+        Td_selected = dataset.ancillary['duration'][planet_selection]
+        try:
+            transit_id = dataset.ancillary['transit_id'][planet_selection]
+        except:
+            if self.use_shared_ttvs: 
+                print('transit_id should be provided in the ancillary file')
+            transit_id = np.arange(0, self.Tc_number, dtype=np.int64)
+
+        for i_sub in range(0, self.Tc_number):
+            par_original = 'Tc'
+
+            id_sub = transit_id[i_sub]
+            par_subset = 'Tc_'+repr(id_sub)
+
+            self._subset_transfer_priors(mc, dataset, par_original, par_subset)
+            par_update = [Tc_selected[i_sub]-Tc_selected[i_sub]/2., 
+            Tc_selected[i_sub]+Tc_selected[i_sub]/2.]
+
+            self.bounds[dataset.name_ref].update({par_subset: par_update})
 
         #!NEW 
         #!NEW 

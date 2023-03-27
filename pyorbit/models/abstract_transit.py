@@ -24,6 +24,11 @@ class AbstractTransit(object):
         self.compute_star_inclination = False
         self.compute_vsini = False
 
+        """ This keywors is specific to TTV analysis analysis
+        Right now implemented only in pytransit_ttv_ancillary
+        """
+        self.use_shared_ttvs = False
+
         """ Keywords inherited from Star_parameter common model (with switched logical sign)"""
         #self.use_stellar_rotation = False
         #self.use_stellar_inclination = False
@@ -82,6 +87,7 @@ class AbstractTransit(object):
             self.compute_time_of_transit = True
             # mean longitude = argument of pericenter + mean anomaly at Tref
 
+        self.use_shared_ttvs = mc.common_models[self.planet_ref].use_shared_ttvs:
 
     def _prepare_star_parameters(self, mc, **kwargs):
         """ Additional stellar parameters

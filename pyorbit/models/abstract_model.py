@@ -302,6 +302,73 @@ class AbstractModel(object):
     def compute(self, parameter_values, dataset, x0_input=None):
         return 0.00
 
+
+    def transfer_priors(self, mc, dataset, par_original, par_subset, 
+    common_pam=False, dataset_pam=False):
+
+        if common_pam:
+            self.list_pams_common.update([par_subset])
+        elif dataset_pam:
+            self.list_pams_dataset.update([par_subset])
+        else:
+            print('ERROR in transfer_prior subroutine')
+            print('The new variable must be either common- or dataset-defined')
+            quit()
+
+        for common_model in self.common_ref:
+            if par_original not in mc.common_models[common_model].list_pams:
+                continue
+
+            if par_original in mc.common_models[common_model].bounds:
+                par_update = mc.common_models[common_model].bounds[par_original]
+            elif par_original in self.bounds[dataset.name_ref]:
+                par_update = self.bounds[dataset.name_ref][par_original]
+            else:
+                par_update = mc.common_models[common_model].default_bounds[par_original]
+
+            if common_pam:
+                 mc.common_models[common_model].bounds.update({par_subset: par_update})
+            else:
+                self.bounds[dataset.name_ref].update({par_subset: par_update})
+
+
+            if par_original in mc.common_models[common_model].spaces:
+                par_update = mc.common_models[common_model].spaces[par_original]
+            elif par_original in self.spaces[dataset.name_ref]:
+                par_update = self.spaces[dataset.name_ref][par_original]
+            else:
+                par_update = mc.common_models[common_model].default_spaces[par_original]
+
+            if common_pam:
+                 mc.common_models[common_model].spaces.update({par_subset: par_update})
+            else:
+                self.spaces[dataset.name_ref].update({par_subset: par_update})
+
+
+            if par_original in mc.common_models[common_model].prior_pams:
+                par_update0 = mc.common_models[common_model].prior_kind[par_original]
+                par_update1 = mc.common_models[common_model].prior_pams[par_original]
+            elif par_original in self.prior_pams[dataset.name_ref]:
+                par_update0 = self.prior_kind[dataset.name_ref][par_original]
+                par_update1 = self.prior_pams[dataset.name_ref][par_original]
+            else:
+                par_update0 = mc.common_models[common_model].default_priors[par_original][0]
+                par_update1 = mc.common_models[common_model].default_priors[par_original][1]
+
+            if common_pam:
+                mc.common_models[common_model].prior_kind.update({par_subset: par_update0})
+                mc.common_models[common_model].prior_pams.update({par_subset: par_update1})
+            else:
+                self.prior_kind[dataset.name_ref].update({par_subset: par_update0})
+                self.prior_pams[dataset.name_ref].update({par_subset: par_update1})
+
+
+    def _subset_transfer_priors(self, mc, dataset, par_original, par_subset):
+        #! deprecated module
+        self.transfer_priors(mc, dataset, par_original, par_subset, dataset_pam=True)
+
+
+    """ 
     def _subset_transfer_priors(self, mc, dataset, par_original, par_subset):
 
         self.list_pams_dataset.update([par_subset])
@@ -333,4 +400,4 @@ class AbstractModel(object):
 
             self.prior_kind[dataset.name_ref].update({par_subset: par_update0})
             self.prior_pams[dataset.name_ref].update({par_subset: par_update1})
-
+    """

@@ -208,6 +208,7 @@ class CommonPlanets(AbstractCommon):
         self.use_semimajor_axis = False
         self.use_time_of_transit = False
         self.use_mass_for_planets = False
+        self.use_shared_ttvs = False
 
         self.omega_star = True
 
@@ -255,6 +256,10 @@ class CommonPlanets(AbstractCommon):
         self.use_time_of_transit = kwargs.get('use_time_of_transit', self.use_time_of_transit)
         if self.use_time_of_transit :
             print('Time of transit replacing mean longitude as a free parameter: ', True)
+
+        self.use_shared_ttvs = kwargs.get('use_shared_ttvs', self.use_shared_ttvs)
+        if self.use_shared_ttvs:
+            print('Shared transit-specific time of transits (i.e., TTVs): ', True)
 
         print()
 
