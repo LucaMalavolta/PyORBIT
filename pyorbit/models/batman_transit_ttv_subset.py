@@ -158,9 +158,9 @@ class Batman_Transit_TTV_Subset(AbstractModel, AbstractTransit):
         else:
             y_output = x0_input * 0.
 
-        if not self.use_inclination:
-            if parameter_values['b'] > 1. + parameter_values['R_Rs'] :
-                return y_output
+        #if not self.use_inclination:
+        #    if parameter_values['b'] > 1. + parameter_values['R_Rs'] :
+        #        return y_output
 
 
 

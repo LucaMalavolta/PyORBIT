@@ -1269,15 +1269,15 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
                 file_keyword = prepend_keyword + 'model_files'
 
                 if prepend_keyword == '':
-                    planet_pars = planet_parameters_med
+                    planet_pams = planet_parameters_med
                     # star_vars = star_parameters # leaving here, it could be useful for the future
                     chain_ref = chain_med[:, 0]
                 elif prepend_keyword == 'MAP_':
-                    planet_pars = planet_parameters_MAP
+                    planet_pams = planet_parameters_MAP
                     # star_vars = star_parameters_MAP
                     chain_ref = chain_MAP
                 elif prepend_keyword == 'sampleMED_':
-                    planet_pars = planet_parameters_sampleMED
+                    planet_pams = planet_parameters_sampleMED
                     # star_vars = star_parameters_MAP
                     chain_ref = chain_sampleMED
 
@@ -1302,26 +1302,26 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
                             np.size(bjd_plot[dataset_name]['x_plot']))
 
                         for common_ref in mc.models[model_name].common_ref:
-                            if common_ref in planet_pars:
-                                if 'P' in planet_pars[common_ref]:
+                            if common_ref in planet_pams:
+                                if 'P' in planet_pams[common_ref]:
                                     phase = (dataset.x0 /
-                                             planet_pars[common_ref]['P']) % 1
+                                             planet_pams[common_ref]['P']) % 1
                                     phase_plot = ((bjd_plot[dataset_name]['x_plot'] - mc.Tref) /
-                                                  planet_pars[common_ref]['P']) % 1
-                                    if 'Tc' in planet_pars[common_ref]:
-                                        tc_folded = (dataset.x - planet_pars[common_ref]['Tc']
-                                                     + planet_pars[common_ref]['P'] / 2.) \
-                                            % planet_pars[common_ref]['P'] \
-                                            - planet_pars[common_ref]['P'] / 2.
-                                        tc_folded_plot = (bjd_plot[dataset_name]['x_plot'] - planet_pars[common_ref][
+                                                  planet_pams[common_ref]['P']) % 1
+                                    if 'Tc' in planet_pams[common_ref]:
+                                        tc_folded = (dataset.x - planet_pams[common_ref]['Tc']
+                                                     + planet_pams[common_ref]['P'] / 2.) \
+                                            % planet_pams[common_ref]['P'] \
+                                            - planet_pams[common_ref]['P'] / 2.
+                                        tc_folded_plot = (bjd_plot[dataset_name]['x_plot'] - planet_pams[common_ref][
                                             'Tc']
-                                            + planet_pars[common_ref]['P'] / 2.) \
-                                            % planet_pars[common_ref]['P'] \
-                                            - planet_pars[common_ref]['P'] / 2.
+                                            + planet_pams[common_ref]['P'] / 2.) \
+                                            % planet_pams[common_ref]['P'] \
+                                            - planet_pams[common_ref]['P'] / 2.
                                     else:
-                                        tc_folded = dataset.x0 % planet_pars[common_ref]['P']
+                                        tc_folded = dataset.x0 % planet_pams[common_ref]['P']
                                         tc_folded_plot = (bjd_plot[dataset_name]['x_plot'] - mc.Tref) % \
-                                            planet_pars[common_ref]['P']
+                                            planet_pams[common_ref]['P']
 
                         fileout.write(
                             'descriptor BJD Tc_folded pha val,+- sys mod full val_compare,+- res,+- jit \n')
@@ -1428,15 +1428,15 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
                         fileout.write('{0:f} {1:f} \n'.format(x, mod))
                     fileout.close()
 
-                for model in planet_pars:
+                for model in planet_pams:
                     try:
 
                         RV_out = kepler_exo.kepler_RV_T0P(bjd_plot['full']['x_plot']-mc.Tref,
-                                                          planet_pars[model]['mean_long'],
-                                                          planet_pars[model]['P'],
-                                                          planet_pars[model]['K'],
-                                                          planet_pars[model]['e'],
-                                                          planet_pars[model]['omega'])
+                                                          planet_pams[model]['mean_long'],
+                                                          planet_pams[model]['P'],
+                                                          planet_pams[model]['K'],
+                                                          planet_pams[model]['e'],
+                                                          planet_pams[model]['omega'])
                         fileout = open(
                             dir_models + 'RV_planet_' + model + '_kep.dat', 'w')
                         fileout.write('descriptor x_range  m_kepler \n')
@@ -1445,12 +1445,12 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
                         fileout.close()
 
                         x_range = np.arange(-1.50, 1.50, 0.001)
-                        RV_out = kepler_exo.kepler_RV_T0P(x_range * planet_pars[model]['P'],
-                                                          planet_pars[model]['mean_long'],
-                                                          planet_pars[model]['P'],
-                                                          planet_pars[model]['K'],
-                                                          planet_pars[model]['e'],
-                                                          planet_pars[model]['omega'])
+                        RV_out = kepler_exo.kepler_RV_T0P(x_range * planet_pams[model]['P'],
+                                                          planet_pams[model]['mean_long'],
+                                                          planet_pams[model]['P'],
+                                                          planet_pams[model]['K'],
+                                                          planet_pams[model]['e'],
+                                                          planet_pams[model]['omega'])
                         fileout = open(
                             dir_models + 'RV_planet_' + model + '_pha.dat', 'w')
                         fileout.write('descriptor x_phase m_phase \n')
@@ -1459,16 +1459,16 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
                         fileout.close()
 
                         x_range = np.arange(-1.50, 1.50, 0.001)
-                        if 'Tc' in planet_pars[model]:
+                        if 'Tc' in planet_pams[model]:
                             Tc_range = x_range * \
-                                planet_pars[model]['P'] + \
-                                planet_pars[model]['Tc'] - mc.Tref
+                                planet_pams[model]['P'] + \
+                                planet_pams[model]['Tc'] - mc.Tref
                             RV_out = kepler_exo.kepler_RV_T0P(Tc_range,
-                                                              planet_pars[model]['mean_long'],
-                                                              planet_pars[model]['P'],
-                                                              planet_pars[model]['K'],
-                                                              planet_pars[model]['e'],
-                                                              planet_pars[model]['omega'])
+                                                              planet_pams[model]['mean_long'],
+                                                              planet_pams[model]['P'],
+                                                              planet_pams[model]['K'],
+                                                              planet_pams[model]['e'],
+                                                              planet_pams[model]['omega'])
                             fileout = open(
                                 dir_models + 'RV_planet_' + model + '_Tcf.dat', 'w')
                             fileout.write('descriptor Tc_phase m_phase \n')

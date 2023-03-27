@@ -58,19 +58,19 @@ class ModelContainer(object):
         # First step: setting up the correct associations between models and dataset
 
         for model_name, model in self.common_models.items():
-            if not model.model_conf:
-                model_conf = {}
-            else:
+            try:
                 model_conf = model.model_conf
+            except:
+                model_conf = {}
 
             model.initialize_model(self, **model_conf)
 
         for model_name, model in self.models.items():
 
-            if not model.model_conf:
-                model_conf = {}
-            else:
+            try:
                 model_conf = model.model_conf
+            except:
+                model_conf = {}
 
             print(model_conf)
             model.initialize_model(self, **model_conf)

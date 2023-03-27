@@ -163,6 +163,8 @@ class AbstractCommon(object):
         return ndim, output_lists
 
     def convert(self, theta):
+        print('cccccc 111111111',self.multivariate_pams)
+
         parameter_values = {}
         for pam in self.parameter_index:
             parameter_values[pam] = self.transformation[pam](
@@ -195,6 +197,7 @@ class AbstractCommon(object):
             starting_point[self.sampler_parameters[sampler_pam]
                            ] = start_converted
 
+
     def return_priors(self, theta):
         """Compute the prior probability for a given set of input parameters
 
@@ -212,7 +215,6 @@ class AbstractCommon(object):
         prior_out = 0.00
 
         parameter_value = self.convert(theta)
-
         """ Preserving backcompatibility with version 8
         #TODO: to be simplified in the next version
         """

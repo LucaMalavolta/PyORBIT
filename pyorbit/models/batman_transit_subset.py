@@ -145,10 +145,9 @@ class Batman_Transit_TTV_Subset(AbstractModel, AbstractTransit):
                 par_subset = par_original+'_'+repr(i_sub)
                 parameter_values[par_original] = parameter_values[par_subset]
 
-
-            if not self.use_inclination:
-                if parameter_values['b'] > 1. + parameter_values['R_Rs'] :
-                    return y_output
+            #if self.compute_inclination:
+            #    if parameter_values['b'] > 1. + parameter_values['R_Rs'] :
+            #        return y_output
 
             self.update_parameter_values(parameter_values, dataset.Tref)
 

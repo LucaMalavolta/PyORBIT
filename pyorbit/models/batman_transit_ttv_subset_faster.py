@@ -153,9 +153,9 @@ class Batman_Transit_TTV_Subset_Faster(AbstractModel, AbstractTransit):
         else:
             y_output = x0_input * 0.
 
-        if not self.use_inclination:
-            if parameter_values['b'] > 1. + parameter_values['R_Rs'] :
-                return y_output
+        #if not self.use_inclination:
+        #    if parameter_values['b'] > 1. + parameter_values['R_Rs'] :
+        #        return y_output
 
 
         random_selector = np.random.randint(1000)

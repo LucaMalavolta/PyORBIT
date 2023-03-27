@@ -142,14 +142,13 @@ class CommonStarParameters(AbstractCommon):
 
     def define_special_parameter_properties(self, ndim, output_lists, pam):
 
-        skip_first_parametrization = False
-        skip_second_parametrization = False
-
+        skip_first_parametrization = True
+        skip_second_parametrization = True
 
         if self.use_equatorial_velocity and self.use_stellar_inclination:
             if self.use_stellar_rotation:
-                if not(pam == "veq_star" or pam == 'i_star' or pam == 'rotation_period'):
-                    skip_first_parametrization = True
+                if pam == "veq_star" or pam == 'i_star' or pam == 'rotation_period':
+                    skip_first_parametrization = False
 
                 for var_check in ['v_sini', 'veq_star', 'i_star', 'radius', 'rotation_period']:
                     if var_check in self.sampler_parameters:
@@ -159,8 +158,8 @@ class CommonStarParameters(AbstractCommon):
                     skip_first_parametrization = True
 
             else:
-                if not(pam == "veq_star" or pam == 'i_star'):
-                    skip_first_parametrization = True
+                if pam == "veq_star" or pam == 'i_star':
+                    skip_first_parametrization = False
 
                 for var_check in ['v_sini', 'veq_star', 'i_star']:
                     if var_check in self.sampler_parameters:
@@ -170,16 +169,19 @@ class CommonStarParameters(AbstractCommon):
                     skip_first_parametrization = True
 
 
-        if not(pam == "mass" or pam == "radius") or \
-            not ('mass' in self.multivariate_pams
+        if pam == "mass" or pam == "radius":
+            skip_second_parametrization = False
+
+        if ('mass' in self.multivariate_pams
                 and 'radius' in self.multivariate_pams
-                and self.multivariate_priors) \
-            or 'mass' in self.fix_list \
+                and self.multivariate_priors):
+            skip_second_parametrization = False
+
+        if ('mass' in self.fix_list \
             or 'radius' in self.fix_list \
             or 'mass' in self.sampler_parameters \
-            or 'radius' in self.sampler_parameters:
+            or 'radius' in self.sampler_parameters):
             skip_second_parametrization = True
-
 
         if skip_first_parametrization and skip_second_parametrization:
             return ndim, output_lists, False

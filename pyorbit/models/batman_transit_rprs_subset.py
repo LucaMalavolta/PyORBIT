@@ -163,9 +163,9 @@ class Batman_Transit_RpRs_Subset(AbstractModel, AbstractTransit):
             self.batman_params.rp = parameter_values[par_subset]
 
 
-            if not self.use_inclination:
-                if parameter_values['b'] > 1. + par_subset :
-                    return y_output
+            #if not self.use_inclination:
+            #    if parameter_values['b'] > 1. + par_subset :
+            #        return y_output
 
 
             if x0_input is None:

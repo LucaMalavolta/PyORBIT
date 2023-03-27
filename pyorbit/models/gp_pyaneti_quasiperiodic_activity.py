@@ -153,21 +153,21 @@ class GP_Pyaneti_QuasiPeriodicActivity(AbstractModel):
         if not self.rotdec_condition(self.internal_parameter_values):
             return -np.inf
 
-        self._gp_pars = np.empty(2*self._added_datasets + 3)
+        self._gp_pams = np.empty(2*self._added_datasets + 3)
 
         for l_dataset in range(0, self._added_datasets):
-            self._gp_pars[2*l_dataset], self._gp_pars[2*l_dataset+1], = self.internal_coefficients[l_dataset]
+            self._gp_pams[2*l_dataset], self._gp_pams[2*l_dataset+1], = self.internal_coefficients[l_dataset]
 
-        self._gp_pars[-3] = self.internal_parameter_values['Pdec']
-        self._gp_pars[-2] = self.internal_parameter_values['Oamp']
-        self._gp_pars[-1] = self.internal_parameter_values['Prot']
+        self._gp_pams[-3] = self.internal_parameter_values['Pdec']
+        self._gp_pams[-2] = self.internal_parameter_values['Oamp']
+        self._gp_pams[-1] = self.internal_parameter_values['Prot']
 
         kernel_name = 'MQ' + repr(self._added_datasets)
         fake_ljitter = np.zeros(self._n_cov_matrix)
         fake_jitter = np.zeros(1)
 
 
-        output = pyaneti.nll_gp(self._gp_pars,
+        output = pyaneti.nll_gp(self._gp_pams,
                                 kernel_name,
                                 self._dataset_x0,
                                 self._dataset_res,
@@ -204,7 +204,7 @@ class GP_Pyaneti_QuasiPeriodicActivity(AbstractModel):
             l_nstart, l_nend = len(x0_input)*dataset_index, len(x0_input)*(dataset_index+1)
 
         kernel_name = 'MQ' + repr(self._added_datasets)
-        cov_matrix = pyaneti.covfunc(kernel_name,self._gp_pars,self._dataset_x0,self._dataset_x0)
+        cov_matrix = pyaneti.covfunc(kernel_name,self._gp_pams,self._dataset_x0,self._dataset_x0)
 
         if faster_computation:
             Ks = self._compute_cov_Ks(t_predict)
