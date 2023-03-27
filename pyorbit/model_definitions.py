@@ -31,10 +31,12 @@ from pyorbit.models.radial_velocities import \
 
 from pyorbit.models.harmonics import Harmonics
 from pyorbit.models.pytransit_transit import PyTransit_Transit
-from pyorbit.models.pytransit_transit_with_ttv import PyTransit_Transit_With_TTV
+from pyorbit.models.pytransit_transit_ttv import PyTransit_Transit_TTV
+from pyorbit.models.pytransit_transit_ttv_subset import PyTransit_Transit_TTV_Subset
+from pyorbit.models.pytransit_transit_ttv_ancillary import PyTransit_Transit_TTV_Ancillary
 
 from pyorbit.models.batman_transit import Batman_Transit
-from pyorbit.models.batman_transit_with_ttv import Batman_Transit_With_TTV
+from pyorbit.models.batman_transit_ttv import Batman_Transit_TTV
 from pyorbit.models.batman_transit_ttv_subset import Batman_Transit_TTV_Subset
 from pyorbit.models.batman_transit_ttv_subset_faster import Batman_Transit_TTV_Subset_Faster
 
@@ -111,9 +113,11 @@ from pyorbit.models.rossitermclaughlin_reloaded import RossiterMcLaughling_Reloa
 
 model_requires_planets = ['radial_velocities', 'rv_planets',
                           'batman_transit', 'pytransit_transit',
-                          'batman_transit_with_ttv', 'pytransit_transit_with_ttv',
+                          'batman_transit_ttv', 'pytransit_transit_ttv',
                           'subset_batman_transit_ttv', 'batman_transit_ttv_subset',
                           'subset_batman_transit_faster_ttv', 'batman_transit_ttv_subset_faster',
+                          'subset_pytransit_transit_ttv', 'pytransit_transit_ttv_subset',
+                          'ancillary_pytransit_transit_ttv', 'pytransit_transit_ttv_ancillary',
                          'rossitermclaughlin_ohta', 'rossitermclaughlin_reloaded',
                          'spiderman_thermal', 'batman_transit_eclipse_phasecurve']
 
@@ -164,13 +168,17 @@ define_type_to_class = {
                       'keplerian': TransitTimeKeplerian,
                       'dynamical': TransitTimeDynamical},
     'pytransit_transit': PyTransit_Transit,
-    'pytransit_transit_with_ttv': PyTransit_Transit_With_TTV,
+    'pytransit_transit_ttv': PyTransit_Transit_TTV,
+    'pytransit_transit_ttv_subset': Pytransit_Transit_TTV_Subset,
+    'subset_pytransit_transit_ttv': Pytransit_Transit_TTV_Subset,
+    'pytransit_transit_ttv_ancillary': Pytransit_Transit_TTV_Ancillary,
+    'ancillary_pytransit_transit_ttv': Pytransit_Transit_TTV_Ancillary,    
     'batman_transit': Batman_Transit,
     'batman_transit_ttv_subset': Batman_Transit_TTV_Subset,
     'subset_batman_transit_ttv': Batman_Transit_TTV_Subset,
     'batman_transit_ttv_subset_faster': Batman_Transit_TTV_Subset_Faster,
     'subset_batman_transit_faster_ttv': Batman_Transit_TTV_Subset_Faster,
-    'batman_transit_with_ttv': Batman_Transit_With_TTV,
+    'batman_transit_ttv': Batman_Transit_TTV,
     'batman_transit_rprs_subset': Batman_Transit_RpRs_Subset,
     'subset_batman_transit_rprs': Batman_Transit_RpRs_Subset,
     'batman_transit_eclipse_phasecurve': Batman_Transit_Eclipse_PhaseCurve,

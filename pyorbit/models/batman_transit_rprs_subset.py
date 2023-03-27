@@ -115,7 +115,6 @@ class Batman_Transit_RpRs_Subset(AbstractModel, AbstractTransit):
         :return:
         """
 
-
         self.update_parameter_values(parameter_values, dataset.Tref)
 
         self.batman_params.a = parameter_values['a_Rs']
@@ -157,8 +156,6 @@ class Batman_Transit_RpRs_Subset(AbstractModel, AbstractTransit):
             y_output = np.zeros(dataset.n)
         else:
             y_output = x0_input * 0.
-
-
 
         for i_sub in range(0,dataset.submodel_flag):
 

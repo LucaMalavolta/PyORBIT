@@ -99,6 +99,7 @@ class Batman_Transit_TTV_Subset(AbstractModel, AbstractTransit):
 
             self.bounds[dataset.name_ref].update({par_subset: par_update})
 
+
             self.batman_models[dataset.name_ref + '_'+repr(i_sub)] = \
                 batman.TransitModel(self.batman_params,
                                     sub_dataset,
