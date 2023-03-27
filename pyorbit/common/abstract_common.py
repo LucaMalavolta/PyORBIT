@@ -163,8 +163,6 @@ class AbstractCommon(object):
         return ndim, output_lists
 
     def convert(self, theta):
-        print('cccccc 111111111',self.multivariate_pams)
-
         parameter_values = {}
         for pam in self.parameter_index:
             parameter_values[pam] = self.transformation[pam](
