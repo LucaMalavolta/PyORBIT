@@ -303,7 +303,7 @@ class AbstractModel(object):
         return 0.00
 
 
-    def transfer_priors(self, mc, dataset, par_original, par_subset, 
+    def transfer_parameter_properties(self, mc, dataset, par_original, par_subset, 
     common_pam=False, dataset_pam=False):
 
         if common_pam:
@@ -365,7 +365,7 @@ class AbstractModel(object):
 
     def _subset_transfer_priors(self, mc, dataset, par_original, par_subset):
         #! deprecated module
-        self.transfer_priors(mc, dataset, par_original, par_subset, dataset_pam=True)
+        self.transfer_parameter_properties(mc, dataset, par_original, par_subset, dataset_pam=True)
 
 
     """ 
