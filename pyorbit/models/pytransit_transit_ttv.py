@@ -11,7 +11,7 @@ except ImportError:
     pass
 
 
-class PyTransit_Transit_With_TTV_Ancillary(AbstractModel, AbstractTransit):
+class PyTransit_Transit_TTV(AbstractModel, AbstractTransit):
 
     def __init__(self, *args, **kwargs):
 
@@ -47,47 +47,10 @@ class PyTransit_Transit_With_TTV_Ancillary(AbstractModel, AbstractTransit):
         self._prepare_limb_darkening_coefficients(mc, **kwargs)
 
         self.list_pams_common.discard('Tc')
+        self.list_pams_dataset.update(['Tc'])
 
     def initialize_model_dataset(self, mc, dataset, **kwargs):
-        """ Reading some code-specific keywords from the configuration file"""
         self._prepare_dataset_options(mc, dataset, **kwargs)
-
-        column_selection = self.ancillary_str_index['planet']
-        planet_selection = (dataset.ancillary_str[:,column_selection] == self.planet_ref )
-        self.Tc_number = int(np.sum(planet_selection))
-
-        """ extracting the central time of transit and the transit duration 
-        for the planet under analysis"""
-        Tc_selected = dataset.ancillary['transit_time'][planet_selection]
-        Td_selected = dataset.ancillary['duration'][planet_selection]
-        try:
-            transit_id = dataset.ancillary['transit_id'][planet_selection]
-        except:
-            if self.use_shared_ttvs: 
-                print('ERROR: transit_id should be provided in the ancillary file')
-                print('     : when flag:use_shared_ttvs is activated ')
-                quit()
-            transit_id = np.arange(0, self.Tc_number, dtype=np.int64)
-
-        self.Tc_names = []
-        self.Tc_array = np.zeros(self.Tc_number, dtype=np.double)
-
-        for i_sub in range(0, self.Tc_number):
-            par_original = 'Tc'
-
-            id_sub = transit_id[i_sub]
-            par_subset = 'Tc_'+repr(id_sub)
-            self.Tc_names.append(par_subset)
-            
-            par_update = [Tc_selected[i_sub]-Td_selected[i_sub]/2., Tc_selected[i_sub]+Td_selected[i_sub]/2.]
-
-            if self.use_shared_ttvs:    
-                self.transfer_parameter_properties(mc, dataset, par_original, par_subset, common_pam=True)
-                mc.common_models[self.planet_ref].bounds.update({par_subset: par_update})
-
-            else:
-                self.transfer_parameter_properties(mc, dataset, par_original, par_subset, dataset_pam=True)
-                self.bounds[dataset.name_ref].update({par_subset: par_update})
 
         if self.limb_darkening_model == 'quadratic':
             self.pytransit_models[dataset.name_ref] = QuadraticModel()
@@ -97,6 +60,15 @@ class PyTransit_Transit_With_TTV_Ancillary(AbstractModel, AbstractTransit):
                                                             exptimes=self.code_options[dataset.name_ref]['exp_time'],
                                                             nsamples=self.code_options[dataset.name_ref]['sample_factor'])
 
+    def define_special_parameter_properties(self,
+                                            ndim,
+                                            output_lists,
+                                            dataset_name,
+                                            par):
+
+        if par == 'Tc' and (par not in self.bounds[dataset_name]):
+            self.bounds[dataset_name][par] = self.code_options[dataset_name]['Tc_boundaries']
+        return ndim, output_lists, False
 
     def compute(self, parameter_values, dataset, x0_input=None):
         """
@@ -105,20 +77,16 @@ class PyTransit_Transit_With_TTV_Ancillary(AbstractModel, AbstractTransit):
         :param x0_input:
         :return:
         """
-
         self.update_parameter_values(parameter_values, dataset.Tref)
 
         for par, i_par in self.ldvars.items():
             self.ld_vars[i_par] = parameter_values[par]
 
-        for i_tc, n_tc in enumerate(self.Tc_names):
-            self.Tc_array[i_tc] = parameter_values[n_tc] - dataset.Tref
-
         if x0_input is None:
             return self.pytransit_models[dataset.name_ref].evaluate_ps(
                 parameter_values['R_Rs'],
                 self.ld_vars,
-                self.Tc_array,
+                parameter_values['Tc'] - dataset.Tref,
                 parameter_values['P'],
                 parameter_values['a_Rs'],
                 parameter_values['i'],
@@ -133,7 +101,7 @@ class PyTransit_Transit_With_TTV_Ancillary(AbstractModel, AbstractTransit):
             return self.pytransit_plot[dataset.name_ref].evaluate_ps(
                 parameter_values['R_Rs'],
                 self.ld_vars,
-                self.Tc_array,
+                parameter_values['Tc'] - dataset.Tref,
                 parameter_values['P'],
                 parameter_values['a_Rs'],
                 parameter_values['i'],

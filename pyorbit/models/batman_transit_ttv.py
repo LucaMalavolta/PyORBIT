@@ -8,7 +8,7 @@ except ImportError:
     pass
 
 
-class Batman_Transit_With_TTV(AbstractModel, AbstractTransit):
+class Batman_Transit_TTV(AbstractModel, AbstractTransit):
 
     def __init__(self, *args, **kwargs):
         # this calls all constructors up to AbstractModel

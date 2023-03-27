@@ -36,9 +36,6 @@ class Batman_Transit_RpRs_Subset(AbstractModel, AbstractTransit):
         self.dataset_x0 ={}
         self.dataset_Tref = {}
 
-        """ Dataset-specific time of transit boundaries are stored here"""
-        self.transit_time_boundaries = {}
-
     def initialize_model(self, mc, **kwargs):
 
         self._prepare_planetary_parameters(mc, **kwargs)

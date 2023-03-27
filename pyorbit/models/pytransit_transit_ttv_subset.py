@@ -11,7 +11,7 @@ except ImportError:
     pass
 
 
-class PyTransit_Transit_With_TTV(AbstractModel, AbstractTransit):
+class PyTransit_Transit_TTV_Subset(AbstractModel, AbstractTransit):
 
     def __init__(self, *args, **kwargs):
 
@@ -34,10 +34,8 @@ class PyTransit_Transit_With_TTV(AbstractModel, AbstractTransit):
 
         self.pytransit_models = {}
         self.pytransit_plot = {}
-
-        """ Dataset-specific time of transit boundaries are stored here"""
-        self.transit_time_boundaries = {}
-
+        self.Tc_names = {}
+        self.Tc_arrays = {}
 
     def initialize_model(self, mc, **kwargs):
         """ Force the use of the central time of transit"""
@@ -47,10 +45,32 @@ class PyTransit_Transit_With_TTV(AbstractModel, AbstractTransit):
         self._prepare_limb_darkening_coefficients(mc, **kwargs)
 
         self.list_pams_common.discard('Tc')
-        self.list_pams_dataset.update(['Tc'])
 
     def initialize_model_dataset(self, mc, dataset, **kwargs):
+        """ Reading some code-specific keywords from the configuration file"""
         self._prepare_dataset_options(mc, dataset, **kwargs)
+
+        self.Tc_number = int(dataset.submodel_flag)
+        self.Tc_names[dataset.name_ref] = []
+        self.Tc_array[dataset.name_ref] = np.zeros(self.Tc_number, dtype=np.double)
+
+        for i_sub in range(0, dataset.submodel_flag):
+            par_original = 'Tc'
+            par_subset = 'Tc_'+repr(i_sub)
+            
+            self.Tc_names[dataset.name_ref].append(par_subset)
+            self.transfer_parameter_properties(mc, dataset, par_original, par_subset, dataset_pam=True)
+
+            sub_dataset = dataset.x[(dataset.submodel_id == i_sub)]
+            if kwargs[dataset.name_ref].get('boundaries', False):
+                par_update = kwargs[dataset.name_ref]['boundaries'].get(
+                    par_subset, [min(sub_dataset), max(sub_dataset)])
+            elif kwargs.get('boundaries', False):
+                par_update = kwargs['boundaries'].get(par_subset, [min(sub_dataset), max(sub_dataset)])
+            else:
+                par_update = [min(sub_dataset), max(sub_dataset)]
+
+            self.bounds[dataset.name_ref].update({par_subset: par_update})
 
         if self.limb_darkening_model == 'quadratic':
             self.pytransit_models[dataset.name_ref] = QuadraticModel()
@@ -60,15 +80,6 @@ class PyTransit_Transit_With_TTV(AbstractModel, AbstractTransit):
                                                             exptimes=self.code_options[dataset.name_ref]['exp_time'],
                                                             nsamples=self.code_options[dataset.name_ref]['sample_factor'])
 
-    def define_special_parameter_properties(self,
-                                            ndim,
-                                            output_lists,
-                                            dataset_name,
-                                            par):
-
-        if par == 'Tc' and (par not in self.bounds[dataset_name]):
-            self.bounds[dataset_name][par] = self.code_options[dataset_name]['Tc_boundaries']
-        return ndim, output_lists, False
 
     def compute(self, parameter_values, dataset, x0_input=None):
         """
@@ -77,16 +88,20 @@ class PyTransit_Transit_With_TTV(AbstractModel, AbstractTransit):
         :param x0_input:
         :return:
         """
+
         self.update_parameter_values(parameter_values, dataset.Tref)
 
         for par, i_par in self.ldvars.items():
             self.ld_vars[i_par] = parameter_values[par]
 
+        for i_tc, n_tc in enumerate(self.Tc_names[dataset.name_ref]):
+            self.Tc_array[dataset.name_ref][i_tc] = parameter_values[n_tc] - dataset.Tref
+
         if x0_input is None:
             return self.pytransit_models[dataset.name_ref].evaluate_ps(
                 parameter_values['R_Rs'],
                 self.ld_vars,
-                parameter_values['Tc'] - dataset.Tref,
+                self.Tc_array[dataset.name_ref],
                 parameter_values['P'],
                 parameter_values['a_Rs'],
                 parameter_values['i'],
@@ -101,7 +116,7 @@ class PyTransit_Transit_With_TTV(AbstractModel, AbstractTransit):
             return self.pytransit_plot[dataset.name_ref].evaluate_ps(
                 parameter_values['R_Rs'],
                 self.ld_vars,
-                parameter_values['Tc'] - dataset.Tref,
+                self.Tc_array[dataset.name_ref],
                 parameter_values['P'],
                 parameter_values['a_Rs'],
                 parameter_values['i'],

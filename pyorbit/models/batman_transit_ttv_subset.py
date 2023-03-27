@@ -32,9 +32,6 @@ class Batman_Transit_TTV_Subset(AbstractModel, AbstractTransit):
         self.batman_models = {}
         self.code_options = {}
 
-        """ Dataset-specific time of transit boundaries are stored here"""
-        self.transit_time_boundaries = {}
-
     def initialize_model(self, mc, **kwargs):
         """ Force the use of the central time of transit"""
         self.use_time_of_transit = True
@@ -88,7 +85,7 @@ class Batman_Transit_TTV_Subset(AbstractModel, AbstractTransit):
             par_original = 'Tc'
             par_subset = 'Tc_'+repr(i_sub)
 
-            self._subset_transfer_priors(mc, dataset, par_original, par_subset)
+            self.transfer_parameter_properties(mc, dataset, par_original, par_subset, dataset_pam=True)
 
             sub_dataset = dataset.x[(dataset.submodel_id == i_sub)]
 
