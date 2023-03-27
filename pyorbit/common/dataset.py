@@ -75,6 +75,7 @@ class Dataset(AbstractCommon):
         """
         # read ancillary data from txt file
         self.ancillary = np.genfromtxt(input_file, names=True)
+        #! deprecated feature
 
 
     def append_ancillary(self, input_file, input_array=False, input_array_str=False):
@@ -98,7 +99,10 @@ class Dataset(AbstractCommon):
             #! considered as string must happen inside the model
             input_array_str =np.genfromtxt(input_file, dtype=str)
 
+        """ NOTE: string are only supported in ancillary data files
+        """
         self.ancillary_str_index = {}
+        self.ancillary_str = input_array_str.copy()
 
         if self.ancillary:
             # Data ancillary has been already defined when reading the main files
@@ -110,14 +114,12 @@ class Dataset(AbstractCommon):
 
                     self.ancillary_str_index[name] = iname
 
-
                 except ValueError:
                     print('The ancillary input array is not a structured array')
                     print('https://numpy.org/doc/stable/user/basics.rec.html')
                     quit()
         else:
             self.ancillary = input_array.copy()
-            self.ancillary_str = input_array_str.copy()
 
             for iname, name in enumerate(input_array.dtype.names):
                 self.ancillary_str_index[name] = iname
@@ -145,6 +147,10 @@ class Dataset(AbstractCommon):
                 elif v_name == 'sub' or v_name=='subset':
                     data_input[:, 5] = data1[v_name]
                 else:
+                    """
+                    NOTE: there is no support for 
+                    ancillary data stored in the input file
+                    """
                     self.ancillary = data1.copy()
         else:
             """ Fall back to previous behaviour of the code"""

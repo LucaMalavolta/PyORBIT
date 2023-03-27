@@ -46,13 +46,26 @@ class PyTransit_Transit_With_TTV_Ancillary(AbstractModel, AbstractTransit):
         self._prepare_planetary_parameters(mc, **kwargs)
         self._prepare_limb_darkening_coefficients(mc, **kwargs)
 
-        # Qui: leggere file con i tempi di transito e gli id
-
         self.list_pams_common.discard('Tc')
-        self.list_pams_dataset.update(['Tc'])
 
     def initialize_model_dataset(self, mc, dataset, **kwargs):
+        """ Reading some code-specific keywords from the configuration file"""
         self._prepare_dataset_options(mc, dataset, **kwargs)
+
+        column_selection = self.ancillary_str_index['planet']
+        planet_selection = (dataset.ancillary_str[:,column_selection] == self.planet_ref )
+
+        #!NEW 
+        #!NEW 
+        #!NEW 
+        #!NEW 
+        #!NEW 
+        #!NEW 
+        #!NEW 
+        #!NEW 
+        #!NEW 
+        #!NEW 
+
 
         if self.limb_darkening_model == 'quadratic':
             self.pytransit_models[dataset.name_ref] = QuadraticModel()
