@@ -16,6 +16,7 @@ def print_bayesian_info(mc):
     print('     Ids, spaces (s), boundaries (b) and priors (p) of the sampler parameters     ')
     print('====================================================================================================')
     print()
+    
     for dataset_name, dataset in mc.dataset_dict.items():
 
         print('----- dataset: ', dataset_name)
@@ -24,6 +25,7 @@ def print_bayesian_info(mc):
                             mc.bounds,
                             mc.spaces,
                             mc.priors,
+                            dataset.fix_list,
                             dataset.prior_kind,
                             dataset.prior_pams)
 
@@ -34,8 +36,9 @@ def print_bayesian_info(mc):
                                 mc.bounds,
                                 mc.spaces,
                                 mc.priors,
+                                mc.models[model_name].fix_list,
                                 mc.models[model_name].prior_kind[dataset_name],
-                                mc.models[model_name].prior_pams[dataset_name])
+                                mc.models[model_name].prior_pams[dataset_name]) 
 
     for model_name, model in mc.common_models.items():
         print('----- common model: ', model_name)
@@ -43,6 +46,7 @@ def print_bayesian_info(mc):
                             mc.bounds,
                             mc.spaces,
                             mc.priors,
+                            model.fix_list,
                             model.prior_kind,
                             model.prior_pams)
 
@@ -562,6 +566,7 @@ def get_model(mc, theta, bjd_dict):
             for common_ref in mc.models[model_name].common_ref:
                 parameter_values.update(
                     mc.common_models[common_ref].convert(theta))
+
             parameter_values.update(
                 mc.models[model_name].convert(theta, dataset_name))
 
@@ -801,16 +806,25 @@ def print_theta_bounds(i_dict, theta, bounds):
     print()
 
 
-def print_analysis_info(i_dict, bounds, spaces, priors, additional_kind, additonal_pams):
+def print_analysis_info(i_dict, bounds, spaces, priors, fixed_list, additional_kind, additonal_pams):
     format_string_v1 = '{0:12s}  id:{1:4d}  s:{2:11s} b:[{3:12.4f}, {4:12.4f}]   p:{5:s}  '
     format_string_v2 = '{0:12s}  derived (no id, space, bound) {1:25s} p:{2:s}  '
+    format_string_v3 = '{0:12s}  fixed (no id, space, bound)   v:{1:12.6}  '
 
     for par, i in i_dict.items():
-        print(format_string_v1.format(
+
+        if par in fixed_list:
+            print(format_string_v3.format(par, fixed_list[par][0]))
+
+        else:
+            print(format_string_v1.format(
                 par, i, spaces[i], bounds[i, 0], bounds[i, 1],priors[i][0]), priors[i][1])
 
     for par in additional_kind:
-        if par not in i_dict:
+        if par in fixed_list:
+            print(format_string_v3.format(par, fixed_list[par][0]))
+
+        elif par not in i_dict:
             print(format_string_v2.format(par, '', additional_kind[par]), additonal_pams[par])
 
     print()
@@ -848,7 +862,7 @@ def return_significant_figures(perc0, perc1=None, perc2=None, are_percentiles=Fa
                 x0 = np.log10(value_err)
                 return int(np.ceil(abs(x0))+1)
         else:
-            if np.isnan(perc0) or np.isnan(perc1) or np.isnan(perc2):
+            if np.isnan(perc0) or np.isnan(perc1) or np.isnan(perc2) or (perc0==perc2):
                 return 2, 2
 
             if are_percentiles:

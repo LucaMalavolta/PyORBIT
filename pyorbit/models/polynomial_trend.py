@@ -360,6 +360,10 @@ class SubsetPolynomialTrend(AbstractModel):
 
         for i_sub in range(0,dataset.submodel_flag):
 
+            sel_data = (dataset.submodel_id==i_sub)
+            if np.sum(sel_data) < 5:
+                continue
+
             x_zero_var = 'x_zero_sub'+repr(i_sub)
             x_input = xd_input-parameter_values[x_zero_var]
 
@@ -369,9 +373,7 @@ class SubsetPolynomialTrend(AbstractModel):
                 par = 'poly_sub'+repr(i_sub)+'_c'+repr(i_order)
                 coeff[i_order] = parameter_values[par]
 
-            if x0_input is None:
-                sel_data = (dataset.submodel_id==i_sub)
-            else:
+            if x0_input is not None:
                 original_dataset = dataset.x[(dataset.submodel_id==i_sub)] -parameter_values[x_zero_var]
                 sel_data = (x_input >= np.amin(original_dataset)) &  (x_input <= np.amax(original_dataset))
             y_output[sel_data] = polynomial.polyval(x_input[sel_data]/self.time_interval, coeff)
