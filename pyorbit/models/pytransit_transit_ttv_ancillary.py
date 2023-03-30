@@ -35,7 +35,7 @@ class PyTransit_Transit_TTV_Ancillary(AbstractModel, AbstractTransit):
         self.pytransit_models = {}
         self.pytransit_plot = {}
         self.Tc_names = {}
-        self.Tc_arrays = {}
+        self.Tc_array = {}
 
     def initialize_model(self, mc, **kwargs):
         """ Force the use of the central time of transit"""
@@ -50,7 +50,7 @@ class PyTransit_Transit_TTV_Ancillary(AbstractModel, AbstractTransit):
         """ Reading some code-specific keywords from the configuration file"""
         self._prepare_dataset_options(mc, dataset, **kwargs)
 
-        column_selection = self.ancillary_str_index['planet']
+        column_selection = dataset.ancillary_str_index['planet']
         planet_selection = (dataset.ancillary_str[:,column_selection] == self.planet_ref )
         self.Tc_number = int(np.sum(planet_selection))
 
@@ -91,7 +91,7 @@ class PyTransit_Transit_TTV_Ancillary(AbstractModel, AbstractTransit):
             self.pytransit_models[dataset.name_ref] = QuadraticModel()
             self.pytransit_plot[dataset.name_ref] = QuadraticModel()
 
-        self.pytransit_models[dataset.name_ref].set_data(dataset.x0,
+        self.pytransit_models[dataset.name_ref].set_data(dataset.x0, lcids=dataset.submodel_id.astype(int), epids=transit_id.astype(int),
                                                             exptimes=self.code_options[dataset.name_ref]['exp_time'],
                                                             nsamples=self.code_options[dataset.name_ref]['sample_factor'])
 
