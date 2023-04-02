@@ -60,6 +60,8 @@ class ModelContainer(object):
         for model_name, model in self.common_models.items():
             try:
                 model_conf = model.model_conf
+                if model_conf is None:
+                    model_conf = {}
             except:
                 model_conf = {}
 
@@ -69,15 +71,15 @@ class ModelContainer(object):
 
             try:
                 model_conf = model.model_conf
+                if model_conf is None:
+                    model_conf = {}
             except:
                 model_conf = {}
 
-            print(model_conf)
             model.initialize_model(self, **model_conf)
             model.change_parameter_status(self, **model_conf)
 
             for dataset_name in list(set(model_conf) & set(self.dataset_dict)):
-                print(dataset_name)
                 model.initialize_model_dataset(
                     self, self.dataset_dict[dataset_name], **model_conf)
 

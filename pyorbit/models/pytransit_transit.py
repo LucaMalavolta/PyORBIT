@@ -42,7 +42,11 @@ class PyTransit_Transit(AbstractModel, AbstractTransit):
     def initialize_model_dataset(self, mc, dataset, **kwargs):
         self._prepare_dataset_options(mc, dataset, **kwargs)
 
-        if self.limb_darkening_model == 'quadratic':
+        if kwargs.get('use_roadrunner', False):
+            self.pytransit_models[dataset.name_ref] = RoadRunnerModel()
+            self.pytransit_plot[dataset.name_ref] = RoadRunnerModel()
+            print('Using RoadRunner Model from PyTransit')
+        elif self.limb_darkening_model == 'quadratic':
             self.pytransit_models[dataset.name_ref] = QuadraticModel()
             self.pytransit_plot[dataset.name_ref] = QuadraticModel()
 
@@ -64,7 +68,7 @@ class PyTransit_Transit(AbstractModel, AbstractTransit):
             self.ld_vars[i_par] = parameter_values[par]
 
         if x0_input is None:
-            return self.pytransit_models[dataset.name_ref].evaluate_ps(
+            return self.pytransit_models[dataset.name_ref].evaluate(
                 parameter_values['R_Rs'],
                 self.ld_vars,
                 parameter_values['Tc'] - dataset.Tref,
@@ -79,7 +83,7 @@ class PyTransit_Transit(AbstractModel, AbstractTransit):
                                                             exptimes=self.code_options[dataset.name_ref]['exp_time'],
                                                             nsamples=self.code_options[dataset.name_ref]['sample_factor'])
 
-            return self.pytransit_plot[dataset.name_ref].evaluate_ps(
+            return self.pytransit_plot[dataset.name_ref].evaluate(
                 parameter_values['R_Rs'],
                 self.ld_vars,
                 parameter_values['Tc'] - dataset.Tref,
