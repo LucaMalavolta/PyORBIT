@@ -35,7 +35,6 @@ class RossiterMcLaughling_Reloaded(AbstractModel, AbstractTransit):
 
         self.use_differential_rotation = kwargs.get('use_differential_rotation', mc.common_models[self.stellar_ref].use_differential_rotation)
 
-
         """ check if the differential rotation should be included in the model"""
         if self.use_differential_rotation:
             self.list_pams_common.discard('v_sini')
@@ -187,7 +186,7 @@ class RossiterMcLaughling_Reloaded(AbstractModel, AbstractTransit):
                 parameter_values['Tc']-dataset.Tref,
                 parameter_values['P'],
                 parameter_values['e'],
-                omega_rad,
+                parameter_values['omega'],
                 parameter_values['a_Rs'])
 
             """ planet position during its orbital motion, in unit of stellar radius"""

@@ -51,6 +51,13 @@ def pyorbit_dynesty(config_in, input_datasets=None, return_output=None):
         for dataset_name, dataset in mc.dataset_dict.items():
             dataset.shutdown_jitter()
 
+    #os.environ["OMP_NUM_THREADS"] = "1"
+    try:
+        num_threads = int(config_in['parameters'].get('cpu_threads', "1"))
+    except:
+        num_threads = multiprocessing.cpu_count()-1
+
+
     mc.model_setup()
     mc.boundaries_setup()
     mc.initialize_logchi2()
@@ -59,7 +66,6 @@ def pyorbit_dynesty(config_in, input_datasets=None, return_output=None):
 
     results_analysis.print_bayesian_info(mc)
 
-    nthreads = mc.nested_sampling_parameters['nthreads']
 
     if 'nlive_mult' in mc.nested_sampling_parameters:
         nlive = mc.ndim * mc.nested_sampling_parameters['nlive_mult']
@@ -68,7 +74,8 @@ def pyorbit_dynesty(config_in, input_datasets=None, return_output=None):
 
 
     print('Number of live points:', nlive)
-    print('Number of threads:', nthreads)
+    print()
+    print('number of multiprocessing threads:', num_threads)
 
     print()
     print('Reference Time Tref: ', mc.Tref)
@@ -105,7 +112,7 @@ def pyorbit_dynesty(config_in, input_datasets=None, return_output=None):
         if use_threading_pool:
 
 
-            with multiprocessing.Pool() as pool:
+            with multiprocessing.Pool(num_threads) as pool:
 
                 # "Dynamic" nested sampling.
 
@@ -114,7 +121,6 @@ def pyorbit_dynesty(config_in, input_datasets=None, return_output=None):
                                                         mc.ndim,
                                                         nlive=nlive,
                                                         pool=pool,
-                                                        queue_size=nthreads,
                                                         bound= mc.nested_sampling_parameters['bound'],
                                                         sample= mc.nested_sampling_parameters['sample'],
                                                         use_pool={
@@ -172,7 +178,7 @@ def pyorbit_dynesty(config_in, input_datasets=None, return_output=None):
 
     if use_threading_pool:
 
-        with multiprocessing.Pool() as pool:
+        with multiprocessing.Pool(num_threads) as pool:
             dsampler = dynesty.DynamicNestedSampler(mc.dynesty_call,
                                                     mc.dynesty_priors,
                                                     mc.ndim,
@@ -180,7 +186,6 @@ def pyorbit_dynesty(config_in, input_datasets=None, return_output=None):
                                                     pool=pool,
                                                     bound= mc.nested_sampling_parameters['bound'],
                                                     sample= mc.nested_sampling_parameters['sample'],
-                                                    queue_size=nthreads,
                                                     use_pool={
                                                         'prior_transform': False},
                                                     )

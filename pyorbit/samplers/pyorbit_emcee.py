@@ -22,12 +22,11 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
         print("ERROR: emcee not installed, this will not work")
         quit()
 
-    # Check how many CPU threads (I guess) should be used
-    omp_num_threads = config_in['parameters'].get('cpu_threads', "1")
-    if type(omp_num_threads) == type("1"):
-        os.environ["OMP_NUM_THREADS"] = omp_num_threads
-    else:
-        os.environ["OMP_NUM_THREADS"] = "{0:.0f}".format(omp_num_threads)
+    os.environ["OMP_NUM_THREADS"] = "1"
+    try:
+        num_threads = int(config_in['parameters'].get('cpu_threads', "1"))
+    except:
+        num_threads = multiprocessing.cpu_count()-1
 
     optimize_dir_output = './' + config_in['output'] + '/optimize/'
     pyde_dir_output = './' + config_in['output'] + '/pyde/'
@@ -66,7 +65,7 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
     print('reloaded_pyde: ', reloaded_pyde)
     print('reloaded_emcee: ', reloaded_emcee)
     print()
-    print('number of system threads:', omp_num_threads )
+    print('number of multiprocessing threads:', num_threads)
     print()
 
     if reloaded_pyde or reloaded_emcee:
@@ -463,7 +462,7 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
         sys.stdout.flush()
 
         if mc.pyde_parameters['use_threading_pool']:
-            with multiprocessing.Pool() as pool:
+            with multiprocessing.Pool(num_threads) as pool:
 
                 de = DiffEvol(
                     log_priors_likelihood,
@@ -540,7 +539,7 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
         for i in range(0, niter):
 
             if mc.emcee_parameters['use_threading_pool']:
-                with multiprocessing.Pool() as pool:
+                with multiprocessing.Pool(num_threads) as pool:
                     sampler.pool = pool
                     population, prob, state = sampler.run_mcmc(
                         population,
@@ -587,7 +586,7 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
 
     else:
         if mc.emcee_parameters['use_threading_pool']:
-            with multiprocessing.Pool() as pool:
+            with multiprocessing.Pool(num_threads) as pool:
                 sampler.pool = pool
                 population, prob, state = sampler.run_mcmc(
                     population,

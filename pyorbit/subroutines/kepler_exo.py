@@ -291,9 +291,9 @@ def kepler_true_anomaly_orbital_distance(BJD0, Tcent0, Period, e0, omega0, a_sm)
 
     phase = kepler_Tc2phase_Tref(Period, Tcent0, e0, omega0)
 
-    omega = np.asarray(omega0, dtype=np.double)
+    omega = np.asarray(omega0, dtype=np.double)/180.*np.pi
     e = np.asarray(e0, dtype=np.double)
-    MeAn = 2. * np.pi * (1. + ((BJD0 / Period) + (phase - omega0) / (2 * np.pi)) % 1.)
+    MeAn = 2. * np.pi * (1. + ((BJD0 / Period) + (phase - omega) / (2 * np.pi)) % 1.)
 
     if abs(e0) < 1e-3:
         TrAn = np.asarray(MeAn, dtype=np.double)

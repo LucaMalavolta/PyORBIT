@@ -26,7 +26,7 @@ class Batman_Transit(AbstractModel, AbstractTransit):
         self.list_pams_common = {
             'P',  # Period, log-uniform prior
             'e',  # eccentricity, uniform prior
-            'omega',  # argument of pericenter (in radians)
+            'omega',  # argument of pericenter (in degrees)
             'R_Rs',  # planet radius (in units of stellar radii)
         }
 
