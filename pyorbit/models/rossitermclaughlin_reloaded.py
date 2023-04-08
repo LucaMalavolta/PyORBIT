@@ -50,15 +50,6 @@ class RossiterMcLaughling_Reloaded(AbstractModel, AbstractTransit):
         self._prepare_star_parameters(mc, **kwargs)
         self._prepare_limb_darkening_coefficients(mc, **kwargs)
 
-
-        if mc.common_models[self.planet_ref].use_time_of_transit:
-            self.list_pams_common.update(['Tc'])
-            self.use_time_of_transit = True
-            # Copying the property to the class for faster access
-        else:
-            self.list_pams_common.update(['mean_long'])
-
-
         #start filling the dictionary with relevant parameters
         self.star_grid['n_grid'] = kwargs.get('star_ngrid', 51 )
         self.star_grid['half_grid'] = int((self.star_grid['n_grid'] - 1) / 2)
@@ -85,7 +76,6 @@ class RossiterMcLaughling_Reloaded(AbstractModel, AbstractTransit):
 
     def compute(self, parameter_values, dataset, x0_input=None):
 
-
         """
         :param parameter_values:
         :param dataset:
@@ -94,24 +84,15 @@ class RossiterMcLaughling_Reloaded(AbstractModel, AbstractTransit):
         """
         self.update_parameter_values(parameter_values, dataset.Tref)
 
+        ld_par = self._limb_darkening_coefficients(parameter_values)
+
         istar_rad = parameter_values['i_star'] * constants.deg2rad
         lambda_rad = parameter_values['lambda'] * constants.deg2rad
         inclination_rad = parameter_values['i'] * constants.deg2rad
         omega_rad = parameter_values['omega'] * constants.deg2rad
 
-
         """ Limb darkening law and coefficients """
-        if self.limb_darkening_model == 'quadratic':
-            ld_par = np.zeros(2)
-            for par, i_par in self.ldvars.items():
-                ld_par[i_par] = parameter_values[par]
-
-            star_grid_I = 1 - ld_par[0]*(1. - self.star_grid['mu']) \
-                - ld_par[1]*(1. - self.star_grid['mu'])**2
-        else:
-            print('ERROR: Selected limb darkening law not implemented')
-            quit()
-
+        star_grid_I = self.compute_limb_darkening(ld_par, self.star_grid['mu'])
         star_grid_I[self.star_grid['outside']] = 0.000
 
         """ Intensity normalization"""
@@ -166,7 +147,7 @@ class RossiterMcLaughling_Reloaded(AbstractModel, AbstractTransit):
             exptime = np.ones_like(bjd) * np.mean(dataset.ancillary['exptime'])
 
         #eclipsed_flux = np.zeros_like(bjd)
-        #mean_mu = np.zeros_like(bjd)
+        mean_mu = np.zeros_like(bjd)
         mean_vstar =  np.zeros_like(bjd)
 
         for i_obs, bjd_value in enumerate(bjd):
@@ -225,7 +206,10 @@ class RossiterMcLaughling_Reloaded(AbstractModel, AbstractTransit):
 
             if muI_sum > 0:
                 #eclipsed_flux[i_obs] = I_sum/n_oversampling
-                #mean_mu[i_obs] = muI_sum/I_sum
+                mean_mu[i_obs] = muI_sum/I_sum
                 mean_vstar[i_obs] = vstarI_sum/I_sum
 
-        return mean_vstar
+        conv_rvstar = self.retrieve_convective_rv(self, ld_par, mean_mu, parameter_values)
+
+        return mean_vstar + conv_rvstar
+

@@ -105,6 +105,30 @@ class CommonStarParameters(AbstractCommon):
                 'fixed' : 1.6,
                 'unit': 'unit',
             },
+        'convective_c1':
+            {
+                'bounds': [-5.00, 5.00],
+                'priors': ['Uniform', []],
+                'spaces': 'Linear',
+                'fixed' : 0.0,
+                'unit': 'unit',
+            },
+        'convective_c2':
+            {
+                'bounds': [-5.00, 5.00],
+                'priors': ['Uniform', []],
+                'spaces': 'Linear',
+                'fixed' : 0.0,
+                'unit': 'unit',
+            },
+        'convective_c3':
+            {
+                'bounds': [-5.00, 5.00],
+                'priors': ['Uniform', []],
+                'spaces': 'Linear',
+                'fixed' : 0.0,
+                'unit': 'unit',
+            },
 
     }
     recenter_pams = set()
@@ -117,6 +141,7 @@ class CommonStarParameters(AbstractCommon):
         self.use_stellar_rotation = False
         self.use_stellar_inclination = False
         self.use_differential_rotation = False
+        self.convective_order = 0
 
     def initialize_model(self, mc, **kwargs):
 
@@ -139,6 +164,9 @@ class CommonStarParameters(AbstractCommon):
             self.use_stellar_inclination = True
 
             self.use_stellar_rotation = kwargs.get('use_stellar_rotation', True)
+
+        self.convective_order = kwargs.get('convective_order', self.convective_order)
+
 
     def define_special_parameter_properties(self, ndim, output_lists, pam):
 

@@ -110,6 +110,28 @@ class AbstractTransit(object):
         else:
             self.compute_rotation_period = True
 
+        self.convective_order = kwargs.get('convective_order', mc.common_models[self.stellar_ref].convective_order)
+        self.mu_step = 0.001
+        self.mu_integral = np.arange(0.,1., self.mu_step)
+        if self.convective_order == 0:
+            self.retrieve_convective_rv = self._convective_rv_order0
+        elif self.convective_order == 1:
+            self.retrieve_convective_rv = self._convective_rv_order1
+            self.list_pams_common.update(['convective_c1'])
+        elif self.convective_order == 2:
+            self.retrieve_convective_rv = self._convective_rv_order2
+            self.list_pams_common.update(['convective_c1'])
+            self.list_pams_common.update(['convective_c2'])
+        elif self.convective_order == 3:
+            self.retrieve_convective_rv = self._convective_rv_order3
+            self.list_pams_common.update(['convective_c1'])
+            self.list_pams_common.update(['convective_c2'])
+            self.list_pams_common.update(['convective_c3'])
+        else:
+            print(' Maximum order for polynomial model for convective RV shift is 3')
+            quit()
+
+
         stellar_radius_names = [
             'stellar_radius',
             'radius',
@@ -162,7 +184,6 @@ class AbstractTransit(object):
                 self.list_pams_common.discard('rotation_period')
                 self.fixed_stellar_rotation = True
 
-
     def _prepare_limb_darkening_coefficients(self, mc, **kwargs):
         """ Setting up the limb darkening calculation"""
 
@@ -172,6 +193,22 @@ class AbstractTransit(object):
             par = 'ld_c' + repr(i_coeff)
             self.ldvars[par] = i_coeff - 1
             self.list_pams_common.update([par])
+
+        if self.limb_darkening_model == 'uniform':
+            self.compute_limb_darkening = self._limb_darkening_uniform
+        elif self.limb_darkening_model == 'linear':
+            self.compute_limb_darkening = self._limb_darkening_linear
+        elif self.limb_darkening_model == 'quadratic':
+            self.compute_limb_darkening = self._limb_darkening_quadratic
+        elif self.limb_darkening_model == 'square-root':
+            self.compute_limb_darkening = self._limb_darkening_squareroot
+        elif self.limb_darkening_model == 'logarithmic':
+            self.compute_limb_darkening = self._limb_darkening_logarithmic
+        elif self.limb_darkening_model == 'exponential':
+            self.compute_limb_darkening = self._limb_darkening_exponential
+        else:
+            print('ERROR: Selected limb darkening law not implemented')
+            quit()
 
     def _prepare_dataset_options(self, mc, dataset, **kwargs):
 
@@ -280,3 +317,66 @@ class AbstractTransit(object):
 
         if self.fixed_stellar_temperature:
             parameter_values['temperature'] = self.code_options['temperature']
+
+
+
+    def _limb_darkening_coefficients(self, parameter_values):
+        ld_par = np.zeros(2)
+        for par, i_par in self.ldvars.items():
+            ld_par[i_par] = parameter_values[par]
+        return ld_par
+
+    def _limb_darkening_uniform(self, ld_par, mu):
+        return  1
+
+    def _limb_darkening_linear(self, ld_par, mu):
+        return  1 - ld_par[0]*(1. - mu)
+
+    def _limb_darkening_quadratic(self, ld_par, mu):
+        return  1 - ld_par[0]*(1. - mu) - ld_par[1]*(1. - mu)**2
+
+    def _limb_darkening_squareroot(self, ld_par, mu):
+        return  1 - ld_par[0]*(1. - mu) - ld_par[1]*(1. - np.sqrt(mu))
+
+    def _limb_darkening_logarithmic(self, ld_par, mu):
+        return  1 - ld_par[0]*(1. - mu) - ld_par[1]*mu*np.log(mu)
+
+    def _limb_darkening_exponential(self, ld_par, mu):
+        return  1 - ld_par[0]*(1. - mu) - ld_par[1]/(1. - np.exp(mu))
+
+    def _convective_rv_order0(self, ld_par, mean_mu, parameter_values):
+        return 0
+
+    def _convective_rv_order1(self, ld_par, mean_mu, parameter_values):
+
+        I_integral = self.compute_limb_darkening(ld_par, self.mu_integral)
+
+        int_1=parameter_values['convective_c1']*np.sum(I_integral*(self.mu_integral**2.)*self.mu_step)
+        dnm=np.sum(I_integral*self.mu_integral*self.mu_step)
+        c0=-(int_1)/dnm
+        return c0+(parameter_values['convective_c1']*mean_mu)
+
+    def _convective_rv_order2(self, ld_par, mean_mu, parameter_values):
+
+        I_integral = self.compute_limb_darkening(ld_par, self.mu_integral)
+
+        int_1=parameter_values['convective_c1']*np.sum(I_integral*(self.mu_integral**2.)*self.mu_step)
+        int_2=parameter_values['convective_c2']*np.sum(I_integral*(self.mu_integral**3.)*self.mu_step)
+        dnm=np.sum(I_integral*self.mu_integral*self.mu_step)
+        c0=-(int_1+int_2)/dnm
+        return c0+(parameter_values['convective_c1']*mean_mu)+(parameter_values['convective_c2']*mean_mu**2)
+
+    def _convective_rv_order3(self, ld_par, mean_mu, parameter_values):
+
+        I_integral = self.compute_limb_darkening(ld_par, self.mu_integral)
+
+        int_1=parameter_values['convective_c1']*np.sum(I_integral*(self.mu_integral**2.)*self.mu_step)
+        int_2=parameter_values['convective_c2']*np.sum(I_integral*(self.mu_integral**3.)*self.mu_step)
+        int_3=parameter_values['convective_c3']*np.sum(I_integral*(self.mu_integral**4.)*self.mu_step)
+        dnm=np.sum(I_integral*self.mu_integral*self.mu_step)
+        c0=-(int_1+int_2+int_3)/dnm
+        return (c0
+            + (parameter_values['convective_c1']*mean_mu)
+            + (parameter_values['convective_c2']*mean_mu**2)
+            + (parameter_values['convective_c3']*mean_mu**3))
+
