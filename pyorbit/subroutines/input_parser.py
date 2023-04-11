@@ -968,11 +968,11 @@ def bounds_space_priors_starts_fixed(mc,
                 if par == 'multivariate':
                     model_obj.multivariate_priors = True
 
-                    model_obj.multivariate_pars = prior_conf[par]['parameters']
+                    model_obj.multivariate_pams = prior_conf[par]['parameters']
                     data_file = np.genfromtxt(prior_conf[par]['file'])
 
                     ll = []
-                    for ii in range(len(model_obj.multivariate_pars)):
+                    for ii in range(len(model_obj.multivariate_pams)):
                         ll.append(data_file[:,ii])
                     cov_data = np.stack(ll, axis=0)
                     model_obj.multivariate_cov = np.cov(cov_data)
@@ -1041,11 +1041,11 @@ def bounds_space_priors_starts_fixed(mc,
                 if par == 'multivariate':
                     model_obj.multivariate_priors[dataset] = True
 
-                    model_obj.multivariate_pars[dataset] = prior_conf[par]['parameters']
+                    model_obj.multivariate_pams[dataset] = prior_conf[par]['parameters']
                     data_file = np.genfromtxt(prior_conf[par]['file'])
 
                     ll = []
-                    for ii in range(len(model_obj.multivariate_pars[dataset])):
+                    for ii in range(len(model_obj.multivariate_pams[dataset])):
                         ll.append(data_file[:,ii])
                     cov_data = np.stack(ll, axis=0)
                     model_obj.multivariate_cov[dataset] = np.cov(cov_data)
