@@ -14,16 +14,16 @@ __all__ = ["pyorbit_pyde"]
 
 def pyorbit_pyde(config_in, input_datasets=None, return_output=None):
 
-    # Check how many CPU threads (I guess) should be used
-    omp_num_threads = config_in['parameters'].get('cpu_threads', "1")
-    if type(omp_num_threads) == type("1"):
-        os.environ["OMP_NUM_THREADS"] = omp_num_threads
-    else:
-        os.environ["OMP_NUM_THREADS"] = "{0:.0f}".format(omp_num_threads)
-
-    pyde_dir_output = './' + config_in['output'] + '/pyde/'
-
-    reloaded_pyde = False
+    ## Check how many CPU threads (I guess) should be used
+    # omp_num_threads = config_in['parameters'].get('cpu_threads', "1")
+    # if type(omp_num_threads) == type("1"):
+    #     os.environ["OMP_NUM_THREADS"] = omp_num_threads
+    # else:
+    #     os.environ["OMP_NUM_THREADS"] = "{0:.0f}".format(omp_num_threads)
+    #
+    # pyde_dir_output = './' + config_in['output'] + '/pyde/'
+    #
+    # reloaded_pyde = False
 
 
     try:
@@ -33,10 +33,17 @@ def pyorbit_pyde(config_in, input_datasets=None, return_output=None):
     except FileNotFoundError:
         pass
 
+
+    os.environ["OMP_NUM_THREADS"] = "1"
+    try:
+        num_threads = int(config_in['parameters'].get('cpu_threads', "1"))
+    except:
+        num_threads = multiprocessing.cpu_count()-1
+
     print()
     print('reloaded_pyde: ', reloaded_pyde)
     print()
-    print('number of system threads:', omp_num_threads )
+    print('number of multiprocessing threads:', num_threads )
     print()
 
     if reloaded_pyde:
@@ -84,7 +91,7 @@ def pyorbit_pyde(config_in, input_datasets=None, return_output=None):
     sys.stdout.flush()
 
     if mc.pyde_parameters['use_threading_pool']:
-        with multiprocessing.Pool() as pool:
+        with multiprocessing.Pool(num_threads) as pool:
 
             de = DiffEvol(
                 mc,

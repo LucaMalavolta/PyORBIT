@@ -57,8 +57,8 @@ def pyorbit_results():
     sampler_keyword = {
         'multinest':['multinest', 'MultiNest', 'multi'],
         'polychord':['polychord', 'PolyChord', 'polychrod', 'poly'],
-        'emcee': ['emcee', 'MCMC', 'Emcee'],
-        'dynesty': ['dynesty', 'DyNesty', 'Dynesty', 'DYNESTY'],
+        'emcee': ['emcee', 'MCMC', 'Emcee', 'emcee_legacy', 'MCMC_legacy', 'Emcee_legacy' ],
+        'dynesty': ['dynesty', 'DyNesty', 'Dynesty', 'DYNESTY', 'dynesty_legacy', 'DyNesty_legacy', 'Dynesty_legacy', 'DYNESTY_legacy'],
         'ultranest': ['ultranest', 'UltraNest', 'Ultranest', 'ULTRANEST', 'ultra','Unest'],
         'emcee_mpi': ['emcee_MPI', 'MCMC_MPI', 'Emcee_MPI','emcee_mpi', 'MCMC_mpi', 'Emcee_mpi'],
         #'optimize': ['optimize', 'scipy', 'Optimize', 'OPTIMIZE'],

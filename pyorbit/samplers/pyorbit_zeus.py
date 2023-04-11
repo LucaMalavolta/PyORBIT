@@ -23,6 +23,10 @@ def pyorbit_zeus(config_in, input_datasets=None, return_output=None):
         quit()
 
     os.environ["OMP_NUM_THREADS"] = "1"
+    try:
+        num_threads = int(config_in['parameters'].get('cpu_threads', "1"))
+    except:
+        num_threads = multiprocessing.cpu_count()-1
 
     optimize_dir_output = './' + config_in['output'] + '/optimize/'
     pyde_dir_output = './' + config_in['output'] + '/pyde/'
@@ -252,7 +256,7 @@ def pyorbit_zeus(config_in, input_datasets=None, return_output=None):
         sys.stdout.flush()
 
         if mc.pyde_parameters['use_threading_pool']:
-            with multiprocessing.Pool() as pool:
+            with multiprocessing.Pool(num_threads) as pool:
 
                 de = DiffEvol(
                     mc,
@@ -322,7 +326,7 @@ def pyorbit_zeus(config_in, input_datasets=None, return_output=None):
         print()
 
     if mc.zeus_parameters['use_threading_pool']:
-        with multiprocessing.Pool() as pool:
+        with multiprocessing.Pool(num_threads) as pool:
             sampler.pool = pool
             sampler.run_mcmc(
                 population,

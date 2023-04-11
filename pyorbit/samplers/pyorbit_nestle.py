@@ -52,6 +52,12 @@ def pyorbit_nestle(config_in, input_datasets=None, return_output=None):
         for dataset_name, dataset in mc.dataset_dict.items():
             dataset.shutdown_jitter()
 
+    os.environ["OMP_NUM_THREADS"] = "1"
+    try:
+        num_threads = int(config_in['parameters'].get('cpu_threads', "1"))
+    except:
+        num_threads = multiprocessing.cpu_count()-1
+
     mc.model_setup()
     mc.boundaries_setup()
     mc.initialize_logchi2()
@@ -111,7 +117,7 @@ def pyorbit_nestle(config_in, input_datasets=None, return_output=None):
         print()
         pfrac = 0.00
 
-        with multiprocessing.Pool() as pool:
+        with multiprocessing.Pool(num_threads) as pool:
 
             # "Dynamic" nested sampling.
             print('Setting up the Dynamic Nested Sampling, posterior/evidence split = {0:4.3f}'.format(pfrac))
@@ -156,7 +162,7 @@ def pyorbit_nestle(config_in, input_datasets=None, return_output=None):
     else:
         pfrac = mc.nested_sampling_parameters['pfrac']
 
-    with multiprocessing.Pool() as pool:
+    with multiprocessing.Pool(num_threads) as pool:
 
         # "Dynamic" nested sampling.
         print('Setting up the Dynamic Nested Sampling, posterior/evidence split = {0:4.3f}'.format(pfrac))
