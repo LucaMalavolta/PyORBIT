@@ -47,7 +47,7 @@ def pyorbit_run():
         pyorbit.pyorbit_emcee(config_in)
 
     if sampler in sampler_keyword['emcee_legacy']:
-        pyorbit.pyorbit_emcee(config_in)
+        pyorbit.pyorbit_emcee_legacy(config_in)
 
     if sampler in sampler_keyword['emcee_mpi']:
         pyorbit.pyorbit_emcee_mpi(config_in)
@@ -69,7 +69,7 @@ def pyorbit_run():
 
     if sampler in sampler_keyword['dynesty_legacy']:
         config_in = pyorbit.subroutines.input_parser.yaml_fix_nested(config_in)
-        pyorbit.pyorbit_dynesty(config_in)
+        pyorbit.pyorbit_dynesty_legacy(config_in)
 
     if sampler in sampler_keyword['nestle']:
         config_in = pyorbit.subroutines.input_parser.yaml_fix_nested(config_in)

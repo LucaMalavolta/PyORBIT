@@ -52,12 +52,12 @@ def pyorbit_dynesty_legacy(config_in, input_datasets=None, return_output=None):
         for dataset_name, dataset in mc.dataset_dict.items():
             dataset.shutdown_jitter()
 
-    #os.environ["OMP_NUM_THREADS"] = "1"
+    os.environ["OMP_NUM_THREADS"] = "1"
     try:
-        num_threads = int(config_in['parameters'].get('cpu_threads', "1"))
+        num_threads = int(config_in['parameters'].get('cpu_threads',  multiprocessing.cpu_count()-1))
     except:
-        num_threads = multiprocessing.cpu_count()-1
-
+        print(" Something happened when trying to setup multiprocessing, switching back to 1 CPU")
+        num_threads = 1
 
     mc.model_setup()
     mc.boundaries_setup()
@@ -122,6 +122,7 @@ def pyorbit_dynesty_legacy(config_in, input_datasets=None, return_output=None):
                                                         mc.ndim,
                                                         nlive=nlive,
                                                         pool=pool,
+                                                        queue_size=num_threads,
                                                         bound= mc.nested_sampling_parameters['bound'],
                                                         sample= mc.nested_sampling_parameters['sample'],
                                                         use_pool={
@@ -185,6 +186,7 @@ def pyorbit_dynesty_legacy(config_in, input_datasets=None, return_output=None):
                                                     mc.ndim,
                                                     nlive=nlive,
                                                     pool=pool,
+                                                    queue_size=num_threads,
                                                     bound= mc.nested_sampling_parameters['bound'],
                                                     sample= mc.nested_sampling_parameters['sample'],
                                                     use_pool={

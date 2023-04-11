@@ -24,9 +24,10 @@ def pyorbit_emcee_legacy(config_in, input_datasets=None, return_output=None):
 
     os.environ["OMP_NUM_THREADS"] = "1"
     try:
-        num_threads = int(config_in['parameters'].get('cpu_threads', "1"))
+        num_threads = int(config_in['parameters'].get('cpu_threads',  multiprocessing.cpu_count()-1))
     except:
-        num_threads = multiprocessing.cpu_count()-1
+        print(" Something happened when trying to setup multiprocessing, switching back to 1 CPU")
+        num_threads = 1
 
     optimize_dir_output = './' + config_in['output'] + '/optimize/'
     pyde_dir_output = './' + config_in['output'] + '/pyde/'
