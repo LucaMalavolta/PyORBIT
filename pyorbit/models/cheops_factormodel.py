@@ -191,7 +191,7 @@ class CheopsFactorModel(AbstractModel):
             trend += self.retrieve_trend(parameter_values, t)
             trend += self.retrieve_roll_angle(parameter_values, self.cheops_interpolated[dataset.name_ref]['sinphi'](t), self.cheops_interpolated[dataset.name_ref]['cosphi'](t))
 
-        return trend * parameter_values['dfdbg']
+        return trend * parameter_values['scale_factor']
 
     @staticmethod
     def _retrieve_roll_angle_mod00(parameter_values, sinphi, cosphi):
