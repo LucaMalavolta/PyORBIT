@@ -55,9 +55,10 @@ def pyorbit_emcee_mpi(config_in, input_datasets=None, return_output=None):
         pass
 
     try:
-        mc, starting_point, population, prob, state, sampler_chain, \
-            sampler_lnprobability, _, theta_dict, sampler = \
+        mc, starting_point, population, prob, sampler_chain, \
+            sampler_lnprobability, _, theta_dict = \
             emcee_load_from_cpickle(emcee_dir_output)
+        state, sampler = emcee_simpler_load_from_cpickle(emcee_dir_output)
         reloaded_emcee = True
     except FileNotFoundError:
         pass

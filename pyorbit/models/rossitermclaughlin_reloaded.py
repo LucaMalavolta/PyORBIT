@@ -209,7 +209,7 @@ class RossiterMcLaughling_Reloaded(AbstractModel, AbstractTransit):
                 mean_mu[i_obs] = muI_sum/I_sum
                 mean_vstar[i_obs] = vstarI_sum/I_sum
 
-        conv_rvstar = self.retrieve_convective_rv(self, ld_par, mean_mu, parameter_values)
+        conv_rvstar = self.retrieve_convective_rv(ld_par, mean_mu, parameter_values)
 
         return mean_vstar + conv_rvstar
 

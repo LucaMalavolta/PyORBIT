@@ -11,10 +11,10 @@ import os
 import sys
 import multiprocessing
 
-__all__ = ["pyorbit_zeus"]
+__all__ = ["pyorbit_zeus_legacy"]
 
 
-def pyorbit_zeus(config_in, input_datasets=None, return_output=None):
+def pyorbit_zeus_legacy(config_in, input_datasets=None, return_output=None):
 
     try:
         import zeus
@@ -45,9 +45,10 @@ def pyorbit_zeus(config_in, input_datasets=None, return_output=None):
         pass
 
     try:
-        mc, starting_point, population, prob, state, sampler_chain, \
-            sampler_lnprobability, _, theta_dict, sampler = \
+        mc, starting_point, population, prob, sampler_chain, \
+            sampler_lnprobability, _, theta_dict = \
             zeus_load_from_cpickle(zeus_dir_output)
+        state, sampler = zeus_simpler_load_from_cpickle(zeus_dir_output)
         reloaded_zeus = True
     except FileNotFoundError:
         pass

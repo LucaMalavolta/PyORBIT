@@ -11,7 +11,7 @@ import os
 import sys
 import multiprocessing
 
-__all__ = ["pyorbit_emcee"]
+#__all__ = ["pyorbit_emcee"]
 
 
 def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
@@ -47,8 +47,8 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
         pass
 
     try:
-        mc, starting_point, population, prob, state, sampler_chain, \
-            sampler_lnprobability, _, theta_dict, sampler = \
+        mc, starting_point, population, prob, sampler_chain, \
+            sampler_lnprobability, _, theta_dict = \
             emcee_load_from_cpickle(emcee_dir_output)
         reloaded_emcee = True
     except FileNotFoundError:
@@ -125,13 +125,6 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
             else:
                 return
 
-        elif not sampler:
-            print('Sampler file is missing - only analysis performed with PyORBIT >8.1 cn be resumed')
-            if return_output:
-                return mc, sampler_chain, sampler_lnprobability
-            else:
-                return
-
     if reloaded_emcee:
         sampled = mc.emcee_parameters['completed_nsteps']
         nsteps_todo = mc.emcee_parameters['nsteps'] \
@@ -175,8 +168,6 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
         state = None
         sampled = 0
         nsteps_todo = mc.emcee_parameters['nsteps']
-
-
 
 
 
@@ -365,8 +356,8 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
         return log_priors+ log_likelihood
 
 
-
-
+    if reloaded_emcee:
+        state, sampler = emcee_simpler_load_from_cpickle(emcee_dir_output)
 
 
     print('Include priors: ', mc.include_priors)
@@ -637,3 +628,4 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
 
     if return_output:
         return mc, sampler.chain,  sampler.lnprobability
+

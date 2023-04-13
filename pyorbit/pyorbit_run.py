@@ -32,7 +32,7 @@ def pyorbit_run():
         'emcee': ['emcee', 'MCMC', 'Emcee'],
         'emcee_legacy': ['emcee_legacy', 'MCMC_legacy', 'Emcee_legacy'],
         'emcee_mpi': ['emcee_MPI', 'MCMC_MPI', 'Emcee_MPI','emcee_mpi', 'MCMC_mpi', 'Emcee_mpi'],
-        'zeus': ['zeus', 'ZEUS', 'Zeus', 'zeus-mcmc'],
+        'zeus_legacy': ['zeus', 'ZEUS', 'Zeus', 'zeus-mcmc', 'zeus_legacy', 'ZEUS_legacy', 'Zeus_legacy', 'zeus-mcmc_legacy'],
         'dynesty': ['dynesty', 'DyNesty', 'Dynesty', 'DYNESTY'],
         'dynesty_legacy': ['dynesty_legacy', 'DyNesty_legacy', 'Dynesty_legacy', 'DYNESTY_legacy'],
         'nestle': ['nestle', 'Nestle', 'NESTLE', 'nelste'],
@@ -52,8 +52,8 @@ def pyorbit_run():
     if sampler in sampler_keyword['emcee_mpi']:
         pyorbit.pyorbit_emcee_mpi(config_in)
 
-    if sampler in sampler_keyword['zeus']:
-        pyorbit.pyorbit_zeus(config_in)
+    if sampler in sampler_keyword['zeus_legacy']:
+        pyorbit.pyorbit_zeus_legacy(config_in)
 
     if sampler in sampler_keyword['multinest']:
         config_in = pyorbit.subroutines.input_parser.yaml_fix_nested(config_in)

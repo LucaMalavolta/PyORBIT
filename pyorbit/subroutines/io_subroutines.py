@@ -116,25 +116,22 @@ def affine_load_from_cpickle(dir_output, prefix=''):
         population = pickle.load(open(dir_output + add_prefix + "starting_population.p", "rb"))
 
     prob = pickle.load(open(dir_output + add_prefix + "prob.p", "rb"))
-    state = pickle.load(open(dir_output + add_prefix + "state.p", "rb"))
     sampler_chain = pickle.load(open(dir_output + add_prefix + "sampler_chain.p", "rb"))
     sampler_lnprobability = pickle.load(open(dir_output + add_prefix + "sampler_lnprobability.p", "rb"))
     sampler_acceptance_fraction = pickle.load(
         open(dir_output + add_prefix + "sampler_acceptance_fraction.p", "rb"))
 
-    try:
-        sampler = pickle.load(open(dir_output + add_prefix + "sampler.p", "rb"))
-    except (FileNotFoundError, ModuleNotFoundError):
-        sampler = None
-
-
-    return mc, starting_point, population, prob, state, \
-        sampler_chain, sampler_lnprobability, sampler_acceptance_fraction, theta_dict, sampler
+    return mc, starting_point, population, prob, \
+        sampler_chain, sampler_lnprobability, sampler_acceptance_fraction, theta_dict
 
 def affine_simpler_load_from_cpickle(dir_output, prefix=''):
     add_prefix = (prefix + '_' if prefix else '')
-    state = pickle.load(open(dir_output + add_prefix + "state.p", "rb"))
-    sampler = pickle.load(open(dir_output + add_prefix + "sampler.p", "rb"))
+    try:
+        state = pickle.load(open(dir_output + add_prefix + "state.p", "rb"))
+        sampler = pickle.load(open(dir_output + add_prefix + "sampler.p", "rb"))
+    except (FileNotFoundError, ModuleNotFoundError):
+        state = None
+        sampler = None
 
     return state, sampler
 

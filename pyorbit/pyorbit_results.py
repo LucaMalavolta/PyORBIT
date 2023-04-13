@@ -57,14 +57,18 @@ def pyorbit_results():
     sampler_keyword = {
         'multinest':['multinest', 'MultiNest', 'multi'],
         'polychord':['polychord', 'PolyChord', 'polychrod', 'poly'],
-        'emcee': ['emcee', 'MCMC', 'Emcee', 'emcee_legacy', 'MCMC_legacy', 'Emcee_legacy' ],
-        'dynesty': ['dynesty', 'DyNesty', 'Dynesty', 'DYNESTY', 'dynesty_legacy', 'DyNesty_legacy', 'Dynesty_legacy', 'DYNESTY_legacy'],
-        'ultranest': ['ultranest', 'UltraNest', 'Ultranest', 'ULTRANEST', 'ultra','Unest'],
+        'emcee': ['emcee', 'MCMC', 'Emcee'],
+        'emcee_legacy': ['emcee_legacy', 'MCMC_legacy', 'Emcee_legacy'],
         'emcee_mpi': ['emcee_MPI', 'MCMC_MPI', 'Emcee_MPI','emcee_mpi', 'MCMC_mpi', 'Emcee_mpi'],
+        'zeus_legacy': ['zeus', 'ZEUS', 'Zeus', 'zeus-mcmc', 'zeus_legacy', 'ZEUS_legacy', 'Zeus_legacy', 'zeus-mcmc_legacy'],
+        'dynesty': ['dynesty', 'DyNesty', 'Dynesty', 'DYNESTY'],
+        'dynesty_legacy': ['dynesty_legacy', 'DyNesty_legacy', 'Dynesty_legacy', 'DYNESTY_legacy'],
+        #'nestle': ['nestle', 'Nestle', 'NESTLE', 'nelste'],
+        'ultranest': ['ultranest', 'UltraNest', 'Ultranest', 'ULTRANEST', 'ultra','Unest'],
         #'optimize': ['optimize', 'scipy', 'Optimize', 'OPTIMIZE'],
     }
 
-    unchained_samplers = ['polychord', 'multinest', 'dynesty', 'ultranest']
+    unchained_samplers = ['polychord', 'multinest', 'dynesty', 'dynesty_legacy', 'nestle', 'ultranest']
 
     args = parser.parse_args()
     sampler = args.sampler[0]

@@ -46,14 +46,17 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
 
     oversampled_models = plot_dictionary['oversampled_models']
 
-    if sampler_name == 'emcee':
-
-        dir_input = './' + config_in['output'] + '/emcee/'
-        dir_output = './' + config_in['output'] + '/emcee_plot/'
+    if sampler_name == 'emcee' or sampler_name == 'emcee_legacy':
+        if sampler_name == 'emcee':
+            dir_input = './' + config_in['output'] + '/emcee/'
+            dir_output = './' + config_in['output'] + '/emcee_plot/'
+        else:
+            dir_input = './' + config_in['output'] + '/emcee_legacy/'
+            dir_output = './' + config_in['output'] + '/emcee_legacy_plot/'
         os.system('mkdir -p ' + dir_output)
 
-        mc, starting_point, population, prob, state, \
-            sampler_chain, sampler_lnprobability, sampler_acceptance_fraction, _, _ = \
+        mc, starting_point, population, prob, \
+            sampler_chain, sampler_lnprobability, sampler_acceptance_fraction, _ = \
             emcee_load_from_cpickle(dir_input)
         mc.check_backward_compatibility()
 
@@ -117,14 +120,18 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
         print(' Steps: {}'.format(nsteps))
         print()
 
-    if sampler_name == 'zeus':
+    if sampler_name == 'zeus' or sampler_name == 'zeus_legacy':
+        if sampler_name == 'zeus':
+            dir_input = './' + config_in['output'] + '/zeus/'
+            dir_output = './' + config_in['output'] + '/zeus_plot/'
+        else:
+            dir_input = './' + config_in['output'] + '/zeus_legacy/'
+            dir_output = './' + config_in['output'] + '/zeus_legacy_plot/'
 
-        dir_input = './' + config_in['output'] + '/zeus/'
-        dir_output = './' + config_in['output'] + '/zeus_plot/'
         os.system('mkdir -p ' + dir_output)
 
-        mc, starting_point, population, prob, state, \
-            sampler_chain, sampler_lnprobability, sampler_acceptance_fraction, _, _ = \
+        mc, starting_point, population, prob, \
+            sampler_chain, sampler_lnprobability, sampler_acceptance_fraction, _ = \
             zeus_load_from_cpickle(dir_input)
         mc.check_backward_compatibility()
 
@@ -258,13 +265,18 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
         print()
         print(' Samples: {}'.format(n_samplings))
 
-    if sampler_name == 'dynesty':
+    if sampler_name == 'dynesty' or sampler_name == 'dynesty_legacy':
 
         from dynesty import utils as dyfunc
         from dynesty import plotting as dyplot
 
-        dir_input = './' + config_in['output'] + '/dynesty/'
-        dir_output = './' + config_in['output'] + '/dynesty_plot/'
+    if sampler_name == 'dynesty' or sampler_name == 'dynesty_legacy':
+        if sampler_name == 'dynesty':
+            dir_input = './' + config_in['output'] + '/dynesty/'
+            dir_output = './' + config_in['output'] + '/dynesty_plot/'
+        else:
+            dir_input = './' + config_in['output'] + '/dynesty_legacy/'
+            dir_output = './' + config_in['output'] + '/dynesty_legacy_plot/'
         os.system('mkdir -p ' + dir_output)
 
         mc = nested_sampling_load_from_cpickle(dir_input)

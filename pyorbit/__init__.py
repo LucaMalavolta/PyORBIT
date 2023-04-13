@@ -7,10 +7,10 @@ from .model_definitions import *
 from .samplers.pyorbit_emcee import *
 from .samplers.pyorbit_emcee_legacy import *
 from .samplers.pyorbit_emcee_mpi import *
-from .samplers.pyorbit_zeus import *
+from .samplers.pyorbit_zeus_legacy import *
 from .samplers.pyorbit_optimize import *
 from .samplers.pyorbit_polychord import *
-from .samplers.pyorbit_dynesty import *
+from .samplers.pyorbit_dynesty import pyorbit_dynesty
 from .samplers.pyorbit_dynesty_legacy import *
 from .samplers.pyorbit_nestle import *
 from .samplers.pyorbit_ultranest import *
