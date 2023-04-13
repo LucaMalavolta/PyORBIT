@@ -36,9 +36,9 @@ class AbstractTransit(object):
     def _prepare_planetary_parameters(self, mc, **kwargs):
 
         try:
-            multivariate_pars = mc.common_models[self.stellar_ref].multivariate_pars
+            multivariate_pams = mc.common_models[self.stellar_ref].multivariate_pams
         except AttributeError:
-            multivariate_pars = []
+            multivariate_pams = []
 
         """ Default parametrization uses the stellar density and the impact
             parameter, it is possible to switch back to scaled semi-major axis and
@@ -49,7 +49,7 @@ class AbstractTransit(object):
             self.list_pams_common.update(['a_Rs'])
             self.use_semimajor_axis = True
         else:
-            if 'mass' in multivariate_pars and 'radius' in multivariate_pars:
+            if 'mass' in multivariate_pams and 'radius' in multivariate_pams:
                 self.list_pams_common.update(['mass'])
                 self.list_pams_common.update(['radius'])
                 self.multivariate_mass_radius = True

@@ -81,7 +81,7 @@ class AbstractModel(object):
         self.model_conf = None
 
         self.multivariate_priors = {}
-        self.multivariate_pars = {}
+        self.multivariate_pams = {}
         self.multivariate_func = {}
         self.multivariate_med = {}
         self.multivariate_cov = {}
@@ -258,9 +258,9 @@ class AbstractModel(object):
         """
 
         if getattr(self, 'multivariate_priors', False):
-            if len(set(self.multivariate_pars[dataset_name]) & set(self.list_pams_dataset[dataset_name])) > 0:
+            if len(set(self.multivariate_pams[dataset_name]) & set(self.list_pams_dataset[dataset_name])) > 0:
                 multi_par = [parameter_values[ii]
-                             for ii in self.multivariate_pars[dataset_name]]
+                             for ii in self.multivariate_pams[dataset_name]]
                 pdf = self.multivariate_func[dataset_name].pdf(multi_par)
                 if pdf > 0:
                     prior_out += np.log(
@@ -268,13 +268,13 @@ class AbstractModel(object):
                 else:
                     return -np.inf
             else:
-                self.multivariate_pars[dataset_name] = []
+                self.multivariate_pams[dataset_name] = []
         else:
-            self.multivariate_pars = {dataset_name: []}
+            self.multivariate_pams = {dataset_name: []}
 
         for par in self.list_pams_dataset:
 
-            if par in self.multivariate_pars[dataset_name]:
+            if par in self.multivariate_pams[dataset_name]:
                 continue
 
             prior_out += giveback_priors(
