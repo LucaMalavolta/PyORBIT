@@ -13,7 +13,7 @@ Each *planet* is defined by the following parameters
 | Tc     | Central time of transit              | days      |
 | mean_long | Mean longitude of the orbit, assuming $\Omega=0$ | degrees |
 | e      | eccentricity of the orbit | adimensional |
-| omega  | argument of periastron of the *planet* $\omega_p$  | adimensional |
+| omega  | argument of periastron of the *planet* $\omega_p$  | degrees |
 | e_coso | $ e \cos{\omega}$ in Ford 2006 parametrization | adimensional |
 | e_sino | $ e \sin{\omega}$ in Ford 2006 parametrization | adimensional |
 | sre_coso | $ \sqrt{e} \cos{\omega}$ in Eastman 2013 parametrization | adimensional |
@@ -32,19 +32,21 @@ Each *planet* is defined by the following parameters
 
 
 ```{warning}
-`PyORBIT` uses the argument of pericenter of the **planet** $\omega_p$, while other packages may use the argument of pericenter of the **star** $\omega _\star$. Some papers report the former without specifying the $\star$ pedix.
+`PyORBIT` uses the argument of pericenter of the **planet** $\omega_p$, while other packages may use the argument of pericenter of the **star** $\omega _\star$. Some papers report the latter without specifying the $\star$ pedix.
 ```
 
 ### Keywords
 
+The default keyword is highlighted in bold face.
+
 **orbit**
-* accepted values: `circular` | `keplerian` | `dynamical`. default: `keplerian`
+* accepted values: `circular` | **`keplerian`** | `dynamical`
 * define if the planet is moving on a circular orbit ($e=0$, $\omega=90°$), a
   standard Keplerian, or on an orbit computed through N-body integration
 
 **parametrization**
 * accepted values: `Standard` | `Standard_Tcent` | `Ford2006` |
-  `Ford2006_Tcent` | `Eastman2013` |  `Eastman2013_Tcent`. default: `Eastman2013`
+  `Ford2006_Tcent` | **`Eastman2013`** |  `Eastman2013_Tcent`
 * define the parametrization for eccentricity and argument of periastron:
   ($e$, $\omega$) for `Standard`, ($e \sin{\omega}$,
   $e \cos{\omega}$) for `Ford2006`, ($\sqrt{e} \sin{\omega}$,
@@ -54,22 +56,22 @@ Each *planet* is defined by the following parameters
   central time of transit `Tc`.
 
 **use_inclination**
-* accepted values:  `True` | `False`. default: `False`
+* accepted values:  `True` | **`False`**
 * if `True`, the inclination of the planet `i` replaces the impact parameter `b`.
 
 **use_semimajor_axis**
-* accepted values: `True` | `False`. default: `False`
+* accepted values: `True` |  **`False`**
 * if `True`, the scaled semimajor axis of the planet `a_Rs` replaces the stellar
   density (defined in the `star` section).
 
 **use_time_of_transit**
-* accepted values: `True` | `False`. default: `False` / overridden by `parametrization`
+* accepted values: `True` |  **`False`** / overridden by `parametrization`
 * alternative way to replace the mean longitude `mean_long` with the
   central time of transit `Tc` when set to `True`. It is overridden by `parametrization` if its
   value is ending with `_Tcent`
 
 **use_mass_for_planets**
-* accepted values:  `True` | `False`. default: `False`
+* accepted values:  `True` |  **`False`**
 * If `False`, the mass of the planet replaces the radial velocity semiamplitude.
   It should be activated with those methods that allow the determination of the
   true mass of a planet, e.g., TTVs
@@ -90,3 +92,16 @@ common:
         b: [0.0, 1.0]
         R_Rs: [0.00, 1.00]
 ```
+
+
+Parameters
+----------
+x : array_like, shape (M,)
+    x-coordinates of the M sample points ``(x[i], y[i])``.
+y : array_like, shape (M,) or (M, K)
+    y-coordinates of the sample points. Several data sets of sample
+    points sharing the same x-coordinates can be fitted at once by
+    passing in a 2D-array that contains one dataset per column.
+deg : int
+    Degree of the fitting polynomial
+
