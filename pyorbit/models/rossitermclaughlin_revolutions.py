@@ -26,6 +26,11 @@ class RossiterMcLaughling_Reloaded(AbstractModel, AbstractTransit):
             'lambda', # Sky-projected angle between stellar rotation axis and normal of orbit plane [deg]
             'R_Rs',  # planet radius (in units of stellar radii)
             'v_sini' # projected rotational velocity of the star
+            'contrast_m', # 
+            'contrast_q',
+            'fwhm_m',
+            'fwhm_q',
+            'rv_offset'
         }
 
         self.star_grid = {}   # write an empty dictionary
@@ -210,6 +215,17 @@ class RossiterMcLaughling_Reloaded(AbstractModel, AbstractTransit):
                 mean_vstar[i_obs] = vstarI_sum/I_sum
 
         conv_rvstar = self.retrieve_convective_rv(ld_par, mean_mu, parameter_values)
+
+        rv_star = mean_vstar + conv_rvstar + parameter_values['rv_offset']
+        contrast = mean_mu * parameter_values['contrast_m'] + parameter_values['contrast_q']
+        sigma = (mean_mu * parameter_values['fwhm_m'] + parameter_values['fwhm_q']) / constants.sigma2FWHM
+
+        #np.subtract(ccf_x.T,rv_zero).T 
+        # rv_zero = np.subtract(ccf_x, rv_zero)
+        # sigma_2d,   = np.meshgrid(sigma, bjd)
+        # constrast_2d   = np.meshgrid(contrast, bjd) 
+
+        # gauss_2d = 1 - constrast_2d * np.exp(-rv_zero**2 / (2*sigma_2d**2) )
 
         return mean_vstar + conv_rvstar
 
