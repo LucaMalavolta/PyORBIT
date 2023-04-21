@@ -289,7 +289,7 @@ def kepler_true_anomaly_orbital_distance(BJD0, Tcent0, Period, e0, omega0, a_sm)
     #        BJD0+T0+phase*Period = Tperi
     # omega = argument of pericenter
 
-    phase = kepler_Tc2phase_Tref(Period, Tcent0, e0, omega0)
+    phase = kepler_Tc2phase_Tref(Period, Tcent0, e0, omega0)/180.*np.pi
 
     omega = np.asarray(omega0, dtype=np.double)/180.*np.pi
     e = np.asarray(e0, dtype=np.double)
