@@ -17,7 +17,7 @@ import pyorbit.subroutines.constants as constants
 #       Newton-Raphson iteration to extend the applicability of this
 #       function to higher eccentricities
 
-__all__ = ["kepler_K1", "kepler_RV", "kepler_Tc2phase_Tref", "kepler_phase2Tc_Tref", "get_planet_mass", "kepler_true_anomaly_orbital_distance"]
+__all__ = ["kepler_K1", "kepler_RV", "kepler_RV_T0P", "kepler_Tc2phase_Tref", "kepler_phase2Tc_Tref", "get_planet_mass", "kepler_true_anomaly_orbital_distance"]
 
 
 def f0_keplerE(ecan_tmp, ecc, mx):
