@@ -410,8 +410,9 @@ def convert_PMsMp_to_a(P, Ms, Mp):
     return np.power(P**2 * constants.Giau * (Ms + Mp/constants.Msear) / (2 * np.pi)**2., 1./3.)
 
 def convert_b_to_i(b,e,o,a):
+    o_rad  = o * constants.deg2rad
 
-    rho_e = (1. - e ** 2) / (1. + e * np.sin(o))
+    rho_e = (1. - e ** 2) / (1. + e * np.sin(o_rad))
     arccos_argument = b / a / rho_e
     if np.size(arccos_argument)<=1:
 
