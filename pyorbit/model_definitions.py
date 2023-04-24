@@ -172,7 +172,7 @@ define_type_to_class = {
     'pytransit_transit_ttv_subset': PyTransit_Transit_TTV_Subset,
     'subset_pytransit_transit_ttv': PyTransit_Transit_TTV_Subset,
     'pytransit_transit_ttv_ancillary': PyTransit_Transit_TTV_Ancillary,
-    'ancillary_pytransit_transit_ttv': PyTransit_Transit_TTV_Ancillary,    
+    'ancillary_pytransit_transit_ttv': PyTransit_Transit_TTV_Ancillary,
     'batman_transit': Batman_Transit,
     'batman_transit_ttv_subset': Batman_Transit_TTV_Subset,
     'subset_batman_transit_ttv': Batman_Transit_TTV_Subset,
@@ -240,6 +240,8 @@ define_type_to_class = {
 accepted_extensions = ['.yaml', '.yml', '.conf', '.config', '.input', ]
 
 star_properties_list = ['limb_darkening', 'dilution_factor']
+
+extended_dataset_keylist = ['expanded_dataset', 'extended_dataset', 'dataset_2d', 'dataset_expanded', 'dataset_extended']
 
 # Trying to guess all the possible mistakes....
 datatype_definition = {
