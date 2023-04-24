@@ -1103,6 +1103,10 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
             P_minimum = min(key_val.get('P', 2.0), P_minimum)
 
         for dataset_name, dataset in mc.dataset_dict.items():
+
+            if not dataset.get('compute_plot', True):
+                continue
+
             if dataset.kind in kinds.keys():
                 kinds[dataset.kind].extend([dataset_name])
             else:
@@ -1298,6 +1302,10 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
                 os.system('mkdir -p ' + dir_models)
 
                 for dataset_name, dataset in mc.dataset_dict.items():
+
+                    if not dataset.get('compute_plot', True):
+                        continue
+
                     for model_name in dataset.models:
 
                         if getattr(mc.models[model_name], 'systematic_model', False):

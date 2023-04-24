@@ -506,6 +506,9 @@ def get_model(mc, theta, bjd_dict):
 
     for dataset_name, dataset in mc.dataset_dict.items():
 
+        if not dataset.get('compute_plot', True):
+            continue
+
         x0_plot = bjd_dict[dataset_name]['x0_plot']
 
         n_input = np.size(x0_plot)

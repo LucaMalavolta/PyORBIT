@@ -61,6 +61,8 @@ class Dataset(AbstractCommon):
 
         self.ancillary = None
 
+        self.compute_plot = True
+
     def convert_ancillary_from_file(self, input_file):
         """ Function to read an ancillary file containing a dataset required to
         model some effect (usually, instrumental) but not object of modelling

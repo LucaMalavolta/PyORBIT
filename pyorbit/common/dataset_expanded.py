@@ -19,6 +19,8 @@ class DatasetExpanded(AbstractCommon, Dataset):
         super().__init__(*args, **kwargs)
         super(AbstractCommon, self).__init__(*args, **kwargs)
 
+        self.compute_plot = False
+
     def convert_dataset_from_file(self, input_file):
 
         """ Robust data reading, now encompassing the case of ancillary data
@@ -45,11 +47,11 @@ class DatasetExpanded(AbstractCommon, Dataset):
             data_dictionary['offset_flag'] = -1
 
         self.x = np.asarray(data_dictionary['bjd'], dtype=np.double)
-        self.y = np.asarray(data_dictionary['2nd_axis'], dtype=np.double)
-        self.data = np.asarray(data_dictionary['data'], dtype=np.double)
-        self.errs = np.asarray(data_dictionary['errs'], dtype=np.double)
+        self.x1 = np.asarray(data_dictionary['2nd_axis'], dtype=np.double)
+        self.y = np.asarray(data_dictionary['data'], dtype=np.double)
+        self.e = np.asarray(data_dictionary['errs'], dtype=np.double)
 
-        self.n = np.size(self.data)
+        self.n = np.size(self.y)
         self.n_shape = np.shape(self.x)
 
         if not update:
@@ -60,11 +62,11 @@ class DatasetExpanded(AbstractCommon, Dataset):
                of the dataset. They must be large enough to allow for most of
                the anomalous situations
             """
-            data_range = np.max(self.data) - np.min(self.data)
+            data_range = np.max(self.y) - np.min(self.y)
 
-            self.generic_default_bounds = {'offset': [np.min(self.data) - 10.*data_range,
-                                                        np.max(self.data) + 10.*data_range],
-                                           'jitter': [0., 100 * np.max(self.errs)]}
+            self.generic_default_bounds = {'offset': [np.min(self.y) - 10.*data_range,
+                                                        np.max(self.y) + 10.*data_range],
+                                           'jitter': [0., 100 * np.max(self.e)]}
 
             self._setup_systematic_dictionaries('jitter', data_dictionary['jitter'])
             self._setup_systematic_dictionaries('offset', data_dictionary['offset'])
@@ -81,20 +83,4 @@ class DatasetExpanded(AbstractCommon, Dataset):
 
         self.model_reset()
 
-    """
-    FIXED UNTIL HERE
-    """
-
-    def compute_residuals(self):
-        self.residuals = self.y - self.model
-
-    def model_logchi2(self):
-        env = 1.0 / (self.e ** 2.0 + self.jitter ** 2.0)
-
-        #chi2 = -0.5 * (self.n * np.log(2 * np.pi) +
-        #               np.sum(self.residuals ** 2 * env - np.log(env)))
-        #print('{0:25s} {1:12f} {2:12f} \n'.format(self.name_ref, chi2, np.std(self.residuals)))
-
-        return -0.5 * (self.n * np.log(2 * np.pi) +
-                       np.sum(self.residuals ** 2 * env - np.log(env)))
 

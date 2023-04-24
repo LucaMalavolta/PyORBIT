@@ -4,6 +4,7 @@ from pyorbit.model_definitions import *
 # Special import for Dataset, it had to be escluded from
 # model_definitons to avoid circular import
 from pyorbit.common.dataset import Dataset
+from pyorbit.common.dataset_expanded import DatasetExpanded
 
 from pyorbit.subroutines.common import np, get_2darray_from_val
 
@@ -436,7 +437,7 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, reload_ze
                             model_name_exp, planet_name)
 
                     # TODO
-                    # ! this part will stop working now that most definitions have been moved to 
+                    # ! this part will stop working now that most definitions have been moved to
                     # ! mc.common_models[conf_name].model_initialize
 
                     if keplerian_approximation:
@@ -871,7 +872,7 @@ def bounds_space_priors_starts_fixed(mc,
                     #! replace with parameters taken from the header of the file
                     model_obj.multivariate_pams = prior_conf[par]['parameters']
                     data_file = np.genfromtxt(prior_conf[par]['file'])
-                    
+
                     ll = []
                     for ii in range(len(model_obj.multivariate_pams)):
                         ll.append(data_file[:,ii])
@@ -881,7 +882,7 @@ def bounds_space_priors_starts_fixed(mc,
                     model_obj.multivariate_med = np.median(data_file, axis=0)
                     model_obj.multivariate_func = multivariate_normal(model_obj.multivariate_med,
                                                                       model_obj.multivariate_cov)
-                    
+
                     #multi_var = [parameter_value[ii] for ii in model_obj.multivariate_pams]
                     #pdf = self.multivariate_func.pdf(multi_var)
                     ll = None
