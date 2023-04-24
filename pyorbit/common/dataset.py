@@ -22,7 +22,7 @@ class Dataset(AbstractCommon):
         self.dynamical = False
         self.planet_name = None
 
-        self.generic_list_pams = {'jitter', 'offset'}
+        self.generic_list_pams = {'jitter', 'offset', 'subset'}
 
         self.generic_default_priors = {
             'jitter': ['Uniform', []],
@@ -35,9 +35,6 @@ class Dataset(AbstractCommon):
         if self.kind == 'Tcent':
             self.generic_default_spaces['jitter'] = 'Logarithmic'
             self.generic_default_priors['jitter'] = ['Uniform', []]
-
-        if self.kind == 'CCFs':
-            self.Tref = 0.000
 
         self.variable_compressed = {}
         self.variable_expanded = {}
@@ -123,7 +120,7 @@ class Dataset(AbstractCommon):
 
             for iname, name in enumerate(input_array.dtype.names):
                 self.ancillary_str_index[name] = iname
-        #!new 
+        #!new
 
 
 
@@ -148,7 +145,7 @@ class Dataset(AbstractCommon):
                     data_input[:, 5] = data1[v_name]
                 else:
                     """
-                    NOTE: there is no support for 
+                    NOTE: there is no support for
                     ancillary data stored in the input file
                     """
                     self.ancillary = data1.copy()
@@ -182,6 +179,7 @@ class Dataset(AbstractCommon):
             self.e = np.asarray(data_input[:, 2], dtype=np.double)
 
         self.n = np.size(self.x)
+        self.n_shape = np.shape(self.x)
 
         if not update:
             if self.Tref is None:
@@ -231,9 +229,12 @@ class Dataset(AbstractCommon):
 
     def _setup_systematic_mask(self, var_generic, dataset_vals):
         n_sys = np.max(dataset_vals.astype(np.int64)) + 1
+        if np.size(dataset_vals) == 1:
+            dataset_vals = np.zeros(self.n_shape, dtype=np.int64)
+
         for ii in range(0, n_sys):
             var = var_generic + '_' + repr(ii)
-            self.mask[var] = np.zeros(self.n, dtype=bool)
+            self.mask[var] = np.zeros(self.n_shape, dtype=bool)
             self.mask[var][(abs(dataset_vals - ii) < 0.1)] = True
 
     def _delete_systematic_dictionaries_mask(self, var_generic):
@@ -255,21 +256,18 @@ class Dataset(AbstractCommon):
         self._delete_systematic_dictionaries_mask('offset')
 
     def common_Tref(self, Tref_in):
-        if self.kind == 'CCFs':
-            self.Tref = 0.000
-        else:
-            self.Tref = Tref_in
+        self.Tref = Tref_in
         self.x0 = self.x - self.Tref
         return
 
     def model_reset(self):
         self.residuals = None
         self.model = None
-        self.additive_model = np.zeros(self.n, dtype=np.double)
-        self.unitary_model = np.zeros(self.n, dtype=np.double)
+        self.additive_model = np.zeros(self.n_shape, dtype=np.double)
+        self.unitary_model = np.zeros(self.n_shape, dtype=np.double)
         self.normalization_model = None
-        self.external_model = np.zeros(self.n, dtype=np.double)
-        self.jitter = np.zeros(self.n, dtype=np.double)
+        self.external_model = np.zeros(self.n_shape, dtype=np.double)
+        self.jitter = np.zeros(self.n_shape, dtype=np.double)
         return
 
     def compute(self, variable_value):
