@@ -40,11 +40,11 @@ class DatasetExpanded(AbstractCommon, Dataset):
         # Add a flag to save internally the input dataset
 
         if flag_shutdown_jitter:
-            data_dictionary['jitter_flag'] = -1
+            data_dictionary['jitter'] = -1
 
         if not self.models:
-            data_dictionary['jitter_flag'] = -1
-            data_dictionary['offset_flag'] = -1
+            data_dictionary['jitter'] = -1
+            data_dictionary['offset'] = -1
 
         self.x = np.asarray(data_dictionary['bjd'], dtype=np.double)
         self.x1 = np.asarray(data_dictionary['2nd_axis'], dtype=np.double)
