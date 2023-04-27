@@ -12,7 +12,7 @@ except ModuleNotFoundError:
 import numpy as np
 
 
-class DatasetExpanded(AbstractCommon, Dataset):
+class DatasetExpanded(Dataset):
 
     def __init__(self, *args, **kwargs):
         # this calls all constructors up to AbstractModel
