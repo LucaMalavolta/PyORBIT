@@ -14,10 +14,9 @@ import numpy as np
 
 class DatasetExpanded(Dataset):
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, model_name, kind, models):
         # this calls all constructors up to AbstractModel
-        super().__init__(*args, **kwargs)
-        super(AbstractCommon, self).__init__(*args, **kwargs)
+        super(self.__class__, self).__init__(None)
 
         self.compute_plot = False
 

@@ -212,11 +212,11 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, reload_ze
                 break
 
         if add_extended_dataset:
-            mc.dataset_dict[dataset_name] = Dataset(dataset_name,
+            mc.dataset_dict[dataset_name] = DatasetExpanded(dataset_name,
                                                     dataset_conf['kind'],
                                                     np.atleast_1d(dataset_conf['models']).tolist())
         else:
-            mc.dataset_dict[dataset_name] = DatasetExpanded(dataset_name,
+            mc.dataset_dict[dataset_name] = Dataset(dataset_name,
                                         dataset_conf['kind'],
                                         np.atleast_1d(dataset_conf['models']).tolist())
 
