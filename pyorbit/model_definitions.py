@@ -241,7 +241,7 @@ accepted_extensions = ['.yaml', '.yml', '.conf', '.config', '.input', ]
 
 star_properties_list = ['limb_darkening', 'dilution_factor']
 
-extended_dataset_keylist = ['expanded_dataset', 'extended_dataset', 'dataset_2d', 'dataset_expanded', 'dataset_extended']
+extended_dataset_keylist = ['expanded_dataset', 'extended_dataset', 'dataset_2d', 'dataset_expanded', 'dataset_extended', 'dataset_2d']
 
 # Trying to guess all the possible mistakes....
 datatype_definition = {

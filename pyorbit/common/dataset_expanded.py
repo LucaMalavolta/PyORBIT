@@ -14,9 +14,59 @@ import numpy as np
 
 class DatasetExpanded(Dataset):
 
-    def __init__(self, model_name, kind, models):
-        # this calls all constructors up to AbstractModel
-        super(self.__class__, self).__init__(None)
+    def __init__(self,  model_name, kind, models):
+        AbstractCommon.__init__(self, None)
+
+        for kind_name, kind_list in datatype_definition.items():
+            if kind in kind_list:
+                self.kind = kind_name
+                break
+
+        # model kind:  'RV', 'PHOT', 'ACT'...
+        self.models = models
+        self.name_ref = model_name
+
+        self.dynamical = False
+        self.planet_name = None
+
+        self.generic_list_pams = {'jitter', 'offset', 'subset'}
+
+        self.generic_default_priors = {
+            'jitter': ['Uniform', []],
+            'offset': ['Uniform', []]}
+
+        self.generic_default_spaces = {
+            'jitter': 'Linear',
+            'offset': 'Linear'}
+
+        if self.kind == 'Tcent':
+            self.generic_default_spaces['jitter'] = 'Logarithmic'
+            self.generic_default_priors['jitter'] = ['Uniform', []]
+
+        self.variable_compressed = {}
+        self.variable_expanded = {}
+
+        self.model_class = 'dataset'
+        self.list_pams = set()
+        self.default_bounds = {}
+        self.default_spaces = {}
+        self.default_priors = {}
+        self.default_fixed = {}
+        self.recenter_pams = {}
+
+        self.Tref = None
+        self.residuals = None
+        self.residuals_for_regression = None
+        self.model = None
+        # this model is compute externally and passed to the compute subroutine of the model
+        self.external_model = None
+        self.additive_model = None
+        self.unitary_model = None
+        self.normalization_model = None
+        self.jitter = None
+        self.mask = {}
+
+        self.ancillary = None
 
         self.compute_plot = False
 
