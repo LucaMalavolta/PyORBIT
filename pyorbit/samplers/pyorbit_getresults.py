@@ -1104,7 +1104,7 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
 
         for dataset_name, dataset in mc.dataset_dict.items():
 
-            if not dataset.get('compute_plot', True):
+            if not getattr(dataset, 'compute_plot', True):
                 continue
 
             if dataset.kind in kinds.keys():
@@ -1303,7 +1303,7 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
 
                 for dataset_name, dataset in mc.dataset_dict.items():
 
-                    if not dataset.get('compute_plot', True):
+                    if not getattr(dataset, 'compute_plot', True):
                         continue
 
                     for model_name in dataset.models:
