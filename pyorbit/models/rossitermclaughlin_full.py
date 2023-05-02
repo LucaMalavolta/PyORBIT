@@ -10,14 +10,14 @@ try:
     from numba import jit
     @jit(nopython=True)
     def CCF_gauss(x, A, x0, fwhm):
-        sigma = fwhm/2.35482004503 
+        sigma = fwhm/2.35482004503
         return 1. - A * np.exp(-(x - x0) ** 2 / (2 * sigma ** 2))
 
     @jit(nopython=True)
     def iter2_CCF_gauss(x, A, fwhm, x0, istar, out):
         sigma = fwhm/2.35482004503
         const = (2 * sigma ** 2)
-        
+
         for i in range(x0.shape[0]):
             for j in range(x0.shape[1]):
                 out[i,j, :] = istar[i, j] * (1. - A * np.exp(-(x - x0[i, j]) ** 2 /const))
@@ -25,18 +25,17 @@ try:
 except:
 
     def CCF_gauss(x, A, x0, fwhm):
-        sigma = fwhm/2.35482004503 
+        sigma = fwhm/2.35482004503
         return 1. - A * np.exp(-(x - x0) ** 2 / (2 * sigma ** 2))
 
     def iter2_CCF_gauss(x, A, fwhm, x0, istar, out):
         sigma = fwhm/2.35482004503
         const = (2 * sigma ** 2)
-        
+
         for i in range(x0.shape[0]):
             for j in range(x0.shape[1]):
                 out[i,j, :] = istar[i, j] * (1. - A * np.exp(-(x - x0[i, j]) ** 2 /const))
         return out
-
 
 
 class RossiterMcLaughling_Full(AbstractModel, AbstractTransit):
@@ -113,54 +112,41 @@ class RossiterMcLaughling_Full(AbstractModel, AbstractTransit):
         #                        nthreads=self.code_options['nthreads'])
 
         """ Values valid for HARPS-N data"""
-        ccf_variables = {
-            'natural_broadening': 1.5,  # in km/s 
-            'natural_contrast': 0.5, # relative depth of CCF, [0-1]
-            'instrumental_broadening': 1.005, # in km/s 
-        }
-
-        """ Lower and upper wavelength boundaries for the filter, in (nm) """
-        for dict_name, dict_value in ccf_variables.items:
-            if kwargs[dataset.name_ref].get(dict_name, False):
-                self.code_options[dataset.name_ref][dict_name] = kwargs[dataset.name_ref][dict_name]
-            elif kwargs.get(dict_name, False):
-                self.code_options[dataset.name_ref][dict_name] = kwargs[dict_name]
-            else:
-                self.code_options[dataset.name_ref][dict_name] = dict_value
-
-        ccf_variables = {
+        self.ccf_variables = {
+            'natural_broadening': 1.5,  # in km/s
+            'natural_contrast': 0.5, # relative depth o
+            'instrumental_broadening': 1.005, # in km/s
             'rv_min': -20.0,
             'rv_max': 20.0,
             'rv_step': 0.25,
         }
 
-        for dict_name, dict_value in ccf_variables.items:
+        for dict_name in self.ccf_variables:
             if kwargs[dataset.name_ref].get(dict_name, False):
-                ccf_variables[dict_name] = kwargs[dataset.name_ref][dict_name]
+                self.ccf_variables[dict_name] = kwargs[dataset.name_ref][dict_name]
             elif kwargs.get(dict_name, False):
-                ccf_variables[dict_name] = kwargs[dict_name]
+                self.ccf_variables[dict_name] = kwargs[dict_name]
 
         exp_array = np.linspace(-0.5, 0.5, self.code_options[dataset.name_ref]['sample_factor'])
         self.code_options[dataset.name_ref]['bjd_oversampling'] = np.empty([dataset.n, self.code_options[dataset.name_ref]['sample_factor']])
         try:
             exptime = dataset.ancillary['exptime'] / constants.d2s
-            self.code_options[dataset.name_ref]['exp_time'] = np.average(exptime)
+            self.code_options[dataset.name_ref]['average_exptime'] = np.average(exptime)
         except:
-            exptime = np.ones(dataset.n) * self.code_options[dataset.name_ref]['exp_time']        
+            exptime = np.ones(dataset.n) * self.code_options[dataset.name_ref]['exp_time']
 
         """ slow non-pythonic way """
         for n in range(0, dataset.n):
             self.code_options[dataset.name_ref]['bjd_oversampling'][n,:] = \
-                dataset.x0 + exp_array* self.code_options[dataset.name_ref]['exptime'][n]
-            
+                dataset.x0[n] + exp_array* exptime[n]
 
         self.star_grid[dataset.name_ref] = {}
-        self.star_grid[dataset.name_ref]['zz'] = np.arange(ccf_variables['rv_min'], 
-                                        ccf_variables['rv_max']+ccf_variables['rv_step'],
-                                        ccf_variables['rv_step'],
+        self.star_grid['zz'] = np.arange(self.ccf_variables['rv_min'],
+                                        self.ccf_variables['rv_max']+self.ccf_variables['rv_step'],
+                                        self.ccf_variables['rv_step'],
                                         dtype=np.double)
-        self.star_grid[dataset.name_ref]['len_zz'] = len(self.star_grid[dataset.name_ref]['zz'])
-        self.star_grid[dataset.name_ref]['rv_step'] = ccf_variables['rv_step']
+        self.star_grid['len_zz'] = len(self.star_grid['zz'])
+        self.star_grid['rv_step'] = self.ccf_variables['rv_step']
 
     def compute(self, parameter_values, dataset, x0_input=None):
 
@@ -174,7 +160,6 @@ class RossiterMcLaughling_Full(AbstractModel, AbstractTransit):
 
         ld_par = self._limb_darkening_coefficients(parameter_values)
 
-        istar_rad = parameter_values['i_star'] * constants.deg2rad
         lambda_rad = parameter_values['lambda'] * constants.deg2rad
         inclination_rad = parameter_values['i'] * constants.deg2rad
         omega_rad = parameter_values['omega'] * constants.deg2rad
@@ -198,6 +183,7 @@ class RossiterMcLaughling_Full(AbstractModel, AbstractTransit):
             1. -star_grid_r_ortho[self.star_grid['inside']] ** 2)
 
         if self.use_differential_rotation:
+            istar_rad = parameter_values['i_star'] * constants.deg2rad
 
             """ rotate the coordinate system around the x_ortho axis by an agle: """
             star_grid_beta = (np.pi / 2.) - istar_rad
@@ -218,7 +204,7 @@ class RossiterMcLaughling_Full(AbstractModel, AbstractTransit):
             # Null velocity for points outside the stellar surface
         else:
             star_grid_v_star = star_grid_x_ortho * parameter_values['v_sini']
-        
+
         """ Addition of the convective contribute"""
         star_grid_v_star += self.retrieve_convective_rv(ld_par, self.star_grid['mu'], parameter_values)
 
@@ -230,12 +216,12 @@ class RossiterMcLaughling_Full(AbstractModel, AbstractTransit):
         star_grid_v_starI = star_grid_I * star_grid_v_star
 
 
-        out_temp = np.empty([self.star_grid['n_grid'], self.star_grid['n_grid'], self.star_grid[dataset.name_ref]['len_zz']])
-        star_grid_ccf = iter2_CCF_gauss(self.star_grid[dataset.name_ref]['zz'],
-                            self.code_options[dataset.name_ref]['natural_contrast'],
-                            self.code_options[dataset.name_ref]['natural_broadening'],
-                            self.code_options[dataset.name_ref]['v_star'], star_grid_I, out_temp)
-    
+        out_temp = np.empty([self.star_grid['n_grid'], self.star_grid['n_grid'], self.star_grid['len_zz']])
+        star_grid_ccf = iter2_CCF_gauss(self.star_grid['zz'],
+                            self.ccf_variables['natural_contrast'],
+                            self.ccf_variables['natural_broadening'],
+                            star_grid_v_star, star_grid_I, out_temp)
+
 
 
         if x0_input is None:
@@ -247,15 +233,16 @@ class RossiterMcLaughling_Full(AbstractModel, AbstractTransit):
             bjd_oversampling = np.empty([n_vals, self.code_options[dataset.name_ref]['sample_factor']])
             for n in range(0, n_vals):
                 bjd_oversampling[n,:] = \
-                    x0_input + exp_array * np.average(self.code_options[dataset.name_ref]['exptime'])
+                    x0_input + exp_array * np.average(self.code_options[dataset.name_ref]['average_exptime'])
 
         #eclipsed_flux = np.zeros_like(bjd)
         #mean_mu = np.zeros(n_vals)
         #mean_vstar =  np.zeros(n_vals)
 
-        rv_rml = np.zeros_like(n_vals)
+        rv_rml = np.zeros(n_vals)
         ccf_total = np.sum(star_grid_ccf, axis=(0,1))
 
+        p0 = (self.ccf_variables['natural_contrast'], 0.00, self.ccf_variables['instrumental_broadening']/self.star_grid['rv_step'])
 
         for i_obs in range(0, n_vals):
 
@@ -297,7 +284,7 @@ class RossiterMcLaughling_Full(AbstractModel, AbstractTransit):
 
                     """ Seelction of the portion of stars covered by the planet"""
                     sel_eclipsed = (rd <= parameter_values['R_Rs']) & self.star_grid['inside']
-                
+
                     ccf_out += ccf_total - np.sum(star_grid_ccf[sel_eclipsed,:], axis=0)
 
                     #I_sum +=  np.sum(star_grid_I[sel_eclipsed])
@@ -305,13 +292,15 @@ class RossiterMcLaughling_Full(AbstractModel, AbstractTransit):
                     #vstarI_sum += np.sum(star_grid_v_starI[sel_eclipsed])
 
             cont_val = np.amax(ccf_out)
-                    
+
             if cont_val > 0:
                 ccf_out /= cont_val
 
-                ccf_broad = gaussian_filter1d(ccf_out, self.code_options[dataset.name_ref]['instrumental_broadening']/self.star_grid[dataset.name_ref]['rv_step'])
-                parameters, covariance = curve_fit(CCF_gauss, self.star_grid[dataset.name_ref]['zz'], ccf_broad)
-                rv_rml[i_obs] = parameters[1]
-
+                ccf_broad = gaussian_filter1d(ccf_out, self.ccf_variables['instrumental_broadening']/self.star_grid['rv_step'])
+                try:
+                    parameters, covariance = curve_fit(CCF_gauss, self.star_grid['zz'], ccf_broad, p0=p0, check_finite =False)
+                    rv_rml[i_obs] = parameters[1] * 1000.
+                except:
+                    rv_rml[i_obs] = 0.00
         return rv_rml
 
