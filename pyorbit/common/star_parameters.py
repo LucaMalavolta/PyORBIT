@@ -142,6 +142,7 @@ class CommonStarParameters(AbstractCommon):
         self.use_stellar_inclination = False
         self.use_differential_rotation = False
         self.convective_order = 0
+        self.preserve_density = True
 
     def initialize_model(self, mc, **kwargs):
 
@@ -153,6 +154,14 @@ class CommonStarParameters(AbstractCommon):
         """ check if the stellar_rotation has to be used as parameter """
         self.use_stellar_rotation = kwargs.get('use_stellar_rotation', self.use_stellar_rotation)
         self.use_differential_rotation = kwargs.get('use_differential_rotation', self.use_differential_rotation)
+
+        #NOTE try/except added to rpeverse compatibility within development version
+        #TODO remove before final release
+        try:
+            self.preserve_density = kwargs.get('preserve_density', self.preserve_density)
+            self.preserve_density = ~ kwargs.get('use_mass_radius', ~ self.preserve_density)
+        except:
+            self.preserve_density = True
 
         self.use_differential_rotation = kwargs.get('use_differential_rotation', self.use_differential_rotation)
         if self.use_differential_rotation:
@@ -172,6 +181,7 @@ class CommonStarParameters(AbstractCommon):
 
         skip_first_parametrization = True
         skip_second_parametrization = True
+        skip_third_parametrization = True
 
         if self.use_equatorial_velocity and self.use_stellar_inclination:
             if self.use_stellar_rotation:
@@ -198,20 +208,30 @@ class CommonStarParameters(AbstractCommon):
 
 
         if pam == "mass" or pam == "radius":
-            skip_second_parametrization = False
+            if self.preserve_density:
+                skip_second_parametrization = True
+                skip_third_parametrization = False
+            else:
+                skip_second_parametrization = False
 
         if ('mass' in self.multivariate_pams
                 and 'radius' in self.multivariate_pams
                 and self.multivariate_priors):
             skip_second_parametrization = False
+            skip_third_parametrization = True
 
         if ('mass' in self.fix_list \
             or 'radius' in self.fix_list \
             or 'mass' in self.sampler_parameters \
             or 'radius' in self.sampler_parameters):
             skip_second_parametrization = True
+            skip_third_parametrization = True
 
-        if skip_first_parametrization and skip_second_parametrization:
+        if ('density' in self.fix_list
+            or 'density' in self.sampler_parameters):
+            skip_third_parametrization = True
+
+        if skip_first_parametrization and skip_second_parametrization and skip_third_parametrization:
             return ndim, output_lists, False
 
         if not skip_first_parametrization:
@@ -246,6 +266,17 @@ class CommonStarParameters(AbstractCommon):
             self.parameter_index['density'] = [ndim, ndim + 1]
             parameter_list = ['mass', 'radius']
             derived_list = ['density']
+
+        if not skip_third_parametrization:
+            self.transformation['density'] = get_var_val
+            self.parameter_index['density'] = ndim
+            self.transformation['radius'] = get_var_val
+            self.parameter_index['radius'] = ndim + 1
+
+            self.transformation['mass'] = get_2var_rho
+            self.parameter_index['mass'] = [ndim, ndim + 1]
+            parameter_list = ['density', 'radius']
+            derived_list = ['mass']
 
         for pam in parameter_list:
 

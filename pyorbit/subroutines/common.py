@@ -168,6 +168,16 @@ def get_2var_rho(var, fix, i):
     return mass/radius**3
 
 
+def get_2var_mass(var, fix, i):
+    if len(np.shape(var)) == 1:
+        density = var[i[0]]
+        radius = var[i[1]]
+    else:
+        density = var[:, i[0]]
+        radius = var[:, i[1]]
+    return density*radius**3
+
+
 def get_2var_product(var, fix, i):
     if len(np.shape(var)) == 1:
         out = var[i[0]] * var[i[1]]

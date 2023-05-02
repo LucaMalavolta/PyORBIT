@@ -31,9 +31,9 @@ class RossiterMcLaughling_Ohta(AbstractModel, AbstractTransit):
             'omega',  # argument of pericenter (in radians)
             'lambda', # Sky-projected angle between stellar rotation axis and normal of orbit plane [deg]
             'R_Rs',  # planet radius (in units of stellar radii)
-            'v_sini' # projected rotational velocity of the star
-            'rotation_period' # rotational period of the star
-            'radius' # radius of the star
+            'v_sini', # projected rotational velocity of the star
+            'rotation_period', # rotational period of the star
+            'radius', # radius of the star
         }
 
         self.compute_Omega_rotation = True
