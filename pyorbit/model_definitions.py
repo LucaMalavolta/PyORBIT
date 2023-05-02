@@ -86,7 +86,6 @@ from pyorbit.models.harmonics import Harmonics
 from pyorbit.models.dilution_factor import DilutionFactor, LocalDilutionFactor
 from pyorbit.models.normalization_factor import NormalizationFactor, LocalNormalizationFactor, SubsetNormalizationFactor
 
-from pyorbit.models.rossitermclaughlin_ohta import RossiterMcLaughling_Ohta
 
 from pyorbit.models.polynomial_trend import PolynomialTrend, SharedPolynomialTrend, LocalPolynomialTrend, SubsetPolynomialTrend
 
@@ -103,6 +102,8 @@ from pyorbit.models.celerite2_granulation_oscillation_rotation import Celerite2_
 from pyorbit.models.tinygp_quasiperiodic_activity import TinyGaussianProcess_QuasiPeriodicActivity
 from pyorbit.models.tinygp_multidimensional_quasiperiodic_activity import TinyGP_Multidimensional_QuasiPeriodicActivity
 
+from pyorbit.models.rossitermclaughlin_ohta import RossiterMcLaughling_Ohta
+from pyorbit.models.rossitermclaughlin_full import RossiterMcLaughling_Full
 from pyorbit.models.rossitermclaughlin_reloaded import RossiterMcLaughling_Reloaded
 
 """
@@ -118,7 +119,7 @@ model_requires_planets = ['radial_velocities', 'rv_planets',
                           'subset_batman_transit_faster_ttv', 'batman_transit_ttv_subset_faster',
                           'subset_pytransit_transit_ttv', 'pytransit_transit_ttv_subset',
                           'ancillary_pytransit_transit_ttv', 'pytransit_transit_ttv_ancillary',
-                         'rossitermclaughlin_ohta', 'rossitermclaughlin_reloaded',
+                         'rossitermclaughlin_ohta','rossitermclaughlin_full', 'rossitermclaughlin_reloaded',
                          'spiderman_thermal', 'batman_transit_eclipse_phasecurve']
 
 single_planet_model = ['Tc_planets', 'transit_times']
@@ -220,7 +221,6 @@ define_type_to_class = {
     'local_normalization_factor': LocalNormalizationFactor,
     'subset_normalization_factor': SubsetNormalizationFactor,
     'local_correlated_jitter': LocalCorrelatedJitter,
-    'rossitermclaughlin_ohta': RossiterMcLaughling_Ohta,
     'spectral_rotation': SpectralRotation,
     'subset_spectral_rotation': SubsetSpectralRotation,
     'subset_spectral_rotation_polynomial': SubsetSpectralRotationPolynomial,
@@ -234,6 +234,8 @@ define_type_to_class = {
     'local_lightcurve_poly_detrending': LocalLightcurvePolyDetrending,
     'tinygp_quasiperiodic': TinyGaussianProcess_QuasiPeriodicActivity,
     'tinygp_multidimensional_quasiperiodic': TinyGP_Multidimensional_QuasiPeriodicActivity,
+    'rossitermclaughlin_ohta': RossiterMcLaughling_Ohta,
+    'rossitermclaughlin_full': RossiterMcLaughling_Full,
     'rossitermclaughlin_reloaded': RossiterMcLaughling_Reloaded,
 }
 
