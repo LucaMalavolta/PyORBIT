@@ -131,9 +131,9 @@ class RossiterMcLaughling_Full(AbstractModel, AbstractTransit):
         self.code_options[dataset.name_ref]['bjd_oversampling'] = np.empty([dataset.n, self.code_options[dataset.name_ref]['sample_factor']])
         try:
             exptime = dataset.ancillary['exptime'] / constants.d2s
-            self.code_options[dataset.name_ref]['average_exptime'] = np.average(exptime)
         except:
             exptime = np.ones(dataset.n) * self.code_options[dataset.name_ref]['exp_time']
+        self.code_options[dataset.name_ref]['average_exptime'] = np.average(exptime)
 
         """ slow non-pythonic way """
         for n in range(0, dataset.n):
@@ -231,9 +231,15 @@ class RossiterMcLaughling_Full(AbstractModel, AbstractTransit):
             n_vals = dataset.n
             exp_array = np.linspace(-0.5, 0.5, self.code_options[dataset.name_ref]['sample_factor'])
             bjd_oversampling = np.empty([n_vals, self.code_options[dataset.name_ref]['sample_factor']])
-            for n in range(0, n_vals):
-                bjd_oversampling[n,:] = \
-                    x0_input + exp_array * np.average(self.code_options[dataset.name_ref]['average_exptime'])
+            #TODO Temporary bugfix to be removed
+            try:
+                for n in range(0, n_vals):
+                    bjd_oversampling[n,:] = \
+                        x0_input[n] + exp_array * self.code_options[dataset.name_ref]['average_exptime']
+            except:
+                for n in range(0, n_vals):
+                    bjd_oversampling[n,:] = \
+                        x0_input[n] + exp_array * np.average(dataset.ancillary['exptime'] / constants.d2s)
 
         #eclipsed_flux = np.zeros_like(bjd)
         #mean_mu = np.zeros(n_vals)
