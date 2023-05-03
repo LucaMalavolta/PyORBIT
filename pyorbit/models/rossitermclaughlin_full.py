@@ -228,7 +228,7 @@ class RossiterMcLaughling_Full(AbstractModel, AbstractTransit):
             bjd_oversampling = self.code_options[dataset.name_ref]['bjd_oversampling']
             n_vals = dataset.n
         else:
-            n_vals = dataset.n
+            n_vals = len(x0_input)
             exp_array = np.linspace(-0.5, 0.5, self.code_options[dataset.name_ref]['sample_factor'])
             bjd_oversampling = np.empty([n_vals, self.code_options[dataset.name_ref]['sample_factor']])
             #TODO Temporary bugfix to be removed
