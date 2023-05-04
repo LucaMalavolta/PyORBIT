@@ -10,7 +10,7 @@ import pyorbit.subroutines.results_analysis as results_analysis
 import os
 import sys
 import multiprocessing
-
+from time import time
 #__all__ = ["pyorbit_emcee"]
 
 
@@ -444,6 +444,8 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
             print('ERROR! PyDE is not installed, run first with optimize instead of emcee')
             quit()
 
+        time_start_pyde = time()
+
         if not os.path.exists(mc.pyde_dir_output):
             os.makedirs(mc.pyde_dir_output)
 
@@ -491,7 +493,8 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
 
         pyde_save_to_pickle(mc, population, starting_point, theta_dict)
 
-        print('PyDE completed')
+        time_end_pyde=time()
+        print('PyDE completed, it took {0:12.1f} seconds'.format(time_end_pyde-time_start_pyde))
         print()
         sys.stdout.flush()
 
