@@ -4,6 +4,40 @@ from pyorbit.models.abstract_model import *
 from scipy.linalg import cho_factor, cho_solve, lapack, LinAlgError
 from scipy import matrix, spatial
 
+from numba.experimental import jitclass
+
+try:
+    from numba import jit
+    @jit(nopython=True)
+    def CCF_gauss(x, A, x0, fwhm):
+        sigma = fwhm/2.35482004503
+        return 1. - A * np.exp(-(x - x0) ** 2 / (2 * sigma ** 2))
+
+    @jit(nopython=True)
+    def iter2_CCF_gauss(x, A, fwhm, x0, istar, out):
+        sigma = fwhm/2.35482004503
+        const = (2 * sigma ** 2)
+
+        for i in range(x0.shape[0]):
+            for j in range(x0.shape[1]):
+                out[i,j, :] = istar[i, j] * (1. - A * np.exp(-(x - x0[i, j]) ** 2 /const))
+        return out
+except:
+
+    def CCF_gauss(x, A, x0, fwhm):
+        sigma = fwhm/2.35482004503
+        return 1. - A * np.exp(-(x - x0) ** 2 / (2 * sigma ** 2))
+
+    def iter2_CCF_gauss(x, A, fwhm, x0, istar, out):
+        sigma = fwhm/2.35482004503
+        const = (2 * sigma ** 2)
+
+        for i in range(x0.shape[0]):
+            for j in range(x0.shape[1]):
+                out[i,j, :] = istar[i, j] * (1. - A * np.exp(-(x - x0[i, j]) ** 2 /const))
+        return out
+
+
 class GP_Multidimensional_QuasiPeriodicActivity(AbstractModel):
     ''' Three parameters out of four are the same for all the datasets, since they are related to
     the properties of the physical process rather than the observed effects on a dataset

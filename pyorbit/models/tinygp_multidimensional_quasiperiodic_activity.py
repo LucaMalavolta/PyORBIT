@@ -174,7 +174,7 @@ class TinyGP_Multidimensional_QuasiPeriodicActivity(AbstractModel):
                                     self._n_cov_matrix+dataset.n])
 
         self._dataset_x0 = np.append(self._dataset_x0, dataset.x0)
-        self._dataset_label = np.append(self._dataset_label, np.zeros_like(dataset.x0)+ self._added_datasets)
+        self._dataset_label = np.append(self._dataset_label, np.zeros_like(dataset.x0, dtype=int) + self._added_datasets)
         self._dataset_e2 = np.append(self._dataset_e2, dataset.e**2)
 
         self._dataset_names[dataset.name_ref] = self._added_datasets
@@ -186,7 +186,7 @@ class TinyGP_Multidimensional_QuasiPeriodicActivity(AbstractModel):
 
         self.internal_coeff_prime = np.empty(self._added_datasets)
         self.internal_coeff_deriv = np.empty(self._added_datasets)
-        self._X = (self._dataset_x0, self._dataset_label)
+        self._X = (self._dataset_x0, self._dataset_label.astype(int))
 
         if 'derivative'in kwargs:
             use_derivative = kwargs['derivative'].get(dataset.name_ref, False)
