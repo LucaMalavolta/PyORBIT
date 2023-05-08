@@ -50,8 +50,8 @@ from pyorbit.models.gp_framework_quasiperiodic_activity import \
 
 from pyorbit.models.gp_multidimensional_quasiperiodic_activity import \
     GP_Multidimensional_QuasiPeriodicActivity
-#from pyorbit.models.gp_multidimensional_quasiperiodic_activity_numba import \
-#    GP_Multidimensional_QuasiPeriodicActivity_Numba
+from pyorbit.models.gp_multidimensional_quasiperiodic_activity_numba import \
+    GP_Multidimensional_QuasiPeriodicActivity_Numba
 
 from pyorbit.models.gp_pyaneti_quasiperiodic_activity import \
     GP_Pyaneti_QuasiPeriodicActivity
@@ -189,7 +189,7 @@ define_type_to_class = {
     'gp_framework_quasiperiodic': GP_Framework_QuasiPeriodicActivity,
     'gp_pyaneti_quasiperiodic': GP_Pyaneti_QuasiPeriodicActivity,
     'gp_multidimensional_quasiperiodic': GP_Multidimensional_QuasiPeriodicActivity,
-    #'gp_multidimensional_quasiperiodic_numba': GP_Multidimensional_QuasiPeriodicActivity_Numba,
+    'gp_multidimensional_quasiperiodic_numba': GP_Multidimensional_QuasiPeriodicActivity_Numba,
     'gp_quasiperiodic': GaussianProcess_QuasiPeriodicActivity,
     'gp_quasiperiodic_common': GaussianProcess_QuasiPeriodicActivity_Common,
     'gp_quasiperiodic_alternative': GaussianProcess_QuasiPeriodicActivity_Alternative,
