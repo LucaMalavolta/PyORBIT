@@ -23,5 +23,5 @@ class ModelContainerEmcee(ModelContainer):
         self.pyde_parameters = {'ngen': 8000,
                                 'npop_mult': 4,
                                 'shutdown_jitter': False,
-                                'use_threading_pool': True
+                                'use_threading_pool': True,
                                 }
