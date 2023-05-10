@@ -1,5 +1,6 @@
 from pyorbit.models.abstract_model import *
 from numpy.polynomial import polynomial
+from scipy.interpolate import interp1d
 
 class LocalCorrelation(AbstractModel):
 
@@ -18,6 +19,9 @@ class LocalCorrelation(AbstractModel):
         self.starting_order = 1
         self.threshold = 0.001
 
+        self.instrumental = {}
+        self.interpolated = {}
+
     def initialize_model(self, mc, **kwargs):
 
         # Threshold value to check if the datasets have the same dimensions
@@ -31,11 +35,13 @@ class LocalCorrelation(AbstractModel):
         if kwargs.get('include_zero_point', False):
             self.starting_order = 0
 
+        """ If the polynomial is used as normalization factor, the first order must be included"""
+        if self.normalization_model:
+            self.starting_order = 0
 
         for i_order in range(self.starting_order, self.order+1):
             par = 'corr_c'+repr(i_order)
             self.list_pams_dataset.update([par])
-
 
     def initialize_model_dataset(self, mc, dataset, **kwargs):
 
@@ -45,6 +51,13 @@ class LocalCorrelation(AbstractModel):
         except (KeyError, ValueError):
             self.fix_list[dataset.name_ref]['x_zero'] = np.asarray(
                 [np.median(dataset.ancillary[self.correlated_val]), 0.0000], dtype=np.double)
+
+        self.interpolated[dataset.name_ref]=interp1d(
+                dataset.ancillary['time'],
+                dataset.ancillary[self.correlated_val],
+                bounds_error=False,
+                fill_value=(np.amin(dataset.ancillary[self.correlated_val]), np.amax(dataset.ancillary[self.correlated_val])))
+
 
     def compute(self, parameter_values, dataset, x0_input=None):
 
@@ -59,6 +72,9 @@ class LocalCorrelation(AbstractModel):
         """
         if x0_input is None:
             return polynomial.polyval(
-                dataset.ancillary[self.correlated_val] - parameter_values['x_zero'],coeff)
+                dataset.ancillary[self.correlated_val] - parameter_values['x_zero'], coeff)
         else:
-            return 0.00
+            t = x0_input + dataset.Tref
+
+            return polynomial.polyval(
+                self.interpolated[dataset.name_ref](t) - parameter_values['x_zero'], coeff)
