@@ -107,6 +107,7 @@ from pyorbit.models.tinygp_multidimensional_quasiperiodic_activity import TinyGP
 from pyorbit.models.rossitermclaughlin_ohta import RossiterMcLaughling_Ohta
 from pyorbit.models.rossitermclaughlin_full import RossiterMcLaughling_Full
 from pyorbit.models.rossitermclaughlin_reloaded import RossiterMcLaughling_Reloaded
+from pyorbit.models.rossitermclaughlin_reloaded_faster import RossiterMcLaughling_Reloaded_Faster
 
 """
  model_requires_planets: all those models that requires AT LEAST one of the planets in the system must be listed here
@@ -121,7 +122,8 @@ model_requires_planets = ['radial_velocities', 'rv_planets',
                           'subset_batman_transit_faster_ttv', 'batman_transit_ttv_subset_faster',
                           'subset_pytransit_transit_ttv', 'pytransit_transit_ttv_subset',
                           'ancillary_pytransit_transit_ttv', 'pytransit_transit_ttv_ancillary',
-                         'rossitermclaughlin_ohta','rossitermclaughlin_full', 'rossitermclaughlin_reloaded',
+                         'rossitermclaughlin_ohta','rossitermclaughlin_full',
+                         'rossitermclaughlin_reloaded','rossitermclaughlin_reloaded_faster',
                          'spiderman_thermal', 'batman_transit_eclipse_phasecurve']
 
 single_planet_model = ['Tc_planets', 'transit_times']
@@ -240,6 +242,7 @@ define_type_to_class = {
     'rossitermclaughlin_ohta': RossiterMcLaughling_Ohta,
     'rossitermclaughlin_full': RossiterMcLaughling_Full,
     'rossitermclaughlin_reloaded': RossiterMcLaughling_Reloaded,
+    'rossitermclaughlin_reloaded_faster': RossiterMcLaughling_Reloaded_Faster,
 }
 
 accepted_extensions = ['.yaml', '.yml', '.conf', '.config', '.input', ]
