@@ -91,6 +91,8 @@ class RossiterMcLaughling_Reloaded(AbstractModel, AbstractTransit):
         inclination_rad = parameter_values['i'] * constants.deg2rad
         omega_rad = parameter_values['omega'] * constants.deg2rad
 
+        #print(parameter_values['v_sini'], parameter_values['veq_star']*np.sin(istar_rad))
+
         """ Limb darkening law and coefficients """
         star_grid_I = self.compute_limb_darkening(ld_par, self.star_grid['mu'])
         star_grid_I[self.star_grid['outside']] = 0.000

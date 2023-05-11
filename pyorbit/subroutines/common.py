@@ -197,6 +197,8 @@ def get_2var_vsini(var, fix, i):
 def get_2var_veq_rot_radius(var, fix, i):
     # first parameter: v_eq
     # second parameter: p_rot
+    # R = v*P / 2pi
+    # R[R_sun] = v_eq[km/s] * (P[d]* 86400[s/d] ) / (2*np.pi) / R_sun[km]
     if len(np.shape(var)) == 1:
         out = var[i[0]] * (var[i[1]] * constants.d2s / (2*np.pi) / constants.Rsun)
     else:
