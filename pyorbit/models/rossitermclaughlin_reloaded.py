@@ -72,26 +72,6 @@ class RossiterMcLaughling_Reloaded(AbstractModel, AbstractTransit):
         # Must avoid negative numbers inside the square root
         self.planet_grid['outside'] = self.planet_grid['rc'] >= 1.000000
 
-    """
-    def initialize_model_dataset(self, mc, dataset, **kwargs):
-
-        self._prepare_dataset_options(mc, dataset, **kwargs)
-
-        exp_array = np.linspace(-0.5, 0.5, self.code_options[dataset.name_ref]['sample_factor'])
-        self.code_options[dataset.name_ref]['bjd_oversampling'] = np.empty([dataset.n, self.code_options[dataset.name_ref]['sample_factor']])
-        try:
-            exptime = dataset.ancillary['exptime'] / constants.d2s
-        except:
-            exptime = np.ones(dataset.n) * self.code_options[dataset.name_ref]['exp_time']
-        self.code_options[dataset.name_ref]['average_exptime'] = np.average(exptime)
-
-        #slow non-pythonic way
-        for n in range(0, dataset.n):
-            self.code_options[dataset.name_ref]['bjd_oversampling'][n,:] = \
-                dataset.x0[n] + exp_array* exptime[n]
-
-            #print(self.code_options[dataset.name_ref]['bjd_oversampling'][n,:])
-    """
 
     def compute(self, parameter_values, dataset, x0_input=None):
 
@@ -112,9 +92,11 @@ class RossiterMcLaughling_Reloaded(AbstractModel, AbstractTransit):
 
         sin_lambda = np.sin(lambda_rad)
         cos_lambda = np.cos(lambda_rad)
-        beta = (np.pi / 2.) - parameter_values['i_star'] * constants.deg2rad
-        sin_beta = np.sin(beta)
-        cos_beta = np.cos(beta)
+
+        if self.use_differential_rotation:
+            beta = (np.pi / 2.) - parameter_values['i_star'] * constants.deg2rad
+            sin_beta = np.sin(beta)
+            cos_beta = np.cos(beta)
 
 
         #print(parameter_values['v_sini'], parameter_values['veq_star']*np.sin(istar_rad))
@@ -188,6 +170,8 @@ class RossiterMcLaughling_Reloaded(AbstractModel, AbstractTransit):
             planet_position_xp = -orbital_distance_ratio * (np.cos(omega_rad + true_anomaly))
             planet_position_yp = -orbital_distance_ratio * (np.sin(omega_rad + true_anomaly) * np.cos(inclination_rad))
             planet_position_zp = orbital_distance_ratio * (np.sin(inclination_rad) * np.sin(omega_rad + true_anomaly))
+
+            # projected distance of the planet's center to the stellar center
             planet_position_rp = np.sqrt(planet_position_xp**2  + planet_position_yp**2)
 
             #print('xp', planet_position_xp)
@@ -225,9 +209,6 @@ class RossiterMcLaughling_Reloaded(AbstractModel, AbstractTransit):
                     """ orthogonal distance from the stellar equator """
                     ### Equation 7 in Cegla+2016
                     yp_ortho = z_ortho * sin_beta + y_ortho * cos_beta
-
-                    ### Equation 6 in Cegla+2016
-                    zp_ortho = z_ortho * cos_beta - y_ortho * sin_beta
 
                     """ stellar rotational velocity for a given position """
                     # differential rotation is included considering a sun-like law
