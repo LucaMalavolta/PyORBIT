@@ -45,6 +45,10 @@ class RossiterMcLaughling_Precise(AbstractModel, AbstractTransit):
         super().__init__(*args, **kwargs)  # this calls all constructors up to AbstractModel
         super(AbstractModel, self).__init__(*args, **kwargs)
 
+        import warnings
+        from scipy.optimize import OptimizeWarning
+        warnings.filterwarnings("ignore", category=OptimizeWarning)
+
         self.unitary_model = False
 
         # Must be moved here because it will updated depending on the selected limb darkening
