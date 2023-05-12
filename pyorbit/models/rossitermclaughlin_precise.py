@@ -225,7 +225,7 @@ class RossiterMcLaughling_Precise(AbstractModel, AbstractTransit):
 
         for i_obs, bjd_value in enumerate(bjd):
 
-            n_oversampling = int(exptime[i_obs] / self.planet_grid['time_step'])
+            n_oversampling = int(exptime[i_obs] / self.star_grid['time_step'])
 
             """recomputing the oversampling steps to homogeneously cover the
             full integration time """
