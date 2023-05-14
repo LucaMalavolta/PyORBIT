@@ -50,18 +50,17 @@ class PyTransit_Transit_TTV_Ancillary(AbstractModel, AbstractTransit):
         """ Reading some code-specific keywords from the configuration file"""
         self._prepare_dataset_options(mc, dataset, **kwargs)
 
-        column_selection = dataset.ancillary_str_index['planet']
-        planet_selection = (dataset.ancillary_str[:,column_selection] == self.planet_ref )
+        planet_selection = (dataset.ancillary_str['planet'] == self.planet_ref )
         self.Tc_number = int(np.sum(planet_selection))
 
-        """ extracting the central time of transit and the transit duration 
+        """ extracting the central time of transit and the transit duration
         for the planet under analysis"""
         Tc_selected = dataset.ancillary['transit_time'][planet_selection]
         Td_selected = dataset.ancillary['duration'][planet_selection]
         try:
             transit_id = dataset.ancillary['transit_id'][planet_selection]
         except:
-            if self.use_shared_ttvs: 
+            if self.use_shared_ttvs:
                 print('ERROR: transit_id should be provided in the ancillary file')
                 print('     : when flag:use_shared_ttvs is activated ')
                 quit()
@@ -76,10 +75,10 @@ class PyTransit_Transit_TTV_Ancillary(AbstractModel, AbstractTransit):
             id_sub = transit_id[i_sub]
             par_subset = 'Tc_'+repr(id_sub)
             self.Tc_names[dataset.name_ref].append(par_subset)
-            
+
             par_update = [Tc_selected[i_sub]-Td_selected[i_sub]/2., Tc_selected[i_sub]+Td_selected[i_sub]/2.]
 
-            if self.use_shared_ttvs:    
+            if self.use_shared_ttvs:
                 self.transfer_parameter_properties(mc, dataset, par_original, par_subset, common_pam=True)
                 mc.common_models[self.planet_ref].bounds.update({par_subset: par_update})
 

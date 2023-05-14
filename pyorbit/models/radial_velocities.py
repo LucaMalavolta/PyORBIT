@@ -20,7 +20,7 @@ class RVkeplerian(AbstractModel):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.model_class = 'rv_keplerian'
+        self.model_class = 'radial_velocities'
 
         self.list_pams_common = {
             'P',  # Period
@@ -82,7 +82,7 @@ class RVkeplerian(AbstractModel):
 
 
 class RVdynamical(AbstractModel):
-    model_class = 'rv_dynamical'
+    model_class = 'radial_velocities'
 
     def __init__(self, *args, **kwargs):
         super(RVdynamical, self).__init__(*args, **kwargs)
@@ -121,7 +121,7 @@ class RVdynamical(AbstractModel):
 
 
 class TransitTimeKeplerian(AbstractModel):
-    model_class = 'transit_time_keplerian'
+    model_class = 'transit_time'
 
     def __init__(self, *args, **kwargs):
         super(TransitTimeKeplerian, self).__init__(*args, **kwargs)
@@ -162,7 +162,7 @@ class TransitTimeKeplerian(AbstractModel):
 
 
 class TransitTimeDynamical(AbstractModel):
-    model_class = 'transit_time_dynamical'
+    model_class = 'transit_time'
 
     def __init__(self, *args, **kwargs):
         super(TransitTimeDynamical, self).__init__(*args, **kwargs)

@@ -4,9 +4,14 @@ import pyorbit.subroutines.kepler_exo as kepler_exo
 from pyorbit.models.abstract_model import AbstractModel
 from pyorbit.models.abstract_transit import *
 
+try:
+    import batman
+except ImportError:
+    pass
 
-class RossiterMcLaughling_Revolutions(AbstractModel, AbstractTransit):
+class RossiterMcLaughlin_Revolutions(AbstractModel, AbstractTransit):
     model_class = 'rossiter_mclaughlin'
+    default_common = 'ccf_parameters'
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)  # this calls all constructors up to AbstractModel
@@ -29,6 +34,8 @@ class RossiterMcLaughling_Revolutions(AbstractModel, AbstractTransit):
             'lambda', # Sky-projected angle between stellar rotation axis and normal of orbit plane [deg]
             'R_Rs',  # planet radius (in units of stellar radii)
             'v_sini' # projected rotational velocity of the star
+        }
+        self.list_pams_dataset = {
             'contrast_m', #
             'contrast_q',
             'fwhm_m',
@@ -107,9 +114,6 @@ class RossiterMcLaughling_Revolutions(AbstractModel, AbstractTransit):
         # limb darkening coefficients
         self.batman_params.u = np.ones(
             kwargs['limb_darkening_ncoeff'], dtype=np.double) * 0.1
-
-
-
 
 
     def compute(self, parameter_values, dataset, x0_input=None):

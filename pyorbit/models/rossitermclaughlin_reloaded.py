@@ -10,7 +10,7 @@ try:
 except ImportError:
     pass
 
-class RossiterMcLaughling_Reloaded(AbstractModel, AbstractTransit):
+class RossiterMcLaughlin_Reloaded(AbstractModel, AbstractTransit):
     model_class = 'rossiter_mclaughlin'
 
     def __init__(self, *args, **kwargs):
@@ -31,7 +31,6 @@ class RossiterMcLaughling_Reloaded(AbstractModel, AbstractTransit):
 
         self.star_grid = {}   # write an empty dictionary
         self.planet_grid = {}   # write an empty dictionary
-
 
     def initialize_model(self, mc, **kwargs):
 

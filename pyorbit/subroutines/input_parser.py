@@ -264,13 +264,13 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, reload_ze
             Differently from the standard pyorbit dataset, the first row must
             include the dataset names
          """
-        if 'ancillary_name' in dataset_conf:
-            #mc.dataset_dict[dataset_name].ancillary = input_datasets[dataset_conf['ancillary_name']]
-            mc.dataset_dict[dataset_name].append_ancillary(input_datasets[dataset_conf['ancillary_name']], input_array=True)
+        #if 'ancillary_name' in dataset_conf:
+        #    #mc.dataset_dict[dataset_name].ancillary = input_datasets[dataset_conf['ancillary_name']]
+        #    mc.dataset_dict[dataset_name].append_ancillary(input_datasets[dataset_conf['ancillary_name']], input_array=True)
 
-        for ancill in ['ancillary_file', 'ancillary', 'ancillary_data', 'ancillary_dataset']:
-            if ancill in dataset_conf:
-                mc.dataset_dict[dataset_name].append_ancillary(dataset_conf[ancill])
+        for ancillary in ['ancillary_file', 'ancillary', 'ancillary_data', 'ancillary_dataset']:
+            if ancillary in dataset_conf:
+                mc.dataset_dict[dataset_name].append_ancillary(dataset_conf[ancillary])
 
     ordering_dict = {}
 
@@ -403,8 +403,13 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, reload_ze
         else:
             model_type = model_name
 
+        temporary_model = define_type_to_class[model_type](model_name, None)
+
+        #if model_type in model_requires_planets or model_type in single_planet_model:
+
         """ some models requires one or more planets, with some specific properties"""
-        if model_type in model_requires_planets or model_type in single_planet_model:
+        if temporary_model.model_class in model_requires_planets \
+            or temporary_model.model_class in single_planet_model:
 
             """ radial_velocities and transits are just wrappers for the planets to be actually included in the model, so we
                 substitute it with the individual planets in the list"""
@@ -428,7 +433,7 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, reload_ze
 
             """ Let's avoid some dumb user using the planet names to name the models"""
 
-            if model_type in model_requires_planets:
+            if temporary_model.model_class in model_requires_planets:
                 """ For each dataset we check if the current model is included in the list of models.
                     We then remove the generic model name  and include all the planet-specific  model names
                 """
@@ -504,6 +509,35 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, reload_ze
                 mc.models[model_name_exp].common_ref.append(common_name)
                 mc.models[model_name_exp].stellar_ref = common_name
 
+
+                """ New addition in 9.2: complex models requiring star, planet, and limb darkening,
+                    now can have extra additional parameters in other common models  """
+                if model_conf.get('common', False):
+                    common_ref = model_conf['common']
+                    mc.models[model_name_exp].common_ref.append(common_ref)
+
+                    if common_ref not in mc.common_models:
+                        mc.common_models[common_ref] = define_common_type_to_class[common_type](common_ref)
+
+                elif hasattr(define_type_to_class[model_type], 'default_common'):
+
+                    """ New: some data-specific models may noy need a common model, e.g., local polynomial trends,
+                        however the code requires that such common model is provided in order to have a fall-back for the
+                        default priors, boundaries, spaces, and fixed parameters. Such common model is saved with the same
+                        name of the data-specifc model.
+                        Default common model only works it has been defined in the model class as a Class attribute
+                    """
+                    common_type = define_type_to_class[model_type].default_common
+                    common_ref = model_name_exp
+                    mc.models[model_name_exp].common_ref.append(common_ref)
+
+                    if common_ref not in mc.common_models:
+                        mc.common_models[common_ref] = define_common_type_to_class[common_type](common_ref)
+
+                else:
+                    common_ref = None
+
+
                 for dataset_name, dataset in mc.dataset_dict.items():
                     if model_name_exp in dataset.models:
                         try:
@@ -531,7 +565,7 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, reload_ze
                 common_type = define_type_to_class[model_type].default_common
                 common_ref = model_name
 
-                if model_name not in mc.common_models:
+                if common_ref not in mc.common_models:
                     mc.common_models[common_ref] = define_common_type_to_class[common_type](common_ref)
             else:
                 common_ref = None
@@ -557,7 +591,7 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, reload_ze
 
                 mc.models[model_name].common_ref.append(common_name)
 
-            """ Adding the stlerra parameters common model by default """
+            """ Adding the stellar parameters common model by default """
             ##TODO: is it really needed?
             #try:
             #    common_name = mc.models[model_name].model_conf['star_parameters']
@@ -877,7 +911,6 @@ def bounds_space_priors_starts_fixed(mc,
             for par in prior_conf:
 
                 if par == 'multivariate':
-                    print(model_obj)
                     model_obj.multivariate_priors = True
 
                     #! replace with parameters taken from the header of the file

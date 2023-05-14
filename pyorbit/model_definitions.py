@@ -14,6 +14,7 @@ from pyorbit.common.dilution_factor import CommonDilutionFactor
 from pyorbit.common.normalization_factor import CommonNormalizationFactor
 from pyorbit.common.star_parameters import CommonStarParameters
 
+from pyorbit.common.ccf_parameters import CommonCCFParameters
 
 from pyorbit.common.limb_darkening import LimbDarkening_Linear, \
     LimbDarkening_Quadratic, \
@@ -104,11 +105,11 @@ from pyorbit.models.celerite2_granulation_oscillation_rotation import Celerite2_
 from pyorbit.models.tinygp_quasiperiodic_activity import TinyGaussianProcess_QuasiPeriodicActivity
 from pyorbit.models.tinygp_multidimensional_quasiperiodic_activity import TinyGP_Multidimensional_QuasiPeriodicActivity
 
-from pyorbit.models.rossitermclaughlin_ohta import RossiterMcLaughling_Ohta
-from pyorbit.models.rossitermclaughlin_precise import RossiterMcLaughling_Precise
-from pyorbit.models.rossitermclaughlin_reloaded import RossiterMcLaughling_Reloaded
-from pyorbit.models.rossitermclaughlin_reloaded_faster import RossiterMcLaughling_Reloaded_Faster
-from pyorbit.models.rossitermclaughlin_revolutions import RossiterMcLaughling_Revolutions
+from pyorbit.models.rossitermclaughlin_ohta import RossiterMcLaughlin_Ohta
+from pyorbit.models.rossitermclaughlin_precise import RossiterMcLaughlin_Precise
+from pyorbit.models.rossitermclaughlin_reloaded import RossiterMcLaughlin_Reloaded
+from pyorbit.models.rossitermclaughlin_reloaded_faster import RossiterMcLaughlin_Reloaded_Faster
+from pyorbit.models.rossitermclaughlin_revolutions import RossiterMcLaughlin_Revolutions
 
 """
  model_requires_planets: all those models that requires AT LEAST one of the planets in the system must be listed here
@@ -116,17 +117,20 @@ from pyorbit.models.rossitermclaughlin_revolutions import RossiterMcLaughling_Re
  single_planet_model: the model is associated to a specific planet, e.g., time of transits
 """
 
-model_requires_planets = ['radial_velocities', 'rv_planets',
-                          'batman_transit', 'pytransit_transit',
-                          'batman_transit_ttv', 'pytransit_transit_ttv',
-                          'subset_batman_transit_ttv', 'batman_transit_ttv_subset',
-                          'subset_batman_transit_faster_ttv', 'batman_transit_ttv_subset_faster',
-                          'subset_pytransit_transit_ttv', 'pytransit_transit_ttv_subset',
-                          'ancillary_pytransit_transit_ttv', 'pytransit_transit_ttv_ancillary',
-                         'rossitermclaughlin_ohta','rossitermclaughlin_precise',
-                         'rossitermclaughlin_reloaded','rossitermclaughlin_reloaded_faster',
-                         'rossitermclaughling_revolutions',
-                         'spiderman_thermal', 'batman_transit_eclipse_phasecurve']
+#model_requires_planets = ['radial_velocities', 'rv_planets',
+#                          'batman_transit', 'pytransit_transit',
+#                          'batman_transit_ttv', 'pytransit_transit_ttv',
+#                          'subset_batman_transit_ttv', 'batman_transit_ttv_subset',
+#                          'subset_batman_transit_faster_ttv', 'batman_transit_ttv_subset_faster',
+#                          'subset_pytransit_transit_ttv', 'pytransit_transit_ttv_subset',
+#                          'ancillary_pytransit_transit_ttv', 'pytransit_transit_ttv_ancillary',
+#                         'rossitermclaughlin_ohta','rossitermclaughlin_precise',
+#                         'rossitermclaughlin_reloaded','rossitermclaughlin_reloaded_faster',
+#                         'rossitermclaughlin_revolutions',
+#                         'spiderman_thermal', 'batman_transit_eclipse_phasecurve']
+
+model_requires_planets = ['radial_velocities', 'transit_times', 'transit',
+                                'transit_eclipse_phasecurve']
 
 single_planet_model = ['Tc_planets', 'transit_times']
 transit_time_model = ['Tc_planets', 'transit_times']
@@ -143,6 +147,7 @@ define_common_type_to_class = {
     'polynomial_trend': CommonPolynomialTrend,
     'common_offset': CommonOffset,
     'common_jitter': CommonJitter,
+    'ccf_parameters': CommonCCFParameters,
     'sinusoid': CommonSinusoid,
     'harmonics': CommonHarmonics,
     'ld_linear': LimbDarkening_Linear,
@@ -241,11 +246,11 @@ define_type_to_class = {
     'local_lightcurve_poly_detrending': LocalLightcurvePolyDetrending,
     'tinygp_quasiperiodic': TinyGaussianProcess_QuasiPeriodicActivity,
     'tinygp_multidimensional_quasiperiodic': TinyGP_Multidimensional_QuasiPeriodicActivity,
-    'rossitermclaughlin_ohta': RossiterMcLaughling_Ohta,
-    'rossitermclaughlin_precise': RossiterMcLaughling_Precise,
-    'rossitermclaughlin_reloaded': RossiterMcLaughling_Reloaded,
-    'rossitermclaughlin_reloaded_faster': RossiterMcLaughling_Reloaded_Faster,
-    'rossitermclaughlin_revolutions': RossiterMcLaughling_Revolutions,
+    'rossitermclaughlin_ohta': RossiterMcLaughlin_Ohta,
+    'rossitermclaughlin_precise': RossiterMcLaughlin_Precise,
+    'rossitermclaughlin_reloaded': RossiterMcLaughlin_Reloaded,
+    'rossitermclaughlin_reloaded_faster': RossiterMcLaughlin_Reloaded_Faster,
+    'rossitermclaughlin_revolutions': RossiterMcLaughlin_Revolutions,
 }
 
 accepted_extensions = ['.yaml', '.yml', '.conf', '.config', '.input', ]

@@ -70,17 +70,61 @@ class DatasetExpanded(Dataset):
 
         self.compute_plot = False
 
+
+    def append_ancillary(self, input_file, input_array=False, input_array_str=False):
+        """ Function to either read an ancillary file or pass the value of another
+        dataset as ancillary
+
+        we define as ancillary every dataset required to
+        model some effect (usually, instrumental) but not object of modelling
+        itself (i.e., the dataset does not enter in the log-likelihhod)
+        Added in PyORBIT 9.2
+
+        Args:
+            input_file (string): name of the file, absolute or relative path
+            data_input: True if the input_file is actually a ndarray
+        """
+
+        if not input_array:
+            # read ancillary data from txt file when it is not passed as a ndarray
+            input_array = pickle.load( open(input_file, "rb" ) )
+
+        """ NOTE: string are only supported in ancillary data files
+        """
+
+        if self.ancillary:
+            # Data ancillary has been already defined when reading the main files
+            # we take the keywords from the file and add them to the existing
+            for key, dict_vals in input_array.items():
+                self.ancillary[key] = dict_vals
+        else:
+            self.ancillary = input_array.copy()
+
+            for iname, name in enumerate(input_array.dtype.names):
+                self.ancillary_str_index[name] = iname
+
+        self.ancillary_str = self.ancillary.copy()
+
+
     def convert_dataset_from_file(self, input_file):
 
         """ Robust data reading, now encompassing the case of ancillary data
         columns embedded in the main file"""
-        data_dictionary =  pickle.load(input_file, "rb")
+        data_dictionary =  pickle.load( open(input_file, "rb" ) )
+
+        """ By default, the dataset is copied into the ancillary file  """
+        self.ancillary = data_dictionary.copy()
 
         for key in self.generic_list_pams:
-            if not data_dictionary.get(key, False):
+            self.ancillary.pop(key, None)
+
+            if key not in data_dictionary:
                 data_dictionary[key] = np.asarray(-1)
             if type(data_dictionary[key]) == bool:
                 data_dictionary[key] = np.asarray(data_dictionary[key]).astype(np.int64) -1
+            if type(data_dictionary[key]) == int:
+                data_dictionary[key] = np.asarray(data_dictionary[key])
+
 
         return data_dictionary
 
@@ -96,12 +140,15 @@ class DatasetExpanded(Dataset):
             data_dictionary['offset'] = -1
 
         self.x = np.asarray(data_dictionary['bjd'], dtype=np.double)
-        self.x1 = np.asarray(data_dictionary['2nd_axis'], dtype=np.double)
+        try:
+            self.x1 = np.asarray(data_dictionary['2nd_axis'], dtype=np.double)
+        except:
+            self.x1 = None
         self.y = np.asarray(data_dictionary['data'], dtype=np.double)
         self.e = np.asarray(data_dictionary['errs'], dtype=np.double)
 
         self.n = np.size(self.y)
-        self.n_shape = np.shape(self.x)
+        self.n_shape = np.shape(self.y)
 
         if not update:
             if self.Tref is None:

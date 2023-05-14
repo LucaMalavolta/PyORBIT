@@ -63,19 +63,6 @@ class Dataset(AbstractCommon):
 
         self.compute_plot = True
 
-    def convert_ancillary_from_file(self, input_file):
-        """ Function to read an ancillary file containing a dataset required to
-        model some effect (usually, instrumental) but not object of modelling
-        itself (i.e., the dataset does not enter in the log-likelihhod)
-        Added in PyORBIT 9.0
-
-        Args:
-            input_file (string): name of the file, absolute or relative path
-        """
-        # read ancillary data from txt file
-        self.ancillary = np.genfromtxt(input_file, names=True)
-        #! deprecated feature
-
 
     def append_ancillary(self, input_file, input_array=False, input_array_str=False):
         """ Function to either read an ancillary file or pass the value of another
@@ -101,7 +88,7 @@ class Dataset(AbstractCommon):
         """ NOTE: string are only supported in ancillary data files
         """
         self.ancillary_str_index = {}
-        self.ancillary_str = input_array_str.copy()
+        self.ancillary_str = input_array.copy()
 
         if self.ancillary:
             # Data ancillary has been already defined when reading the main files
@@ -111,17 +98,25 @@ class Dataset(AbstractCommon):
                     self.ancillary = drop_fields(self.ancillary, name)
                     self.ancillary = append_fields(self.ancillary, name, input_array[name])
 
-                    self.ancillary_str_index[name] = iname
-
                 except ValueError:
                     print('The ancillary input array is not a structured array')
                     print('https://numpy.org/doc/stable/user/basics.rec.html')
                     quit()
+
+                try:
+                    self.ancillary_str = drop_fields(self.ancillary_str, name)
+                    self.ancillary_str = append_fields(self.ancillary_str, name, input_array_str[:,iname])
+                except:
+                    print('Ancillary file containing string must be provided as argument of append_Ancillary ')
+
         else:
             self.ancillary = input_array.copy()
+            self.ancillary_str = input_array.copy()
 
             for iname, name in enumerate(input_array.dtype.names):
-                self.ancillary_str_index[name] = iname
+                self.ancillary_str = drop_fields(self.ancillary_str, name)
+                self.ancillary_str = append_fields(self.ancillary_str, name, input_array_str[:,iname])
+
         #!new
 
 
@@ -151,6 +146,7 @@ class Dataset(AbstractCommon):
                     ancillary data stored in the input file
                     """
                     self.ancillary = data1.copy()
+                    self.ancillary_str = data1.copy()
         else:
             """ Fall back to previous behaviour of the code"""
             data_input[:, :np.size(data0, axis=1)] = data0[:, :]
@@ -181,15 +177,15 @@ class Dataset(AbstractCommon):
             self.e = np.asarray(data_input[:, 2], dtype=np.double)
 
         self.n = np.size(self.x)
-        self.n_shape = np.shape(self.x)
+        self.n_shape = np.shape(self.y)
 
         if not update:
             if self.Tref is None:
                 self.Tref = np.mean(self.x, dtype=np.double)
 
-            """Default boundaries are defined according to the characteristic
-               of the dataset. They must be large enough to allow formost of
-               the anomalous situations
+            """ Default boundaries are defined according to the characteristic
+                of the dataset. They must be large enough to allow formost of
+                the anomalous situations
             """
             x_range = np.max(self.x) - np.min(self.x)
             y_range = np.max(self.y) - np.min(self.y)

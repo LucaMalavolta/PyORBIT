@@ -10,7 +10,7 @@ try:
 except ImportError:
     pass
 
-class RossiterMcLaughling_Reloaded_Faster(AbstractModel, AbstractTransit):
+class RossiterMcLaughlin_Reloaded_Faster(AbstractModel, AbstractTransit):
     model_class = 'rossiter_mclaughlin'
 
     def __init__(self, *args, **kwargs):
