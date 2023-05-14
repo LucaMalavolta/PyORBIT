@@ -4,19 +4,22 @@ import pyorbit.subroutines.kepler_exo as kepler_exo
 from pyorbit.models.abstract_model import AbstractModel
 from pyorbit.models.abstract_transit import *
 
-try:
-    from PyAstronomy import modelSuite as PyAstroModelSuite
-except ImportError:
-    pass
 
-class RossiterMcLaughling_Reloaded(AbstractModel, AbstractTransit):
+class RossiterMcLaughling_Revolutions(AbstractModel, AbstractTransit):
     model_class = 'rossiter_mclaughlin'
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)  # this calls all constructors up to AbstractModel
         super(AbstractModel, self).__init__(*args, **kwargs)
 
+        try:
+            import batman
+        except ImportError:
+            print("ERROR: batman package not installed, this will not work")
+            quit()
+
         self.unitary_model = False
+        self.time_independent_model = True
 
         # Must be moved here because it will updated depending on the selected limb darkening
         self.list_pams_common = {
@@ -26,7 +29,7 @@ class RossiterMcLaughling_Reloaded(AbstractModel, AbstractTransit):
             'lambda', # Sky-projected angle between stellar rotation axis and normal of orbit plane [deg]
             'R_Rs',  # planet radius (in units of stellar radii)
             'v_sini' # projected rotational velocity of the star
-            'contrast_m', # 
+            'contrast_m', #
             'contrast_q',
             'fwhm_m',
             'fwhm_q',
@@ -35,6 +38,9 @@ class RossiterMcLaughling_Reloaded(AbstractModel, AbstractTransit):
 
         self.star_grid = {}   # write an empty dictionary
 
+        """ Model-specifc parameters, not declared in the abstract class """
+        self.batman_params = None
+        self.batman_models = {}
 
     def initialize_model(self, mc, **kwargs):
 
@@ -54,6 +60,9 @@ class RossiterMcLaughling_Reloaded(AbstractModel, AbstractTransit):
         self._prepare_planetary_parameters(mc, **kwargs)
         self._prepare_star_parameters(mc, **kwargs)
         self._prepare_limb_darkening_coefficients(mc, **kwargs)
+
+        self.use_improved_model = kwargs.get('use_improved_model', True)
+        print('RMR improved modelling of data: ', self.use_improved_model)
 
         #start filling the dictionary with relevant parameters
         self.star_grid['n_grid'] = kwargs.get('star_ngrid', 51 )
@@ -79,6 +88,30 @@ class RossiterMcLaughling_Reloaded(AbstractModel, AbstractTransit):
         self.star_grid['mu'][self.star_grid['inside']] = np.sqrt(1. - self.star_grid['rc'][self.star_grid['inside']] ** 2)
 
 
+        self.batman_params = batman.TransitParams()
+
+        """ Initialization with random transit parameters"""
+        self.batman_params.t0 = 0.  # time of inferior conjunction
+        self.batman_params.per = 1.  # orbital period
+        # planet radius (in units of stellar radii)
+        self.batman_params.rp = 0.1
+        # semi-major axis (in units of stellar radii)
+        self.batman_params.a = 15.
+        self.batman_params.inc = 87.  # orbital inclination (in degrees)
+        self.batman_params.ecc = 0.  # eccentricity
+        self.batman_params.w = 90.  # longitude of periastron (in degrees)
+
+        """ Setting up the limb darkening calculation"""
+
+        self.batman_params.limb_dark = kwargs['limb_darkening_model']
+        # limb darkening coefficients
+        self.batman_params.u = np.ones(
+            kwargs['limb_darkening_ncoeff'], dtype=np.double) * 0.1
+
+
+
+
+
     def compute(self, parameter_values, dataset, x0_input=None):
 
         """
@@ -91,7 +124,6 @@ class RossiterMcLaughling_Reloaded(AbstractModel, AbstractTransit):
 
         ld_par = self._limb_darkening_coefficients(parameter_values)
 
-        istar_rad = parameter_values['i_star'] * constants.deg2rad
         lambda_rad = parameter_values['lambda'] * constants.deg2rad
         inclination_rad = parameter_values['i'] * constants.deg2rad
         omega_rad = parameter_values['omega'] * constants.deg2rad
@@ -115,6 +147,7 @@ class RossiterMcLaughling_Reloaded(AbstractModel, AbstractTransit):
             1. -star_grid_r_ortho[self.star_grid['inside']] ** 2)
 
         if self.use_differential_rotation:
+            istar_rad = parameter_values['i_star'] * constants.deg2rad
 
             """ rotate the coordinate system around the x_ortho axis by an agle: """
             star_grid_beta = (np.pi / 2.) - istar_rad
@@ -144,16 +177,18 @@ class RossiterMcLaughling_Reloaded(AbstractModel, AbstractTransit):
         star_grid_v_starI = star_grid_I * star_grid_v_star
 
         if x0_input is None:
-            bjd = dataset.x
+            bjd = dataset.x0
             exptime = dataset.ancillary['exptime']
 
         else:
-            bjd = x0_input + dataset.Tref
+            bjd = x0_input
             exptime = np.ones_like(bjd) * np.mean(dataset.ancillary['exptime'])
 
         #eclipsed_flux = np.zeros_like(bjd)
         mean_mu = np.zeros_like(bjd)
         mean_vstar =  np.zeros_like(bjd)
+
+        max_oversampling = 2
 
         for i_obs, bjd_value in enumerate(bjd):
             n_oversampling = int(exptime[i_obs] / self.star_grid['time_step'])
@@ -163,12 +198,14 @@ class RossiterMcLaughling_Reloaded(AbstractModel, AbstractTransit):
             if n_oversampling % 2 == 0:
                 n_oversampling += 1
 
+            max_oversampling = max(max_oversampling, n_oversampling)
+
             half_time = exptime[i_obs] / 2 / 86400.
 
             bjd_oversampling = np.linspace(bjd_value - half_time, bjd_value + half_time, n_oversampling, dtype=np.double)
 
             true_anomaly, orbital_distance_ratio = kepler_exo.kepler_true_anomaly_orbital_distance(
-                bjd_oversampling - dataset.Tref,
+                bjd_oversampling,
                 parameter_values['Tc']-dataset.Tref,
                 parameter_values['P'],
                 parameter_values['e'],
@@ -181,7 +218,7 @@ class RossiterMcLaughling_Reloaded(AbstractModel, AbstractTransit):
             # 2) the reference plance coincide with the plane of the sky
 
             planet_position_xp = -orbital_distance_ratio * (np.cos(omega_rad + true_anomaly))
-            planet_position_yp = orbital_distance_ratio * (np.sin(omega_rad + true_anomaly) * np.cos(inclination_rad))
+            planet_position_yp = - orbital_distance_ratio * (np.sin(omega_rad + true_anomaly) * np.cos(inclination_rad))
             planet_position_zp = orbital_distance_ratio * (np.sin(inclination_rad) * np.sin(omega_rad + true_anomaly))
 
 
@@ -220,10 +257,40 @@ class RossiterMcLaughling_Reloaded(AbstractModel, AbstractTransit):
         contrast = mean_mu * parameter_values['contrast_m'] + parameter_values['contrast_q']
         sigma = (mean_mu * parameter_values['fwhm_m'] + parameter_values['fwhm_q']) / constants.sigma2FWHM
 
-        #np.subtract(ccf_x.T,rv_zero).T 
+
+        matrix = 1. - contrast[:,np.newaxis]* np.exp(-(rv_star[:,np.newaxis] - dataset.x1)**2/(2*sigma[:,np.newaxis]**2) )
+
+        if self.use_improved_model:
+
+
+            self.batman_params.a = parameter_values['a_Rs']
+            self.batman_params.inc = parameter_values['i']
+            self.batman_params.t0 = parameter_values['Tc'] - dataset.Tref
+
+            self.batman_params.per = parameter_values['P']  # orbital period
+            # planet radius (in units of stellar radii)
+            self.batman_params.rp = parameter_values['R_Rs']
+            self.batman_params.ecc = parameter_values['e']  # eccentricity
+            # longitude of periastron (in degrees)
+            self.batman_params.w = parameter_values['omega']
+
+            for par, i_par in self.ldvars.items():
+                self.batman_params.u[i_par] = parameter_values[par]
+            batman_model = batman.TransitModel(self.batman_params,
+                                    dataset.x0,
+                                    supersample_factor=max_oversampling,
+                                    exp_time=np.average(exptime))
+            batman_lightcurve = batman_model.light_curve(self.batman_params)
+
+            return dataset.ancillary['ccf_master'] - matrix* (1. - batman_lightcurve[:,np.newaxis])/batman_lightcurve[:,np.newaxis]
+
+        else:
+            return matrix
+
+        #np.subtract(ccf_x.T,rv_zero).T
         # rv_zero = np.subtract(ccf_x, rv_zero)
         # sigma_2d,   = np.meshgrid(sigma, bjd)
-        # constrast_2d   = np.meshgrid(contrast, bjd) 
+        # constrast_2d   = np.meshgrid(contrast, bjd)
 
         # gauss_2d = 1 - constrast_2d * np.exp(-rv_zero**2 / (2*sigma_2d**2) )
 

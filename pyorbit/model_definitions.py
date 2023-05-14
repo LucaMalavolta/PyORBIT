@@ -108,6 +108,7 @@ from pyorbit.models.rossitermclaughlin_ohta import RossiterMcLaughling_Ohta
 from pyorbit.models.rossitermclaughlin_precise import RossiterMcLaughling_Precise
 from pyorbit.models.rossitermclaughlin_reloaded import RossiterMcLaughling_Reloaded
 from pyorbit.models.rossitermclaughlin_reloaded_faster import RossiterMcLaughling_Reloaded_Faster
+from pyorbit.models.rossitermclaughlin_revolutions import RossiterMcLaughling_Revolutions
 
 """
  model_requires_planets: all those models that requires AT LEAST one of the planets in the system must be listed here
@@ -124,6 +125,7 @@ model_requires_planets = ['radial_velocities', 'rv_planets',
                           'ancillary_pytransit_transit_ttv', 'pytransit_transit_ttv_ancillary',
                          'rossitermclaughlin_ohta','rossitermclaughlin_precise',
                          'rossitermclaughlin_reloaded','rossitermclaughlin_reloaded_faster',
+                         'rossitermclaughling_revolutions',
                          'spiderman_thermal', 'batman_transit_eclipse_phasecurve']
 
 single_planet_model = ['Tc_planets', 'transit_times']
@@ -243,13 +245,14 @@ define_type_to_class = {
     'rossitermclaughlin_precise': RossiterMcLaughling_Precise,
     'rossitermclaughlin_reloaded': RossiterMcLaughling_Reloaded,
     'rossitermclaughlin_reloaded_faster': RossiterMcLaughling_Reloaded_Faster,
+    'rossitermclaughlin_revolutions': RossiterMcLaughling_Revolutions,
 }
 
 accepted_extensions = ['.yaml', '.yml', '.conf', '.config', '.input', ]
 
 star_properties_list = ['limb_darkening', 'dilution_factor']
 
-extended_dataset_keylist = ['expanded_dataset', 'extended_dataset', 'dataset_2d', 'dataset_expanded', 'dataset_extended', 'dataset_2d']
+extended_dataset_keylist = ['expanded_dataset', 'extended_dataset', 'dataset_2d', 'dataset_expanded', 'dataset_extended', '2d_dataset']
 
 # Trying to guess all the possible mistakes....
 datatype_definition = {
