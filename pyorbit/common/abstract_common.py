@@ -250,6 +250,7 @@ class AbstractCommon(object):
         return population
 
     def _transfer_priors(self, mc, pam_original, pam_addition):
+        #! deprecated module
 
 
         if pam_original not in self.list_pams:

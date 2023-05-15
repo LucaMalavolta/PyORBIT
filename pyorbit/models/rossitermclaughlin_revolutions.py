@@ -187,6 +187,7 @@ class RossiterMcLaughlin_Revolutions(AbstractModel, AbstractTransit):
         else:
             bjd = x0_input
             exptime = np.ones_like(bjd) * np.mean(dataset.ancillary['exptime'])
+            return x0_input*0.
 
         #eclipsed_flux = np.zeros_like(bjd)
         mean_mu = np.zeros_like(bjd)
@@ -281,7 +282,7 @@ class RossiterMcLaughlin_Revolutions(AbstractModel, AbstractTransit):
             for par, i_par in self.ldvars.items():
                 self.batman_params.u[i_par] = parameter_values[par]
             batman_model = batman.TransitModel(self.batman_params,
-                                    dataset.x0,
+                                    bjd,
                                     supersample_factor=max_oversampling,
                                     exp_time=np.average(exptime))
             batman_lightcurve = batman_model.light_curve(self.batman_params)
