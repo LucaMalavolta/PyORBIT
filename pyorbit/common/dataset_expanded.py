@@ -16,7 +16,9 @@ class DatasetExpanded(Dataset):
 
     def __init__(self,  model_name, kind, models):
         AbstractCommon.__init__(self, None)
-
+        Dataset.__init(self, model_name, kind, models)
+        
+        """
         for kind_name, kind_list in datatype_definition.items():
             if kind in kind_list:
                 self.kind = kind_name
@@ -69,6 +71,7 @@ class DatasetExpanded(Dataset):
         self.ancillary = None
 
         self.compute_plot = False
+        """
 
 
     def append_ancillary(self, input_file, input_array=False, input_array_str=False):

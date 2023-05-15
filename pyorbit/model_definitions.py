@@ -25,6 +25,8 @@ from pyorbit.common.limb_darkening import LimbDarkening_Linear, \
 from pyorbit.common.cheops_modelling import CommonCheopsModelling
 from pyorbit.common.correlation import CommonCorrelation, CommonComplexCorrelation
 from pyorbit.common.lightcurve_detrending import CommonLightcurveDetrending
+from pyorbit.common.detrending import CommonDetrending
+
 
 from pyorbit.models.radial_velocities import \
     RVkeplerian, RVdynamical, \
@@ -101,6 +103,10 @@ from pyorbit.models.lightcurve_linear_detrending import LightcurveLinearDetrendi
 from pyorbit.models.lightcurve_detrending import LightcurveDetrending, LocalLightcurveDetrending
 from pyorbit.models.lightcurve_poly_detrending import LightcurvePolyDetrending, LocalLightcurvePolyDetrending
 
+from pyorbit.models.detrending import Detrending, PolynomialDetrending, ExponentialDetrending
+#from pyorbit.models.exponential_detrending import ExponentialDetrending
+
+
 from pyorbit.models.celerite2_granulation_oscillation_rotation import Celerite2_Granulation_Oscillation_Rotation
 from pyorbit.models.tinygp_quasiperiodic_activity import TinyGaussianProcess_QuasiPeriodicActivity
 from pyorbit.models.tinygp_multidimensional_quasiperiodic_activity import TinyGP_Multidimensional_QuasiPeriodicActivity
@@ -164,6 +170,7 @@ define_common_type_to_class = {
     'correlation': CommonCorrelation,
     'complex_correlation': CommonComplexCorrelation,
     'lightcurve_detrending': CommonLightcurveDetrending,
+    'detrending': CommonDetrending,
 }
 
 define_type_to_class = {
@@ -251,6 +258,9 @@ define_type_to_class = {
     'rossitermclaughlin_reloaded': RossiterMcLaughlin_Reloaded,
     'rossitermclaughlin_reloaded_faster': RossiterMcLaughlin_Reloaded_Faster,
     'rossitermclaughlin_revolutions': RossiterMcLaughlin_Revolutions,
+    'polynomial_detrending': PolynomialDetrending,
+    'exponential_detrending': ExponentialDetrending,
+    'detrending': Detrending,
 }
 
 accepted_extensions = ['.yaml', '.yml', '.conf', '.config', '.input', ]
