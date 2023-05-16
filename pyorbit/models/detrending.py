@@ -175,6 +175,8 @@ class Detrending(AbstractModel):
                 return trend
 
         else:
+            return x0_input*0.
+            """
             trend = np.ones_like(x0_input) * parameter_values.get('det_c0', self.baseline_value)
 
             for data_name, data_order in self.pams_order.items():
@@ -193,7 +195,7 @@ class Detrending(AbstractModel):
                     return 10**(trend)
             else:
                 return trend
-
+            """
 
 class PolynomialDetrending(Detrending):
 
