@@ -31,18 +31,21 @@ class PolynomialTrend(AbstractModel):
 
         self.order = kwargs.get('order', 1)
 
+        """ If the polynomial is used as normalization factor, the first order must be included"""
+        if self.normalization_model:
+            self.starting_order = 0
+
         """ The user may decide to include the 0th order anyway - be aware of correlations with dataset offset!"""
         if kwargs.get('include_zero_point', False):
             self.starting_order = 0
+
+        if kwargs.get('exclude_zero_point', False):
+            self.starting_order = 1
 
         """ The user may decide to compute the polynomial parameters over a different time interval
             useful for long-term with very slow variations over a single day
         """
         self.time_interval = kwargs.get('time_interval', 1.000000000)
-
-        """ If the polynomial is used as normalization factor, the first order must be included"""
-        if self.normalization_model:
-            self.starting_order = 0
 
         for i_order in range(self.starting_order, self.order+1):
             par = 'poly_c'+repr(i_order)
@@ -112,18 +115,21 @@ class SharedPolynomialTrend(AbstractModel):
 
         self.order = kwargs.get('order', 1)
 
-        """ The user may decide to include the 0th order anyway - be aware of correlations with dataset offset!"""
-        if kwargs.get('include_zero_point', False):
+        """ If the polynomial is used as normalization factor, the first order must be included"""
+        if self.normalization_model:
             self.starting_order = 0
+
+        """ The user may decide to include the 0th order anyway - be aware of correlations with dataset offset!"""
+        if kwargs.get('include_zero_point', self.include_zero_point):
+            self.starting_order = 0
+
+        if kwargs.get('exclude_zero_point', self.exclude_zero_point):
+            self.starting_order = 1
 
         """ The user may decide to compute the polynomial parameters over a different time interval
             useful for long-term with very slow variations over a single day
         """
         self.time_interval = kwargs.get('time_interval', 1.000000000)
-
-        """ If the polynomial is used as normalization factor, the first order must be included"""
-        if self.normalization_model:
-            self.starting_order = 0
 
         """ A polynome with amplitude variable according to the dataset under analysis"""
         self.variable_amplitude = kwargs.get('variable_amplitude', True)
@@ -216,18 +222,21 @@ class LocalPolynomialTrend(AbstractModel):
 
         self.order = kwargs.get('order', 1)
 
+        """ If the polynomial is used as normalization factor, the first order must be included"""
+        if self.normalization_model:
+            self.starting_order = 0
+
         """ The user may decide to include the 0th order anyway - be aware of correlations with dataset offset!"""
         if kwargs.get('include_zero_point', False):
             self.starting_order = 0
+
+        if kwargs.get('exclude_zero_point', False):
+            self.starting_order = 1
 
         """ The user may decide to compute the polynomial parameters over a different time interval
             useful for long-term with very slow variations over a single day
         """
         self.time_interval = kwargs.get('time_interval', 1.000000000)
-
-        """ If the polynomial is used as normalization factor, the first order must be included"""
-        if self.normalization_model:
-            self.starting_order = 0
 
         for i_order in range(self.starting_order, self.order+1):
             par = 'poly_c'+repr(i_order)

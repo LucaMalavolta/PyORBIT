@@ -28,7 +28,7 @@ class CommonDetrending(AbstractCommon):
             },
         'coeff_poly':
             {
-                'bounds': [-10., 10.],
+                'bounds': [-1., 1.],
                 'priors': ['Uniform', []],
                 'spaces': 'Linear',
                 'fixed' : 0.00,

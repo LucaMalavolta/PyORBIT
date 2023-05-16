@@ -18,7 +18,6 @@ class Detrending(AbstractModel):
         self.model_class = 'detrending'
         self.unitary_model = False
         self.normalization_model = False
-        self.multiplicative_model = True
         self.time_independent_model = True
 
         self.exponential_detrending = False
@@ -37,8 +36,6 @@ class Detrending(AbstractModel):
 
         self.pams_order = {}
 
-        self.initialized = False
-
         self.interpolated = {}
 
     def initialize_model(self, mc, **kwargs):
@@ -54,26 +51,28 @@ class Detrending(AbstractModel):
                 self.common_detrending = common_ref
                 break
 
-        if self.multiplicative_model or self.normalization_model:
+        if self.normalization_model:
+            self.starting_order = 0
             if self.exponential_detrending:
                 self.baseline_value = 0.000
             else:
                 self.baseline_value = 1.000
 
-        if self.normalization_model or kwargs.get('include_zero_point', False):
+        if kwargs.get('include_zero_point', self.include_zero_point):
             self.starting_order = 0
+
+        if kwargs.get('exclude_zero_point', self.exclude_zero_point):
+            self.starting_order = 1
 
         self.natural_base = kwargs.get('natural_base', self.natural_base )
 
         if self.exponential_detrending:
             if self.natural_base:
-                print(' Exponential detrending: using natural base')
+                print('     Exponential detrending: using natural base')
             else:
-                print(' Exponential detrending: using base 10')
+                print('     Exponential detrending: using base 10')
         else:
-            print(' Polynomial detrending')
-
-        self.initialized = False
+            print('     Polynomial detrending')
 
     def initialize_model_dataset(self, mc, dataset, **kwargs):
 
@@ -81,19 +80,13 @@ class Detrending(AbstractModel):
             parameter degeneracies will arise
             Be aware of possible correlations with other parameters!
         """
-        if self.starting_order == 0 and self.initialized == False:
-
+        if self.starting_order == 0:
             par_original = 'coeff_c0'
-            par_addition = 'exp_c0'
-
+            par_addition = 'det_c0'
             if self.local_model:
                 self.transfer_parameter_properties(mc, dataset, par_original, par_addition, dataset_pam=True)
             else:
                 self.transfer_parameter_properties(mc, dataset, par_original, par_addition, common_pam=True)
-
-            """ No need to redo everything is the parameter has been already initialized during the first instance"""
-            self.initialized = True
-
 
         """ the name and the polynomial order for each dataset and each set is preserved
             We assume that the same order are used for all the datasets that are using this model
@@ -132,7 +125,7 @@ class Detrending(AbstractModel):
             for i_order in range(1, self.pams_order[data_name]+1):
 
                 par_original = 'coeff_poly'
-                par_addition = 'exp_' + data_name + '_c'+repr(i_order)
+                par_addition = 'det_' + data_name + '_c'+repr(i_order)
 
                 if self.local_model:
                     self.transfer_parameter_properties(mc, dataset, par_original, par_addition, dataset_pam=True)
@@ -160,17 +153,19 @@ class Detrending(AbstractModel):
 
         if x0_input is None:
 
-            trend = np.ones(dataset.n) * parameter_values.get('exp_c0', self.baseline_value)
+            trend = np.ones(dataset.n) * parameter_values.get('det_c0', self.baseline_value)
 
             for data_name, data_order in self.pams_order.items():
 
                 coeff = np.zeros(data_order+1)
                 for i_order in range(1, data_order+1):
-                    par_addition = 'exp_' + data_name + '_c'+repr(i_order)
+                    par_addition = 'det_' + data_name + '_c'+repr(i_order)
                     coeff[i_order] = parameter_values[par_addition]
 
                 trend += polynomial.polyval(dataset.ancillary[data_name]-parameter_values['x_zero_'+data_name], coeff)
-
+                #if dataset.name_ref == 'GROND_r':
+                #    print(self.model_name, data_name, trend[20:23], coeff)
+                #    print()
             if self.exponential_detrending:
                 if self.natural_base:
                     return np.exp(trend)
@@ -180,13 +175,13 @@ class Detrending(AbstractModel):
                 return trend
 
         else:
-            trend = np.ones_like(x0_input) * parameter_values.get('exp_c0', self.baseline_value)
+            trend = np.ones_like(x0_input) * parameter_values.get('det_c0', self.baseline_value)
 
             for data_name, data_order in self.pams_order.items():
 
                 coeff = np.zeros(data_order+1)
                 for i_order in range(1, data_order+1):
-                    par_addition = 'exp_' + data_name + '_c'+repr(i_order)
+                    par_addition = 'det_' + data_name + '_c'+repr(i_order)
                     coeff[i_order] = parameter_values[par_addition]
 
                 trend += polynomial.polyval(self.interpolated[dataset.name_ref](x0_input)-parameter_values['x_zero_'+data_name], coeff)
@@ -205,8 +200,7 @@ class PolynomialDetrending(Detrending):
     def __init__(self, *args, **kwargs):
         AbstractModel.__init__(self, *args, **kwargs)
         Detrending.__init__(self, *args, **kwargs)
-        self.exponential_detrending = True
-
+        self.exponential_detrending = False
 
 class ExponentialDetrending(Detrending):
 

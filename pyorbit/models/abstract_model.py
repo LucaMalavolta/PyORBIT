@@ -86,6 +86,9 @@ class AbstractModel(object):
         self.multivariate_med = {}
         self.multivariate_cov = {}
 
+        self.include_zero_point = False
+        self.exclude_zero_point = False
+
     def initialize_model(self, mc, **kwargs):
         pass
 
@@ -158,7 +161,7 @@ class AbstractModel(object):
 
                 # Workaround to preserve compatibility with Python 2.x
                 if isinstance(self.fix_list[dataset_name][par],
-                              type('string')) \
+                            type('string')) \
                         and par in self.default_fixed:
                     self.fixed.append(
                         get_2darray_from_val(self.default_fixed[par])[0])
@@ -327,7 +330,7 @@ class AbstractModel(object):
                 par_update = mc.common_models[common_model].default_bounds[par_original]
 
             if common_pam:
-                 mc.common_models[common_model].bounds.update({par_subset: par_update})
+                mc.common_models[common_model].bounds.update({par_subset: par_update})
             else:
                 self.bounds[dataset.name_ref].update({par_subset: par_update})
 
@@ -340,7 +343,7 @@ class AbstractModel(object):
                 par_update = mc.common_models[common_model].default_spaces[par_original]
 
             if common_pam:
-                 mc.common_models[common_model].spaces.update({par_subset: par_update})
+                mc.common_models[common_model].spaces.update({par_subset: par_update})
             else:
                 self.spaces[dataset.name_ref].update({par_subset: par_update})
 

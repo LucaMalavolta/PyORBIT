@@ -403,7 +403,11 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, reload_ze
         else:
             model_type = model_name
 
-        temporary_model = define_type_to_class[model_type](model_name, None)
+        try:
+            temporary_model = define_type_to_class[model_type](model_name, None)
+        except TypeError:
+            temporary_model = define_type_to_class[model_type]['circular'](model_name, None)
+
 
         #if model_type in model_requires_planets or model_type in single_planet_model:
 
@@ -614,10 +618,10 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, reload_ze
 
             try:
                 if model_conf['multiplicative_model'] is True:
-                    mc.models[model_name].multiplicative_model = True
-                    mc.models[model_name].normalization_model = False
+                    mc.models[model_name].normalization_model = True
                     mc.models[model_name].unitary_model = False
-                    print('Model type: normalization')
+                    mc.models[model_name].exclude_zero_point = True
+                    print('Model type: multiplicative')
             except KeyError:
                 pass
 
