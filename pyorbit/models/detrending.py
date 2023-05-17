@@ -191,7 +191,7 @@ class Detrending(AbstractModel):
                     par_addition = 'det_' + data_name + '_c'+repr(i_order)
                     coeff[i_order] = parameter_values[par_addition]
 
-                trend += polynomial.polyval(self.interpolated[dataset.name_ref](x0_input)-parameter_values['x_zero_'+data_name], coeff)
+                trend += polynomial.polyval(self.interpolated[dataset.name_ref][data_name](x0_input)-parameter_values['x_zero_'+data_name], coeff)
 
             if self.exponential_detrending:
                 if self.natural_base:
