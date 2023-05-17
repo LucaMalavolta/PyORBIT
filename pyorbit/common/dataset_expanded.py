@@ -16,7 +16,7 @@ class DatasetExpanded(Dataset):
 
     def __init__(self,  model_name, kind, models):
         AbstractCommon.__init__(self, None)
-        Dataset.__init(self, model_name, kind, models)
+        Dataset.__init__(self, model_name, kind, models)
         
         """
         for kind_name, kind_list in datatype_definition.items():
