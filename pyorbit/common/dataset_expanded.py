@@ -14,13 +14,10 @@ import numpy as np
 
 class DatasetExpanded(Dataset):
 
-    #def __init__(self,  model_name, kind, models):
-        #AbstractCommon.__init__(self, None)
-        #Dataset.__init__(self, model_name, kind, models)
+    def __init__(self,  model_name, kind, models):
+        AbstractCommon.__init__(self, None)
+        Dataset.__init__(self, model_name, kind, models)
         
-    def __init__(self, *args, **kwargs):
-        AbstractCommon.__init__(self, *args, **kwargs)
-        Dataset.__init__(self, *args, **kwargs)
         """
         for kind_name, kind_list in datatype_definition.items():
             if kind in kind_list:
