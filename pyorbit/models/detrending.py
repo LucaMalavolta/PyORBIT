@@ -18,12 +18,11 @@ class Detrending(AbstractModel):
         self.model_class = 'detrending'
         self.unitary_model = False
         self.normalization_model = False
-        self.time_independent_model = True
 
         self.exponential_detrending = False
         self.natural_base = False
         self.local_model = True
-        self.use_median_xzero = False
+        self.use_median_xzero = True
 
         self.list_pams_common = set()
         self.list_pams_dataset = set()
@@ -41,7 +40,7 @@ class Detrending(AbstractModel):
     def initialize_model(self, mc, **kwargs):
 
         self.order = kwargs.get('order', self.order)
-        self.x_zero = kwargs.get('local_model', self.x_zero)
+        self.x_zero = kwargs.get('x_zero', self.x_zero)
         self.local_model = kwargs.get('local_model', self.local_model)
         self.use_median_xzero = kwargs.get('use_median_xzero', self.use_median_xzero)
         self.exponential_detrending = kwargs.get('exponential_detrending', self.exponential_detrending)
@@ -51,13 +50,19 @@ class Detrending(AbstractModel):
                 self.common_detrending = common_ref
                 break
 
+        """ If the polynomial is used as normalization factor, the first order must be included"""
         if self.normalization_model:
             self.starting_order = 0
             if self.exponential_detrending:
-                self.baseline_value = 0.000
+                self.baseline_value = kwargs.get('baseline_value', 0.0)
             else:
-                self.baseline_value = 1.000
+                self.baseline_value = kwargs.get('baseline_value', 1.0)
+        else:
+            self.starting_order = 1
+            self.baseline_value = kwargs.get('baseline_value', 0.0)
 
+        """ The user may decide to include the 0th order anyway -
+            be aware of correlations with dataset offset!"""
         if kwargs.get('include_zero_point', self.include_zero_point):
             self.starting_order = 0
 
@@ -108,19 +113,20 @@ class Detrending(AbstractModel):
                 self.pams_order[data_name] = 0
                 continue
 
+            if self.use_median_xzero:
+                x_zero = np.median(dataset.ancillary[data_name])
+            else:
+                x_zero = self.x_zero
+
             try:
                 nested_dict = kwargs['detrending_variables'][data_name]
                 self.pams_order[data_name] = nested_dict.get('order', self.order)
-                x_zero =  nested_dict.get('x_zero', self.x_zero)
+                x_zero =  nested_dict.get('x_zero', x_zero)
             except AttributeError:
                 self.pams_order[data_name] = kwargs['detrending_variables'][data_name]
-                x_zero = self.x_zero
             except TypeError:
                 self.pams_order[data_name] = self.order
-                x_zero = self.x_zero
 
-            if self.use_median_xzero:
-                x_zero = np.median(dataset.ancillary[data_name])
 
             for i_order in range(1, self.pams_order[data_name]+1):
 
@@ -175,8 +181,7 @@ class Detrending(AbstractModel):
                 return trend
 
         else:
-            return x0_input*0.
-            """
+
             trend = np.ones_like(x0_input) * parameter_values.get('det_c0', self.baseline_value)
 
             for data_name, data_order in self.pams_order.items():
@@ -195,7 +200,7 @@ class Detrending(AbstractModel):
                     return 10**(trend)
             else:
                 return trend
-            """
+
 
 class PolynomialDetrending(Detrending):
 
