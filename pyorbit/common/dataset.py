@@ -5,10 +5,10 @@ from pyorbit.model_definitions import datatype_definition
 from numpy.lib.recfunctions import append_fields, drop_fields
 
 class Dataset(AbstractCommon):
-
-    def __init__(self, model_name, kind, models):
-
-        super(self.__class__, self).__init__(None)
+#    def __init__(self, model_name, kind, models):
+#        super(self.__class__, self).__init__(None)
+    def __init__(self, *args, **kwargs):
+        super(self.__class__, self).__init__(self, *args, **kwargs)
 
         for kind_name, kind_list in datatype_definition.items():
             if kind in kind_list:
