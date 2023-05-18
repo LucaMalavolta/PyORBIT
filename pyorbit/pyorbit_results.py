@@ -32,7 +32,7 @@ def pyorbit_results():
         'write_models': False,
         'write_planet_samples': False,
         'write_all_samples': False,
-        'print_acf': True,
+        'print_acf': False, # todo bring back
         'plot_acf': False,
         'chains': False,
         'traces': False,

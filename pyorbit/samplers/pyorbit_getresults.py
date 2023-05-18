@@ -1104,8 +1104,10 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
 
         for dataset_name, dataset in mc.dataset_dict.items():
 
-            if not getattr(dataset, 'compute_plot', True):
-                continue
+            #TODO fix it back
+            """ Check removed to allow bugfixing"""
+            #if not getattr(dataset, 'compute_plot', True):
+            #    continue
 
             if dataset.kind in kinds.keys():
                 kinds[dataset.kind].extend([dataset_name])
@@ -1154,7 +1156,7 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
                 bjd_plot['full']['range'] = bjd_plot['full']['end'] - \
                     bjd_plot['full']['start']
 
-
+        print( bjd_plot['full']['range'] )
         step_size =  min(P_minimum / 20., bjd_plot['full']['range'] / dataset.n / 10.)
 
         bjd_plot['full']['start'] -= bjd_plot['full']['range'] * 0.50
@@ -1177,6 +1179,16 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
             mc, chain_MAP, bjd_plot)
         bjd_plot['sampleMED_model_out'], bjd_plot['sampleMED_model_x'] = results_analysis.get_model(
             mc, chain_sampleMED, bjd_plot)
+
+        print(bjd_plot['model_out'])
+        print(type(bjd_plot['model_out']))
+        print(np.shape(bjd_plot['model_out']))
+        #import matplotlib.pyplot as plt 
+        plt.imshow(bjd_plot['model_out'])
+        plt.show()
+        plt.imshow(dataset.y - bjd_plot['model_out'])
+        plt.show()
+
 
         if plot_dictionary['plot_models']:
             print(' Writing the plots ')

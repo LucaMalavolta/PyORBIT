@@ -19,7 +19,7 @@ class CommonCCFParameters(AbstractCommon):
             },
         'contrast_q':
             {
-                'bounds': [-10.0, 10.00],
+                'bounds': [0.0, 1.00],
                 'priors': ['Uniform', []],
                 'spaces': 'Linear',
                 'fixed' : 0.000,
@@ -35,7 +35,7 @@ class CommonCCFParameters(AbstractCommon):
             },
         'fwhm_q':
             {
-                'bounds': [-10.0, 10.00],
+                'bounds': [0.0, 70.00],
                 'priors': ['Uniform', []],
                 'spaces': 'Linear',
                 'fixed' : 0.000,
