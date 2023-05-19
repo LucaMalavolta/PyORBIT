@@ -116,7 +116,7 @@ from pyorbit.models.rossitermclaughlin_precise import RossiterMcLaughlin_Precise
 from pyorbit.models.rossitermclaughlin_reloaded import RossiterMcLaughlin_Reloaded
 from pyorbit.models.rossitermclaughlin_reloaded_faster import RossiterMcLaughlin_Reloaded_Faster
 from pyorbit.models.rossitermclaughlin_revolutions import RossiterMcLaughlin_Revolutions
-#from pyorbit.models.rossitermclaughlin_revolutions_faster import RossiterMcLaughlin_Revolutions_Faster
+from pyorbit.models.rossitermclaughlin_revolutions_faster import RossiterMcLaughlin_Revolutions_Faster
 
 """
  model_requires_planets: all those models that requires AT LEAST one of the planets in the system must be listed here
