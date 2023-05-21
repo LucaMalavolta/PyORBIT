@@ -1180,14 +1180,14 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
         bjd_plot['sampleMED_model_out'], bjd_plot['sampleMED_model_x'] = results_analysis.get_model(
             mc, chain_sampleMED, bjd_plot)
 
-        print(bjd_plot['model_out'])
-        print(type(bjd_plot['model_out']))
-        print(np.shape(bjd_plot['model_out']))
-        #import matplotlib.pyplot as plt 
-        plt.imshow(bjd_plot['model_out'])
-        plt.show()
-        plt.imshow(dataset.y - bjd_plot['model_out'])
-        plt.show()
+        #print(bjd_plot['model_out'])
+        #print(type(bjd_plot['model_out']))
+        #print(np.shape(bjd_plot['model_out']))
+        ##import matplotlib.pyplot as plt
+        #plt.imshow(bjd_plot['model_out'])
+        #plt.show()
+        #plt.imshow(dataset.y - bjd_plot['model_out'])
+        #plt.show()
 
 
         if plot_dictionary['plot_models']:
