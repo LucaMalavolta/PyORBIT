@@ -867,16 +867,22 @@ def return_significant_figures(perc0, perc1=None, perc2=None, are_percentiles=Fa
             elif minus_err > 1.:
                 sig_minus = 1
             else:
-                x0 = np.log10(minus_err)
-                sig_minus = int(np.ceil(abs(x0))+1)
+                try:
+                    x0 = np.log10(minus_err)
+                    sig_minus = int(np.ceil(abs(x0))+1)
+                except OverflowError:
+                    sig_minus = 6
 
             if plus_err > 10.:
                 sig_plus = 0
             elif plus_err > 1.:
                 sig_plus = 1
             else:
-                x0 = np.log10(plus_err)
-                sig_plus = int(np.ceil(abs(x0))+1)
+                try:
+                    x0 = np.log10(plus_err)
+                    sig_plus = int(np.ceil(abs(x0))+1)
+                except OverflowError:
+                    sig_plus = 6
 
             return sig_minus, sig_plus
 
