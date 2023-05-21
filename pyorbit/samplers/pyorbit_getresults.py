@@ -1156,7 +1156,6 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
                 bjd_plot['full']['range'] = bjd_plot['full']['end'] - \
                     bjd_plot['full']['start']
 
-        print( bjd_plot['full']['range'] )
         step_size =  min(P_minimum / 20., bjd_plot['full']['range'] / dataset.n / 10.)
 
         bjd_plot['full']['start'] -= bjd_plot['full']['range'] * 0.50
