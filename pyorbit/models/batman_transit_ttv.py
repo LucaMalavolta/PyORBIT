@@ -111,6 +111,10 @@ class Batman_Transit_TTV(AbstractModel, AbstractTransit):
 
         self.update_parameter_values(parameter_values, dataset.Tref)
 
+        for key, key_val in parameter_values.items():
+            if np.isnan(key_val):
+                return 0.
+
         self.batman_params.a = parameter_values['a_Rs']
         self.batman_params.inc = parameter_values['i']
         self.batman_params.t0 = parameter_values['Tc'] - dataset.Tref

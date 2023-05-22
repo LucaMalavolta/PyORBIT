@@ -205,6 +205,41 @@ def get_2var_veq_rot_radius(var, fix, i):
         out = var[:, i[0]] * (var[:, i[1]] * constants.d2s / (2*np.pi) / constants.Rsun)
     return out
 
+def get_3var_vsini_prot_rstar_istar(var, fix, i):
+    #first parameter: vsini 
+    #second parameter: p_rot
+    #third parameter: rstar 
+    # istar = arcsin( vsini / (2piR / P) )
+    # i[deg] = arcsin( vsini[km/s] / (2pi R[km] / P[d])) 
+    if len(np.shape(var)) == 1:
+        out = np.arcsin(var[i[0]] 
+                        / ((2* np.pi * var[i[2]] * constants.Rsun)
+                        / (var[i[1]] * constants.d2s ))) * constants.rad2deg
+    else:
+        out = np.arcsin(var[:,i[0]] 
+                        / ((2* np.pi * var[:,i[2]] * constants.Rsun)
+                        / (var[:,i[1]] * constants.d2s ))) * constants.rad2deg
+
+    return out
+
+
+def get_2var_prot_rstar_veq(var, fix, i):
+    #first parameter: p_rot
+    #second parameter: rstar
+    #  v = 2piR / P
+    #  v[km/s] = 2pi R[km] / P[d]
+    if len(np.shape(var)) == 1:
+        out =  2* np.pi * var[i[1]] * constants.Rsun / (var[i[0]] * constants.d2s )
+    else:
+        out =  2* np.pi * var[:,i[1]] * constants.Rsun / (var[:,i[0]] * constants.d2s )
+
+
+    return out
+
+
+
+
+
 
 def giveback_priors(kind, bounds, pams, val):
     """ The code is supposed to give -np.inf log-likelihood when the

@@ -135,13 +135,9 @@ class Batman_Transit_TTV_Subset(AbstractModel, AbstractTransit):
         else:
             y_output = x0_input * 0.
 
-
-
-
-
         for i_sub in range(0,dataset.submodel_flag):
 
-            for par_original in self.subset_parameters
+            for par_original in self.subset_parameters:
                 par_subset = par_original+'_'+repr(i_sub)
                 parameter_values[par_original] = parameter_values[par_subset]
 
@@ -150,6 +146,10 @@ class Batman_Transit_TTV_Subset(AbstractModel, AbstractTransit):
             #        return y_output
 
             self.update_parameter_values(parameter_values, dataset.Tref)
+
+            for key, key_val in parameter_values.items():
+                if np.isnan(key_val):
+                    return 0.
 
             self.batman_params.a = parameter_values['a_Rs']
             self.batman_params.inc = parameter_values['i']

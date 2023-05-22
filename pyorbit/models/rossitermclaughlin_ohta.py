@@ -72,6 +72,10 @@ class RossiterMcLaughlin_Ohta(AbstractModel, AbstractTransit):
 
         self.update_parameter_values(parameter_values, dataset.Tref)
 
+        for key, key_val in parameter_values.items():
+            if np.isnan(key_val):
+                return 0.
+
         parameter_values['i_star'] = np.arcsin(parameter_values['v_sini']  / (parameter_values['radius'] * constants.Rsun) * (parameter_values['rotation_period'] * constants.d2s)  / (2* np.pi)) * constants.rad2deg
         try:
             parameter_values['Omega_rotation'] = 2* np.pi / ( parameter_values['rotation_period'] * constants.d2s)

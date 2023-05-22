@@ -883,7 +883,7 @@ def bounds_space_priors_starts_fixed(mc,
 
     This formatting applies to all the items in "key_list"
 
-    Code is super-utly, and probably a real coder will faint by looking at it :-(
+    Code is super-ugly, and probably a real coder will faint by looking at it :-(
     """
 
     for key_name in key_list:

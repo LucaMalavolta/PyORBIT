@@ -1198,7 +1198,7 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
                     try:
                         error_bars = np.sqrt(mc.dataset_dict[dataset_name].e**2
                                              + bjd_plot['model_out'][dataset_name]['jitter']**2)
-                    except ValueError:
+                    except (ValueError, KeyError):
                         error_bars = mc.dataset_dict[dataset_name].e
 
                     fig = plt.figure(figsize=(12, 12))

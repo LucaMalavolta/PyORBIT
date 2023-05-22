@@ -125,6 +125,10 @@ class RossiterMcLaughlin_Revolutions_Faster(AbstractModel, AbstractTransit):
         """
         self.update_parameter_values(parameter_values, dataset.Tref)
 
+        for key, key_val in parameter_values.items():
+            if np.isnan(key_val):
+                return 0.
+
         ld_par = self._limb_darkening_coefficients(parameter_values)
 
         lambda_rad = parameter_values['lambda'] * constants.deg2rad

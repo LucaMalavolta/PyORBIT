@@ -182,6 +182,7 @@ class CommonStarParameters(AbstractCommon):
         skip_first_parametrization = True
         skip_second_parametrization = True
         skip_third_parametrization = True
+        skip_fourth_parametrization = True
 
         if self.use_equatorial_velocity and self.use_stellar_inclination:
             if self.use_stellar_rotation:
@@ -205,6 +206,17 @@ class CommonStarParameters(AbstractCommon):
 
                 if 'v_sini' in self.fix_list:
                     skip_first_parametrization = True
+
+        elif self.use_stellar_rotation:
+            if pam == "v_sini" or pam == 'rotation_period' or pam=='radius':
+                    skip_fourth_parametrization = False
+
+            for var_check in ['v_sini', 'i_star', 'radius', 'veq_star','rotation_period']:
+                    if var_check in self.sampler_parameters:
+                        skip_fourth_parametrization = True
+
+            if 'i_star' in self.fix_list or 'veq_star' in self.fix_list:
+                skip_fourth_parametrization = True
 
 
         if pam == "mass" or pam == "radius":
@@ -231,7 +243,7 @@ class CommonStarParameters(AbstractCommon):
             or 'density' in self.sampler_parameters):
             skip_third_parametrization = True
 
-        if skip_first_parametrization and skip_second_parametrization and skip_third_parametrization:
+        if skip_first_parametrization and skip_second_parametrization and skip_third_parametrization and skip_fourth_parametrization:
             return ndim, output_lists, False
 
         if not skip_first_parametrization:
@@ -255,6 +267,25 @@ class CommonStarParameters(AbstractCommon):
             else:
                 parameter_list = ['veq_star', 'i_star']
                 derived_list = ['v_sini']
+
+        if not skip_fourth_parametrization:
+            self.transformation['v_sini'] = get_var_val
+            self.parameter_index['v_sini'] = ndim
+            self.transformation['rotation_period'] = get_var_val
+            self.parameter_index['rotation_period'] = ndim + 1
+            self.transformation['radius'] = get_var_val
+            self.parameter_index['radius'] = ndim + 2
+
+            self.transformation['i_star'] = get_3var_vsini_prot_rstar_istar
+            self.parameter_index['i_star'] = [ndim, ndim+1, ndim+2]
+
+            self.transformation['veq_star'] = get_2var_prot_rstar_veq
+            self.parameter_index['veq_star'] = [ndim + 1, ndim+2]
+
+            parameter_list = ['v_sini', 'rotation_period', 'radius']
+            derived_list = ['veq_star', 'i_star']
+
+
 
         if not skip_second_parametrization:
             self.transformation['mass'] = get_var_val

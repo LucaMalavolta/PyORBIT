@@ -120,6 +120,10 @@ class RossiterMcLaughlin_Revolutions(AbstractModel, AbstractTransit):
         :return:
         """
         self.update_parameter_values(parameter_values, dataset.Tref)
+        for key, key_val in parameter_values.items():
+            if np.isnan(key_val):
+                return 0.
+
 
         ld_par = self._limb_darkening_coefficients(parameter_values)
 
@@ -144,6 +148,8 @@ class RossiterMcLaughlin_Revolutions(AbstractModel, AbstractTransit):
             bjd = x0_input
             exptime = np.ones_like(bjd) * np.mean(dataset.ancillary['exptime'])
             n_vals = len(bjd)
+
+
 
 
         #eclipsed_flux = np.zeros_like(bjd)
