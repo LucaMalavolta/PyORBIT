@@ -107,7 +107,7 @@ class CommonStarParameters(AbstractCommon):
             },
         'convective_c1':
             {
-                'bounds': [-5.00, 5.00],
+                'bounds': [0.00, 5.00],
                 'priors': ['Uniform', []],
                 'spaces': 'Linear',
                 'fixed' : 0.0,
@@ -115,7 +115,7 @@ class CommonStarParameters(AbstractCommon):
             },
         'convective_c2':
             {
-                'bounds': [-5.00, 5.00],
+                'bounds': [-5.00, 0.00],
                 'priors': ['Uniform', []],
                 'spaces': 'Linear',
                 'fixed' : 0.0,

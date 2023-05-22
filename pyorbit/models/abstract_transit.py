@@ -111,7 +111,7 @@ class AbstractTransit(object):
             self.compute_rotation_period = True
 
         self.convective_order = kwargs.get('convective_order', mc.common_models[self.stellar_ref].convective_order)
-        self.mu_step = 0.001
+        self.mu_step = 0.00001
         self.mu_integral = np.arange(0.,1., self.mu_step)
         if self.convective_order == 0:
             self.retrieve_convective_rv = self._convective_rv_order0
