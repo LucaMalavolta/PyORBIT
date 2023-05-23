@@ -1195,9 +1195,12 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
             for kind_name, kind in kinds.items():
                 for dataset_name in kind:
 
+                    if len(mc.dataset_dict[dataset_name]) > 1:
+                        continue
+
                     try:
                         error_bars = np.sqrt(mc.dataset_dict[dataset_name].e**2
-                                             + bjd_plot['model_out'][dataset_name]['jitter']**2)
+                                                + bjd_plot['model_out'][dataset_name]['jitter']**2)
                     except (ValueError, KeyError):
                         error_bars = mc.dataset_dict[dataset_name].e
 
@@ -1208,7 +1211,7 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
                     gs = gridspec.GridSpec(2, 1, height_ratios=[3.0, 1.0])
                     # Also make sure the margins and spacing are apropriate
                     gs.update(left=0.3, right=0.95, bottom=0.08,
-                              top=0.93, wspace=0.15, hspace=0.05)
+                                top=0.93, wspace=0.15, hspace=0.05)
 
                     ax_0 = plt.subplot(gs[0])
                     ax_1 = plt.subplot(gs[1], sharex=ax_0)
