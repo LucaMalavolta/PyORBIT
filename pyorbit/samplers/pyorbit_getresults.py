@@ -1195,7 +1195,7 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
             for kind_name, kind in kinds.items():
                 for dataset_name in kind:
 
-                    if len(mc.dataset_dict[dataset_name]) > 1:
+                    if len(mc.dataset_dict[dataset_name].n_shape) > 1:
                         continue
 
                     try:
@@ -1319,6 +1319,10 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
 
                     if not getattr(dataset, 'compute_plot', True):
                         continue
+
+                    if len(dataset.n_shape) > 1:
+                        continue
+
 
                     for model_name in dataset.models:
 
