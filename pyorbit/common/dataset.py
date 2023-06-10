@@ -133,11 +133,11 @@ class Dataset(AbstractCommon):
             for i_name, v_name in enumerate(data1.dtype.names):
                 if i_name<3:
                     data_input[:, i_name] = data1[v_name]
-                elif v_name == 'jit' or v_name=='jitter':
+                elif v_name == 'jit' or v_name=='jitter' or v_name=='jitter_flag':
                     data_input[:, 3] = data1[v_name]
-                elif v_name == 'off' or v_name=='offset':
+                elif v_name == 'off' or v_name=='offset' or v_name=='offset_flag':
                     data_input[:, 4] = data1[v_name]
-                elif v_name == 'sub' or v_name=='subset':
+                elif v_name == 'sub' or v_name=='subset' or v_name=='subset_flag':
                     data_input[:, 5] = data1[v_name]
                 else:
                     """
