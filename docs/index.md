@@ -64,6 +64,7 @@ Documentation is still work in progress!
 ```{toctree}
 :maxdepth: 2
 installation
+quickstart
 prepare_datasets
 prepare_yaml
 common_objects
