@@ -60,7 +60,7 @@ Generally speaking, `PyORBIT` will assume that the number of parameters is equal
 - Flags in different *files* are independent
 
 ```{warning}
-  If a column is missing, `PyORBIT` will assume that the corresponding flag is deactivateed. However, columns are not labelled, so it is not possible to deactivate the *jitter* column by removing it without deactivating the *offset* column as well.
+  If a column is missing, `PyORBIT` will assume that the corresponding flag is deactivated. However, columns are not labelled, so it is not possible to deactivate the *jitter* column by removing it without deactivating the *offset* column as well.
 ```
 
 <!---
