@@ -95,7 +95,7 @@ class Dataset(AbstractCommon):
 
         if self.kind == 'Tcent':
             """ Special input reading from T0 files """
-            self.n_transit = np.asarray(data_input[:, 0], dtype=np.int16)
+            self.n_transit = np.asarray(data_input[:, 0], dtype=np.int64)
             self.x = np.asarray(data_input[:, 1], dtype=np.double)
             self.e = np.asarray(data_input[:, 2], dtype=np.double)
             """ copy of self.y added for consistency with the rest of the code
@@ -135,7 +135,7 @@ class Dataset(AbstractCommon):
         self._setup_systematic_mask('offset', data_input[:, 4])
 
         if np.amax(data_input[:, 5]) > 0:
-            self.submodel_flag = np.int(np.amax(data_input[:, 5])) + 1
+            self.submodel_flag = np.int64(np.amax(data_input[:, 5])) + 1
             self.submodel_id = data_input[:, 5]
         else:
             self.submodel_flag = None
