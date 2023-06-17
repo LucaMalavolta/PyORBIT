@@ -4,7 +4,7 @@
 
 ## Setting up an environment
 
-Before proceeding with the installation, I suggest to create an environment dedicated to `PyORBIT` using python\<=3.9 .  At the moment of writing I hve received a few complaints (unrelated to PyORBIT) about Python 3.10, so you may use it at your own risk. 
+Before proceeding with the installation, I suggest to create an environment dedicated to `PyORBIT` using python\<=3.9 .  At the moment of writing I hve received a few complaints (unrelated to PyORBIT) about Python 3.10, so you may use it at your own risk.
 With conda/anaconda:
 
 ```{code} bash
@@ -34,7 +34,7 @@ You can then install `PyORBIT` by using `pip` inside the code repository:
  pip install pyorbit-package
 ```
 
-Note that the name is  `pyorbit-package` and not  `pyorbit`, as the former was already taken by another package in PyPI (altough not installable). The name for package importation will still be `pyorbit`:
+Note that the name is  `pyorbit-package` and not  `pyorbit`, as the former was already taken by another package in PyPI (although not installable). The name for package importation will still be `pyorbit`:
 
 ```{code} bash
  python -c "import pyorbit"
@@ -50,7 +50,7 @@ Download the latest version from the GitHub repository:
 
 You can then install `PyORBIT` by using `pip` inside the code repository:
 
-```{code} bash 
+```{code} bash
  cd PyORBIT
  pip install .
 ```
@@ -66,7 +66,7 @@ Alternatively, you can install `PyORBIT` using the `setup.py` file:
 
 ```{admonition} Give people credit for their work
 
-If you are using any of those packages listed above, *please be sure to cite the proper references*, as stated in the relative web page. 
+If you are using any of those packages listed above, *please be sure to cite the proper references*, as stated in the relative web page.
 ```
 
 These packages are installed automatically when using pip.
@@ -82,9 +82,9 @@ These packages are installed automatically when using pip.
 Basic analysis can be performed using the `scipy.optimize` package, however to fully unwind the power of `PyORBIT` these two packages should be installed:
 
 - `pyDE`: global optimization package ([PyDE home page])
-- `emcee`: ensemble sampling toolkit for affine-invariant MCMC ([emcee home page]). 
+- `emcee`: ensemble sampling toolkit for affine-invariant MCMC ([emcee home page]).
 
-`emcee` is already included in the requirements, `pyDE` needs to be installed separately as the GitHub version supports multiprocessing: 
+`emcee` is already included in the requirements, `pyDE` needs to be installed separately as the GitHub version supports multiprocessing:
 
 ```{code} bash
  pip install git+https://github.com/hpparvi/PyDE.git

@@ -67,9 +67,10 @@ installation
 quickstart
 prepare_datasets
 prepare_yaml
+samplers
 common_objects
 models
-results_interpretation
+running_pyorbit
 GitHub Repository <https://github.com/LucaMalavolta/PyORBIT>
 ```
 

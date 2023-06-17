@@ -1,20 +1,8 @@
-(results_interpretation)=
+(results_flags)=
 
-# Interpreting the output
+# `results` flags
 
-When the analysis is completed, you can retrieve the results using the 
-`pyorbit_results` command. 
-
-The syntax is similar to `pyorbit_run`, with the exception that now the command
-accepts several flags depending on the desired output. 
-
-```bash
-pyorbit_results sampler_name configuration_file.yaml -flags
-```
-
-For a list of possible flags 
-
-blah bla
+This is a stub
 
 ```bash
 
@@ -51,8 +39,3 @@ optional arguments:
 
 ```
 
-
-```{toctree}
-:maxdepth: 1
-results_interpretation/terminal_output
-```

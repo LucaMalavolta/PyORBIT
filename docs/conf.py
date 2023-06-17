@@ -48,6 +48,8 @@ myst_number_code_blocks = ["yaml"]
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
 
+suppress_warnings = ["myst.header"]
+
 # The suffix(es) of source filenames.
 # You can specify multiple suffix as a list of string:
 #
@@ -65,6 +67,7 @@ master_doc = 'index'
 project = u'PyORBIT'
 copyright = u'2016-2023, Luca Malavolta'
 author = u'Luca Malavolta'
+contact = 'luca.malavolta at unipd.it'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the

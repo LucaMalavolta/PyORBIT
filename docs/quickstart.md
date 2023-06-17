@@ -94,4 +94,17 @@ In this example, we will fit the ``Bouchy2005_RV01_noRML`` dataset with ``radial
 
 For more details on the configuration files, don't forget to check the [Prepare a configuration file](prepare_yaml) page.
 
+## Launch PyORBIT
 
+Analyzing your dataset with `PyORBIT` is a two-step process: you first run the actual analysis, and then you extract the relevant information (posteriors distributions of the derived parameters, corner plots...).
+
+If you have installed `PyORBIT` through pip (from PyPI or from the local repository), just run this command on your terminal:
+
+```{code} bash
+pyorbit_run emcee configuration_file.yaml
+```
+The first argument of `pyorbit_run` is the sampler to be used in the analysis (see [Samplers](samplers)), the second argument is the configuration file.
+
+PyORBIT will produce a very extensive terminal output, detailed in the section [Interpreting the output](results_interpretation).
+
+To save the terminal output to a file,   `> configuration_file_emcee_res.log` the terminal output will be saved to a file.

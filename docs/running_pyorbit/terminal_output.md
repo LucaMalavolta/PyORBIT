@@ -45,7 +45,7 @@ jitter_0             25.641528         -1.200384         1.372232 (15-84 p)
 ```
 
 read as $\mathrm{jitter}_0 = 25.6_{-1.2}^{+1.4} ms^{-1}$ (in case of radial
-velocities). 
+velocities).
 
 ```{note}
 The code will not try to format the output according to the significant figures of a measurement. Unit measurements and priors will not be displayed, at least for now.
@@ -85,10 +85,10 @@ appropriate choice is left to the user.
 ```
 
 The *maximum a posteriori* (MAP) set of parameters is computed by picking the
-sampling corresponding to the maximum value of the log-probability distribution. 
+sampling corresponding to the maximum value of the log-probability distribution.
 As in the previous steps, different model selection criteria using either the
 log-likelihood or the log-probability are reported here, with the difference
-that now the corresponding *MAP* value is used rather than the corresponding *median* value. 
+that now the corresponding *MAP* value is used rather than the corresponding *median* value.
 
 ```text
  MAP log_priors     = -177.66943313873546
@@ -103,7 +103,7 @@ that now the corresponding *MAP* value is used rather than the corresponding *me
  MAP AICc (using posterior)  = 654.5233577414831
 ```
 
-Finally, the code provides a suggestion regarding the use of either AIC or AICc 
+Finally, the code provides a suggestion regarding the use of either AIC or AICc
 following the standard definition
 
 ```text
@@ -164,7 +164,7 @@ Negative values: not converged yet
 ```
 
 Finally, you'll get a (badly formatted) table to identify misbehaving variables,
-and a suggestion regarding the number of steps required to satisfy the criterion 
+and a suggestion regarding the number of steps required to satisfy the criterion
 reported above and the (minimum) value for the burn-in.
 
 | sampler parameter       | ACF | ACF*nthin  | converged at  |  nteps/ACF |
@@ -179,9 +179,9 @@ Legend:
 
 - sampler parameter: the parameter explored by the sampler (it may be different
   from the parameter of the model)
-- ACF: the integrated autocorrelation time, computed on the thinned chains. 
+- ACF: the integrated autocorrelation time, computed on the thinned chains.
 - ACF*nthin: the integrated autocorrelation time, in units of sampler steps
-- converged at: number of sampler steps at which the chain 
+- converged at: number of sampler steps at which the chain
 
 ```text
 All the chains are longer than 50\*ACF, but some are shorter than 100\*ACF
@@ -248,7 +248,7 @@ problem. At the end of the line, the boundaries of the parameters are reported:
 these boundaries can be assigned by the users (as in the case of *P* and *Tc*)
 or internally defined (as for *b* and *R_Rs*).
 <!---
-I should include a page in the documentation where the theta_parameters dictionary is detailed 
+I should include a page in the documentation where the theta_parameters dictionary is detailed
 -->
 In this example you can see that the orbital period *P* is negative: this is not
 an error, as the parameter is being explored in logarithmic space (specifically,
@@ -280,10 +280,10 @@ The main difference with respect to the previous table is that the columns of
 the parameter index and the parameter boundaries are not listed here, as not all
 the parameters may have been directly involved in the optimization procedure.
 The orbital period *P* is now expressed in the correct unit (days) as it has
-been converted from logarithmic to natural space. 
+been converted from logarithmic to natural space.
 , while the
 other parameters *b*, *Tc*, and *R_Rs* are identical as they did not go through
-any transformation. 
+any transformation.
 The *argument of pericenter* (*omega*) and the eccentricity *e* are now
 explicitly reported, as they are the actual parameters of the physical model.
 
@@ -291,7 +291,7 @@ In the case of a circular orbit, *sre_sino* and *sre_coso* would not be listed
 in the sampler parameters output, while the eccentricity *e* and the argument of
 periastron *\omega* would be listed as *fixed parameters* and without confidence
 interval, as the model still require these terms although they are not involved
-in the optimization procedure. 
+in the optimization procedure.
 
 ```text
 ...
@@ -358,4 +358,4 @@ $$e_{\mathrm{sampler}} = (\sqrt{e} \sin{\omega})^2 + (\sqrt{e} \cos{\omega} )^2
   = 0.004$$
 
 while the reported median value for the eccentricity in the model parameters
-section is $e = 0.061$.
+section is (correctly) $e = 0.061$.
