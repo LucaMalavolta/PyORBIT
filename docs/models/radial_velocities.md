@@ -2,16 +2,21 @@
 
 # Planetary RV signal
 
-A Keplerian model for non-interacting planets
+A Keplerian model for non-interacting planets.
+The effect of each planet on the radial velocity of the host star are modelled as non-interacting Keplerians.
+
+## Model definition and requirements
 
 - model name: ``radial_velocities``
 - required common objects : ``planets`` , ``star``
 
-### Keywords
+## Keywords
 
 There are no keywords defined for this model, all the relevant information are inherited from the planet common model
 
-### Example
+## Examples
+
+Minimal configuration for a model
 
 ```yaml
 models:
@@ -20,11 +25,11 @@ models:
      - b
 ```
 
-#```{tip}
-#Planets are automatically assigned to the `star` model when there is only one stellar object #specified in the model
-#```
+```{tip}
+Planets are automatically assigned to the `star` model when there is only one stellar object specified in the model
+```
 
-### Model parameters
+## Model parameters
 
 The following parameters will be inherited from the common model (column *Common?: common*) or a different value will be assigned for each dataset (column *Common?: dataset*)
 

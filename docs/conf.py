@@ -41,7 +41,7 @@ extensions = ['myst_parser',
     "sphinx.ext.viewcode",
     'sphinx.ext.napoleon']
 
-myst_enable_extensions = ["dollarmath", "colon_fence"]
+myst_enable_extensions = ["amsmath", "dollarmath", "colon_fence"]
 
 myst_number_code_blocks = ["yaml"]
 
