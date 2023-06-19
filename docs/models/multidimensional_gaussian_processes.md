@@ -59,7 +59,9 @@ Model-wide keywords, with the default value in bold face.
 
 ## Examples
 
+In the following example, ore RV dataset comes together with two activity indicators, the `BIS` and the `FWHM` of the CCF, the latter as replacement of  $\log{R^{\prime}_\mathrm{HK}}$.
 
+Here `gp_multidimensional` is the label that we assign to the model `gp_multidimensional_quasiperiodic`. 
 
 ```yaml
 inputs:
@@ -69,36 +71,27 @@ inputs:
     models:
       - radial_velocities
       - gp_multidimensional
-    boundaries:
-      offset: [12580.0, 12630.0] #example for a RV interval
-      jitter: [0.0, 10.0]
   BISdata:
     file: BIS_PyORBIT.dat
     kind: BIS
     models:
       - gp_multidimensional
-    boundaries:
-      offset: [20.0, 70.0]
-      jitter: [0.0, 10.0]
   FWHMdata:
     file: FWHM_PyORBIT.dat
     kind: FWHM
     models:
       - gp_multidimensional
-    boundaries:
-      offset: [5660.0, 5820.0]
-      jitter: [0.00, 50.0]
 common:
   planets:
     b:
       orbit: circular
       parametrization: Eastman2013_Tcent
       boundaries:
-        P: [0.21000, 0.240000]
+        P: [2.21000, 2.240000]
         K: [0.001, 20.0]
         Tc: [59144.60, 59144.63]
       priors:
-        P: ['Gaussian', 0.2241951, 0.00000030]
+        P: ['Gaussian', 2.2241951, 0.00000030]
         Tc: ['Gaussian', 59144.616171, 0.000284]
     c:
       orbit: keplerian
@@ -174,6 +167,26 @@ solver:
   recenter_bounds: True
 
 ```
+
+A simpler way to prepare the configuration file if you are not specifying the boundaries is to list the datasets with derivatives under the same keyword
+
+
+```yaml
+...
+  gp_multidimensional:
+    model: gp_multidimensional_quasiperiodic
+    common: activity
+    hyperparameters_condition: True
+    rotation_decay_condition: True
+    derivative:
+      RVdata: True
+      BISdata: True
+      FWHMdata: False
+parameters:
+...
+
+```
+
 
 ```{tip}
 Planets are automatically assigned to the `star` model when there is only one stellar object specified in the model
