@@ -26,6 +26,13 @@ WINDOWS: activate pyorbit
 LINUX, macOS: conda activate pyorbit
 ```
 
+To avoid any nuisance with numba, jax, and all those picky packages, I suggest you everything you need using the reuirements file:
+```{code} bash
+wget https://raw.githubusercontent.com/LucaMalavolta/PyORBIT/main/extra_requirements.txt
+pip install -r extra_requirements.txt
+```
+
+
 ## Install using pip
 
 You can then install `PyORBIT` by using `pip` inside the code repository:
@@ -40,6 +47,12 @@ Note that the name is  `pyorbit-package` and not  `pyorbit`, as the former was a
  python -c "import pyorbit"
 ```
 
+`PyORBIT` only comes with the basic packages, to exploit its full potential follow the instructions in the section [Requirements](Requirements). For the impatient, just do:
+```{code} bash
+wget https://raw.githubusercontent.com/LucaMalavolta/PyORBIT/main/extra_requirements.txt
+pip install -r extra_requirements.txt
+```
+
 ## Install from the repository
 
 Download the latest version from the GitHub repository:
@@ -48,18 +61,33 @@ Download the latest version from the GitHub repository:
  git clone https://github.com/LucaMalavolta/PyORBIT.git
 ```
 
-You can then install `PyORBIT` by using `pip` inside the code repository:
+If you are downloading the code from GitHub, most likely it's because you want to try the development version (10.0.0beta, not accessible from PyPI)
 
 ```{code} bash
  cd PyORBIT
+ git checkout development
+```
+
+You can then install `PyORBIT` by using `pip` inside the code repository:
+
+```{code} bash
  pip install .
 ```
 
 Alternatively, you can install `PyORBIT` using the `setup.py` file:
 
 ```{code} bash
- cd PyORBIT
  python setup.py install
+```
+
+Keep in mind that you can still run PyORBIT by specifying the full path of the code.
+
+Again, I suggest to install the extra requirements following the instructions given above
+
+If you repent and you want to go back to the main version of  `PyORBIT`, just install with pip the last uploaded version:
+
+```{code} bash
+ pip install pyorbit-package=9.1.13
 ```
 
 ## Requirements

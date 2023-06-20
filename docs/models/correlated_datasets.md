@@ -131,7 +131,7 @@ solver:
   recenter_bounds: True
 ```
 
-** New from version `PyORBIT` 10**:
+**New from `PyORBIT` version 10**:
 
 The correlated dataset can be embedded directly in the dataset file (here called `dataset_dat1.dat`):
 ```
