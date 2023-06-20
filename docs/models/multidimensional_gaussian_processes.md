@@ -54,14 +54,18 @@ Model-wide keywords, with the default value in bold face.
 
 **derivative**
 * accepted values: list of dataset using the model
-* if not provided, default is **`True`** for all datasets except `H-alpha` `S_index` `Ca_HK`, and `FWHM'. If provided, default is **`False`** for all the dataset not explicitly mentioned.
+* if not provided, default is **`True`** for all datasets except `H-alpha` `S_index` `Ca_HK`, and `FWHM`. If provided, default is **`False`** for all the dataset not explicitly mentioned.
 * If **`True`**, the first derivative of the ubderlying Gaussian process is included, otherwise `rot_amp`F is fixed to zero.
 
 ## Examples
 
 In the following example, ore RV dataset comes together with two activity indicators, the `BIS` and the `FWHM` of the CCF, the latter as replacement of  $\log{R^{\prime}_\mathrm{HK}}$.
 
-Here `gp_multidimensional` is the label that we assign to the model `gp_multidimensional_quasiperiodic`. 
+Here `gp_multidimensional` is the label that we assign to the `gp_multidimensional_quasiperiodic` model. The label is assigned to each dataset, including the RV dataset for which also the RV model is included.
+
+The `common:planets` section includes thre planets, of which one is transiting - with Gaussian priors on the period and time of inferior conjunction -  and two non-transiting planets with a prior on the eccentricity. 
+The `common:activity` section provides the hyperparameters for the GP shared among all the datasets. The example shows how to assign boundaries and priors to the parameters.
+The model keywords and the boundaries for the dataset-specific parameters are listed in `models:gp_multidimensional` 
 
 ```yaml
 inputs:
@@ -168,8 +172,11 @@ solver:
 
 ```
 
-A simpler way to prepare the configuration file if you are not specifying the boundaries is to list the datasets with derivatives under the same keyword
+```{tip}
+Since the coefficients are always copuled, there is a degenracy between a given set and the opposite one (i.e., all the coefficient with opposite sign). This degeneracy can be solved by force one coefficient to be positive, e.g., `rot_amp` for the `RV_data` in the example.
+```
 
+A simpler way to prepare the configuration file if you are not specifying the boundaries is to list the datasets with derivatives under the same keyword:
 
 ```yaml
 ...
@@ -188,10 +195,6 @@ parameters:
 ```
 
 
-```{tip}
-Planets are automatically assigned to the `star` model when there is only one stellar object specified in the model
-```
-
 ## Model parameters
 
 The following parameters will be inherited from the common model (column *Common?: common*) or a different value will be assigned for each dataset (column *Common?: dataset*)
@@ -201,12 +204,5 @@ The following parameters will be inherited from the common model (column *Common
 | Prot      | rotational period of the star $\theta$ | common | ``activity``     | |
 | Pdec      | Decay time scale of active regions $\lambda$ | common | ``activity``     | |
 | Oamp | Coherence scale $w$ | common | ``activity`` |   |
-
-
-Notes:
-
-  1. replaced by ``Tc`` when ``_Tcent`` parametrization is used
-  2. ``_Tcent`` parametrization only
-  3. ``Standard`` parametrization only
-  4. ``Ford2006`` parametrization only
-  5. ``Eastman2013`` parametrization only
+| rot_amp    | coefficient of $G(t)$ component | dataset | ``activity``     | |
+| con_amp    | coefficient of $G^\prime (t)$ component | dataset | ``activity``     | |

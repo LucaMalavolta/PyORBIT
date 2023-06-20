@@ -14,5 +14,6 @@ All the parameters are inherited from the *common models*, where the boundaries 
 :maxdepth: 1
 models/radial_velocities
 models/abstract_transit
+models/correlated_datasets
 models/multidimensional_gaussian_processes
 ```
