@@ -24,7 +24,7 @@ class LocalCorrelation(AbstractModel):
         # Well it looks like I have assumed that the user is careful enough
         self.threshold = kwargs.get('threshold', 0.001)
         self.order = kwargs.get('order', 1)
-        self.correlated_val = kwargs.get('correlated_val', 'flux')
+        self.correlated_val = kwargs.get('correlated_val', 'corr')
 
         """ The user may decide to include the 0th order anyway -
             be aware of correlations with dataset offset!"""
