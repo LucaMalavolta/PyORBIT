@@ -17,6 +17,11 @@ or keep it fixed if necessary. Thanks to abstraction, it is virtually possible t
 Every information you need to analyze your data is contained in an easy-to-use and portable configuration file in the ``yaml`` format.
 Alternatively, for easy automatization, PyORBIT can be called as a Python function by passing a dictionary instead of a configuration file.
 
+```{warning} Documentation updates!
+As I'm working mostly on the next `PyORBIT` update, you will find new documentation in the development branch of this documentation, accessible by either clicking on the small *Read The Docs* box in the lower part of this page, below the Table of Contents, or by clicking to this link:
+[https://pyorbit.readthedocs.io/en/development/](https://pyorbit.readthedocs.io/en/development/)
+```
+
 <!---
 ..
   One of the main strength of PyORBIT is in the abstraction of the models. For
@@ -68,7 +73,7 @@ results_interpretation
 GitHub Repository <https://github.com/LucaMalavolta/PyORBIT>
 ```
 
-<!--- 
+<!---
 ```{eval-rst}
 .. toctree::
    :maxdepth: 2
