@@ -34,7 +34,7 @@ class LocalCorrelation(AbstractModel):
         self.use_median_xzero = kwargs.get('use_median_xzero', self.use_median_xzero)
 
 
-        self.correlated_val = kwargs.get('correlated_variable', 'flux')
+        self.correlated_val = kwargs.get('correlated_variable', 'corr')
 
         """ If the polynomial is used as normalization factor, the first order must be included"""
         if self.normalization_model:
