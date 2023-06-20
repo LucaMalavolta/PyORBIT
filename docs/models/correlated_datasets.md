@@ -31,7 +31,7 @@ Model-wide keywords, with the default value in bold face.
 * accepted values: any number up to 10 | **`1`**
 * order (or degree) of the polynomial used to describe the correlation
 
-**correlated variable**
+**correlated_variable**
 * accepted values: any variable name  | **`corr`**
 * specify which variable you want to use as correlated model. You need to declare it if you use a name different from `corr` for the label of your column in your dataset/ancillary file
 
@@ -65,7 +65,26 @@ Not all the keywords have been implemented in version <= 9.1.12, check out if th
 ```
 ## Examples
 
-To be completed
+The input dataset follow the standard structure described in [Prepare a dataset file](prepare_dataset).
+
+```
+# time flux flux_err jitter offset subset
+    0.302929   131.510068 1.00 0  0 -1
+    0.808006    58.192176 1.00 0  0 -1
+    2.114672   -37.794774 1.00 0  0 -1
+    ...
+```
+
+The ancillary dataset, specified in the `ancillary` keyword in the `input` section as in the example below, is rather simple:
+```
+# time corr
+    0.302929    49.767572
+    0.808006    35.340020
+    2.114672    16.585392
+    ...
+```
+
+This is an example of a basic analysis where a radial velocity model and a correlation model are used simultaneously. You can see that is not necessary to specify the `correlation` model in the `common` section, as `PyORBIT` will automatically grab the default boundaries, priors and spaces from the `model` specification.
 
 ```yaml
 inputs:
@@ -93,7 +112,8 @@ models:
     planets:
       - b
   local_correlation:
-    type: local_correlation
+    model: local_correlation
+    correlated_variable: corr
     order: 1
 parameters:
   Tref: 0.00 #BJD-2450000; istante arbitrario, più o meno centrale
@@ -110,3 +130,69 @@ solver:
     nlive: 4000
   recenter_bounds: True
 ```
+
+** New from version `PyORBIT` 10**:
+
+The correlated dataset can be embedded directly in the dataset file (here called `dataset_dat1.dat`):
+```
+# time flux flux_err jitter offset subset corr
+    0.302929   131.510068 1.00 0  0 -1 49.767572
+    0.808006    58.192176 1.00 0  0 -1 35.340020
+    2.114672   -37.794774 1.00 0  0 -1 16.585392
+    ...
+```
+
+In this case, it is not necessary to include the `ancillary` keyword anymore, but be sure to specify the `correlated_variable` keyword in the model section, as shown in the example above-
+
+```yaml
+inputs:
+  RV_data:
+    file: dataset_dat1.dat
+    kind: RV
+    models:
+      - radial_velocities
+      - local_correlation
+common:
+  planets:
+    b:
+      orbit: circular
+      boundaries:
+        P: [2, 20]
+        K: [0.01, 10.0]
+  star:
+    star_parameters:
+      priors:
+        radius: ['Gaussian', 1.00, 0.02]
+        mass: ['Gaussian', 1.00, 0.02]
+models:
+  radial_velocities:
+    planets:
+      - b
+  local_correlation:
+    type: local_correlation
+    correlated_variable: corr
+    order: 1
+parameters:
+  Tref: 0.00 #BJD-2450000; istante arbitrario, più o meno centrale
+solver:
+  pyde:
+    ngen: 20000
+    npop_mult: 4
+  emcee:
+    npop_mult: 4
+    nsteps: 25000
+    nburn: 10000
+    thin: 100
+  nested_sampling:
+    nlive: 4000
+  recenter_bounds: True
+```
+
+## Model parameters
+
+The following parameters will be inherited from the common model (column *Common?: common*) or a different value will be assigned for each dataset (column *Common?: dataset*)
+
+| Name        | Parameter | Common?  | Definition  | Notes |
+| :---        | :-------- | :-------------  | :-----  | :---- |
+| x_zero      | Constant $Z_\mathrm{ref}$ as defined in Equation {eq} `polynomial_correlation` | dataset | ``correlation``     | |
+| corr_cN     | Coefficient of order N | dataset | ``correlation``     | |

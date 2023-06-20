@@ -140,10 +140,6 @@ class Dataset(AbstractCommon):
                 elif v_name == 'sub' or v_name=='subset' or v_name=='subset_flag':
                     data_input[:, 5] = data1[v_name]
                 else:
-                    """
-                    NOTE: there is no support for
-                    ancillary data stored in the input file
-                    """
                     self.ancillary = data1.copy()
                     self.ancillary_str = data1.copy()
         else:
