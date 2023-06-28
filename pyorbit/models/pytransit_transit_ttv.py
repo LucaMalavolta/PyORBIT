@@ -83,7 +83,7 @@ class PyTransit_Transit_TTV(AbstractModel, AbstractTransit):
             self.ld_vars[i_par] = parameter_values[par]
 
         if x0_input is None:
-            return self.pytransit_models[dataset.name_ref].evaluate_ps(
+            return self.pytransit_models[dataset.name_ref].evaluate(
                 parameter_values['R_Rs'],
                 self.ld_vars,
                 parameter_values['Tc'] - dataset.Tref,
