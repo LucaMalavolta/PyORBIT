@@ -337,38 +337,14 @@ def nested_sampling_prior_prepare(kind, bounds, pams, space):
     if kind == 'Uniform':
         return bounds
 
-    elif kind == 'Gaussian':
-        out_array = np.empty(6)
-        out_array[0] = pams[0]
-        out_array[1] = pams[1]
-        out_array[2] = (bounds[0] - pams[0]) / pams[1]
-        out_array[3] = (bounds[1] - pams[0]) / pams[1]
-        return out_array
-
-    elif kind in ['HalfGaussian', 'PositiveHalfGaussian']:
-        out_array = np.empty(6)
-        out_array[0] = pams[0]
-        out_array[1] = pams[1]
-        out_array[2] = 0.00
-        out_array[3] = (bounds[1] - pams[0]) / pams[1]
-        return out_array
-
-    elif kind in ['NegativeHalfGaussian']:
-        out_array = np.empty(6)
-        out_array[0] = pams[0]
-        out_array[1] = pams[1]
-        out_array[2] = (bounds[0] - pams[0]) / pams[1]
-        out_array[3] = 0.00
-        return out_array
-
-    elif kind in ['BetaDistribution', 'Beta']:
+    if kind in ['Gaussian', 'HalfGaussian',  'PositiveHalfGaussian', 'NegativeHalfGaussian','BetaDistribution', 'Beta']:
         return pams
 
     """ All the following priors are defined only if the variable is sampled in the Natural space"""
     if space != 'Linear':
         print()
         print(' *** ERROR in the YAML file ***')
-        print(' You are using a prior that is not supported in a not-Linear sampling space')
+        print(' You are using a prior that is not supported in a non-Linear sampling space')
         print(' add this keyword in the YAML file for each parameter not sampled in the ')
         print(' Linear space and with a prior other than Uniform or Gaussian')
         print('   spaces: ')
@@ -401,9 +377,8 @@ def nested_sampling_prior_compute(val, kind, coeff, space):
     if kind == 'Uniform':
         return val * (coeff[1] - coeff[0]) + coeff[0]
 
-    if kind in ['Gaussian', 'HalfGaussian', 'PositiveHalfGaussian', 'NegativeHalfGaussian']:
-
-        x_new = stats.truncnorm.ppf(val, coeff[2], coeff[3]) * coeff[1] + coeff[0]
+    if kind == 'Gaussian':
+        x_new = stats.norm.ppf(val, coeff[0], coeff[1])  
 
         if space == 'Linear':
             return x_new
@@ -414,7 +389,33 @@ def nested_sampling_prior_compute(val, kind, coeff, space):
         elif space == 'Log_Natural':
             return np.log(x_new)
 
-    elif kind in ['BetaDistribution', 'Beta']:
+    if kind in ['HalfGaussian', 'PositiveHalfGaussian']:
+
+        x_new = stats.halfnorm.ppf(val, coeff[0], coeff[1])
+
+        if space == 'Linear':
+            return x_new
+        elif space in ['Log_Base2', 'Logarithmic']:
+            return np.log2(x_new)
+        elif space == 'Log_Base10':
+            return np.log10(x_new)
+        elif space == 'Log_Natural':
+            return np.log(x_new)
+
+    if kind in ['NegativeHalfGaussian']:
+
+        x_new = coeff[0] - stats.truncnorm.ppf(val, 0, coeff[1])
+
+        if space == 'Linear':
+            return x_new
+        elif space in ['Log_Base2', 'Logarithmic']:
+            return np.log2(x_new)
+        elif space == 'Log_Base10':
+            return np.log10(x_new)
+        elif space == 'Log_Natural':
+            return np.log(x_new)
+
+    if kind in ['BetaDistribution', 'Beta']:
         x_new = stats.beta.ppf(val, coeff[0], coeff[1])
 
         if space == 'Linear':
