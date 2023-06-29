@@ -1361,8 +1361,12 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
                                         tc_folded_plot = (bjd_plot[dataset_name]['x_plot'] - mc.Tref) % \
                                             planet_pams[common_ref]['P']
 
-                        fileout.write(
-                            'descriptor BJD Tc_folded pha val,+- sys mod full val_compare,+- res,+- jit \n')
+                        if plot_dictionary.get('veuz_compatibility', False):
+                            fileout.write(
+                                'descriptor BJD Tc_folded pha val,+- sys mod full val_compare,+- res,+- jit \n')
+                        else:
+                            fileout.write(
+                                '# epoch Tc_folded Tref_folded value value_err offset model full_model val_compare val_compare_err residuals residuals_err jitter \n')
 
                         try:
                             len(bjd_plot[plot_out_keyword]
@@ -1387,7 +1391,7 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
                             bjd_plot[plot_out_keyword][dataset_name]['complete'],
                                 bjd_plot[plot_out_keyword][dataset_name]['jitter']):
                             fileout.write('{0:f} {1:f} {2:f} {3:f} {4:f} {5:f} {6:1f} {7:f} {8:f} {9:f} {10:f} {11:f} {12:f}'
-                                          '\n'.format(x, tcf, pha, y, e, sys_val, mod, com, obs_mod, e, res, e, jit))
+                                            '\n'.format(x, tcf, pha, y, e, sys_val, mod, com, obs_mod, e, res, e, jit))
                         fileout.close()
 
                         if getattr(mc.models[model_name], 'systematic_model', False):
@@ -1396,12 +1400,15 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
                         if getattr(mc.models[model_name], 'jitter_model', False):
                             continue
 
-                        fileout = open(dir_models + dataset_name +
-                                       '_' + model_name + '_full.dat', 'w')
+                        fileout = open(dir_models + dataset_name + '_' + model_name + '_full.dat', 'w')
 
                         if model_name + '_std' in bjd_plot[plot_x_keyword][dataset_name]:
-                            fileout.write(
-                                'descriptor BJD Tc_folded phase mod,+- \n')
+
+                            if plot_dictionary.get('veuz_compatibility', False):
+                                fileout.write('descriptor BJD Tc_folded phase_folded mod,+- \n')
+                            else:
+                                fileout.write('# epoch Tc_folded Tref_folded model model_err \n')
+
                             for x, tfc, pha, mod, std in zip(
                                     bjd_plot[dataset_name]['x_plot'],
                                     tc_folded_plot,
@@ -1412,8 +1419,12 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
                                     x, tcf, pha, mod, std))
                             fileout.close()
                         else:
-                            fileout.write(
-                                'descriptor BJD Tc_folded phase mod \n')
+
+                            if plot_dictionary.get('veuz_compatibility', False):
+                                fileout.write('descriptor BJD Tc_folded phase_folded mod\n')
+                            else:
+                                fileout.write('# epoch Tc_folded Tref_folded model \n')
+
                             for x, tcf, pha, mod in zip(bjd_plot[dataset_name]['x_plot'],
                                                         tc_folded_plot,
                                                         phase_plot,
@@ -1453,14 +1464,22 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
                             y_plot = mc.models[model_name].compute(
                                 parameter_values, dataset, x_range+delta_T)
 
-                            fileout.write('descriptor Tc_folded  mod \n')
+                            if plot_dictionary.get('veuz_compatibility', False):
+                                fileout.write('descriptor Tc_folded  mod \n')
+                            else:
+                                fileout.write('# epoch model \n')
+
                             for x, mod in zip(x_range, y_plot):
                                 fileout.write('{0:f} {1:f} \n'.format(x, mod))
                             fileout.close()
 
-                    fileout = open(dir_models + dataset_name +
-                                   '_full.dat', 'w')
-                    fileout.write('descriptor BJD mod \n')
+                    fileout = open(dir_models + dataset_name +  '_full.dat', 'w')
+
+                    if plot_dictionary.get('veuz_compatibility', False):
+                        fileout.write('descriptor BJD mod \n')
+                    else:
+                        fileout.write( '# epoch model \n')
+
                     for x, mod in zip(bjd_plot[dataset_name]['x_plot'],
                                       bjd_plot[plot_x_keyword][dataset_name]['complete']):
                         fileout.write('{0:f} {1:f} \n'.format(x, mod))
@@ -1470,14 +1489,20 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
                     try:
 
                         RV_out = kepler_exo.kepler_RV_T0P(bjd_plot['full']['x_plot']-mc.Tref,
-                                                          planet_pams[model]['mean_long'],
-                                                          planet_pams[model]['P'],
-                                                          planet_pams[model]['K'],
-                                                          planet_pams[model]['e'],
-                                                          planet_pams[model]['omega'])
+                                                            planet_pams[model]['mean_long'],
+                                                            planet_pams[model]['P'],
+                                                            planet_pams[model]['K'],
+                                                            planet_pams[model]['e'],
+                                                            planet_pams[model]['omega'])
                         fileout = open(
                             dir_models + 'RV_planet_' + model + '_kep.dat', 'w')
-                        fileout.write('descriptor x_range  m_kepler \n')
+
+
+                        if plot_dictionary.get('veuz_compatibility', False):
+                            fileout.write('descriptor x_range  m_kepler \n')
+                        else:
+                            fileout.write('# epoch model \n')
+
                         for x, y in zip(bjd_plot['full']['x_plot'], RV_out):
                             fileout.write('{0:f} {1:f} \n'.format(x, y))
                         fileout.close()
@@ -1491,7 +1516,12 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
                                                           planet_pams[model]['omega'])
                         fileout = open(
                             dir_models + 'RV_planet_' + model + '_pha.dat', 'w')
-                        fileout.write('descriptor x_phase m_phase \n')
+
+                        if plot_dictionary.get('veuz_compatibility', False):
+                            fileout.write('descriptor x_phase m_phase \n')
+                        else:
+                            fileout.write('# Tref_folded model \n')
+
                         for x, y in zip(x_range, RV_out):
                             fileout.write('{0:f} {1:f} \n'.format(x, y))
                         fileout.close()
@@ -1509,7 +1539,13 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
                                                               planet_pams[model]['omega'])
                             fileout = open(
                                 dir_models + 'RV_planet_' + model + '_Tcf.dat', 'w')
-                            fileout.write('descriptor Tc_phase m_phase \n')
+
+
+                            if plot_dictionary.get('veuz_compatibility', False):
+                                fileout.write('descriptor Tc_phase m_phase \n')
+                            else:
+                                fileout.write('# Tc_folded model \n')
+                            
                             for x, y in zip(x_range, RV_out):
                                 fileout.write('{0:f} {1:f} \n'.format(x, y))
                             fileout.close()
