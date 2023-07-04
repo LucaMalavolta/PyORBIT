@@ -404,7 +404,7 @@ def nested_sampling_prior_compute(val, kind, coeff, space):
 
     if kind in ['NegativeHalfGaussian']:
 
-        x_new = coeff[0] - stats.truncnorm.ppf(val, 0, coeff[1])
+        x_new = coeff[0] - stats.halfnorm.ppf(val, 0, coeff[1])
 
         if space == 'Linear':
             return x_new
