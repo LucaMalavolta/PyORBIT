@@ -231,6 +231,11 @@ class RossiterMcLaughlin_Precise(AbstractModel, AbstractTransit):
 
         p0 = (self.ccf_variables['natural_contrast'], 0.00, self.ccf_variables['instrumental_broadening']/self.star_grid['rv_step'])
 
+        # RV unperturbed CCF
+        ccf_broad = gaussian_filter1d(ccf_total/np.amax(ccf_total), self.ccf_variables['instrumental_broadening']/self.star_grid['rv_step'])
+        parameters, _ = curve_fit(CCF_gauss, self.star_grid['zz'], ccf_broad, p0=p0, check_finite =False)
+        rv_unperturbed = parameters[1] * 1000.
+
         for i_obs, bjd_value in enumerate(bjd):
 
             n_oversampling = int(exptime[i_obs] / self.star_grid['time_step'])
@@ -258,7 +263,7 @@ class RossiterMcLaughlin_Precise(AbstractModel, AbstractTransit):
             # 2) the reference plance coincide with the plane of the sky
 
             planet_position_xp = -orbital_distance_ratio * (np.cos(omega_rad + true_anomaly))
-            planet_position_yp = orbital_distance_ratio * (np.sin(omega_rad + true_anomaly) * np.cos(inclination_rad))
+            planet_position_yp = -orbital_distance_ratio * (np.sin(omega_rad + true_anomaly) * np.cos(inclination_rad))
             planet_position_zp = orbital_distance_ratio * (np.sin(inclination_rad) * np.sin(omega_rad + true_anomaly))
 
             # projected distance of the planet's center to the stellar center
@@ -287,7 +292,7 @@ class RossiterMcLaughlin_Precise(AbstractModel, AbstractTransit):
                 ccf_broad = gaussian_filter1d(ccf_out, self.ccf_variables['instrumental_broadening']/self.star_grid['rv_step'])
                 try:
                     parameters, _ = curve_fit(CCF_gauss, self.star_grid['zz'], ccf_broad, p0=p0, check_finite =False)
-                    rv_rml[i_obs] = parameters[1] * 1000.
+                    rv_rml[i_obs] = parameters[1] * 1000. - rv_unperturbed
                 except:
                     rv_rml[i_obs] = 0.00
         return rv_rml
