@@ -61,7 +61,7 @@ Download the latest version from the GitHub repository:
  git clone https://github.com/LucaMalavolta/PyORBIT.git
 ```
 
-If you are downloading the code from GitHub, most likely it's because you want to try the development version (10.0.0beta, not accessible from PyPI)
+If you are downloading the code from GitHub, most likely it's because you want to try the *development* version (10.0.0beta, not accessible from PyPI)
 
 ```{code} bash
  cd PyORBIT
@@ -80,7 +80,12 @@ Alternatively, you can install `PyORBIT` using the `setup.py` file:
  python setup.py install
 ```
 
-Keep in mind that you can still run PyORBIT by specifying the full path of the code.
+Keep in mind that you can still run PyORBIT by specifying the full path of the code. For example, if you cloned the repository in the folder ``~/CODE/PyORBIT``, you can run the analysis and explore the results with these scripts:
+
+```{code} bash
+python ~/CODE/PyORBIT/PyORBIT_Run.py emcee configuration_file.yaml
+python ~/CODE/PyORBIT/PyORBIT_Results.py emcee configuration_file.yaml -all
+```
 
 Again, I suggest to install the extra requirements following the instructions given above
 
