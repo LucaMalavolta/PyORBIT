@@ -150,13 +150,13 @@ class RossiterMcLaughlin_Revolutions(AbstractModel, AbstractTransit):
             n_vals = len(bjd)
 
 
-
-
         #eclipsed_flux = np.zeros_like(bjd)
         mean_mu = np.zeros(n_vals)
         mean_vstar =  np.zeros(n_vals)
 
         max_oversampling = 1
+
+        convective_c0 = self.retrieve_convective_c0(ld_par, parameter_values)
 
         for i_obs, bjd_value in enumerate(bjd):
 
@@ -242,6 +242,8 @@ class RossiterMcLaughlin_Revolutions(AbstractModel, AbstractTransit):
                 else:
                     rv = x_ortho * parameter_values['v_sini']
 
+                rv += convective_c0 + self.retrieve_convective_rv(mu_grid, parameter_values)
+
                 mu_sum += np.sum((mu_grid*I_grid)[sel_inside])
                 vstarI_sum += np.sum((rv*I_grid)[sel_inside])
                 I_sum += np.sum((I_grid)[sel_inside])
@@ -249,9 +251,7 @@ class RossiterMcLaughlin_Revolutions(AbstractModel, AbstractTransit):
             mean_mu[i_obs] = mu_sum/I_sum
             mean_vstar[i_obs] = vstarI_sum/I_sum
 
-        conv_rvstar = self.retrieve_convective_rv(ld_par, mean_mu, parameter_values)
-
-        rv_star = mean_vstar + conv_rvstar + parameter_values['rv_offset']
+        rv_star = mean_vstar + parameter_values['rv_offset']
         contrast = mean_mu * parameter_values['contrast_m'] + parameter_values['contrast_q']
         sigma = (mean_mu * parameter_values['fwhm_m'] + parameter_values['fwhm_q']) / constants.sigma2FWHM
 

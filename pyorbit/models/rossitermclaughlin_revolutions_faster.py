@@ -176,6 +176,9 @@ class RossiterMcLaughlin_Revolutions_Faster(AbstractModel, AbstractTransit):
         else:
             star_grid_v_star = star_grid_x_ortho * parameter_values['v_sini']
 
+        convective_c0 = self.retrieve_convective_c0(ld_par, parameter_values)
+        star_grid_v_star += convective_c0 + self.retrieve_convective_rv(self.star_grid['mu'], parameter_values)
+
         star_grid_v_star[self.star_grid['outside']] = 0.0
 
 
@@ -260,9 +263,7 @@ class RossiterMcLaughlin_Revolutions_Faster(AbstractModel, AbstractTransit):
                 mean_mu[i_obs] = muI_sum/I_sum
                 mean_vstar[i_obs] = vstarI_sum/I_sum
 
-        conv_rvstar = self.retrieve_convective_rv(ld_par, mean_mu, parameter_values)
-
-        rv_star = mean_vstar + conv_rvstar + parameter_values['rv_offset']
+        rv_star = mean_vstar + parameter_values['rv_offset']
         contrast = mean_mu * parameter_values['contrast_m'] + parameter_values['contrast_q']
         sigma = (mean_mu * parameter_values['fwhm_m'] + parameter_values['fwhm_q']) / constants.sigma2FWHM
 

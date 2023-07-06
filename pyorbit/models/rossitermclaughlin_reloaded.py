@@ -138,6 +138,8 @@ class RossiterMcLaughlin_Reloaded(AbstractModel, AbstractTransit):
         mean_mu = np.zeros(n_vals)
         mean_vstar =  np.zeros(n_vals)
 
+        convective_c0 = self.retrieve_convective_c0(ld_par, parameter_values)
+
         for i_obs, bjd_value in enumerate(bjd):
 
             n_oversampling = int(exptime[i_obs] / self.planet_grid['time_step'])
@@ -220,6 +222,8 @@ class RossiterMcLaughlin_Reloaded(AbstractModel, AbstractTransit):
                 else:
                     rv = x_ortho * parameter_values['v_sini']
 
+                rv += convective_c0 + self.retrieve_convective_rv(mu_grid, parameter_values)
+
                 mu_sum += np.sum((mu_grid*I_grid)[sel_inside])
                 vstarI_sum += np.sum((rv*I_grid)[sel_inside])
                 I_sum += np.sum((I_grid)[sel_inside])
@@ -227,10 +231,5 @@ class RossiterMcLaughlin_Reloaded(AbstractModel, AbstractTransit):
             mean_mu[i_obs] = mu_sum/I_sum
             mean_vstar[i_obs] = vstarI_sum/I_sum
 
-        conv_rvstar = self.retrieve_convective_rv(ld_par, mean_mu, parameter_values)
-
-        #time_1 = time()
-        #print(time_1-time_0)
-
-        return mean_vstar + conv_rvstar
+        return mean_vstar
 

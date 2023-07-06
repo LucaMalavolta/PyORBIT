@@ -202,15 +202,10 @@ class RossiterMcLaughlin_Precise(AbstractModel, AbstractTransit):
             star_grid_v_star = star_grid_x_ortho * parameter_values['v_sini']
 
         """ Addition of the convective contribute"""
-        star_grid_v_star += self.retrieve_convective_rv(ld_par, self.star_grid['mu'], parameter_values)
+        convective_c0 = self.retrieve_convective_c0(ld_par, parameter_values)
+        star_grid_v_star += convective_c0 + self.retrieve_convective_rv(self.star_grid['mu'], parameter_values)
 
         star_grid_v_star[self.star_grid['outside']] = 0.0
-
-
-        """ working arrays for Eq. 1 and 9 of Cegla+2016"""
-        star_grid_muI = star_grid_I * self.star_grid['mu']
-        star_grid_v_starI = star_grid_I * star_grid_v_star
-
 
         out_temp = np.empty([self.star_grid['n_grid'], self.star_grid['n_grid'], self.star_grid['len_zz']])
         star_grid_ccf = iter2_CCF_gauss(self.star_grid['zz'],

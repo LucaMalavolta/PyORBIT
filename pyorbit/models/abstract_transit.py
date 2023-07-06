@@ -112,17 +112,21 @@ class AbstractTransit(object):
 
         self.convective_order = kwargs.get('convective_order', mc.common_models[self.stellar_ref].convective_order)
         self.mu_step = 0.00001
-        self.mu_integral = np.arange(0.,1., self.mu_step)
+        self.mu_integral = np.arange(0.,1.+self.mu_step, self.mu_step)
         if self.convective_order == 0:
+            self.retrieve_convective_c0 = self._convective_c0_order0
             self.retrieve_convective_rv = self._convective_rv_order0
         elif self.convective_order == 1:
+            self.retrieve_convective_c0 = self._convective_c0_order1
             self.retrieve_convective_rv = self._convective_rv_order1
             self.list_pams_common.update(['convective_c1'])
         elif self.convective_order == 2:
+            self.retrieve_convective_c0 = self._convective_c0_order2
             self.retrieve_convective_rv = self._convective_rv_order2
             self.list_pams_common.update(['convective_c1'])
             self.list_pams_common.update(['convective_c2'])
         elif self.convective_order == 3:
+            self.retrieve_convective_c0 = self._convective_c0_order3
             self.retrieve_convective_rv = self._convective_rv_order3
             self.list_pams_common.update(['convective_c1'])
             self.list_pams_common.update(['convective_c2'])
@@ -344,29 +348,40 @@ class AbstractTransit(object):
     def _limb_darkening_exponential(self, ld_par, mu):
         return  1 - ld_par[0]*(1. - mu) - ld_par[1]/(1. - np.exp(mu))
 
-    def _convective_rv_order0(self, ld_par, mean_mu, parameter_values):
+
+
+
+    def _convective_c0_order0(self, ld_par, parameter_values):
         return 0
 
-    def _convective_rv_order1(self, ld_par, mean_mu, parameter_values):
+    def _convective_rv_order0(self, mean_mu, parameter_values):
+        return 0
+
+    def _convective_c0_order1(self, ld_par, parameter_values):
 
         I_integral = self.compute_limb_darkening(ld_par, self.mu_integral)
 
         int_1=parameter_values['convective_c1']*np.sum(I_integral*(self.mu_integral**2.)*self.mu_step)
         dnm=np.sum(I_integral*self.mu_integral*self.mu_step)
-        c0=-(int_1)/dnm
-        return c0+(parameter_values['convective_c1']*mean_mu)
+        return -(int_1)/dnm
 
-    def _convective_rv_order2(self, ld_par, mean_mu, parameter_values):
+    def _convective_rv_order1(self, mean_mu, parameter_values):
+
+        return parameter_values['convective_c1']*mean_mu
+
+    def _convective_c0_order2(self, ld_par, parameter_values):
 
         I_integral = self.compute_limb_darkening(ld_par, self.mu_integral)
 
         int_1=parameter_values['convective_c1']*np.sum(I_integral*(self.mu_integral**2.)*self.mu_step)
         int_2=parameter_values['convective_c2']*np.sum(I_integral*(self.mu_integral**3.)*self.mu_step)
         dnm=np.sum(I_integral*self.mu_integral*self.mu_step)
-        c0=-(int_1+int_2)/dnm
-        return c0+(parameter_values['convective_c1']*mean_mu)+(parameter_values['convective_c2']*mean_mu**2)
+        return -(int_1+int_2)/dnm
 
-    def _convective_rv_order3(self, ld_par, mean_mu, parameter_values):
+    def _convective_rv_order2(self, mean_mu, parameter_values):
+        return parameter_values['convective_c1']*mean_mu+(parameter_values['convective_c2']*mean_mu**2)
+
+    def _convective_c0_order3(self, ld_par, parameter_values):
 
         I_integral = self.compute_limb_darkening(ld_par, self.mu_integral)
 
@@ -374,9 +389,10 @@ class AbstractTransit(object):
         int_2=parameter_values['convective_c2']*np.sum(I_integral*(self.mu_integral**3.)*self.mu_step)
         int_3=parameter_values['convective_c3']*np.sum(I_integral*(self.mu_integral**4.)*self.mu_step)
         dnm=np.sum(I_integral*self.mu_integral*self.mu_step)
-        c0=-(int_1+int_2+int_3)/dnm
-        return (c0
-            + (parameter_values['convective_c1']*mean_mu)
+        return -(int_1+int_2+int_3)/dnm
+
+    def _convective_rv_order3(self, mean_mu, parameter_values):
+        return ((parameter_values['convective_c1']*mean_mu)
             + (parameter_values['convective_c2']*mean_mu**2)
             + (parameter_values['convective_c3']*mean_mu**3))
 

@@ -138,6 +138,10 @@ class RossiterMcLaughlin_Reloaded_Faster(AbstractModel, AbstractTransit):
         else:
             star_grid_v_star = star_grid_x_ortho * parameter_values['v_sini']
 
+
+        convective_c0 = self.retrieve_convective_c0(ld_par, parameter_values)
+        star_grid_v_star += convective_c0 + self.retrieve_convective_rv(self.star_grid['mu'], parameter_values)
+
         star_grid_v_star[self.star_grid['outside']] = 0.0
 
 
@@ -156,6 +160,7 @@ class RossiterMcLaughlin_Reloaded_Faster(AbstractModel, AbstractTransit):
         #eclipsed_flux = np.zeros_like(bjd)
         mean_mu = np.zeros_like(bjd)
         mean_vstar =  np.zeros_like(bjd)
+
 
         for i_obs, bjd_value in enumerate(bjd):
             n_oversampling = int(exptime[i_obs] / self.star_grid['time_step'])
@@ -219,7 +224,5 @@ class RossiterMcLaughlin_Reloaded_Faster(AbstractModel, AbstractTransit):
                 mean_mu[i_obs] = muI_sum/I_sum
                 mean_vstar[i_obs] = vstarI_sum/I_sum
 
-        conv_rvstar = self.retrieve_convective_rv(ld_par, mean_mu, parameter_values)
-
-        return mean_vstar + conv_rvstar
+        return mean_vstar
 
