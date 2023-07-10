@@ -1363,10 +1363,10 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
 
                         if plot_dictionary.get('veuz_compatibility', False):
                             fileout.write(
-                                'descriptor BJD Tc_folded pha val,+- sys mod full val_compare,+- res,+- jit \n')
+                                'descriptor BJD Tc_folded pha val,+- sys mod full val_compare,+- res,+- jit jit_flag off_flag sub_flag \n')
                         else:
                             fileout.write(
-                                '# epoch Tc_folded Tref_folded value value_err offset model full_model val_compare val_compare_err residuals residuals_err jitter \n')
+                                '# epoch Tc_folded Tref_folded value value_err offset model full_model val_compare val_compare_err residuals residuals_err jitter jitter_flag offset_flag subset_flag \n')
 
                         try:
                             len(bjd_plot[plot_out_keyword]
@@ -1380,7 +1380,32 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
                                 bjd_plot[plot_x_keyword][dataset_name][model_name] * \
                                 np.ones(dataset.n)
 
-                        for x, tcf, pha, y, e, sys_val, mod, com, obs_mod, res, jit in zip(
+                        #print(getattr(dataset, 'input_jitter', False))
+                        try:
+                            if getattr(dataset, 'input_jitter', False).any():
+                                jitter_flag = dataset.input_jitter
+                            else:
+                                jitter_flag = np.zeros_like(dataset.x) - 1.
+                        except:
+                            jitter_flag = np.zeros_like(dataset.x) - 1.
+
+                        try:
+                            if getattr(dataset, 'input_offset', False).any():
+                                offset_flag = dataset.input_offset
+                            else:
+                                offset_flag = np.zeros_like(dataset.x) - 1.
+                        except:
+                            offset_flag = np.zeros_like(dataset.x) - 1.
+
+                        try:
+                            if getattr(dataset, 'input_subset', False).any():
+                                subset_flag = dataset.input_subset
+                            else:
+                                subset_flag = np.zeros_like(dataset.x) - 1.
+                        except:
+                            subset_flag = np.zeros_like(dataset.x) - 1.
+
+                        for x, tcf, pha, y, e, sys_val, mod, com, obs_mod, res, jit, jflag, oflag, sflag in zip(
                                 dataset.x, tc_folded, phase, dataset.y, dataset.e,
                                 bjd_plot[plot_out_keyword][dataset_name]['systematics'],
                                 bjd_plot[plot_out_keyword][dataset_name][model_name],
@@ -1389,9 +1414,10 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
                                 bjd_plot[plot_out_keyword][dataset_name][model_name],
                                 dataset.y -
                             bjd_plot[plot_out_keyword][dataset_name]['complete'],
-                                bjd_plot[plot_out_keyword][dataset_name]['jitter']):
-                            fileout.write('{0:f} {1:f} {2:f} {3:f} {4:f} {5:f} {6:1f} {7:f} {8:f} {9:f} {10:f} {11:f} {12:f}'
-                                            '\n'.format(x, tcf, pha, y, e, sys_val, mod, com, obs_mod, e, res, e, jit))
+                                bjd_plot[plot_out_keyword][dataset_name]['jitter'],
+                                jitter_flag, offset_flag, subset_flag):
+                            fileout.write('{0:f} {1:f} {2:f} {3:f} {4:f} {5:f} {6:1f} {7:f} {8:f} {9:f} {10:f} {11:f} {12:f} {13:3.0f} {14:3.0f} {15:3.0f} '
+                                            '\n'.format(x, tcf, pha, y, e, sys_val, mod, com, obs_mod, e, res, e, jit, jflag, oflag, sflag))
                         fileout.close()
 
                         if getattr(mc.models[model_name], 'systematic_model', False):
@@ -1545,7 +1571,7 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
                                 fileout.write('descriptor Tc_phase m_phase \n')
                             else:
                                 fileout.write('# Tc_folded model \n')
-                            
+
                             for x, y in zip(x_range, RV_out):
                                 fileout.write('{0:f} {1:f} \n'.format(x, y))
                             fileout.close()

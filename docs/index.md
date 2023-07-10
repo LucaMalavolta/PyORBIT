@@ -30,6 +30,11 @@ Alternatively, for easy automatization, PyORBIT can be called as a Python functi
   the same hyper-parameters.
 -->
 
+## Updates on version 10
+
+- *Improved speed* especially on
+After several failed attempts, I finally managed to apply the advices from the [emcee parallelization page](https://emcee.readthedocs.io/en/stable/tutorials/parallel/) to the rather complex structure of PyORBIT. The speed up is noticeable for large datasets (e.g., photometry) 
+
 ## References
 
 If you find `PyORBIT` useful for your work, please cite [Malavolta et al. (2016)](https://ui.adsabs.harvard.edu//#abs/2016A&A...588A.118M/abstract) and [Malavolta et al. (2018)](https://ui.adsabs.harvard.edu//#abs/2018AJ....155..107M/abstract).

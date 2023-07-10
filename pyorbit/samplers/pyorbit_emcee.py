@@ -71,7 +71,7 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
 
     safe_reload = config_in['parameters'].get('safe_reload', False)
 
-    print('parameters/safe_reaload flag (must be True for tinygp): ', safe_reload)
+    print('parameters/safe_reload flag (must be True for tinygp): ', safe_reload)
     print()
 
     if reloaded_pyde or reloaded_emcee:
@@ -502,14 +502,14 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
         print('PyDE completed, it took {0:12.1f} seconds'.format(time_end_pyde-time_start_pyde))
         print()
         sys.stdout.flush()
-        
+
         if safe_reload:
-            print(' safe_reload falg on True, the program will now quit ')
+            print(' safe_reload flag on True, the program will now quit ')
             print(' You have to relaunch it again in order for emcee to work properly')
             print(' No worries, your PyDE results have been saved!')
             quit()
-        
-        
+
+
 
 
     if reloaded_emcee:

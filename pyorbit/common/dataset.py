@@ -206,6 +206,21 @@ class Dataset(AbstractCommon):
         else:
             self.submodel_flag = None
 
+        if np.amax(data_input[:, 3]) > 0:
+            self.input_jitter = np.asarray(data_input[:, 3], dtype=np.double)
+        else:
+            self.input_jitter = None
+
+        if np.amax(data_input[:, 4]) > 0:
+            self.input_offset = np.asarray(data_input[:, 4], dtype=np.double)
+        else:
+            self.input_offset = None
+
+        if np.amax(data_input[:, 5]) > 0:
+            self.input_subset = np.asarray(data_input[:, 5], dtype=np.double)
+        else:
+            self.input_subset = None
+
         self.model_reset()
 
     def _setup_systematic_dictionaries(self, var_generic, dataset_vals):
@@ -244,9 +259,11 @@ class Dataset(AbstractCommon):
 
     def shutdown_jitter(self):
         self._delete_systematic_dictionaries_mask('jitter')
+        self.input_jitter = None
 
     def shutdown_offset(self):
         self._delete_systematic_dictionaries_mask('offset')
+        self.input_offset = None
 
     def common_Tref(self, Tref_in):
         self.Tref = Tref_in
