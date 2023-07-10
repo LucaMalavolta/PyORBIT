@@ -8,6 +8,7 @@ Before you start delving into the many available models, let’s work together o
 
 To get started, we need two ingredients: the **dataset**, and a **configuration file**.
 
+(quickstart_dataset)=
 ## Dataset
 
 The radial velocity dataset is just a text file with five columns, as in this example:
@@ -107,4 +108,147 @@ The first argument of `pyorbit_run` is the sampler to be used in the analysis (s
 
 PyORBIT will produce a very extensive terminal output, detailed in the section [Interpreting the output](results_interpretation).
 
-To save the terminal output to a file,   `> configuration_file_emcee_res.log` the terminal output will be saved to a file.
+To save the terminal output to a file, add  `> configuration_file_emcee_run.log` to the command and the terminal output will be saved to a file.
+
+After the analysis is complete, you can run convergence diagnostics and write model files for plotting by running the command:
+
+```{code} bash
+pyorbit_results emcee configuration_file.yaml
+```
+
+The confidence intervals of the main parameters you are interested to are printedin the section called *Statistics on the physical parameters obtained from the posteriors samples*
+
+```text
+====================================================================================================
+     Statistics on the physical parameters obtained from the posteriors samples
+====================================================================================================
+
+----- dataset:  Bouchy2005_RV01_noRML
+offset_0               -2363.5         -4.8          4.4    (15-84 p)
+jitter_0                  16.0         -3.2          5.0    (15-84 p)
+
+
+----- common model:  b
+P                      2.21511     -0.00027      0.00028    (15-84 p)
+K                        204.4         -7.4          7.4    (15-84 p)
+e                         0.00                              [fixed]
+omega                90.000000                              [fixed]
+mean_long                  264         -117          127    (15-84 p)
+```
+
+More details on the interpretation of the results can be found in the page [Interpreting the output](results_interpretation).
+
+## Multiple datasets
+
+To add more radial velocity datasets, you just need to include them in the `input` sections alongside with the model you want to use to analyze the, - in this case, still `radial_velocities`. The rest of the configuration file is unchanged.
+
+In this example below, we have added RV measurements from [Winn et al. 2006](https://ui.adsabs.harvard.edu/abs/2006ApJ...653L..69W/abstract) and [Boisse et al. 2009](https://ui.adsabs.harvard.edu/abs/2009A%26A...495..959B/abstract).
+
+```{code-block} yaml
+:lineno-start: 1
+inputs:
+  Bouchy2005_RV01_noRML:
+    file: Bouchy2005_RV01_noRML_PyORBIT.dat
+    kind: RV
+    models:
+      - radial_velocities
+  Winn2006_RV02_noRML:
+    file: Winn2006_RV02_noRML_PyORBIT.dat
+    kind: RV
+    models:
+      - radial_velocities
+  Boisse2009_RV03_noRML:
+    file: Boisse2009_RV03_noRML_PyORBIT.dat
+    kind: RV
+    models:
+      - radial_velocities
+common:
+   ...
+
+```
+
+`PyORBIT` will automatically include a *jitter* term and an *offset* term for each dataset, if the data file has been formatted as described in the [Dataset](quickstar_daatset) section.
+
+
+```text
+====================================================================================================
+     Statistics on the model parameters obtained from the posteriors samples
+====================================================================================================
+
+----- dataset:  Bouchy2005_RV01_noRML
+offset_0               -2362.8         -4.6          4.5    (15-84 p)
+jitter_0                  16.2         -3.1          4.3    (15-84 p)
+
+
+----- dataset:  Winn2006_RV02_noRML
+offset_0                 -11.0         -2.1          2.3    (15-84 p)
+jitter_0                  10.3         -1.4          1.8    (15-84 p)
+
+
+----- dataset:  Boisse2009_RV03_noRML
+offset_0               -2273.6         -1.6          1.7    (15-84 p)
+jitter_0                   8.6         -1.2          1.5    (15-84 p)
+
+
+----- common model:  b
+omega                90.000000                              [fixed]
+P                     2.218551    -0.000022     0.000022    (15-84 p)
+e                         0.00                              [fixed]
+K                        202.0         -1.8          1.8    (15-84 p)
+mean_long                140.3         -8.9          8.9    (15-84 p)
+```
+
+The inclusion of the two datasets has lowered the uncertainty on the radial velocity semiamplitude of planet b from $K_\mathrm{b} = 204.4 \pm 7.4 \, [\mathrm{m/s}] $ to $K_\mathrm{b} = 202.0 \pm 1.8 \, [\mathrm{m/s}] $. The conversion in Jupiter masses is also provided in the `Statistics on the derived parameters obtained from the posteriors samples`, if a prior on the stellar mass is provided in the configuration file:
+
+```text
+====================================================================================================
+     Statistics on the derived parameters obtained from the posteriors samples
+====================================================================================================
+
+----- common model:  b
+Inclination fixed to 90 deg!
+Computing exact mass of the planet (average approximate mass larger than 30.0 Me)
+M_Mj                     1.122       -0.045        0.047    (15-84 p)
+M_Me                       357          -14           15    (15-84 p)
+Tc                 2459501.908       -0.055        0.055    (15-84 p)
+a_AU_(M)               0.03099     -0.00063      0.00061    (15-84 p)
+
+```
+
+```{warning}
+The error on the mass wil ltake into account the error associated to the stellar mass.
+However, If no information on the orbital inclination is provided, `PyORBIT` will return the *minimum mass* of the planet.
+```
+
+Orbital inclination with the associated error can be included as a `fixed` parameter
+
+```{code-block} yaml
+:lineno-start: 1
+common:
+  planets:
+    b:
+      orbit: circular
+      boundaries:
+        P: [0.50, 5.0]
+        K: [0.01, 300.0]
+      fixed:
+        i: [85.580, 0.060]
+  star:
+    ...
+```
+
+```
+====================================================================================================
+     Statistics on the derived parameters obtained from the posteriors samples
+====================================================================================================
+
+----- common model:  b
+Inclination randomized to 85.58 +- 0.06 deg
+Computing exact mass of the planet (average approximate mass larger than 30.0 Me)
+i                       85.579       -0.059        0.059    (15-84 p)
+M_Mj                     1.128       -0.046        0.045    (15-84 p)
+M_Me                       359          -15           14    (15-84 p)
+Tc                 2459501.908       -0.055        0.055    (15-84 p)
+a_AU_(M)               0.03100     -0.00062      0.00060    (15-84 p)
+
+```
