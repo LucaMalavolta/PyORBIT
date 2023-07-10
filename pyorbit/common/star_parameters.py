@@ -159,8 +159,12 @@ class CommonStarParameters(AbstractCommon):
         self.use_differential_rotation = kwargs.get('use_differential_rotation', self.use_differential_rotation)
 
         """ check if the radius has to be used as parameter """
-        self.use_stellar_radius = kwargs.get('use_stellar_radius', self.use_stellar_radius)
-
+        #NOTE try/except added to preverse compatibility within development version 
+        #TODO remove before final release      
+        try:
+            self.use_stellar_radius = kwargs.get('use_stellar_radius', self.use_stellar_radius)
+        except:
+            self.use_stellar_radius = kwargs.get('use_stellar_radius', False)
 
         #NOTE try/except added to preverse compatibility within development version
         #TODO remove before final release

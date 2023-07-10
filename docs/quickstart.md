@@ -220,7 +220,7 @@ The error on the mass wil ltake into account the error associated to the stellar
 However, If no information on the orbital inclination is provided, `PyORBIT` will return the *minimum mass* of the planet.
 ```
 
-Orbital inclination with the associated error can be included as a `fixed` parameter
+Orbital inclination with the associated error can be included as a `fixed` parameter - in the sense that the parameter is not involved in the computation fo the log-likelihood and it will not be optimized
 
 ```{code-block} yaml
 :lineno-start: 1
@@ -236,6 +236,7 @@ common:
   star:
     ...
 ```
+You can see that the mass as *slightly* increased as a result of the updated inclination
 
 ```
 ====================================================================================================
@@ -252,3 +253,10 @@ Tc                 2459501.908       -0.055        0.055    (15-84 p)
 a_AU_(M)               0.03100     -0.00062      0.00060    (15-84 p)
 
 ```
+
+```{tip}
+When `fixed`, you can change the value of the orbital inclination and obtain updated masses by just running `pyorbit_results` again. 
+```
+
+# Light curve fitting
+
