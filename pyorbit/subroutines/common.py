@@ -205,6 +205,19 @@ def get_2var_veq_rot_radius(var, fix, i):
         out = var[:, i[0]] * (var[:, i[1]] * constants.d2s / (2*np.pi) / constants.Rsun)
     return out
 
+def get_2var_veq_radius_rot(var, fix, i):
+    # first parameter: v_eq
+    # second parameter: radius
+    # P = 2pi R / v
+    # P[d]  = (2*np.pi) R[R_sun]*R_sun[km] /  v_eq[km/s] /  86400[s/d]
+    if len(np.shape(var)) == 1:
+
+        out = (2*np.pi) * var[i[1]]  / var[i[0]] * (constants.Rsun /constants.d2s)
+        out = var[i[0]] * (var[i[1]] * constants.d2s / (2*np.pi) / constants.Rsun)
+    else:
+        out = (2*np.pi) * var[:, i[1]]  / var[:, i[0]] * (constants.Rsun /constants.d2s)
+    return out
+
 def get_3var_vsini_prot_rstar_istar(var, fix, i):
     #first parameter: vsini 
     #second parameter: p_rot
