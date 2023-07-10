@@ -6,15 +6,15 @@ Transit parameters and keywords are defined in an abstract class that is then in
 
 Models relying on the Transit abstract model:
 - ``batman_transit``
-- ``pytransit_batman``
+- ``pytransit_transit``
 - ``batman_transit_secondary_phasecurve``
-- ``batman_transit_with_ttv``
-- ``pytransit_transit_with_ttv``
+- ``batman_transit_ttv``
+- ``pytransit_transit_ttv``
 
 
 ### Keywords
 
-**kind**
+**model**
 * accepted values: any of the models listed above
 * default: the model with the same name assigned to the section
 

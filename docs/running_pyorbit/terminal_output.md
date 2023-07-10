@@ -1,6 +1,6 @@
 (terminal_output)=
 
-# Interpreting `results` terminal output
+# Interpreting terminal output
 
 PyORBIT_results will produce several files depending on the flags provided at
 runtime. The terminal output is always present

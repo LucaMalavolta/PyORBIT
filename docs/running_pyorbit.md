@@ -43,6 +43,6 @@ Differently from `pyorbit_run`, all the files in the `configuration_file/sampler
 
 ```{toctree}
 :maxdepth: 1
-running_pyorbit/results_flags
 running_pyorbit/terminal_output
+running_pyorbit/results_flags
 ```
