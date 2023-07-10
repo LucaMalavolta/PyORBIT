@@ -141,6 +141,7 @@ class CommonStarParameters(AbstractCommon):
         self.use_stellar_rotation = False
         self.use_stellar_inclination = False
         self.use_differential_rotation = False
+        self.use_stellar_radius = False
         self.convective_order = 0
         self.preserve_density = True
 
@@ -151,11 +152,17 @@ class CommonStarParameters(AbstractCommon):
         """ check if the stellar_inclination has to be used as parameter """
         self.use_stellar_inclination = kwargs.get('use_stellar_inclination', self.use_stellar_inclination)
 
-        """ check if the stellar_rotation has to be used as parameter """
+        """ check if the stellar_rotation has to be used as parameter"""
         self.use_stellar_rotation = kwargs.get('use_stellar_rotation', self.use_stellar_rotation)
+
+        """ check if the differential rotation should be included in the model"""
         self.use_differential_rotation = kwargs.get('use_differential_rotation', self.use_differential_rotation)
 
-        #NOTE try/except added to rpeverse compatibility within development version
+        """ check if the radius has to be used as parameter """
+        self.use_stellar_radius = kwargs.get('use_stellar_radius', self.use_stellar_radius)
+
+
+        #NOTE try/except added to preverse compatibility within development version
         #TODO remove before final release
         try:
             self.preserve_density = kwargs.get('preserve_density', self.preserve_density)
@@ -172,9 +179,21 @@ class CommonStarParameters(AbstractCommon):
             self.use_equatorial_velocity = True
             self.use_stellar_inclination = True
 
-            self.use_stellar_rotation = kwargs.get('use_stellar_rotation', True)
+            if self.use_stellar_radius:
+                default_rotation = False
+            else:
+                default_rotation = True
+            self.use_stellar_rotation = kwargs.get('use_stellar_rotation', default_rotation)
+
 
         self.convective_order = kwargs.get('convective_order', self.convective_order)
+
+        if self.use_equatorial_velocity and self.use_stellar_inclination and self.use_stellar_rotation and self.use_stellar_radius:
+            print('Possible source of unexpected behaviour:')
+            print('Stellar rotation period and stellar radius should not be used as free parameters simultaneously')
+            print('when the equatorial velocity and stellar inclination are set as free parameters')
+            print('Either set use_stellar_rotation: False or use_stellar_radius: False ')
+            print()
 
 
     def define_special_parameter_properties(self, ndim, output_lists, pam):
@@ -196,6 +215,17 @@ class CommonStarParameters(AbstractCommon):
                 if 'v_sini' in self.fix_list or 'radius' in self.fix_list:
                     skip_first_parametrization = True
 
+            elif self.use_stellar_radius:
+                if pam == "veq_star" or pam == 'i_star' or pam == 'radius':
+                    skip_first_parametrization = False
+
+                for var_check in ['v_sini', 'veq_star', 'i_star', 'radius', 'rotation_period']:
+                    if var_check in self.sampler_parameters:
+                        skip_first_parametrization = True
+
+                if 'v_sini' in self.fix_list or 'rotation_period' in self.fix_list:
+                    skip_first_parametrization = True
+
             else:
                 if pam == "veq_star" or pam == 'i_star':
                     skip_first_parametrization = False
@@ -207,7 +237,7 @@ class CommonStarParameters(AbstractCommon):
                 if 'v_sini' in self.fix_list:
                     skip_first_parametrization = True
 
-        elif self.use_stellar_rotation:
+        elif self.use_stellar_rotation or self.use_stellar_radius:
             if pam == "v_sini" or pam == 'rotation_period' or pam=='radius':
                     skip_fourth_parametrization = False
 
@@ -264,6 +294,17 @@ class CommonStarParameters(AbstractCommon):
 
                 parameter_list = ['veq_star', 'i_star', 'rotation_period']
                 derived_list = ['v_sini', 'radius']
+
+            elif self.use_stellar_radius:
+                self.transformation['radius'] = get_var_val
+                self.parameter_index['radius'] = ndim + 2
+
+                self.transformation['rotation_period'] = get_2var_veq_radius_rot
+                self.parameter_index['rotation_period'] = [ndim, ndim + 2]
+
+                parameter_list = ['veq_star', 'i_star', 'radius']
+                derived_list = ['v_sini', 'rotation_period']
+
             else:
                 parameter_list = ['veq_star', 'i_star']
                 derived_list = ['v_sini']

@@ -97,18 +97,21 @@ class AbstractTransit(object):
 
         if mc.common_models[self.stellar_ref].use_stellar_inclination:
             self.list_pams_common.update(['i_star'])
-        else:
-            self.compute_star_inclination = True
+        #else:
+        #    self.compute_star_inclination = True
 
         if mc.common_models[self.stellar_ref].use_equatorial_velocity:
             self.list_pams_common.update(['veq_star'])
-        else:
-            self.compute_equatorial_velocity = True
+        #else:
+        #    self.compute_equatorial_velocity = True
 
         if mc.common_models[self.stellar_ref].use_stellar_rotation:
             self.list_pams_common.update(['rotation_period'])
-        else:
-            self.compute_rotation_period = True
+        #else:
+        #    self.compute_rotation_period = True
+
+        if mc.common_models[self.stellar_ref].use_stellar_radius:
+            self.list_pams_common.update(['radius'])
 
         self.convective_order = kwargs.get('convective_order', mc.common_models[self.stellar_ref].convective_order)
         self.mu_step = 0.00001
