@@ -13,7 +13,6 @@ except:
 
 __all__ = ['TinyGaussianProcess_QuasiPeriodicActivity']
 
-
 def _build_tinygp_quasiperiodic(params):
     kernel = jnp.power(params['Hamp'], 2.0) \
         * kernels.ExpSquared(scale=jnp.abs(params["Pdec"])) \
@@ -30,11 +29,6 @@ def _loss_tinygp(params):
     gp = _build_tinygp_quasiperiodic(params)
     return gp.log_probability(params['y'])
 
-@jax.jit
-def _residuals_tinygp(params):
-    gp = _build_tinygp_quasiperiodic(params)
-    _, cond_gp = gp.condition(params['y'], params['x0'])
-    return cond_gp
 
 class TinyGaussianProcess_QuasiPeriodicActivity(AbstractModel):
     ''' Three parameters out of four are the same for all the datasets, since they are related to
@@ -111,14 +105,16 @@ class TinyGaussianProcess_QuasiPeriodicActivity(AbstractModel):
             Pdec=parameter_values['Pdec'],
             Prot=parameter_values['Prot'],
             diag=dataset.e ** 2.0 + dataset.jitter ** 2.0,
-            x0=x0,
-            y=dataset.residuals
+            x0=dataset.x0,
+            y=dataset.residuals,
+            x0_predict = x0
         )
 
-
-        cond_gp = _residuals_tinygp(theta_dict)
-        mu = cond_gp.mean
+        gp = _build_tinygp_quasiperiodic(theta_dict)
+        _, cond_gp = gp.condition(theta_dict['y'], theta_dict['x0_predict'])
+        mu = cond_gp.loc
         std = np.sqrt(cond_gp.variance)
+
         if return_variance:
             return mu, std
         else:

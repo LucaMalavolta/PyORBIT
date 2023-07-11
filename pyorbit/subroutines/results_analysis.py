@@ -659,7 +659,9 @@ def get_model(mc, theta, bjd_dict):
                 """
                 ram_occupancy= (0.5 *  1024**3) / 8
                 x0_len = len(x0_plot)
-                if (x0_len * dataset.n) > ram_occupancy:
+
+                #if (x0_len * dataset.n) > ram_occupancy:
+                if (x0_len > 10000):
 
                     print('     Splitting the plot array to allow GP prediction of extended datasets, it may take a while...')
 
@@ -722,9 +724,9 @@ def get_model(mc, theta, bjd_dict):
 
         x0_plot = bjd_dict[dataset_name]['x0_plot']
         x0_len = len(x0_plot)
-        #print(ram_occupancy,x0_len, dataset.n )
-        #print((6* x0_len * dataset.n * len(delayed_lnlk_computation)**2))
-        if (6* x0_len * dataset.n * len(delayed_lnlk_computation)**2) > ram_occupancy:
+
+        #if (6* x0_len * dataset.n * len(delayed_lnlk_computation)**2) > ram_occupancy:
+        if (x0_len > 10000):
 
             print('     Splitting the plot array to allow GP prediction of extended datasets, it may take a while...')
 
