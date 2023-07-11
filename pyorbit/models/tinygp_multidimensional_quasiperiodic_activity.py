@@ -88,12 +88,6 @@ def _loss_tinygp(params):
     gp = _build_tinygp_multidimensional(params)
     return gp.log_probability(params['y'])
 
-@jax.jit
-def _residuals_tinygp(params):
-    gp = _build_tinygp_multidimensional(params)
-    _, cond_gp = gp.condition(params['y'], params['X'])
-    return cond_gp
-
 
 class TinyGP_Multidimensional_QuasiPeriodicActivity(AbstractModel):
     ''' Three parameters out of four are the same for all the datasets, since they are related to
@@ -266,14 +260,18 @@ class TinyGP_Multidimensional_QuasiPeriodicActivity(AbstractModel):
             Pdec=self.internal_parameter_values['Pdec'],
             Prot=self.internal_parameter_values['Prot'],
             diag=self._dataset_ej2,
-            X=X_input,
+            X=self._X,
             y=self._dataset_res,
             coeff_prime=self.internal_coeff_prime,
-            coeff_deriv=self.internal_coeff_deriv
+            coeff_deriv=self.internal_coeff_deriv,
+            x0_predict = x0
         )
 
-        _, cond_gp = _residuals_tinygp(theta_dict)
-        mu = cond_gp.mean[l_nstart:l_nend]
+
+        gp = _build_tinygp_multidimensional(theta_dict)
+        _, cond_gp = gp.condition(theta_dict['y'], theta_dict['x0_predict'])
+
+        mu = cond_gp.loc[l_nstart:l_nend] # or cond_gp.mean? 
         std = np.sqrt(cond_gp.variance[l_nstart:l_nend])
         if return_variance:
             return mu, std

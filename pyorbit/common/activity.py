@@ -325,3 +325,7 @@ class CommonActivity(AbstractCommon):
     default_fixed = {}
 
     recenter_pams = {'f'}
+
+    def initialize_model(self, mc, **kwargs):
+
+        self.use_stellar_rotation_period = kwargs.get('use_stellar_rotation_period', False)

@@ -112,7 +112,7 @@ class TinyGaussianProcess_QuasiPeriodicActivity(AbstractModel):
 
         gp = _build_tinygp_quasiperiodic(theta_dict)
         _, cond_gp = gp.condition(theta_dict['y'], theta_dict['x0_predict'])
-        mu = cond_gp.loc
+        mu = cond_gp.loc # or cond_gp.mean? 
         std = np.sqrt(cond_gp.variance)
 
         if return_variance:
