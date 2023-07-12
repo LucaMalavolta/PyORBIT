@@ -252,7 +252,7 @@ class TinyGP_Multidimensional_QuasiPeriodicActivity(AbstractModel):
 
             for ii in range(0, self._added_datasets):
                 temp_input = np.append(temp_input, x0_input)
-                temp_label = np.append(temp_label, np.zeros_like(x0_input, dtype=int)+ii)
+                temp_label = np.append(temp_label, (np.zeros_like(x0_input, dtype=int)+ii).astype(int))
             X_input = (temp_input, temp_label)
 
         theta_dict =  dict(
@@ -264,14 +264,14 @@ class TinyGP_Multidimensional_QuasiPeriodicActivity(AbstractModel):
             y=self._dataset_res,
             coeff_prime=self.internal_coeff_prime,
             coeff_deriv=self.internal_coeff_deriv,
-            x0_predict = x0
+            x0_predict = X_input
         )
 
 
         gp = _build_tinygp_multidimensional(theta_dict)
         _, cond_gp = gp.condition(theta_dict['y'], theta_dict['x0_predict'])
 
-        mu = cond_gp.loc[l_nstart:l_nend] # or cond_gp.mean? 
+        mu = cond_gp.loc[l_nstart:l_nend] # or cond_gp.mean?
         std = np.sqrt(cond_gp.variance[l_nstart:l_nend])
         if return_variance:
             return mu, std
@@ -287,7 +287,7 @@ class TinyGP_Multidimensional_QuasiPeriodicActivity(AbstractModel):
     def _hypercond_01(parameter_values):
         # Condition from Rajpaul 2017, Rajpaul+2021
         # Taking into account that Pdec^2 = 2*lambda_2^2
-        return parameter_values['Pdec']**2 > (3. / 4. / np.pi) * parameter_values['Oamp']**2 * parameter_values['Prot']**2 
+        return parameter_values['Pdec']**2 > (3. / 4. / np.pi) * parameter_values['Oamp']**2 * parameter_values['Prot']**2
 
     @staticmethod
     def _hypercond_02(parameter_values):
