@@ -271,8 +271,9 @@ class TinyGP_Multidimensional_QuasiPeriodicActivity(AbstractModel):
         gp = _build_tinygp_multidimensional(theta_dict)
         _, cond_gp = gp.condition(theta_dict['y'], theta_dict['x0_predict'])
 
-        mu = cond_gp.loc[l_nstart:l_nend] # or cond_gp.mean?
-        std = np.sqrt(cond_gp.variance[l_nstart:l_nend])
+        mu_full = cond_gp.loc # or cond_gp.mean?
+        mu = mu_full[l_nstart:l_nend]
+        std = np.sqrt(cond_gp.variance)[l_nstart:l_nend]
         if return_variance:
             return mu, std
         else:
