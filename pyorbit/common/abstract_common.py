@@ -213,6 +213,7 @@ class AbstractCommon(object):
         prior_out = 0.00
 
         parameter_value = self.convert(theta)
+
         """ Preserving backcompatibility with version 8
         #TODO: to be simplified in the next version
         """
@@ -234,7 +235,6 @@ class AbstractCommon(object):
                                          self.bounds[pam],
                                          self.prior_pams[pam],
                                          parameter_value[pam])
-
         return prior_out
 
     def index_recenter_bounds(self):

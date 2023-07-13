@@ -176,7 +176,7 @@ class CommonStarParameters(AbstractCommon):
 
         self.use_differential_rotation = kwargs.get('use_differential_rotation', self.use_differential_rotation)
         if self.use_differential_rotation:
-            print('Differential rotation in model switched on: ')
+            print('Differential rotation model switched on: ')
             print(' - Equatorial velocity and stellar inclination as independent parameters ')
             print(' - Check on rotational period, unless otherwise specified ')
 
@@ -206,6 +206,9 @@ class CommonStarParameters(AbstractCommon):
         skip_second_parametrization = True
         skip_third_parametrization = True
         skip_fourth_parametrization = True
+
+
+        #print(self.parameter_index)
 
         if self.use_equatorial_velocity and self.use_stellar_inclination:
             if self.use_stellar_rotation:
@@ -279,6 +282,13 @@ class CommonStarParameters(AbstractCommon):
 
         if skip_first_parametrization and skip_second_parametrization and skip_third_parametrization and skip_fourth_parametrization:
             return ndim, output_lists, False
+        
+        if (skip_first_parametrization +
+              skip_second_parametrization +  skip_third_parametrization +
+               skip_fourth_parametrization) == 2:
+            print('You got a random error that happens only once every five times',)
+            print('The code will quit, you will need to relaunching it again',)
+            quit()
 
         if not skip_first_parametrization:
             self.transformation['veq_star'] = get_var_val
