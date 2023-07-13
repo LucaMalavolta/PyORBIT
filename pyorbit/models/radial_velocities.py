@@ -121,7 +121,7 @@ class RVdynamical(AbstractModel):
 
 
 class TransitTimeKeplerian(AbstractModel):
-    model_class = 'transit_time'
+    model_class = 'transit_times'
 
     def __init__(self, *args, **kwargs):
         super(TransitTimeKeplerian, self).__init__(*args, **kwargs)
@@ -162,7 +162,7 @@ class TransitTimeKeplerian(AbstractModel):
 
 
 class TransitTimeDynamical(AbstractModel):
-    model_class = 'transit_time'
+    model_class = 'transit_times'
 
     def __init__(self, *args, **kwargs):
         super(TransitTimeDynamical, self).__init__(*args, **kwargs)

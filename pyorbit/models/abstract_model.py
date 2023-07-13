@@ -57,6 +57,8 @@ class AbstractModel(object):
         self.planet_ref = common_ref
         self.stellar_ref = 'star_parameters'
 
+        self.planet_list = [] # used only by very complex models
+
         self.sampler_parameters = {}
 
         self.transformation = {}
