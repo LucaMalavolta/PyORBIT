@@ -71,6 +71,9 @@ class AbstractCommon(object):
     def define_special_parameter_properties(self, ndim, output_lists, var):
         return ndim, output_lists, False
 
+    def define_derived_parameters(self):
+        pass
+
     def define_parameter_properties(self, ndim, output_lists, parameters_list):
         """ Bounds are defined in this class, where all the Planet-related
             parameters are stored
