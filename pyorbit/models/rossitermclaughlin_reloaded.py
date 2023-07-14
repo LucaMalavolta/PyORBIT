@@ -26,26 +26,13 @@ class RossiterMcLaughlin_Reloaded(AbstractModel, AbstractTransit):
             'omega',  # argument of pericenter (in radians)
             'lambda', # Sky-projected angle between stellar rotation axis and normal of orbit plane [deg]
             'R_Rs',  # planet radius (in units of stellar radii)
-            'v_sini' # projected rotational velocity of the star
+            #'v_sini' # projected rotational velocity of the star
         }
 
         self.star_grid = {}   # write an empty dictionary
         self.planet_grid = {}   # write an empty dictionary
 
     def initialize_model(self, mc, **kwargs):
-
-        self.use_differential_rotation = kwargs.get('use_differential_rotation', mc.common_models[self.stellar_ref].use_differential_rotation)
-
-        """ check if the differential rotation should be included in the model"""
-        if self.use_differential_rotation:
-            self.list_pams_common.discard('v_sini')
-            self.list_pams_common.update(['veq_star', 'i_star', 'alpha_rotation'])
-            mc.common_models[self.stellar_ref].use_equatorial_velocity =  True
-            mc.common_models[self.stellar_ref].use_stellar_inclination =  True
-
-            """ If stellar rotation is provided as a prior or as the outcome of the fit,
-                the code will check if the derived stellar radius is consistent with the prior
-            """
 
         self._prepare_planetary_parameters(mc, **kwargs)
         self._prepare_star_parameters(mc, **kwargs)

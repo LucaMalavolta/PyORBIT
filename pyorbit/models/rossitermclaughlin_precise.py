@@ -58,14 +58,13 @@ class RossiterMcLaughlin_Precise(AbstractModel, AbstractTransit):
             'omega',  # argument of pericenter (in radians)
             'lambda', # Sky-projected angle between stellar rotation axis and normal of orbit plane [deg]
             'R_Rs',  # planet radius (in units of stellar radii)
-            'v_sini' # projected rotational velocity of the star
+            #'v_sini' # projected rotational velocity of the star
         }
 
         self.star_grid = {}   # write an empty dictionary
 
 
     def initialize_model(self, mc, **kwargs):
-
 
 
         self._prepare_planetary_parameters(mc, **kwargs)

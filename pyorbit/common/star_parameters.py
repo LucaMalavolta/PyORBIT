@@ -142,6 +142,7 @@ class CommonStarParameters(AbstractCommon):
         self.use_stellar_inclination = False
         self.use_differential_rotation = False
         self.use_stellar_radius = False
+        self.use_projected_velocity = True
         self.convective_order = 0
         self.preserve_density = True
 
@@ -162,12 +163,14 @@ class CommonStarParameters(AbstractCommon):
             self.use_equatorial_velocity = False
             self.use_stellar_inclination = True
             self.use_stellar_radius = True
+            self.use_projected_velocity = False
 
         """ check if the differential rotation should be included in the model"""
         self.use_differential_rotation = kwargs.get('use_differential_rotation', self.use_differential_rotation)
         if self.use_differential_rotation and not self.use_stellar_rotation:
             self.use_equatorial_velocity = True
             self.use_stellar_inclination = True
+            self.use_projected_velocity = False
 
 
         """ The user can force the use of the equatorial velocity, the stellar inclination,
@@ -175,6 +178,7 @@ class CommonStarParameters(AbstractCommon):
         self.use_equatorial_velocity = kwargs.get('use_equatorial_velocity', self.use_equatorial_velocity)
         self.use_stellar_inclination = kwargs.get('use_stellar_inclination', self.use_stellar_inclination)
         self.use_stellar_radius = kwargs.get('use_stellar_radius', self.use_stellar_radius)
+        self.use_projected_velocity = kwargs.get('use_projected_velocity', self.use_projected_velocity)
 
 
 
@@ -209,8 +213,8 @@ class CommonStarParameters(AbstractCommon):
             'radius' in self.sampler_parameters and \
             'veq_star' not in self.parameter_index:
 
-            pam00_index = self.parameter_index['rotation_period']
-            pam01_index = self.parameter_index['radius']
+            pam00_index = self.sampler_parameters['rotation_period']
+            pam01_index = self.sampler_parameters['radius']
 
             self.transformation['veq_star'] = get_2var_prot_rstar_veq
             self.parameter_index['veq_star'] = [pam00_index, pam01_index]
@@ -223,9 +227,9 @@ class CommonStarParameters(AbstractCommon):
             'i_star' in self.sampler_parameters and  \
             'v_sini' not in self.sampler_parameters:
 
-            pam00_index = self.parameter_index['rotation_period']
-            pam01_index = self.parameter_index['radius']
-            pam02_index = self.parameter_index['i_star']
+            pam00_index = self.sampler_parameters['rotation_period']
+            pam01_index = self.sampler_parameters['radius']
+            pam02_index = self.sampler_parameters['i_star']
 
             self.transformation['v_sini'] = get_3var_prot_rstar_istar_veq
             self.parameter_index['v_sini'] = [pam00_index, pam01_index, pam02_index]
@@ -236,8 +240,8 @@ class CommonStarParameters(AbstractCommon):
             'i_star' in self.sampler_parameters and  \
             'v_sini' not in self.parameter_index:
 
-            pam00_index = self.parameter_index['veq_star']
-            pam01_index = self.parameter_index['v_sini']
+            pam00_index = self.sampler_parameters['veq_star']
+            pam01_index = self.sampler_parameters['v_sini']
 
             self.transformation['v_sini'] = get_2var_vsini
             self.parameter_index['v_sini'] = [pam00_index, pam01_index]
@@ -248,8 +252,8 @@ class CommonStarParameters(AbstractCommon):
             'radius' in self.sampler_parameters and \
             'mass' not in self.parameter_index:
 
-            pam00_index = self.parameter_index['mass']
-            pam01_index = self.parameter_index['radius']
+            pam00_index = self.sampler_parameters['density']
+            pam01_index = self.sampler_parameters['radius']
 
             self.transformation['mass'] = get_2var_mass
             self.parameter_index['mass'] = [pam00_index, pam01_index]
@@ -260,9 +264,8 @@ class CommonStarParameters(AbstractCommon):
             'radius' in self.sampler_parameters and \
             'density' not in self.parameter_index:
 
-
-            pam00_index = self.parameter_index['mass']
-            pam01_index = self.parameter_index['radius']
+            pam00_index = self.sampler_parameters['mass']
+            pam01_index = self.sampler_parameters['radius']
 
             self.transformation['density'] = get_2var_rho
             self.parameter_index['density'] = [pam00_index, pam01_index]

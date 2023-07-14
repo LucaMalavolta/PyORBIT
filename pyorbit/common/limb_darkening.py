@@ -100,8 +100,8 @@ class LimbDarkening_2Pam(AbstractCommon):
         if 'ld_q1' in self.sampler_parameters and  \
             'ld_q2' in self.sampler_parameters:
 
-            pam00_index = self.parameter_index['ld_q1']
-            pam01_index = self.parameter_index['ld_q2']
+            pam00_index = self.sampler_parameters['ld_q1']
+            pam01_index = self.sampler_parameters['ld_q2']
 
             del self.parameter_index['ld_q1']
             del self.parameter_index['ld_q2']

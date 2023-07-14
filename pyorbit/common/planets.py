@@ -269,11 +269,14 @@ class CommonPlanets(AbstractCommon):
         if 'e_coso' in self.sampler_parameters and  \
             'e_sino' in self.sampler_parameters:
 
-            pam00_index = self.parameter_index['e_coso']
-            pam01_index = self.parameter_index['e_sino']
+            pam00_index = self.sampler_parameters['e_coso']
+            pam01_index = self.sampler_parameters['e_sino']
 
-            del self.parameter_index['e_coso']
-            del self.parameter_index['e_sino']
+            try:
+                del self.parameter_index['e_coso']
+                del self.parameter_index['e_sino']
+            except:
+                pass
 
             if 'e' not in self.parameter_index:
                 self.transformation['e'] = get_2var_e
@@ -288,10 +291,14 @@ class CommonPlanets(AbstractCommon):
         if 'sre_coso' in self.sampler_parameters and  \
             'sre_sino' in self.sampler_parameters:
 
-            pam00_index = self.parameter_index['sre_coso']
-            pam01_index = self.parameter_index['sre_sino']
-            del self.parameter_index['sre_coso']
-            del self.parameter_index['sre_sino']
+            pam00_index = self.sampler_parameters['sre_coso']
+            pam01_index = self.sampler_parameters['sre_sino']
+
+            try:
+                del self.parameter_index['sre_coso']
+                del self.parameter_index['sre_sino']
+            except:
+                pass
 
             if 'e' not in self.parameter_index:
                 self.transformation['e'] = get_2var_sre

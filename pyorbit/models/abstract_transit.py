@@ -115,7 +115,7 @@ class AbstractTransit(object):
 
         """ check if the differential rotation should be included in the model"""
         if self.use_differential_rotation:
-            self.list_pams_common.discard('v_sini')
+            #self.list_pams_common.discard('v_sini')
             self.list_pams_common.update(['alpha_rotation'])
 
             mc.common_models[self.stellar_ref].use_differential_rotation = True
@@ -125,13 +125,20 @@ class AbstractTransit(object):
                 mc.common_models[self.stellar_ref].use_stellar_inclination = True
                 mc.common_models[self.stellar_ref].use_stellar_rotation = True
                 mc.common_models[self.stellar_ref].use_stellar_radius = True
+                mc.common_models[self.stellar_ref].use_projected_velocity = False
             else:
                 mc.common_models[self.stellar_ref].use_equatorial_velocity =  True
                 mc.common_models[self.stellar_ref].use_stellar_inclination =  True
+                mc.common_models[self.stellar_ref].use_projected_velocity = False
 
             """ If stellar rotation is provided as a prior or as the outcome of the fit,
                 the code will check if the derived stellar radius is consistent with the prior
             """
+
+        if mc.common_models[self.stellar_ref].use_projected_velocity:
+            self.list_pams_common.update(['v_sini'])
+        else:
+            self.list_pams_common.discard('v_sini')
 
 
         if mc.common_models[self.stellar_ref].use_stellar_inclination:

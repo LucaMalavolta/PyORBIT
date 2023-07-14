@@ -31,7 +31,7 @@ class RossiterMcLaughling_Starry(AbstractModel, AbstractTransit):
             # Sky-projected angle between stellar rotation axis and normal of orbit plane [deg]
             'o_star',
             'i_star',  # Inclination of the star
-            'v_sini'  # projected rotational velocity of the star
+            #'v_sini'  # projected rotational velocity of the star
         }
 
         self.use_stellar_radius = True
@@ -89,7 +89,7 @@ class RossiterMcLaughling_Starry(AbstractModel, AbstractTransit):
         # obl = lambda_ang
         # inc = Is
 
-        ''' 
+        '''
         a = 6.039                       # Semi major axis [stellar radii]
 
         # Sky-projected angle between stellar rotation axis and normal of orbit plane [rad]
