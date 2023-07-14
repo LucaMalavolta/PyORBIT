@@ -153,12 +153,21 @@ class CommonStarParameters(AbstractCommon):
             The stellar inclination must be used as a free parameter
             and the veq_sini as a prior to be checked a posteriori, as the determination of the
             stellar inclination from the veq_sini could bias its distribution
+            From several experiments, I determined that PyDE/MCMC convergence is
+            much more difficult if v_eq and i_star are left as free parameters and
+            the output is compared with too many priors
         """
         self.use_stellar_rotation = kwargs.get('use_stellar_rotation', self.use_stellar_rotation)
         if self.use_stellar_rotation:
             self.use_equatorial_velocity = False
             self.use_stellar_inclination = True
             self.use_stellar_radius = True
+
+        """ check if the differential rotation should be included in the model"""
+        self.use_differential_rotation = kwargs.get('use_differential_rotation', self.use_differential_rotation)
+        if self.use_differential_rotation and not self.use_stellar_rotation:
+            self.use_equatorial_velocity = True
+            self.use_stellar_inclination = True
 
 
         """ The user can force the use of the equatorial velocity, the stellar inclination, 
@@ -167,8 +176,7 @@ class CommonStarParameters(AbstractCommon):
         self.use_stellar_inclination = kwargs.get('use_stellar_inclination', self.use_stellar_inclination)
         self.use_stellar_radius = kwargs.get('use_stellar_radius', self.use_stellar_radius)
 
-        """ check if the differential rotation should be included in the model"""
-        self.use_differential_rotation = kwargs.get('use_differential_rotation', self.use_differential_rotation)
+
 
         """ the user can decide how to deal with the mass-radius-density correlation
             density and (sometimes) radius can be involved in transit fit, while there is no way to measure the 
@@ -191,6 +199,7 @@ class CommonStarParameters(AbstractCommon):
             quit()
 
 
+
     def define_derived_parameters(self):
 
         # prima controlla se la variabile è una variabile del sample o derivata 
@@ -198,6 +207,7 @@ class CommonStarParameters(AbstractCommon):
         # se tutti i parametri necessari sono stati inseriti allora procedi con le variabili derivate 
         # il controllo va fatto ogni volt aperchè non sappiamo quali sono le variabili da derivare 
 
+        derived_list = []
 
         if not self.use_equatorial_velocity and \
             'rotation_period' in self.sampler_parameters and \
@@ -210,77 +220,75 @@ class CommonStarParameters(AbstractCommon):
             self.transformation['veq_star'] = get_2var_prot_rstar_veq
             self.parameter_index['veq_star'] = [pam00_index, pam01_index]
 
-            parameter_list = ['v_sini', 'rotation_period', 'radius']
-            derived_list.a = ['veq_star', 'i_star']
+            derived_list.append = ['veq_star']
 
-
-
-        if self.use_stellar_rotation and pam=='rotation_period':
-            self.transformation['rotation_period'] = get_var_val
-            self.parameter_index['rotation_period'] = ndim
-
-
-
-
-        if self.use_stellar_inclination and pam=='i_star':
-            self.transformation['i_star'] = get_var_val
-            self.parameter_index['i_star'] = ndim
-
-
-
-        if pam not in self.bounds:
-            self.bounds[pam] = self.default_bounds[pam]
-
-        if pam not in self.spaces:
-            self.spaces[pam] = self.default_spaces[pam]
-
-        output_lists['bounds'].append(self.bounds[pam])
-
-        if pam not in self.prior_pams:
-            self.prior_kind[pam] = self.default_priors[pam][0]
-            self.prior_pams[pam] = self.default_priors[pam][1]
-
-        nested_coeff = nested_sampling_prior_prepare(self.prior_kind[pam],
-                                                        output_lists['bounds'][-1],
-                                                        self.prior_pams[pam],
-                                                        self.spaces[pam])
-
-        output_lists['spaces'].append(self.spaces[pam])
-        output_lists['priors'].append([self.prior_kind[pam], self.prior_pams[pam], nested_coeff])
-
-        self.sampler_parameters[pam] = ndim
-        ndim += 1
-
-
-
-        if  'rotation_period' in self.sampler_parameters and \
+        if not self.use_equatorial_velocity and \
+            'rotation_period' in self.sampler_parameters and \
             'radius' in self.sampler_parameters and \
-            'veq_star' not in self.parameter_index:
+            'i_star' in self.sampler_parameters and  \
+            'v_sini' not in self.sampler_parameters:
 
             pam00_index = self.parameter_index['rotation_period']
             pam01_index = self.parameter_index['radius']
+            pam02_index = self.parameter_index['i_star']
 
-            self.transformation['veq_star'] = get_2var_prot_rstar_veq
-            self.parameter_index['veq_star'] = [pam00_index, pam01_index]
+            self.transformation['v_sini'] = get_3var_prot_rstar_istar_veq
+            self.parameter_index['v_sini'] = [pam00_index, pam01_index, pam02_index]
 
-            parameter_list = ['v_sini', 'rotation_period', 'radius']
-            derived_list.a = ['veq_star', 'i_star']
+            derived_list.append = ['v_sini']
 
-            get_2var_prot_rstar_veq
+        if 'veq_star' in self.sampler_parameters and \
+            'i_star' in self.sampler_parameters and  \
+            'v_sini' not in self.sampler_parameters:
 
+            pam00_index = self.parameter_index['veq_star']
+            pam01_index = self.parameter_index['v_sini']
 
-        parameter_list = ['rotation_period']
-        derived_list = []
+            self.transformation['v_sini'] = get_2var_vsini
+            self.parameter_index['v_sini'] = [pam00_index, pam01_index]
 
+            derived_list.append = ['v_sini']
 
+        if 'density' in self.sampler_parameters and  \
+            'radius' in self.sampler_parameters and  \
 
+            pam00_index = self.parameter_index['mass']
+            pam01_index = self.parameter_index['radius']
 
+            self.transformation['mass'] = get_2var_mass
+            self.parameter_index['mass'] = [pam00_index, pam01_index]
 
+            derived_list.append = ['mass']
 
+        if 'mass' in self.sampler_parameters and  \
+            'radius' in self.sampler_parameters and  \
 
+            pam00_index = self.parameter_index['mass']
+            pam01_index = self.parameter_index['radius']
 
+            self.transformation['density'] = get_2var_rho
+            self.parameter_index['density'] = [pam00_index, pam01_index]
+
+            derived_list.append = ['density']
+
+        for pam in derived_list:
+            if pam not in self.bounds:
+                self.bounds[pam] = self.default_bounds[pam]
+
+            if pam not in self.prior_pams:
+
+                if pam in self.bounds:
+                    self.prior_pams[pam] = self.bounds[pam]
+                else:
+                    self.prior_pams[pam] = self.default_bounds[pam]
+
+                self.prior_kind[pam] = 'Uniform'
+
+        return
 
     def define_special_parameter_properties(self, ndim, output_lists, pam):
+
+        return ndim, output_lists, False
 
         skip_first_parametrization = True
         skip_second_parametrization = True
@@ -291,94 +299,6 @@ class CommonStarParameters(AbstractCommon):
         # Prima controlla le variabili derivate 
         # se tutti i parametri necessari sono stati inseriti allora procedi con le variabili derivate 
         # il controllo va fatto ogni volt aperchè non sappiamo quali sono le variabili da derivare 
-
-
-        if not self.use_equatorial_velocity and \
-            'rotation_period' in self.sampler_parameters and \
-            'radius' in self.sampler_parameters and \
-            'veq_star' not in self.parameter_index:
-
-            pam00_index = self.parameter_index['rotation_period']
-            pam01_index = self.parameter_index['radius']
-
-            self.transformation['veq_star'] = get_2var_prot_rstar_veq
-            self.parameter_index['veq_star'] = [pam00_index, pam01_index]
-
-            parameter_list = ['v_sini', 'rotation_period', 'radius']
-            derived_list.a = ['veq_star', 'i_star']
-
-
-
-        if self.use_stellar_rotation and pam=='rotation_period':
-            self.transformation['rotation_period'] = get_var_val
-            self.parameter_index['rotation_period'] = ndim
-
-
-
-
-        if self.use_stellar_inclination and pam=='i_star':
-            self.transformation['i_star'] = get_var_val
-            self.parameter_index['i_star'] = ndim
-
-
-        if 
-
-        if pam not in self.bounds:
-            self.bounds[pam] = self.default_bounds[pam]
-
-        if pam not in self.spaces:
-            self.spaces[pam] = self.default_spaces[pam]
-
-        output_lists['bounds'].append(self.bounds[pam])
-
-        if pam not in self.prior_pams:
-            self.prior_kind[pam] = self.default_priors[pam][0]
-            self.prior_pams[pam] = self.default_priors[pam][1]
-
-        nested_coeff = nested_sampling_prior_prepare(self.prior_kind[pam],
-                                                        output_lists['bounds'][-1],
-                                                        self.prior_pams[pam],
-                                                        self.spaces[pam])
-
-        output_lists['spaces'].append(self.spaces[pam])
-        output_lists['priors'].append([self.prior_kind[pam], self.prior_pams[pam], nested_coeff])
-
-        self.sampler_parameters[pam] = ndim
-        ndim += 1
-
-        else:
-    
-
-
-        if  'rotation_period' in self.sampler_parameters and \
-            'radius' in self.sampler_parameters and \
-            'veq_star' not in self.parameter_index:
-
-            pam00_index = self.parameter_index['rotation_period']
-            pam01_index = self.parameter_index['radius']
-
-            self.transformation['veq_star'] = get_2var_prot_rstar_veq
-            self.parameter_index['veq_star'] = [pam00_index, pam01_index]
-
-            parameter_list = ['v_sini', 'rotation_period', 'radius']
-            derived_list.a = ['veq_star', 'i_star']
-
-            get_2var_prot_rstar_veq
-
-
-        parameter_list = ['rotation_period']
-            derived_list = []
-
-
-
-
-
-        self.use_equatorial_velocity = False
-            self.use_stellar_radius = True
-
-
-
-
 
         #print(self.parameter_index)
 

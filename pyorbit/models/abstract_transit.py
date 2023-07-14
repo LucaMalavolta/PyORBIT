@@ -91,27 +91,44 @@ class AbstractTransit(object):
 
     def _prepare_star_parameters(self, mc, **kwargs):
         """ Additional stellar parameters
-            in 9.2 the possibility of fixing a parameter for a specific model
-            may be suppressed
         """
+
+        self.use_differential_rotation = kwargs.get('use_differential_rotation', mc.common_models[self.stellar_ref].use_differential_rotation)
+        self.use_stellar_rotation = kwargs.get('use_differential_rotation', mc.common_models[self.stellar_ref].use_stellar_rotation)
+
+        """ check if the differential rotation should be included in the model"""
+        if self.use_differential_rotation:
+            self.list_pams_common.discard('v_sini')
+            self.list_pams_common.update(['alpha_rotation'])
+
+            mc.common_models[self.stellar_ref].use_differential_rotation = True
+
+            if self.use_stellar_rotation:
+                mc.common_models[self.stellar_ref].use_differential_rotation = True
+                mc.common_models[self.stellar_ref].use_stellar_inclination = True
+                mc.common_models[self.stellar_ref].use_stellar_rotation = True
+                mc.common_models[self.stellar_ref].use_stellar_radius = True
+            else:
+                mc.common_models[self.stellar_ref].use_equatorial_velocity =  True
+                mc.common_models[self.stellar_ref].use_stellar_inclination =  True
+
+            """ If stellar rotation is provided as a prior or as the outcome of the fit,
+                the code will check if the derived stellar radius is consistent with the prior
+            """
+
 
         if mc.common_models[self.stellar_ref].use_stellar_inclination:
             self.list_pams_common.update(['i_star'])
-        #else:
-        #    self.compute_star_inclination = True
 
         if mc.common_models[self.stellar_ref].use_equatorial_velocity:
             self.list_pams_common.update(['veq_star'])
-        #else:
-        #    self.compute_equatorial_velocity = True
 
         if mc.common_models[self.stellar_ref].use_stellar_rotation:
             self.list_pams_common.update(['rotation_period'])
-        #else:
-        #    self.compute_rotation_period = True
 
         if mc.common_models[self.stellar_ref].use_stellar_radius:
             self.list_pams_common.update(['radius'])
+
 
         self.convective_order = kwargs.get('convective_order', mc.common_models[self.stellar_ref].convective_order)
         self.mu_step = 0.00001
@@ -138,58 +155,6 @@ class AbstractTransit(object):
             print(' Maximum order for polynomial model for convective RV shift is 3')
             quit()
 
-
-        stellar_radius_names = [
-            'stellar_radius',
-            'radius',
-            'star_radius'
-        ]
-
-        for dict_name in stellar_radius_names:
-            if kwargs.get(dict_name, False):
-                self.code_options['radius'] = kwargs[dict_name]
-                self.list_pams_common.discard('radius')
-                self.fixed_stellar_radius = True
-
-        effective_temperature_names = [
-            'teff',
-            'temperature',
-            'eff_temperature'
-            'temperature_eff'
-        ]
-        for dict_name in effective_temperature_names:
-            if kwargs.get(dict_name, False):
-                self.code_options['temperature'] = kwargs[dict_name]
-                self.list_pams_common.discard('temperature')
-                self.fixed_stellar_temperature = True
-
-        """ Check if the stellar rotation period is given as a starting value
-            If so, the angular rotation of the star and the stellar inclination
-            are computed through the rotation period
-        """
-
-        self.code_options['rotation_keyword'] = 'rotation_period'
-        rotation_period_names =[
-            'rotation_period',
-            'rotational_period',
-            'stellar_period',
-            'stellar_rotation',
-            'Prot',
-            'activity',
-            'activity_model',
-            'activity_rotation',
-            'stellar_rotation_from_activity',
-            'stellar_period_from_activity',
-            'Prot_from_activity',
-            'star_rotation_from_activity',
-            'star_period_from_activity',
-            'rotation_period_from_activity'
-        ]
-        for dict_name in rotation_period_names:
-            if kwargs.get(dict_name, False):
-                self.code_options['rotation_period'] = kwargs[dict_name]
-                self.list_pams_common.discard('rotation_period')
-                self.fixed_stellar_rotation = True
 
     def _prepare_limb_darkening_coefficients(self, mc, **kwargs):
         """ Setting up the limb darkening calculation"""

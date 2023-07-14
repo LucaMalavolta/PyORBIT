@@ -218,39 +218,32 @@ def get_2var_veq_radius_rot(var, fix, i):
         out = (2*np.pi) * var[:, i[1]]  / var[:, i[0]] * (constants.Rsun /constants.d2s)
     return out
 
-def get_3var_vsini_prot_rstar_istar(var, fix, i):
-    #first parameter: vsini 
-    #second parameter: p_rot
-    #third parameter: rstar 
-    # istar = arcsin( vsini / (2piR / P) )
-    # i[deg] = arcsin( vsini[km/s] / (2pi R[km] / P[d])) 
-    if len(np.shape(var)) == 1:
-        out = np.arcsin(var[i[0]] 
-                        / ((2* np.pi * var[i[2]] * constants.Rsun)
-                        / (var[i[1]] * constants.d2s ))) * constants.rad2deg
-    else:
-        out = np.arcsin(var[:,i[0]] 
-                        / ((2* np.pi * var[:,i[2]] * constants.Rsun)
-                        / (var[:,i[1]] * constants.d2s ))) * constants.rad2deg
 
-    return out
 
 
 def get_2var_prot_rstar_veq(var, fix, i):
     #first parameter: p_rot
-    #second parameter: rstar
+    #second parameter: r_star
     #  v = 2piR / P
     #  v[km/s] = 2pi R[km] / P[d]
     if len(np.shape(var)) == 1:
         out =  2* np.pi * var[i[1]] * constants.Rsun / (var[i[0]] * constants.d2s )
     else:
         out =  2* np.pi * var[:,i[1]] * constants.Rsun / (var[:,i[0]] * constants.d2s )
-
-
     return out
 
 
-
+def get_3var_prot_rstar_istar_veq(var, fix, i):
+    #first parameter: p_rot
+    #second parameter: r_star
+    #third parameter: i_star
+    #  v = 2piR / P
+    #  v[km/s] = 2pi R[km] / P[d]
+    if len(np.shape(var)) == 1:
+        out =  2* np.pi * var[i[1]] * constants.Rsun / (var[i[0]] * constants.d2s ) * np.sin(var[i[2]] * constants.deg2rad)
+    else:
+        out =  2* np.pi * var[:,i[1]] * constants.Rsun / (var[:,i[0]] * constants.d2s ) *np.sin(var[:, i[2]] * constants.deg2rad)
+    return out
 
 
 
