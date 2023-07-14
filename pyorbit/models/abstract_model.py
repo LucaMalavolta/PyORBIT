@@ -108,13 +108,6 @@ class AbstractModel(object):
     def initialize_model_dataset(self, mc, dataset, **kwargs):
         pass
 
-    def define_special_parameter_properties(self,
-                                           ndim,
-                                           output_lists,
-                                           dataset_name,
-                                           par):
-        return ndim, output_lists, False
-
     def define_parameter_properties(self, ndim, output_lists, dataset_name):
         """[summary]
             Boundaries are defined in this class, where all the dataset-related
@@ -142,11 +135,6 @@ class AbstractModel(object):
             self.spaces[dataset_name] = {}
 
         for par in self.list_pams_dataset:
-            ndim, output_lists, applied = \
-                self.define_special_parameter_properties(
-                    ndim, output_lists, dataset_name, par)
-            if applied:
-                continue
 
             if par not in self.bounds[dataset_name]:
                 self.bounds[dataset_name][par] = self.default_bounds[par]
@@ -209,8 +197,8 @@ class AbstractModel(object):
                 output_lists['spaces'].append(self.spaces[dataset_name][par])
                 output_lists['priors'].append(
                     [self.prior_kind[dataset_name][par],
-                     self.prior_pams[dataset_name][par],
-                     nested_coeff])
+                        self.prior_pams[dataset_name][par],
+                        nested_coeff])
 
                 self.parameter_index[dataset_name][par] = ndim
                 self.sampler_parameters[dataset_name][par] = ndim
@@ -218,7 +206,7 @@ class AbstractModel(object):
 
         return ndim, output_lists
 
-    def define_special_starting_point(self, starting_point, dataset_name, par):
+    def define_starting_point_from_derived(self, starting_point, dataset_name, par):
         return False
 
     def define_starting_point(self, starting_point, dataset_name):
@@ -227,7 +215,7 @@ class AbstractModel(object):
             return
 
         for par in self.starts[dataset_name]:
-            if self.define_special_starting_point(
+            if self.define_starting_point_from_derived(
                     starting_point, dataset_name, par):
                 continue
 
@@ -242,7 +230,7 @@ class AbstractModel(object):
             elif self.spaces[dataset_name][par] == 'Logarithmic':
                 start_converted = np.log2(self.starts[dataset_name][par])
             starting_point[self.sampler_parameters[dataset_name]
-                           [par]] = start_converted
+                            [par]] = start_converted
 
     def convert(self, theta, dataset_name):
         parameter_values = {}
@@ -290,6 +278,7 @@ class AbstractModel(object):
 
         return prior_out
 
+
     def index_recenter_bounds(self, dataset_name):
         ind_list = []
         for par in list(set(self.recenter_pams_dataset)
@@ -298,17 +287,12 @@ class AbstractModel(object):
 
         return ind_list
 
-    def special_index_recenter_bounds(self, dataset_name):
-        return []
-
-    def special_fix_population(self, pop_mean, population, dataset_name):
-        return population
 
     def compute(self, parameter_values, dataset, x0_input=None):
         return 0.00
 
 
-    def transfer_parameter_properties(self, mc, dataset, par_original, par_subset, 
+    def transfer_parameter_properties(self, mc, dataset, par_original, par_subset,
     common_pam=False, dataset_pam=False):
 
         if common_pam:
@@ -366,43 +350,3 @@ class AbstractModel(object):
             else:
                 self.prior_kind[dataset.name_ref].update({par_subset: par_update0})
                 self.prior_pams[dataset.name_ref].update({par_subset: par_update1})
-
-
-    def _subset_transfer_priors(self, mc, dataset, par_original, par_subset):
-        #! deprecated module
-        self.transfer_parameter_properties(mc, dataset, par_original, par_subset, dataset_pam=True)
-
-
-    """ 
-    def _subset_transfer_priors(self, mc, dataset, par_original, par_subset):
-
-        self.list_pams_dataset.update([par_subset])
-
-        for common_model in self.common_ref:
-            if par_original not in mc.common_models[common_model].list_pams:
-                continue
-
-            if par_original in self.bounds[dataset.name_ref]:
-                par_update = self.bounds[dataset.name_ref][par_original]
-            else:
-                par_update = mc.common_models[common_model].default_bounds[par_original]
-
-            self.bounds[dataset.name_ref].update({par_subset: par_update})
-
-            if par_original in self.spaces[dataset.name_ref]:
-                par_update = self.spaces[dataset.name_ref][par_original]
-            else:
-                par_update = mc.common_models[common_model].default_spaces[par_original]
-
-            self.spaces[dataset.name_ref].update({par_subset: par_update})
-
-            if par_original in self.prior_pams[dataset.name_ref]:
-                par_update0 = self.prior_kind[dataset.name_ref][par_original]
-                par_update1 = self.prior_pams[dataset.name_ref][par_original]
-            else:
-                par_update0 = mc.common_models[common_model].default_priors[par_original][0]
-                par_update1 = mc.common_models[common_model].default_priors[par_original][1]
-
-            self.prior_kind[dataset.name_ref].update({par_subset: par_update0})
-            self.prior_pams[dataset.name_ref].update({par_subset: par_update1})
-    """

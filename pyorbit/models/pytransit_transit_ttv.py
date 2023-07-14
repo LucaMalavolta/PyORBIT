@@ -60,15 +60,15 @@ class PyTransit_Transit_TTV(AbstractModel, AbstractTransit):
                                                             exptimes=self.code_options[dataset.name_ref]['exp_time'],
                                                             nsamples=self.code_options[dataset.name_ref]['sample_factor'])
 
-    def define_special_parameter_properties(self,
-                                            ndim,
-                                            output_lists,
-                                            dataset_name,
-                                            par):
+    #def define_special_parameter_properties(self,
+    #                                        ndim,
+    #                                        output_lists,
+    #                                        dataset_name,
+    #                                        par):
 
-        if par == 'Tc' and (par not in self.bounds[dataset_name]):
-            self.bounds[dataset_name][par] = self.code_options[dataset_name]['Tc_boundaries']
-        return ndim, output_lists, False
+    #    if par == 'Tc' and (par not in self.bounds[dataset_name]):
+    #        self.bounds[dataset_name][par] = self.code_options[dataset_name]['Tc_boundaries']
+    #    return ndim, output_lists, False
 
     def compute(self, parameter_values, dataset, x0_input=None):
         """

@@ -171,7 +171,7 @@ class LocalLightcurvePolyDetrending(AbstractModel):
             par_original = 'coeff_c0'
             par_addition = 'lcpd_c0'
 
-            self._subset_transfer_priors(mc, dataset, par_original, par_addition)
+            self.transfer_parameter_properties(mc, dataset, par_original, par_addition, dataset_pam=True)
 
         for data_name in dataset.ancillary.dtype.names:
             if data_name == skip_name: continue
@@ -219,14 +219,14 @@ class LocalLightcurvePolyDetrending(AbstractModel):
             par_addition = 'x_zero_' + data_name
 
             self.fix_list[dataset.name_ref][par_addition] = np.asarray([x_zero, 0.0000])
-            self._subset_transfer_priors(mc, dataset, par_original, par_addition)
+            self.transfer_parameter_properties(mc, dataset, par_original, par_addition, dataset_pam=True)
 
             for i_order in range(1, self.ancillary_order[data_name]+1):
 
                 par_original = 'coeff_poly'
                 par_addition = 'lcpd_' + data_name + '_c'+repr(i_order)
 
-                self._subset_transfer_priors(mc, dataset, par_original, par_addition)
+                self.transfer_parameter_properties(mc, dataset, par_original, par_addition, dataset_pam=True)
 
             self.lightcurve_ancillary[dataset.name_ref][data_name] = dataset.ancillary[data_name] - x_zero
 

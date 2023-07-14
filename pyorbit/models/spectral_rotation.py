@@ -66,10 +66,10 @@ class SpectralRotation(AbstractModel):
                 wave_array = dataset.x
 
             return PyAstroFastRotBroad(wave_array,
-                                   solar_flux,
-                                   parameter_values['ld_c1'],
-                                   parameter_values['v_sini'],
-                                   effWvl =self.reference_wavelength)
+                                        solar_flux,
+                                        parameter_values['ld_c1'],
+                                        parameter_values['v_sini'],
+                                        effWvl =self.reference_wavelength)
 
         else:
             return x0_input*0.
@@ -129,7 +129,7 @@ class SubsetSpectralRotation(AbstractModel):
 
             par_original = 'rv_center'
             par_subset = 'rv_center_sub'+repr(i_sub)
-            self._subset_transfer_priors(mc, dataset, par_original, par_subset)
+            self.transfer_parameter_properties(mc, dataset, par_original, par_subset, dataset_pam=True)
 
     def compute(self, parameter_values, dataset, x0_input=None):
         """
@@ -159,10 +159,10 @@ class SubsetSpectralRotation(AbstractModel):
                     * np.exp(-(dataset.x[sel_data] - parameter_values[par])**2 / (2 * sigma**2))
 
                 y_output[sel_data] = PyAstroFastRotBroad(wave_array[sel_data],
-                                                     solar_flux,
-                                                     parameter_values['ld_c1'],
-                                                     parameter_values['v_sini'],
-                                                     effWvl=self.reference_wavelength)
+                                                            solar_flux,
+                                                            parameter_values['ld_c1'],
+                                                            parameter_values['v_sini'],
+                                                            effWvl=self.reference_wavelength)
             return y_output
         else:
             return x0_input*0.
@@ -228,7 +228,7 @@ class SubsetSpectralRotationPolynomial(AbstractModel):
 
             par_original = 'rv_center'
             par_subset = 'rv_center_sub'+repr(i_sub)
-            self._subset_transfer_priors(mc, dataset, par_original, par_subset)
+            self.transfer_parameter_properties(mc, dataset, par_original, par_subset, dataset_pam=True)
 
     def compute(self, parameter_values, dataset, x0_input=None):
         """

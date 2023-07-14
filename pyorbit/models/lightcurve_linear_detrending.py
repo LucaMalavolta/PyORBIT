@@ -128,7 +128,7 @@ class LocalLightcurveLinearDetrending(AbstractModel):
         if kwargs.get('include_zero_point', False) or self.normalization_model:
             par_original = 'coeff_c0'
             par_addition = 'lcld_c0'
-            self._subset_transfer_priors(mc, dataset, par_original, par_addition)
+            self.transfer_parameter_properties(mc, dataset, par_original, par_addition, dataset_pam=True)
 
         for data_name in dataset.ancillary.dtype.names:
             if data_name == skip_name: continue
@@ -136,7 +136,7 @@ class LocalLightcurveLinearDetrending(AbstractModel):
             par_original = 'coeff_linear'
             par_addition = 'lcld_coeff_'+data_name
 
-            self._subset_transfer_priors(mc, dataset, par_original, par_addition)
+            self.transfer_parameter_properties(mc, dataset, par_original, par_addition, dataset_pam=True)
 
 
             par_original = 'x_zero'
@@ -148,7 +148,7 @@ class LocalLightcurveLinearDetrending(AbstractModel):
                 x_zero = np.average(dataset.ancillary[data_name])
 
             self.fix_list[dataset.name_ref][par_addition] = np.asarray([x_zero, 0.0000])
-            self._subset_transfer_priors(mc, dataset, par_original, par_addition)
+            self.transfer_parameter_properties(mc, dataset, par_original, par_addition, dataset_pam=True)
 
             self.lightcurve_ancillary[dataset.name_ref][data_name] = dataset.ancillary[data_name] - x_zero
 

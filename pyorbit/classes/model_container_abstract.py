@@ -325,7 +325,6 @@ class ModelContainer(object):
                     self.models[model_name].convert(theta, dataset_name))
 
                 """ residuals will be computed following the definition in Dataset class
-                """
                 if getattr(self.models[model_name], 'residuals_analysis', False):
 
                     skip_loglikelihood = True
@@ -343,7 +342,7 @@ class ModelContainer(object):
                         residuals_analysis[model_name]['x_gp_model'] = None
                         residuals_analysis[model_name]['x_gp_parameters'] = None
                     else:
-                        """ Subtract the priors previously added, to avoid including the priors twice """
+                        # Subtract the priors previously added, to avoid including the priors twice
                         log_priors -= self.models[model_name].return_priors(theta, dataset_name)
 
                         residuals_dataset_label = 'y'
@@ -351,6 +350,7 @@ class ModelContainer(object):
                         residuals_analysis[model_name]['y_gp_parameters'] = None
                     continue
 
+                """
 
                 if getattr(self.models[model_name], 'internal_likelihood', False):
                     logchi2_gp_model = model_name
@@ -464,13 +464,10 @@ class ModelContainer(object):
         ind_list = []
 
         for model_name, model in self.common_models.items():
-            ind_list.extend(model.special_index_recenter_bounds())
             ind_list.extend(model.index_recenter_bounds())
 
         for dataset_name, dataset in self.dataset_dict.items():
             for model in dataset.models:
-                ind_list.extend(
-                    self.models[model].special_index_recenter_bounds(dataset.name_ref))
                 ind_list.extend(
                     self.models[model].index_recenter_bounds(dataset.name_ref))
 
@@ -503,19 +500,4 @@ class ModelContainer(object):
 
         return population
 
-    def check_backward_compatibility(self):
-
-        if parse_version(getattr(self, 'pyorbit_version', '9.0.22')) < parse_version('9.1.0'):
-            print('Back-compatibility with version < 9.0 activated \n')
-            for model_name, model in self.common_models.items():
-                model.parameter_index = model.variable_index
-                model.sampler_parameters = model.variable_sampler
-
-            for model_name, model in self.models.items():
-                model.parameter_index = model.variable_index
-                model.sampler_parameters = model.variable_sampler
-
-            for dataset_name, dataset in self.dataset_dict.items():
-                dataset.parameter_index = dataset.variable_index
-                dataset.sampler_parameters = dataset.variable_sampler
 

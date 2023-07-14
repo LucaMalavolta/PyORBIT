@@ -68,8 +68,8 @@ class AbstractCommon(object):
     def initialize_model(self, mc, **kwargs):
         pass
 
-    def define_special_parameter_properties(self, ndim, output_lists, var):
-        return ndim, output_lists, False
+    #def define_special_parameter_properties(self, ndim, output_lists, var):
+    #    return ndim, output_lists, False
 
     def define_derived_parameters(self):
         pass
@@ -89,11 +89,11 @@ class AbstractCommon(object):
                 are not yet included in list_pams[pl_name] at this stage
             """
 
-            ndim, output_lists, applied = \
-                self.define_special_parameter_properties(
-                    ndim, output_lists, pam)
-            if applied:
-                continue
+            # ndim, output_lists, applied = \
+            #     self.define_special_parameter_properties(
+            #        ndim, output_lists, pam)
+            #if applied:
+            #    continue
 
             if pam not in self.bounds:
                 self.bounds[pam] = self.default_bounds[pam]
@@ -162,7 +162,7 @@ class AbstractCommon(object):
                 self.parameter_index[pam] = ndim
                 self.sampler_parameters[pam] = ndim
                 ndim += 1
-        
+
         self.define_derived_parameters()
 
         return ndim, output_lists
@@ -174,7 +174,7 @@ class AbstractCommon(object):
                 theta, self.fixed, self.parameter_index[pam])
         return parameter_values
 
-    def define_special_starting_point(self, starting_point, var):
+    def define_starting_point_from_derived(self, starting_point, var):
         return False
 
     def define_starting_point(self, starting_point):
@@ -182,7 +182,7 @@ class AbstractCommon(object):
         for sampler_pam in list(set(self.starts)
                                 and set(self.sampler_parameters)):
 
-            if self.define_special_starting_point(starting_point, sampler_pam):
+            if self.define_starting_point_from_derived(starting_point, sampler_pam):
                 continue
 
             if not self.starts.get(sampler_pam, False): continue
@@ -247,12 +247,6 @@ class AbstractCommon(object):
         for pam in list(set(self.recenter_pams) & set(self.sampler_parameters)):
             ind_list.append(self.sampler_parameters[pam])
         return ind_list
-
-    def special_index_recenter_bounds(self):
-        return []
-
-    def special_fix_population(self, pop_mean, population):
-        return population
 
     def _transfer_priors(self, mc, pam_original, pam_addition):
         #! deprecated module

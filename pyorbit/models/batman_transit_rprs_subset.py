@@ -87,7 +87,7 @@ class Batman_Transit_RpRs_Subset(AbstractModel, AbstractTransit):
             par_original = 'R_Rs'
             par_subset = 'R_Rs_'+repr(i_sub)
 
-            self._subset_transfer_priors(mc, dataset, par_original, par_subset)
+            self.transfer_parameter_properties(mc, dataset, par_original, par_subset, dataset_pam=True)
 
             sub_dataset = dataset.x[(dataset.submodel_id == i_sub)]
 

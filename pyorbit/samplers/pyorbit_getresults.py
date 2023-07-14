@@ -58,7 +58,6 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
         mc, starting_point, population, prob, \
             sampler_chain, sampler_lnprobability, sampler_acceptance_fraction, _ = \
             emcee_load_from_cpickle(dir_input)
-        mc.check_backward_compatibility()
 
         if hasattr(mc.emcee_parameters, 'version'):
             emcee_version = mc.emcee_parameters['version'][0]
@@ -133,7 +132,6 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
         mc, starting_point, population, prob, \
             sampler_chain, sampler_lnprobability, sampler_acceptance_fraction, _ = \
             zeus_load_from_cpickle(dir_input)
-        mc.check_backward_compatibility()
 
         pars_input(config_in, mc, reload_zeus=True)
 
@@ -197,7 +195,6 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
         os.system('mkdir -p ' + dir_output)
 
         mc = nested_sampling_load_from_cpickle(dir_input)
-        mc.check_backward_compatibility()
 
         mc.model_setup()
         mc.initialize_logchi2()
@@ -233,7 +230,6 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
         os.system('mkdir -p ' + dir_output)
 
         mc = nested_sampling_load_from_cpickle(dir_input)
-        mc.check_backward_compatibility()
 
         # pars_input(config_in, mc)
 
@@ -280,7 +276,6 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
         os.system('mkdir -p ' + dir_output)
 
         mc = nested_sampling_load_from_cpickle(dir_input)
-        mc.check_backward_compatibility()
 
         mc.model_setup()
         mc.initialize_logchi2()
@@ -466,7 +461,6 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
 
 
         mc = nested_sampling_load_from_cpickle(dir_input)
-        mc.check_backward_compatibility()
 
         mc.model_setup()
         mc.initialize_logchi2()

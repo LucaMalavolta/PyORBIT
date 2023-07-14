@@ -49,6 +49,23 @@ class AbstractTransit(object):
 
     def _prepare_planetary_parameters(self, mc, **kwargs):
 
+        if mc.common_models[self.planet_ref].parametrization[:8] == 'Ford2006' \
+            and mc.common_models[self.planet_ref].orbit != 'circular':
+            self.list_pams_common.discard('e')
+            self.list_pams_common.discard('omega')
+
+            self.list_pams_common.update(['e_coso'])
+            self.list_pams_common.update(['e_sino'])
+
+        elif mc.common_models[self.planet_ref].parametrization[:8] != 'Standard' \
+            and mc.common_models[self.planet_ref].orbit != 'circular':
+                # 'Eastman2013' is the standard choice
+            self.list_pams_common.discard('e')
+            self.list_pams_common.discard('omega')
+
+            self.list_pams_common.update(['sre_coso'])
+            self.list_pams_common.update(['sre_sino'])
+
         try:
             multivariate_pams = mc.common_models[self.stellar_ref].multivariate_pams
         except AttributeError:
@@ -161,10 +178,21 @@ class AbstractTransit(object):
 
         self.limb_darkening_model = kwargs['limb_darkening_model']
         self.ld_vars = [0.00] * kwargs['limb_darkening_ncoeff']
-        for i_coeff in range(1, kwargs['limb_darkening_ncoeff'] + 1):
-            par = 'ld_c' + repr(i_coeff)
-            self.ldvars[par] = i_coeff - 1
-            self.list_pams_common.update([par])
+
+        for common_model in self.common_ref:
+            if mc.common_models[common_model].model_class == 'limb_darkening':
+                ld_parametrization = getattr(mc.common_models[common_model], 'parametrization', 'Standard')
+
+        if ld_parametrization=='Kipping':
+            self.ldvars['ld_c1'] = 0
+            self.ldvars['ld_c2'] = 1
+            self.list_pams_common.update(['ld_q1'])
+            self.list_pams_common.update(['ld_q2'])
+        else:
+            for i_coeff in range(1, kwargs['limb_darkening_ncoeff'] + 1):
+                par = 'ld_c' + repr(i_coeff)
+                self.ldvars[par] = i_coeff - 1
+                self.list_pams_common.update([par])
 
         if self.limb_darkening_model == 'uniform':
             self.compute_limb_darkening = self._limb_darkening_uniform
@@ -185,18 +213,18 @@ class AbstractTransit(object):
     def _prepare_dataset_options(self, mc, dataset, **kwargs):
 
         supersample_names = ['supersample_factor',
-                             'supersample',
-                             'supersampling',
-                             'oversample_factor',
-                             'oversample',
-                             'oversampling',
-                             'sample_factor',
-                             'sample',
-                             'sampling'
-                             'nsample_factor',
-                             'nsample',
-                             'nsampling'
-                             ]
+                                'supersample',
+                                'supersampling',
+                                'oversample_factor',
+                                'oversample',
+                                'oversampling',
+                                'sample_factor',
+                                'sample',
+                                'sampling'
+                                'nsample_factor',
+                                'nsample',
+                                'nsampling'
+                            ]
 
         sample_factor = 1
         exposure_time = 0.01
@@ -208,12 +236,12 @@ class AbstractTransit(object):
                 sample_factor = kwargs[dict_name]
 
         exptime_names = ['exposure_time',
-                         'exposure',
-                         'exp_time',
-                         'exptime',
-                         'obs_duration',
-                         'integration',
-                         ]
+                            'exposure',
+                            'exp_time',
+                            'exptime',
+                            'obs_duration',
+                            'integration',
+                        ]
 
         for dict_name in exptime_names:
             if kwargs[dataset.name_ref].get(dict_name, False):

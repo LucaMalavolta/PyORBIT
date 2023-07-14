@@ -93,77 +93,45 @@ class LimbDarkening_2Pam(AbstractCommon):
             print('ERROR in configuration file - limb darkening: parametrization not supported')
             quit()
 
-    def define_special_parameter_properties(self, ndim, output_lists, var):
-        """
+    def define_derived_parameters(self):
 
-        :param ndim:
-        :param output_lists:
-        :param var:
-        :return:
-        """
+        derived_list = []
 
-        if 'ld_c1' in self.fix_list or \
-           'ld_c2' in self.fix_list:
-            return ndim, output_lists, False
+        if 'ld_q1' in self.sampler_parameters and  \
+            'ld_q2' in self.sampler_parameters:
 
-        for var_check in ['ld_c1', 'ld_c2', 'ld_q1', 'ld_q2']:
-            if var_check in self.sampler_parameters:
-                return ndim, output_lists, False
+            pam00_index = self.parameter_index['ld_q1']
+            pam01_index = self.parameter_index['ld_q2']
 
-        if self.parametrization[:8] == 'Standard':
-            self.transformation['ld_c1'] = get_var_val
-            self.parameter_index['ld_c1'] = ndim
-            self.transformation['ld_c2'] = get_var_val
-            self.parameter_index['ld_c2'] = ndim + 1
-            variable_list = ['ld_c1', 'ld_c2']
-        else:
-            self.transformation['ld_c1'] = get_2var_c1
-            self.parameter_index['ld_c1'] = [ndim, ndim + 1]
-            self.transformation['ld_c2'] = get_2var_c2
-            self.parameter_index['ld_c2'] = [ndim, ndim + 1]
-            variable_list = ['ld_q1', 'ld_q2']
+            del self.parameter_index['ld_q1']
+            del self.parameter_index['ld_q2']
 
-        for var in variable_list:
-            if var not in self.bounds:
-                self.bounds[var] = self.default_bounds[var]
+            if 'ld_c1' not in self.parameter_index:
+                self.transformation['ld_c1'] = get_2var_c1
+                self.parameter_index['ld_c1'] = [pam00_index, pam01_index]
+                derived_list.append('ld_c1')
 
-            self.spaces[var] = self.default_spaces[var]
+            if 'ld_c2' not in self.parameter_index:
+                self.transformation['ld_c2'] = get_2var_c2
+                self.parameter_index['ld_c2'] = [pam00_index, pam01_index]
+                derived_list.append('ld_c2')
 
-            output_lists['bounds'].append(self.bounds[var])
+        for pam in derived_list:
+            if pam not in self.bounds:
+                self.bounds[pam] = self.default_bounds[pam]
 
-            if var not in self.prior_pams:
-                self.prior_kind[var] = self.default_priors[var][0]
-                self.prior_pams[var] = self.default_priors[var][1]
+            if pam not in self.prior_pams:
 
-            nested_coeff = nested_sampling_prior_prepare(self.prior_kind[var],
-                                                         output_lists['bounds'][-1],
-                                                         self.prior_pams[var],
-                                                         self.spaces[var])
-
-            output_lists['spaces'].append(self.spaces[var])
-            output_lists['priors'].append(
-                [self.prior_kind[var], self.prior_pams[var], nested_coeff])
-
-            self.sampler_parameters[var] = ndim
-            ndim += 1
-
-        for var in ['ld_c1', 'ld_c2']:
-
-            if var not in self.bounds:
-                self.bounds[var] = self.default_bounds[var]
-
-            if var not in self.prior_pams:
-
-                if var in self.bounds:
-                    self.prior_pams[var] = self.bounds[var]
+                if pam in self.bounds:
+                    self.prior_pams[pam] = self.bounds[pam]
                 else:
-                    self.prior_pams[var] = self.default_bounds[var]
+                    self.prior_pams[pam] = self.default_bounds[pam]
 
-                self.prior_kind[var] = 'Uniform'
+                self.prior_kind[pam] = 'Uniform'
 
-        return ndim, output_lists, True
+        return
 
-    def define_special_starting_point(self, starting_point, var_sampler):
+    def define_starting_point_from_derived(self, starting_point, var_sampler):
         if var_sampler == 'ld_q1' or var_sampler == 'ld_q2':
 
             if 'ld_c1' in self.starts and 'ld_c2' in self.starts:
@@ -225,35 +193,35 @@ class LimbDarkening_4Pam(AbstractCommon):
 
 
 class LimbDarkening_Linear(LimbDarkening_1Pam):
-    model_class = 'ld_linear'
+    model_class = 'limb_darkening'
     ld_type = 'linear'
 
 
 class LimbDarkening_Quadratic(LimbDarkening_2Pam):
-    model_class = 'ld_quadratic'
+    model_class = 'limb_darkening'
     ld_type = 'quadratic'
 
 
 class LimbDarkening_SquareRoot(LimbDarkening_2Pam):
-    model_class = 'ld_square-root'
+    model_class = 'limb_darkening'
     ld_type = 'square-root'
 
 
 class LimbDarkening_Logarithmic(LimbDarkening_2Pam):
-    model_class = 'ld_logarithmic'
+    model_class = 'limb_darkening'
     ld_type = 'logarithmic'
 
 
 class LimbDarkening_Exponential(LimbDarkening_2Pam):
-    model_class = 'ld_exponential'
+    model_class = 'limb_darkening'
     ld_type = 'exponential'
 
 
 class LimbDarkening_Power2(LimbDarkening_1Pam):
-    model_class = 'ld_power2'
+    model_class = 'limb_darkening'
     ld_type = 'power2'
 
 
 class LimbDarkening_NonLinear(LimbDarkening_4Pam):
-    model_class = 'ld_nonlinear'
+    model_class = 'limb_darkening'
     ld_type = 'nonlinear'

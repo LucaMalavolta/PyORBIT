@@ -7,7 +7,6 @@ class CommonPlanets(AbstractCommon):
     Inherited class from AbstractCommon
 
     For computational reason it is better to fit :math:`\sqrt{e}\sin{\omega}` and :math:`\sqrt{e}\cos{\omega}`.
-    :func:`define_special_parameter_properties` and :func:`define_special_starting_point` must be redefined
 
     Attributes:
         :model_class (string): identify the kind of class
@@ -263,108 +262,65 @@ class CommonPlanets(AbstractCommon):
 
         print()
 
+    def define_derived_parameters(self):
 
-    def define_special_parameter_properties(self, ndim, output_lists, var):
-        """ Boundaries definition for eccentricity :math:`e` and argument of pericenter :math:`\omega`
+        derived_list = []
 
-        The internal variable to be fitted are :math:`\sqrt{e}\sin{\omega}` and :math:`\sqrt{e}\cos{\omega}`.
-        With this parametrization it is not possible to naturally put a boundary to :math:`e` without affecting the
-        :math:`\omega`.
-        Additionally the subroutine will check if either :math:`e` or :math:`\omega` have been provided as fixed values.
-        If true, the parametrization will consist of :math:`e` or :math:`\omega`  instead of
-        :math:`\sqrt{e}\sin{\omega}` and :math:`\sqrt{e}\cos{\omega}`
+        if 'e_coso' in self.sampler_parameters and  \
+            'e_sino' in self.sampler_parameters:
 
-        Args:
-            :ndim: number of parameters already processed by other models
-            :var: input variable, either :math:`e` or :math:`\omega`
-        Returns:
-            :ndim: updated dimensionality of the problem
-            :bounds_list: additional boundaries to be added to the original list
-        """
+            pam00_index = self.parameter_index['e_coso']
+            pam01_index = self.parameter_index['e_sino']
 
-        if var == 'P':
-            if var in self.fix_list:
-                self.period_average = self.fix_list['P'][0]
-            else:
-                if var in self.bounds:
-                    self.period_average = np.average(self.bounds[var])
-                else:
-                    self.period_average = np.average(self.default_bounds[var])
-            return ndim, output_lists, False
+            del self.parameter_index['e_coso']
+            del self.parameter_index['e_sino']
 
-        if not(var == "e" or var == "omega"):
-            return ndim, output_lists, False
-
-        if 'e' in self.fix_list or \
-           'omega' in self.fix_list:
-            return ndim, output_lists, False
-
-        for var_check in ['e', 'omega', 'e_coso', 'e_sino', 'sre_coso', 'sre_sino']:
-            if var_check in self.sampler_parameters:
-                return ndim, output_lists, False
-
-        if self.parametrization[:8] == 'Standard':
-            self.transformation['e'] = get_var_val
-            self.parameter_index['e'] = ndim
-            self.transformation['omega'] = get_var_val
-            self.parameter_index['omega'] = ndim + 1
-            variable_list = ['e', 'omega']
-
-        else:
-            if self.parametrization[:8] == 'Ford2006':
+            if 'e' not in self.parameter_index:
                 self.transformation['e'] = get_2var_e
-                self.parameter_index['e'] = [ndim, ndim + 1]
-                variable_list = ['e_coso', 'e_sino']
-            else:
-                # 'Eastman2013' is the standard choice
+                self.parameter_index['e'] = [pam00_index, pam01_index]
+                derived_list.append('e')
+
+            if 'omega' not in self.parameter_index:
+                self.transformation['omega'] = get_2var_o
+                self.parameter_index['omega'] = [pam00_index, pam01_index]
+                derived_list.append('omega')
+
+        if 'sre_coso' in self.sampler_parameters and  \
+            'sre_sino' in self.sampler_parameters:
+
+            pam00_index = self.parameter_index['sre_coso']
+            pam01_index = self.parameter_index['sre_sino']
+            del self.parameter_index['sre_coso']
+            del self.parameter_index['sre_sino']
+
+            if 'e' not in self.parameter_index:
                 self.transformation['e'] = get_2var_sre
-                self.parameter_index['e'] = [ndim, ndim + 1]
-                variable_list = ['sre_coso', 'sre_sino']
+                self.parameter_index['e'] = [pam00_index, pam01_index]
+                derived_list.append('e')
 
-            self.transformation['omega'] = get_2var_o
-            self.parameter_index['omega'] = [ndim, ndim + 1]
+            if 'omega' not in self.parameter_index:
+                self.transformation['omega'] = get_2var_o
+                self.parameter_index['omega'] = [pam00_index, pam01_index]
+                derived_list.append('omega')
 
-        for var in variable_list:
 
-            if var not in self.bounds:
-                self.bounds[var] = self.default_bounds[var]
+        for pam in derived_list:
+            if pam not in self.bounds:
+                self.bounds[pam] = self.default_bounds[pam]
 
-            if var not in self.spaces:
-                self.spaces[var] = self.default_spaces[var]
+            if pam not in self.prior_pams:
 
-            output_lists['bounds'].append(self.bounds[var])
-
-            if var not in self.prior_pams:
-                self.prior_kind[var] = self.default_priors[var][0]
-                self.prior_pams[var] = self.default_priors[var][1]
-
-            nested_coeff = nested_sampling_prior_prepare(self.prior_kind[var],
-                                                          output_lists['bounds'][-1],
-                                                          self.prior_pams[var],
-                                                          self.spaces[var])
-
-            output_lists['spaces'].append(self.spaces[var])
-            output_lists['priors'].append([self.prior_kind[var], self.prior_pams[var], nested_coeff])
-
-            self.sampler_parameters[var] = ndim
-            ndim += 1
-
-        for var in ['e', 'omega']:
-            if var not in self.bounds:
-                self.bounds[var] = self.default_bounds[var]
-
-            if var not in self.prior_pams:
-
-                if var in self.bounds:
-                    self.prior_pams[var] = self.bounds[var]
+                if pam in self.bounds:
+                    self.prior_pams[pam] = self.bounds[pam]
                 else:
-                    self.prior_pams[var] = self.default_bounds[var]
+                    self.prior_pams[pam] = self.default_bounds[pam]
 
-                self.prior_kind[var] = 'Uniform'
+                self.prior_kind[pam] = 'Uniform'
 
-        return ndim, output_lists, True
+        return
 
-    def define_special_starting_point(self, starting_point, var_sampler):
+
+    def define_starting_point_from_derived(self, starting_point, var_sampler):
         """
         Eccentricity and argument of pericenter require a special treatment
 
@@ -408,38 +364,3 @@ class CommonPlanets(AbstractCommon):
             return True
 
         return False
-
-    def special_fix_population(self, population):
-
-        n_pop = np.size(population, axis=0)
-        if 'e_sino' in self.sampler_parameters and \
-           'e_coso' in self.sampler_parameters:
-                e_sino_list = self.sampler_parameters['e_sino']
-                e_coso_list = self.sampler_parameters['e_coso']
-                e_pops = np.sqrt(population[:, e_sino_list] ** 2 + population[:, e_coso_list] ** 2)
-                o_pops = np.arctan2(population[:, e_sino_list], population[:, e_coso_list], dtype=np.double)
-                # e_mean = (self[planet_name].bounds['e'][0] +
-                # self[planet_name].bounds['e'][1]) / 2.
-                for ii in range(0, n_pop):
-                    if not self.bounds['e'][0] + 0.02 <= e_pops[ii] < \
-                                    self.bounds['e'][1] - 0.02:
-                        e_random = np.random.uniform(self.bounds['e'][0],
-                                                     self.bounds['e'][1])
-                        population[ii, e_sino_list] = e_random * np.sin(o_pops[ii])
-                        population[ii, e_coso_list] = e_random * np.cos(o_pops[ii])
-
-        if 'sre_sino' in self.sampler_parameters and \
-           'sre_coso' in self.sampler_parameters:
-                sre_sino_list = self.sampler_parameters['sre_sino']
-                sre_coso_list = self.sampler_parameters['sre_coso']
-                e_pops = population[:, sre_sino_list] ** 2 + population[:, sre_coso_list] ** 2
-                o_pops = np.arctan2(population[:, sre_sino_list], population[:, sre_coso_list], dtype=np.double)
-                # e_mean = (self[planet_name].bounds['e'][0] +
-                # self[planet_name].bounds['e'][1]) / 2.
-                for ii in range(0, n_pop):
-                    if not self.bounds['e'][0] + 0.02 <= e_pops[ii] < \
-                                    self.bounds['e'][1] - 0.02:
-                        e_random = np.random.uniform(self.bounds['e'][0],
-                                                     self.bounds['e'][1])
-                        population[ii, sre_sino_list] = np.sqrt(e_random) * np.sin(o_pops[ii])
-                        population[ii, sre_coso_list] = np.sqrt(e_random) * np.cos(o_pops[ii])

@@ -33,6 +33,23 @@ class RVkeplerian(AbstractModel):
 
     def initialize_model(self, mc, **kwargs):
 
+        if mc.common_models[self.planet_ref].parametrization[:8] == 'Ford2006' \
+            and mc.common_models[self.planet_ref].orbit != 'circular':
+            self.list_pams_common.discard('e')
+            self.list_pams_common.discard('omega')
+
+            self.list_pams_common.update(['e_coso'])
+            self.list_pams_common.update(['e_sino'])
+
+        elif mc.common_models[self.planet_ref].parametrization[:8] != 'Standard' \
+            and mc.common_models[self.planet_ref].orbit != 'circular':
+                # 'Eastman2013' is the standard choice
+            self.list_pams_common.discard('e')
+            self.list_pams_common.discard('omega')
+
+            self.list_pams_common.update(['sre_coso'])
+            self.list_pams_common.update(['sre_sino'])
+
         if mc.common_models[self.planet_ref].use_time_of_transit:
             self.list_pams_common.update(['Tc'])
             self.use_time_of_transit = True

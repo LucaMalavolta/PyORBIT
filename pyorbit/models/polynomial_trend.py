@@ -341,7 +341,7 @@ class SubsetPolynomialTrend(AbstractModel):
                 par_original = 'poly_c'+repr(i_order)
                 par_subset = 'poly_sub'+repr(i_sub)+'_c'+repr(i_order)
 
-                self._subset_transfer_priors(mc, dataset, par_original, par_subset)
+                self.transfer_parameter_properties(mc, dataset, par_original, par_addition, dataset_pam=True)
 
             sub_dataset = dataset.x[(dataset.submodel_id==i_sub)]
 
@@ -355,7 +355,7 @@ class SubsetPolynomialTrend(AbstractModel):
 
             self.fix_list[dataset.name_ref][par_subset] = np.asarray([xzero_ref, 0.0000])
 
-            self._subset_transfer_priors(mc, dataset, par_original, par_subset)
+            self.transfer_parameter_properties(mc, dataset, par_original, par_addition, dataset_pam=True)
 
 
     def compute(self, parameter_values, dataset, x0_input=None):
