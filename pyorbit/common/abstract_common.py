@@ -162,6 +162,8 @@ class AbstractCommon(object):
                 self.parameter_index[pam] = ndim
                 self.sampler_parameters[pam] = ndim
                 ndim += 1
+        
+        self.define_derived_parameters()
 
         return ndim, output_lists
 
