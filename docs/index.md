@@ -79,10 +79,6 @@ Feel free to submit your retrofitting acronym!
 [github-link]: https://github.com/LucaMalavolta/PyORBIT
 
 
-```{admonition} Be careful
-Documentation is still work in progress!
-```
-
 ## Table of contents
 
 ```{toctree}

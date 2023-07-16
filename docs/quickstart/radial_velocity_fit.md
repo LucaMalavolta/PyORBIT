@@ -265,6 +265,7 @@ common:
   star:
     ...
 ```
+
 You can see that the mass as *slightly* increased as a result of the updated inclination
 
 ```

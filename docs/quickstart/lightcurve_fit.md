@@ -32,7 +32,7 @@ Keep in mind that **0** activates a flag, **-1** deactives it, folllowing the Py
 
 ## Configuration file 
 
-```{code-cell} yaml
+```{code-block} yaml
 :lineno-start: 1
 
 inputs:
@@ -87,9 +87,8 @@ solver:
 There is a lot to process:
 
 **Fit of the time of inferior conjuction $T_c$** (equivalent to the central time of transit in the case of a circular orbit) is the way to go, as we now we have a good guess of the orbital period and time of transit. Although the $P$ and $T_C$ boundaries are quite tight, they can still be considered uninformative priors as the final posteriors will have much narrow distributions.
-To enable the use
-* Appending `_Tcent` to the
-  parametrization label will replace the mean longitude `mean_long` with the
+To enable the use of $T_C$ instead of the mean longitude `mean_long`, you need to append `_Tcent` to the name of the parametrization you want to use
+  parametrization label will replace  with the
   central time of transit `Tc`. 
 
 ```{code-cell} yaml
