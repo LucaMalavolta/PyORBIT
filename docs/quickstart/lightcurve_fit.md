@@ -86,10 +86,31 @@ solver:
 
 There is a lot to process:
 
-**Orbit parametrization** 
+**Fit of the time of inferior conjuction $T_c$** (equivalent to the central time of transit in the case of a circular orbit) is the way to go, as we now we have a good guess of the orbital period and time of transit. Although the $P$ and $T_C$ boundaries are quite tight, they can still be considered uninformative priors as the final posteriors will have much narrow distributions.
+To enable the use
+* Appending `_Tcent` to the
+  parametrization label will replace the mean longitude `mean_long` with the
+  central time of transit `Tc`. 
+
+```{code-cell} yaml
+:lineno-start: 7
+
+common:
+    planets:
+        b:
+            orbit: keplerian
+            parametrization: Standard
+            boundaries:
+                P: [0.50, 5.0]
+                K: [0.01, 300.0]
+                e: [0.00, 0.95]
+```
+
 
 **Stellar density** is expressed in Solar units, so a star with one Solar mass and one Solar radius will have a density equal to one. If you know mass anda radius of a star in Solar units, then the density will be simply $\rho_\star = M_\star / R_\star^3$, without multiplicative constants.
 
 **Limb darkening** coefficients are included under the `star` common model for conceptual reasons, although you must remeber that lightcurves obtained with different filters will require specific limb darkening paramters. When using a *quadratic* limb darkening law, you can use the parametrization introduced by [Kipping](https://ui.adsabs.harvard.edu/abs/2013MNRAS.435.2152K/abstract) cby simply activating the flag as in the example
 
 **Light curve modellling** can be performed either with `batman` ([Kreidberg 2015](https://ui.adsabs.harvard.edu/abs/2015PASP..127.1161K/abstract)) or `PyTransit` ([Pairviainen 2015](https://arxiv.org/abs/1504.07433)). You can choose the model by specifying `batman_transit` or `pytransit_transit` respectively. 
+
+## 

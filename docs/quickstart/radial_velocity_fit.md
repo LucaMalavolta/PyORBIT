@@ -137,6 +137,36 @@ mean_long                  264         -117          127    (15-84 p)
 
 More details on the interpretation of the results can be found in the page [Interpreting the output](results_interpretation).
 
+## Note on the orbital parametrization
+
+Unless otherwise specified, `PyORBIT`  assumes that the orbital period of the planet is not knwon.
+If you want to explore a large range of period, you should avoid the parametrization introduced by [Eastman et al. 2013](https://ui.adsabs.harvard.edu/abs/2013PASP..125...83E/abstract) involving the time of inferior conjuction $T_C$ (sometimes confused with the time of central transit) as you may end up with several peaks in the posterior of $T_C$ spaced according to the orbital period of the planet (formally correct, but not optimal for the computational point of view).
+In this case I suggest to use the parametrization introduced by [Ford 2006](https://ui.adsabs.harvard.edu/abs/2006ApJ...642..505F/abstract) in section 4.3. In `PyORBIT`, the sum of the *argument of pericenter of the planet $\omega_p$* and the *mean anomaly at the reference time $\M_0$* is called *mean longitude*, as the sum of the two angles is indeed equal to the formal defitiion of mean longitude when the *ascending node* is equal to zero. With this parametrization, you are not forced to use ad-hoc boundaries for the $T_C$ to avoid multiple peaks in its posterior, as the problem is solved at its roots.
+
+If you want to fit for an eccentric orbit, you can do it by changing the orbit keyword to keplerian. You
+
+```{code-cell} yaml
+:lineno-start: 7
+
+common:
+    planets:
+        b:
+            orbit: keplerian
+            parametrization: Standard
+            boundaries:
+                P: [0.50, 5.0]
+                K: [0.01, 300.0]
+                e: [0.00, 0.95]
+```
+
+There are three available parametrization for eccentricity $e$ and argument of pericenter of the planet $\omega_p$:
+* `Standard`:  $e$ and $\omega_p$ are fitted directly,
+* `Ford2006`: the free parameters are $e \sin{\omega_p}$ and
+  $e \cos{\omega_p}$, as proposed by [Ford 2006](https://ui.adsabs.harvard.edu/abs/2006ApJ...642..505F/abstract). 
+* `Eastman2013`: the free parameters are $\sqrt{e} \sin{\omega_p}$ and 
+  $\sqrt{e} \cos{\omega_p}$. This is the default choice for non-circular orbits. 
+In all cases it is possible to put a prior on the eccentricity, even if it is a derived parameter.
+
 ## Multiple datasets
 
 To add more radial velocity datasets, you just need to include them in the `input` sections alongside with the model you want to use to analyze the, - in this case, still `radial_velocities`. The rest of the configuration file is unchanged.

@@ -14,10 +14,10 @@ Each *planet* is defined by the following parameters
 | mean_long | Mean longitude of the orbit, assuming $\Omega=0$ | degrees |
 | e      | eccentricity of the orbit | adimensional |
 | omega  | argument of periastron of the *planet* $\omega_p$  | degrees |
-| e_coso | $ e \cos{\omega}$ in Ford 2006 parametrization | adimensional |
-| e_sino | $ e \sin{\omega}$ in Ford 2006 parametrization | adimensional |
-| sre_coso | $ \sqrt{e} \cos{\omega}$ in Eastman 2013 parametrization | adimensional |
-| sre_sino | $ \sqrt{e} \sin{\omega}$ in Eastman 2013 parametrization | adimensional |
+| e_coso | $ e \cos{\omega_p}$ in Ford 2006 parametrization | adimensional |
+| e_sino | $ e \sin{\omega_p}$ in Ford 2006 parametrization | adimensional |
+| sre_coso | $ \sqrt{e} \cos{\omega_p}$ in Eastman 2013 parametrization | adimensional |
+| sre_sino | $ \sqrt{e} \sin{\omega_p}$ in Eastman 2013 parametrization | adimensional |
 | M_Me | planet mass in Earth masses | $M_\oplus$ |
 | R_Rs | planet radius in stellar radii | $R_\star$ |
 | a_Rs | semi-major axis of th eorbit in stellar radii | $R_\star$ |
@@ -48,9 +48,9 @@ The default keyword is highlighted in bold face.
 * accepted values: `Standard` | `Standard_Tcent` | `Ford2006` |
   `Ford2006_Tcent` | **`Eastman2013`** |  `Eastman2013_Tcent`
 * define the parametrization for eccentricity and argument of periastron:
-  ($e$, $\omega$) for `Standard`, ($e \sin{\omega}$,
-  $e \cos{\omega}$) for `Ford2006`, ($\sqrt{e} \sin{\omega}$,
-  $\sqrt{e} \cos{\omega}$) for `Eastman2013`.
+  ($e$, $\omega_p$) for `Standard`, ($e \sin{\omega_p}$,
+  $e \cos{\omega_p}$) for `Ford2006`, ($\sqrt{e} \sin{\omega_p}$,
+  $\sqrt{e} \cos{\omega_p}$) for `Eastman2013`.
 * Appending `_Tcent` to the
   parametrization label will replace the mean longitude `mean_long` with the
   central time of transit `Tc`.
