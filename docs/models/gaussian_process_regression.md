@@ -2,18 +2,10 @@
 
 # Gaussian process regression
 
-Gaussian process regression (GPR) is a nonparametric, Bayesian approach to regression which 
-[Haywood at al. 2014](https://ui.adsabs.harvard.edu/abs/2014MNRAS.443.2517H/abstract) 
+Gaussian process regression (GPR) is a nonparametric, Bayesian approach to regression which has been very succesful for the analysis of radia lvelocity datasets i nthe presence of stellar activity, e.g., [Haywood at al. 2014](https://ui.adsabs.harvard.edu/abs/2014MNRAS.443.2517H/abstract),  [Grunblatt et al. 2015](https://ui.adsabs.harvard.edu/abs/2015ApJ...808..127G/abstract).
 
-In the original Gaussian process framework ([Rajpaul et al. 2015](https://ui.adsabs.harvard.edu/abs/2015MNRAS.452.2269R/abstract), [Rajpaul et al. 2021](https://ui.adsabs.harvard.edu/abs/2021MNRAS.507.1847R/abstract)) the radial velocity datasets ($\Delta \mathrm{RV}$, after removing the deterministic part) and two activity indicators (in this example, $\mathrm{BIS}$ and  $\log{R^{\prime}_\mathrm{HK}}$) are modelled as a liner combination of an underlying Gaussian proccess $G(t)$  and its first derivative $G^\prime (t)$.
+The first appearence of GPR in `PyORBIT` dates back to 2018.
 
-```{math}
-:label: gp_framework_original
-
-\Delta \mathrm{RV} & = V_c G(t) + V_r G^\prime (t) \\
-\mathrm{BIS} & = B_c G(t) + B_r G^\prime (t) \\
-\log{R^{\prime}_\mathrm{HK}} & = L_c G(t) \\
-```
 
 ### Kernels
 
@@ -34,13 +26,11 @@ It is common to have a factor 2 in the denominator of the aperiodic variation (i
 
 ### Improvements
 
-In `PyORBIT` the framework implementation has been expanded to support an unlimited number of datasets. Additionally, it is not required for the datasets to have the same dimensions, thus allowing the use of several RV datasets even if activity indicators are not available for all of them.
-
-The coefficients $X_c$ and $X_c$ are thus renamed in *con_amp* and *rot_amp*, with the reference dataset easily identifiable from the terminal output.
+In `PyORBIT` unlimited number of additional datasets can be included for the simultaneous training of the hyperparameters. All the parameters will be shared except the amplitude of covariance matrix, which is dataset-dependent. Each dataset will be characterized by its own covariance matrix.
 
 ## Model definition and requirements
 
-- model name: ``gp_multidimensional_quasiperiodic``
+- model name: ``gp_quasiperiodic``
 - required common objects : ``activity``
 
 ## Keywords
@@ -55,106 +45,90 @@ Model-wide keywords, with the default value in bold face.
 * accepted values: `True` | **`False`**
 * if activated, it ensures that the decay time scale of the activity regions $\lambda$ is at least twice the rotational period of the star $\theta$
 
-**derivative**
-* accepted values: list of dataset using the model
-* if not provided, default is **`True`** for all datasets except `H-alpha` `S_index` `Ca_HK`, and `FWHM`. If provided, default is **`False`** for all the dataset not explicitly mentioned.
-* If **`True`**, the first derivative of the ubderlying Gaussian process is included, otherwise `rot_amp`F is fixed to zero.
 
 ## Examples
 
-In the following example, ore RV dataset comes together with two activity indicators, the `BIS` and the `FWHM` of the CCF, the latter as replacement of  $\log{R^{\prime}_\mathrm{HK}}$.
+In the following example, ore RV dataset comes together with two activity indicators, the `BIS`  of the CCF and the `S index`
 
-Here `gp_multidimensional` is the label that we assign to the `gp_multidimensional_quasiperiodic` model. The label is assigned to each dataset, including the RV dataset for which also the RV model is included.
-
-The `common:planets` section includes thre planets, of which one is transiting - with Gaussian priors on the period and time of inferior conjunction -  and two non-transiting planets with a prior on the eccentricity. 
 The `common:activity` section provides the hyperparameters for the GP shared among all the datasets. The example shows how to assign boundaries and priors to the parameters.
-The model keywords and the boundaries for the dataset-specific parameters are listed in `models:gp_multidimensional` 
+The model keywords and the boundaries for the dataset-specific parameters are listed in `models:gp_quasiperiodic`
 
-```yaml
+```{code-block} yaml
+:lineno-start: 1
+
 inputs:
   RVdata:
-    file: RVS_PyORBIT.dat
+    file: datasets/K2-141_RV_PyORBIT.dat
     kind: RV
     models:
       - radial_velocities
-      - gp_multidimensional
+      - gp_quasiperiodic
   BISdata:
-    file: BIS_PyORBIT.dat
+    file: datasets/K2-141_BIS_PyORBIT.dat
     kind: BIS
     models:
-      - gp_multidimensional
-  FWHMdata:
-    file: FWHM_PyORBIT.dat
-    kind: FWHM
+      - gp_quasiperiodic
+  Sdata:
+    file: datasets/K2-141_Sindex_PyORBIT.dat
+    kind: S_index
     models:
-      - gp_multidimensional
+      - gp_quasiperiodic
 common:
   planets:
     b:
       orbit: circular
-      parametrization: Eastman2013_Tcent
+      use_time_inferior_conjunction: True
       boundaries:
-        P: [2.21000, 2.240000]
+        P: [0.2750, 0.2850]
         K: [0.001, 20.0]
-        Tc: [59144.60, 59144.63]
+        Tc: [57744.00, 57744.10]
       priors:
-        P: ['Gaussian', 2.2241951, 0.00000030]
-        Tc: ['Gaussian', 59144.616171, 0.000284]
+        P: ['Gaussian', 0.280324956, 0.000000067]
+        Tc: ['Gaussian', 57744.071508, 0.000103]
+      spaces:
+        P: Linear
+        K: Linear
     c:
       orbit: keplerian
+      parametrization: Eastman2013
+      use_time_inferior_conjunction: True
       boundaries:
-        P: [2.0, 100.0]
-        K: [0.001, 30.0]
+        P: [7.70, 7.80]
+        K: [0.001, 20.0]
+        Tc: [58371.00, 58371.10]
         e: [0.00, 0.70]
       priors:
         e: ['Gaussian', 0.00, 0.098]
-    d:
-      orbit: keplerian
-      boundaries:
-        P: [2.0, 100.0]
-        K: [0.001, 30.0]
-        e: [0.00, 0.70]
-      priors:
-        e: ['Gaussian', 0.00, 0.098]
+        P: ['Gaussian', 7.7489943, 0.0000149]
+        Tc: ['Gaussian', 58371.07415, 0.000652]
+      spaces:
+        P: Linear
+        K: Linear
   activity:
     boundaries:
-      Prot: [20.0, 30.0]
-      Pdec: [30.0, 1000.0]
-      Oamp: [0.01, 1.0]
-    priors:
-      Prot: ['Gaussian', 14.00, 0.50]
-      Oamp: ['Gaussian', 0.35, 0.035]
+      Prot: [10.0, 20.0]
+      Pdec: [20.0, 1000.0]
+      Oamp: [0.001, 1.0]
+    #priors:
+    #  Oamp: ['Gaussian', 0.35, 0.035]
   star:
     star_parameters:
       priors:
-        mass: ['Gaussian', 0.65, 0.05]
-        radius: ['Gaussian', 0.624, 0.005]
+        mass: ['Gaussian', 0.708, 0.028]
+        radius: ['Gaussian', 0.681, 0.018]
         density: ['Gaussian', 2.65, 0.08]
 models:
   radial_velocities:
     planets:
       - b
       - c
-      - d
-  gp_multidimensional:
-    model: gp_multidimensional_quasiperiodic
+  gp_quasiperiodic:
+    model: gp_quasiperiodic
     common: activity
-    hyperparameters_condition: True
-    rotation_decay_condition: True
-    RVdata:
-      boundaries:
-        rot_amp: [0.0, 20.0] #at least one must be positive definite
-        con_amp: [-20.0, 20.0]
-      derivative: True
-    BISdata:
-      boundaries:
-        rot_amp: [-20.0, 20.0]
-        con_amp: [-20.0, 20.0]
-      derivative: True
-    FWHMdata:
-      boundaries:
-        con_amp: [-50., 50.]
-      derivative: False
+    hyperparameters_condition: True  # Condition from Rajpaul 2017, Rajpaul+2021
+    rotation_decay_condition: True # It forces the decay timescale to be at least twice the rotational period
+    boundaries:
+      Hamp: [0.0, 100.0] # same range for all datasets
 parameters:
   Tref: 59200.00
 solver:
@@ -163,39 +137,14 @@ solver:
     npop_mult: 4
   emcee:
     npop_mult: 4
-    nsteps: 100000
-    nburn: 25000
+    nsteps: 50000
+    nburn: 20000
     nsave: 25000
     thin: 100
-    #use_threading_pool: False
-  nested_sampling:
-    nlive: 1000
-    sampling_efficiency: 0.30
   recenter_bounds: True
 
 ```
 
-```{tip}
-Since the coefficients are always copuled, there is a degenracy between a given set and the opposite one (i.e., all the coefficient with opposite sign). This degeneracy can be solved by force one coefficient to be positive, e.g., `rot_amp` for the `RV_data` in the example.
-```
-
-A simpler way to prepare the configuration file if you are not specifying the boundaries is to list the datasets with derivatives under the same keyword:
-
-```yaml
-...
-  gp_multidimensional:
-    model: gp_multidimensional_quasiperiodic
-    common: activity
-    hyperparameters_condition: True
-    rotation_decay_condition: True
-    derivative:
-      RVdata: True
-      BISdata: True
-      FWHMdata: False
-parameters:
-...
-
-```
 
 
 ## Model parameters
@@ -207,5 +156,4 @@ The following parameters will be inherited from the common model (column *Common
 | Prot      | rotational period of the star $\theta$ | common | ``activity``     | |
 | Pdec      | Decay time scale of active regions $\lambda$ | common | ``activity``     | |
 | Oamp | Coherence scale $w$ | common | ``activity`` |   |
-| rot_amp    | coefficient of $G(t)$ component | dataset | ``activity``     | |
-| con_amp    | coefficient of $G^\prime (t)$ component | dataset | ``activity``     | |
+| Hamp  | Amplitude of the kernel | dataset | ``activity``     | |

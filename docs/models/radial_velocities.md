@@ -38,7 +38,7 @@ The following parameters will be inherited from the common model (column *Common
 | P      | orbital period of the planet | common | ``planets``     | |
 | K      | Radial velocity semiamplitude | common | ``planets``     | |
 | mean_long | mean longitude of the orbit, assuming $\Omega=0$ | common | ``planets`` | (1) |
-| Tc     | Central time of transit              | common | ``planets``     | (2)|
+| Tc     | Time of inferior conjunction              | common | ``planets``     | (2)|
 | e      | eccentricity of the orbit  | common | ``planets`` | (3) |
 | omega  | argument of pericenter of the *planet* $\omega_p$  | common |  ``planets`` | (3) |
 | e_coso | $ e \cos{\omega}$ in Ford 2006 parametrization | common |  ``planets`` | (4) |
@@ -48,8 +48,8 @@ The following parameters will be inherited from the common model (column *Common
 
 Notes:
 
-  1. replaced by ``Tc`` when ``_Tcent`` parametrization is used
-  2. ``_Tcent`` parametrization only
+  1. replaced by ``Tc`` when ``use_time_inferior_conjunction: True``
+  2. ``use_time_inferior_conjunction: True`` parametrization only
   3. ``Standard`` parametrization only
   4. ``Ford2006`` parametrization only
   5. ``Eastman2013`` parametrization only

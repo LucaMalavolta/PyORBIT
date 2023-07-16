@@ -44,6 +44,14 @@ When the rotation period is known - together with the stellar radius - the stell
 - *Multidimensional Gaussian Process*
 The model has been introduced a few years back, but now it can finally take advante of imrpoved parallelization 
 
+- *tinyGP for better performances*
+Working on both *classic* and *multidimensional* Gaussian Process, although the former is showing some JAX problems when producing the output results.
+
+```{admonition} No back-compatibility
+Version 10 is not compatible with the results obtained with version 9.
+If you have been using the development version of V10, you may run into incompatibility issues as well.
+```
+
 # Documentation updates
 
 Documentions is being updated slowly but steadily, with new pages appearing every week. Below you can check which pages have been updated recently
@@ -51,12 +59,14 @@ Documentions is being updated slowly but steadily, with new pages appearing ever
 - *Quickstart* 
   + Radial velocities **done**
   + Lighcurve analysis **done**
-  + Combined fit **in progress** 
+  + Combined fit **to be done** 
 - *Data modelling*
   + Planetary RV signal **done**
   + Correlated datasets **done**
   + Gaussian processes regression **in progress**
   + Multidimensional GPs **done**
+  + CHEOPS detrending **foreseen**
+
 
 ## References
 

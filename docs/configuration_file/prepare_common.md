@@ -14,7 +14,7 @@ Let's have a look at this example where we have included a transiting planet in 
      planets:
        b:
          orbit: circular
-         parametrization: Eastman2013_Tcent
+         use_time_inferior_conjunction: True
          boundaries:
            P: [0.25, 0.31]
            K: [0.01, 100.0]

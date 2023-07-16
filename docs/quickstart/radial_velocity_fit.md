@@ -43,7 +43,7 @@ This structure reflects the logical organization of PyORBIT, and it will become 
 
 Look at the example below:
 
-```{code-cell} yaml
+```{code-block} yaml
 :lineno-start: 1
 
 inputs:
@@ -147,8 +147,8 @@ In this case I suggest to use the parametrization introduced by [Ford 2006](http
 
 If you want to fit for an eccentric orbit, you can do it by changing the orbit keyword to keplerian. You
 
-```{code-cell} yaml
-:lineno-start: 7
+```{code-block} yaml
+:lineno-start: 1
 
 common:
     planets:

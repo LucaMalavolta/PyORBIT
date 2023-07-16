@@ -3,9 +3,31 @@
 
 ### A code for exoplanet orbital parameters and stellar activity.
 ***
-### `PyORBIT` version 9.1 by Luca Malavolta - March 2023
+### `PyORBIT` version 10 by Luca Malavolta - July 2023
 
-**News**
+
+
+## Updates on version 10
+
+- *Improved speed*
+After several failed attempts, I finally managed to apply the advices from the [emcee parallelization page](https://emcee.readthedocs.io/en/stable/tutorials/parallel/) to the rather complex structure of PyORBIT. The speed up is noticeable for large datasets (e.g., photometry) 
+
+- *Rossiter McLaughlin* 
+Rossiter McLaughlin effect can now be precisely modelled using the CCF simulation approach employed in [Covino et al. 2013](https://ui.adsabs.harvard.edu/abs/2013A%26A...554A..28C/abstract).
+When the rotation period is known - together with the stellar radius - the stellar inclination can be derived avoiding the bias reported by [Masuda & Winn 2020](https://ui.adsabs.harvard.edu/abs/2020AJ....159...81M/abstract)
+
+- *Multidimensional Gaussian Process*
+The model has been introduced a few years back, but now it can finally take advante of imrpoved parallelization 
+
+- *tinyGP for better performances*
+Working on both *classic* and *multidimensional* Gaussian Process, although the former is showing some JAX problems when producing the output results.
+
+```{admonition} No back-compatibility
+Version 10 is not compatible with the results obtained with version 9.
+If you have been using the development version of V10, you may run into incompatibility issues as well.
+```
+
+## Updates on version 9
 
 * Added celerite2 SHO term
 

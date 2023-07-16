@@ -63,7 +63,7 @@ In the following example, ore RV dataset comes together with two activity indica
 
 Here `gp_multidimensional` is the label that we assign to the `gp_multidimensional_quasiperiodic` model. The label is assigned to each dataset, including the RV dataset for which also the RV model is included.
 
-The `common:planets` section includes thre planets, of which one is transiting - with Gaussian priors on the period and time of inferior conjunction -  and two non-transiting planets with a prior on the eccentricity. 
+The `common:planets` section includes three planets, of which one is transiting - with Gaussian priors on the period and time of inferior conjunction -  and two non-transiting planets with a prior on the eccentricity. 
 The `common:activity` section provides the hyperparameters for the GP shared among all the datasets. The example shows how to assign boundaries and priors to the parameters.
 The model keywords and the boundaries for the dataset-specific parameters are listed in `models:gp_multidimensional` 
 
@@ -89,7 +89,7 @@ common:
   planets:
     b:
       orbit: circular
-      parametrization: Eastman2013_Tcent
+      use_time_inferior_conjunction: True
       boundaries:
         P: [2.21000, 2.240000]
         K: [0.001, 20.0]
