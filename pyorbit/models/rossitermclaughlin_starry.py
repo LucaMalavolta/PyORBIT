@@ -165,7 +165,7 @@ class RossiterMcLaughling_Starry(AbstractModel, AbstractTransit):
                                       "gamma": parameter_values['R_Rs']})
         else:
 
-            if self.use_time_of_transit:
+            if self.use_time_inferior_conjunction:
                 Tperi = kepler_exo.kepler_Tc2Tperi_Tref(parameter_values['P'],
                                                         var_tc,
                                                         parameter_values['e'],

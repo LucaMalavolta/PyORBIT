@@ -44,7 +44,7 @@ When the rotation period is known - together with the stellar radius - the stell
 - *Multidimensional Gaussian Process*
 The model has been introduced a few years back, but now it can finally take advante of imrpoved parallelization 
 
-# Updates om documentation 
+# Documentation updates
 
 Documentions is being updated slowly but steadily, with new pages appearing every week. Below you can check which pages have been updated recently
 
@@ -52,7 +52,11 @@ Documentions is being updated slowly but steadily, with new pages appearing ever
   + Radial velocities **done**
   + Lighcurve analysis **done**
   + Combined fit **in progress** 
-
+- *Data modelling*
+  + Planetary RV signal **done**
+  + Correlated datasets **done**
+  + Gaussian processes regression **in progress**
+  + Multidimensional GPs **done**
 
 ## References
 

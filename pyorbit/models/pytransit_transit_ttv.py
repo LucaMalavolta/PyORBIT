@@ -35,13 +35,9 @@ class PyTransit_Transit_TTV(AbstractModel, AbstractTransit):
         self.pytransit_models = {}
         self.pytransit_plot = {}
 
-        """ Dataset-specific time of transit boundaries are stored here"""
-        self.transit_time_boundaries = {}
-
-
     def initialize_model(self, mc, **kwargs):
-        """ Force the use of the central time of transit"""
-        self.use_time_of_transit = True
+        """ Force the use of the time of inferior conjunction"""
+        mc.common_models[self.planet_ref].use_time_inferior_conjunction = True
 
         self._prepare_planetary_parameters(mc, **kwargs)
         self._prepare_limb_darkening_coefficients(mc, **kwargs)

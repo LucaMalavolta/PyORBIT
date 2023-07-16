@@ -33,12 +33,10 @@ class Batman_Transit_TTV_Subset_Faster(AbstractModel, AbstractTransit):
         self.batman_models = {}
         self.code_options = {}
 
-        """ Dataset-specific time of transit boundaries are stored here"""
-        self.transit_time_boundaries = {}
 
     def initialize_model(self, mc, **kwargs):
-        """ Force the use of the central time of transit"""
-        self.use_time_of_transit = True
+        """ Force the use of the time of inferior conjunction"""
+        mc.common_models[self.planet_ref].use_time_inferior_conjunction = True
 
         self._prepare_planetary_parameters(mc, **kwargs)
         self._prepare_limb_darkening_coefficients(mc, **kwargs)
@@ -75,7 +73,7 @@ class Batman_Transit_TTV_Subset_Faster(AbstractModel, AbstractTransit):
         self.batman_params.u = np.ones(kwargs['limb_darkening_ncoeff'],
                                        dtype=np.double) * 0.1  # limb darkening coefficients
 
-        """ And now we remove the transit time from the common parameters, and add it back as a dataset-specific parameter """
+        """ And now we remove the time of inferior conjunction from the common parameters, and add it back as a dataset-specific parameter """
 
         self.list_pams_common.discard('Tc')
         # self.list_pams_dataset.update(['Tc'])

@@ -1,6 +1,9 @@
-(multidimensional_gaussian_processes)=
+(gaussian_process_regression)=
 
-# Multidimensional GPs
+# Gaussian process regression
+
+Gaussian process regression (GPR) is a nonparametric, Bayesian approach to regression which 
+[Haywood at al. 2014](https://ui.adsabs.harvard.edu/abs/2014MNRAS.443.2517H/abstract) 
 
 In the original Gaussian process framework ([Rajpaul et al. 2015](https://ui.adsabs.harvard.edu/abs/2015MNRAS.452.2269R/abstract), [Rajpaul et al. 2021](https://ui.adsabs.harvard.edu/abs/2021MNRAS.507.1847R/abstract)) the radial velocity datasets ($\Delta \mathrm{RV}$, after removing the deterministic part) and two activity indicators (in this example, $\mathrm{BIS}$ and  $\log{R^{\prime}_\mathrm{HK}}$) are modelled as a liner combination of an underlying Gaussian proccess $G(t)$  and its first derivative $G^\prime (t)$.
 

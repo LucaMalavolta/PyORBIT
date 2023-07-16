@@ -28,7 +28,7 @@ class RVkeplerian(AbstractModel):
             'e',  # eccentricity, uniform prior - to be fixed
             'omega'}  # argument of pericenter
 
-        self.use_time_of_transit = False
+        self.use_time_inferior_conjunction = False
         self.use_mass_for_planets = False
 
     def initialize_model(self, mc, **kwargs):
@@ -50,9 +50,9 @@ class RVkeplerian(AbstractModel):
             self.list_pams_common.update(['sre_coso'])
             self.list_pams_common.update(['sre_sino'])
 
-        if mc.common_models[self.planet_ref].use_time_of_transit:
+        if mc.common_models[self.planet_ref].use_time_inferior_conjunction:
             self.list_pams_common.update(['Tc'])
-            self.use_time_of_transit = True
+            self.use_time_inferior_conjunction = True
             # Copying the property to the class for faster access
         else:
             self.list_pams_common.update(['mean_long'])
@@ -66,7 +66,7 @@ class RVkeplerian(AbstractModel):
 
     def compute(self, parameter_values, dataset, x0_input=None):
 
-        if self.use_time_of_transit:
+        if self.use_time_inferior_conjunction:
             mean_long = kepler_exo.kepler_Tc2phase_Tref(parameter_values['P'],
                                                 parameter_values['Tc'] - dataset.Tref,
                                                 parameter_values['e'],
@@ -131,7 +131,7 @@ class RVdynamical(AbstractModel):
                 """ rho is the density of the star (in solar units) """
                 self.list_pams_common.update(['density'])
 
-        if mc.common_models[self.planet_ref].use_time_of_transit:
+        if mc.common_models[self.planet_ref].use_time_inferior_conjunction:
             self.list_pams_common.update(['Tc'])
         else:
             self.list_pams_common.update(['mean_long'])
@@ -142,7 +142,7 @@ class TransitTimeKeplerian(AbstractModel):
 
     def __init__(self, *args, **kwargs):
         super(TransitTimeKeplerian, self).__init__(*args, **kwargs)
-        self.use_time_of_transit = False
+        self.use_time_inferior_conjunction = False
 
         self.list_pams_common = {'P'}  # Period
 
@@ -150,9 +150,9 @@ class TransitTimeKeplerian(AbstractModel):
 
     def initialize_model(self, mc, **kwargs):
 
-        if mc.common_models[self.planet_ref].use_time_of_transit:
+        if mc.common_models[self.planet_ref].use_time_inferior_conjunction:
             self.list_pams_common.update(['Tc'])
-            self.use_time_of_transit = True
+            self.use_time_inferior_conjunction = True
             # Copying the property to the class for faster access
         else:
             self.list_pams_common.update(['mean_long'])
@@ -162,7 +162,7 @@ class TransitTimeKeplerian(AbstractModel):
 
     def compute(self, parameter_values, dataset, x0_input=None):
 
-        if self.use_time_of_transit:
+        if self.use_time_inferior_conjunction:
             delta_T = parameter_values['Tc'] - \
                 np.floor((parameter_values['Tc'] - dataset.Tref) / parameter_values['P']) * parameter_values['P']
         else:
@@ -198,7 +198,7 @@ class TransitTimeDynamical(AbstractModel):
 
         self.use_semimajor_axis = False
         self.use_inclination = False
-        self.use_time_of_transit = False
+        self.use_time_inferior_conjunction = False
 
     def initialize_model(self, mc, **kwargs):
 
@@ -218,9 +218,9 @@ class TransitTimeDynamical(AbstractModel):
                 """ rho is the density of the star (in solar units) """
                 self.list_pams_common.update(['density'])
 
-        if mc.common_models[self.planet_ref].use_time_of_transit:
+        if mc.common_models[self.planet_ref].use_time_inferior_conjunction:
             self.list_pams_common.update(['Tc'])
-            self.use_time_of_transit = True
+            self.use_time_inferior_conjunction = True
             # Copying the property to the class for faster access
         else:
             self.list_pams_common.update(['mean_long'])
@@ -293,7 +293,7 @@ class DynamicalIntegrator:
                 int_buffer['rv_ref'].extend(dataset.x * 0.0 + dataset_rv)
                 int_buffer['key_ref'][dataset_name] = dataset_rv
                 dataset_rv += 1
-            elif dataset.kind == 'Tcent':
+            elif dataset.kind == 'transit_time':
                 int_buffer['t0_times'].extend(dataset.x.tolist())
 
         """ Creating the flag array after all the RV epochs have been mixed
@@ -473,7 +473,7 @@ class DynamicalIntegrator:
                                        dict_pams['omega'],
                                        a_temp)
 
-            if mc.common_models[planet_name].use_time_of_transit:
+            if mc.common_models[planet_name].use_time_inferior_conjunction:
                 dict_pams['mean_long'] = kepler_exo.kepler_Tc2phase_Tref(dict_pams['P'],
                                                                  dict_pams['Tc'] - mc.Tref,
                                                                  dict_pams['e'],
@@ -493,7 +493,7 @@ class DynamicalIntegrator:
             self.dynamical_set['pams']['Omega'][n_plan] = dict_pams['Omega']
             self.dynamical_set['pams']['mA'][n_plan] = (dict_pams['mean_long'] - dict_pams['omega'])
 
-        # sample_plan[:, convert_out['Tcent']] = mc.Tref + kepler_exo.kepler_phase2Tc_Tref(
+        # sample_plan[:, convert_out['transit_time']] = mc.Tref + kepler_exo.kepler_phase2Tc_Tref(
         #    sample_plan[:, convert_out['P']], sample_plan[:, convert_out['mL']],
         #    sample_plan[:, convert_out['e']], sample_plan[:, convert_out['o']])
 
@@ -581,7 +581,7 @@ class DynamicalIntegrator:
                     output[dataset_name] = rv_sim[self.dynamical_set['data']['selection'][dataset_name]]
                 else:
                     output[dataset_name] = rv_sim
-            elif dataset.kind == 'Tcent' and dataset.planet_name in mc.dynamical_dict:
+            elif dataset.kind == 'transit_time' and dataset.planet_name in mc.dynamical_dict:
                 n_plan = self.dynamical_set['data']['plan_ref'][dataset.planet_name]
                 output[dataset_name] = t0_sim[:self.dynamical_set['data']['t0_tot'][n_plan], n_plan]
 
@@ -604,7 +604,7 @@ class DynamicalIntegrator:
                 int_buffer['rv_ref'].extend(dataset.x0 * 0 + dataset_rv)
                 int_buffer['key_ref'][dataset_name] = dataset_rv
                 dataset_rv += 1
-            elif dataset.kind == 'Tcent':
+            elif dataset.kind == 'transit_time':
                 int_buffer['t0_times'].extend(dataset.x0.tolist())
 
             delta_t = min(delta_t, np.amin(np.abs(dataset.x0[1:]-dataset.x0[:-1])))
@@ -685,7 +685,7 @@ class DynamicalIntegrator:
                                        dict_pams['omega'],
                                        a_temp)
 
-            if mc.common_models[planet_name].use_time_of_transit:
+            if mc.common_models[planet_name].use_time_inferior_conjunction:
                 dict_pams['mean_long'] = kepler_exo.kepler_Tc2phase_Tref(dict_pams['P'],
                                                                  dict_pams['Tc'] - mc.Tref,
                                                                  dict_pams['e'],
@@ -740,7 +740,7 @@ class DynamicalIntegrator:
                     output[dataset_name] = rv_meas
 
 
-            elif dataset.kind == 'Tcent':
+            elif dataset.kind == 'transit_time':
                 t0_sel = (positions[0][:] == plan_ref[dataset.planet_name])
                 t0_mod = positions[2][t0_sel]  # T0 of the transit
                 nn_mod = np.asarray(positions[1][t0_sel], dtype=np.int16)  # Number of transit as stored by TTVfast

@@ -29,8 +29,8 @@ This is equivalent in writing:
 
 Keep in mind that **0** activates a flag, **-1** deactives it, folllowing the Python notation, while the absence of a column automatically deactivate a flag.
 
-
 ## Configuration file 
+
 
 ```{code-block} yaml
 :lineno-start: 1
@@ -87,9 +87,8 @@ solver:
 There is a lot to process:
 
 **Fit of the time of inferior conjuction $T_c$** (equivalent to the central time of transit in the case of a circular orbit) is the way to go, as we now we have a good guess of the orbital period and time of transit. Although the $P$ and $T_C$ boundaries are quite tight, they can still be considered uninformative priors as the final posteriors will have much narrow distributions.
-To enable the use of $T_C$ instead of the mean longitude `mean_long`, you need to append `_Tcent` to the name of the parametrization you want to use
-  parametrization label will replace  with the
-  central time of transit `Tc`. 
+To enable the use of $T_C$ instead of the mean longitude `mean_long`, you need to append `_Tcent` to the name of the parametrization you want to use (check also [this section](note_on_orbital_parametrization) in the radial velocity quickstart). 
+
 
 ```{code-cell} yaml
 :lineno-start: 7
@@ -97,13 +96,15 @@ To enable the use of $T_C$ instead of the mean longitude `mean_long`, you need t
 common:
     planets:
         b:
-            orbit: keplerian
-            parametrization: Standard
+            orbit: circular
+            use_time_inferior_conjunction: True
             boundaries:
                 P: [0.50, 5.0]
                 K: [0.01, 300.0]
                 e: [0.00, 0.95]
 ```
+
+You need to specify the parametrization even in the case of circular orbits. 
 
 
 **Stellar density** is expressed in Solar units, so a star with one Solar mass and one Solar radius will have a density equal to one. If you know mass anda radius of a star in Solar units, then the density will be simply $\rho_\star = M_\star / R_\star^3$, without multiplicative constants.

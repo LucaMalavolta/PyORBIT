@@ -95,7 +95,7 @@ class RossiterMcLaughlin_Ohta(AbstractModel, AbstractTransit):
                             "gamma": parameter_values['R_Rs']})
         else:
 
-            if self.use_time_of_transit:
+            if self.use_time_inferior_conjunction:
                 Tperi  = kepler_exo.kepler_Tc2Tperi_Tref(parameter_values['P'],
                                                          parameter_values['Tc'] - dataset.Tref,
                                                          parameter_values['e'],

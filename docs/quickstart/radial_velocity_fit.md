@@ -84,6 +84,7 @@ solver:
 ```
 
 You can see that there are five main sections:
+
 - ``inputs``: the properties of each dataset are enclosed within a dedicated subsection.
 - ``common``: it encompasses two subsections, *planets* and *star*, where you list the characteristics of the objects that will be common to all the models.
 - ``models``: any model used to fit your data, to be recalled in the ``model`` subsection of the dataset
@@ -137,6 +138,7 @@ mean_long                  264         -117          127    (15-84 p)
 
 More details on the interpretation of the results can be found in the page [Interpreting the output](results_interpretation).
 
+(note_on_orbital_parametrization)=
 ## Note on the orbital parametrization
 
 Unless otherwise specified, `PyORBIT`  assumes that the orbital period of the planet is not knwon.

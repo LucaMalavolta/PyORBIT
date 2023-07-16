@@ -205,7 +205,7 @@ class CommonPlanets(AbstractCommon):
 
         self.use_inclination = False
         self.use_semimajor_axis = False
-        self.use_time_of_transit = False
+        self.use_time_inferior_conjunction = False
         self.use_mass_for_planets = False
         self.use_shared_ttvs = False
 
@@ -235,7 +235,7 @@ class CommonPlanets(AbstractCommon):
             print('Using orbital parametrization: ', self.parametrization)
 
             if self.parametrization[-5:] == 'Tcent' or self.parametrization[-5:] == 'Tc':
-                self.use_time_of_transit = True
+                self.use_time_inferior_conjunction = True
         else:
             print('ERROR in configuration file - orbital model: not supported')
             quit()
@@ -252,9 +252,9 @@ class CommonPlanets(AbstractCommon):
         if self.use_mass_for_planets :
             print('Planetary mass replacing RV semi-amplitude as a free parameter: ', True)
 
-        self.use_time_of_transit = kwargs.get('use_time_of_transit', self.use_time_of_transit)
-        if self.use_time_of_transit :
-            print('Time of transit replacing mean longitude as a free parameter: ', True)
+        self.use_time_inferior_conjunction = kwargs.get('use_time_inferior_conjunction', self.use_time_inferior_conjunction)
+        if self.use_time_inferior_conjunction :
+            print('Time of inferior conjunction replacing mean longitude as a free parameter: ', True)
 
         self.use_shared_ttvs = kwargs.get('use_shared_ttvs', self.use_shared_ttvs)
         if self.use_shared_ttvs:

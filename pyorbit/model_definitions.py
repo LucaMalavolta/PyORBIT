@@ -273,7 +273,7 @@ extended_dataset_keylist = ['expanded_dataset', 'extended_dataset', 'dataset_2d'
 # Trying to guess all the possible mistakes....
 datatype_definition = {
     'RV': ['RV', 'RVs', 'rv', 'rvs'],
-    'Tcent': ['Tcent', 'TCent', 'Tc', 'TC', 'T0', 'TT'],
+    'transit_time': ['transit_time', 'transit_times', 'Tcent', 'TCent', 'Tc', 'TC', 'T0', 'TT'],
     'astrometry': ['astrometry', 'Astrometry', 'AstroMetry', 'Astro', 'astro', 'AM', 'Gaia', 'gaia'],
     'H-alpha': ['H', 'HA', 'h', 'ha', 'Halpha', 'H-alpha', 'halpha', 'h-alpha'],
     'Phot': ['P', 'Ph', 'p', 'ph', 'PHOT', 'Phot', 'phot', 'Photometry', 'photometry'],

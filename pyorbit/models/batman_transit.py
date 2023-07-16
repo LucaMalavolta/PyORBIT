@@ -34,7 +34,7 @@ class Batman_Transit(AbstractModel, AbstractTransit):
         self.batman_params = None
         self.batman_models = {}
         self.code_options = {}
-        self.transit_time_boundaries = {}
+        #self.time_inferior_conjunction_boundaries = {}
 
         self.dataset_x0 ={}
         self.dataset_Tref = {}
@@ -95,11 +95,9 @@ class Batman_Transit(AbstractModel, AbstractTransit):
                                 supersample_factor=self.code_options[dataset.name_ref]['sample_factor'],
                                 exp_time=self.code_options[dataset.name_ref]['exp_time'],
                                 nthreads=self.code_options['nthreads'])
-        """ Keep track of the boundaries of each dataset, so that the user do
-        not have to write down the boundaries of each transit in case of TTV fit
-        """
-        self.transit_time_boundaries[dataset.name_ref] = \
-            [np.amin(dataset.x), np.amax(dataset.x)]
+        
+        #self.time_inferior_conjunction_boundaries[dataset.name_ref] = \
+        #    [np.amin(dataset.x), np.amax(dataset.x)]
 
     def compute(self, parameter_values, dataset, x0_input=None):
         """

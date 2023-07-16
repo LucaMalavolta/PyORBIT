@@ -27,7 +27,7 @@ class Spiderman_Thermal(AbstractModel, AbstractTransit):
 
         self.use_semimajor_axis = False
         self.use_inclination = False
-        self.use_time_of_transit = False
+        self.use_time_inferior_conjunction = False
         self.use_stellar_radius = True
         self.use_stellar_temperature = True
 

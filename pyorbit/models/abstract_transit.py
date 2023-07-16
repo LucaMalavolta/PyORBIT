@@ -17,7 +17,7 @@ class AbstractTransit(object):
         """ Keywords inherited from Planet common model (with switched logical sign)"""
         self.compute_semimajor_axis = True
         self.compute_inclination = True
-        self.compute_time_of_transit = False
+        self.compute_time_inferior_conjunction = False
 
         """ This keywors is specific to Rossiter-McLaughlin analysis"""
         self.compute_Omega_rotation = False
@@ -97,11 +97,11 @@ class AbstractTransit(object):
             """ b is the impact parameter """
             self.list_pams_common.update(['b'])
 
-        if mc.common_models[self.planet_ref].use_time_of_transit:
+        if mc.common_models[self.planet_ref].use_time_inferior_conjunction:
             self.list_pams_common.update(['Tc'])
         else:
             self.list_pams_common.update(['mean_long'])
-            self.compute_time_of_transit = True
+            self.compute_time_inferior_conjunction = True
             # mean longitude = argument of pericenter + mean anomaly at Tref
 
         self.use_shared_ttvs = mc.common_models[self.planet_ref].use_shared_ttvs
@@ -313,7 +313,7 @@ class AbstractTransit(object):
             parameter_values['i'] = convert_b_to_i(
             parameter_values['b'], parameter_values['e'], parameter_values['omega'], parameter_values['a_Rs'])
 
-        if self.compute_time_of_transit:
+        if self.compute_time_inferior_conjunction:
             parameter_values['Tc']= kepler_exo.kepler_phase2Tc_Tref(parameter_values['P'],
                                                parameter_values['mean_long'],
                                                parameter_values['e'],
