@@ -1,9 +1,9 @@
 
 ![PyORBIT logo](docs/_static/PyORBIT_logo_transp.png?raw=true)
 
-## `PyORBIT` version 10 by Luca Malavolta - July 2023
-***
 ### A code for exoplanet orbital parameters and stellar activity.
+***
+## `PyORBIT` version 10 by Luca Malavolta July 2023
 
 
 ## Documentation update
