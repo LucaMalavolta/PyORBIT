@@ -1,9 +1,10 @@
 
 ![PyORBIT logo](docs/_static/PyORBIT_logo_transp.png?raw=true)
 
-### A code for exoplanet orbital parameters and stellar activity.
+## `PyORBIT` version 10 by Luca Malavolta - July 2023
 ***
-### `PyORBIT` version 10 by Luca Malavolta - July 2023
+### A code for exoplanet orbital parameters and stellar activity.
+
 
 ## Documentation update
 
@@ -11,7 +12,7 @@ I have extensively updated the documentation and  several examples are now avail
 - [`PyORBIT` 10 Documentation](https://pyorbit.readthedocs.io/en/latest/)
 - [`PyORBIT` examples repository](https://github.com/LucaMalavolta/PyORBIT_examples)
 
-For nostalgic people, `PyORBIT` 9 is available [at this repository](https://github.com/LucaMalavolta/PyORBIT_legacy_V9)
+For nostalgic people, `PyORBIT` 8 and 9 are available as branches of the main repository: [legacy_version8](https://github.com/LucaMalavolta/PyORBIT/tree/legacy_version8) and [legacy_version9](https://github.com/LucaMalavolta/PyORBIT/tree/legacy_version8) respectively.
 
 ## Updates on version 10
 
