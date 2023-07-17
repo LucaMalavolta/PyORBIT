@@ -12,6 +12,8 @@ In the original Gaussian process framework ([Rajpaul et al. 2015](https://ui.ads
 \log{R^{\prime}_\mathrm{HK}} & = L_c G(t) \\
 ```
 
+`PyORBIT` implementation produces results that are perfectly consistent with the GP framework by [Rajpaul et al. 2015](https://ui.adsabs.harvard.edu/abs/2015MNRAS.452.2269R/abstract)  and the multidimensional GP by [Barragán et al. 2022](https://ui.adsabs.harvard.edu/abs/2022MNRAS.509..866B/abstract), as shown in [Nardiello et al. 2022, appendix D](https://ui.adsabs.harvard.edu/abs/2022A%26A...664A.163N/abstract).
+
 ### Kernels
 
 The only implemented kernel for the underlying GP is the quasi-periodic one, following the expression given by [Grunblatt et al. 2015](https://ui.adsabs.harvard.edu/abs/2015ApJ...808..127G/abstract):
