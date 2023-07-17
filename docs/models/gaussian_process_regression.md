@@ -6,6 +6,8 @@ Gaussian process regression (GPR) is a nonparametric, Bayesian approach to regre
 
 In this section, we will discuss only models encompassing independent covariance matrix among datasets, with some hyperparameters in common. I will refer to these approach as *classic* or *standard* Gaussian processes. 
 
+
+
 ### Kernels
 
 #### Quasi-periodic
@@ -193,3 +195,4 @@ The following parameters will be inherited from the common model (column *Common
 | Pdec      | Decay time scale of active regions $\lambda$ | common | ``activity``     | |
 | Oamp | Coherence scale $w$ | common | ``activity`` |   |
 | Hamp  | Amplitude of the kernel | dataset | ``activity``     | |
+
