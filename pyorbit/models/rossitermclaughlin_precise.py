@@ -220,6 +220,8 @@ class RossiterMcLaughlin_Precise(AbstractModel, AbstractTransit):
         parameters, _ = curve_fit(CCF_gauss, self.star_grid['zz'], ccf_broad, p0=p0, check_finite =False)
         rv_unperturbed = parameters[1] * 1000.
 
+        p0 = (parameters[0], 0.00, parameters[2])
+
         for i_obs, bjd_value in enumerate(bjd):
 
             n_oversampling = int(exptime[i_obs] / self.star_grid['time_step'])
