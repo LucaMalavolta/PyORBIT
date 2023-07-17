@@ -52,20 +52,27 @@ Version 10 is not compatible with the results obtained with version 9.
 If you have been using the development version of V10, you may run into incompatibility issues as well.
 ```
 
+
 # Documentation updates
 
 Documentions is being updated slowly but steadily, with new pages appearing every week. Below you can check which pages have been updated recently
 
 - *Quickstart* 
-  + Radial velocities **done**
-  + Lighcurve analysis **done**
-  + Combined fit **to be done** 
+  + Radial velocities
+  + Lighcurve analysis
+  + Combined fit  
 - *Data modelling*
-  + Planetary RV signal **done**
-  + Correlated datasets **done**
+  + Planetary RV signal 
+  + Correlated datasets
   + Gaussian processes regression **in progress**
-  + Multidimensional GPs **done**
-  + CHEOPS detrending **foreseen**
+  + Multidimensional GPs
+  + CHEOPS detrending **coming soon**
+  + Polynomial **coming soon**
+  + Lightcurve detrending
+
+```{tip}
+The configuration files used in this documentation can be found at [this repository](https://github.com/LucaMalavolta/PyORBIT_examples)
+```
 
 
 ## References

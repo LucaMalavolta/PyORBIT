@@ -212,4 +212,7 @@ Note the main differences:
 
 It is indeed possible to obtain independent radius estimates for different photometric bands by using some of the advanced features of `PyORBIT`. An example will be provided in a dedicated tutorial. 
 
+```{warning}
+`batman` may get stuck in a loop when eccentricity is higher than 0.95. 
 
+```

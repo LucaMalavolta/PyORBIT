@@ -2,19 +2,20 @@
 
 # Gaussian process regression
 
-Gaussian process regression (GPR) is a nonparametric, Bayesian approach to regression which has been very succesful for the analysis of radia lvelocity datasets i nthe presence of stellar activity, e.g., [Haywood at al. 2014](https://ui.adsabs.harvard.edu/abs/2014MNRAS.443.2517H/abstract),  [Grunblatt et al. 2015](https://ui.adsabs.harvard.edu/abs/2015ApJ...808..127G/abstract).
+Gaussian process regression (GPR) is a nonparametric, Bayesian approach to regression which has been very succesful for the analysis of radial velocity datasets in the presence of stellar activity, e.g., [Haywood at al. 2014](https://ui.adsabs.harvard.edu/abs/2014MNRAS.443.2517H/abstract),  [Grunblatt et al. 2015](https://ui.adsabs.harvard.edu/abs/2015ApJ...808..127G/abstract). The first stable and tested implementation of GPR in `PyORBIT` dates back to 2018. 
 
-The first appearence of GPR in `PyORBIT` dates back to 2018.
-
+In this section, we will discuss only models encompassing independent covariance matrix among datasets, with some hyperparameters in common. I will refer to these approach as *classic* or *standard* Gaussian processes. 
 
 ### Kernels
 
-The only implemented kernel for the underlying GP is the quasi-periodic one, following the expression given by [Grunblatt et al. 2015](https://ui.adsabs.harvard.edu/abs/2015ApJ...808..127G/abstract):
+#### Quasi-periodic
+
+The most common and most reliable kernel for stellar activity  is the quasi-periodic one, following the expression given by [Grunblatt et al. 2015](https://ui.adsabs.harvard.edu/abs/2015ApJ...808..127G/abstract):
 
 ```{math}
 :label: quasiperiodic_grunblatt
 
-\gamma ^{(G,G)}_{i,j} = \exp{ \left \{-\frac{\sin^2{[\pi(t_i - t_j)/\theta]}}{2 w ^2} - \left (\frac{t_i-t_j}{\lambda} \right )^2 \right \} }
+G(t_i, t_j) = h^2  \exp{ \left \{-\frac{\sin^2{[\pi(t_i - t_j)/\theta]}}{2 w ^2} - \left (\frac{t_i-t_j}{\lambda} \right )^2 \right \} }
 ```
 
 where $\theta$ is equivalent to the rotation period of the star, $w$ is the coherence scale, and $\lambda$ is usually associated to the decay time scale fo the active regions
@@ -22,6 +23,41 @@ where $\theta$ is equivalent to the rotation period of the star, $w$ is the cohe
 ```{important}
 It is common to have a factor 2 in the denominator of the aperiodic variation (i.e., $2 \lambda$ rather than $\lambda$) in {eq}`quasiperiodic_grunblatt`. In such a case, it is sufficient to multiply the value of $\lambda$ of `PyORBIT` by a factor $\sqrt(2)$ - keep it in mind when assigning priors!
 ```
+
+This kernel relies on the `george` package. An independent implementation not relying on any package is available, however it is much slower. 
+A new implementation using  `tinyGP` is now available, but it requires a few extra tricks in the configuration file and execution.
+
+#### Quasi-periodic with cosine 
+
+**work in progress** 
+
+```{math}
+:label: quasiperiodic_cosine
+
+G(t_i, t_j) = \exp{  \left  ( \frac{t_i-t_j}{\lambda} \right ) ^2 } * 
+{  h^2 \exp{ \left {  -\frac{\sin^2{ [ \pi (t_i - t_j)/\theta]}}{2 w ^2} + c^2  \cos \frac{ 4\pi (t_i-t_j)}{\theta} \right } } 
+
+```
+
+#### Matern 3/2
+
+**work in progress** 
+
+#### Damped harmonic oscillator
+
+**work in progress** 
+
+#### Rotation
+
+**work in progress** 
+
+#### Granulation and Rotation
+
+**work in progress** 
+
+#### Granulation, Oscillations, and Rotation
+
+**work in progress** 
 
 
 ### Improvements
