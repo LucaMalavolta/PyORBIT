@@ -5,7 +5,13 @@
 ***
 ### `PyORBIT` version 10 by Luca Malavolta - July 2023
 
+## Documentation update
 
+I have extensively updated the documentation and  several examples are now available in a new dedicated repository, check them out:
+- [`PyORBIT` 10 Documentation](https://pyorbit.readthedocs.io/en/latest/)
+- [`PyORBIT` examples repository](https://github.com/LucaMalavolta/PyORBIT_examples)
+
+For nostalgic people, `PyORBIT` 9 is available [at this repository](https://github.com/LucaMalavolta/PyORBIT_legacy_V9)
 
 ## Updates on version 10
 
