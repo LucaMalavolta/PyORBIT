@@ -115,28 +115,42 @@ common:
 ## Multiband photometry 
 
 Multiband photometry with specific limb darkening parameters is easy to accomodate.
-In this example, we will add a lightcurve in V (Johnson) band from [Winn et al. 2007](https://ui.adsabs.harvard.edu/abs/2007AJ....133.1828W/abstract) to the TESS photometry
+In this example, we will add four lightcurves in Ic(Cousins) band from [Bakos et al. 2006](https://ui.adsabs.harvard.edu/abs/2006ApJ...641L..57B/abstract) to the TESS photometry
 
 ```{code-block} yaml
 :lineno-start: 1
 
 inputs:
-  LCdata_Winn2007_LC06:
-    file: ./literature_dataset/Winn2007_LC06_PyORBIT.dat
-    kind: Phot
-    models:
-      - lc_model_V_Johnson
-      - normalization
   LCdata_TESS:
-    file: ./HD189733_TESS_PyORBIT.dat
+    file: HD189733_TESS_PyORBIT.dat
     kind: Phot
     models:
-      - lc_model
+      - lc_model_TESS
+  LCdata_Bakos2006_LC06:
+    file: Bakos2006_LC06_PyORBIT.dat
+    kind: Phot
+    models:
+      - lc_model_Ic_Cousins
+  LCdata_Bakos2006_LC07:
+    file: Bakos2006_LC07_PyORBIT.dat
+    kind: Phot
+    models:
+      - lc_model_Ic_Cousins
+  LCdata_Bakos2006_LC08:
+    file: /Bakos2006_LC08_PyORBIT.dat
+    kind: Phot
+    models:
+      - lc_model_Ic_Cousins
+  LCdata_Bakos2006_LC09:
+    file: Bakos2006_LC09_PyORBIT.dat
+    kind: Phot
+    models:
+      - lc_model_Ic_Cousins
 common:
   planets:
     b:
       orbit: circular
-      use_time_inferior_conjunction: True
+      parametrization: Eastman2013_Tcent
       boundaries:
         P: [2.2185600, 2.2185800]
         Tc: [2459770.4100, 2459770.4110]
@@ -151,32 +165,51 @@ common:
     limb_darkening_TESS:
       model: ld_quadratic
       parametrization: Kipping
-    limb_darkening_V_Johnson:
+    limb_darkening_Ic_Cousins:
       type: ld_quadratic
+      #parametrization: Kipping
       priors:
-        ld_c1: ['Gaussian', 0.66, 0.05]
-        ld_c2: ['Gaussian', 0.10, 0.05]
+        ld_c1: ['Gaussian', 0.45, 0.05]
+        ld_c2: ['Gaussian', 0.13, 0.05]
 models:
   lc_model_TESS:
     model: batman_transit
     limb_darkening: limb_darkening_TESS
     planets:
       - b
-  lc_model_V_Johnson:
-    model: batman_transit
-    limb_darkening: limb_darkening_V_Johnson
+  lc_model_Ic_Cousins:
+    kind: batman_transit
+    limb_darkening: limb_darkening_Ic_Cousins
     planets:
       - b
 parameters:
   Tref: 2459750.00
+solver:
+  pyde:
+    ngen: 50000
+    npop_mult: 4
+  emcee:
+    npop_mult: 4
+    nsteps: 100000
+    nburn: 20000
+    nsave: 10000
+    thin: 100
+  nested_sampling:
+    nlive: 1000
+  recenter_bounds: True
 
 ```
 
 Note the main differences:
 
-- There are now two limb darkening models under the `star` common model. I decided to rename the TESS limb darkening model to clearly distinguish from the V (Johnson) one, but the renaming is not strictly necessary.
-- I have specified a set of prior for the limb darkening coefficient of the V (Johnson) filter. In doing so, there is no advantage in using the Kipping parametrization and it can be omitted
+- There are now two limb darkening models under the `star` common model. I decided to rename the TESS limb darkening model to clearly distinguish from the Ic (Cousins) one, but the renaming is not strictly necessary.
+- I have specified a set of prior for the limb darkening coefficient of the Ic (Cousins) filter. In doing so, there is no advantage in using the Kipping parametrization and it can be omitted
 - There are now two light curve models under the `models` section, one for each set of limb darkening paramters. The number of models does not depend of the number of datasets, but on the number of photometric bands, as they influence the shape of a transit.
 - In the `input` section, the correct model must be associated to each dataset.
+
+```{attention} In this example we assumed that the transit depth is independent from wavelength.
+```
+
+It is indeed possible to obtain independent radius estimates for different photometric bands by using some of the advanced features of `PyORBIT`. An example will be provided in a dedicated tutorial. 
 
 

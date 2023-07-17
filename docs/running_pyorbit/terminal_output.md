@@ -2,8 +2,12 @@
 
 # Interpreting terminal output
 
-PyORBIT_results will produce several files depending on the flags provided at
+`PyORBIT_results` will produce several files depending on the flags provided at
 runtime. The terminal output is always present
+
+```{danger} 
+This page is based on the ouput of `PyORBIT` version 9. Version 10 provides some more advanced outputs that are not yet described here
+```
 
 ## Terminal output
 

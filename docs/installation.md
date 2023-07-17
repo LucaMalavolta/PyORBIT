@@ -35,7 +35,7 @@ pip install -r extra_requirements.txt
 
 ## Install using pip
 
-You can then install `PyORBIT` by using `pip` inside the code repository:
+You can then install `PyORBIT` by using `pip`:
 
 ```{code} bash
  pip install pyorbit-package
@@ -47,7 +47,7 @@ Note that the name is  `pyorbit-package` and not  `pyorbit`, as the former was a
  python -c "import pyorbit"
 ```
 
-`PyORBIT` only comes with the basic packages, to exploit its full potential follow the instructions in the section [Requirements](Requirements). For the impatient, just do:
+`PyORBIT` only comes with the basic packages, to exploit its full potential follow the instructions in the section [Requirements](Requirements). For the impatients, just do:
 ```{code} bash
 wget https://raw.githubusercontent.com/LucaMalavolta/PyORBIT/main/extra_requirements.txt
 pip install -r extra_requirements.txt
@@ -61,11 +61,15 @@ Download the latest version from the GitHub repository:
  git clone https://github.com/LucaMalavolta/PyORBIT.git
 ```
 
-If you are downloading the code from GitHub, most likely it's because you want to try the *development* version (10.0.0beta, not accessible from PyPI)
+If you are downloading the code from GitHub, most likely it's because you want to try the *development* version
 
 ```{code} bash
  cd PyORBIT
  git checkout development
+```
+
+```{note} 
+Development version may not be availabler at all times.
 ```
 
 You can then install `PyORBIT` by using `pip` inside the code repository:
@@ -89,7 +93,7 @@ python ~/CODE/PyORBIT/PyORBIT_Results.py emcee configuration_file.yaml -all
 
 Again, I suggest to install the extra requirements following the instructions given above
 
-If you repent and you want to go back to the main version of  `PyORBIT`, just install with pip the last uploaded version:
+If you repent and you want to go back a previous version of  `PyORBIT`, just install with pip the desired version:
 
 ```{code} bash
  pip install pyorbit-package=9.1.13
