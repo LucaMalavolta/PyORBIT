@@ -36,8 +36,8 @@ A new implementation using  `tinyGP` is now available, but it requires a few ext
 ```{math}
 :label: quasiperiodic_cosine
 
-G(t_i, t_j) = \exp{  \left  ( \frac{t_i-t_j}{\lambda} \right ) ^2 } * 
-{  h^2 \exp{ \left {  -\frac{\sin^2{ [ \pi (t_i - t_j)/\theta]}}{2 w ^2} + c^2  \cos \frac{ 4\pi (t_i-t_j)}{\theta} \right } } 
+G(t_i, t_j) = \exp{  \left  \( \frac{t_i-t_j}{\lambda} \right \) ^2 } *  \left
+\{  h^2 \exp{ \left \{  -\frac{\sin^2{ [ \pi (t_i - t_j)/\theta]}}{2 w ^2} + c^2  \cos \frac{ 4\pi (t_i-t_j)}{\theta} \right \} } \right \} 
 
 ```
 
