@@ -14,7 +14,7 @@ In the original Gaussian process framework ([Rajpaul et al. 2015](https://ui.ads
 
 `PyORBIT` implementation produces results that are perfectly consistent with the GP framework by [Rajpaul et al. 2015](https://ui.adsabs.harvard.edu/abs/2015MNRAS.452.2269R/abstract)  and the multidimensional GP by [Barragán et al. 2022](https://ui.adsabs.harvard.edu/abs/2022MNRAS.509..866B/abstract), as shown in [Nardiello et al. 2022, appendix D](https://ui.adsabs.harvard.edu/abs/2022A%26A...664A.163N/abstract). Note that the signs of the coefficients may vary according to the employed defintion of  $\Delta t = (t_i-t_j)$. 
 
-```{admonition} Five credits to the authors
+```{admonition} Give credits to the authors
 If you use the multidimensional GP, remeber to cite [Rajpaul et al. 2015](https://ui.adsabs.harvard.edu/abs/2015MNRAS.452.2269R/abstract)  and [Barragán et al. 2022](https://ui.adsabs.harvard.edu/abs/2022MNRAS.509..866B/abstract).
 For more details on the `PyORBIT` implementation of  multidimensional GP, please refer to [Nardiello et al. 2022, appendix D](https://ui.adsabs.harvard.edu/abs/2022A%26A...664A.163N/abstract)
 
