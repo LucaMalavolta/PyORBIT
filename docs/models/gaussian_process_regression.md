@@ -17,7 +17,7 @@ The most common and most reliable kernel for stellar activity  is the quasi-peri
 ```{math}
 :label: quasiperiodic_grunblatt
 
-G(t_i, t_j) = h^2  \exp{ \left \{-\frac{\sin^2{[\pi(t_i - t_j)/\theta]}}{2 w ^2} - \left (\frac{t_i-t_j}{\lambda} \right )^2 \right \} }
+G(t_i, t_j) = h^2  \exp{ \left \{-\frac{\sin^2{[\pi(t_i - t_j)/\theta]}}{2 w ^2} - \left ( \frac{t_i-t_j}{\lambda} \right )^2 \right \} }
 ```
 
 where $\theta$ is equivalent to the rotation period of the star, $w$ is the coherence scale, and $\lambda$ is usually associated to the decay time scale fo the active regions
@@ -29,17 +29,25 @@ It is common to have a factor 2 in the denominator of the aperiodic variation (i
 This kernel relies on the `george` package. An independent implementation not relying on any package is available, however it is much slower. 
 A new implementation using  `tinyGP` is now available, but it requires a few extra tricks in the configuration file and execution.
 
+
 #### Quasi-periodic with cosine 
 
 **work in progress** 
 
+This kernel has been introduced by [Perger et al. 2021](https://ui.adsabs.harvard.edu/abs/2021A%26A...645A..58P/abstract). The kernell has been implemented in `PyORBIT` without relying on any other package.
+
+If we define $\tau = t_i-t_j$ : 
+
 ```{math}
 :label: quasiperiodic_cosine
 
-G(t_i, t_j) = \exp{  \left  \( \frac{t_i-t_j}{\lambda} \right \) ^2 } *  \left
-\{  h^2 \exp{ \left \{  -\frac{\sin^2{ [ \pi (t_i - t_j)/\theta]}}{2 w ^2} + c^2  \cos \frac{ 4\pi (t_i-t_j)}{\theta} \right \} } \right \} 
+G(\tau ) = \exp{\frac{-2 \tau^2}{\lambda^2}} *  \left [ h_1^2 \exp{-\frac {
+  \sin^2{( \pi \tau / \theta )}}{2 w ^2}} + h_2^2  \cos \frac{ 4\pi \tau}{\theta} \right ]
 
 ```
+
+Within `PyORBIT`, $h_1$ and $h_2$ have been labelled as `Hamp` and `Camp` respectively.
+
 
 #### Matern 3/2
 
@@ -195,4 +203,5 @@ The following parameters will be inherited from the common model (column *Common
 | Pdec      | Decay time scale of active regions $\lambda$ | common | ``activity``     | |
 | Oamp | Coherence scale $w$ | common | ``activity`` |   |
 | Hamp  | Amplitude of the kernel | dataset | ``activity``     | |
+| Camp  | Amplitude of the cosine part of the kernel | dataset | ``activity``     | |
 
