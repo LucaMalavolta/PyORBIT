@@ -877,6 +877,9 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
                                 bbox_inches='tight', dpi=300)
                     plt.close(fig)
                 else:
+                    print(np.shape(corner_plot['samples']))
+                    print(corner_plot['labels'])
+                    
                     GTC = pygtc.plotGTC(chains=np.asarray(corner_plot['samples']).T,
                                         paramNames=corner_plot['labels'],
                                         truths=corner_plot['truths'],
@@ -884,7 +887,7 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
                                         plotName=dir_output + common_name + "_corners.pdf")
                     GTC = None
 
-            except AssertionError:
+            except (AssertionError, IndexError):
                 print('     Something went wrong, plot skipped ')
                 print()
 
