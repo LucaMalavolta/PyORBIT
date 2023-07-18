@@ -265,7 +265,7 @@ class RossiterMcLaughlin_Precise(AbstractModel, AbstractTransit):
                     rd = np.sqrt((planet_position_xp[j] - self.star_grid['xc']) ** 2 +
                                     (planet_position_yp[j] - self.star_grid['yc']) ** 2)
 
-                    """ Seelction of the portion of stars covered by the planet"""
+                    """ Selection of the portion of stars covered by the planet"""
                     sel_eclipsed = (rd <= parameter_values['R_Rs']) & self.star_grid['inside']
 
                     ccf_out += ccf_total - np.sum(star_grid_ccf[sel_eclipsed,:], axis=0)

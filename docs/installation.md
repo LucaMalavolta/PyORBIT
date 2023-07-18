@@ -26,13 +26,6 @@ WINDOWS: activate pyorbit
 LINUX, macOS: conda activate pyorbit
 ```
 
-To avoid any nuisance with numba, jax, and all those picky packages, I suggest you everything you need using the reuirements file:
-```{code} bash
-wget https://raw.githubusercontent.com/LucaMalavolta/PyORBIT/main/extra_requirements.txt
-pip install -r extra_requirements.txt
-```
-
-
 ## Install using pip
 
 You can then install `PyORBIT` by using `pip`:
@@ -52,6 +45,11 @@ Note that the name is  `pyorbit-package` and not  `pyorbit`, as the former was a
 wget https://raw.githubusercontent.com/LucaMalavolta/PyORBIT/main/extra_requirements.txt
 pip install -r extra_requirements.txt
 ```
+
+```{tip}
+Requirement file has weaker constraints on package versioning (see below), so remember to install `PyORBIT` first  to avoid version incompatibilities
+```
+
 
 ## Install from the repository
 
@@ -96,8 +94,8 @@ Again, I suggest to install the extra requirements following the instructions gi
 If you repent and you want to go back a previous version of  `PyORBIT`, just install with pip the desired version:
 
 ```{code} bash
- pip install pyorbit-package=9.1.13
-```
+ pip install pyorbit-package=10.0.0
+ ```
 
 ## Requirements
 
