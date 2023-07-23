@@ -491,7 +491,7 @@ def get_theta_dictionary(mc):
     return theta_dictionary
 
 
-def get_model(mc, theta, bjd_dict):
+def get_model(mc, theta, bjd_dict, **kwargs):
     model_out = {}
     model_x0 = {}
 
@@ -654,29 +654,34 @@ def get_model(mc, theta, bjd_dict):
                 model_out[dataset_name]['complete'] += model_out[dataset_name][logchi2_gp_model]
 
                 """ Attempt to avoid RAM overflow
-                    A float64 takes 64 bits -> 8 kilobytes
-                    here we set it to take 0.5 Gb
                 """
-                ram_occupancy= (0.5 *  1024**3) / 8
                 x0_len = len(x0_plot)
 
-                #if (x0_len * dataset.n) > ram_occupancy:
-                if (x0_len > 10000):
+                plot_split_threshold = kwargs.get('plot_split_threshold', 10000)
+                low_ram_plot = kwargs.get('low_ram_plot', False)
 
-                    print('     Splitting the plot array to allow GP prediction of extended datasets, it may take a while...')
+                #if (x0_len * dataset.n) > ram_occupancy:
+                if (x0_len > plot_split_threshold) or low_ram_plot:
 
                     x0_out = np.empty(x0_len)
                     x0_var = np.empty(x0_len)
 
                     array_length = int(x0_len / dataset.n)
+                    if low_ram_plot:
+                        array_length = dataset.n
+                    elif plot_split_threshold < array_length:
+                        array_length = plot_split_threshold
 
                     id_start = 0
                     id_end = array_length
 
                     max_iterations = x0_len//array_length + 1
-                    for i_gp in tqdm(range(max_iterations+1)):
 
-                        #print("{0:4.1f}%".format(100/max_iterations*i_gp), end = '')
+                    print('     Splitting the plot array to allow GP prediction of extended datasets, it may take a while...')
+                    print('     # {0:d} chunks of {1:d} epochs each'.format(max_iterations, array_length))
+                    print('     Check the documentation if the code is taking too long or if it crashes...')
+
+                    for i_gp in tqdm(range(max_iterations)):
 
                         if (id_end+array_length >= x0_len):
                             id_end = -1
@@ -692,7 +697,6 @@ def get_model(mc, theta, bjd_dict):
                         id_start += array_length
                         id_end += array_length
 
-                    #print('   ...Done')
                 else:
                     print('     computing GP prediction for the whole temporal range, it may take a while...')
 
@@ -717,32 +721,38 @@ def get_model(mc, theta, bjd_dict):
         model_out[dataset_name]['complete'] += model_out[dataset_name][logchi2_gp_model]
 
         """ Attempt to avoid RAM overflow
-            A float64 takes 64 bits -> 8 kilobytes
-            here we set it to take 0.5 Gb
         """
-        ram_occupancy= (0.5 *  1024**3) / 8
 
         x0_plot = bjd_dict[dataset_name]['x0_plot']
         x0_len = len(x0_plot)
 
-        #if (6* x0_len * dataset.n * len(delayed_lnlk_computation)**2) > ram_occupancy:
-        if (x0_len > 10000):
+        plot_split_threshold = kwargs.get('plot_split_threshold', 10000)
+        low_ram_plot = kwargs.get('low_ram_plot', False)
 
-            print('     Splitting the plot array to allow GP prediction of extended datasets, it may take a while...')
+        #if (6* x0_len * dataset.n * len(delayed_lnlk_computation)**2) > ram_occupancy:
+        if (x0_len > plot_split_threshold) or low_ram_plot:
 
             x0_out = np.empty(x0_len)
             x0_var = np.empty(x0_len)
 
             array_length = int(x0_len / dataset.n)
-            #print(array_length)
+            if low_ram_plot:
+                array_length = dataset.n
+            elif plot_split_threshold < array_length:
+                array_length = plot_split_threshold
 
             id_start = 0
             id_end = array_length
 
             max_iterations = x0_len//array_length + 1
-            #print(max_iterations)
-            #print()
-            for i_gp in tqdm(range(max_iterations+1)):
+
+
+            print('     Splitting the plot array to allow GP prediction of extended datasets, it may take a while...')
+            print('     # {0:d} chunks of {1:d} epochs each'.format(max_iterations, array_length))
+            print('     Check the documentation if the code is taking too long or if it crashes...')
+
+
+            for i_gp in tqdm(range(max_iterations)):
 
                 #print("{0:4.1f}%".format(100/max_iterations*i_gp), end = '')
 

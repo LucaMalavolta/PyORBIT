@@ -102,9 +102,6 @@ class GaussianProcess_QuasiPeriodicActivity(AbstractModel):
         else:
             self.rotdec_condition = self._hypercond_00
 
-        #for common_model in self.common_ref:
-        #    if mc.models[common_model].model_class == 'activity':
-        #        self.use_stellar_rotation_period = getattr(common_model, 'use_stellar_rotation_period', False)
         for common_ref in self.common_ref:
             if mc.common_models[common_ref].model_class == 'activity':
                 self.use_stellar_rotation_period = getattr(mc.common_models[common_ref], 'use_stellar_rotation_period', False)
@@ -179,6 +176,9 @@ class GaussianProcess_QuasiPeriodicActivity(AbstractModel):
 
     def sample_predict(self, parameter_values, dataset, x0_input=None, return_covariance=False, return_variance=False):
 
+        if self.use_stellar_rotation_period:
+            parameter_values['Prot'] = parameter_values['rotation_period']
+
         gp_pams = self.convert_val2gp(parameter_values)
 
         env = np.sqrt(dataset.e ** 2.0 + dataset.jitter ** 2.0)
@@ -190,6 +190,9 @@ class GaussianProcess_QuasiPeriodicActivity(AbstractModel):
             return self.gp[dataset.name_ref].predict(dataset.residuals, x0_input, return_cov=return_covariance, return_var=return_variance)
 
     def sample_conditional(self, parameter_values, dataset, x0_input=None):
+
+        if self.use_stellar_rotation_period:
+            parameter_values['Prot'] = parameter_values['rotation_period']
 
         gp_pams = self.convert_val2gp(parameter_values)
 

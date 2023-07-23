@@ -81,6 +81,17 @@ class GP_Pyaneti_QuasiPeriodicActivity(AbstractModel):
         else:
             self.rotdec_condition = self._hypercond_00
 
+        for common_ref in self.common_ref:
+            if mc.common_models[common_ref].model_class == 'activity':
+                self.use_stellar_rotation_period = getattr(mc.common_models[common_ref], 'use_stellar_rotation_period', False)
+                break
+
+        self.use_stellar_rotation_period =  kwargs.get('use_stellar_rotation_period', self.use_stellar_rotation_period)
+
+        if self.use_stellar_rotation_period:
+            self.list_pams_common.update(['rotation_period'])
+            self.list_pams_common.discard('Prot')
+
     def initialize_model_dataset(self, mc, dataset, **kwargs):
 
         """ when reloading the .p files, the object is not reinitialized, so we have to skip the
@@ -136,6 +147,9 @@ class GP_Pyaneti_QuasiPeriodicActivity(AbstractModel):
     #    return
 
     def add_internal_dataset(self, parameter_values, dataset):
+
+        if self.use_stellar_rotation_period:
+            parameter_values['Prot'] = parameter_values['rotation_period']
 
         self.internal_parameter_values = parameter_values
 

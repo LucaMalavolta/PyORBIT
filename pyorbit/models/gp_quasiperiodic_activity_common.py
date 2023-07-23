@@ -48,7 +48,22 @@ class GaussianProcess_QuasiPeriodicActivity_Common(AbstractModel):
         }
 
         self.gp = {}
-        self.internal_dataset = {'x0': [], 'yr': [], 'ej': []}
+
+        self._added_datasets = 0
+        self.dataset_ordering = {}
+
+        self._dataset_x0 = []
+        self._dataset_e2 = []
+        self._dataset_names = {}
+
+        self._dataset_nindex = []
+
+        self._dataset_ej2 = []
+        self._dataset_res = []
+
+        self._added_datasets = 0
+        self._n_cov_matrix = 0
+
         self.internal_parameter_values = None
         self.internal_gp_pams = None
         self.use_HODLR = False
@@ -105,11 +120,31 @@ class GaussianProcess_QuasiPeriodicActivity_Common(AbstractModel):
         else:
             self.rotdec_condition = self._hypercond_00
 
+        self.use_stellar_rotation_period =  kwargs.get('use_stellar_rotation_period', self.use_stellar_rotation_period)
+
+        if self.use_stellar_rotation_period:
+            self.list_pams_common.update(['rotation_period'])
+            self.list_pams_common.discard('Prot')
+
     def initialize_model_dataset(self, mc, dataset, **kwargs):
-        self.define_kernel(dataset)
+
+        self._dataset_nindex.append([self._n_cov_matrix,
+                                    self._n_cov_matrix+dataset.n])
+        self._dataset_x0.append(dataset.x0)
+        self._dataset_e2 = np.append(self._dataset_e2, dataset.e**2)
+        
+        self._dataset_names[dataset.name_ref] = self._added_datasets
+        self._n_cov_matrix += dataset.n
+        self._added_datasets += 1
+
+        self._dataset_ej2 = self._dataset_e2 * 1.
+        self._dataset_res = self._dataset_e2 * 0.
+
+        self.define_kernel()
+
         return
 
-    def define_kernel(self, dataset):
+    def define_kernel(self):
 
         gp_pams = np.ones(self.n_pams)
         """ Kernel initialized with fake values... don't worry, they'll be overwritten soon"""
@@ -135,65 +170,57 @@ class GaussianProcess_QuasiPeriodicActivity_Common(AbstractModel):
             self.gp = george.GP(kernel)
         # self.gp = george.GP(kernel, solver=george.HODLRSolver, mean=0.00)
 
-        """ I've decided to add the jitter in quadrature instead of using a constant kernel to allow the use of
-        different / selective jitter within the dataset
-        """
-        env = np.sqrt(dataset.e ** 2.0 + dataset.jitter ** 2.0)
-
-        self.gp.compute(dataset.x0, env)
-        # Temporary patch
+        self.gp.compute(self._dataset_x0, self._dataset_ej2)
 
         return
 
-    def add_internal_dataset(self, parameter_values, dataset, reset_status):
-        if not reset_status:
-            self.internal_dataset['x0'] = []
-            self.internal_dataset['yr'] = []
-            self.internal_dataset['ej'] = []
-            self.internal_parameter_values = parameter_values
-            self.internal_gp_pams = self.convert_val2gp(parameter_values)
+    def add_internal_dataset(self, parameter_values, dataset):
+        d_ind = self._dataset_names[dataset.name_ref]
+        d_nstart, d_nend = self._dataset_nindex[d_ind]
 
-        self.internal_dataset['x0'].extend(dataset.x0)
-        self.internal_dataset['yr'].extend(dataset.residuals)
-        self.internal_dataset['ej'].extend(
-            np.sqrt(dataset.e ** 2.0 + dataset.jitter ** 2.0))
+        self._dataset_ej2[d_nstart:d_nend] = self._dataset_e2[d_nstart:d_nend] + dataset.jitter**2.0
+        self._dataset_res[d_nstart:d_nend] = dataset.residuals
+
+        if self.use_stellar_rotation_period:
+            parameter_values['Prot'] = parameter_values['rotation_period']
+
+        self.internal_parameter_values = parameter_values
+        self.internal_gp_pams = self.convert_val2gp(parameter_values)
 
     def lnlk_compute(self):
         """ 2 steps:
            1) theta parameters must be converted in physical units (e.g. from logarithmic to linear spaces)
            2) physical values must be converted to {\tt george} input parameters
         """
+
         if not self.hyper_condition(self.internal_parameter_values):
             return -np.inf
         if not self.rotdec_condition(self.internal_parameter_values):
             return -np.inf
 
         self.gp.set_parameter_vector(self.internal_gp_pams)
-        self.gp.compute(
-            self.internal_dataset['x0'], self.internal_dataset['ej'])
-        return self.gp.log_likelihood(self.internal_dataset['yr'], quiet=True)
+        self.gp.compute(self._dataset_x0, np.sqrt(self._dataset_ej2))
+        return self.gp.log_likelihood(self._dataset_res, quiet=True)
 
     def sample_predict(self, dataset, x0_input=None, return_covariance=False, return_variance=False):
 
         self.gp.set_parameter_vector(self.internal_gp_pams)
-        self.gp.compute(
-            self.internal_dataset['x0'], self.internal_dataset['ej'])
+        self.gp.compute(self._dataset_x0, np.sqrt(self._dataset_ej2))
 
         if x0_input is None:
-            return self.gp.predict(self.internal_dataset['yr'], dataset.x0, return_cov=return_covariance, return_var=return_variance)
+            return self.gp.predict(self._dataset_res, dataset.x0, return_cov=return_covariance, return_var=return_variance)
         else:
-            return self.gp.predict(self.internal_dataset['yr'], x0_input, return_cov=return_covariance, return_var=return_variance)
+            return self.gp.predict(self._dataset_res, x0_input, return_cov=return_covariance, return_var=return_variance)
 
     def sample_conditional(self, dataset, x0_input=None):
 
         self.gp.set_parameter_vector(self.internal_gp_pams)
-        self.gp.compute(
-            self.internal_dataset['x0'], self.internal_dataset['ej'])
+        self.gp.compute(self._dataset_x0, np.sqrt(self._dataset_ej2))
 
         if x0_input is None:
-            return self.gp.sample_conditional(self.internal_dataset['yr'], dataset.x0)
+            return self.gp.sample_conditional(self._dataset_res, dataset.x0)
         else:
-            return self.gp.sample_conditional(self.internal_dataset['yr'], x0_input)
+            return self.gp.sample_conditional(self._dataset_res, x0_input)
 
     @staticmethod
     def _hypercond_00(parameter_values):

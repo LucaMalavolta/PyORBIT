@@ -70,7 +70,17 @@ class GaussianProcess_QuasiPeriodicActivity_Alternative(AbstractModel):
             self.rotdec_condition = self._hypercond_02
         else:
             self.rotdec_condition = self._hypercond_00
+        
+        for common_ref in self.common_ref:
+            if mc.common_models[common_ref].model_class == 'activity':
+                self.use_stellar_rotation_period = getattr(mc.common_models[common_ref], 'use_stellar_rotation_period', False)
+                break
 
+        self.use_stellar_rotation_period =  kwargs.get('use_stellar_rotation_period', self.use_stellar_rotation_period)
+
+        if self.use_stellar_rotation_period:
+            self.list_pams_common.update(['rotation_period'])
+            self.list_pams_common.discard('Prot')
 
     def initialize_model_dataset(self, mc, dataset, **kwargs):
 
@@ -81,6 +91,10 @@ class GaussianProcess_QuasiPeriodicActivity_Alternative(AbstractModel):
         return
 
     def lnlk_compute(self, parameter_values, dataset):
+
+        if self.use_stellar_rotation_period:
+            parameter_values['Prot'] = parameter_values['rotation_period']
+
         if not self.hyper_condition(parameter_values):
             return -np.inf
         if not self.rotdec_condition(parameter_values):
@@ -111,6 +125,9 @@ class GaussianProcess_QuasiPeriodicActivity_Alternative(AbstractModel):
         return output
 
     def sample_predict(self, parameter_values, dataset, x0_input=None, return_covariance=False, return_variance=False):
+
+        if self.use_stellar_rotation_period:
+            parameter_values['Prot'] = parameter_values['rotation_period']
 
         env = dataset.e ** 2.0 + dataset.jitter ** 2.0
         cov_matrix = self._compute_cov_matrix(parameter_values,
@@ -149,6 +166,9 @@ class GaussianProcess_QuasiPeriodicActivity_Alternative(AbstractModel):
             return mu
 
     def sample_conditional(self, parameter_values, dataset, x0_input=None):
+
+        if self.use_stellar_rotation_period:
+            parameter_values['Prot'] = parameter_values['rotation_period']
 
         val, std = self.sample_predict(parameter_values, dataset, x0_input)
         return val

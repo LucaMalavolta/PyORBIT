@@ -25,6 +25,7 @@ def pyorbit_results():
     parser.add_argument('-ddp', type=str, nargs='?', default=False, help='Save dynesty default plots')
     parser.add_argument('-all_corners', type=str, nargs='?', default=False, help='Do all the corner plots')
     parser.add_argument('-all', type=str, nargs='?', default=False, help='Active all flags')
+    parser.add_argument('-noacf', type=str, nargs='?', default=False, help='Skip ACF, even when all the flags are active')
     parser.add_argument('-dfm_corner', type=str, nargs='?', default=False, help='Use DFM corner script for corner plots')
     parser.add_argument('-getdist_corner', type=str, nargs='?', default=False, help='Use getdist script for corner plots')
 
@@ -33,7 +34,7 @@ def pyorbit_results():
         'write_models': False,
         'write_planet_samples': False,
         'write_all_samples': False,
-        'print_acf': False, # todo bring back
+        'print_acf': True,
         'plot_acf': False,
         'chains': False,
         'traces': False,
@@ -143,6 +144,9 @@ def pyorbit_results():
         plot_dictionary['common_corner'] = True
         plot_dictionary['dataset_corner'] = True
 
+    if args.noacf is not False:
+        plot_dictionary['print_acf'] = False
+        plot_dictionary['plot_acf'] = False
 
     if sampler_name in unchained_samplers:
         plot_dictionary['lnprob_chain'] = False

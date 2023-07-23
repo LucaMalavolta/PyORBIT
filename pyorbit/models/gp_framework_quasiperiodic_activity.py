@@ -57,6 +57,17 @@ class GP_Framework_QuasiPeriodicActivity(AbstractModel):
         else:
             self.rotdec_condition = self._hypercond_00
 
+        for common_ref in self.common_ref:
+            if mc.common_models[common_ref].model_class == 'activity':
+                self.use_stellar_rotation_period = getattr(mc.common_models[common_ref], 'use_stellar_rotation_period', False)
+                break
+
+        self.use_stellar_rotation_period =  kwargs.get('use_stellar_rotation_period', self.use_stellar_rotation_period)
+
+        if self.use_stellar_rotation_period:
+            self.list_pams_common.update(['rotation_period'])
+            self.list_pams_common.discard('Prot')
+
     def initialize_model_dataset(self, mc, dataset, **kwargs):
 
         if self._added_datasets == 3:
@@ -146,6 +157,9 @@ class GP_Framework_QuasiPeriodicActivity(AbstractModel):
 
     def add_internal_dataset(self, parameter_values, dataset):
 
+        if self.use_stellar_rotation_period:
+            parameter_values['Prot'] = parameter_values['rotation_period']
+
         self.internal_parameter_values = parameter_values
 
         if dataset.kind == 'RV':
@@ -165,8 +179,6 @@ class GP_Framework_QuasiPeriodicActivity(AbstractModel):
             self._3ej[2*self._nx0:] = np.sqrt(self._3e[2*self._nx0:]
                                               ** 2 + dataset.jitter**2.0)
             self._3res[2 * self._nx0:] = dataset.residuals
-
-
 
 
     def _compute_distance(self, bjd0, bjd1):
@@ -292,6 +304,7 @@ class GP_Framework_QuasiPeriodicActivity(AbstractModel):
         return inv, detA, False
 
     def lnlk_compute(self):
+
         if not self.hyper_condition(self.internal_parameter_values):
             return -np.inf
         if not self.rotdec_condition(self.internal_parameter_values):

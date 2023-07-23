@@ -252,8 +252,9 @@ class TinyGP_Multidimensional_QuasiPeriodicActivity(AbstractModel):
 
             for ii in range(0, self._added_datasets):
                 temp_input = np.append(temp_input, x0_input)
-                temp_label = np.append(temp_label, (np.zeros_like(x0_input, dtype=int)+ii).astype(int))
-            X_input = (temp_input, temp_label)
+                temp_label = np.append(temp_label, np.zeros_like(x0_input, dtype=int) + ii)
+
+            X_input = (temp_input, temp_label.astype(int))
 
         theta_dict =  dict(
             gamma=1. / (2.*self.internal_parameter_values['Oamp'] ** 2),
@@ -267,13 +268,15 @@ class TinyGP_Multidimensional_QuasiPeriodicActivity(AbstractModel):
             x0_predict = X_input
         )
 
-
         gp = _build_tinygp_multidimensional(theta_dict)
         _, cond_gp = gp.condition(theta_dict['y'], theta_dict['x0_predict'])
 
+        #mu = cond_gp.mean
+        #std = np.sqrt(cond_gp.variance)
         mu_full = cond_gp.loc # or cond_gp.mean?
         mu = mu_full[l_nstart:l_nend]
         std = np.sqrt(cond_gp.variance)[l_nstart:l_nend]
+        
         if return_variance:
             return mu, std
         else:

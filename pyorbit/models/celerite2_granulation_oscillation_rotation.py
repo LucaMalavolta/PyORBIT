@@ -65,6 +65,12 @@ class Celerite2_Granulation_Oscillation_Rotation(AbstractModel):
 
     def initialize_model(self, mc, **kwargs):
 
+        for common_ref in self.common_ref:
+            if mc.common_models[common_ref].model_class == 'activity':
+                self.use_stellar_rotation_period = getattr(mc.common_models[common_ref], 'use_stellar_rotation_period', False)
+                break
+
+        self.use_stellar_rotation_period =  kwargs.get('use_stellar_rotation_period', self.use_stellar_rotation_period)
 
         self.rotation_kernels = kwargs.get('rotation_kernels', 1)
         self.granulation_kernels = kwargs.get('granulation_kernels', 2)
@@ -72,7 +78,12 @@ class Celerite2_Granulation_Oscillation_Rotation(AbstractModel):
 
         """ Only one rotation kernel is allowed """
         if self.rotation_kernels == 1 :
-            self.list_pams_common.update(['Prot'])
+
+            if self.use_stellar_rotation_period:
+                self.list_pams_common.update(['rotation_period'])
+            else:
+                self.list_pams_common.update(['Prot'])
+            
             self.list_pams_common.update(['rot_Q0'])
             self.list_pams_common.update(['rot_deltaQ'])
             self.list_pams_common.update(['rot_fmix'])
@@ -147,6 +158,9 @@ class Celerite2_Granulation_Oscillation_Rotation(AbstractModel):
         In celerite2 the old function "set_parameter_vector" has been removed
         and the kernel has to be defined every time
         """
+        if self.use_stellar_rotation_period:
+            parameter_values['Prot'] = parameter_values['rotation_period']
+
         self.gp[dataset.name_ref].mean = 0.
         i_kernels = 0
         if self.rotation_kernels == 1:
@@ -187,6 +201,9 @@ class Celerite2_Granulation_Oscillation_Rotation(AbstractModel):
         return self.gp[dataset.name_ref].log_likelihood(dataset.residuals)
 
     def sample_predict(self, parameter_values, dataset, x0_input=None, return_covariance=False, return_variance=False):
+
+        if self.use_stellar_rotation_period:
+            parameter_values['Prot'] = parameter_values['rotation_period']
 
         self.gp[dataset.name_ref].mean = 0.
 
@@ -232,6 +249,9 @@ class Celerite2_Granulation_Oscillation_Rotation(AbstractModel):
             return self.gp[dataset.name_ref].predict(dataset.residuals, x0_input, return_cov=return_covariance, return_var=return_variance)
 
     def sample_conditional(self, parameter_values, dataset,  x0_input=None):
+
+        if self.use_stellar_rotation_period:
+            parameter_values['Prot'] = parameter_values['rotation_period']
 
         self.gp[dataset.name_ref].mean = 0.
         i_kernels = 0

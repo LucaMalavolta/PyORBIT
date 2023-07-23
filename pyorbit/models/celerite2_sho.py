@@ -46,6 +46,13 @@ class Celerite2_SHO(AbstractModel):
 
     def initialize_model(self, mc, **kwargs):
 
+        for common_ref in self.common_ref:
+            if mc.common_models[common_ref].model_class == 'activity':
+                self.use_stellar_rotation_period = getattr(mc.common_models[common_ref], 'use_stellar_rotation_period', False)
+                break
+
+        self.use_stellar_rotation_period =  kwargs.get('use_stellar_rotation_period', self.use_stellar_rotation_period)
+
         self.retrieve_rho_tau = self._internal_transformation_mod00
 
         change_variable_names = [
@@ -57,7 +64,10 @@ class Celerite2_SHO(AbstractModel):
 
         for dict_name in change_variable_names:
             if kwargs.get(dict_name, False):
-                self.list_pams_common.update(['Prot'])
+                if self.use_stellar_rotation_period:
+                    self.list_pams_common.update(['rotation_period'])
+                else:
+                    self.list_pams_common.update(['Prot'])
                 self.list_pams_common.update(['Pdec'])
                 self.list_pams_common.discard('sho_period')
                 self.list_pams_common.discard('sho_tau')
@@ -86,6 +96,9 @@ class Celerite2_SHO(AbstractModel):
         In celerite2 the old function "set_parameter_vector" has been removed
         and the kernel has to be defined every time
         """
+        if self.use_stellar_rotation_period:
+            parameter_values['Prot'] = parameter_values['rotation_period']
+
         rho, tau = self.retrieve_rho_tau(parameter_values)
 
         self.gp[dataset.name_ref].mean = 0.
@@ -97,6 +110,9 @@ class Celerite2_SHO(AbstractModel):
         return self.gp[dataset.name_ref].log_likelihood(dataset.residuals)
 
     def sample_predict(self, parameter_values, dataset, x0_input=None, return_covariance=False, return_variance=False):
+
+        if self.use_stellar_rotation_period:
+            parameter_values['Prot'] = parameter_values['rotation_period']
 
         rho, tau = self.retrieve_rho_tau(parameter_values)
 
@@ -112,6 +128,8 @@ class Celerite2_SHO(AbstractModel):
             return self.gp[dataset.name_ref].predict(dataset.residuals, x0_input, return_cov=return_covariance, return_var=return_variance)
 
     def sample_conditional(self, parameter_values, dataset,  x0_input=None):
+        if self.use_stellar_rotation_period:
+            parameter_values['Prot'] = parameter_values['rotation_period']
 
         rho, tau = self.retrieve_rho_tau(parameter_values)
 

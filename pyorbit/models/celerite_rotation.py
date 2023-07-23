@@ -93,6 +93,19 @@ class Celerite_Rotation(AbstractModel):
 
         return output_pams
 
+    def initialize_model(self, mc,  **kwargs):
+
+        for common_ref in self.common_ref:
+            if mc.common_models[common_ref].model_class == 'activity':
+                self.use_stellar_rotation_period = getattr(mc.common_models[common_ref], 'use_stellar_rotation_period', False)
+                break
+
+        self.use_stellar_rotation_period =  kwargs.get('use_stellar_rotation_period', self.use_stellar_rotation_period)
+
+        if self.use_stellar_rotation_period:
+            self.list_pams_common.update(['rotation_period'])
+            self.list_pams_common.discard('Prot')
+
     def initialize_model_dataset(self, mc, dataset, **kwargs):
         self.define_kernel(dataset)
         return
@@ -123,6 +136,9 @@ class Celerite_Rotation(AbstractModel):
            1) theta parameters must be converted in physical units (e.g. from logarithmic to linear spaces)
            2) physical values must be converted to {\tt george} input parameters
         """
+        if self.use_stellar_rotation_period:
+            parameter_values['Prot'] = parameter_values['rotation_period']
+
         gp_pams = self.convert_val2gp(parameter_values)
 
         env = np.sqrt(dataset.e ** 2.0 + dataset.jitter ** 2.0)
@@ -132,6 +148,9 @@ class Celerite_Rotation(AbstractModel):
         return self.gp[dataset.name_ref].log_likelihood(dataset.residuals)
 
     def sample_predict(self, parameter_values, dataset, x0_input=None, return_covariance=False, return_variance=False):
+
+        if self.use_stellar_rotation_period:
+            parameter_values['Prot'] = parameter_values['rotation_period']
 
         gp_pams = self.convert_val2gp(parameter_values)
 
@@ -145,6 +164,9 @@ class Celerite_Rotation(AbstractModel):
             return self.gp[dataset.name_ref].predict(dataset.residuals, x0_input, return_cov=return_covariance, return_var=return_variance)
 
     def sample_conditional(self, parameter_values, dataset,  x0_input=None):
+
+        if self.use_stellar_rotation_period:
+            parameter_values['Prot'] = parameter_values['rotation_period']
 
         gp_pams = self.convert_val2gp(parameter_values)
 

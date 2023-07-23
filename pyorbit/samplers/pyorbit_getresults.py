@@ -543,6 +543,7 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
         print()
         print(' Samples: {}'.format(n_samplings))
 
+
     print()
     print(' LN posterior: {0:12f}   {1:12f} {2:12f} (15-84 p) '.format(
         lnprob_med[0], lnprob_med[2], lnprob_med[1]))
@@ -1167,11 +1168,11 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
                 bjd_plot[dataset_name]['x0_plot'] = dataset.x
 
         bjd_plot['model_out'], bjd_plot['model_x'] = results_analysis.get_model(
-            mc, chain_med[:, 0], bjd_plot)
+            mc, chain_med[:, 0], bjd_plot, **config_in['parameters'])
         bjd_plot['MAP_model_out'], bjd_plot['MAP_model_x'] = results_analysis.get_model(
-            mc, chain_MAP, bjd_plot)
+            mc, chain_MAP, bjd_plot, **config_in['parameters'])
         bjd_plot['sampleMED_model_out'], bjd_plot['sampleMED_model_x'] = results_analysis.get_model(
-            mc, chain_sampleMED, bjd_plot)
+            mc, chain_sampleMED, bjd_plot, **config_in['parameters'])
 
         #print(bjd_plot['model_out'])
         #print(type(bjd_plot['model_out']))

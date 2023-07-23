@@ -589,6 +589,12 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
             print()
             sys.stdout.flush()
 
+            if safe_reload:
+                print(' safe_reload flag on True, the program will now quit ')
+                print(' You have to relaunch it again in order for emcee to work properly')
+                print(' No worries, your PyDE results have been saved!')
+                quit()
+
             # It turns out that reloading the sampler from the file will
             # result in faster parallelization...
             state, sampler = emcee_simpler_load_from_cpickle(emcee_dir_output)
