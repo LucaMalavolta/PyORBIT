@@ -34,6 +34,12 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
     use_tex = False
     plt.rc('text', usetex=use_tex)
 
+    font_label = config_in['parameters'].get('font_label', 18)
+
+    plt.rcParams['font.family'] = 'DeJavu Serif'
+    plt.rcParams['font.serif'] = ['Times New Roman']
+    mpl.rcParams.update({'font.size': font_label})
+
 
     if plot_dictionary['use_corner']:
         import corner
