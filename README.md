@@ -29,9 +29,15 @@ The model has been introduced a few years back, but now it can finally take adva
 - *tinyGP for better performances*
 Working on both *classic* and *multidimensional* Gaussian Process, although the former is showing some JAX problems when producing the output results.
 
-```{admonition} No back-compatibility
+```{text}
+**No back-compatibility**
 Version 10 is not compatible with the results obtained with version 9.
 If you have been using the development version of V10, you may run into incompatibility issues as well.
+```
+
+``` 
+**Messed-up repository**
+I must have done something wrong when upgrading to version 10, if you already downloaded the repository before the upgrrade then I advise to to delete the repo and clone it again.
 ```
 
 ## Updates on version 9
