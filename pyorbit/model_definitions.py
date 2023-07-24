@@ -279,6 +279,8 @@ datatype_definition = {
     'Phot': ['P', 'Ph', 'p', 'ph', 'PHOT', 'Phot', 'phot', 'Photometry', 'photometry'],
     'FWHM': ['FWHM', 'fwhm'],
     'BIS': ['BIS', 'bis'],
+    'EWs': ['EWs', 'EW', 'ew', 'ews'],
+    'Activity': ['Activity', 'activity', 'act_index', 'Act_index', 'activity_index', 'Activity_index'],
     'Ca_HK': ['Ca', 'Cahk', 'CaHK', 'Ca_hk', 'Ca_HK',
               'logR', 'logRhk', 'logRHK', 'logR_hk', 'logR_HK',
               'log(R)', 'log(Rhk)', 'log(RHK)', 'log(R_hk)', 'log(R_HK)'],
