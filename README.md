@@ -35,7 +35,7 @@ Version 10 is not compatible with the results obtained with version 9.
 If you have been using the development version of V10, you may run into incompatibility issues as well.
 ```
 
-``` 
+```{text}
 **Messed-up repository**
 I must have done something wrong when upgrading to version 10, if you already downloaded the repository before the upgrrade then I advise to to delete the repo and clone it again.
 ```
