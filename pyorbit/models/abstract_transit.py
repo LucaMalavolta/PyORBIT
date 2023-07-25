@@ -19,30 +19,16 @@ class AbstractTransit(object):
         self.compute_inclination = True
         self.compute_time_inferior_conjunction = False
 
-        """ This keywors is specific to Rossiter-McLaughlin analysis"""
+        """ These keywords are specific to Rossiter-McLaughlin analysis"""
         self.compute_Omega_rotation = False
-        self.compute_star_inclination = False
-        self.compute_vsini = False
+        self.compute_Omega_rotation_model = -1
 
         """ This keywors is specific to TTV analysis analysis
         Right now implemented only in pytransit_ttv_ancillary
         """
         self.use_shared_ttvs = False
 
-        """ Keywords inherited from Star_parameter common model (with switched logical sign)"""
-        #self.use_stellar_rotation = False
-        #self.use_stellar_inclination = False
-        #self.use_equatorial_velocity = False
-        #self.use_rotation_from_activity = False
-
-        """ Some models just want fixed values for stellar raddi and temperature"""
-        self.fixed_stellar_radius = False
-        self.fixed_stellar_temperature = False
-
         self.limb_darkening_model = None
-
-        #self.retrieve_Omega_Istar = None
-        #self.retrieve_Istar = None
 
         self.multivariate_mass_radius = False
         self.code_options = {}
@@ -111,7 +97,7 @@ class AbstractTransit(object):
         """
 
         self.use_differential_rotation = kwargs.get('use_differential_rotation', mc.common_models[self.stellar_ref].use_differential_rotation)
-        self.use_stellar_rotation = kwargs.get('use_differential_rotation', mc.common_models[self.stellar_ref].use_stellar_rotation)
+        self.use_stellar_rotation = kwargs.get('use_stellar_rotation', mc.common_models[self.stellar_ref].use_stellar_rotation)
 
         """ check if the differential rotation should be included in the model"""
         if self.use_differential_rotation:
@@ -140,7 +126,6 @@ class AbstractTransit(object):
         else:
             self.list_pams_common.discard('v_sini')
 
-
         if mc.common_models[self.stellar_ref].use_stellar_inclination:
             self.list_pams_common.update(['i_star'])
 
@@ -152,6 +137,10 @@ class AbstractTransit(object):
 
         if mc.common_models[self.stellar_ref].use_stellar_radius:
             self.list_pams_common.update(['radius'])
+
+        if mc.common_models[self.stellar_ref].use_stellar_rotation and mc.common_models[self.stellar_ref].use_equatorial_velocity:
+            print('   ***  WARNING *** stellar rotation period and equatorial velocity  ')
+            print('                    included as independent parameters ')
 
 
         self.convective_order = kwargs.get('convective_order', mc.common_models[self.stellar_ref].convective_order)
@@ -318,13 +307,6 @@ class AbstractTransit(object):
                                                parameter_values['mean_long'],
                                                parameter_values['e'],
                                                parameter_values['omega']) + Tref
-
-        if self.fixed_stellar_radius:
-            parameter_values['radius'] = self.code_options['radius']
-
-        if self.fixed_stellar_temperature:
-            parameter_values['temperature'] = self.code_options['temperature']
-
 
 
     def _limb_darkening_coefficients(self, parameter_values):

@@ -241,12 +241,24 @@ class CommonStarParameters(AbstractCommon):
             'v_sini' not in self.parameter_index:
 
             pam00_index = self.sampler_parameters['veq_star']
-            pam01_index = self.sampler_parameters['v_sini']
+            pam01_index = self.sampler_parameters['i_star']
 
             self.transformation['v_sini'] = get_2var_vsini
             self.parameter_index['v_sini'] = [pam00_index, pam01_index]
 
             derived_list.append('v_sini')
+
+        if 'veq_star' in self.sampler_parameters and \
+            'radius' in self.sampler_parameters and  \
+            'rotation_period' not in self.parameter_index:
+
+            pam00_index = self.sampler_parameters['veq_star']
+            pam01_index = self.sampler_parameters['radius']
+
+            self.transformation['rotation_period'] = get_2var_veq_radius_rot
+            self.parameter_index['rotation_period'] = [pam00_index, pam01_index]
+
+            derived_list.append('rotation_period')
 
         if 'density' in self.sampler_parameters and  \
             'radius' in self.sampler_parameters and \
