@@ -50,6 +50,79 @@ pip install -r extra_requirements.txt
 Requirement file has weaker constraints on package versioning (see below), so remember to install `PyORBIT` first  to avoid version incompatibilities
 ```
 
+## `starry` support 
+
+The [`starry`](https://starry.readthedocs.io/en/latest/) code package is a suite of tools for mapping stars and exoplanets based on timeseries data, and it has been implemented in several models within `PyORBIT`. Due to the use of discontinued libraries as [`Theano`](https://github.com/Theano), its installation requires some different steps. 
+
+### `g++` installation
+In order to work, starry requires `g++` (available through `gcc`), while `blas` libraries are optional.
+It may be possible that you already have `g++` installed, in this cause you should get a  `fatal error` when trying to run iot without an input file 
+```{code} bash
+g++
+   g++: fatal error: no input files
+   compilation terminated.
+```
+
+On my Ubuntu computer, I managed to install `g++` and `blas` libraries only after installing `aptitude`. 
+```{code} bash
+sudo apt install build-essential manpages-dev software-properties-common
+sudo apt install aptitude
+sudo aptitude install g++
+sudo aptitude install libopenblas-dev
+```
+In the case of `g++`, I had to take a step further by checking the proposed solutions to solve conflicts.  
+
+Installation on Fedora was much straightforward. 
+
+```{code} bash
+sudo yum install gcc-c++
+sudo yum install blas blas-devel
+```
+
+I'm just reporting these issues for your convenience, if you are running on troubles please check with your IT crowd / best friend.  
+
+### installing `starry` 
+
+First of all, create a dedicated environment:
+```{code} bash
+conda create --name starry python=3.9
+```
+This step is **strongly**  suggested as the installation of `starry` will downgrade several packages, causing dependancies issues.
+
+The best way to make sure that our packages are compatible with `starry` is to install it as the first packaged in the newly created environment, togehter with some extra packages. 
+
+```{code} bash
+conda activate starry
+pip install starry
+pip install mkl mkl-service
+```
+
+We then install all the packages required by `PyORBIT`:
+```{code} bash
+wget https://raw.githubusercontent.com/LucaMalavolta/PyORBIT/main/extra_requirements.txt
+pip install -r extra_requirements.txt
+```
+
+We finally install `PyORBIT` using `pip`, but without checking for dependencies
+```{code} bash
+pip install --no-dependencies pyorbit-package
+```
+
+You should see something like this:
+```{code} bash
+(starry) [~]$ python
+Python 3.9.17 (main, Jul  5 2023, 20:41:20)
+[GCC 11.2.0] :: Anaconda, Inc. on linux
+Type "help", "copyright", "credits" or "license" for more information.
+>>> import starry
+>>> starry.__version__
+'1.2.0'
+>>>
+```
+
+If you get an error relative to `g++`, it means that something went wrong during its installation and you will not be able to use `starry` until you fix it. If you get an error about the `blas` library, you may still use `starry` but with possibly slower performances.
+
+
 
 ## Install from the repository
 
@@ -94,7 +167,7 @@ Again, I suggest to install the extra requirements following the instructions gi
 If you repent and you want to go back a previous version of  `PyORBIT`, just install with pip the desired version:
 
 ```{code} bash
- pip install pyorbit-package=10.0.0
+ pip install pyorbit-package==10.0.0
  ```
 
 ## Requirements
