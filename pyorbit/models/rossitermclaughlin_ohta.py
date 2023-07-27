@@ -31,16 +31,19 @@ class RossiterMcLaughlin_Ohta(AbstractModel, AbstractTransit):
             'omega',  # argument of pericenter (in radians)
             'lambda', # Sky-projected angle between stellar rotation axis and normal of orbit plane [deg]
             'R_Rs',  # planet radius (in units of stellar radii)
-            #'v_sini', # projected rotational velocity of the star
-            'rotation_period', # rotational period of the star
-            'radius', # radius of the star
         }
 
-        self.compute_Omega_rotation = True
+        self.Omega_rotation_conversion = None
 
         self.rm_ohta = None
 
     def initialize_model(self, mc, **kwargs):
+
+        mc.common_models[self.stellar_ref].use_stellar_inclination = True
+        if not (mc.common_models[self.stellar_ref].use_projected_velocity
+                or mc.common_models[self.stellar_ref].use_stellar_rotation):
+            mc.common_models[self.stellar_ref].use_equatorial_velocity = True
+            mc.common_models[self.stellar_ref].use_stellar_radius = True
 
         self._prepare_planetary_parameters(mc, **kwargs)
         self._prepare_star_parameters(mc, **kwargs)
@@ -58,8 +61,21 @@ class RossiterMcLaughlin_Ohta(AbstractModel, AbstractTransit):
 
         if len(self.ld_vars) > 1:
             print('WARNING on rossiter_mclaughlin ohta model:  ')
-            print(' this model accepts only linear limb-darkening coefficients')
+            print('    this model accepts only linear limb-darkening coefficients')
             print()
+
+        if mc.common_models[self.stellar_ref].use_equatorial_velocity \
+            and mc.common_models[self.stellar_ref].use_stellar_radius:
+                print("Angular rotation velocity from equatorial velocity and radius")
+                self.Omega_rotation_conversion = self._omega_conversion_mod00
+        elif self.compute_Omega_rotation and mc.common_models[self.stellar_ref].use_stellar_rotation:
+                print("Angular rotation velocity from rotation period")
+                self.Omega_rotation_conversion = self._omega_conversion_mod01
+        else:
+                print("Angular rotation velocity from vsini")
+                self.Omega_rotation_conversion = self._omega_conversion_mod02
+
+
 
     def compute(self, parameter_values, dataset, x0_input=None):
         """
@@ -71,17 +87,11 @@ class RossiterMcLaughlin_Ohta(AbstractModel, AbstractTransit):
         #t1_start = process_time()
 
         self.update_parameter_values(parameter_values, dataset.Tref)
+        parameter_values['Omega_rotation'] = self.Omega_rotation_conversion(parameter_values)
 
         for key, key_val in parameter_values.items():
             if np.isnan(key_val):
                 return 0.
-
-        parameter_values['i_star'] = np.arcsin(parameter_values['v_sini']  / (parameter_values['radius'] * constants.Rsun) * (parameter_values['rotation_period'] * constants.d2s)  / (2* np.pi)) * constants.rad2deg
-        try:
-            parameter_values['Omega_rotation'] = 2* np.pi / ( parameter_values['rotation_period'] * constants.d2s)
-        except:
-            parameter_values['Omega_rotation'] = parameter_values['v_sini'] / (parameter_values['radius'] * constants.Rsun) / np.sin(parameter_values['i_star'] * constants.deg2rad)
-
 
         if self.orbit == 'circular':
             self.rm_ohta.assignValue({"a": parameter_values['a_Rs'],
@@ -106,13 +116,13 @@ class RossiterMcLaughlin_Ohta(AbstractModel, AbstractTransit):
                                                          parameter_values['e'],
                                                          parameter_values['omega'])
 
-            self.rm_ohta.assignValue({"a": par_a,
-                "lambda": parameter_values['lambda']/180.*np.pi,
+            self.rm_ohta.assignValue({"a": parameter_values['a_Rs'],
+                "lambda": parameter_values['lambda']*constants.deg2rad,
                 "epsilon": parameter_values['ld_c1'],
                 "P": parameter_values['P'],
                 "tau": Tperi,
                 "i": parameter_values['i'] *constants.deg2rad,
-                "w": parameter_values['omega']/180.*np.pi-np.pi,
+                "w": parameter_values['omega']*constants.deg2rad,
                 "e":parameter_values['e'],
                 "Is": parameter_values['i_star']*constants.deg2rad,
                 "Omega": parameter_values['Omega_rotation'],
@@ -123,3 +133,12 @@ class RossiterMcLaughlin_Ohta(AbstractModel, AbstractTransit):
         else:
             return self.rm_ohta.evaluate(x0_input) * parameter_values['radius'] * constants.Rsun * 1000.
 
+
+    def _omega_conversion_mod00(self, parameter_values):
+        return parameter_values['veq_star'] / (parameter_values['radius'] * constants.Rsun)
+
+    def _omega_conversion_mod01(self, parameter_values):
+        return 2* np.pi / ( parameter_values['rotation_period'] * constants.d2s)
+
+    def _omega_conversion_mod02(self, parameter_values):
+        return parameter_values['v_sini'] / (parameter_values['radius'] * constants.Rsun) / np.sin(parameter_values['i_star'] * constants.deg2rad)
