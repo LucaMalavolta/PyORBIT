@@ -4,7 +4,6 @@
 
 It is possible to incorporate a model for which the observed value $Y$ at epoch $i$ is a function of another (error-less) observable $Z$, which I will call *correlated variable*:
 
-
 ```{math}
 :label: polynomial_correlation
 
@@ -50,7 +49,7 @@ Model-wide keywords, with the default value in boldface.
 
 **include_zero_point**
 * accepted values: `True` | **`False`**
-* The coefficient $c_0$ is automatically set to zero, in order to avoid a degeneracy between this parameter and the offset of the dataset. You can decide to fit for $c_0$ by setting this keyword to True, but be aware of the consequences
+* The coefficient $c_0$ is automatically set to zero, to avoid a degeneracy between this parameter and the offset of the dataset. You can decide to fit for $c_0$ by setting this keyword to True, but be aware of the consequences
 * Note: this keyword is set to `True` if `normalization_model` is set to True
 
 **exclude_zero_point**
@@ -77,6 +76,7 @@ The input dataset follows the standard structure described in [Prepare a dataset
 ```
 
 The ancillary dataset, specified in the `ancillary` keyword in the `input` section as in the example below, is rather simple:
+
 ```
 # time corr
     0.302929    49.767572
