@@ -25,7 +25,7 @@ The common object ``correlation`` will be automatically grabbed by `PyORBIT`. Si
 
 ## Keywords
 
-Model-wide keywords, with the default value in bold face.
+Model-wide keywords, with the default value in boldface.
 
 **order**
 * accepted values: any number up to 10 | **`1`**
@@ -37,7 +37,7 @@ Model-wide keywords, with the default value in bold face.
 
 **normalization_model**
 * accepted values: `True` | **`False`**
-* If `False`, the correlation model is *added* to the final model (which is the combination of all the other models). If `True`, the correlation model is *multiplied* to the final model (as in the case of a normalization factor).
+* If `False`, the correlation model is *added* to the final model (which is a combination of all the other models). If `True`, the correlation model is *multiplied* to the final model (as in the case of a normalization factor).
 * If set to `True`, they keyword `include_zero_point` will be set to True as well.
 
 **use_median_xzero**
@@ -58,6 +58,7 @@ Model-wide keywords, with the default value in bold face.
 It does the opposite of the keyword `include_zero_point`. It must be set to `True` if you are using the `normalization_model` flag but you don't want to fit for $c_0$
 
 **baseline_value**
+
 * I'll fix this
 
 ```{warning}
@@ -65,7 +66,7 @@ Not all the keywords have been implemented in version <= 9.1.12, check out if th
 ```
 ## Examples
 
-The input dataset follow the standard structure described in [Prepare a dataset file](prepare_dataset).
+The input dataset follows the standard structure described in [Prepare a dataset file](prepare_dataset).
 
 ```
 # time flux flux_err jitter offset subset
@@ -84,7 +85,7 @@ The ancillary dataset, specified in the `ancillary` keyword in the `input` secti
     ...
 ```
 
-This is an example of a basic analysis where a radial velocity model and a correlation model are used simultaneously. You can see that is not necessary to specify the `correlation` model in the `common` section, as `PyORBIT` will automatically grab the default boundaries, priors and spaces from the `model` specification.
+This is an example of a basic analysis where a radial velocity model and a correlation model are used simultaneously. You can see that is not necessary to specify the `correlation` model in the `common` section, as `PyORBIT` will automatically grab the default boundaries, priors, and spaces from the `model` specification.
 
 ```yaml
 inputs:

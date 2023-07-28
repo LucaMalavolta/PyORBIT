@@ -104,6 +104,7 @@ If you have installed `PyORBIT` through pip (from PyPI or from the local reposit
 ```{code} bash
 pyorbit_run emcee configuration_file.yaml
 ```
+
 The first argument of `pyorbit_run` is the sampler to be used in the analysis (see [Samplers](samplers)), the second argument is the configuration file.
 
 PyORBIT will produce a very extensive terminal output, detailed in the section [Interpreting the output](terminal_output).
