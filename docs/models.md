@@ -15,5 +15,5 @@ models/radial_velocities
 models/correlated_datasets
 models/gaussian_process_regression
 models/multidimensional_gaussian_processes
-modesl/tinygp_caveats
+models/tinygp_caveats
 ```
