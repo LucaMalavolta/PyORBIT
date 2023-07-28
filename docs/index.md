@@ -59,17 +59,18 @@ I must have done something wrong when upgrading to version 10, if you already do
 
 # Documentation updates
 
-Documentions is being updated slowly but steadily, with new pages appearing every week. Below you can check which pages have been updated recently
+Documentions is being updated slowly but steadily, with new pages appearing every week. Below you can check which pages have been updated recently (last update: 28/07/2023).
 
 - *Quickstart* 
   + Radial velocities
-  + Lighcurve analysis
+  + Lightcurve analysis
   + Combined fit  
 - *Data modelling*
   + Planetary RV signal 
   + Correlated datasets
   + Gaussian processes regression **in progress**
   + Multidimensional GPs
+  + YinyGP caveats **new** 
   + CHEOPS detrending **coming soon**
   + Polynomial **coming soon**
   + Lightcurve detrending

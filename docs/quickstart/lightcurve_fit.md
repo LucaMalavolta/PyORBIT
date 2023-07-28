@@ -27,11 +27,11 @@ This is equivalent in writing:
 ...
 ```
 
-Keep in mind that **0** activates a flag, **-1** deactives it, folllowing the Python notation, while the absence of a column automatically deactivate a flag.
+Keep in mind that **0** activates a flag, **-1** deactivates it, following the Python notation, while the absence of a column automatically deactivates a flag.
 
-## Configuration file 
+## Configuration file
 
-In this example the full configuration file to fit a TESS lightcurve is reported
+In this example, the full configuration file to fit a TESS lightcurve is reported
 
 ```{code-block} yaml
 :lineno-start: 1
