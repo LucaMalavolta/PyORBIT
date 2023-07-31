@@ -10,11 +10,10 @@
 [![PyPI version fury.io](https://badge.fury.io/py/pyorbit-package.svg)](https://pypi.python.org/pypi/pyprbot-package/)
 
 
-
 ``PyORBIT`` is a robust, versatile framework for the characterization of planetary systems.
-With ``PyORBIT`` you can model light curves, radial velocities, activity indexes and transit time variations.
+With ``PyORBIT`` you can model light curves, radial velocities, activity indexes, and transit time variations.
 In addition to the exoplanet signature, you can add to your model instrumental systematics and stellar activity,
-including Gaussian processes regression with a variety of kernels. Both Markov Chain Monte-Carlo samplers or Nested Sampling algortihms are supported.
+including Gaussian processes regression with a variety of kernels. Both Markov Chain Monte-Carlo samplers or Nested Sampling algorithms are supported.
 Different parametrization can be used for orbital parameters, and orbits can be computed using dynamical integration or just non-interacting Keplerians.
 For every parameter in the model, it is possible to set a prior, explore it in linear or logarithmic space,
 or keep it fixed if necessary. Thanks to abstraction, it is virtually possible to implement any physical model you can think of.
@@ -35,14 +34,14 @@ Alternatively, for easy automatization, PyORBIT can be called as a Python functi
 ## Updates on version 10
 
 - *Improved speed*
-After several failed attempts, I finally managed to apply the advices from the [emcee parallelization page](https://emcee.readthedocs.io/en/stable/tutorials/parallel/) to the rather complex structure of PyORBIT. The speed up is noticeable for large datasets (e.g., photometry) 
+After several failed attempts, I finally managed to apply the advice from the [emcee parallelization page](https://emcee.readthedocs.io/en/stable/tutorials/parallel/) to the rather complex structure of PyORBIT. The speed-up is noticeable for large datasets (e.g., photometry)
 
-- *Rossiter McLaughlin* 
+- *Rossiter McLaughlin*
 Rossiter McLaughlin effect can now be precisely modelled using the CCF simulation approach employed in [Covino et al. 2013](https://ui.adsabs.harvard.edu/abs/2013A%26A...554A..28C/abstract).
 When the rotation period is known - together with the stellar radius - the stellar inclination can be derived avoiding the bias reported by [Masuda & Winn 2020](https://ui.adsabs.harvard.edu/abs/2020AJ....159...81M/abstract)
 
 - *Multidimensional Gaussian Process*
-The model has been introduced a few years back, but now it can finally take advante of imrpoved parallelization 
+The model has been introduced a few years back, but now it can finally take advantage of improved parallelization
 
 - *tinyGP for better performances*
 Working on both *classic* and *multidimensional* Gaussian Process, although the former is showing some JAX problems when producing the output results.
@@ -52,25 +51,24 @@ Version 10 is not compatible with the results obtained with version 9.
 If you have been using the development version of V10, you may run into incompatibility issues as well.
 ```
 
-```{warning} Messed-up repository
-I must have done something wrong when upgrading to version 10, if you already downloaded the repository before the upgrrade then I advise to to delete the repo and clone it again.
+```{warning}
+I must have done something wrong when upgrading to version 10, if you already downloaded the repository before the upgrrade then I advise to to delete the repo and **clone it again**.
 ```
-
 
 # Documentation updates
 
-Documentions is being updated slowly but steadily, with new pages appearing every week. Below you can check which pages have been updated recently (last update: 28/07/2023).
+Documentation is being updated slowly but steadily, with new pages appearing every week. Below you can check which pages have been updated recently (last update: 28/07/2023).
 
-- *Quickstart* 
+- *Quickstart*
   + Radial velocities
   + Lightcurve analysis
-  + Combined fit  
+  + Combined fit
 - *Data modelling*
-  + Planetary RV signal 
+  + Planetary RV signal
   + Correlated datasets
   + Gaussian processes regression **in progress**
   + Multidimensional GPs
-  + YinyGP caveats **new** 
+  + TinyGP caveats **new** 
   + CHEOPS detrending **coming soon**
   + Polynomial **coming soon**
   + Lightcurve detrending

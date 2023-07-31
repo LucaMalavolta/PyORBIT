@@ -24,7 +24,7 @@ Rossiter McLaughlin effect can now be precisely modelled using the CCF simulatio
 When the rotation period is known - together with the stellar radius - the stellar inclination can be derived avoiding the bias reported by [Masuda & Winn 2020](https://ui.adsabs.harvard.edu/abs/2020AJ....159...81M/abstract)
 
 - *Multidimensional Gaussian Process*
-The model has been introduced a few years back, but now it can finally take advante of imrpoved parallelization 
+The model has been introduced a few years back, but now it can finally take advante of imrpoved parallelization
 
 - *tinyGP for better performances*
 Working on both *classic* and *multidimensional* Gaussian Process, although the former is showing some JAX problems when producing the output results.

@@ -16,7 +16,7 @@ The `tinyGP` alternatives deliver the same results as their traditional counterp
 
 Likely due to the use of [`jax`](https://jax.readthedocs.io/en/latest/) and a slightly different approach compared to the other models, at the moment `PyORBIT` is not able to start the `emcee` analysis after the `pyDE` step, or reload an intermediate `emcee` analysis, unless the code is stopped and launch again. The code will not throw any error, it will simply be stuck without performing any further analysis.
 
-To circumvent this problem, I introduced a flag called `safe_reload` in the `parameter` section of the configuration file. 
+To circumvent this problem, I introduced a flag called `safe_reload` in the `parameter` section of the configuration file.
 
 ```yaml
 parameters:

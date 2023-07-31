@@ -2,7 +2,7 @@
 
 # Abstract Transit Model
 
-Transit parameters and keywords are defined in an abstract class that is then inherited by all the different implementations of the transit model and transit-like modelling (phase curves, Rossiter-McLaughlin)..
+Transit parameters and keywords are defined in an abstract class that is then inherited by all the different implementations of the transit model and transit-like modelling (phase curves, Rossiter-McLaughlin).
 
 Models relying on the Transit abstract model:
 - ``batman_transit``
