@@ -27,7 +27,7 @@ def show(filepath):
 """
 
 
-def pyorbit_dynesty_restore(config_in, input_datasets=None, return_output=None, run_nested=True):
+def pyorbit_dynesty(config_in, input_datasets=None, return_output=None, run_nested=True):
 
     reloaded_dynesty = False
     output_directory = './' + config_in['output'] + '/dynesty/'

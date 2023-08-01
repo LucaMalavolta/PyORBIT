@@ -72,7 +72,7 @@ def pyorbit_run():
 
     if sampler in sampler_keyword['dynesty_dryrun']:
         config_in = pyorbit.subroutines.input_parser.yaml_fix_nested(config_in)
-        pyorbit.pyorbit_dynesty_restore(config_in, run_nested=False)
+        pyorbit.pyorbit_dynesty(config_in, run_nested=False)
 
     if sampler in sampler_keyword['dynesty_static']:
         config_in = pyorbit.subroutines.input_parser.yaml_fix_nested(config_in)
