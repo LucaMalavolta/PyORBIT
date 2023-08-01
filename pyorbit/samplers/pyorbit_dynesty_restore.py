@@ -17,7 +17,7 @@ import multiprocessing
 import matplotlib.pyplot as plt
 from pyorbit.subroutines.common import np, nested_sampling_prior_compute
 
-__all__ = ["pyorbit_dynesty"]
+__all__ = ["pyorbit_dynesty_restore"]
 
 """
 def show(filepath):
@@ -27,13 +27,14 @@ def show(filepath):
 """
 
 
-def pyorbit_dynesty(config_in, input_datasets=None, return_output=None):
+def pyorbit_dynesty_restore(config_in, input_datasets=None, return_output=None):
 
     mc = ModelContainerDynesty()
     pars_input(config_in, mc, input_datasets)
 
     mc.output_directory = './' + config_in['output'] + '/dynesty/'
     save_checkpoint = mc.output_directory + 'dynesty.save'
+    save_checkpoint_maxevidence = mc.output_directory + 'dynesty_maxevidence.save'
 
     try:
         results = dynesty_results_load_from_cpickle(mc.output_directory)
@@ -302,32 +303,48 @@ def pyorbit_dynesty(config_in, input_datasets=None, return_output=None):
 
                 # "Dynamic" nested sampling.
 
+                try:
+                    dsampler_maxevidence = dynesty.DynamicNestedSampler.restore(save_checkpoint_maxevidence, pool=pool)
+                    print('Restoring Dynamic Nested Sampling')
+                    dsampler_maxevidence.run_nested(resume=True)
+                except:
+
+                    dsampler_maxevidence = dynesty.DynamicNestedSampler(dynesty_loglikelihood,
+                                                            dynesty_priors,
+                                                            mc.ndim,
+                                                            nlive=nlive,
+                                                            pool=pool,
+                                                            queue_size=num_threads,
+                                                            bound= mc.nested_sampling_parameters['bound'],
+                                                            sample= mc.nested_sampling_parameters['sample'],
+                                                            use_pool={
+                                                                'prior_transform': False},
+                                                            )
+                    print('Running Dynamic Nested Sampling')
+                    dsampler_maxevidence.run_nested(checkpoint_file=save_checkpoint_maxevidence, dlogz=dlogz, wt_kwargs={'pfrac': pfrac_value})
+                    print()
+
+
+
+        else:
+
+            try:
+                dsampler_maxevidence = dynesty.DynamicNestedSampler.restore(save_checkpoint_maxevidence)
+                print('Restoring Dynamic Nested Sampling')
+                dsampler_maxevidence.run_nested(resume=True)
+            except:
+
+
                 dsampler_maxevidence = dynesty.DynamicNestedSampler(dynesty_loglikelihood,
                                                         dynesty_priors,
                                                         mc.ndim,
                                                         nlive=nlive,
-                                                        pool=pool,
-                                                        queue_size=num_threads,
                                                         bound= mc.nested_sampling_parameters['bound'],
                                                         sample= mc.nested_sampling_parameters['sample'],
-                                                        use_pool={
-                                                            'prior_transform': False},
                                                         )
                 print('Running Dynamic Nested Sampling')
-                dsampler_maxevidence.run_nested(dlogz=dlogz, wt_kwargs={'pfrac': pfrac_value})
+                dsampler_maxevidence.run_nested(checkpoint_file=save_checkpoint_maxevidence, dlogz=dlogz, wt_kwargs={'pfrac': pfrac_value})
                 print()
-        else:
-
-            dsampler_maxevidence = dynesty.DynamicNestedSampler(dynesty_loglikelihood,
-                                                    dynesty_priors,
-                                                    mc.ndim,
-                                                    nlive=nlive,
-                                                    bound= mc.nested_sampling_parameters['bound'],
-                                                    sample= mc.nested_sampling_parameters['sample'],
-                                                    )
-            print('Running Dynamic Nested Sampling')
-            dsampler_maxevidence.run_nested(dlogz=dlogz, wt_kwargs={'pfrac': pfrac_value})
-            print()
 
         print()
 
@@ -366,39 +383,119 @@ def pyorbit_dynesty(config_in, input_datasets=None, return_output=None):
     if use_threading_pool:
 
         with multiprocessing.Pool(num_threads) as pool:
+
+            try:
+                dsampler = dynesty.DynamicNestedSampler.restore(save_checkpoint, pool=pool)
+                print('Restoring Dynamic Nested Sampling')
+                results = dsampler.results
+                print(results)
+                from dynesty import utils as dyfunc
+                from dynesty import plotting as dyplot
+                import re
+
+                theta_dictionary = results_analysis.get_theta_dictionary(mc)
+
+                labels_array = [None] * len(theta_dictionary)
+                for key_name, key_value in theta_dictionary.items():
+                    labels_array[key_value] = re.sub('_', '-', key_name)
+                print(results)
+                dir_output = mc.output_directory
+
+                try:
+                    print('Plot traces and 1-D marginalized posteriors.')
+                    tfig, taxes = dyplot.traceplot(results, labels=labels_array)
+                    tfig.savefig(dir_output + 'dynesty_results_maxevidence_traceplot.pdf', bbox_inches='tight', dpi=300)
+                    plt.close(tfig)
+                except:
+                    print('Unable to plot traces and 1-D marginalized posteriors using the internal dynesty routine - skipped')
+
+                # Plot the 2-D marginalized posteriors.
+                try:
+                    print('Plot the 2-D marginalized posteriors.')
+                    cfig, caxes = dyplot.cornerplot(results, labels=labels_array)
+                    cfig.savefig(dir_output + 'dynesty_results_maxevidence_cornerplot.pdf', bbox_inches='tight', dpi=300)
+                    plt.close(cfig)
+                except:
+                    print('Unable to plot the 2-D marginalized posteriors using the internal dynesty routine - skipped')
+
+
+                # Extract sampling results.
+                samples = results.samples  # samples
+
+                # normalized weights
+                weights = np.exp(results.logwt - results.logz[-1])
+
+                # Compute 5%-95% quantiles.
+                quantiles = dyfunc.quantile(samples, [0.05, 0.95])
+
+                # Compute weighted mean and covariance.
+                mean, cov = dyfunc.mean_and_cov(samples, weights)
+                print()
+                print('Weighted mean and convariance from original samplings')
+                for key_name, key_value in theta_dictionary.items():
+                    print('  {0:s}  {1:15.6f} +- {2:15.6f}'.format(key_name, mean[key_value], cov[key_value, key_value]))
+                print('From now on, all results are from weighted samples')
+
+
+                # Resample weighted samples.
+                flat_chain = dyfunc.resample_equal(samples, weights)
+                flat_lnprob = dyfunc.resample_equal(results.logl, weights)
+
+                n_samplings, n_pams = np.shape(flat_chain)
+
+                lnprob_med = common.compute_value_sigma(flat_lnprob)
+                chain_med = common.compute_value_sigma(flat_chain)
+
+                chain_MAP, lnprob_MAP = common.pick_MAP_parameters(
+                    flat_chain, flat_lnprob)
+
+                chain_sampleMED, lnprob_sampleMED = common.pick_sampleMED_parameters(
+                    flat_chain, flat_lnprob)
+
+                results_analysis.print_bayesian_info(mc)
+
+                quit()
+
+                dsampler.run_nested(resume=True)
+            except:
+
+                dsampler = dynesty.DynamicNestedSampler(dynesty_loglikelihood,
+                                                        dynesty_priors,
+                                                        mc.ndim,
+                                                        nlive=nlive,
+                                                        pool=pool,
+                                                        queue_size=num_threads,
+                                                        bound= mc.nested_sampling_parameters['bound'],
+                                                        sample= mc.nested_sampling_parameters['sample'],
+                                                        use_pool={
+                                                            'prior_transform': False},
+                                                        )
+
+                print('Running Dynamic Nested Sampling')
+                if use_default:
+                    dsampler.run_nested(checkpoint_file=save_checkpoint)
+                else:
+                    dsampler.run_nested(checkpoint_file=save_checkpoint, dlogz_init=dlogz, wt_kwargs={'pfrac': pfrac_value})
+                print()
+    else:
+        try:
+            dsampler = dynesty.DynamicNestedSampler.restore(save_checkpoint)
+            print('Restoring Dynamic Nested Sampling')
+            dsampler.run_nested(resume=True)
+        except:
             dsampler = dynesty.DynamicNestedSampler(dynesty_loglikelihood,
                                                     dynesty_priors,
                                                     mc.ndim,
                                                     nlive=nlive,
-                                                    pool=pool,
-                                                    queue_size=num_threads,
                                                     bound= mc.nested_sampling_parameters['bound'],
-                                                    sample= mc.nested_sampling_parameters['sample'],
-                                                    use_pool={
-                                                        'prior_transform': False},
-                                                    )
+                                                    sample= mc.nested_sampling_parameters['sample'])
 
-            print('Running Dynamic Nested Sampling')
+            print('Running Dynamic Nested Sampling without parallelization')
             if use_default:
-                dsampler.run_nested()
+                dsampler.run_nested(checkpoint_file=save_checkpoint)
             else:
-                dsampler.run_nested(dlogz_init=dlogz, wt_kwargs={'pfrac': pfrac_value})
+                dsampler.run_nested(checkpoint_file=save_checkpoint, dlogz_init=dlogz, wt_kwargs={'pfrac': pfrac_value})
             print()
-    else:
-
-        dsampler = dynesty.DynamicNestedSampler(dynesty_loglikelihood,
-                                                dynesty_priors,
-                                                mc.ndim,
-                                                nlive=nlive,
-                                                bound= mc.nested_sampling_parameters['bound'],
-                                                sample= mc.nested_sampling_parameters['sample'])
-
-        print('Running Dynamic Nested Sampling without parallelization')
-        if use_default:
-            dsampler.run_nested()
-        else:
-            dsampler.run_nested(dlogz_init=dlogz, wt_kwargs={'pfrac': pfrac_value})
-        print()
 
     print()
 

@@ -17,7 +17,7 @@ import multiprocessing
 import matplotlib.pyplot as plt
 from pyorbit.subroutines.common import np, nested_sampling_prior_compute
 
-__all__ = ["pyorbit_dynesty"]
+__all__ = ["pyorbit_dynesty_static"]
 
 """
 def show(filepath):
@@ -27,13 +27,14 @@ def show(filepath):
 """
 
 
-def pyorbit_dynesty(config_in, input_datasets=None, return_output=None):
+def pyorbit_dynesty_static(config_in, input_datasets=None, return_output=None):
 
     mc = ModelContainerDynesty()
     pars_input(config_in, mc, input_datasets)
 
-    mc.output_directory = './' + config_in['output'] + '/dynesty/'
+    mc.output_directory = './' + config_in['output'] + '/dynesty_static/'
     save_checkpoint = mc.output_directory + 'dynesty.save'
+    save_checkpoint_maxevidence = mc.output_directory + 'dynesty_maxevidence.save'
 
     try:
         results = dynesty_results_load_from_cpickle(mc.output_directory)
@@ -302,32 +303,48 @@ def pyorbit_dynesty(config_in, input_datasets=None, return_output=None):
 
                 # "Dynamic" nested sampling.
 
-                dsampler_maxevidence = dynesty.DynamicNestedSampler(dynesty_loglikelihood,
+                try:
+                    dsampler_maxevidence = dynesty.NestedSampler.restore(save_checkpoint_maxevidence, pool=pool)
+                    print('Restoring Dynamic Nested Sampling')
+                    dsampler_maxevidence.run_nested(resume=True)
+                except:
+
+                    dsampler_maxevidence = dynesty.NestedSampler(dynesty_loglikelihood,
+                                                            dynesty_priors,
+                                                            mc.ndim,
+                                                            nlive=nlive,
+                                                            pool=pool,
+                                                            queue_size=num_threads,
+                                                            bound= mc.nested_sampling_parameters['bound'],
+                                                            sample= mc.nested_sampling_parameters['sample'],
+                                                            use_pool={
+                                                                'prior_transform': False},
+                                                            )
+                    print('Running Dynamic Nested Sampling')
+                    dsampler_maxevidence.run_nested(checkpoint_file=save_checkpoint_maxevidence, dlogz=dlogz, wt_kwargs={'pfrac': pfrac_value})
+                    print()
+
+
+
+        else:
+
+            try:
+                dsampler_maxevidence = dynesty.NestedSampler.restore(save_checkpoint_maxevidence)
+                print('Restoring Dynamic Nested Sampling')
+                dsampler_maxevidence.run_nested(resume=True)
+            except:
+
+
+                dsampler_maxevidence = dynesty.NestedSampler(dynesty_loglikelihood,
                                                         dynesty_priors,
                                                         mc.ndim,
                                                         nlive=nlive,
-                                                        pool=pool,
-                                                        queue_size=num_threads,
                                                         bound= mc.nested_sampling_parameters['bound'],
                                                         sample= mc.nested_sampling_parameters['sample'],
-                                                        use_pool={
-                                                            'prior_transform': False},
                                                         )
                 print('Running Dynamic Nested Sampling')
-                dsampler_maxevidence.run_nested(dlogz=dlogz, wt_kwargs={'pfrac': pfrac_value})
+                dsampler_maxevidence.run_nested(checkpoint_file=save_checkpoint_maxevidence, dlogz=dlogz, wt_kwargs={'pfrac': pfrac_value})
                 print()
-        else:
-
-            dsampler_maxevidence = dynesty.DynamicNestedSampler(dynesty_loglikelihood,
-                                                    dynesty_priors,
-                                                    mc.ndim,
-                                                    nlive=nlive,
-                                                    bound= mc.nested_sampling_parameters['bound'],
-                                                    sample= mc.nested_sampling_parameters['sample'],
-                                                    )
-            print('Running Dynamic Nested Sampling')
-            dsampler_maxevidence.run_nested(dlogz=dlogz, wt_kwargs={'pfrac': pfrac_value})
-            print()
 
         print()
 
@@ -366,39 +383,50 @@ def pyorbit_dynesty(config_in, input_datasets=None, return_output=None):
     if use_threading_pool:
 
         with multiprocessing.Pool(num_threads) as pool:
-            dsampler = dynesty.DynamicNestedSampler(dynesty_loglikelihood,
+
+            try:
+                dsampler = dynesty.NestedSampler.restore(save_checkpoint, pool=pool)
+                print('Restoring Dynamic Nested Sampling')
+                dsampler.run_nested(resume=True)
+            except:
+
+                dsampler = dynesty.NestedSampler(dynesty_loglikelihood,
+                                                        dynesty_priors,
+                                                        mc.ndim,
+                                                        nlive=nlive,
+                                                        pool=pool,
+                                                        #queue_size=num_threads,
+                                                        #bound= mc.nested_sampling_parameters['bound'],
+                                                        #sample= mc.nested_sampling_parameters['sample'],
+                                                        #use_pool={
+                                                        #    'prior_transform': False},
+                                                        )
+
+                print('Running Dynamic Nested Sampling')
+                if use_default:
+                    dsampler.run_nested(checkpoint_file=save_checkpoint)
+                else:
+                    dsampler.run_nested(checkpoint_file=save_checkpoint)
+                print()
+    else:
+        try:
+            dsampler = dynesty.NestedSampler.restore(save_checkpoint)
+            print('Restoring Dynamic Nested Sampling')
+            dsampler.run_nested(resume=True)
+        except:
+            dsampler = dynesty.NestedSampler(dynesty_loglikelihood,
                                                     dynesty_priors,
                                                     mc.ndim,
                                                     nlive=nlive,
-                                                    pool=pool,
-                                                    queue_size=num_threads,
                                                     bound= mc.nested_sampling_parameters['bound'],
-                                                    sample= mc.nested_sampling_parameters['sample'],
-                                                    use_pool={
-                                                        'prior_transform': False},
-                                                    )
+                                                    sample= mc.nested_sampling_parameters['sample'])
 
-            print('Running Dynamic Nested Sampling')
+            print('Running Dynamic Nested Sampling without parallelization')
             if use_default:
-                dsampler.run_nested()
+                dsampler.run_nested(checkpoint_file=save_checkpoint)
             else:
-                dsampler.run_nested(dlogz_init=dlogz, wt_kwargs={'pfrac': pfrac_value})
+                dsampler.run_nested(checkpoint_file=save_checkpoint)
             print()
-    else:
-
-        dsampler = dynesty.DynamicNestedSampler(dynesty_loglikelihood,
-                                                dynesty_priors,
-                                                mc.ndim,
-                                                nlive=nlive,
-                                                bound= mc.nested_sampling_parameters['bound'],
-                                                sample= mc.nested_sampling_parameters['sample'])
-
-        print('Running Dynamic Nested Sampling without parallelization')
-        if use_default:
-            dsampler.run_nested()
-        else:
-            dsampler.run_nested(dlogz_init=dlogz, wt_kwargs={'pfrac': pfrac_value})
-        print()
 
     print()
 

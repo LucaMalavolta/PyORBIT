@@ -66,6 +66,7 @@ def pyorbit_results():
         'zeus_legacy': ['zeus', 'ZEUS', 'Zeus', 'zeus-mcmc', 'zeus_legacy', 'ZEUS_legacy', 'Zeus_legacy', 'zeus-mcmc_legacy'],
         'dynesty': ['dynesty', 'DyNesty', 'Dynesty', 'DYNESTY'],
         'dynesty_legacy': ['dynesty_legacy', 'DyNesty_legacy', 'Dynesty_legacy', 'DYNESTY_legacy'],
+        'dynesty_static': ['dynesty_static', 'DyNesty_static', 'Dynesty_static', 'DYNESTY_static'],
         #'nestle': ['nestle', 'Nestle', 'NESTLE', 'nelste'],
         'ultranest': ['ultranest', 'UltraNest', 'Ultranest', 'ULTRANEST', 'ultra','Unest'],
         #'optimize': ['optimize', 'scipy', 'Optimize', 'OPTIMIZE'],

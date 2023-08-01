@@ -53,12 +53,13 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
     oversampled_models = plot_dictionary['oversampled_models']
 
     if sampler_name == 'emcee' or sampler_name == 'emcee_legacy':
-        if sampler_name == 'emcee':
-            dir_input = './' + config_in['output'] + '/emcee/'
-            dir_output = './' + config_in['output'] + '/emcee_plot/'
-        else:
+        if sampler_name == 'emcee_legacy':
             dir_input = './' + config_in['output'] + '/emcee_legacy/'
             dir_output = './' + config_in['output'] + '/emcee_legacy_plot/'
+        else:
+            dir_input = './' + config_in['output'] + '/emcee/'
+            dir_output = './' + config_in['output'] + '/emcee_plot/'
+
         os.system('mkdir -p ' + dir_output)
 
         mc, starting_point, population, prob, \
@@ -126,12 +127,13 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
         print()
 
     if sampler_name == 'zeus' or sampler_name == 'zeus_legacy':
-        if sampler_name == 'zeus':
-            dir_input = './' + config_in['output'] + '/zeus/'
-            dir_output = './' + config_in['output'] + '/zeus_plot/'
-        else:
+        if sampler_name == 'zeus_legacy':
             dir_input = './' + config_in['output'] + '/zeus_legacy/'
             dir_output = './' + config_in['output'] + '/zeus_legacy_plot/'
+        else:
+            dir_input = './' + config_in['output'] + '/zeus/'
+            dir_output = './' + config_in['output'] + '/zeus_plot/'
+
 
         os.system('mkdir -p ' + dir_output)
 
@@ -272,13 +274,19 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
         from dynesty import utils as dyfunc
         from dynesty import plotting as dyplot
 
-    if sampler_name == 'dynesty' or sampler_name == 'dynesty_legacy':
-        if sampler_name == 'dynesty':
-            dir_input = './' + config_in['output'] + '/dynesty/'
-            dir_output = './' + config_in['output'] + '/dynesty_plot/'
-        else:
+    if sampler_name in ['dynesty', 'dynesty_legacy', 'dynesty_static']:
+
+        if sampler_name == 'dynesty_legacy':
             dir_input = './' + config_in['output'] + '/dynesty_legacy/'
             dir_output = './' + config_in['output'] + '/dynesty_legacy_plot/'
+        elif sampler_name == 'dynesty_static':
+            dir_input = './' + config_in['output'] + '/dynesty_static/'
+            dir_output = './' + config_in['output'] + '/dynesty_static_plot/'
+        else:
+            dir_input = './' + config_in['output'] + '/dynesty/'
+            dir_output = './' + config_in['output'] + '/dynesty_plot/'
+
+
         os.system('mkdir -p ' + dir_output)
 
         mc = nested_sampling_load_from_cpickle(dir_input)
