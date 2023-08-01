@@ -279,7 +279,7 @@ def pyorbit_dynesty(config_in, input_datasets=None, return_output=None, run_nest
 
     print('Number of live points:', nlive)
     print()
-    print('number of multiprocessing threads:', num_threads +1)
+    print('number of multiprocessing threads:', num_threads)
 
     print()
     print('Reference Time Tref: ', mc.Tref)

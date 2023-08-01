@@ -261,7 +261,7 @@ def pyorbit_dynesty(config_in, input_datasets=None, return_output=None):
 
     print('Number of live points:', nlive)
     print()
-    print('number of multiprocessing threads:', num_threads +1)
+    print('number of multiprocessing threads:', num_threads)
 
     print()
     print('Reference Time Tref: ', mc.Tref)
@@ -280,10 +280,10 @@ def pyorbit_dynesty(config_in, input_datasets=None, return_output=None):
     use_threading_pool = mc.nested_sampling_parameters.get('use_threading_pool', True)
     pfrac_value = mc.nested_sampling_parameters.get('pfrac', 0.000)
     use_default = (mc.nested_sampling_parameters.get('default', False) | mc.nested_sampling_parameters.get('use_default', False))
-    
+
     if use_default:
         pfrac_value = 0.80
-    
+
     print('Using threading pool for dynesty:', use_threading_pool)
 
 
