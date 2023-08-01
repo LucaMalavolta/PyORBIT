@@ -11,7 +11,6 @@ from .samplers.pyorbit_zeus_legacy import *
 from .samplers.pyorbit_optimize import *
 from .samplers.pyorbit_polychord import *
 from .samplers.pyorbit_dynesty import *
-from .samplers.pyorbit_dynesty_restore import *
 from .samplers.pyorbit_dynesty_static import *
 from .samplers.pyorbit_dynesty_legacy import *
 from .samplers.pyorbit_nestle import *

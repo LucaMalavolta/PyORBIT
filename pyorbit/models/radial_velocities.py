@@ -66,6 +66,9 @@ class RVkeplerian(AbstractModel):
 
     def compute(self, parameter_values, dataset, x0_input=None):
 
+        #if parameter_values['P']<10:
+        #    print(parameter_values['P'], parameter_values['K'], parameter_values['e'], parameter_values['omega'])
+
         if self.use_time_inferior_conjunction:
             mean_long = kepler_exo.kepler_Tc2phase_Tref(parameter_values['P'],
                                                 parameter_values['Tc'] - dataset.Tref,

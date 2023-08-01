@@ -269,12 +269,11 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
         print()
         print(' Samples: {}'.format(n_samplings))
 
-    if sampler_name == 'dynesty' or sampler_name == 'dynesty_legacy':
+
+    if sampler_name in ['dynesty', 'dynesty_legacy', 'dynesty_static', 'dynesty_restore']:
 
         from dynesty import utils as dyfunc
         from dynesty import plotting as dyplot
-
-    if sampler_name in ['dynesty', 'dynesty_legacy', 'dynesty_static']:
 
         if sampler_name == 'dynesty_legacy':
             dir_input = './' + config_in['output'] + '/dynesty_legacy/'
@@ -286,6 +285,8 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
             dir_input = './' + config_in['output'] + '/dynesty/'
             dir_output = './' + config_in['output'] + '/dynesty_plot/'
 
+        save_checkpoint = dir_input + 'dynesty.save'
+        save_checkpoint_maxevidence = dir_input + 'dynesty_maxevidence.save'
 
         os.system('mkdir -p ' + dir_output)
 
@@ -306,8 +307,6 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
             labels_array = [None] * len(theta_dictionary)
             for key_name, key_value in theta_dictionary.items():
                 labels_array[key_value] = re.sub('_', '-', key_name)
-            print(results)
-
 
             if plot_dictionary['dynesty_default_plots']:
                 print()
@@ -342,7 +341,10 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
             pfrac = 1.00
 
         except:
-            results = dynesty_results_load_from_cpickle(dir_input)
+            pass
+
+        results = dynesty_results_load_from_cpickle(dir_input)
+        print('Posteriors analysis from dynesty run with posterior/evidence split = {0:4.3f}'.format(pfrac))
 
 
         #taken from dynesty/dynesty/results.py  but without the nlive point causing an error
@@ -373,8 +375,7 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
             print('Computation of statistical+sampling errors skipped - workaround after dynesty>1.2 update')
 
 
-        results = dynesty_results_load_from_cpickle(dir_input)
-        print('Posteriors analysis from dynesty run with posterior/evidence split = {0:4.3f}'.format(pfrac))
+
 
         labels_array = [None] * len(theta_dictionary)
         for key_name, key_value in theta_dictionary.items():

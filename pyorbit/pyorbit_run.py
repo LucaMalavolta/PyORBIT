@@ -36,7 +36,7 @@ def pyorbit_run():
         'zeus_legacy': ['zeus', 'ZEUS', 'Zeus', 'zeus-mcmc', 'zeus_legacy', 'ZEUS_legacy', 'Zeus_legacy', 'zeus-mcmc_legacy'],
         'dynesty': ['dynesty', 'DyNesty', 'Dynesty', 'DYNESTY'],
         'dynesty_legacy': ['dynesty_legacy', 'DyNesty_legacy', 'Dynesty_legacy', 'DYNESTY_legacy'],
-        'dynesty_restore': ['dynesty_restore', 'DyNesty_restore', 'Dynesty_restore', 'DYNESTY_restore'],
+        'dynesty_dryrun': ['dynesty_dryrun', 'DyNesty_dryrun', 'Dynesty_dryrun', 'DYNESTY_dryrun'],
         'dynesty_static': ['dynesty_static', 'DyNesty_static', 'Dynesty_static', 'DYNESTY_static'],
         'nestle': ['nestle', 'Nestle', 'NESTLE', 'nelste'],
         'ultranest': ['ultranest', 'UltraNest', 'Ultranest', 'ULTRANEST', 'ultra','Unest'],
@@ -70,9 +70,9 @@ def pyorbit_run():
         config_in = pyorbit.subroutines.input_parser.yaml_fix_nested(config_in)
         pyorbit.pyorbit_dynesty(config_in)
 
-    if sampler in sampler_keyword['dynesty_static']:
+    if sampler in sampler_keyword['dynesty_dryrun']:
         config_in = pyorbit.subroutines.input_parser.yaml_fix_nested(config_in)
-        pyorbit.pyorbit_dynesty_restore(config_in)
+        pyorbit.pyorbit_dynesty_restore(config_in, run_nested=False)
 
     if sampler in sampler_keyword['dynesty_static']:
         config_in = pyorbit.subroutines.input_parser.yaml_fix_nested(config_in)

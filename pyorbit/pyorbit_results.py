@@ -72,7 +72,7 @@ def pyorbit_results():
         #'optimize': ['optimize', 'scipy', 'Optimize', 'OPTIMIZE'],
     }
 
-    unchained_samplers = ['polychord', 'multinest', 'dynesty', 'dynesty_legacy', 'nestle', 'ultranest']
+    unchained_samplers = ['polychord', 'multinest', 'dynesty', 'dynesty_legacy','dynesty_static', 'nestle', 'ultranest']
 
     args = parser.parse_args()
     sampler = args.sampler[0]
@@ -84,7 +84,7 @@ def pyorbit_results():
             sampler_name = sampler_key
 
     if not sampler_name:
-        print(' *** Sampler not suppoerted by GetResults, exiting *** ')
+        print(' *** Sampler not supported by GetResults, exiting *** ')
         quit()
 
     if args.p is not False :
