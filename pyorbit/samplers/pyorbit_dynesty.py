@@ -52,7 +52,7 @@ def pyorbit_dynesty(config_in, input_datasets=None, return_output=None, run_nest
 
     try:
         results = dynesty_results_load_from_cpickle(mc.output_directory)
-        print('Dynesty results already saved in the respective directory, run PyORBIT_GetResults')
+        print('Dynesty results already saved in the respective directory, run pyorbit_results')
         if return_output:
             return mc
         else:
