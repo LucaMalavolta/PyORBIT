@@ -135,7 +135,6 @@ class AbstractModel(object):
             self.spaces[dataset_name] = {}
 
         for par in self.list_pams_dataset:
-
             if par not in self.bounds[dataset_name]:
                 self.bounds[dataset_name][par] = self.default_bounds[par]
 

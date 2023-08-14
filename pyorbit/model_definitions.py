@@ -24,7 +24,7 @@ from pyorbit.common.limb_darkening import LimbDarkening_Linear, \
 
 from pyorbit.common.cheops_modelling import CommonCheopsModelling
 from pyorbit.common.correlation import CommonCorrelation, CommonComplexCorrelation
-from pyorbit.common.lightcurve_detrending import CommonLightcurveDetrending
+#from pyorbit.common.lightcurve_detrending import CommonLightcurveDetrending
 from pyorbit.common.detrending import CommonDetrending
 
 
@@ -99,9 +99,9 @@ from pyorbit.models.spectral_rotation import SpectralRotation, SubsetSpectralRot
 from pyorbit.models.cheops_detrending import CheopsDetrending
 from pyorbit.models.cheops_factormodel import CheopsFactorModel
 
-from pyorbit.models.lightcurve_linear_detrending import LightcurveLinearDetrending, LocalLightcurveLinearDetrending
-from pyorbit.models.lightcurve_detrending import LightcurveDetrending, LocalLightcurveDetrending
-from pyorbit.models.lightcurve_poly_detrending import LightcurvePolyDetrending, LocalLightcurvePolyDetrending
+#from pyorbit.models.lightcurve_linear_detrending import LightcurveLinearDetrending, LocalLightcurveLinearDetrending
+#from pyorbit.models.lightcurve_detrending import LightcurveDetrending, LocalLightcurveDetrending
+#from pyorbit.models.lightcurve_poly_detrending import LightcurvePolyDetrending, LocalLightcurvePolyDetrending
 
 from pyorbit.models.detrending import Detrending, PolynomialDetrending, ExponentialDetrending
 #from pyorbit.models.exponential_detrending import ExponentialDetrending
@@ -170,7 +170,7 @@ define_common_type_to_class = {
     'cheops_modelling': CommonCheopsModelling,
     'correlation': CommonCorrelation,
     'complex_correlation': CommonComplexCorrelation,
-    'lightcurve_detrending': CommonLightcurveDetrending,
+    #'lightcurve_detrending': CommonLightcurveDetrending,
     'detrending': CommonDetrending,
 }
 
@@ -246,12 +246,12 @@ define_type_to_class = {
     'subset_spectral_rotation_polynomial': SubsetSpectralRotationPolynomial,
     'cheops_detrending': CheopsDetrending,
     'cheops_factormodel': CheopsFactorModel,
-    'lightcurve_linear_detrending': LightcurveLinearDetrending,
-    'local_lightcurve_detrending': LocalLightcurveLinearDetrending,
-    'lightcurve_detrending': LightcurveDetrending,
-    'local_lightcurve_detrending': LocalLightcurveDetrending,
-    'lightcurve_poly_detrending': LightcurvePolyDetrending,
-    'local_lightcurve_poly_detrending': LocalLightcurvePolyDetrending,
+    #'lightcurve_linear_detrending': LightcurveLinearDetrending,
+    #'local_lightcurve_detrending': LocalLightcurveLinearDetrending,
+    #'lightcurve_detrending': LightcurveDetrending,
+    #'local_lightcurve_detrending': LocalLightcurveDetrending,
+    #'lightcurve_poly_detrending': LightcurvePolyDetrending,
+    #'local_lightcurve_poly_detrending': LocalLightcurvePolyDetrending,
     'tinygp_quasiperiodic': TinyGaussianProcess_QuasiPeriodicActivity,
     'tinygp_multidimensional_quasiperiodic': TinyGP_Multidimensional_QuasiPeriodicActivity,
     'rossitermclaughlin_ohta': RossiterMcLaughlin_Ohta,
