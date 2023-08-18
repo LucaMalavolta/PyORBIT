@@ -53,6 +53,7 @@ def yaml_fix_nested(config_in):
                 continue
 
             prev_parametrization = common_conf['planets'][planet_name].get('parametrization', 'Eastman2013')
+            use_time_inferior_conjunction = common_conf['planets'][planet_name].get('use_time_inferior_conjunction', False)
             if prev_parametrization[:5] == 'Stand':
                 continue
 
@@ -63,7 +64,7 @@ def yaml_fix_nested(config_in):
                     change_parametrization = True
 
             if change_parametrization:
-                if prev_parametrization[-5:] == 'Tcent':
+                if prev_parametrization[-5:] == 'Tcent' or use_time_inferior_conjunction:
                     common_conf['planets'][planet_name]['parametrization'] = 'Standard_Tcent'
                 else:
                     common_conf['planets'][planet_name]['parametrization'] = 'Standard'

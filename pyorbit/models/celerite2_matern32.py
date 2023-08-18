@@ -52,8 +52,20 @@ class Celerite2_Matern32(AbstractModel):
 
         if self.use_stellar_rotation_period:
             self.list_pams_common.update(['rotation_period'])
-            self.list_pams_common.discard('Prot')
+            self.list_pams_dataset.discard('matern32_rho')
     
+        self.use_shared_hyperparameters = False
+        for keyword in ['use_shared_hyperparameters', 
+                        'shared_hyperparameters',
+                        'use_common_hyperparameters',
+                        'common_hyperparameters']:
+            self.use_shared_hyperparameters =  kwargs.get(keyword, self.use_shared_hyperparameters)
+        if self.use_shared_hyperparameters:
+            pams_copy = self.list_pams_dataset.copy()
+            for pam in pams_copy:
+                self.list_pams_common.update([pam])
+                self.list_pams_dataset.discard(pam)
+
     def initialize_model_dataset(self, mc, dataset, **kwargs):
         self.define_kernel(dataset)
         return
@@ -72,12 +84,13 @@ class Celerite2_Matern32(AbstractModel):
         return
 
     def lnlk_compute(self, parameter_values, dataset):
+
         """ 2 steps:
         In celerite2 the old function "set_parameter_vector" has been removed
         and the kernel has to be defined every time
         """
         if self.use_stellar_rotation_period:
-            parameter_values['Prot'] = parameter_values['rotation_period']
+            parameter_values['matern32_rho'] = parameter_values['rotation_period']
 
         self.gp[dataset.name_ref].mean = 0.
         self.gp[dataset.name_ref].kernel = celerite2.terms.Matern32Term(
@@ -92,7 +105,7 @@ class Celerite2_Matern32(AbstractModel):
     def sample_predict(self, parameter_values, dataset, x0_input=None, return_covariance=False, return_variance=False):
 
         if self.use_stellar_rotation_period:
-            parameter_values['Prot'] = parameter_values['rotation_period']
+            parameter_values['matern32_rho'] = parameter_values['rotation_period']
 
         self.gp[dataset.name_ref].mean = 0.
         self.gp[dataset.name_ref].kernel = celerite2.terms.Matern32Term(
@@ -110,7 +123,7 @@ class Celerite2_Matern32(AbstractModel):
     def sample_conditional(self, parameter_values, dataset,  x0_input=None):
 
         if self.use_stellar_rotation_period:
-            parameter_values['Prot'] = parameter_values['rotation_period']
+            parameter_values['matern32_rho'] = parameter_values['rotation_period']
 
         self.gp[dataset.name_ref].mean = 0.
         self.gp[dataset.name_ref].kernel = celerite2.terms.Matern32Term(

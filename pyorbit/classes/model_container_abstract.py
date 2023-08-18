@@ -111,7 +111,6 @@ class ModelContainer(object):
                         self.common_models[common_ref].default_priors)
                     self.ndim, output_lists = self.common_models[common_ref].define_parameter_properties(
                         self.ndim, output_lists, model.list_pams_common)
-
             else:
                 pass
 

@@ -18,7 +18,7 @@ class CommonDetrending(AbstractCommon):
     model_class = 'detrending'
 
     parameters_dictionary = {
-        'coeff_linear':
+        'det_linear':
             {
                 'bounds': [-10., 10.],
                 'priors': ['Uniform', []],
@@ -26,7 +26,7 @@ class CommonDetrending(AbstractCommon):
                 'fixed' : 0.00,
                 'unit': None,
             },
-        'coeff_poly':
+        'det_poly':
             {
                 'bounds': [-1., 1.],
                 'priors': ['Uniform', []],
@@ -34,7 +34,7 @@ class CommonDetrending(AbstractCommon):
                 'fixed' : 0.00,
                 'unit': None,
             },
-        'coeff_c0':
+        'det_c0':
             {
                 'bounds': [-100000., 100000.],
                 'priors': ['Uniform', []],
@@ -53,8 +53,8 @@ class CommonDetrending(AbstractCommon):
     }
 
     for i_pol in range(0,10):
-        # Coefficient of the i_pol order of the polynomial
-        parameters_dictionary['poly_c'+repr(i_pol)] = {
+        # Coefficient of the i_det order of the polynomial
+        parameters_dictionary['det_c'+repr(i_pol)] = {
                 'bounds': [-1e06, 1e06],
                 'priors': ['Uniform', []],
                 'spaces': 'Linear',

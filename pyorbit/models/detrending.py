@@ -41,7 +41,14 @@ class Detrending(AbstractModel):
 
         self.order = kwargs.get('order', self.order)
         self.x_zero = kwargs.get('x_zero', self.x_zero)
+
         self.local_model = kwargs.get('local_model', self.local_model)
+
+        self.common_model = ~self.local_model
+        for keyword in ['use_common_parameters', 'common_parameters', 'use_common_model', 'common_model']:
+            self.common_model = kwargs.get(keyword, self.common_model)
+        self.local_model = ~self.common_model
+
         self.use_median_xzero = kwargs.get('use_median_xzero', self.use_median_xzero)
         self.exponential_detrending = kwargs.get('exponential_detrending', self.exponential_detrending)
 
@@ -71,6 +78,18 @@ class Detrending(AbstractModel):
 
         self.natural_base = kwargs.get('natural_base', self.natural_base )
 
+        print()
+        print('     model:              ', self.model_name)
+        print('     unitary_model:      ', self.unitary_model)
+        print('     normalization_model:', self.normalization_model)
+
+        print('     local_model:        ', self.local_model)
+        print('     use_median_xzero:   ', self.use_median_xzero)
+
+        print('     order:              ', self.order)
+        print('     starting_order:     ', self.starting_order)
+        print('     baseline_value:     ', self.baseline_value)
+
         if self.exponential_detrending:
             if self.natural_base:
                 print('     Exponential detrending: using natural base')
@@ -78,6 +97,8 @@ class Detrending(AbstractModel):
                 print('     Exponential detrending: using base 10')
         else:
             print('     Polynomial detrending')
+        print()
+
 
     def initialize_model_dataset(self, mc, dataset, **kwargs):
 
@@ -86,7 +107,7 @@ class Detrending(AbstractModel):
             Be aware of possible correlations with other parameters!
         """
         if self.starting_order == 0:
-            par_original = 'coeff_c0'
+            par_original = 'det_c0'
             par_addition = 'det_c0'
             if self.local_model:
                 self.transfer_parameter_properties(mc, dataset, par_original, par_addition, dataset_pam=True)
@@ -130,7 +151,7 @@ class Detrending(AbstractModel):
 
             for i_order in range(1, self.pams_order[data_name]+1):
 
-                par_original = 'coeff_poly'
+                par_original = 'det_c'+repr(i_order)
                 par_addition = 'det_' + data_name + '_c'+repr(i_order)
 
                 if self.local_model:
