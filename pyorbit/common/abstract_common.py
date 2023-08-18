@@ -8,7 +8,8 @@ from pyorbit.subroutines.common import get_fix_val
 from pyorbit.subroutines.common import get_2darray_from_val
 from pyorbit.subroutines.common import giveback_priors
 from pyorbit.subroutines.common import nested_sampling_prior_prepare
-
+from pyorbit.subroutines.common import get_var_arccosine, get_var_cosine, get_var_arcsine, get_var_sine
+from pyorbit.subroutines import constants
 
 class AbstractCommon(object):
     """
@@ -128,7 +129,7 @@ class AbstractCommon(object):
                     self.transformation[pam] = get_var_val
                     output_lists['bounds'].append(self.bounds[pam])
                 elif self.spaces[pam] == 'Log_Natural':
-                    self.transformation[pam] = get_var_log_natural
+                    self.transformation[pam] = get_var_exp_natural
                     output_lists['bounds'].append(
                         np.log(self.bounds[pam]))
                 elif self.spaces[pam] == 'Log_Base2':
@@ -143,6 +144,15 @@ class AbstractCommon(object):
                     self.transformation[pam] = get_var_exp
                     output_lists['bounds'].append(
                         np.log2(self.bounds[pam]))
+                elif self.spaces[pam] == 'Sine_Angle':
+                    self.transformation[pam] = get_var_arcsine
+                    output_lists['bounds'].append(
+                        np.sin(self.bounds[pam]*constants.deg2rad))
+                elif self.spaces[pam] == 'Cosine_Angle':
+                    self.transformation[pam] = get_var_arccosine
+                    output_lists['bounds'].append(
+                        np.cos(self.bounds[pam]*constants.deg2rad))
+
 
                 if pam not in self.prior_pams:
                     self.prior_kind[pam] = self.default_priors[pam][0]
@@ -197,6 +207,10 @@ class AbstractCommon(object):
                 start_converted = np.log10(self.starts[sampler_pam])
             elif self.spaces[sampler_pam] == 'Logarithmic':
                 start_converted = np.log2(self.starts[sampler_pam])
+            elif self.spaces[sampler_pam] == 'Sine_Angle':
+                start_converted = np.arcsin(self.starts[sampler_pam])*constants.rad2deg
+            elif self.spaces[sampler_pam] == 'Cosine_Angle':
+                start_converted = np.arccos(self.starts[sampler_pam])*constants.rad2deg
             starting_point[self.sampler_parameters[sampler_pam]
                            ] = start_converted
 

@@ -99,6 +99,8 @@ class AbstractTransit(object):
         self.use_differential_rotation = kwargs.get('use_differential_rotation', mc.common_models[self.stellar_ref].use_differential_rotation)
         self.use_stellar_rotation = kwargs.get('use_stellar_rotation', mc.common_models[self.stellar_ref].use_stellar_rotation)
 
+
+
         """ check if the differential rotation should be included in the model"""
         if self.use_differential_rotation:
             #self.list_pams_common.discard('v_sini')
@@ -128,6 +130,13 @@ class AbstractTransit(object):
 
         if mc.common_models[self.stellar_ref].use_stellar_inclination:
             self.list_pams_common.update(['i_star'])
+
+        if mc.common_models[self.stellar_ref].use_cosine_stellar_inclination:
+            self.list_pams_common.update(['cosi_star'])
+            try:
+                self.list_pams_common.discard('i_star')
+            except:
+                pass
 
         if mc.common_models[self.stellar_ref].use_equatorial_velocity:
             self.list_pams_common.update(['veq_star'])

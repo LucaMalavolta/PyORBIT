@@ -41,6 +41,14 @@ class CommonStarParameters(AbstractCommon):
                 'fixed' : 90,
                 'unit': 'degree',
             },
+        'cosi_star': # Inclination of the star
+            {
+                'bounds': [0., 1.],
+                'priors': ['Uniform', []],
+                'spaces': 'Linear',
+                'fixed' : 1.,
+                'unit': 'unitary',
+            },
         'v_sini': # Projected rotational velocity of the star
             {
                 'bounds': [0., 200.],
@@ -140,6 +148,7 @@ class CommonStarParameters(AbstractCommon):
         self.use_equatorial_velocity = False
         self.use_stellar_rotation = False
         self.use_stellar_inclination = False
+        self.use_cosine_stellar_inclination = False
         self.use_differential_rotation = False
         self.use_stellar_radius = False
         self.use_projected_velocity = True
@@ -177,10 +186,11 @@ class CommonStarParameters(AbstractCommon):
             and the stellar radius, by activating the corresponding flags in the model"""
         self.use_equatorial_velocity = kwargs.get('use_equatorial_velocity', self.use_equatorial_velocity)
         self.use_stellar_inclination = kwargs.get('use_stellar_inclination', self.use_stellar_inclination)
+        self.use_cosine_stellar_inclination = kwargs.get('use_cosine_stellar_inclination', False) # Directly addressed here for back-compatibility
+        if self.use_cosine_stellar_inclination:
+            self.use_stellar_inclination = True
         self.use_stellar_radius = kwargs.get('use_stellar_radius', self.use_stellar_radius)
         self.use_projected_velocity = kwargs.get('use_projected_velocity', self.use_projected_velocity)
-
-
 
         """ the user can decide how to deal with the mass-radius-density correlation
             density and (sometimes) radius can be involved in transit fit, while there is no way to measure the
@@ -207,6 +217,17 @@ class CommonStarParameters(AbstractCommon):
     def define_derived_parameters(self):
 
         derived_list = []
+
+        if self.use_cosine_stellar_inclination and \
+            'cosi_star' in self.sampler_parameters and \
+            'i_star' not in self.parameter_index:
+
+            pam00_index = self.sampler_parameters['cosi_star']
+
+            self.transformation['i_star'] = get_var_arccosine
+            self.parameter_index['i_star'] = [pam00_index]
+
+            derived_list.append('i_star')
 
         if not self.use_equatorial_velocity and \
             'rotation_period' in self.sampler_parameters and \
@@ -236,6 +257,21 @@ class CommonStarParameters(AbstractCommon):
 
             derived_list.append('v_sini')
 
+        if not self.use_equatorial_velocity and \
+            'rotation_period' in self.sampler_parameters and \
+            'radius' in self.sampler_parameters and \
+            'cosi_star' in self.sampler_parameters and  \
+            'v_sini' not in self.sampler_parameters:
+
+            pam00_index = self.sampler_parameters['rotation_period']
+            pam01_index = self.sampler_parameters['radius']
+            pam02_index = self.sampler_parameters['cosi_star']
+
+            self.transformation['v_sini'] = get_3var_prot_rstar_cosistar_veq
+            self.parameter_index['v_sini'] = [pam00_index, pam01_index, pam02_index]
+
+            derived_list.append('v_sini')
+
         if 'veq_star' in self.sampler_parameters and \
             'i_star' in self.sampler_parameters and  \
             'v_sini' not in self.parameter_index:
@@ -243,7 +279,19 @@ class CommonStarParameters(AbstractCommon):
             pam00_index = self.sampler_parameters['veq_star']
             pam01_index = self.sampler_parameters['i_star']
 
-            self.transformation['v_sini'] = get_2var_vsini
+            self.transformation['v_sini'] = get_2var_veq_istar_vsini
+            self.parameter_index['v_sini'] = [pam00_index, pam01_index]
+
+            derived_list.append('v_sini')
+
+        if 'veq_star' in self.sampler_parameters and \
+            'cosi_star' in self.sampler_parameters and  \
+            'v_sini' not in self.parameter_index:
+
+            pam00_index = self.sampler_parameters['veq_star']
+            pam01_index = self.sampler_parameters['cosi_star']
+
+            self.transformation['v_sini'] = get_2var_veq_cosi_vsini
             self.parameter_index['v_sini'] = [pam00_index, pam01_index]
 
             derived_list.append('v_sini')

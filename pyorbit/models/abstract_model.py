@@ -11,7 +11,8 @@ from pyorbit.subroutines.common import get_var_exp, get_var_log
 from pyorbit.subroutines.common import get_var_exp_base2, get_var_log_base2
 from pyorbit.subroutines.common import get_var_exp_base10, get_var_log_base10
 from pyorbit.subroutines.common import get_var_exp_natural, get_var_log_natural
-
+from pyorbit.subroutines.common import get_var_arccosine, get_var_cosine, get_var_arcsine, get_var_sine
+from pyorbit.subroutines import constants
 
 class AbstractModel(object):
 
@@ -165,7 +166,7 @@ class AbstractModel(object):
                     output_lists['bounds'].append(
                         self.bounds[dataset_name][par])
                 elif self.spaces[dataset_name][par] == 'Log_Natural':
-                    self.transformation[dataset_name][par] = get_var_log_natural
+                    self.transformation[dataset_name][par] = get_var_exp_natural
                     output_lists['bounds'].append(
                         np.log(self.bounds[dataset_name][par]))
                 elif self.spaces[dataset_name][par] == 'Log_Base2':
@@ -180,6 +181,14 @@ class AbstractModel(object):
                     self.transformation[dataset_name][par] = get_var_exp
                     output_lists['bounds'].append(
                         np.log2(self.bounds[dataset_name][par]))
+                elif self.spaces[dataset_name][par] == 'Sine_Angle':
+                    self.transformation[dataset_name][par] = get_var_arcsine
+                    output_lists['bounds'].append(
+                        np.sin(self.bounds[dataset_name][par]*constants.deg2rad))
+                elif self.spaces[dataset_name][par] == 'Cosine_Angle':
+                    self.transformation[dataset_name][par] = get_var_arccosine
+                    output_lists['bounds'].append(
+                        np.cos(self.bounds[dataset_name][par]*constants.deg2rad))
 
                 if par not in self.prior_pams[dataset_name]:
                     self.prior_kind[dataset_name][par] = \
@@ -229,6 +238,11 @@ class AbstractModel(object):
                 start_converted = np.log10(self.starts[dataset_name][par])
             elif self.spaces[dataset_name][par] == 'Logarithmic':
                 start_converted = np.log2(self.starts[dataset_name][par])
+            elif self.spaces[dataset_name][par] == 'Sine_Angle':
+                start_converted = np.arcsin(self.starts[dataset_name][par])*constants.rad2deg
+            elif self.spaces[dataset_name][par] == 'Cosine_Angle':
+                start_converted = np.arccos(self.starts[dataset_name][par])*constants.rad2deg
+
             starting_point[self.sampler_parameters[dataset_name]
                             [par]] = start_converted
 
@@ -246,7 +260,7 @@ class AbstractModel(object):
         prior_out = 0.00
         parameter_values = self.convert(theta, dataset_name)
 
-        """ Preserving backcompatibility with version 8
+        """ Preserving back-compatibility with version 8
         #TODO: to be simplified in the next version
         """
 

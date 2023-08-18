@@ -77,6 +77,39 @@ def get_var_exp_natural(var, fix, i):
     else:
         return np.exp(var[:, i], dtype=np.double)
 
+def get_var_sin(var, fix, i):
+    if len(np.shape(var)) == 1:
+        return np.sin(var[i] * constants.deg2rad, dtype=np.double)
+    else:
+        return np.sin(var[:, i]* constants.deg2rad, dtype=np.double)
+
+
+def get_var_arcsine(var, fix, i):
+    if len(np.shape(var)) == 1:
+        return np.arcsin(var[i], dtype=np.double)*constants.rad2deg
+    else:
+        return np.arcsin(var[:, i], dtype=np.double)*constants.rad2deg
+
+
+def get_var_sine(var, fix, i):
+    if len(np.shape(var)) == 1:
+        return np.sin(var[i] * constants.deg2rad, dtype=np.double)
+    else:
+        return np.sin(var[:, i]* constants.deg2rad, dtype=np.double)
+
+
+def get_var_arccosine(var, fix, i):
+    if len(np.shape(var)) == 1:
+        return np.arccos(var[i], dtype=np.double)*constants.rad2deg
+    else:
+        return np.arccos(var[:, i], dtype=np.double)*constants.rad2deg
+
+def get_var_cosine(var, fix, i):
+    if len(np.shape(var)) == 1:
+        return np.cos(var[i] * constants.deg2rad, dtype=np.double)
+    else:
+        return np.cos(var[:, i]* constants.deg2rad, dtype=np.double)
+
 
 def get_var_val(var, fix, i):
     if len(np.shape(var)) == 1:
@@ -186,13 +219,27 @@ def get_2var_product(var, fix, i):
     return out
 
 
-def get_2var_vsini(var, fix, i):
+def get_2var_veq_istar_vsini(var, fix, i):
+    # first parameter: v_eq
+    # second parameter: i_star
+    # output: vsini
     if len(np.shape(var)) == 1:
         out = var[i[0]] * np.sin(var[i[1]] * constants.deg2rad)
     else:
         out = var[:, i[0]] * np.sin(var[:, i[1]] * constants.deg2rad)
     return out
 
+def get_2var_veq_cosistar_vsini(var, fix, i):
+    # first parameter: v_eq
+    # second parameter: i_star
+    # output: vsini
+    if len(np.shape(var)) == 1:
+        istar = np.arccos(var[i[1]])
+        out = var[i[0]] * np.sin(istar)
+    else:
+        istar = np.arccos(var[:, i[1]])
+        out = var[:, i[0]] * np.sin(istar)
+    return out
 
 def get_2var_veq_rot_radius(var, fix, i):
     # first parameter: v_eq
@@ -244,6 +291,21 @@ def get_3var_prot_rstar_istar_veq(var, fix, i):
     else:
         out =  2* np.pi * var[:,i[1]] * constants.Rsun / (var[:,i[0]] * constants.d2s ) *np.sin(var[:, i[2]] * constants.deg2rad)
     return out
+
+def get_3var_prot_rstar_cosistar_veq(var, fix, i):
+    #first parameter: p_rot
+    #second parameter: r_star
+    #third parameter: i_star
+    #  v = 2piR / P
+    #  v[km/s] = 2pi R[km] / P[d]
+    if len(np.shape(var)) == 1:
+        i_star = np.arccos(var[i[2]])
+        out =  2* np.pi * var[i[1]] * constants.Rsun / (var[i[0]] * constants.d2s ) * np.sin(i_star)
+    else:
+        i_star = np.arccos(var[:, i[2]])
+        out =  2* np.pi * var[:,i[1]] * constants.Rsun / (var[:,i[0]] * constants.d2s ) *np.sin(i_star)
+    return out
+
 
 
 
@@ -384,7 +446,7 @@ def nested_sampling_prior_compute(val, kind, coeff, space):
         return val * (coeff[1] - coeff[0]) + coeff[0]
 
     if kind == 'Gaussian':
-        x_new = stats.norm.ppf(val, coeff[0], coeff[1])  
+        x_new = stats.norm.ppf(val, coeff[0], coeff[1])
 
         if space == 'Linear':
             return x_new
@@ -394,6 +456,10 @@ def nested_sampling_prior_compute(val, kind, coeff, space):
             return np.log10(x_new)
         elif space == 'Log_Natural':
             return np.log(x_new)
+        elif space == 'Sine_Angle':
+            return np.sin(x_new*constants.rad2deg)
+        elif space == 'Cosine_Angle':
+            return np.cos(x_new*constants.rad2deg)
 
     if kind in ['HalfGaussian', 'PositiveHalfGaussian']:
 
@@ -407,6 +473,10 @@ def nested_sampling_prior_compute(val, kind, coeff, space):
             return np.log10(x_new)
         elif space == 'Log_Natural':
             return np.log(x_new)
+        elif space == 'Sine_Angle':
+            return np.sin(x_new*constants.rad2deg)
+        elif space == 'Cosine_Angle':
+            return np.cos(x_new*constants.rad2deg)
 
     if kind in ['NegativeHalfGaussian']:
 
@@ -420,6 +490,10 @@ def nested_sampling_prior_compute(val, kind, coeff, space):
             return np.log10(x_new)
         elif space == 'Log_Natural':
             return np.log(x_new)
+        elif space == 'Sine_Angle':
+            return np.sin(x_new*constants.rad2deg)
+        elif space == 'Cosine_Angle':
+            return np.cos(x_new*constants.rad2deg)
 
     if kind in ['BetaDistribution', 'Beta']:
         x_new = stats.beta.ppf(val, coeff[0], coeff[1])
@@ -432,6 +506,10 @@ def nested_sampling_prior_compute(val, kind, coeff, space):
             return np.log10(x_new)
         elif space == 'Log_Natural':
             return np.log(x_new)
+        elif space == 'Sine_Angle':
+            return np.sin(x_new*constants.rad2deg)
+        elif space == 'Cosine_Angle':
+            return np.cos(x_new*constants.rad2deg)
 
     return splev(val, coeff)
 
