@@ -231,7 +231,7 @@ def get_2var_veq_istar_vsini(var, fix, i):
 
 def get_2var_veq_cosistar_vsini(var, fix, i):
     # first parameter: v_eq
-    # second parameter: i_star
+    # second parameter: cosi_star
     # output: vsini
     if len(np.shape(var)) == 1:
         istar = np.arccos(var[i[1]])

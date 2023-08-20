@@ -225,7 +225,7 @@ class CommonStarParameters(AbstractCommon):
             pam00_index = self.sampler_parameters['cosi_star']
 
             self.transformation['i_star'] = get_var_arccosine
-            self.parameter_index['i_star'] = [pam00_index]
+            self.parameter_index['i_star'] = pam00_index
 
             derived_list.append('i_star')
 

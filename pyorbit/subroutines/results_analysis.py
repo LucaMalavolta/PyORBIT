@@ -180,7 +180,6 @@ def get_stellar_parameters(mc, theta, warnings=True, stellar_ref=None):
     try:
         stellar_model = mc.common_models[stellar_ref]
     except:
-        print(' Trying to identify the stellar parameters')
         for model_name, model_obj in mc.common_models.items():
             if getattr(model_obj,'model_class', None) == 'star_parameters':
                 stellar_model = mc.common_models[model_name]
@@ -215,7 +214,7 @@ def get_stellar_parameters(mc, theta, warnings=True, stellar_ref=None):
             stellar_values['density'] = stellar_values['mass'] / \
                 stellar_values['radius'] ** 3
             if warnings:
-                print('Note: stellar density derived from its mass and radius')
+                print('Note: stellar density derived from stellar mass and radius')
                 print()
 
     else:
@@ -227,12 +226,12 @@ def get_stellar_parameters(mc, theta, warnings=True, stellar_ref=None):
             stellar_values['radius'] = (
                 stellar_values['mass'] / stellar_values['density']) ** (1. / 3.)
             if warnings:
-                print('Note: stellar radius derived from its mass and density')
+                print('Note: stellar radius derived from stellar mass and density')
                 print()
         elif 'radius' in stellar_values:
             stellar_values['mass'] = stellar_values['radius'] ** 3. * stellar_values['density']
             if warnings:
-                print('Note: stellar mass derived from its radius and density')
+                print('Note: stellar mass derived from stellar radius and density')
                 print()
 
         else:
@@ -938,7 +937,6 @@ def print_dictionary(parameter_values, recenter=[], fixed_warning=True):
 
             """
             format_string_long = '{0:12s}   {1:15.'+repr(max(s0,s1))+'f} {2:12.'+repr(s0)+'f} {3:12.'+repr(s1)+'f}    (15-84 p)'
-
             print(format_string_long.format(par_names, perc1, perc0 - perc1, perc2 - perc1))
 
         else:
