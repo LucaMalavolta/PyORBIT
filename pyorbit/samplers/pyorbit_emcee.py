@@ -24,7 +24,7 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
 
     os.environ["OMP_NUM_THREADS"] = "1"
     try:
-        num_threads = int(config_in['parameters'].get('cpu_threads',  multiprocessing.cpu_count()-1))
+        num_threads = int(config_in['parameters'].get('cpu_threads',  multiprocessing.cpu_count()))
     except:
         print(" Something happened when trying to setup multiprocessing, switching back to 1 CPU")
         num_threads = 1
