@@ -43,19 +43,22 @@ class Celerite2_Matern32(AbstractModel):
 
     def initialize_model(self, mc,  **kwargs):
 
-        for common_ref in self.common_ref:
-            if mc.common_models[common_ref].model_class == 'activity':
-                self.use_stellar_rotation_period = getattr(mc.common_models[common_ref], 'use_stellar_rotation_period', False)
-                break
+        try:
+            for common_ref in self.common_ref:
+                if mc.common_models[common_ref].model_class == 'activity':
+                    self.use_stellar_rotation_period = getattr(mc.common_models[common_ref], 'use_stellar_rotation_period', False)
+                    break
+        except:
+            self.use_stellar_rotation_period = False
 
         self.use_stellar_rotation_period =  kwargs.get('use_stellar_rotation_period', self.use_stellar_rotation_period)
 
         if self.use_stellar_rotation_period:
             self.list_pams_common.update(['rotation_period'])
             self.list_pams_dataset.discard('matern32_rho')
-    
+
         self.use_shared_hyperparameters = False
-        for keyword in ['use_shared_hyperparameters', 
+        for keyword in ['use_shared_hyperparameters',
                         'shared_hyperparameters',
                         'use_common_hyperparameters',
                         'common_hyperparameters']:

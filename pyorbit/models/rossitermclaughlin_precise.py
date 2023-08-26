@@ -113,6 +113,15 @@ class RossiterMcLaughlin_Precise(AbstractModel, AbstractTransit):
             'rv_step': 0.50,
         }
 
+        # HARPS-N instrumental braodening: FWHM of 3.1 pixels
+        # At 530 nm for example, in the center of the CCD,
+        # the scale is 0.001415 nm/pixel, and the spectral
+        # resolution taking into account the measured spotsize
+        # is computed to about R = 124’000.
+        # fwhm = 2.355 sigma
+        # fwhm = 0.01415 * 3.1 * 299792.458 / 5300 = 2.48 km/s
+        # sigma = 
+
         for dict_name in self.ccf_variables:
             if kwargs[dataset.name_ref].get(dict_name, False):
                 self.ccf_variables[dict_name] = kwargs[dataset.name_ref][dict_name]
