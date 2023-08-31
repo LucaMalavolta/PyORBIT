@@ -103,9 +103,12 @@ class LimbDarkening_2Pam(AbstractCommon):
             pam00_index = self.sampler_parameters['ld_q1']
             pam01_index = self.sampler_parameters['ld_q2']
 
-            del self.parameter_index['ld_q1']
-            del self.parameter_index['ld_q2']
-
+            try:
+                del self.parameter_index['ld_q1']
+                del self.parameter_index['ld_q2']
+            except:
+                pass
+            
             if 'ld_c1' not in self.parameter_index:
                 self.transformation['ld_c1'] = get_2var_c1
                 self.parameter_index['ld_c1'] = [pam00_index, pam01_index]
