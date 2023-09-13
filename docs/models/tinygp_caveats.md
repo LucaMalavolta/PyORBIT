@@ -24,7 +24,7 @@ parameters:
   safe_reload: True
 ```
 
-By activating this flag, the code will exit after having completed the global search with `pyDE`. It is then necessary to launch `PyORBIT` again, but this task can be accomplished by writing a simple `bash` script where `PyORBIT` is just executed twice on the same configuration file.
+If the `safe_reload` flag is set to `True`, the code will exit after completing the global search with `pyDE`. It is then necessary to launch `PyORBIT` again, but this task can be accomplished by writing a simple `bash` script where `PyORBIT` is just executed twice on the same configuration file.
 
 Following the example in the [`PyORBIT_examples/gaussian_processes`](https://github.com/LucaMalavolta/PyORBIT_examples/tree/main/gaussian_processes) repository, we prepare a simple text file code `exec_all_fits.source` including these lines:
 
