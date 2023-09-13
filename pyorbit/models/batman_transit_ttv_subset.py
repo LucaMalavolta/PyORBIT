@@ -84,7 +84,7 @@ class Batman_Transit_TTV_Subset(AbstractModel, AbstractTransit):
             par_original = 'Tc'
             par_subset = 'Tc_'+repr(i_sub)
 
-            self.transfer_parameter_properties(mc, dataset, par_original, par_subset, dataset_pam=True)
+            self.transfer_parameter_properties(mc, dataset, par_original, par_subset, keywords=kwargs, dataset_pam=True)
 
             sub_dataset = dataset.x[(dataset.submodel_id == i_sub)]
 

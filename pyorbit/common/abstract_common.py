@@ -83,6 +83,7 @@ class AbstractCommon(object):
             will be actually used in the complete model.
         """
 
+
         for pam in list(set(parameters_list) & set(self.list_pams)):
             """We check for each parameter (except eccentricity and omega) if
                 the parameter is a fixed value or a free parameter, and move the

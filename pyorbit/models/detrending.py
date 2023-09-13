@@ -110,9 +110,9 @@ class Detrending(AbstractModel):
             par_original = 'det_c0'
             par_addition = 'det_c0'
             if self.local_model:
-                self.transfer_parameter_properties(mc, dataset, par_original, par_addition, dataset_pam=True)
+                self.transfer_parameter_properties(mc, dataset, par_original, par_addition, keywords=kwargs, dataset_pam=True)
             else:
-                self.transfer_parameter_properties(mc, dataset, par_original, par_addition, common_pam=True)
+                self.transfer_parameter_properties(mc, dataset, par_original, par_addition, keywords=kwargs, common_pam=True)
 
         """ the name and the polynomial order for each dataset and each set is preserved
             We assume that the same order are used for all the datasets that are using this model
@@ -155,19 +155,19 @@ class Detrending(AbstractModel):
                 par_addition = 'det_' + data_name + '_c'+repr(i_order)
 
                 if self.local_model:
-                    self.transfer_parameter_properties(mc, dataset, par_original, par_addition, dataset_pam=True)
+                    self.transfer_parameter_properties(mc, dataset, par_original, par_addition, keywords=kwargs, dataset_pam=True)
                 else:
-                    self.transfer_parameter_properties(mc, dataset, par_original, par_addition, common_pam=True)
+                    self.transfer_parameter_properties(mc, dataset, par_original, par_addition, keywords=kwargs, common_pam=True)
 
             par_original = 'x_zero'
             par_addition = 'x_zero_' + data_name
 
             if self.local_model:
                 self.fix_list[dataset.name_ref][par_addition] = np.asarray([x_zero, 0.0])
-                self.transfer_parameter_properties(mc, dataset, par_original, par_addition, dataset_pam=True)
+                self.transfer_parameter_properties(mc, dataset, par_original, par_addition, keywords=kwargs, dataset_pam=True)
             else:
                 mc.common_models[self.common_detrending].fix_list[par_addition] = np.asarray([self.x_zero, 0.0000])
-                self.transfer_parameter_properties(mc, dataset, par_original, par_addition, common_pam=True)
+                self.transfer_parameter_properties(mc, dataset, par_original, par_addition, keywords=kwargs, common_pam=True)
 
             self.interpolated[dataset.name_ref][data_name]=interp1d(
             dataset.x0,

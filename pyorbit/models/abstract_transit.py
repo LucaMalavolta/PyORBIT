@@ -273,8 +273,10 @@ class AbstractTransit(object):
                 self.code_options[dataset.name_ref]['l1'] = kwargs[dict_name][0] / 10**9
                 self.code_options[dataset.name_ref]['l2'] = kwargs[dict_name][1] / 10**9
 
-        """ Keep track of the boundaries of each dataset, so that the user do
+        """ TTV MODULE
+            Keep track of the boundaries of each dataset, so that the user do
             not have to write down the boundaries of each transit in case of TTV fit
+            We also read the priors on Tc, if specified
         """
 
         tc_boundaries_names = ['Tc_boundaries',
@@ -292,8 +294,33 @@ class AbstractTransit(object):
             for dict_name in tc_boundaries_names:
                 if kwargs[dataset.name_ref].get(dict_name, False):
                     tc_boundaries = kwargs[dataset.name_ref][dict_name]
+                if kwargs.get(dict_name, False):
+                    if kwargs[dict_name].get(dataset.name_ref, False):
+                        tc_boundaries = kwargs[dict_name][dataset.name_ref]
 
-        self.code_options[dataset.name_ref]['Tc_boundaries'] = tc_boundaries
+        tc_priors_names = ['Tc_priors',
+            'T_priors',
+            'TC_priors',
+        ]
+
+        tc_priors = ['Uniform', 0.00, 0.00]
+        if kwargs[dataset.name_ref].get('priors', False):
+            tc_priors = np.atleast_1d(kwargs[dataset.name_ref]['priors']['Tc'])
+        else:
+            for dict_name in tc_priors_names:
+                if kwargs[dataset.name_ref].get(dict_name, False):
+                    tc_priors = kwargs[dataset.name_ref][dict_name]
+                if kwargs.get(dict_name, False):
+                    if kwargs[dict_name].get(dataset.name_ref, False):
+                        tc_priors = kwargs[dict_name][dataset.name_ref]
+
+        if 'Tc' in self.list_pams_dataset:
+            self.bounds[dataset.name_ref]['Tc'] = tc_boundaries
+            self.prior_kind[dataset.name_ref]['Tc'] = tc_priors[0]
+            try:
+                self.prior_pams[dataset.name_ref]['Tc'] = np.asarray(tc_priors[1:], dtype=np.double)
+            except:
+                self.prior_pams[dataset.name_ref]['Tc'] = np.asarray([0.00], dtype=np.double)
 
 
     """ function for internal transformation of parameters """

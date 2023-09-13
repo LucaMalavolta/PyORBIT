@@ -305,7 +305,7 @@ class AbstractModel(object):
         return 0.00
 
 
-    def transfer_parameter_properties(self, mc, dataset, par_original, par_subset,
+    def transfer_parameter_properties(self, mc, dataset, par_original, par_subset, keywords={},
     common_pam=False, dataset_pam=False):
 
         if common_pam:
@@ -321,7 +321,14 @@ class AbstractModel(object):
             if par_original not in mc.common_models[common_model].list_pams:
                 continue
 
-            if par_original in mc.common_models[common_model].bounds:
+            if common_pam:
+                mc.common_models[common_model].list_pams.update([par_subset])
+
+            if par_original in keywords.get('boundaries', {}):
+                par_update = keywords['boundaries'][par_original]
+            elif par_subset in keywords.get('boundaries', {}):
+                par_update = keywords['boundaries'][par_subset]
+            elif par_original in mc.common_models[common_model].bounds:
                 par_update = mc.common_models[common_model].bounds[par_original]
             elif par_original in self.bounds[dataset.name_ref]:
                 par_update = self.bounds[dataset.name_ref][par_original]
@@ -333,8 +340,11 @@ class AbstractModel(object):
             else:
                 self.bounds[dataset.name_ref].update({par_subset: par_update})
 
-
-            if par_original in mc.common_models[common_model].spaces:
+            if par_original in keywords.get('spaces', {}):
+                par_update = keywords['spaces'][par_original]
+            elif par_subset in keywords.get('spaces', {}):
+                par_update = keywords['spaces'][par_subset]
+            elif par_original in mc.common_models[common_model].spaces:
                 par_update = mc.common_models[common_model].spaces[par_original]
             elif par_original in self.spaces[dataset.name_ref]:
                 par_update = self.spaces[dataset.name_ref][par_original]
@@ -346,8 +356,21 @@ class AbstractModel(object):
             else:
                 self.spaces[dataset.name_ref].update({par_subset: par_update})
 
-
-            if par_original in mc.common_models[common_model].prior_pams:
+            if par_original in keywords.get('priors', {}):
+                prior_pams = np.atleast_1d(keywords['priors'][par_original])
+                par_update0 = prior_pams[0]
+                try:
+                    par_update1 = np.asarray(prior_pams[1:], dtype=np.double)
+                except:
+                    par_update1 = np.asarray([0.00], dtype=np.double)
+            elif par_subset in keywords.get('priors', {}):
+                prior_pams = np.atleast_1d(keywords['priors'][par_subset])
+                par_update0 = prior_pams[0]
+                try:
+                    par_update1 = np.asarray(prior_pams[1:], dtype=np.double)
+                except:
+                    par_update1 = np.asarray([0.00], dtype=np.double)
+            elif par_original in mc.common_models[common_model].prior_pams:
                 par_update0 = mc.common_models[common_model].prior_kind[par_original]
                 par_update1 = mc.common_models[common_model].prior_pams[par_original]
             elif par_original in self.prior_pams[dataset.name_ref]:
