@@ -89,7 +89,7 @@ class Dataset(AbstractCommon):
         self.ancillary_str_index = {}
         self.ancillary_str = input_array.copy()
 
-        if self.ancillary:
+        if self.ancillary is not None:
             # Data ancillary has been already defined when reading the main files
             # we take the keywords from the file and add them to the existing
             for iname, name in enumerate(input_array.dtype.names):
