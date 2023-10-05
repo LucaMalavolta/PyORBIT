@@ -41,7 +41,7 @@ setup(
         'numpy>=1.22',
         'numba>=0.55.2',
         'scipy>=1.8.1',
-        'matplotlib>=3.5.2',
+        'matplotlib>=3.5.2,<3.8',
         'astropy>=5.1',
         'astroquery>=0.4',
         'pyerfa>=2.0',
