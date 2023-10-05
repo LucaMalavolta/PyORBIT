@@ -11,7 +11,7 @@ long_description = (this_directory / "README.md").read_text()
 
 setup(
     name="pyorbit-package",
-    version='10.0.9',
+    version='10.0.10',
     author="Luca Malavolta",
 	author_email = 'luca.malavolta@unipd.it',
 	url = 'https://github.com/LucaMalavolta/PyORBIT',
