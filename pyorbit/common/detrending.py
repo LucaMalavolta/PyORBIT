@@ -42,6 +42,22 @@ class CommonDetrending(AbstractCommon):
                 'fixed' : 0.00,
                 'unit': None,
             },
+        'det_m32_sigma':
+            {
+                'bounds': [0.000001, 1000000.0],
+                'priors': ['Uniform', []],
+                'spaces': 'Log_Base10',
+                'fixed' : None,
+                'unit': 'as input',
+            },
+        'det_m32_rho':
+            {
+                'bounds': [0.001, 1000.00],
+                'priors': ['Uniform', []],
+                'spaces': 'Log_Base10',
+                'fixed' : None,
+                'unit': 'as input',
+            },
         'x_zero':
             {
                 'bounds': [-1e09, 1e09],

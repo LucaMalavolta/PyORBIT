@@ -179,7 +179,7 @@ class CommonActivity(AbstractCommon):
                 'unit': 'as input',
             },
         # Matern kernel
-        'matern32_sigma': # Matern kernel,  sigma parameter
+        'matern32_sigma': # Matern kernel,  sigma parameter (amplitude^2)
             {
                 'bounds': [0.000001, 1000000.0],
                 'priors': ['Uniform', []],
@@ -187,7 +187,7 @@ class CommonActivity(AbstractCommon):
                 'fixed' : None,
                 'unit': 'as input',
             },
-        'matern32_rho': # Matern kernel,  rho parameter
+        'matern32_rho': # Matern kernel,  rho parameter (metric)
             {
                 'bounds': [0.001, 1000.00],
                 'priors': ['Uniform', []],
