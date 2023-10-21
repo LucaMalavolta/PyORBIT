@@ -105,7 +105,7 @@ from pyorbit.models.cheops_factormodel import CheopsFactorModel
 
 from pyorbit.models.detrending import Detrending, PolynomialDetrending, ExponentialDetrending
 #from pyorbit.models.exponential_detrending import ExponentialDetrending
-
+from pyorbit.models.detrending_matern32 import Detrending_Matern32
 
 from pyorbit.models.celerite2_granulation_oscillation_rotation import Celerite2_Granulation_Oscillation_Rotation
 from pyorbit.models.tinygp_quasiperiodic_activity import TinyGaussianProcess_QuasiPeriodicActivity
@@ -262,6 +262,8 @@ define_type_to_class = {
     'polynomial_detrending': PolynomialDetrending,
     'exponential_detrending': ExponentialDetrending,
     'detrending': Detrending,
+    'detrending_mater32': Detrending_Matern32,
+    'matern32_detrending': Detrending_Matern32,
 }
 
 accepted_extensions = ['.yaml', '.yml', '.conf', '.config', '.input', ]
