@@ -5,6 +5,11 @@ from numpy.polynomial import polynomial
 from numpy.lib.recfunctions import append_fields
 from scipy.interpolate import interp1d
 
+try:
+    import george
+except:
+    pass
+
 class Detrending_Matern32(AbstractModel):
 
     default_common = 'detrending'
@@ -13,10 +18,9 @@ class Detrending_Matern32(AbstractModel):
         super().__init__(*args, **kwargs)
 
         try:
-            from george import kernels, GP
-            from george.metrics import Metric
+            import george
         except:
-            print("ERROR: celerite2 not installed, this will not work")
+            print("ERROR: george not installed, this will not work")
             quit()
 
         import warnings
@@ -85,7 +89,7 @@ class Detrending_Matern32(AbstractModel):
                     mean = np.mean(dataset.ancillary[data_name])
                     std = np.std(dataset.ancillary[data_name])
                     self.gp_rvector[dataset.name_ref][:,index] = (dataset.ancillary[data_name]-mean)/std
-                    print('  {0:s} {1:s} mean:{2:f} std:{4:f}'.format(dataset.name_ref, data_name, mean, std))
+                    print('  {0:s} {1:s} mean:{2:f} std:{3:f}'.format(dataset.name_ref, data_name, mean, std))
                 else:
                     self.gp_rvector[dataset.name_ref][:,index] = dataset.ancillary[data_name]
 
@@ -112,10 +116,10 @@ class Detrending_Matern32(AbstractModel):
     def define_kernel(self, dataset):
         # random initialization
 
-        metric = [0.]*(self.gp_ndim+1)
+        metric = [1.]*self.gp_ndim
         #self.gp_kernel[dataset.name_ref] = 1.0 * kernels.Matern32Kernel(metric=metric, ndim=self.gp_ndim)
-        kernel = 1.0 * kernels.Matern32Kernel(metric=metric, ndim=self.gp_ndim)
-        self.gp[dataset.name_ref] = GP(kernel)
+        kernel = 1.0 * george.kernels.Matern32Kernel(metric=metric, ndim=self.gp_ndim)
+        self.gp[dataset.name_ref] = george.GP(kernel)
 
         """ I've decided to add the jitter in quadrature instead of using a constant kernel to allow the use of
         different / selective jitter within the dataset
