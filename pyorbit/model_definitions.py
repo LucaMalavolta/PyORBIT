@@ -262,7 +262,7 @@ define_type_to_class = {
     'polynomial_detrending': PolynomialDetrending,
     'exponential_detrending': ExponentialDetrending,
     'detrending': Detrending,
-    'detrending_mater32': Detrending_Matern32,
+    'detrending_matern32': Detrending_Matern32,
     'matern32_detrending': Detrending_Matern32,
 }
 

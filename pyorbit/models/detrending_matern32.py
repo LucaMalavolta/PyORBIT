@@ -73,16 +73,21 @@ class Detrending_Matern32(AbstractModel):
         """ For plotting purposes only """
         self.interpolated[dataset.name_ref] = {}
 
-        """ starting from one as the first variable is the amplitude of the GP"""
-        index = 1
+        index = 0
 
         for data_name in kwargs['detrending_variables']:
 
             if data_name not in dataset.ancillary.dtype.names:
+                self.gp_rvector[dataset.name_ref][:,index] = np.zeros(dataset.n)
+            else:
+                
                 if self.standardize:
-                    dataset.ancillary = append_fields(dataset.ancillary, data_name, np.zeros(dataset.n))
+                    mean = np.mean(dataset.ancillary[data_name])
+                    std = np.std(dataset.ancillary[data_name])
+                    self.gp_rvector[dataset.name_ref][:,index] = (dataset.ancillary[data_name]-mean)/std
+                    print('  {0:s} {1:s} mean:{2:f} std:{4:f}'.format(dataset.name_ref, data_name, mean, std))
                 else:
-                    dataset.ancillary = append_fields(dataset.ancillary, data_name, np.zeros(dataset.n))
+                    self.gp_rvector[dataset.name_ref][:,index] = dataset.ancillary[data_name]
 
             par_original = 'det_m32_rho'
             par_addition = 'det_' + data_name + '_m32_rho'
@@ -94,9 +99,11 @@ class Detrending_Matern32(AbstractModel):
 
             self.gp_metric_index[dataset.name_ref][par_addition] = index
 
-            if self.standardize:
-                print('  dataset.name_ref, data_name, ' : {0:12f}')
-            self.gp_rvector[dataset.name_ref][:,index] = dataset.ancillary['data_name']
+            self.interpolated[dataset.name_ref][data_name]=interp1d(
+            dataset.x0,
+            self.gp_rvector[dataset.name_ref][:,index],
+            bounds_error=False,
+            fill_value=(np.amin(self.gp_rvector[dataset.name_ref][:,index]), np.amax(self.gp_rvector[dataset.name_ref][:,index])))
 
             index += 1
 
@@ -105,7 +112,7 @@ class Detrending_Matern32(AbstractModel):
     def define_kernel(self, dataset):
         # random initialization
 
-        metric = [0.]*self.gp_ndim
+        metric = [0.]*(self.gp_ndim+1)
         #self.gp_kernel[dataset.name_ref] = 1.0 * kernels.Matern32Kernel(metric=metric, ndim=self.gp_ndim)
         kernel = 1.0 * kernels.Matern32Kernel(metric=metric, ndim=self.gp_ndim)
         self.gp[dataset.name_ref] = GP(kernel)
@@ -115,7 +122,7 @@ class Detrending_Matern32(AbstractModel):
         """
         env = np.sqrt(dataset.e ** 2.0 + dataset.jitter ** 2.0)
 
-        self.gp[dataset.name_ref].compute(dataset.x0, env)
+        self.gp[dataset.name_ref].compute(self.gp_rvector[dataset.name_ref], env)
 
         return
 
@@ -127,44 +134,57 @@ class Detrending_Matern32(AbstractModel):
         gp_pams[0] = np.log(parameter_values['det_m32_sigma']/self.gp_ndim)
         for data_name, pam_index in self.gp_metric_index[dataset.name_ref].items():
             par_name = 'det_' + data_name + '_m32_rho'
-            gp_pams[pam_index] = np.log(parameter_values[par_name]**2)
+            gp_pams[pam_index+1] = np.log(parameter_values[par_name]**2)
 
         self.gp[dataset.name_ref].set_parameter_vector(gp_pams)
 
         env = np.sqrt(dataset.e ** 2.0 + dataset.jitter ** 2.0)
-        self.gp[dataset.name_ref].compute(dataset.x0, env)
+        self.gp[dataset.name_ref].compute(self.gp_rvector[dataset.name_ref], env)
         return self.gp[dataset.name_ref].log_likelihood(dataset.residuals, quiet=True)
 
     def sample_predict(self, parameter_values, dataset, x0_input=None, return_covariance=False, return_variance=False):
 
-        gp_pams = [0.]*self.gp_ndim
+        gp_pams = [0.]*(self.gp_ndim+1)
+
+        if x0_input is not None:
+            gp_rvector = np.empty([len(x0_input), self.gp_ndim])
 
         gp_pams[0] = np.log(parameter_values['det_m32_sigma']/self.gp_ndim)
         for data_name, pam_index in self.gp_metric_index[dataset.name_ref].items():
             par_name = 'det_' + data_name + '_m32_rho'
-            gp_pams[pam_index] = np.log(gp_pams[par_name]**2)
+            gp_pams[pam_index+1] = np.log(gp_pams[par_name]**2)
+
+            if x0_input is None:
+                gp_rvector[:,pam_index] = dataset.ancillary[data_name]
+            else:
+                gp_rvector[:,pam_index] = self.interpolated[dataset.name_ref][data_name](x0_input)
+
 
         env = np.sqrt(dataset.e ** 2.0 + dataset.jitter ** 2.0)
         self.gp[dataset.name_ref].set_parameter_vector(gp_pams)
-        self.gp[dataset.name_ref].compute(dataset.x0, env)
-        if x0_input is None:
-            return self.gp[dataset.name_ref].predict(dataset.residuals, dataset.x0, return_cov=return_covariance, return_var=return_variance)
-        else:
-            return self.gp[dataset.name_ref].predict(dataset.residuals, x0_input, return_cov=return_covariance, return_var=return_variance)
+        self.gp[dataset.name_ref].compute(self.gp_rvector[dataset.name_ref], env)
+        
+        return self.gp[dataset.name_ref].predict(dataset.residuals, gp_rvector, return_cov=return_covariance, return_var=return_variance)
 
     def sample_conditional(self, parameter_values, dataset, x0_input=None):
 
-        gp_pams = [0.]*self.gp_ndim
+        gp_pams = [0.]*(self.gp_ndim+1)
+
+        if x0_input is not None:
+            gp_rvector = np.empty([len(x0_input), self.gp_ndim])
 
         gp_pams[0] = np.log(parameter_values['det_m32_sigma']/self.gp_ndim)
         for data_name, pam_index in self.gp_metric_index[dataset.name_ref].items():
             par_name = 'det_' + data_name + '_m32_rho'
-            gp_pams[pam_index] = np.log(gp_pams[par_name]**2)
+            gp_pams[pam_index+1] = np.log(gp_pams[par_name]**2)
+
+            if x0_input is None:
+                gp_rvector[:,pam_index] = dataset.ancillary[data_name]
+            else:
+                gp_rvector[:,pam_index] = self.interpolated[dataset.name_ref][data_name](x0_input)
 
         env = np.sqrt(dataset.e ** 2.0 + dataset.jitter ** 2.0)
         self.gp[dataset.name_ref].set_parameter_vector(gp_pams)
-        self.gp[dataset.name_ref].compute(dataset.x0, env)
-        if x0_input is None:
-            return self.gp[dataset.name_ref].sample_conditional(dataset.residuals, dataset.x0)
-        else:
-            return self.gp[dataset.name_ref].sample_conditional(dataset.residuals, x0_input)
+        self.gp[dataset.name_ref].compute(self.gp_rvector[dataset.name_ref], env)
+        return self.gp[dataset.name_ref].sample_conditional(dataset.residuals, gp_rvector)
+
