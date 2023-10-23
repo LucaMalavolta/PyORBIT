@@ -52,7 +52,7 @@ class CommonDetrending(AbstractCommon):
             },
         'det_m32_rho':
             {
-                'bounds': [0.001, 1000.00],
+                'bounds': [0.0001, 1000000.00],
                 'priors': ['Uniform', []],
                 'spaces': 'Log_Base10',
                 'fixed' : None,
