@@ -101,7 +101,7 @@ class Detrending_Matern32(AbstractModel):
             else:
                 self.transfer_parameter_properties(mc, dataset, par_original, par_addition, keywords=kwargs, common_pam=True)
 
-            self.gp_metric_index[dataset.name_ref][par_addition] = index
+            self.gp_metric_index[dataset.name_ref][data_name] = index
 
             self.interpolated[dataset.name_ref][data_name]=interp1d(
             dataset.x0,
@@ -133,7 +133,7 @@ class Detrending_Matern32(AbstractModel):
 
     def lnlk_compute(self, parameter_values, dataset):
 
-        gp_pams = [0.]*self.gp_ndim
+        gp_pams = [0.]*(self.gp_ndim+1)
 
         gp_pams[0] = np.log(parameter_values['det_m32_sigma']/self.gp_ndim)
         for data_name, pam_index in self.gp_metric_index[dataset.name_ref].items():
