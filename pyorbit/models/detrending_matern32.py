@@ -37,12 +37,15 @@ class Detrending_Matern32(AbstractModel):
         self.gp_rvector = {}
         self.gp_metric_index = {}
 
+        self.standardize = False
+
         self.gp_kernel = {}
         self.gp = {}
 
     def initialize_model(self, mc, **kwargs):
 
         self.local_model = kwargs.get('local_model', self.local_model)
+        self.standardize = kwargs.get('standardize', self.standardize)
 
         self.common_model = ~self.local_model
         for keyword in ['use_common_parameters', 'common_parameters', 'use_common_model', 'common_model']:
@@ -76,7 +79,10 @@ class Detrending_Matern32(AbstractModel):
         for data_name in kwargs['detrending_variables']:
 
             if data_name not in dataset.ancillary.dtype.names:
-                dataset.ancillary = append_fields(dataset.ancillary, data_name, np.zeros(dataset.n))
+                if self.standardize:
+                    dataset.ancillary = append_fields(dataset.ancillary, data_name, np.zeros(dataset.n))
+                else:
+                    dataset.ancillary = append_fields(dataset.ancillary, data_name, np.zeros(dataset.n))
 
             par_original = 'det_m32_rho'
             par_addition = 'det_' + data_name + '_m32_rho'
@@ -87,16 +93,12 @@ class Detrending_Matern32(AbstractModel):
                 self.transfer_parameter_properties(mc, dataset, par_original, par_addition, keywords=kwargs, common_pam=True)
 
             self.gp_metric_index[dataset.name_ref][par_addition] = index
+
+            if self.standardize:
+                print('  dataset.name_ref, data_name, ' : {0:12f}')
             self.gp_rvector[dataset.name_ref][:,index] = dataset.ancillary['data_name']
 
             index += 1
-
-            """ For plotting purposes only """
-            self.interpolated[dataset.name_ref][data_name]=interp1d(
-            dataset.x0,
-            dataset.ancillary[data_name],
-            bounds_error=False,
-            fill_value=(np.amin(dataset.ancillary[data_name]), np.amax(dataset.ancillary[data_name])))
 
         self.define_kernel(dataset)
 
