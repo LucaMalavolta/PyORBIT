@@ -137,9 +137,8 @@ class Detrending_Matern32(AbstractModel):
 
         gp_pams[0] = np.log(parameter_values['det_m32_sigma']/self.gp_ndim)
         for data_name, pam_index in self.gp_metric_index[dataset.name_ref].items():
-            index = np.int16(pam_index)
             par_name = 'det_' + data_name + '_m32_rho'
-            gp_pams[index+1] = np.log(parameter_values[par_name]**2)
+            gp_pams[pam_index+1] = np.log(parameter_values[par_name]**2)
 
         self.gp[dataset.name_ref].set_parameter_vector(gp_pams)
 
@@ -156,15 +155,13 @@ class Detrending_Matern32(AbstractModel):
 
         gp_pams[0] = np.log(parameter_values['det_m32_sigma']/self.gp_ndim)
         for data_name, pam_index in self.gp_metric_index[dataset.name_ref].items():
-            index = np.int16(pam_index)
-
             par_name = 'det_' + data_name + '_m32_rho'
-            gp_pams[index+1] = np.log(gp_pams[par_name]**2)
+            gp_pams[pam_index+1] = np.log(parameter_values[par_name]**2)
 
             if x0_input is None:
-                gp_rvector[:,index] = dataset.ancillary[data_name]
+                gp_rvector[:,pam_index] = dataset.ancillary[data_name]
             else:
-                gp_rvector[:,index] = self.interpolated[dataset.name_ref][data_name](x0_input)
+                gp_rvector[:,pam_index] = self.interpolated[dataset.name_ref][data_name](x0_input)
 
 
         env = np.sqrt(dataset.e ** 2.0 + dataset.jitter ** 2.0)
@@ -182,14 +179,13 @@ class Detrending_Matern32(AbstractModel):
 
         gp_pams[0] = np.log(parameter_values['det_m32_sigma']/self.gp_ndim)
         for data_name, pam_index in self.gp_metric_index[dataset.name_ref].items():
-            index = np.int16(pam_index)
             par_name = 'det_' + data_name + '_m32_rho'
-            gp_pams[index+1] = np.log(gp_pams[par_name]**2)
+            gp_pams[pam_index+1] = np.log(parameter_values[par_name]**2)
 
             if x0_input is None:
-                gp_rvector[:,index] = dataset.ancillary[data_name]
+                gp_rvector[:,pam_index] = dataset.ancillary[data_name]
             else:
-                gp_rvector[:,index] = self.interpolated[dataset.name_ref][data_name](x0_input)
+                gp_rvector[:,pam_index] = self.interpolated[dataset.name_ref][data_name](x0_input)
 
         env = np.sqrt(dataset.e ** 2.0 + dataset.jitter ** 2.0)
         self.gp[dataset.name_ref].set_parameter_vector(gp_pams)
