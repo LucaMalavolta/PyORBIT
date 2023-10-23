@@ -150,7 +150,9 @@ class Detrending_Matern32(AbstractModel):
 
         gp_pams = [0.]*(self.gp_ndim+1)
 
-        if x0_input is not None:
+        if x0_input is None:
+            gp_rvector = np.empty([dataset.n, self.gp_ndim])
+        else:
             gp_rvector = np.empty([len(x0_input), self.gp_ndim])
 
         gp_pams[0] = np.log(parameter_values['det_m32_sigma']/self.gp_ndim)
@@ -174,7 +176,9 @@ class Detrending_Matern32(AbstractModel):
 
         gp_pams = [0.]*(self.gp_ndim+1)
 
-        if x0_input is not None:
+        if x0_input is None:
+            gp_rvector = np.empty([dataset.n, self.gp_ndim])
+        else:
             gp_rvector = np.empty([len(x0_input), self.gp_ndim])
 
         gp_pams[0] = np.log(parameter_values['det_m32_sigma']/self.gp_ndim)
