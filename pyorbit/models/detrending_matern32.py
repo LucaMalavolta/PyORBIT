@@ -84,7 +84,7 @@ class Detrending_Matern32(AbstractModel):
             if data_name not in dataset.ancillary.dtype.names:
                 self.gp_rvector[dataset.name_ref][:,index] = np.zeros(dataset.n)
             else:
-                
+
                 if self.standardize:
                     mean = np.mean(dataset.ancillary[data_name])
                     std = np.std(dataset.ancillary[data_name])
@@ -118,7 +118,7 @@ class Detrending_Matern32(AbstractModel):
 
         metric = [1.]*self.gp_ndim
         #self.gp_kernel[dataset.name_ref] = 1.0 * kernels.Matern32Kernel(metric=metric, ndim=self.gp_ndim)
-        kernel = 1.0 * george.kernels.Matern32Kernel(metric=metric, ndim=self.gp_ndim)
+        kernel = 0.1 * george.kernels.Matern32Kernel(metric=metric, ndim=self.gp_ndim)
         self.gp[dataset.name_ref] = george.GP(kernel)
 
         """ I've decided to add the jitter in quadrature instead of using a constant kernel to allow the use of
@@ -135,7 +135,7 @@ class Detrending_Matern32(AbstractModel):
 
         gp_pams = [0.]*(self.gp_ndim+1)
 
-        gp_pams[0] = np.log(parameter_values['det_m32_sigma']/self.gp_ndim)
+        gp_pams[0] = np.log(parameter_values['det_m32_sigma']**2/self.gp_ndim)
         for data_name, pam_index in self.gp_metric_index[dataset.name_ref].items():
             par_name = 'det_' + data_name + '_m32_rho'
             gp_pams[pam_index+1] = np.log(parameter_values[par_name]**2)
@@ -155,7 +155,7 @@ class Detrending_Matern32(AbstractModel):
         else:
             gp_rvector = np.empty([len(x0_input), self.gp_ndim])
 
-        gp_pams[0] = np.log(parameter_values['det_m32_sigma']/self.gp_ndim)
+        gp_pams[0] = np.log(parameter_values['det_m32_sigma']**2/self.gp_ndim)
         for data_name, pam_index in self.gp_metric_index[dataset.name_ref].items():
             par_name = 'det_' + data_name + '_m32_rho'
             gp_pams[pam_index+1] = np.log(parameter_values[par_name]**2)
@@ -169,7 +169,7 @@ class Detrending_Matern32(AbstractModel):
         env = np.sqrt(dataset.e ** 2.0 + dataset.jitter ** 2.0)
         self.gp[dataset.name_ref].set_parameter_vector(gp_pams)
         self.gp[dataset.name_ref].compute(self.gp_rvector[dataset.name_ref], env)
-        
+
         return self.gp[dataset.name_ref].predict(dataset.residuals, gp_rvector, return_cov=return_covariance, return_var=return_variance)
 
     def sample_conditional(self, parameter_values, dataset, x0_input=None):
@@ -181,7 +181,7 @@ class Detrending_Matern32(AbstractModel):
         else:
             gp_rvector = np.empty([len(x0_input), self.gp_ndim])
 
-        gp_pams[0] = np.log(parameter_values['det_m32_sigma']/self.gp_ndim)
+        gp_pams[0] = np.log(parameter_values['det_m32_sigma']**2/self.gp_ndim)
         for data_name, pam_index in self.gp_metric_index[dataset.name_ref].items():
             par_name = 'det_' + data_name + '_m32_rho'
             gp_pams[pam_index+1] = np.log(parameter_values[par_name]**2)

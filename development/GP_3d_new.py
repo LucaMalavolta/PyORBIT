@@ -4,7 +4,7 @@ import numpy as np
 
 x = np.random.uniform(-1, 1., 20)
 y = np.random.uniform(-1, 1., 20)
-z = np.random.uniform(-1, 1., 20) 
+z = np.random.uniform(-1, 1., 20)
 
 lx = 1.0
 ly = 1.0
@@ -32,7 +32,7 @@ l2_lx = np.log(lx**2)
 l2_ly = np.log(ly**2)
 l2_lz = np.log(lz**2)
 
-l2_lamp = np.log(l_amp/ndim)
+l2_lamp = np.log(l_amp**2/ndim)
 k.set_parameter_vector([l2_lamp, l2_lx, l2_ly, l2_lz])
 
 
@@ -51,7 +51,7 @@ y1, y2 = np.meshgrid(y,y)
 z1, z2 = np.meshgrid(z,z)
 
 d_mat = np.sqrt(((x1-x2)/lx)**2 + ((y1-y2)/ly)**2 + ((z1-z2)/lz)**2)
-k_mat = l_amp * (1 + np.sqrt(3)*d_mat)*np.exp(-np.sqrt(3)*d_mat)
+k_mat = l_amp**2 * (1 + np.sqrt(3)*d_mat)*np.exp(-np.sqrt(3)*d_mat)
 plt.matshow(k_mat)
 plt.show()
 
