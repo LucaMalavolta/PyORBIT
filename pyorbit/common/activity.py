@@ -195,6 +195,14 @@ class CommonActivity(AbstractCommon):
                 'fixed' : None,
                 'unit': 'as input',
             },
+        'matern32_sigma_deriv': # Matern kernel,  rho parameter (metric)
+            {
+                'bounds': [0.001, 1000.00],
+                'priors': ['Uniform', []],
+                'spaces': 'Log_Base10',
+                'fixed' : None,
+                'unit': 'as input',
+            },
         # sinusoid-like activity
         'sin_P':  # Period
             {
