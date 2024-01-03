@@ -69,10 +69,21 @@ class TinyGaussianProcess_Matern32Activity(AbstractModel):
             self.list_pams_common.update(['rotation_period'])
             self.list_pams_dataset.discard('matern32_rho')
 
+        self.use_shared_hyperparameters = False
+        for keyword in ['use_shared_hyperparameters',
+                        'shared_hyperparameters',
+                        'use_common_hyperparameters',
+                        'common_hyperparameters']:
+            self.use_shared_hyperparameters =  kwargs.get(keyword, self.use_shared_hyperparameters)
+        if self.use_shared_hyperparameters:
+            pams_copy = self.list_pams_dataset.copy()
+            for pam in pams_copy:
+                self.list_pams_common.update([pam])
+                self.list_pams_dataset.discard(pam)
+
     def lnlk_compute(self, parameter_values, dataset):
         if self.use_stellar_rotation_period:
             parameter_values['matern32_rho'] = parameter_values['rotation_period']
-
 
         theta_dict =  dict(
             scale=parameter_values['matern32_rho'],
