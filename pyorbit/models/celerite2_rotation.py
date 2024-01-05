@@ -75,6 +75,19 @@ class Celerite2_Rotation(AbstractModel):
             self.list_pams_common.update(['rotation_period'])
             self.list_pams_common.discard('Prot')
 
+        self.use_shared_hyperparameters = False
+        for keyword in ['use_shared_hyperparameters',
+                        'shared_hyperparameters',
+                        'use_common_hyperparameters',
+                        'common_hyperparameters']:
+            self.use_shared_hyperparameters =  kwargs.get(keyword, self.use_shared_hyperparameters)
+        if self.use_shared_hyperparameters:
+            pams_copy = self.list_pams_dataset.copy()
+            for pam in pams_copy:
+                self.list_pams_common.update([pam])
+                self.list_pams_dataset.discard(pam)
+
+
     def initialize_model_dataset(self, mc, dataset, **kwargs):
         self.define_kernel(dataset)
         return

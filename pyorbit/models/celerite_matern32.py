@@ -51,7 +51,11 @@ class Celerite_Matern32(AbstractModel):
 
         if self.use_stellar_rotation_period:
             self.list_pams_common.update(['rotation_period'])
-            self.list_pams_common.discard('Prot')
+            try:
+                self.list_pams_dataset.discard('matern32_rho')
+            except:
+                self.list_pams_common.discard('matern32_rho')
+
 
     def initialize_model_dataset(self, mc, dataset, **kwargs):
         self.define_kernel(dataset)
@@ -77,7 +81,7 @@ class Celerite_Matern32(AbstractModel):
         """
 
         if self.use_stellar_rotation_period:
-            parameter_values['Prot'] = parameter_values['rotation_period']
+            parameter_values['matern32_rho'] = parameter_values['rotation_period']
 
         gp_pams = np.asarray(
             [np.log10(parameter_values['matern32_sigma']), np.log10(parameter_values['matern32_rho'])])
@@ -91,7 +95,7 @@ class Celerite_Matern32(AbstractModel):
     def sample_predict(self, parameter_values, dataset, x0_input=None, return_covariance=False, return_variance=False):
 
         if self.use_stellar_rotation_period:
-            parameter_values['Prot'] = parameter_values['rotation_period']
+            parameter_values['matern32_rho'] = parameter_values['rotation_period']
 
         gp_pams = np.asarray(
             [np.log10(parameter_values['matern32_sigma']), np.log10(parameter_values['matern32_rho'])])
@@ -108,7 +112,7 @@ class Celerite_Matern32(AbstractModel):
     def sample_conditional(self, parameter_values, dataset,  x0_input=None):
 
         if self.use_stellar_rotation_period:
-            parameter_values['Prot'] = parameter_values['rotation_period']
+            parameter_values['matern32_rho'] = parameter_values['rotation_period']
 
         gp_pams = np.asarray(
             [np.log10(parameter_values['matern32_sigma']), np.log10(parameter_values['matern32_rho'])])

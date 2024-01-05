@@ -62,16 +62,38 @@ class Celerite2_SHO(AbstractModel):
             'use_Prot_Pdec'
         ]
 
+        if self.use_stellar_rotation_period:
+            self.list_pams_common.update(['rotation_period'])
+            self.list_pams_common.discard('sho_period')
+            self.retrieve_rho_tau = self._internal_transformation_mod02
+
         for dict_name in change_variable_names:
             if kwargs.get(dict_name, False):
+
+                self.list_pams_common.update(['Pdec'])
+                self.list_pams_common.discard('sho_tau')
+
                 if self.use_stellar_rotation_period:
                     self.list_pams_common.update(['rotation_period'])
+                    self.retrieve_rho_tau = self._internal_transformation_mod04
+
                 else:
                     self.list_pams_common.update(['Prot'])
-                self.list_pams_common.update(['Pdec'])
-                self.list_pams_common.discard('sho_period')
-                self.list_pams_common.discard('sho_tau')
-                self.retrieve_rho_tau = self._internal_transformation_mod01
+                    self.list_pams_common.discard('sho_period')
+                    self.retrieve_rho_tau = self._internal_transformation_mod01
+
+
+        self.use_shared_hyperparameters = False
+        for keyword in ['use_shared_hyperparameters',
+                        'shared_hyperparameters',
+                        'use_common_hyperparameters',
+                        'common_hyperparameters']:
+            self.use_shared_hyperparameters =  kwargs.get(keyword, self.use_shared_hyperparameters)
+        if self.use_shared_hyperparameters:
+            pams_copy = self.list_pams_dataset.copy()
+            for pam in pams_copy:
+                self.list_pams_common.update([pam])
+                self.list_pams_dataset.discard(pam)
 
 
     def initialize_model_dataset(self, mc, dataset, **kwargs):
@@ -96,8 +118,6 @@ class Celerite2_SHO(AbstractModel):
         In celerite2 the old function "set_parameter_vector" has been removed
         and the kernel has to be defined every time
         """
-        if self.use_stellar_rotation_period:
-            parameter_values['Prot'] = parameter_values['rotation_period']
 
         rho, tau = self.retrieve_rho_tau(parameter_values)
 
@@ -110,9 +130,6 @@ class Celerite2_SHO(AbstractModel):
         return self.gp[dataset.name_ref].log_likelihood(dataset.residuals)
 
     def sample_predict(self, parameter_values, dataset, x0_input=None, return_covariance=False, return_variance=False):
-
-        if self.use_stellar_rotation_period:
-            parameter_values['Prot'] = parameter_values['rotation_period']
 
         rho, tau = self.retrieve_rho_tau(parameter_values)
 
@@ -128,8 +145,6 @@ class Celerite2_SHO(AbstractModel):
             return self.gp[dataset.name_ref].predict(dataset.residuals, x0_input, return_cov=return_covariance, return_var=return_variance)
 
     def sample_conditional(self, parameter_values, dataset,  x0_input=None):
-        if self.use_stellar_rotation_period:
-            parameter_values['Prot'] = parameter_values['rotation_period']
 
         rho, tau = self.retrieve_rho_tau(parameter_values)
 
@@ -151,3 +166,11 @@ class Celerite2_SHO(AbstractModel):
     @staticmethod
     def _internal_transformation_mod01(parameter_values):
         return  parameter_values['Prot'], parameter_values['Pdec']
+
+    @staticmethod
+    def _internal_transformation_mod02(parameter_values):
+        return  parameter_values['rotation_period'], parameter_values['sho_tau']
+
+    @staticmethod
+    def _internal_transformation_mod03(parameter_values):
+        return  parameter_values['rotation_period'], parameter_values['Pdec']

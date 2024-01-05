@@ -70,8 +70,8 @@ class GaussianProcess_QuasiPeriodicActivity_Common(AbstractModel):
 
     def convert_val2gp(self, input_pams):
         """
-        :param input_pam: dictonary with the 'physically meaningful' parameters of the GP kernel
-        :return: dictonary with the parameters to be fed to 'george'
+        :param input_pam: dictionary with the 'physically meaningful' parameters of the GP kernel
+        :return: dictionary with the parameters to be fed to 'george'
         WARNING: this subroutine is HIGHLY specific of your choice of the kernel! I reccomend to
         create a new Class with different transformations if you are planning of using a different
         kernel combination
@@ -132,7 +132,7 @@ class GaussianProcess_QuasiPeriodicActivity_Common(AbstractModel):
                                     self._n_cov_matrix+dataset.n])
         self._dataset_x0.append(dataset.x0)
         self._dataset_e2 = np.append(self._dataset_e2, dataset.e**2)
-        
+
         self._dataset_names[dataset.name_ref] = self._added_datasets
         self._n_cov_matrix += dataset.n
         self._added_datasets += 1
@@ -231,7 +231,7 @@ class GaussianProcess_QuasiPeriodicActivity_Common(AbstractModel):
     def _hypercond_01(parameter_values):
         # Condition from Rajpaul 2017, Rajpaul+2021
         # Taking into account that Pdec^2 = 2*lambda_2^2
-        return parameter_values['Pdec']**2 > (3. / 4. / np.pi) * parameter_values['Oamp']**2 * parameter_values['Prot']**2 
+        return parameter_values['Pdec']**2 > (3. / 4. / np.pi) * parameter_values['Oamp']**2 * parameter_values['Prot']**2
 
     @staticmethod
     def _hypercond_02(parameter_values):
