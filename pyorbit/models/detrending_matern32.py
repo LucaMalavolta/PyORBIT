@@ -151,17 +151,17 @@ class Detrending_Matern32(AbstractModel):
         gp_pams = [0.]*(self.gp_ndim+1)
 
         if x0_input is None:
-            gp_rvector = np.empty([dataset.n, self.gp_ndim])
+            gp_rvector = np.zeros([dataset.n, self.gp_ndim])
         else:
-            gp_rvector = np.empty([len(x0_input), self.gp_ndim])
-
+            gp_rvector = np.zeros([len(x0_input), self.gp_ndim])
+        print(x0_input)
         gp_pams[0] = np.log(parameter_values['det_m32_sigma']**2/self.gp_ndim)
         for data_name, pam_index in self.gp_metric_index[dataset.name_ref].items():
             par_name = 'det_' + data_name + '_m32_rho'
             gp_pams[pam_index+1] = np.log(parameter_values[par_name]**2)
 
             if x0_input is None:
-                gp_rvector[:,pam_index] = dataset.ancillary[data_name]
+                gp_rvector[:,pam_index] = self.gp_rvector[dataset.name_ref][:,pam_index]*1.
             else:
                 gp_rvector[:,pam_index] = self.interpolated[dataset.name_ref][data_name](x0_input)
 
@@ -169,7 +169,6 @@ class Detrending_Matern32(AbstractModel):
         env = np.sqrt(dataset.e ** 2.0 + dataset.jitter ** 2.0)
         self.gp[dataset.name_ref].set_parameter_vector(gp_pams)
         self.gp[dataset.name_ref].compute(self.gp_rvector[dataset.name_ref], env)
-
         return self.gp[dataset.name_ref].predict(dataset.residuals, gp_rvector, return_cov=return_covariance, return_var=return_variance)
 
     def sample_conditional(self, parameter_values, dataset, x0_input=None):
@@ -187,7 +186,7 @@ class Detrending_Matern32(AbstractModel):
             gp_pams[pam_index+1] = np.log(parameter_values[par_name]**2)
 
             if x0_input is None:
-                gp_rvector[:,pam_index] = dataset.ancillary[data_name]
+                gp_rvector[:,pam_index] = self.gp_rvector[dataset.name_ref][:,pam_index]*1.
             else:
                 gp_rvector[:,pam_index] = self.interpolated[dataset.name_ref][data_name](x0_input)
 
