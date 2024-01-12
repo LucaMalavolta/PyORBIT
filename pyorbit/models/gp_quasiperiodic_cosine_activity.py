@@ -18,6 +18,8 @@ class GaussianProcess_QuasiPeriodicCosineActivity(AbstractModel):
      - omega: is the length scale of the periodic component, and can be linked to the size evolution of the active regions;
      - h: represents the amplitude of the correlations '''
 
+    default_common = 'activity'
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 

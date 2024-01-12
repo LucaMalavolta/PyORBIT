@@ -93,6 +93,8 @@ class TinyGP_Multidimensional_Matern32Activity(AbstractModel):
     - matern32_sigma_deriv: amplitude of the first derivative
     '''
 
+    default_common = 'activity'
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
