@@ -116,9 +116,6 @@ class Dataset(AbstractCommon):
                 self.ancillary_str = drop_fields(self.ancillary_str, name)
                 self.ancillary_str = append_fields(self.ancillary_str, name, input_array_str[:,iname])
 
-        #!new
-
-
 
     def convert_dataset_from_file(self, input_file):
 
