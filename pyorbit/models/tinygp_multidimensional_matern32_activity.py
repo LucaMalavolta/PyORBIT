@@ -136,6 +136,7 @@ class TinyGP_Multidimensional_Matern32Activity(AbstractModel):
         self._n_cov_matrix = 0
 
         self.pi2 = np.pi * np.pi
+        self.use_stellar_rotation_period = False
 
 
     def initialize_model(self, mc,  **kwargs):

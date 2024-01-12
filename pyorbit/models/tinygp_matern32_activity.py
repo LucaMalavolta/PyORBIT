@@ -52,6 +52,7 @@ class TinyGaussianProcess_Matern32Activity(AbstractModel):
             'matern32_rho',  # time scale of the Matern32
             'matern32_sigma', # Amplitude of the covariance matrix
         }
+        self.use_stellar_rotation_period = False
 
     def initialize_model(self, mc,  **kwargs):
 

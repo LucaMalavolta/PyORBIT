@@ -39,6 +39,7 @@ class Celerite_Matern32(AbstractModel):
 
         self.n_pams = 2
         self.gp = {}
+        self.use_stellar_rotation_period = False
 
     def initialize_model(self, mc,  **kwargs):
 
