@@ -30,6 +30,10 @@ class LatentKernel_Matern32(kernels.Kernel):
             shape as ``coeff_prim``.
     """
 
+    kernel : kernels
+    coeff_prim: JAXArray | float
+    coeff_deriv: JAXArray | float
+
     def __init__(self, kernel, coeff_prim, coeff_deriv):
         self.kernel = kernel
         self.coeff_prim, self.coeff_deriv = jnp.broadcast_arrays(
