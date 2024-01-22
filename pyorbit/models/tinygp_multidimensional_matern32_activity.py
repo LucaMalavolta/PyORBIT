@@ -9,6 +9,7 @@ try:
     jax.config.update("jax_enable_x64", True)
     import jax.numpy as jnp
     from tinygp import kernels, GaussianProcess
+    from tinygp.helpers import JAXArray
 
 except:
     pass
