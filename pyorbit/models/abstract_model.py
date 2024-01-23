@@ -92,6 +92,9 @@ class AbstractModel(object):
         self.include_zero_point = False
         self.exclude_zero_point = False
 
+        ## New attribute
+        self.multiple_planets = False
+
     def initialize_model(self, mc, **kwargs):
         pass
 

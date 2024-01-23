@@ -120,6 +120,8 @@ from pyorbit.models.rossitermclaughlin_reloaded_faster import RossiterMcLaughlin
 from pyorbit.models.rossitermclaughlin_revolutions import RossiterMcLaughlin_Revolutions
 from pyorbit.models.rossitermclaughlin_revolutions_faster import RossiterMcLaughlin_Revolutions_Faster
 
+from pyorbit.models.rossitermclaughlin_multipleplanets_precise import RossiterMcLaughlin_MultiplePlanets_Precise
+
 """
  model_requires_planets: all those models that requires AT LEAST one of the planets in the system must be listed here
     this is the case for dataset that contains the signature of multiple planets, e.g., RVs or transit light curve
@@ -144,11 +146,15 @@ model_requires_planets = ['radial_velocities', 'transit_times', 'transit',
 single_planet_model = ['Tc_planets', 'transit_times']
 transit_time_model = ['Tc_planets', 'transit_times']
 
-model_requires_limbdarkening = ['transit',
+model_requires_limb_darkening = ['transit',
                                 'transit_eclipse_phasecurve',
                                 'spectral_rotation',
                                 'subset_spectral_rotation',
-                                'subset_spectral_rotation_polynomial']
+                                'subset_spectral_rotation_polynomial',
+                                'rossiter_mclaughlin']
+
+model_requires_star = ['rossiter_mclaughlin']
+model_requires_multiple_planets = ['rossiter_mclaughlin']
 
 define_common_type_to_class = {
     'planets': CommonPlanets,
@@ -263,6 +269,7 @@ define_type_to_class = {
     'rossitermclaughlin_reloaded': RossiterMcLaughlin_Reloaded,
     'rossitermclaughlin_reloaded_faster': RossiterMcLaughlin_Reloaded_Faster,
     'rossitermclaughlin_revolutions': RossiterMcLaughlin_Revolutions,
+    'rossitermclaughlin_multiple_precise': RossiterMcLaughlin_MultiplePlanets_Precise,
     'polynomial_detrending': PolynomialDetrending,
     'exponential_detrending': ExponentialDetrending,
     'detrending': Detrending,

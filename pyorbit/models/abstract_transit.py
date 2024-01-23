@@ -50,7 +50,7 @@ class AbstractTransit(object):
             self.list_pams_common.discard('omega')
 
             self.list_pams_common.update(['sre_coso'])
-            self.list_pams_common.update(['sre_sino'])
+            self.list_pams_common.update(['sre_sino'])        
 
         try:
             multivariate_pams = mc.common_models[self.stellar_ref].multivariate_pams
@@ -325,24 +325,24 @@ class AbstractTransit(object):
 
     """ function for internal transformation of parameters """
 
-    def update_parameter_values(self, parameter_values, Tref):
+    def update_parameter_values(self, parameter_values, Tref, prepend=''):
 
         #t1_start = process_time()
         if self.multivariate_mass_radius:
             parameter_values['density'] = parameter_values['mass']/parameter_values['radius']**3
 
         if self.compute_semimajor_axis:
-            parameter_values['a_Rs'] = convert_rho_to_ars(parameter_values['P'], parameter_values['density'])
+            parameter_values[prepend+'a_Rs'] = convert_rho_to_ars(parameter_values[prepend+'P'], parameter_values['density'])
 
         if self.compute_inclination:
-            parameter_values['i'] = convert_b_to_i(
-            parameter_values['b'], parameter_values['e'], parameter_values['omega'], parameter_values['a_Rs'])
+            parameter_values[prepend+'i'] = convert_b_to_i(
+            parameter_values[prepend+'b'], parameter_values[prepend+'e'], parameter_values[prepend+'omega'], parameter_values[prepend+'a_Rs'])
 
         if self.compute_time_inferior_conjunction:
-            parameter_values['Tc']= kepler_exo.kepler_phase2Tc_Tref(parameter_values['P'],
-                                               parameter_values['mean_long'],
-                                               parameter_values['e'],
-                                               parameter_values['omega']) + Tref
+            parameter_values[prepend+'Tc']= kepler_exo.kepler_phase2Tc_Tref(parameter_values[prepend+'P'],
+                                               parameter_values[prepend+'mean_long'],
+                                               parameter_values[prepend+'e'],
+                                               parameter_values[prepend+'omega']) + Tref
 
 
     def _limb_darkening_coefficients(self, parameter_values):

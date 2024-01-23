@@ -313,13 +313,13 @@ class ModelContainer(object):
                     parameter_values.update(
                         self.common_models[common_ref].convert(theta))
 
-                # try:
-                #    """ Taking the parameter values from the common models"""
-                #    for common_ref in self.models[model_name].common_ref:
-                #        Translohr.update(self.common_models[common_ref].convert(theta))
-                # except:
-                #    """ This model has no common model reference, i.e., it is strictly connected to the dataset"""
-                #    pass
+                #TODO: remove try-except starting from version 11 !!
+                try:
+                    for planet_name in self.models[model_name].multiple_planets:
+                        parameter_values.update(
+                            self.common_models[common_ref].convert_with_name(theta, planet_name))
+                except:
+                    pass
 
                 parameter_values.update(
                     self.models[model_name].convert(theta, dataset_name))
@@ -382,8 +382,8 @@ class ModelContainer(object):
             dataset.compute_residuals()
 
             """ Gaussian Process check MUST be the last one or the program will fail
-             that's because for the GP to work we need to know the _deterministic_ part of the model
-             (i.e. the theoretical values you get when you feed your model with the parameter values) """
+            that's because for the GP to work we need to know the _deterministic_ part of the model
+            (i.e. the theoretical values you get when you feed your model with the parameter values) """
 
             if logchi2_gp_model:
 

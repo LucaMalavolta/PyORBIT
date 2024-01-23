@@ -412,7 +412,11 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, reload_ze
 
         #if model_type in model_requires_planets or model_type in single_planet_model:
 
-        """ some models require one or more planets, with some specific properties"""
+        """ Some models require one or more planets, with some specific properties.
+        In this approach, a copy of the model will be created for each planet in the system
+
+        """
+
         if temporary_model.model_class in model_requires_planets \
             or temporary_model.model_class in single_planet_model:
 
@@ -488,7 +492,7 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, reload_ze
                             mc.dynamical_t0_dict[planet_name] = dataset_name
 
                 """ This snippet will work only for transit class"""
-                if mc.models[model_name_exp].model_class in model_requires_limbdarkening:
+                if mc.models[model_name_exp].model_class in model_requires_limb_darkening:
 
                     try:
                         common_name = mc.models[model_name_exp].model_conf['limb_darkening']
@@ -578,7 +582,7 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, reload_ze
             mc.models[model_name] = define_type_to_class[model_type](model_name, common_ref)
 
             """ Check if we need to add the limb darkening parameters to the model"""
-            if mc.models[model_name].model_class in model_requires_limbdarkening:
+            if mc.models[model_name].model_class in model_requires_limb_darkening:
 
                 try:
                     common_name = mc.models[model_name].model_conf['limb_darkening']
@@ -597,14 +601,22 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, reload_ze
                 mc.models[model_name].common_ref.append(common_name)
 
             """ Adding the stellar parameters common model by default """
-            ##TODO: is it really needed?
-            #try:
-            #    common_name = mc.models[model_name].model_conf['star_parameters']
-            #except:
-            #    common_name = 'star_parameters'
-            #mc.models[model_name].common_ref.append(common_name)
-            #mc.models[model_name].stellar_ref = common_name
+            if mc.models[model_name].model_class in model_requires_star:
+                try:
+                    common_name = mc.models[model_name].model_conf['star_parameters']
+                except:
+                    common_name = 'star_parameters'
+                mc.models[model_name].common_ref.append(common_name)
+                mc.models[model_name].stellar_ref = common_name
 
+            """ Adding the list of multiple planets"""
+            if mc.models[model_name].model_class in model_requires_multiple_planets:
+                
+                planet_list = np.atleast_1d(model_conf['planets']).tolist()
+                mc.models[model_name].planet_ref = planet_list[0]
+                for planet in planet_list:
+                    mc.models[model_name].common_ref.append(planet)
+                mc.models[model_name].multiple_planets = planet_list
 
             """ A model can be exclusively unitary, additive, or normalization.
                 How the individual model are combined to provided the final model is embedded in the Dataset class

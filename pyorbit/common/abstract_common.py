@@ -22,6 +22,7 @@ class AbstractCommon(object):
         self.common_ref = common_ref
         self.planet_ref = common_ref
         self.stellar_ref = 'star_parameters'
+        self.multiple_planets = []
 
         self.list_pams_common = set()
         self.list_pams_dataset = set()
@@ -182,6 +183,13 @@ class AbstractCommon(object):
         parameter_values = {}
         for pam in self.parameter_index:
             parameter_values[pam] = self.transformation[pam](
+                theta, self.fixed, self.parameter_index[pam])
+        return parameter_values
+
+    def convert_with_name(self, theta, name):
+        parameter_values = {}
+        for pam in self.parameter_index:
+            parameter_values[name + '_' + pam] = self.transformation[pam](
                 theta, self.fixed, self.parameter_index[pam])
         return parameter_values
 
