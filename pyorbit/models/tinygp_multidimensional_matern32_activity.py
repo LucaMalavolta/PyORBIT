@@ -97,8 +97,8 @@ def _loss_tinygp_matern32(params):
 class TinyGP_Multidimensional_Matern32Activity(AbstractModel):
     '''
     - matern32_rho: the scale of the Matern32 kernel;
-    - matern32_sigma: the amplitude of the correlations;
-    - matern32_sigma_deriv: amplitude of the first derivative
+    - matern32_multigp_sigma: the amplitude of the correlations;
+    - matern32_multigp_sigma_deriv: amplitude of the first derivative
     '''
 
     default_common = 'activity'
@@ -115,8 +115,8 @@ class TinyGP_Multidimensional_Matern32Activity(AbstractModel):
             'matern32_rho',  # time scale of the Matern32
         }
         self.list_pams_dataset = {
-            'matern32_sigma', # Amplitude of the covariance matrix
-            'matern32_sigma_deriv' # Amplitude of the first derivative of the covariance matrix
+            'matern32_multigp_sigma', # Amplitude of the covariance matrix
+            'matern32_multigp_sigma_deriv' # Amplitude of the first derivative of the covariance matrix
         }
 
 
@@ -198,7 +198,7 @@ class TinyGP_Multidimensional_Matern32Activity(AbstractModel):
             use_derivative = True
 
         if not use_derivative:
-            self.fix_list[dataset.name_ref] = {'matern32_sigma_deriv': [0., 0.]}
+            self.fix_list[dataset.name_ref] = {'matern32_multigp_sigma_deriv': [0., 0.]}
 
 
         return
@@ -216,8 +216,8 @@ class TinyGP_Multidimensional_Matern32Activity(AbstractModel):
         self._dataset_ej2[d_nstart:d_nend] = self._dataset_e2[d_nstart:d_nend] + dataset.jitter**2.0
         self._dataset_res[d_nstart:d_nend] = dataset.residuals
 
-        self.internal_coeff_prime[d_ind] = parameter_values['matern32_sigma']
-        self.internal_coeff_deriv[d_ind] = parameter_values['matern32_sigma_deriv']
+        self.internal_coeff_prime[d_ind] = parameter_values['matern32_multigp_sigma']
+        self.internal_coeff_deriv[d_ind] = parameter_values['matern32_multigp_sigma_deriv']
 
     def lnlk_compute(self):
 

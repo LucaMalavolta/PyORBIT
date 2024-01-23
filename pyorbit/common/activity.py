@@ -195,11 +195,19 @@ class CommonActivity(AbstractCommon):
                 'fixed' : None,
                 'unit': 'as input',
             },
-        'matern32_sigma_deriv': # Matern kernel,  rho parameter (metric)
+        'matern32_multigp_sigma': # Matern kernel,  rho parameter (metric)
             {
-                'bounds': [0.001, 1000.00],
+                'bounds': [-10000.00, 1000.00],
                 'priors': ['Uniform', []],
-                'spaces': 'Log_Base10',
+                'spaces': 'Linear',
+                'fixed' : None,
+                'unit': 'as input',
+            },
+        'matern32_multigp_sigma_deriv': # Matern kernel,  rho parameter (metric)
+            {
+                'bounds': [-10000.00, 1000.00],
+                'priors': ['Uniform', []],
+                'spaces': 'Linear',
                 'fixed' : None,
                 'unit': 'as input',
             },
