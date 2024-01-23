@@ -31,9 +31,12 @@ class LatentKernel(kernels.Kernel):
             shape as ``coeff_prim``.
     """
 
-    kernel : kernels
-    coeff_prim: JAXArray | float
-    coeff_deriv: JAXArray | float
+    try:
+        kernel : kernels
+        coeff_prim: JAXArray | float
+        coeff_deriv: JAXArray | float
+    except: 
+        pass
 
     def __init__(self, kernel, coeff_prim, coeff_deriv):
         self.kernel = kernel
