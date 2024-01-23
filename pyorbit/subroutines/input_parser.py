@@ -412,7 +412,7 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, reload_ze
 
         #if model_type in model_requires_planets or model_type in single_planet_model:
 
-        """ some models requires one or more planets, with some specific properties"""
+        """ some models require one or more planets, with some specific properties"""
         if temporary_model.model_class in model_requires_planets \
             or temporary_model.model_class in single_planet_model:
 
