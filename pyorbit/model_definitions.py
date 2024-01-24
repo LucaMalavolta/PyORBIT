@@ -109,7 +109,7 @@ from pyorbit.models.detrending_matern32 import Detrending_Matern32
 
 from pyorbit.models.celerite2_granulation_oscillation_rotation import Celerite2_Granulation_Oscillation_Rotation
 from pyorbit.models.tinygp_quasiperiodic_activity import TinyGaussianProcess_QuasiPeriodicActivity
-from pyorbit.models.tinygp_matern32_activity import TinyGaussianProcess_Matern32Activity 
+from pyorbit.models.tinygp_matern32_activity import TinyGaussianProcess_Matern32Activity
 from pyorbit.models.tinygp_multidimensional_quasiperiodic_activity import TinyGP_Multidimensional_QuasiPeriodicActivity
 from pyorbit.models.tinygp_multidimensional_matern32_activity import TinyGP_Multidimensional_Matern32Activity
 
@@ -120,7 +120,7 @@ from pyorbit.models.rossitermclaughlin_reloaded_faster import RossiterMcLaughlin
 from pyorbit.models.rossitermclaughlin_revolutions import RossiterMcLaughlin_Revolutions
 from pyorbit.models.rossitermclaughlin_revolutions_faster import RossiterMcLaughlin_Revolutions_Faster
 
-from pyorbit.models.rossitermclaughlin_multipleplanets_precise import RossiterMcLaughlin_MultiplePlanets_Precise
+from pyorbit.models.rossitermclaughlin_multiplanets_precise import RossiterMcLaughlin_MultiPlanets_Precise
 
 """
  model_requires_planets: all those models that requires AT LEAST one of the planets in the system must be listed here
@@ -269,7 +269,7 @@ define_type_to_class = {
     'rossitermclaughlin_reloaded': RossiterMcLaughlin_Reloaded,
     'rossitermclaughlin_reloaded_faster': RossiterMcLaughlin_Reloaded_Faster,
     'rossitermclaughlin_revolutions': RossiterMcLaughlin_Revolutions,
-    'rossitermclaughlin_multiple_precise': RossiterMcLaughlin_MultiplePlanets_Precise,
+    'rossitermclaughlin_multiplanets_precise': RossiterMcLaughlin_MultiPlanets_Precise,
     'polynomial_detrending': PolynomialDetrending,
     'exponential_detrending': ExponentialDetrending,
     'detrending': Detrending,
