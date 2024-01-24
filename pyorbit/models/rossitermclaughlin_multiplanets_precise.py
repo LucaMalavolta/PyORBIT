@@ -286,12 +286,12 @@ class RossiterMcLaughlin_MultiPlanets_Precise(AbstractModel, AbstractTransit):
 
                 for planet_name, planet_dict in planet_out.items():
 
-                    if planet_dict['planet_position_zp'][j] > 0 and planet_dict['planet_position_rp'][j] < 1. + parameter_values[planet_name+'_R_Rs']:
+                    if planet_dict['planet_position_zp'][j,i_obs] > 0 and planet_dict['planet_position_rp'][j,i_obs] < 1. + parameter_values[planet_name+'_R_Rs']:
                         # the planet is in the foreground or inside the stellar disk, continue
                         # adjustment: computation is performed even if only part of the planet is shadowing the star
 
-                        rd = np.sqrt((planet_dict['planet_position_xp'][j] - self.star_grid['xc']) ** 2 +
-                                        (planet_dict['planet_position_yp'][j] - self.star_grid['yc']) ** 2)
+                        rd = np.sqrt((planet_dict['planet_position_xp'][j,i_obs] - self.star_grid['xc']) ** 2 +
+                                        (planet_dict['planet_position_yp'][j,i_obs] - self.star_grid['yc']) ** 2)
 
                         """ Selection of the portion of stars covered by the planet"""
                         sel_eclipsed = (rd <= parameter_values[planet_name+'_R_Rs']) | sel_eclipsed
