@@ -71,31 +71,31 @@ class RossiterMcLaughlin_MultiPlanets_Precise(AbstractModel, AbstractTransit):
         self._prepare_limb_darkening_coefficients(mc, **kwargs)
 
         #start filling the dictionary with relevant parameters
-        self.star_grid['n_grid'] = kwargs.get('star_ngrid', 101 )
+        self.star_grid['n_grid'] = kwargs.get('star_ngrid', 301 )
         self.star_grid['half_grid'] = int((self.star_grid['n_grid'] - 1) / 2)
         self.star_grid['time_step'] = kwargs.get('time_step', 149 ) # in seconds
 
         """ Coordinates of the centers of each grid cell (add offset) """
-        self.star_grid['xx'] = np.linspace(-1.000000, 1.000000, self.star_grid['n_grid'], dtype=np.double)
+        self.star_grid['xx'] = np.linspace(-1.000000, 1.000000, self.star_grid['n_grid'], dtype=np.single)
         self.star_grid['xc'], self.star_grid['yc'] = np.meshgrid(self.star_grid['xx'], self.star_grid['xx'], indexing='xy')
         # check the Note section of the wiki page of meshgrid
         # https://docs.scipy.org/doc/numpy/reference/generated/numpy.meshgrid.html
 
         """ Distance of each grid cell from the center of the stellar disk """
-        self.star_grid['rc'] = np.sqrt(self.star_grid['xc'] ** 2 + self.star_grid['yc'] ** 2)
+        self.star_grid['rc'] = np.sqrt(self.star_grid['xc'] ** 2 + self.star_grid['yc'] ** 2, dtype=np.single)
         # Must avoid negative numbers inside the square root
         self.star_grid['inside'] = self.star_grid['rc'] < 1.000000
         # Must avoid negative numbers inside the square root
         self.star_grid['outside'] = self.star_grid['rc'] >= 1.000000
 
-        self.star_grid['zc'] = np.zeros_like(self.star_grid['rc'])
+        self.star_grid['zc'] = np.zeros_like(self.star_grid['rc'],dtype=np.single)
         self.star_grid['zc'][self.star_grid['inside']] = np.sqrt(
-            1. -self.star_grid['rc'][self.star_grid['inside']] ** 2)
+            1. -self.star_grid['rc'][self.star_grid['inside']] ** 2,dtype=np.single)
 
 
         """ Determine the mu angle for each grid cell, as a function of radius. """
-        self.star_grid['mu'] = np.zeros([self.star_grid['n_grid'], self.star_grid['n_grid']],dtype=np.double)  # initialization of the matrix with the mu values
-        self.star_grid['mu'][self.star_grid['inside']] = np.sqrt(1. - self.star_grid['rc'][self.star_grid['inside']] ** 2)
+        self.star_grid['mu'] = np.zeros([self.star_grid['n_grid'], self.star_grid['n_grid']],dtype=np.single)  # initialization of the matrix with the mu values
+        self.star_grid['mu'][self.star_grid['inside']] = np.sqrt(1. - self.star_grid['rc'][self.star_grid['inside']] ** 2,dtype=np.single)
 
     def initialize_model_dataset(self, mc, dataset, **kwargs):
 
@@ -114,7 +114,7 @@ class RossiterMcLaughlin_MultiPlanets_Precise(AbstractModel, AbstractTransit):
             'instrumental_broadening': 1.108, # in km/s
             'rv_min': -20.0,
             'rv_max': 20.0,
-            'rv_step': 0.50,
+            'rv_step': 0.25,
         }
 
         # HARPS-N instrumental braodening: FWHM of 3.1 pixels
@@ -136,7 +136,7 @@ class RossiterMcLaughlin_MultiPlanets_Precise(AbstractModel, AbstractTransit):
         self.star_grid['zz'] = np.arange(self.ccf_variables['rv_min'],
                                         self.ccf_variables['rv_max']+self.ccf_variables['rv_step'],
                                         self.ccf_variables['rv_step'],
-                                        dtype=np.double)
+                                        dtype=np.single)
         self.star_grid['len_zz'] = len(self.star_grid['zz'])
         self.star_grid['rv_step'] = self.ccf_variables['rv_step']
 
@@ -163,7 +163,7 @@ class RossiterMcLaughlin_MultiPlanets_Precise(AbstractModel, AbstractTransit):
         star_grid_I[self.star_grid['outside']] = 0.000
 
         """ Intensity normalization"""
-        star_grid_I /= np.sum(star_grid_I)
+        star_grid_I /= np.sum(star_grid_I, dtype=np.single)
 
         if self.use_differential_rotation:
             istar_rad = parameter_values['i_star'] * constants.deg2rad
@@ -173,8 +173,8 @@ class RossiterMcLaughlin_MultiPlanets_Precise(AbstractModel, AbstractTransit):
 
             """ orthogonal distance from the stellar equator """
             ### Equation 7 in Cegla+2016
-            star_grid_yp = self.star_grid['zc'] * np.sin(star_grid_beta) \
-                + self.star_grid['yc'] * np.cos(star_grid_beta)
+            star_grid_yp = self.star_grid['zc'] * np.sin(star_grid_beta, dtype=np.single) \
+                + self.star_grid['yc'] * np.cos(star_grid_beta, dtype=np.single)
 
             ### Equation 6 in Cegla+2016
             #star_grid_zp_ortho = star_grid_z_ortho * np.cos(star_grid_beta) \
@@ -206,10 +206,10 @@ class RossiterMcLaughlin_MultiPlanets_Precise(AbstractModel, AbstractTransit):
 
         else:
             bjd = x0_input
-            exptime = np.ones_like(bjd) * np.mean(dataset.ancillary['exptime'])
+            exptime = np.ones_like(bjd, dtype=np.single) * np.mean(dataset.ancillary['exptime'], dtype=np.single)
 
-        rv_rml = np.zeros_like(bjd)
-        ccf_total = np.sum(star_grid_ccf, axis=(0,1))
+        rv_rml = np.zeros_like(bjd, dtype=np.single)
+        ccf_total = np.sum(star_grid_ccf, axis=(0,1), dtype=np.single)
 
         p0 = (self.ccf_variables['natural_contrast'], 0.00, self.ccf_variables['instrumental_broadening']/self.star_grid['rv_step'])
 
@@ -220,65 +220,68 @@ class RossiterMcLaughlin_MultiPlanets_Precise(AbstractModel, AbstractTransit):
 
         p0 = (parameters[0], 0.00, parameters[2])
 
-        for i_obs, bjd_value in enumerate(bjd):
 
-            n_oversampling = int(exptime[i_obs] / self.star_grid['time_step'])
+        n_oversampling = int(np.amax(exptime / self.star_grid['time_step']))
 
-            """recomputing the oversampling steps to homogeneously cover the
-            full integration time """
-            if n_oversampling % 2 == 0:
-                n_oversampling += 1
+        if n_oversampling % 2 == 0:
+            n_oversampling += 1
+        if n_oversampling<=1:
+            oversampling = np.asarray([0.00], dtype=np.single)
+        else:
+            oversampling = np.linspace(-0.5, 0.5, n_oversampling, dtype=np.single)
+        bjd_meshgrid, over_meshgrid = np.meshgrid(bjd, oversampling)
 
-            half_time = exptime[i_obs] / 2 / 86400.
+        bjd_meshgrid += over_meshgrid*exptime / 86400.
 
-            bjd_oversampling = np.linspace(bjd_value - half_time, bjd_value + half_time, n_oversampling, dtype=np.double)
+        planet_out = {}
+        for planet_name in self.multiple_planets:
 
-            planet_out = {}
-            for planet_name in self.multiple_planets:
-
-
-                prepend = planet_name + '_'
-
-
-                lambda_rad = parameter_values[prepend+'lambda'] * constants.deg2rad
-                inclination_rad = parameter_values[prepend+'i'] * constants.deg2rad
-                omega_rad = parameter_values[prepend+'omega'] * constants.deg2rad
-
-                true_anomaly, orbital_distance_ratio = kepler_exo.kepler_true_anomaly_orbital_distance(
-                    bjd_oversampling,
-                    parameter_values[prepend+'Tc']-dataset.Tref,
-                    parameter_values[prepend+'P'],
-                    parameter_values[prepend+'e'],
-                    parameter_values[prepend+'omega'],
-                    parameter_values[prepend+'a_Rs'])
-
-                """ planet position during its orbital motion, in unit of stellar radius"""
-                # Following Murray+Correia 2011 , with the argument of the ascending node set to zero.
-                # 1) the ascending node coincide with the X axis
-                # 2) the reference plance coincide with the plane of the sky
-
-                p_xp = -orbital_distance_ratio * (np.cos(omega_rad + true_anomaly))
-                p_yp = -orbital_distance_ratio * (np.sin(omega_rad + true_anomaly) * np.cos(inclination_rad))
+            prepend = planet_name + '_'
 
 
-                planet_position_xp = p_xp * np.cos(lambda_rad) - p_yp * np.sin(lambda_rad)
-                planet_position_yp = p_xp * np.sin(lambda_rad) + p_yp * np.cos(lambda_rad)
-                planet_position_zp = orbital_distance_ratio * (np.sin(inclination_rad) * np.sin(omega_rad + true_anomaly))
+            lambda_rad = parameter_values[prepend+'lambda'] * constants.deg2rad
+            inclination_rad = parameter_values[prepend+'i'] * constants.deg2rad
+            omega_rad = parameter_values[prepend+'omega'] * constants.deg2rad
+
+            true_anomaly, orbital_distance_ratio = kepler_exo.kepler_true_anomaly_orbital_distance(
+                bjd_meshgrid,
+                parameter_values[prepend+'Tc']-dataset.Tref,
+                parameter_values[prepend+'P'],
+                parameter_values[prepend+'e'],
+                parameter_values[prepend+'omega'],
+                parameter_values[prepend+'a_Rs'])
+
+            """ planet position during its orbital motion, in unit of stellar radius"""
+            # Following Murray+Correia 2011 , with the argument of the ascending node set to zero.
+            # 1) the ascending node coincide with the X axis
+            # 2) the reference plance coincide with the plane of the sky
+
+            p_xp = -orbital_distance_ratio * (np.cos(omega_rad + true_anomaly))
+            p_yp = -orbital_distance_ratio * (np.sin(omega_rad + true_anomaly) * np.cos(inclination_rad))
 
 
-                # projected distance of the planet's center to the stellar center
-                planet_position_rp = np.sqrt(planet_position_xp**2  + planet_position_yp**2)
+            planet_position_xp = p_xp * np.cos(lambda_rad) - p_yp * np.sin(lambda_rad)
+            planet_position_yp = p_xp * np.sin(lambda_rad) + p_yp * np.cos(lambda_rad)
+            planet_position_zp = orbital_distance_ratio * (np.sin(inclination_rad) * np.sin(omega_rad + true_anomaly))
 
-                planet_out[planet_name]={
-                    'planet_position_xp':planet_position_xp,
-                    'planet_position_yp':planet_position_xp,
-                    'planet_position_zp':planet_position_xp,
-                    'planet_position_rp':planet_position_xp,
-                }
+
+            # projected distance of the planet's center to the stellar center
+            planet_position_rp = np.sqrt(planet_position_xp**2  + planet_position_yp**2)
+
+            planet_out[planet_name]={
+                'planet_position_xp':planet_position_xp,
+                'planet_position_yp':planet_position_xp,
+                'planet_position_zp':planet_position_zp,
+                'planet_position_rp':planet_position_rp,
+            }
+
+
+        for i_obs in range(len(bjd)):
 
             ccf_out = np.zeros_like(ccf_total)
+            sum_eclipsed = 0
 
-            for j in range(0, len(bjd_oversampling)):
+            for j in range(n_oversampling):
                 sel_eclipsed =np.zeros_like(self.star_grid['inside'], dtype=bool)
 
                 for planet_name, planet_dict in planet_out.items():
@@ -295,12 +298,13 @@ class RossiterMcLaughlin_MultiPlanets_Precise(AbstractModel, AbstractTransit):
 
 
                 sel_eclipsed = sel_eclipsed & self.star_grid['inside']
-                ccf_out += ccf_total - np.sum(star_grid_ccf[sel_eclipsed,:], axis=0)
+                sum_eclipsed += np.sum(sel_eclipsed, dtype=np.single)
+                ccf_out += ccf_total - np.sum(star_grid_ccf[sel_eclipsed,:], axis=0, dtype=np.single)
 
             cont_val = np.amax(ccf_out)
             #cont_out[i_obs] = cont_val
 
-            if cont_val > 0:
+            if sum_eclipsed > 0:
                 ccf_out /= cont_val
 
                 ccf_broad = gaussian_filter1d(ccf_out, self.ccf_variables['instrumental_broadening']/self.star_grid['rv_step'])

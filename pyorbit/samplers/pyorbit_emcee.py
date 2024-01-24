@@ -228,10 +228,11 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
                         mc.common_models[common_ref].convert(theta))
 
                 #TODO: remove try-except starting from version 11 !!
+                #TODO results_analysis:get_model needs to be updated as well
                 try:
                     for planet_name in mc.models[model_name].multiple_planets:
                         parameter_values.update(
-                            mc.common_models[common_ref].convert_with_name(theta, planet_name))
+                            mc.common_models[planet_name].convert_with_name(theta, planet_name))
                 except:
                     pass
 

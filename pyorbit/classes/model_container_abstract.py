@@ -317,7 +317,7 @@ class ModelContainer(object):
                 try:
                     for planet_name in self.models[model_name].multiple_planets:
                         parameter_values.update(
-                            self.common_models[common_ref].convert_with_name(theta, planet_name))
+                            self.common_models[planet_name].convert_with_name(theta, planet_name))
                 except:
                     pass
 

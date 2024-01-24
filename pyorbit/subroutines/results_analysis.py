@@ -530,6 +530,14 @@ def get_model(mc, theta, bjd_dict, **kwargs):
                 parameter_values.update(
                     mc.common_models[common_ref].convert(theta))
 
+            #TODO: remove try-except starting from version 11 !!
+            try:
+                for planet_name in mc.models[model_name].multiple_planets:
+                    parameter_values.update(
+                        mc.common_models[planet_name].convert_with_name(theta, planet_name))
+            except:
+                pass
+
             parameter_values.update(
                 mc.models[model_name].convert(theta, dataset_name))
 
@@ -564,6 +572,15 @@ def get_model(mc, theta, bjd_dict, **kwargs):
             for common_ref in mc.models[model_name].common_ref:
                 parameter_values.update(
                     mc.common_models[common_ref].convert(theta))
+
+            #TODO: remove try-except starting from version 11 !!
+            try:
+                for planet_name in mc.models[model_name].multiple_planets:
+                    parameter_values.update(
+                        mc.common_models[planet_name].convert_with_name(theta, planet_name))
+            except:
+                pass
+
             parameter_values.update(
                 mc.models[model_name].convert(theta, dataset_name))
 

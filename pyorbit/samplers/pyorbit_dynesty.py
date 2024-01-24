@@ -149,7 +149,7 @@ def pyorbit_dynesty(config_in, input_datasets=None, return_output=None, run_nest
                 try:
                     for planet_name in mc.models[model_name].multiple_planets:
                         parameter_values.update(
-                            mc.common_models[common_ref].convert_with_name(theta, planet_name))
+                            mc.common_models[planet_name].convert_with_name(theta, planet_name))
                 except:
                     pass
 
