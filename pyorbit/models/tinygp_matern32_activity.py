@@ -6,7 +6,6 @@ try:
     jax.config.update("jax_enable_x64", True)
     import jax.numpy as jnp
     from tinygp import kernels, GaussianProcess
-
 except:
     pass
 
@@ -117,7 +116,7 @@ class TinyGaussianProcess_Matern32Activity(AbstractModel):
 
         gp = _build_tinygp_matern32(theta_dict)
         _, cond_gp = gp.condition(theta_dict['y'], theta_dict['x0_predict'])
-        mu = cond_gp.loc # or cond_gp.mean? 
+        mu = cond_gp.loc # or cond_gp.mean?
         std = np.sqrt(cond_gp.variance)
 
         if return_variance:
