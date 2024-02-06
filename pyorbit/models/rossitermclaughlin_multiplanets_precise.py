@@ -194,7 +194,7 @@ class RossiterMcLaughlin_MultiPlanets_Precise(AbstractModel, AbstractTransit):
 
         star_grid_v_star[self.star_grid['outside']] = 0.0
 
-        out_temp = np.empty([self.star_grid['n_grid'], self.star_grid['n_grid'], self.star_grid['len_zz']])
+        out_temp = np.empty([self.star_grid['n_grid'], self.star_grid['n_grid'], self.star_grid['len_zz']], dtype=np.single)
         star_grid_ccf = iter2_CCF_gauss(self.star_grid['zz'],
                             self.ccf_variables['natural_contrast'],
                             self.ccf_variables['natural_broadening'],
@@ -256,17 +256,17 @@ class RossiterMcLaughlin_MultiPlanets_Precise(AbstractModel, AbstractTransit):
             # 1) the ascending node coincide with the X axis
             # 2) the reference plance coincide with the plane of the sky
 
-            p_xp = -orbital_distance_ratio * (np.cos(omega_rad + true_anomaly))
-            p_yp = -orbital_distance_ratio * (np.sin(omega_rad + true_anomaly) * np.cos(inclination_rad))
+            p_xp = -orbital_distance_ratio * (np.cos(omega_rad + true_anomaly, dtype=np.single))
+            p_yp = -orbital_distance_ratio * (np.sin(omega_rad + true_anomaly, dtype=np.single) * np.cos(inclination_rad, dtype=np.single))
 
 
-            planet_position_xp = p_xp * np.cos(lambda_rad) - p_yp * np.sin(lambda_rad)
-            planet_position_yp = p_xp * np.sin(lambda_rad) + p_yp * np.cos(lambda_rad)
-            planet_position_zp = orbital_distance_ratio * (np.sin(inclination_rad) * np.sin(omega_rad + true_anomaly))
+            planet_position_xp = p_xp * np.cos(lambda_rad, dtype=np.single) - p_yp * np.sin(lambda_rad, dtype=np.single)
+            planet_position_yp = p_xp * np.sin(lambda_rad, dtype=np.single) + p_yp * np.cos(lambda_rad, dtype=np.single)
+            planet_position_zp = orbital_distance_ratio * (np.sin(inclination_rad, dtype=np.single) * np.sin(omega_rad + true_anomaly, dtype=np.single))
 
 
             # projected distance of the planet's center to the stellar center
-            planet_position_rp = np.sqrt(planet_position_xp**2  + planet_position_yp**2)
+            planet_position_rp = np.sqrt(planet_position_xp**2  + planet_position_yp**2, dtype=np.single)
 
             planet_out[planet_name]={
                 'planet_position_xp':planet_position_xp,
@@ -291,7 +291,7 @@ class RossiterMcLaughlin_MultiPlanets_Precise(AbstractModel, AbstractTransit):
                         # adjustment: computation is performed even if only part of the planet is shadowing the star
 
                         rd = np.sqrt((planet_dict['planet_position_xp'][j,i_obs] - self.star_grid['xc']) ** 2 +
-                                        (planet_dict['planet_position_yp'][j,i_obs] - self.star_grid['yc']) ** 2)
+                                        (planet_dict['planet_position_yp'][j,i_obs] - self.star_grid['yc']) ** 2, dtype=np.single)
 
                         """ Selection of the portion of stars covered by the planet"""
                         sel_eclipsed = (rd <= parameter_values[planet_name+'_R_Rs']) | sel_eclipsed

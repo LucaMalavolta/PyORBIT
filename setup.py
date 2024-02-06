@@ -53,7 +53,7 @@ setup(
         'pygtc',
         'jaxlib>=0.3.15',
         'jax >=0.3.15',
-        'tinygp>=0.2.2',
+        'tinygp==0.2.4',
         #'schwimmbad'
     ],
     setup_requires=['setuptools']

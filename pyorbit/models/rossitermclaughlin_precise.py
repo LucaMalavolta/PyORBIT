@@ -61,6 +61,7 @@ class RossiterMcLaughlin_Precise(AbstractModel, AbstractTransit):
         }
 
         self.star_grid = {}   # write an empty dictionary
+        self.model_class = 'rossiter_mclaughlin'
 
 
     def initialize_model(self, mc, **kwargs):
@@ -76,7 +77,7 @@ class RossiterMcLaughlin_Precise(AbstractModel, AbstractTransit):
         self.star_grid['time_step'] = kwargs.get('time_step', 149 ) # in seconds
 
         """ Coordinates of the centers of each grid cell (add offset) """
-        self.star_grid['xx'] = np.linspace(-1.000000, 1.000000, self.star_grid['n_grid'], dtype=np.double)
+        self.star_grid['xx'] = np.linspace(-1.000000, 1.000000, self.star_grid['n_grid'], dtype=np.single)
         self.star_grid['xc'], self.star_grid['yc'] = np.meshgrid(self.star_grid['xx'], self.star_grid['xx'], indexing='xy')
         # check the Note section of the wiki page of meshgrid
         # https://docs.scipy.org/doc/numpy/reference/generated/numpy.meshgrid.html
@@ -90,7 +91,7 @@ class RossiterMcLaughlin_Precise(AbstractModel, AbstractTransit):
 
 
         """ Determine the mu angle for each grid cell, as a function of radius. """
-        self.star_grid['mu'] = np.zeros([self.star_grid['n_grid'], self.star_grid['n_grid']],dtype=np.double)  # initialization of the matrix with the mu values
+        self.star_grid['mu'] = np.zeros([self.star_grid['n_grid'], self.star_grid['n_grid']], dtype=np.single)  # initialization of the matrix with the mu values
         self.star_grid['mu'][self.star_grid['inside']] = np.sqrt(1. - self.star_grid['rc'][self.star_grid['inside']] ** 2)
 
     def initialize_model_dataset(self, mc, dataset, **kwargs):
@@ -120,7 +121,7 @@ class RossiterMcLaughlin_Precise(AbstractModel, AbstractTransit):
         # is computed to about R = 124’000.
         # fwhm = 2.355 sigma
         # fwhm = 0.01415 * 3.1 * 299792.458 / 5300 = 2.48 km/s
-        # sigma = 
+        # sigma =
 
         for dict_name in self.ccf_variables:
             if kwargs[dataset.name_ref].get(dict_name, False):
@@ -132,7 +133,7 @@ class RossiterMcLaughlin_Precise(AbstractModel, AbstractTransit):
         self.star_grid['zz'] = np.arange(self.ccf_variables['rv_min'],
                                         self.ccf_variables['rv_max']+self.ccf_variables['rv_step'],
                                         self.ccf_variables['rv_step'],
-                                        dtype=np.double)
+                                        dtype=np.single)
         self.star_grid['len_zz'] = len(self.star_grid['zz'])
         self.star_grid['rv_step'] = self.ccf_variables['rv_step']
 
@@ -162,12 +163,12 @@ class RossiterMcLaughlin_Precise(AbstractModel, AbstractTransit):
         star_grid_I[self.star_grid['outside']] = 0.000
 
         """ Intensity normalization"""
-        star_grid_I /= np.sum(star_grid_I)
+        star_grid_I /= np.sum(star_grid_I, dtype=np.single)
 
-        star_grid_x_ortho = self.star_grid['xc'] * np.cos(lambda_rad) \
-            - self.star_grid['yc'] * np.sin(lambda_rad)  # orthogonal distances from the spin-axis
-        star_grid_y_ortho = self.star_grid['xc'] * np.sin(lambda_rad) \
-            + self.star_grid['yc'] * np.cos(lambda_rad)
+        star_grid_x_ortho = self.star_grid['xc'] * np.cos(lambda_rad, dtype=np.single) \
+            - self.star_grid['yc'] * np.sin(lambda_rad, dtype=np.single)  # orthogonal distances from the spin-axis
+        star_grid_y_ortho = self.star_grid['xc'] * np.sin(lambda_rad, dtype=np.single) \
+            + self.star_grid['yc'] * np.cos(lambda_rad, dtype=np.single)
 
 
         star_grid_r_ortho = np.sqrt(star_grid_x_ortho ** 2 + star_grid_y_ortho** 2)
@@ -183,8 +184,8 @@ class RossiterMcLaughlin_Precise(AbstractModel, AbstractTransit):
 
             """ orthogonal distance from the stellar equator """
             ### Equation 7 in Cegla+2016
-            star_grid_yp_ortho = star_grid_z_ortho * np.sin(star_grid_beta) \
-                + star_grid_y_ortho * np.cos(star_grid_beta)
+            star_grid_yp_ortho = star_grid_z_ortho * np.sin(star_grid_beta, dtype=np.single) \
+                + star_grid_y_ortho * np.cos(star_grid_beta, dtype=np.single)
 
             ### Equation 6 in Cegla+2016
             #star_grid_zp_ortho = star_grid_z_ortho * np.cos(star_grid_beta) \
@@ -204,7 +205,7 @@ class RossiterMcLaughlin_Precise(AbstractModel, AbstractTransit):
 
         star_grid_v_star[self.star_grid['outside']] = 0.0
 
-        out_temp = np.empty([self.star_grid['n_grid'], self.star_grid['n_grid'], self.star_grid['len_zz']])
+        out_temp = np.empty([self.star_grid['n_grid'], self.star_grid['n_grid'], self.star_grid['len_zz']], dtype=np.single)
         star_grid_ccf = iter2_CCF_gauss(self.star_grid['zz'],
                             self.ccf_variables['natural_contrast'],
                             self.ccf_variables['natural_broadening'],
@@ -218,8 +219,8 @@ class RossiterMcLaughlin_Precise(AbstractModel, AbstractTransit):
             bjd = x0_input
             exptime = np.ones_like(bjd) * np.mean(dataset.ancillary['exptime'])
 
-        rv_rml = np.zeros_like(bjd)
-        ccf_total = np.sum(star_grid_ccf, axis=(0,1))
+        rv_rml = np.zeros_like(bjd, dtype=np.single)
+        ccf_total = np.sum(star_grid_ccf, axis=(0,1), dtype=np.single)
 
         p0 = (self.ccf_variables['natural_contrast'], 0.00, self.ccf_variables['instrumental_broadening']/self.star_grid['rv_step'])
 
@@ -241,7 +242,7 @@ class RossiterMcLaughlin_Precise(AbstractModel, AbstractTransit):
 
             half_time = exptime[i_obs] / 2 / 86400.
 
-            bjd_oversampling = np.linspace(bjd_value - half_time, bjd_value + half_time, n_oversampling, dtype=np.double)
+            bjd_oversampling = np.linspace(bjd_value - half_time, bjd_value + half_time, n_oversampling, dtype=np.single)
 
             true_anomaly, orbital_distance_ratio = kepler_exo.kepler_true_anomaly_orbital_distance(
                 bjd_oversampling,
@@ -256,13 +257,13 @@ class RossiterMcLaughlin_Precise(AbstractModel, AbstractTransit):
             # 1) the ascending node coincide with the X axis
             # 2) the reference plance coincide with the plane of the sky
 
-            planet_position_xp = -orbital_distance_ratio * (np.cos(omega_rad + true_anomaly))
-            planet_position_yp = -orbital_distance_ratio * (np.sin(omega_rad + true_anomaly) * np.cos(inclination_rad))
-            planet_position_zp = orbital_distance_ratio * (np.sin(inclination_rad) * np.sin(omega_rad + true_anomaly))
+            planet_position_xp = -orbital_distance_ratio * (np.cos(omega_rad + true_anomaly, dtype=np.single))
+            planet_position_yp = -orbital_distance_ratio * (np.sin(omega_rad + true_anomaly, dtype=np.single) * np.cos(inclination_rad, dtype=np.single))
+            planet_position_zp = orbital_distance_ratio * (np.sin(inclination_rad, dtype=np.single) * np.sin(omega_rad + true_anomaly, dtype=np.single))
 
             # projected distance of the planet's center to the stellar center
-            planet_position_rp = np.sqrt(planet_position_xp**2  + planet_position_yp**2)
-            ccf_out = np.zeros_like(ccf_total)
+            planet_position_rp = np.sqrt(planet_position_xp**2  + planet_position_yp**2, dtype=np.single)
+            ccf_out = np.zeros_like(ccf_total, dtype=np.single)
 
             for j, zeta in enumerate(planet_position_zp):
 
@@ -271,12 +272,12 @@ class RossiterMcLaughlin_Precise(AbstractModel, AbstractTransit):
                     # adjustment: computation is performed even if only part of the planet is shadowing the star
 
                     rd = np.sqrt((planet_position_xp[j] - self.star_grid['xc']) ** 2 +
-                                    (planet_position_yp[j] - self.star_grid['yc']) ** 2)
+                                    (planet_position_yp[j] - self.star_grid['yc']) ** 2, dtype=np.single)
 
                     """ Selection of the portion of stars covered by the planet"""
                     sel_eclipsed = (rd <= parameter_values['R_Rs']) & self.star_grid['inside']
 
-                    ccf_out += ccf_total - np.sum(star_grid_ccf[sel_eclipsed,:], axis=0)
+                    ccf_out += ccf_total - np.sum(star_grid_ccf[sel_eclipsed,:], axis=0, dtype=np.single)
 
             cont_val = np.amax(ccf_out)
 

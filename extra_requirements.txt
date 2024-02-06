@@ -9,7 +9,7 @@ astroquery >=0.4
 pyerfa >=2.0
 jaxlib >=0.3.15
 jax >=0.3.15
-tinygp >=0.2.2
+tinygp ==0.2.4
 ###### Requirements without Version Specifiers ######
 argparse
 pyyaml
