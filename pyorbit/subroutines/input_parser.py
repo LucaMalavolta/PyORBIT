@@ -611,7 +611,7 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, reload_ze
 
             """ Adding the list of multiple planets"""
             if mc.models[model_name].model_class in model_requires_multiple_planets:
-                
+
                 planet_list = np.atleast_1d(model_conf['planets']).tolist()
                 mc.models[model_name].planet_ref = planet_list[0]
                 for planet in planet_list:
@@ -787,8 +787,12 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, reload_ze
             if 'include_priors' in conf:
                 mc.include_priors = np.asarray(conf['include_priors'], dtype=bool)
 
+            if 'starts_relative_dispersion' in conf:
+                mc.emcee_parameters['starts_relative_dispersion'] = np.asarray(conf['starts_relative_dispersion'], dtype=bool)
+
             if 'use_threading_pool' in conf:
                 mc.emcee_parameters['use_threading_pool'] = np.asarray(conf['use_threading_pool'], dtype=bool)
+
 
     if hasattr(mc, 'zeus_parameters'):
         conf = None

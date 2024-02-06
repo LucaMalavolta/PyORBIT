@@ -433,8 +433,17 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
             [mc.emcee_parameters['nwalkers'], mc.ndim], dtype=np.double)
 
         for jj, val in enumerate(starting_point):
+
             if np.isfinite(val):
-                population[:, jj] = np.random.normal(val, np.abs(val)*0.0001, size=mc.emcee_parameters['nwalkers'])
+
+                if mc.emcee_parameters.get('starts_relative_dispersion', True):
+                    if val == 0.00:
+                        population[:, jj] = np.random.normal(val, 0.0001, size=mc.emcee_parameters['nwalkers'])
+                    else:
+                        population[:, jj] = np.random.normal(val, np.abs(val)*0.0001, size=mc.emcee_parameters['nwalkers'])
+                else:
+                    population[:, jj] = np.random.normal(val, 0.0001, size=mc.emcee_parameters['nwalkers'])
+
             else:
                 population[:, jj] = np.random.uniform(mc.bounds[jj,0], mc.bounds[jj,1], size=mc.emcee_parameters['nwalkers'])
 

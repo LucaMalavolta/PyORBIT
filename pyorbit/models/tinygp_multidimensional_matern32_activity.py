@@ -35,7 +35,7 @@ class LatentKernel_Matern32(kernels.Kernel):
         kernel : kernels
         coeff_prim: JAXArray | float
         coeff_deriv: JAXArray | float
-    except: 
+    except:
         pass
 
     def __init__(self, kernel, coeff_prim, coeff_deriv):
@@ -236,7 +236,6 @@ class TinyGP_Multidimensional_Matern32Activity(AbstractModel):
     def sample_predict(self, dataset, x0_input=None, return_covariance=False, return_variance=False):
 
         dataset_index = self._dataset_names[dataset.name_ref]
-
         if x0_input is None:
 
             l_nstart, l_nend = self._dataset_nindex[dataset_index]
@@ -273,7 +272,7 @@ class TinyGP_Multidimensional_Matern32Activity(AbstractModel):
         mu_full = cond_gp.loc # or cond_gp.mean?
         mu = mu_full[l_nstart:l_nend]
         std = np.sqrt(cond_gp.variance)[l_nstart:l_nend]
-        
+
         if return_variance:
             return mu, std
         else:

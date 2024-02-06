@@ -148,7 +148,6 @@ class RossiterMcLaughlin_MultiPlanets_Precise(AbstractModel, AbstractTransit):
         :param x0_input:
         :return:
         """
-
         for key, key_val in parameter_values.items():
             if np.isnan(key_val):
                 return 0.
