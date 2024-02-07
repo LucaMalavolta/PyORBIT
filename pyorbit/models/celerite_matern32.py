@@ -48,6 +48,21 @@ class Celerite_Matern32(AbstractModel):
                 self.use_stellar_rotation_period = getattr(mc.common_models[common_ref], 'use_stellar_rotation_period', False)
                 break
 
+        self.use_shared_rho = False
+        for keyword in ['use_shared_rho',
+                        'shared_rho',
+                        'use_common_rho',
+                        'common_rho',
+                        'use_shared_timescale',
+                        'shared_timescale',
+                        'use_common_timescale',
+                        'common_timescale']:
+            self.use_shared_rho =  kwargs.get(keyword, self.use_shared_rho)
+        if self.use_shared_rho:
+            pam = 'matern32_rho'
+            self.list_pams_common.update([pam])
+            self.list_pams_dataset.discard(pam)
+
         self.use_stellar_rotation_period =  kwargs.get('use_stellar_rotation_period', self.use_stellar_rotation_period)
 
         if self.use_stellar_rotation_period:
@@ -56,6 +71,7 @@ class Celerite_Matern32(AbstractModel):
                 self.list_pams_dataset.discard('matern32_rho')
             except:
                 self.list_pams_common.discard('matern32_rho')
+
 
 
     def initialize_model_dataset(self, mc, dataset, **kwargs):

@@ -81,6 +81,22 @@ class TinyGaussianProcess_Matern32Activity(AbstractModel):
                 self.list_pams_common.update([pam])
                 self.list_pams_dataset.discard(pam)
 
+        self.use_shared_rho = False
+        for keyword in ['use_shared_rho',
+                        'shared_rho',
+                        'use_common_rho',
+                        'common_rho',
+                        'use_shared_timescale',
+                        'shared_timescale',
+                        'use_common_timescale',
+                        'common_timescale']:
+            self.use_shared_rho =  kwargs.get(keyword, self.use_shared_rho)
+        if self.use_shared_rho and not self.use_stellar_rotation_period:
+            pam = 'matern32_rho'
+            self.list_pams_common.update([pam])
+            self.list_pams_dataset.discard(pam)
+
+
     def lnlk_compute(self, parameter_values, dataset):
         if self.use_stellar_rotation_period:
             parameter_values['matern32_rho'] = parameter_values['rotation_period']
