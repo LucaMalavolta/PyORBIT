@@ -4,7 +4,7 @@
 
 ## Setting up an environment
 
-Before proceeding with the installation, I suggest to create an environment dedicated to `PyORBIT` using python\<=3.9 .  At the moment of writing I hve received a few complaints (unrelated to PyORBIT) about Python 3.10, so you may use it at your own risk.
+Before proceeding with the installation, I suggest creating an environment dedicated to `PyORBIT` using Python \<=3.9 .  At the moment of writing, I have received a few complaints (unrelated to PyORBIT) about Python 3.10, so you may use it at your own risk.
 With conda/anaconda:
 
 ```{code} bash
@@ -40,19 +40,19 @@ Note that the name is  `pyorbit-package` and not  `pyorbit`, as the former was a
  python -c "import pyorbit"
 ```
 
-`PyORBIT` only comes with the basic packages, to exploit its full potential follow the instructions in the section [Requirements](Requirements). For the impatients, just do:
+`PyORBIT` only comes with the basic packages; to exploit its full potential, follow the instructions in the section [Requirements](Requirements). For the impatient, just do:
 ```{code} bash
 wget https://raw.githubusercontent.com/LucaMalavolta/PyORBIT/main/extra_requirements.txt
 pip install -r extra_requirements.txt
 ```
 
 ```{tip}
-Requirement file has weaker constraints on package versioning (see below), so remember to install `PyORBIT` first  to avoid version incompatibilities
+The requirement file has weaker constraints on package versioning (see below), so remember to install `PyORBIT` first  to avoid version incompatibilities
 ```
 
 ## `starry` support 
 
-The [`starry`](https://starry.readthedocs.io/en/latest/) code package is a suite of tools for mapping stars and exoplanets based on timeseries data, and it has been implemented in several models within `PyORBIT`. Due to the use of discontinued libraries as [`Theano`](https://github.com/Theano), its installation requires some different steps. 
+The [`starry`](https://starry.readthedocs.io/en/latest/) code package is a suite of tools for mapping stars and exoplanets based on time series data, and it has been implemented in several models within `PyORBIT`. Due to the use of discontinued libraries as [`Theano`](https://github.com/Theano), its installation requires some different steps. 
 
 ### `g++` installation
 In order to work, starry requires `g++` (available through `gcc`), while `blas` libraries are optional.
@@ -87,9 +87,9 @@ First of all, create a dedicated environment:
 ```{code} bash
 conda create --name starry python=3.9
 ```
-This step is **strongly**  suggested as the installation of `starry` will downgrade several packages, causing dependancies issues.
+This step is **strongly**  suggested as the installation of `starry` will downgrade several packages, causing dependencies issues.
 
-The best way to make sure that our packages are compatible with `starry` is to install it as the first packaged in the newly created environment, togehter with some extra packages. 
+The best way to make sure that our packages are compatible with `starry` is to install it as the first package in the newly created environment, together with some extra packages. 
 
 ```{code} bash
 conda activate starry
@@ -140,7 +140,7 @@ If you are downloading the code from GitHub, most likely it's because you want t
 ```
 
 ```{note} 
-Development version may not be availabler at all times.
+The development version may not be available at all times.
 ```
 
 You can then install `PyORBIT` by using `pip` inside the code repository:
@@ -164,7 +164,7 @@ python ~/CODE/PyORBIT/PyORBIT_Results.py emcee configuration_file.yaml -all
 
 Again, I suggest to install the extra requirements following the instructions given above
 
-If you repent and you want to go back a previous version of  `PyORBIT`, just install with pip the desired version:
+If you repent and you want to go back to a previous version of  `PyORBIT`, just install the desired version with pip:
 
 ```{code} bash
  pip install pyorbit-package==10.0.0
@@ -180,7 +180,7 @@ If you are using any of those packages listed above, *please be sure to cite the
 These packages are installed automatically when using pip.
 
 - `numpy`, `scipy`, `matplotlib`: pretty standard
-- `numba`: open source JIT compiler, actually required as undeclared dependency by some packages ([numba home page])
+- `numba`: open source JIT compiler, actually required as an undeclared dependency by some packages ([numba home page])
 - `argparse`: Parser for command-line options, arguments and sub-commands, required to pass terminal keywords ([argpares home page])
 - `pyyaml`: a full-featured YAML framework for the Python programming language.  YAML is the language used for the configuration file ([pyyaml home page], [yaml home page])
 - `h5py`: HDF5 for Python ([h5py home page])
@@ -245,12 +245,12 @@ Gaussian Process Regression:
 
 Nersted Sampling:
 
-- `dynesty`: a pure Python Dynamic Nested Sampling package for estimating Bayesian posteriors and evidences ([dynesty home page])
+- `dynesty`: a pure Python Dynamic Nested Sampling package for estimating Bayesian posteriors and evidence ([dynesty home page])
 - `UltraNest`: fit and compare complex models reliably and rapidly with advanced sampling techniques ([UltraNest home page])
 
 Other models:
 
-- `PyAstronomy`: a collection of astronomy related packages ([PyAstronomy home page])
+- `PyAstronomy`: a collection of astronomy-related packages ([PyAstronomy home page])
 - `starry`: a suite of tools for mapping stars and exoplanets based on timeseries data ([starry home page])
 - `spiderman`: A fast code to simulate secondary transits and phase curves ([spiderman home page])
 
