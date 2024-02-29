@@ -10,7 +10,7 @@ pyorbit_run sampler configuration_file.yaml
 
 Where `sampler` is one of the boldface keywords listed in [Samplers](samplers).
 
-The files produced by the analysis will be stored in the folder `configuration_file/sampler/`, automatically created when specific combination *sampler* + *configuration file* is run for the first time.
+The files produced by the analysis will be stored in the folder `configuration_file/sampler/`, automatically created when a given combination *sampler* + *configuration file* is run for the first time.
 
 ```{admonition} Analysis preservation
 Running again a *sampler* + *configuration file* combo will not overwrite previous results. If you change your configuration file, most likely you will need to either delete the *configuration file* folder or (better) rename the configuration file.
@@ -31,7 +31,7 @@ When the analysis is completed, you can retrieve the results using the
 pyorbit_results sampler_name configuration_file.yaml -flags
 ```
 
-For a list of possible flags, just run `pyorbit_results` with the `-h` (for *help*) flag. Not using any flag will just produce the standard terminal output. The `-all` flag will produce any conceivable plots and files. Flags are described in this [dedicated page](results_flags).
+For a list of possible flags, just run `pyorbit_results` with the `-h` (for *help*) flag. Not using any flag will just produce the standard terminal output. The `-all` flag will produce any conceivable plots and files. Flags are described on this [dedicated](results_flags) page](results_flags).
 
 The output of `pyorbit_results` will be saved into the folder `configuration_file/sampler_plot/` - notice the `_plot` at the end of the name.
 
