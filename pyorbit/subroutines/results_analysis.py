@@ -694,7 +694,7 @@ def get_model(mc, theta, bjd_dict, **kwargs):
                     max_iterations = x0_len//array_length + 1
 
                     print('     Splitting the plot array to allow GP prediction of extended datasets, it may take a while...')
-                    print('     # {0:d} chunks of {1:d} epochs each'.format(max_iterations, array_length))
+                    print('     # {0:d} chunks of {1:d} times each'.format(max_iterations, array_length))
                     print('     Check the documentation if the code is taking too long or if it crashes...')
 
                     for i_gp in tqdm(range(max_iterations)):
@@ -764,7 +764,7 @@ def get_model(mc, theta, bjd_dict, **kwargs):
 
 
             print('     Splitting the plot array to allow GP prediction of extended datasets, it may take a while...')
-            print('     # {0:d} chunks of {1:d} epochs each'.format(max_iterations, array_length))
+            print('     # {0:d} chunks of {1:d} times each'.format(max_iterations, array_length))
             print('     Check the documentation if the code is taking too long or if it crashes...')
 
 

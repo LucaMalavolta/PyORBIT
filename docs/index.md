@@ -13,7 +13,7 @@
 ``PyORBIT`` is a robust, versatile framework for the characterization of planetary systems.
 With ``PyORBIT`` you can model light curves, radial velocities, activity indexes, and transit time variations.
 In addition to the exoplanet signature, you can add to your model instrumental systematics and stellar activity,
-including Gaussian processes regression with a variety of kernels. Both Markov Chain Monte-Carlo samplers or Nested Sampling algorithms are supported.
+including Gaussian processes regression with a variety of kernels. Both Markov Chain Monte-Carlo samplers and Nested Sampling algorithms are supported.
 Different parametrization can be used for orbital parameters, and orbits can be computed using dynamical integration or just non-interacting Keplerians.
 For every parameter in the model, it is possible to set a prior, explore it in linear or logarithmic space,
 or keep it fixed if necessary. Thanks to abstraction, it is virtually possible to implement any physical model you can think of.
@@ -41,10 +41,10 @@ Rossiter McLaughlin effect can now be precisely modelled using the CCF simulatio
 When the rotation period is known - together with the stellar radius - the stellar inclination can be derived avoiding the bias reported by [Masuda & Winn 2020](https://ui.adsabs.harvard.edu/abs/2020AJ....159...81M/abstract)
 
 - *Multidimensional Gaussian Process*
-The model has been introduced a few years back, but now it can finally take advantage of improved parallelization
+The model was introduced a few years back, but now it can finally take advantage of improved parallelization
 
 - *tinyGP for better performances*
-Working on both *classic* and *multidimensional* Gaussian Process, although the former is showing some JAX problems when producing the output results.
+Working on both *classic* and _multidimensional_ Gaussian Processes, although the former is showing some JAX problems when producing the output results.
 
 ```{admonition} No back-compatibility
 Version 10 is not compatible with the results obtained with version 9.
@@ -63,7 +63,7 @@ Documentation is being updated slowly but steadily, with new pages appearing eve
   + Radial velocities
   + Lightcurve analysis
   + Combined fit
-- *Data modelling*
+- *Data modeling*
   + Planetary RV signal
   + Correlated datasets
   + Gaussian processes regression **in progress**
@@ -91,13 +91,13 @@ PyORBIT has been used in the following works
 
 ``PyORBIT`` started in 2015 as an exercise to learn Python (2), and also because at
 the time the only publicly available code for the Bayesian analysis of RVs was
-written in IDL, for which I didn't have a license. Since then I've been added new options every time I needed, and I kept updating the code while improving my Python skills.
+written in IDL, for which I didn't have a license. Since then I've been adding new options every time I needed, and I kept updating the code while improving my Python skills.
 
 If you are wondering what ``PyORBIT`` stands for: I am bad at acronym creation so
-I decided to write it with capitol *ORBIT* just because I liked how it looked.
+I decided to write it with capital _ORBIT_ just because I liked how it looked.
 Feel free to submit your retrofitting acronym!
 
-``PyORBIT`` has been now converted and tested for Python 3 fow a while, back-compatibitlity with Python 2 is not guaranteed anymore at least since version 8.0. If you havn't done it already, I strongly suggest you to move to Python 3.
+``PyORBIT`` has been now converted and tested for Python 3 for a while, back compatibility with Python 2 is not guaranteed anymore at least since version 8.0. If you haven't done it already, I strongly suggest you move to Python 3.
 
 [github-badge]: https://img.shields.io/badge/GitHub-PyORBIT-blue
 [github-link]: https://github.com/LucaMalavolta/PyORBIT
