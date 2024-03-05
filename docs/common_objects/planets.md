@@ -24,11 +24,10 @@ Each *planet* is defined by the following parameters
 | b | impact parameter | $R_\star$ |
 | i | orbital inclination with respect to the plane of the sky | degrees |
 | Omega  | longitude of the ascending note $\Omega$| degrees |
-| lambda | $\lambda$ | degrees |
-| phase_amp | **check** Amplitude of the phase curve| |
-| phase_off | **check** Offset of the peack of the phase curve| degrees |
-| redist | **check**  | adimensional |
-| insol | **check**  | adimensional |
+| lambda | Spin-orbit alignment angle $\lambda$  | degrees |
+| delta_occ | Depth of the occulation | Normalized flux |
+| phase_amp | Amplitude of the phase curve, *if no occultation was present* | Normalized flux |
+| phase_off | Offset of the peak of the phase curve (light  travel time effect not included) | degrees |
 
 
 ```{warning}
