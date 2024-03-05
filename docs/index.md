@@ -107,7 +107,6 @@ Feel free to submit your retrofitting acronym!
 
 ```{toctree}
 :maxdepth: 2
-home
 installation
 quickstart
 prepare_datasets
@@ -115,6 +114,7 @@ prepare_yaml
 samplers
 common_objects
 models
+gaussian_process_regression
 running_pyorbit
 GitHub Repository <https://github.com/LucaMalavolta/PyORBIT>
 ```

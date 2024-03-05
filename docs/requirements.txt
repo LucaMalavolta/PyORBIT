@@ -2,7 +2,9 @@ sphinx-book-theme
 myst-parser
 myst-nb
 matplotlib
-scipy
+scipy>=1.8.1,<1.12.0
+astropy>=5.1
+astroquery>=0.4
 numba
 argparse
 emcee
