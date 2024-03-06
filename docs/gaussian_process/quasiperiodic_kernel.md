@@ -2,7 +2,7 @@
 
 # Quasi-periodic kernel
 
-The most common and most reliable kernel for stellar activity  is the quasi-periodic one, following the expression given by [Grunblatt et al. 2015](https://ui.adsabs.harvard.edu/abs/2015ApJ...808..127G/abstract):
+The most common and most reliable kernel for stellar activity is the quasi-periodic one, following the expression given by [Grunblatt et al. 2015](https://ui.adsabs.harvard.edu/abs/2015ApJ...808..127G/abstract):
 
 ```{math}
 :label: quasiperiodic_grunblatt
