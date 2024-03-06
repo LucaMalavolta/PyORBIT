@@ -8,7 +8,12 @@ In the following, I will assume that you are already familiar with the mathemati
 
 In this section, we will discuss only models encompassing independent covariance matrix among datasets, with some hyperparameters in common. I will refer to these approaches as *classic* or *standard* Gaussian processes regression. Multi-dimensional GP, formerly known as GP framework, will be presented in a dedicated section.
 
+In `PyORBIT` unlimited number of additional datasets can be included for the simultaneous training of the hyperparameters. Unless differently specified, all the hyperparameters will be shared (if referred to the same *model* and *common model*) except the amplitude of covariance matrix, which is dataset-dependent. Each dataset will be characterized by its own covariance matrix.
+
+
+
 ```{toctree}
 :maxdepth: 1
 gaussian_process/quasiperiodic_kernel.md
+gaussian_process/quasiperiodic_cosine_kernel.md
 ```
