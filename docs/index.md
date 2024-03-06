@@ -111,7 +111,6 @@ installation
 quickstart
 prepare_datasets
 prepare_yaml
-samplers
 common_objects
 models
 gaussian_process_regression

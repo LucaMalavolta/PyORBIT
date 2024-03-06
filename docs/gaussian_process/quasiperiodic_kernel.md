@@ -10,14 +10,16 @@ The most common and most reliable kernel for stellar activity is the quasi-perio
 G(t_i, t_j) = h^2  \exp{ \left \{-\frac{\sin^2{[\pi(t_i - t_j)/\theta]}}{2 w ^2} - \left ( \frac{t_i-t_j}{\lambda} \right )^2 \right \} }
 ```
 
-where $\theta$ is equivalent to the rotation period of the star, $w$ is the coherence scale, and $\lambda$ is usually associated to the decay time scale fo the active regions
+where $\theta$ is equivalent to the rotation period of the star, $w$ is the coherence scale, and $\lambda$ is usually associated with the decay time scale of the active regions
 
 ```{important}
 It is common to have a factor 2 in the denominator of the aperiodic variation (i.e., $2 \lambda$ rather than $\lambda$) in {eq}`quasiperiodic_grunblatt`. In such a case, it is sufficient to multiply the value of $\lambda$ of `PyORBIT` by a factor $\sqrt(2)$ - keep it in mind when assigning priors!
 ```
 
 This kernel relies on the `george` package. An independent implementation not relying on any package is available, however it is much slower. 
-A new implementation using  `tinyGP` is now available, but it requires a few extra tricks in the configuration file and execution.
+A new implementation using `tinyGP` is now available, but it requires a few extra tricks in the configuration file and execution (see [Caveats on the use of `tinyGP`](../running_pyorbit/tinygp_caveats)
+)
+
 
 ## Improvements
 
