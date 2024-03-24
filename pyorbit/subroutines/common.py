@@ -8,16 +8,6 @@ import pyorbit.subroutines.constants as constants
 import numpy as np
 np.seterr(invalid='ignore')
 
-try:
-    if os.path.isdir('/Users/malavolta/Astro/CODE/others/trades'):
-        sys.path.insert(0, '/Users/malavolta/Astro/CODE/others/trades/pytrades/')
-    elif os.path.isdir('/Users/malavolta/Astro/CODE/trades'):
-        sys.path.insert(0, '/Users/malavolta/Astro/CODE/trades/pytrades/')
-    else:
-        sys.path.insert(0, '/home/malavolta/CODE/others/trades/pytrades/')
-    # from pytrades_lib import pytrades
-except:
-    pass
 
 # old base 2 logarithm
 
