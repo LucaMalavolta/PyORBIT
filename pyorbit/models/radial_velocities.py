@@ -10,7 +10,7 @@ except ImportError:
     pass
 
 try:
-    from pytrades_lib import pytrades
+    from pytrades import pytrades
 except ImportError:
     pass
 
@@ -234,8 +234,12 @@ class DynamicalIntegrator:
     def __init__(self):
         self.model_name = 'dynamical_integrator'
         self.dynamical_integrator = 'TRADES'
+
         self.dynamical_set = {}
-        self.n_max_t0 = 0
+        self.rv_dataset_idbool = {}
+        self.t0_planet_idflag = {}
+        self.planet_idflag = {}
+
         self.to_be_initialized = True
 
     def prepare(self, mc):
@@ -248,7 +252,7 @@ class DynamicalIntegrator:
 
         if self.dynamical_integrator == 'TRADES':
             try:
-                from pytrades_lib import pytrades
+                from pytrades import pytrades
             except ImportError:
                 print("ERROR: TRADES not installed, this will not work")
                 quit()
@@ -284,7 +288,9 @@ class DynamicalIntegrator:
         :return:
         """
         dataset_rv = 0
-        int_buffer = dict(rv_times=[], t0_times=[], rv_ref=[], t0_ref=[], key_ref={})
+        int_buffer = dict(rv_time=[], rv_value=[], rv_error=[], rv_ref=[],
+                          t0_time=[], t0_error=[], t0_ref=[], key_ref={})
+
 
         """ Putting all the RV epochs in the same array, flagging in the temporary buffer
             the stored values according to their dataset of origin
@@ -292,135 +298,84 @@ class DynamicalIntegrator:
         for dataset_name, dataset in mc.dataset_dict.items():
             if dataset.dynamical is False: continue
             if dataset.kind == 'RV':
-                int_buffer['rv_times'].extend(dataset.x.tolist())
+                int_buffer['rv_time'].extend(dataset.x.tolist())
+                int_buffer['rv_value'].extend(dataset.y.tolist())
+                int_buffer['rv_error'].extend(dataset.e.tolist())
                 int_buffer['rv_ref'].extend(dataset.x * 0.0 + dataset_rv)
                 int_buffer['key_ref'][dataset_name] = dataset_rv
                 dataset_rv += 1
             elif dataset.kind == 'transit_time':
-                int_buffer['t0_times'].extend(dataset.x.tolist())
+                int_buffer['t0_time'].extend(dataset.x.tolist())
 
         """ Creating the flag array after all the RV epochs have been mixed
         """
-        self.dynamical_set['data'] = {'selection': {}}
         for dataset_name, dataset in mc.dataset_dict.items():
             if dataset.dynamical is False: continue
             if dataset.kind == 'RV':
-                self.dynamical_set['data']['selection'][dataset_name] = \
+                self.rv_dataset_idbool[dataset_name] = \
                     (np.asarray(int_buffer['rv_ref']) == int_buffer['key_ref'][dataset_name])
 
-        self.dynamical_set['data']['rv_times'] = np.float64(int_buffer['rv_times'])
+        rv_time = np.float64(int_buffer['rv_time'])
+        rv_value = np.float64(int_buffer['rv_value'])
+        rv_error = np.float64(int_buffer['rv_error'])
 
         """ Substituting empty arrays with None to allow minimum determination
             We give for granted that at least one of the two vector is not null, otherwise
             it doesn't make any sense to run the program at all
         """
         if np.size(int_buffer['rv_times']) == 0:
-            int_buffer['rv_times'] = int_buffer['t0_times']
+            int_buffer['rv_time'] =  int_buffer['t0_time']
 
         if np.size(int_buffer['t0_times']) == 0:
-            int_buffer['t0_times'] = int_buffer['rv_times']
+            int_buffer['t0_time'] = int_buffer['rv_time']
 
         rv_minmax = [np.amin(int_buffer['rv_times']), np.amax(int_buffer['rv_times'])]
         t0_minmax = [np.amin(int_buffer['t0_times']), np.amax(int_buffer['t0_times'])]
 
-        self.dynamical_set['trades'] = {
-            'ti_beg': np.min([rv_minmax[0], t0_minmax[0]]) - 10,
-            'ti_end': np.max([rv_minmax[1], t0_minmax[1]]) + 10}
-        self.dynamical_set['trades']['ti_int'] = \
-            self.dynamical_set['trades']['ti_end'] - self.dynamical_set['trades']['ti_beg']
-        self.dynamical_set['trades']['ti_ref'] = np.float64(mc.Tref)
-        self.dynamical_set['trades']['i_step'] = np.float64(1.e-3)
-
-        self.dynamical_set['data']['plan_ref'] = {}
+        self.ti_beg = np.min([rv_minmax[0], t0_minmax[0]]) - 10
+        self.ti_end = np.max([rv_minmax[1], t0_minmax[1]]) + 10
+        self.ti_int = self.ti_end - self.ti_beg
+        self.ti_ref = np.float64(mc.Tref)
+        self.i_step = np.float64(1.e-3)
 
         """First iteration to identify the number of transits
         stored for each planet, including the planets in the dynamical
         simulation but without observed transit
         """
-        t0_ntot = [0]
-        t0_flag = [False]
-        n_body = 1  # The star is included among the bodies
-
-        period_list = []
-        planet_list = []
+        self.n_body = 1  # The star is included among the bodies
+        self.duration_check = 1
 
         for planet_name in mc.dynamical_dict:
-            period_list.extend([mc.common_models[planet_name].period_average])
-            planet_list.extend([planet_name])
-        sort_planets = np.argsort(period_list)
+            self.n_body += 1
+            self.planet_idflag[planet_name] = self.n_body * 1
 
-        for planet_name in np.asarray(planet_list)[sort_planets]:
-            tmp_t0_ntot = [0]
-            tmp_t0_flag = [True]
-            if planet_name in mc.dynamical_t0_dict:
-                tmp_t0_ntot = [mc.dataset_dict[mc.dynamical_t0_dict[planet_name]].n]
-                tmp_t0_flag = [True]
-            t0_ntot.extend(tmp_t0_ntot)
-            t0_flag.extend(tmp_t0_flag)
-            self.dynamical_set['data']['plan_ref'][planet_name] = np.asarray(n_body).astype(int)
-            n_body += 1
+        self.t0_flag = np.zeros(self.n_body, dtype=bool)
 
-        """ TRADES requires at least one planet to be observed transiting, since it was create primarily for
-         TTV analysis. We use a workaround in case there are no T_cent observed by creating and passing to
-          TRADES a fake dataset that  is not include in the chi^2 computation
-        """
-        if np.max(t0_ntot) == 0:
-            self.dynamical_set['fake_t0s'] = True
-            t0_flag[1] = True
-            t0_ntot[1] = 3
-        else:
-            self.dynamical_set['fake_t0s'] = False
 
-        """ Identification the maximum number of transit """
-        self.n_max_t0 = np.max(t0_ntot)
+        # TRADES initialization
+        pytrades.args_init(
+            self.n_body, 
+            self.duration_check,
+            t_epoch=self.ti_ref,
+            t_start=self.ti_beg,
+            t_int=self.ti_int,
+        )
 
-        self.dynamical_set['data']['t0_tot'] = np.asarray(t0_ntot).astype(int)
-        self.dynamical_set['data']['t0_flg'] = np.asarray(t0_flag)
 
-        self.dynamical_set['data']['t0_num'] = np.zeros([self.n_max_t0, n_body]).astype(int)
-        self.dynamical_set['data']['t0_obs'] = np.zeros([self.n_max_t0, n_body], dtype=np.float64)
-        self.dynamical_set['data']['t0_err'] = np.zeros([self.n_max_t0, n_body], dtype=np.float64)
+        for planet_name, dataset_name in mc.dynamical_t0_dict.items():
+            n_plan = self.planet_idflag[planet_name]
+            self.t0_flag[n_plan-1] = True
 
-        for planet_name in mc.dynamical_dict:
-            plan_n = self.dynamical_set['data']['plan_ref'][planet_name]
-            if planet_name in mc.dynamical_t0_dict:
-                self.dynamical_set['data']['t0_num'][0:t0_ntot[plan_n], plan_n] = \
-                    mc.dataset_dict[mc.dynamical_t0_dict[planet_name]].n_transit[:].astype(int)
-                self.dynamical_set['data']['t0_obs'][0:t0_ntot[plan_n], plan_n] = \
-                    mc.dataset_dict[mc.dynamical_t0_dict[planet_name]].x
-                self.dynamical_set['data']['t0_err'][0:t0_ntot[plan_n], plan_n] = \
-                    mc.dataset_dict[mc.dynamical_t0_dict[planet_name]].e
+            pytrades.set_t0_dataset(
+                n_plan,
+                mc.dataset_dict[dataset_name].n_transit[:].astype(int),
+                mc.dataset_dict[dataset_name].x,
+                mc.dataset_dict[dataset_name].e)
 
-        if self.dynamical_set['fake_t0s']:
-            self.dynamical_set['data']['t0_num'][0:3, 1] = np.arange(0, 3, 1, dtype=int)
-            self.dynamical_set['data']['t0_obs'][0:3, 1] = np.arange(-1, 2, 1, dtype=np.float64) * 10.0 + mc.Tref
-            self.dynamical_set['data']['t0_err'][0:3, 1] = 0.1
-
-        self.dynamical_set['trades']['n_body'] = n_body
-
-        # print   '0  ---> ', self.dynamical_set['trades']['ti_beg']
-        # print   '1  ---> ', self.dynamical_set['trades']['ti_ref']
-        # print   '2  ---> ', self.dynamical_set['trades']['ti_int']
-        # print   '3  ---> ', self.dynamical_set['trades']['n_body']
-        # print   '4  ---> ', self.dynamical_set['data']['t0_tot']
-        # print   '5  ---> ', self.dynamical_set['data']['t0_num']
-        # print   '6  ---> ', self.dynamical_set['data']['t0_obs']
-        # print   '7  ---> ', self.dynamical_set['data']['t0_err']
-
-        pytrades.args_init(self.dynamical_set['trades']['ti_beg'],
-                           self.dynamical_set['trades']['ti_ref'],
-                           self.dynamical_set['trades']['ti_int'],
-                           self.dynamical_set['trades']['n_body'],
-                           self.dynamical_set['data']['t0_tot'],
-                           self.dynamical_set['data']['t0_num'],
-                           self.dynamical_set['data']['t0_obs'],
-                           self.dynamical_set['data']['t0_err'])
-
-        """ When the object is copied, data on RV and other properties are somehow lost
-            but the object is still initialized - somehow """
+        if len(rv_time)>0:
+            pytrades.set_rv_dataset(rv_time, rv_value, rv_error)#, rv_setid=rv_setid, n_rvset=n_rvset)
 
         self.to_be_initialized = False
-        print('TRADES parameters', self.dynamical_set['trades'])
         print()
 
         return
@@ -430,47 +385,44 @@ class DynamicalIntegrator:
             The user can specify which planets are subject to interactions, e.g. long-period planets can be approximated
             with a Keplerian function"""
 
-        """ setting up the dictionaries with the orbital parameters required by TRADES,
-        """
-
         if self.to_be_initialized:
             self.prepare_trades(mc)
 
-        self.dynamical_set['pams'] = {
-            'M': np.zeros(self.dynamical_set['trades']['n_body'], dtype=np.float64),
-            'R': np.zeros(self.dynamical_set['trades']['n_body'], dtype=np.float64),
-            'P': np.zeros(self.dynamical_set['trades']['n_body'], dtype=np.float64),
-            'e': np.zeros(self.dynamical_set['trades']['n_body'], dtype=np.float64),
-            'omega': np.zeros(self.dynamical_set['trades']['n_body'], dtype=np.float64),
-            'i': np.zeros(self.dynamical_set['trades']['n_body'], dtype=np.float64),
-            'Omega': np.zeros(self.dynamical_set['trades']['n_body'], dtype=np.float64),
-            'mA': np.zeros(self.dynamical_set['trades']['n_body'], dtype=np.float64)
+        self.dynamical_pams = {
+            'M': np.zeros(self.n_body, dtype=np.float64),
+            'R': np.zeros(self.n_body, dtype=np.float64),
+            'P': np.zeros(self.n_body, dtype=np.float64),
+            'e': np.zeros(self.n_body, dtype=np.float64),
+            'omega': np.zeros(self.n_body, dtype=np.float64),
+            'i': np.zeros(self.n_body, dtype=np.float64),
+            'Omega': np.zeros(self.n_body, dtype=np.float64),
+            'mA': np.zeros(self.n_body, dtype=np.float64)
         }
 
         """ Adding star parameters"""
         star_pams = get_stellar_parameters(mc, theta, warnings=False)
         #star_pams = mc.common_models['star_parameters'].convert(theta)
 
-        self.dynamical_set['pams']['mass'][0] = star_pams['mass']
-        self.dynamical_set['pams']['radius'][0] = star_pams['radius']
+        self.dynamical_pams['mass'][0] = star_pams['mass']
+        self.dynamical_pams['radius'][0] = star_pams['radius']
 
         for planet_name in mc.dynamical_dict:
-            n_plan = self.dynamical_set['data']['plan_ref'][planet_name]
+            n_plan = self.planet_idflag[planet_name]
 
             dict_pams = mc.common_models[planet_name].convert(theta)
 
             if mc.common_models[planet_name].use_inclination:
-                self.dynamical_set['pams']['i'][n_plan] = dict_pams['i']
+                self.dynamical_pams['i'][n_plan] = dict_pams['i']
             else:
                 if mc.common_models[planet_name].use_semimajor_axis:
-                    self.dynamical_set['pams']['i'][n_plan] = \
+                    self.dynamical_pams['i'][n_plan] = \
                         convert_b_to_i(dict_pams['b'],
                                        dict_pams['e'],
                                        dict_pams['omega'],
                                        dict_pams['a_Rs'])
                 else:
                     a_temp = convert_rho_to_ars(dict_pams['P'], star_pams['density'])
-                    self.dynamical_set['pams']['i'][n_plan] = \
+                    self.dynamical_pams['i'][n_plan] = \
                         convert_b_to_i(dict_pams['b'],
                                        dict_pams['e'],
                                        dict_pams['omega'],
@@ -484,109 +436,72 @@ class DynamicalIntegrator:
 
             if 'R' in dict_pams:
                 """ Converting the radius from Stellar units to Solar units"""
-                self.dynamical_set['pams']['R'][n_plan] = dict_pams['R_Rs'] * star_pams['radius']
+                self.dynamical_pams['R'][n_plan] = dict_pams['R_Rs'] * star_pams['radius']
             else:
                 """ Default value: slightly more than 1 Earth radii in Solar units"""
-                self.dynamical_set['pams']['R'][n_plan] = 0.02
+                self.dynamical_pams['R'][n_plan] = 0.02
 
-            self.dynamical_set['pams']['M'][n_plan] = dict_pams['M_Me'] / constants.Msear
-            self.dynamical_set['pams']['P'][n_plan] = dict_pams['P']
-            self.dynamical_set['pams']['e'][n_plan] = dict_pams['e']
-            self.dynamical_set['pams']['omega'][n_plan] = dict_pams['omega']
-            self.dynamical_set['pams']['Omega'][n_plan] = dict_pams['Omega']
-            self.dynamical_set['pams']['mA'][n_plan] = (dict_pams['mean_long'] - dict_pams['omega'])
+            self.dynamical_pams['M'][n_plan] = dict_pams['M_Me'] / constants.Msear
+            self.dynamical_pams['P'][n_plan] = dict_pams['P']
+            self.dynamical_pams['e'][n_plan] = dict_pams['e']
+            self.dynamical_pams['omega'][n_plan] = dict_pams['omega']
+            self.dynamical_pams['Omega'][n_plan] = dict_pams['Omega']
+            self.dynamical_pams['mA'][n_plan] = (dict_pams['mean_long'] - dict_pams['omega'])
 
-        # sample_plan[:, convert_out['transit_time']] = mc.Tref + kepler_exo.kepler_phase2Tc_Tref(
-        #    sample_plan[:, convert_out['P']], sample_plan[:, convert_out['mL']],
-        #    sample_plan[:, convert_out['e']], sample_plan[:, convert_out['o']])
-
-        """ Extracted from TRADES:
-          !!! SUBROUTINE TO RUN TRADES INTEGRATION AND RETURN RV_SIM AND T0_SIM
-        !   subroutine kelements_to_data(t_start,t_epoch,step_in,t_int,&
-        !     &m_msun,R_rsun,P_day,ecc,argp_deg,mA_deg,inc_deg,lN_deg,&
-        !     &t_rv,transit_flag,n_t0,t0_num,& ! input
-        !     &rv_sim,t0_sim,& ! output
-        !     &n_body,n_rv,n_max_t0) ! dimensions
-          subroutine kelements_to_data(t_start,t_epoch,step_in,t_int,&
-            &m_msun,R_rsun,P_day,ecc,argp_deg,mA_deg,inc_deg,lN_deg,&
-            &t_rv,transit_flag,& ! input
-            &rv_sim,t0_sim,& ! output
-            &n_body,n_rv,n_max_t0) ! dimensions
-
-            ! INPUT
-            ! t_start      == start of the integration
-            ! t_epoch      == reference time epoch
-            ! step_in      == initial step size of the integration
-            ! t_int        == total integration time in days
-
-            ! m_msun       == masses of all the bodies in Msun m_sun(n_body)
-            ! R_rsun       == radii of all the bodies in Rsun r_rsun(n_body)
-            ! P_day        == periods of all the bodies in days p_day(n_body); p_day(0) = 0
-            ! ecc          == eccentricities of all the bodies ecc(n_body); ecc(0) = 0
-            ! argp_deg     == argument of pericentre of all the bodies argp_deg(n_body); argp_deg(0) = 0
-            ! mA_deg       == mean anomaly of all the bodies mA_deg(n_body); mA_deg(0) = 0
-            ! inc_deg      == inclination of all the bodies inc_deg(n_body); inc_deg(0) = 0
-            ! lN_deg       == longitude of node of all the bodies lN_deg(n_body); lN_deg(0) = 0
-
-            ! t_rv         == time of the RV datapoints t_rv(n_rv)
-            ! transit_flag == logical/boolean vector with which bodies should transit (.true.) or not (.false) transit_flag(n_body); transit_flag(0) = False
-
-            ! OUTPUT
-            ! rv_sim       == rv simulated in m/s, same dimension of t_rv
-            ! t0_sim       == t0 simulated in days, same dimension of t0_num
-
-            ! DIMENSIONS
-            ! n_body       == number of bodies (take into account the star)
-            ! n_rv         == number of radial velocities datapoints
-            ! n_max_t0     == maxval(n_t0) == maxval of transits available
-
-        """
 
         if x_input is None:
-            rv_sim, t0_sim = pytrades.kelements_to_data(
-                self.dynamical_set['trades']['ti_beg'],
-                self.dynamical_set['trades']['ti_ref'],
-                self.dynamical_set['trades']['i_step'],
-                self.dynamical_set['trades']['ti_int'],
-                self.dynamical_set['pams']['M'],
-                self.dynamical_set['pams']['R'],
-                self.dynamical_set['pams']['P'],
-                self.dynamical_set['pams']['e'],
-                self.dynamical_set['pams']['omega'],
-                self.dynamical_set['pams']['mA'],
-                self.dynamical_set['pams']['i'],
-                self.dynamical_set['pams']['Omega'],
-                self.dynamical_set['data']['rv_times'],
-                self.dynamical_set['data']['t0_flg'], self.n_max_t0)
-        else:
-            rv_sim, t0_sim = pytrades.kelements_to_data(
-                self.dynamical_set['trades']['ti_beg'],
-                self.dynamical_set['trades']['ti_ref'],
-                self.dynamical_set['trades']['i_step'],
-                self.dynamical_set['trades']['ti_int'],
-                self.dynamical_set['pams']['M'],
-                self.dynamical_set['pams']['R'],
-                self.dynamical_set['pams']['P'],
-                self.dynamical_set['pams']['e'],
-                self.dynamical_set['pams']['omega'],
-                self.dynamical_set['pams']['mA'],
-                self.dynamical_set['pams']['i'],
-                self.dynamical_set['pams']['Omega'],
-                x_input,
-                self.dynamical_set['data']['t0_flg'], self.n_max_t0)
 
+            rv_sim, body_id_sim, epoch_sim, t0_sim, durations_sim, kep_elem_sim = pytrades.kelements_to_rv_and_t0s(
+                self.ti_beg,
+                self.ti_ref,
+                self.ti_int,
+                self.dynamical_pams['M'],
+                self.dynamical_pams['R'],
+                self.dynamical_pams['P'],
+                self.dynamical_pams['e'],
+                self.dynamical_pams['omega'],
+                self.dynamical_pams['mA'],
+                self.dynamical_pams['i'],
+                self.dynamical_pams['Omega'],
+                self.t0_flag,
+            )
+
+        else:
+
+            pytrades.set_rv_dataset(x_input, np.zeros_like(x_input), np.zeros_like(x_input))#, rv_setid=rv_setid, n_rvset=n_rvset)
+            self.to_be_initialized = True
+
+            rv_sim, body_id_sim, epoch_sim, t0_sim, durations_sim, kep_elem_sim = pytrades.kelements_to_rv_and_t0s(
+                self.ti_beg,
+                self.ti_ref,
+                self.ti_int,
+                self.dynamical_pams['M'],
+                self.dynamical_pams['R'],
+                self.dynamical_pams['P'],
+                self.dynamical_pams['e'],
+                self.dynamical_pams['omega'],
+                self.dynamical_pams['mA'],
+                self.dynamical_pams['i'],
+                self.dynamical_pams['Omega'],
+                self.t0_flag,
+            )
         output = {}
 
         for dataset_name, dataset in mc.dataset_dict.items():
             if dataset.dynamical is False: continue
             if dataset.kind == 'RV':
                 if x_input is None:
-                    output[dataset_name] = rv_sim[self.dynamical_set['data']['selection'][dataset_name]]
+                    output[dataset_name] = rv_sim[self.rv_dataset_idbool[dataset_name]]
                 else:
                     output[dataset_name] = rv_sim
             elif dataset.kind == 'transit_time' and dataset.planet_name in mc.dynamical_dict:
-                n_plan = self.dynamical_set['data']['plan_ref'][dataset.planet_name]
-                output[dataset_name] = t0_sim[:self.dynamical_set['data']['t0_tot'][n_plan], n_plan]
+                n_plan = self.planet_idflag[planet_name]
+                data_sel = (body_id_sim==n_plan)
+                output[dataset_name] = t0_sim[data_sel]
+            elif dataset.kind == 'transit_duration' and dataset.planet_name in mc.dynamical_dict:
+                n_plan = self.planet_idflag[planet_name]
+                data_sel = (body_id_sim==n_plan)
+                output[dataset_name] = durations_sim[data_sel]
 
         return output
 
