@@ -1,18 +1,9 @@
 from __future__ import print_function
 from pyorbit.subroutines.common import *
-from pyorbit.models.abstract_model import *
+from pyorbit.models.abstract_model import AbstractModel
+
 import pyorbit.subroutines.kepler_exo as kepler_exo
 from pyorbit.subroutines.results_analysis import get_stellar_parameters
-
-try:
-    import ttvfast
-except ImportError:
-    pass
-
-try:
-    from pytrades import pytrades
-except ImportError:
-    pass
 
 
 class RVkeplerian(AbstractModel):
@@ -29,7 +20,7 @@ class RVkeplerian(AbstractModel):
             'omega'}  # argument of pericenter
 
         self.use_time_inferior_conjunction = False
-        self.use_mass_for_planets = False
+        self.use_mass = False
 
     def initialize_model(self, mc, **kwargs):
 
@@ -57,10 +48,10 @@ class RVkeplerian(AbstractModel):
         else:
             self.list_pams_common.update(['mean_long'])
 
-        if mc.common_models[self.planet_ref].use_mass_for_planets:
+        if mc.common_models[self.planet_ref].use_mass:
             self.list_pams_common.update(['M_Me'])
             self.list_pams_common.update(['mass'])
-            self.use_mass_for_planets = True
+            self.use_mass = True
         else:
             self.list_pams_common.update(['K'])
 
@@ -77,7 +68,7 @@ class RVkeplerian(AbstractModel):
         else:
             mean_long = parameter_values['mean_long']
 
-        if self.use_mass_for_planets:
+        if self.use_mass:
 
             K = kepler_exo.kepler_K1(parameter_values['mass'],
                                      parameter_values['M_Me'] / constants.Msear, parameter_values['P'], parameter_values['i'],
@@ -185,16 +176,18 @@ class TransitTimeDynamical(AbstractModel):
     model_class = 'transit_times'
 
     def __init__(self, *args, **kwargs):
-        super(TransitTimeDynamical, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
+        super(AbstractModel, self).__init__(*args, **kwargs)
 
         ''' Orbital parameters to be used in the dynamical fit '''
         self.list_pams_common = {
-            'P',    # Period in days
-            'M_Me',    # Mass in Earth masses
-            'Omega',   # longitude of ascending node
-            'e',    # eccentricity, uniform prior - to be fixed
-            'R_Rs',    # planet radius (in units of stellar radii)
-            'omega',    # argument of pericenter
+            'P',     # Period in days
+            'M_Me',  # Mass in Earth masses
+            'Omega', # longitude of ascending node
+            'e',     # eccentricity, uniform prior - to be fixed
+            'i',
+            'R_Rs',  # planet radius (in units of stellar radii)
+            'omega', # argument of pericenter
             'mass'} # mass of the star (needed for proper dynamical computation and for reversibility)
 
         self.list_pams_dataset = set()
@@ -203,31 +196,21 @@ class TransitTimeDynamical(AbstractModel):
         self.use_inclination = False
         self.use_time_inferior_conjunction = False
 
+
     def initialize_model(self, mc, **kwargs):
+
 
         if mc.common_models[self.planet_ref].use_inclination:
             """ i is the orbital inclination (in degrees) """
             self.list_pams_common.update(['i'])
-            self.use_inclination = True
         else:
             """ b is the impact parameter """
             self.list_pams_common.update(['b'])
 
-            if mc.common_models[self.planet_ref].use_semimajor_axis:
-                """ a is the semi-major axis (in units of stellar radii) """
-                self.list_pams_common.update(['a_Rs'])
-                self.use_semimajor_axis = True
-            else:
-                """ rho is the density of the star (in solar units) """
-                self.list_pams_common.update(['density'])
-
         if mc.common_models[self.planet_ref].use_time_inferior_conjunction:
             self.list_pams_common.update(['Tc'])
-            self.use_time_inferior_conjunction = True
-            # Copying the property to the class for faster access
         else:
             self.list_pams_common.update(['mean_long'])
-            # mean longitude = argument of pericenter + mean anomaly at Tref
 
 
 class DynamicalIntegrator:
@@ -403,50 +386,30 @@ class DynamicalIntegrator:
         star_pams = get_stellar_parameters(mc, theta, warnings=False)
         #star_pams = mc.common_models['star_parameters'].convert(theta)
 
-        self.dynamical_pams['mass'][0] = star_pams['mass']
-        self.dynamical_pams['radius'][0] = star_pams['radius']
+        self.dynamical_pams['M'][0] = star_pams['mass']
+        self.dynamical_pams['R'][0] = star_pams['radius']
 
         for planet_name in mc.dynamical_dict:
             n_plan = self.planet_idflag[planet_name]
 
-            dict_pams = mc.common_models[planet_name].convert(theta)
+            parameter_values = mc.common_models[planet_name].convert(theta)
+            mc.common_models[planet_name].update_parameter_values(parameter_values, self.ti_ref )
 
-            if mc.common_models[planet_name].use_inclination:
-                self.dynamical_pams['i'][n_plan] = dict_pams['i']
-            else:
-                if mc.common_models[planet_name].use_semimajor_axis:
-                    self.dynamical_pams['i'][n_plan] = \
-                        convert_b_to_i(dict_pams['b'],
-                                       dict_pams['e'],
-                                       dict_pams['omega'],
-                                       dict_pams['a_Rs'])
-                else:
-                    a_temp = convert_rho_to_ars(dict_pams['P'], star_pams['density'])
-                    self.dynamical_pams['i'][n_plan] = \
-                        convert_b_to_i(dict_pams['b'],
-                                       dict_pams['e'],
-                                       dict_pams['omega'],
-                                       a_temp)
+            print(parameter_values)
 
-            if mc.common_models[planet_name].use_time_inferior_conjunction:
-                dict_pams['mean_long'] = kepler_exo.kepler_Tc2phase_Tref(dict_pams['P'],
-                                                                 dict_pams['Tc'] - mc.Tref,
-                                                                 dict_pams['e'],
-                                                                 dict_pams['omega'])
-
-            if 'R' in dict_pams:
+            if 'R_Rs' in parameter_values:
                 """ Converting the radius from Stellar units to Solar units"""
-                self.dynamical_pams['R'][n_plan] = dict_pams['R_Rs'] * star_pams['radius']
+                self.dynamical_pams['R'][n_plan] = parameter_values['R_Rs'] * star_pams['radius']
             else:
                 """ Default value: slightly more than 1 Earth radii in Solar units"""
                 self.dynamical_pams['R'][n_plan] = 0.02
 
-            self.dynamical_pams['M'][n_plan] = dict_pams['M_Me'] / constants.Msear
-            self.dynamical_pams['P'][n_plan] = dict_pams['P']
-            self.dynamical_pams['e'][n_plan] = dict_pams['e']
-            self.dynamical_pams['omega'][n_plan] = dict_pams['omega']
-            self.dynamical_pams['Omega'][n_plan] = dict_pams['Omega']
-            self.dynamical_pams['mA'][n_plan] = (dict_pams['mean_long'] - dict_pams['omega'])
+            self.dynamical_pams['M'][n_plan] = parameter_values['M_Me'] / constants.Msear
+            self.dynamical_pams['P'][n_plan] = parameter_values['P']
+            self.dynamical_pams['e'][n_plan] = parameter_values['e']
+            self.dynamical_pams['omega'][n_plan] = parameter_values['omega']
+            self.dynamical_pams['Omega'][n_plan] = parameter_values['Omega']
+            self.dynamical_pams['mA'][n_plan] = (parameter_values['mean_long'] - parameter_values['omega'])
 
 
         if x_input is None:

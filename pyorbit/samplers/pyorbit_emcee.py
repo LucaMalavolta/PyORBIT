@@ -191,7 +191,7 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
         if mc.dynamical_model is not None:
             """ check if any keyword ahas get the output model from the dynamical tool
             we must do it here because all the planet are involved"""
-            dynamical_output = mc.dynamical_model.compute(theta)
+            dynamical_output = mc.dynamical_model.compute(mc, theta)
 
         for model_name, model in mc.common_models.items():
             log_priors += model.return_priors(theta)

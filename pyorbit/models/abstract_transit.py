@@ -70,8 +70,12 @@ class AbstractTransit(object):
                 self.list_pams_common.update(['mass'])
                 self.list_pams_common.update(['radius'])
                 self.multivariate_mass_radius = True
+            elif mc.common_models[self.stellar_ref].compute_density:
+                self.list_pams_common.update(['mass'])
+                self.list_pams_common.update(['radius'])
+                self.multivariate_mass_radius = True
             else:
-                """ rho is the density of the star (in solar units) """
+                """ this is the density of the star (in solar units) """
                 self.list_pams_common.update(['density'])
                 self.multivariate_mass_radius = False
 
@@ -98,7 +102,6 @@ class AbstractTransit(object):
 
         self.use_differential_rotation = kwargs.get('use_differential_rotation', mc.common_models[self.stellar_ref].use_differential_rotation)
         self.use_stellar_rotation = kwargs.get('use_stellar_rotation', mc.common_models[self.stellar_ref].use_stellar_rotation)
-
 
 
         """ check if the differential rotation should be included in the model"""
@@ -150,7 +153,6 @@ class AbstractTransit(object):
         if mc.common_models[self.stellar_ref].use_stellar_rotation and mc.common_models[self.stellar_ref].use_equatorial_velocity:
             print('   ***  WARNING *** stellar rotation period and equatorial velocity  ')
             print('                    included as independent parameters ')
-
 
         self.convective_order = kwargs.get('convective_order', mc.common_models[self.stellar_ref].convective_order)
         self.mu_step = 0.00001

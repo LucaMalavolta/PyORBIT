@@ -28,9 +28,8 @@ from pyorbit.common.correlation import CommonCorrelation, CommonComplexCorrelati
 from pyorbit.common.detrending import CommonDetrending
 
 
-from pyorbit.models.radial_velocities import \
-    RVkeplerian, RVdynamical, \
-    TransitTimeKeplerian, TransitTimeDynamical, DynamicalIntegrator
+from pyorbit.models.keplerian_modelling import  RVkeplerian, TransitTimeKeplerian
+from pyorbit.models.dynamical_modelling import  TransitTimeDynamical, RVdynamical, DynamicalIntegrator
 
 from pyorbit.models.harmonics import Harmonics
 from pyorbit.models.pytransit_transit import PyTransit_Transit
@@ -153,7 +152,7 @@ model_requires_limb_darkening = ['transit',
                                 'subset_spectral_rotation_polynomial',
                                 'rossiter_mclaughlin']
 
-model_requires_star = ['rossiter_mclaughlin']
+model_requires_star = ['rossiter_mclaughlin', 'transit_times']
 model_requires_multiple_planets = ['rossiter_mclaughlin']
 
 define_common_type_to_class = {

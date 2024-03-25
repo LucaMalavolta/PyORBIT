@@ -153,7 +153,9 @@ class CommonStarParameters(AbstractCommon):
         self.use_stellar_radius = False
         self.use_projected_velocity = True
         self.convective_order = 0
-        self.preserve_density = True
+        self.compute_mass = True
+        self.compute_radius = False
+        self.compute_density = False
 
     def initialize_model(self, mc, **kwargs):
 
@@ -193,12 +195,32 @@ class CommonStarParameters(AbstractCommon):
         self.use_projected_velocity = kwargs.get('use_projected_velocity', self.use_projected_velocity)
 
         """ the user can decide how to deal with the mass-radius-density correlation
-            density and (sometimes) radius can be involved in transit fit, while there is no way to measure the
+            Density and (sometimes) radius can be involved in transit fit, while there is no way to measure the
             mass from the star from radial velocities or photometry, so the mass should have lower priority
             as a free parameter.
         """
-        self.preserve_density = kwargs.get('preserve_density', self.preserve_density)
-        self.preserve_density = ~ kwargs.get('use_mass_radius', ~ self.preserve_density)
+        self.compute_mass = kwargs.get('compute_mass', self.compute_mass)
+        self.compute_radius = kwargs.get('compute_radius', self.compute_radius)
+        self.compute_density = ~ kwargs.get('compute_density', self.compute_density)            
+
+        try:
+            multivariate_pams = self.multivariate_pams
+            self.compute_density = True
+        except AttributeError:
+            pass
+        
+        if self.compute_density:
+            self.compute_radius = False
+            self.compute_mass = False
+        if self.compute_radius:
+            self.compute_density = False
+            self.compute_mass = False
+        if self.compute_mass:
+            self.compute_density = False
+            self.compute_radius = False
+
+        if not (self.compute_mass or self.compute_radius or self.compute_density):
+            self.compute_mass = True
 
         self.convective_order = kwargs.get('convective_order', self.convective_order)
 
@@ -331,6 +353,19 @@ class CommonStarParameters(AbstractCommon):
             self.parameter_index['density'] = [pam00_index, pam01_index]
 
             derived_list.append('density')
+
+        if 'mass' in self.sampler_parameters and  \
+            'density' in self.sampler_parameters and \
+            'radius' not in self.parameter_index:
+
+            pam00_index = self.sampler_parameters['mass']
+            pam01_index = self.sampler_parameters['density']
+
+            self.transformation['radius'] = get_2var_radius
+            self.parameter_index['radius'] = [pam00_index, pam01_index]
+
+            derived_list.append('radius')
+
 
         for pam in derived_list:
             if pam not in self.bounds:

@@ -190,6 +190,15 @@ def get_2var_rho(var, fix, i):
         radius = var[:, i[1]]
     return mass/radius**3
 
+def get_2var_radius(var, fix, i):
+    if len(np.shape(var)) == 1:
+        mass = var[i[0]]
+        density = var[i[1]]
+    else:
+        mass = var[:, i[0]]
+        density = var[:, i[1]]
+    return np.power(mass/density, 1./3.)
+
 
 def get_2var_mass(var, fix, i):
     if len(np.shape(var)) == 1:
