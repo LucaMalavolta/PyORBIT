@@ -284,6 +284,7 @@ class DynamicalIntegrator:
             self.dynamical_pams['M'][n_plan-1] = parameter_values['M_Me'] / constants.Msear
             self.dynamical_pams['P'][n_plan-1] = parameter_values['P']
             self.dynamical_pams['e'][n_plan-1] = parameter_values['e']
+            self.dynamical_pams['i'][n_plan-1] = parameter_values['i']
             self.dynamical_pams['omega'][n_plan-1] = parameter_values['omega']
             self.dynamical_pams['Omega'][n_plan-1] = parameter_values['Omega']
             self.dynamical_pams['mA'][n_plan-1] = (parameter_values['mean_long'] - parameter_values['omega'])
@@ -328,12 +329,20 @@ class DynamicalIntegrator:
         output = {}
 
         for dataset_name, dataset in mc.dataset_dict.items():
+
+            print('aaaaaaaaaaa',dataset_name)
+            print(self.dynamical_pams)
             if dataset.dynamical is False: continue
+            print(rv_sim)
+
             if dataset.kind == 'RV':
                 if x_input is None:
                     output[dataset_name] = rv_sim[self.rv_dataset_idbool[dataset_name]]
                 else:
                     output[dataset_name] = rv_sim
+
+
+                print(rv_sim)
             elif dataset.kind == 'transit_time' and dataset.planet_name in mc.dynamical_dict:
 
                 n_plan = self.planet_idflag[dataset.planet_name]

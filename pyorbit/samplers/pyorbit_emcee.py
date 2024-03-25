@@ -280,6 +280,7 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
                 if getattr(dataset, 'dynamical', False):
                     dataset.external_model = dynamical_output[dataset_name]
 
+
                 if dataset.normalization_model is None and (mc.models[model_name].unitary_model or mc.models[model_name].normalization_model):
                     dataset.normalization_model = np.ones(dataset.n, dtype=np.double)
 
