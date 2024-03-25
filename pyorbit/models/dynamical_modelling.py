@@ -111,6 +111,21 @@ class TransitTimeDynamical(AbstractModel, AbstractDynamical):
         self._initialize_model(mc, **kwargs)
 
 
+class PhotoDynamical(AbstractModel, AbstractDynamical):
+    model_class = 'transit_times'
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        super(AbstractModel, self).__init__(*args, **kwargs)
+
+    # brainless workaround
+    def initialize_model(self, mc, **kwargs):
+        self._initialize_model(mc, **kwargs)
+
+
+
+
+
 class DynamicalIntegrator:
     def __init__(self):
         self.model_name = 'dynamical_integrator'
@@ -330,10 +345,7 @@ class DynamicalIntegrator:
 
         for dataset_name, dataset in mc.dataset_dict.items():
 
-            print('aaaaaaaaaaa',dataset_name)
-            print(self.dynamical_pams)
             if dataset.dynamical is False: continue
-            print(rv_sim)
 
             if dataset.kind == 'RV':
                 if x_input is None:
@@ -341,8 +353,6 @@ class DynamicalIntegrator:
                 else:
                     output[dataset_name] = rv_sim
 
-
-                print(rv_sim)
             elif dataset.kind == 'transit_time' and dataset.planet_name in mc.dynamical_dict:
 
                 n_plan = self.planet_idflag[dataset.planet_name]
