@@ -222,6 +222,7 @@ class CommonPlanets(AbstractCommon):
         self.compute_time_inferior_conjunction = True
         self.compute_mass = False
         self.compute_mean_longitude = False
+        self.compute_semimajor_axis = True
 
     def initialize_model(self, mc, **kwargs):
 

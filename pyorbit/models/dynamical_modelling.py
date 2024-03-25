@@ -28,7 +28,7 @@ class AbstractDynamical(object):
 
     # brainless workaround
     def _initialize_model(self, mc, **kwargs):
-
+        
         if mc.common_models[self.planet_ref].parametrization[:8] == 'Ford2006' \
             and mc.common_models[self.planet_ref].orbit != 'circular':
             self.list_pams_common.discard('e')
@@ -122,9 +122,91 @@ class PhotoDynamical(AbstractModel, AbstractDynamical):
     def initialize_model(self, mc, **kwargs):
         self._initialize_model(mc, **kwargs)
 
+        """ Setting up the limb darkening calculation"""
+
+        self.limb_darkening_model = kwargs['limb_darkening_model']
+        self.ld_vars = [0.00] * kwargs['limb_darkening_ncoeff']
+
+        for common_model in self.common_ref:
+            if mc.common_models[common_model].model_class == 'limb_darkening':
+                ld_parametrization = getattr(mc.common_models[common_model], 'parametrization', 'Standard')
+
+        if ld_parametrization=='Kipping':
+            self.ldvars['ld_c1'] = 0
+            self.ldvars['ld_c2'] = 1
+            self.list_pams_common.update(['ld_q1'])
+            self.list_pams_common.update(['ld_q2'])
+        else:
+            for i_coeff in range(1, kwargs['limb_darkening_ncoeff'] + 1):
+                par = 'ld_c' + repr(i_coeff)
+                self.ldvars[par] = i_coeff - 1
+                self.list_pams_common.update([par])
+
+        if self.limb_darkening_model == 'quadratic':
+            self.compute_limb_darkening = self._limb_darkening_quadratic
+        else:
+            print('ERROR: Selected limb darkening law not implemented')
+            quit()
+
+    def initialize_model_dataset(self, mc, dataset, **kwargs):
+        supersample_names = ['supersample_factor',
+                                'supersample',
+                                'supersampling',
+                                'oversample_factor',
+                                'oversample',
+                                'oversampling',
+                                'sample_factor',
+                                'sample',
+                                'sampling'
+                                'nsample_factor',
+                                'nsample',
+                                'nsampling'
+                            ]
+
+        sample_factor = 1
+        exposure_time = 0.01
+
+        for dict_name in supersample_names:
+            if kwargs[dataset.name_ref].get(dict_name, False):
+                sample_factor = kwargs[dataset.name_ref][dict_name]
+            elif kwargs.get(dict_name, False):
+                sample_factor = kwargs[dict_name]
+
+        exptime_names = ['exposure_time',
+                            'exposure',
+                            'exp_time',
+                            'exptime',
+                            'obs_duration',
+                            'integration',
+                        ]
+
+        for dict_name in exptime_names:
+            if kwargs[dataset.name_ref].get(dict_name, False):
+                exposure_time = kwargs[dataset.name_ref][dict_name]
+            elif kwargs.get(dict_name, False):
+                exposure_time = kwargs[dict_name]
+
+        self.code_options[dataset.name_ref] = {
+            'sample_factor': sample_factor,
+            'exp_time': exposure_time / constants.d2s,
+        }
+
+    # ????????
+    def compute(self, parameter_values, dataset, x0_input=None):
+        # ??????
+        for par, i_par in self.ldvars.items():
+            self.ld_vars[i_par] = parameter_values[par]
 
 
-
+    # not sure if needed
+    def _limb_darkening_coefficients(self, parameter_values):
+        ld_par = np.zeros(2)
+        for par, i_par in self.ldvars.items():
+            ld_par[i_par] = parameter_values[par]
+        return ld_par
+    
+    def _limb_darkening_quadratic(self, ld_par, mu):
+        return  1 - ld_par[0]*(1. - mu) - ld_par[1]*(1. - mu)**2
 
 class DynamicalIntegrator:
     def __init__(self):
@@ -287,6 +369,7 @@ class DynamicalIntegrator:
                 star_counter += 1
 
             parameter_values = mc.common_models[planet_name].convert(theta)
+            parameter_values.update(star_parameter)
             mc.common_models[planet_name].update_parameter_values_for_dynamical(parameter_values, self.ti_ref)
 
             if 'R_Rs' in parameter_values:
