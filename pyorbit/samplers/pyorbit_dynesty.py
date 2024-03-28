@@ -1,7 +1,7 @@
 from __future__ import print_function
 from __future__ import print_function
 #from pyorbit.classes.common import *
-from pyorbit.classes.model_container_dynesty import ModelContainerDynesty
+f rom pyorbit.classes.model_container_dynesty import ModelContainerDynesty
 from pyorbit.subroutines.input_parser import yaml_parser, pars_input
 from pyorbit.subroutines.io_subroutines import nested_sampling_save_to_cpickle, \
     nested_sampling_load_from_cpickle, nested_sampling_write_dummy_file, \

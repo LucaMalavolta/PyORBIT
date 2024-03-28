@@ -1,5 +1,6 @@
 from pyorbit.subroutines.common import *
 from pyorbit.models.abstract_model import *
+from pyorbit.keywords_definitions import *
 
 try:
     import george
@@ -109,7 +110,8 @@ class GaussianProcess_QuasiPeriodicActivity(AbstractModel):
                 self.use_stellar_rotation_period = getattr(mc.common_models[common_ref], 'use_stellar_rotation_period', False)
                 break
 
-        self.use_stellar_rotation_period =  kwargs.get('use_stellar_rotation_period', self.use_stellar_rotation_period)
+        for keyword in keywords_stellar_rotation:
+            self.use_stellar_rotation = kwargs.get(keyword, self.use_stellar_rotation)
 
         if self.use_stellar_rotation_period:
             self.list_pams_common.update(['rotation_period'])

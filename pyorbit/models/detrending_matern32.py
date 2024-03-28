@@ -4,6 +4,7 @@ import pyorbit.subroutines.constants as constants
 from numpy.polynomial import polynomial
 from numpy.lib.recfunctions import append_fields
 from scipy.interpolate import interp1d
+from pyorbit.keywords_definitions import *
 
 try:
     import george
@@ -52,7 +53,7 @@ class Detrending_Matern32(AbstractModel):
         self.standardize = kwargs.get('standardize', self.standardize)
 
         self.common_model = ~self.local_model
-        for keyword in ['use_common_parameters', 'common_parameters', 'use_common_model', 'common_model']:
+        for keyword in keywords_detrending_common_parameters:
             self.common_model = kwargs.get(keyword, self.common_model)
         self.local_model = ~self.common_model
 

@@ -1,5 +1,6 @@
 from pyorbit.subroutines.common import np
 from pyorbit.models.abstract_model import AbstractModel
+from pyorbit.keywords_definitions import *
 
 try:
     import celerite
@@ -49,21 +50,15 @@ class Celerite_Matern32(AbstractModel):
                 break
 
         self.use_shared_rho = False
-        for keyword in ['use_shared_rho',
-                        'shared_rho',
-                        'use_common_rho',
-                        'common_rho',
-                        'use_shared_timescale',
-                        'shared_timescale',
-                        'use_common_timescale',
-                        'common_timescale']:
+        for keyword in keywords_shared_timescale:
             self.use_shared_rho =  kwargs.get(keyword, self.use_shared_rho)
         if self.use_shared_rho:
             pam = 'matern32_rho'
             self.list_pams_common.update([pam])
             self.list_pams_dataset.discard(pam)
 
-        self.use_stellar_rotation_period =  kwargs.get('use_stellar_rotation_period', self.use_stellar_rotation_period)
+        for keyword in keywords_stellar_rotation:
+            self.use_stellar_rotation = kwargs.get(keyword, self.use_stellar_rotation)
 
         if self.use_stellar_rotation_period:
             self.list_pams_common.update(['rotation_period'])

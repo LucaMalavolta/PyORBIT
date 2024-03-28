@@ -1,6 +1,6 @@
 from pyorbit.subroutines.common import *
 from pyorbit.common.abstract_common import *
-
+from pyorbit.keywords_definitions import *
 
 class CommonStarParameters(AbstractCommon):
     ''' This class must be used by each planet in the system
@@ -169,15 +169,18 @@ class CommonStarParameters(AbstractCommon):
             much more difficult if v_eq and i_star are left as free parameters and
             the output is compared with too many priors
         """
-        self.use_stellar_rotation = kwargs.get('use_stellar_rotation', self.use_stellar_rotation)
+
+        for keyword in keywords_stellar_rotation:
+            self.use_stellar_rotation = kwargs.get(keyword, self.use_stellar_rotation)
         if self.use_stellar_rotation:
             self.use_equatorial_velocity = False
             self.use_stellar_inclination = True
             self.use_stellar_radius = True
             self.use_projected_velocity = False
 
-        """ check if the differential rotation should be included in the model"""
-        self.use_differential_rotation = kwargs.get('use_differential_rotation', self.use_differential_rotation)
+        """ check if the differemntial rotation should be included in the model"""
+        for keyword in keywords_differential_rotation:
+            self.use_differential_rotation = kwargs.get(keyword, self.use_differential_rotation)
         if self.use_differential_rotation and not self.use_stellar_rotation:
             self.use_equatorial_velocity = True
             self.use_stellar_inclination = True
