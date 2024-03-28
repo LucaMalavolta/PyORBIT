@@ -1,7 +1,7 @@
 from pyorbit.subroutines.common import np, convert_rho_to_ars, convert_b_to_i
 import pyorbit.subroutines.constants as constants
 import pyorbit.subroutines.kepler_exo as kepler_exo
-
+from pyorbit.keywords_definitions import *
 
 class AbstractTransit(object):
 
@@ -99,9 +99,15 @@ class AbstractTransit(object):
     def _prepare_star_parameters(self, mc, **kwargs):
         """ Additional stellar parameters
         """
+        
+        self.use_differential_rotation = kwargs.get(mc.common_models[self.stellar_ref].use_differential_rotation, False)
+        for keyword in keywords_differential_rotation:
+            self.use_differential_rotation = kwargs.get(keyword, self.use_differential_rotation)
 
-        self.use_differential_rotation = kwargs.get('use_differential_rotation', mc.common_models[self.stellar_ref].use_differential_rotation)
-        self.use_stellar_rotation = kwargs.get('use_stellar_rotation', mc.common_models[self.stellar_ref].use_stellar_rotation)
+
+        self.use_stellar_rotation_period = kwargs.get(mc.common_models[self.stellar_ref].use_stellar_rotation_period, False)
+        for keyword in keywords_stellar_rotation:
+            self.use_stellar_rotation_period = kwargs.get(keyword, self.use_stellar_rotation_period)
 
 
         """ check if the differential rotation should be included in the model"""
@@ -111,10 +117,10 @@ class AbstractTransit(object):
 
             mc.common_models[self.stellar_ref].use_differential_rotation = True
 
-            if self.use_stellar_rotation:
+            if self.use_stellar_rotation_period:
                 mc.common_models[self.stellar_ref].use_differential_rotation = True
                 mc.common_models[self.stellar_ref].use_stellar_inclination = True
-                mc.common_models[self.stellar_ref].use_stellar_rotation = True
+                mc.common_models[self.stellar_ref].use_stellar_rotation_period = True
                 mc.common_models[self.stellar_ref].use_stellar_radius = True
                 mc.common_models[self.stellar_ref].use_projected_velocity = False
             else:
@@ -144,13 +150,13 @@ class AbstractTransit(object):
         if mc.common_models[self.stellar_ref].use_equatorial_velocity:
             self.list_pams_common.update(['veq_star'])
 
-        if mc.common_models[self.stellar_ref].use_stellar_rotation:
+        if mc.common_models[self.stellar_ref].use_stellar_rotation_period:
             self.list_pams_common.update(['rotation_period'])
 
         if mc.common_models[self.stellar_ref].use_stellar_radius:
             self.list_pams_common.update(['radius'])
 
-        if mc.common_models[self.stellar_ref].use_stellar_rotation and mc.common_models[self.stellar_ref].use_equatorial_velocity:
+        if mc.common_models[self.stellar_ref].use_stellar_rotation_period and mc.common_models[self.stellar_ref].use_equatorial_velocity:
             print('   ***  WARNING *** stellar rotation period and equatorial velocity  ')
             print('                    included as independent parameters ')
 

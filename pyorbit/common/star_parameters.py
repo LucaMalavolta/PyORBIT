@@ -146,7 +146,7 @@ class CommonStarParameters(AbstractCommon):
         super(CommonStarParameters, self).__init__(*args, **kwargs)
 
         self.use_equatorial_velocity = False
-        self.use_stellar_rotation = False
+        self.use_stellar_rotation_period = False
         self.use_stellar_inclination = False
         self.use_cosine_stellar_inclination = False
         self.use_differential_rotation = False
@@ -159,7 +159,7 @@ class CommonStarParameters(AbstractCommon):
 
     def initialize_model(self, mc, **kwargs):
 
-        """ check if the stellar_rotation has to be used as parameter
+        """ check if the stellar_rotation_period has to be used as parameter
             when the stellar rotation period is given as a prior, then the equatorial velcoity
             is computed using the rotational period and the radius of the star.
             The stellar inclination must be used as a free parameter
@@ -172,7 +172,7 @@ class CommonStarParameters(AbstractCommon):
 
         for keyword in keywords_stellar_rotation:
             self.use_stellar_rotation_period = kwargs.get(keyword, self.use_stellar_rotation_period)
-        if self.use_stellar_rotation:
+        if self.use_stellar_rotation_period:
             self.use_equatorial_velocity = False
             self.use_stellar_inclination = True
             self.use_stellar_radius = True
@@ -181,7 +181,7 @@ class CommonStarParameters(AbstractCommon):
         """ check if the differemntial rotation should be included in the model"""
         for keyword in keywords_differential_rotation:
             self.use_differential_rotation = kwargs.get(keyword, self.use_differential_rotation)
-        if self.use_differential_rotation and not self.use_stellar_rotation:
+        if self.use_differential_rotation and not self.use_stellar_rotation_period:
             self.use_equatorial_velocity = True
             self.use_stellar_inclination = True
             self.use_projected_velocity = False
@@ -227,7 +227,7 @@ class CommonStarParameters(AbstractCommon):
 
         self.convective_order = kwargs.get('convective_order', self.convective_order)
 
-        if self.use_equatorial_velocity and self.use_stellar_inclination and self.use_stellar_rotation and self.use_stellar_radius:
+        if self.use_equatorial_velocity and self.use_stellar_inclination and self.use_stellar_rotation_period and self.use_stellar_radius:
             print('Possible source of unexpected behaviour, I will quit')
             print('These parameters are correlated and should not be all free simultaneously:')
             print('- stellar rotation period ')
