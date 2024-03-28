@@ -54,7 +54,7 @@ class Celerite2_Matern32(AbstractModel):
             self.use_stellar_rotation_period = False
 
         for keyword in keywords_stellar_rotation:
-            self.use_stellar_rotation = kwargs.get(keyword, self.use_stellar_rotation)
+            self.use_stellar_rotation_period = kwargs.get(keyword, self.use_stellar_rotation_period)
 
         if self.use_stellar_rotation_period:
             self.list_pams_common.update(['rotation_period'])

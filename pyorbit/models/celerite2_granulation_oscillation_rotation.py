@@ -72,7 +72,7 @@ class Celerite2_Granulation_Oscillation_Rotation(AbstractModel):
                 break
 
         for keyword in keywords_stellar_rotation:
-            self.use_stellar_rotation = kwargs.get(keyword, self.use_stellar_rotation)
+            self.use_stellar_rotation_period = kwargs.get(keyword, self.use_stellar_rotation_period)
 
         self.rotation_kernels = kwargs.get('rotation_kernels', 1)
         self.granulation_kernels = kwargs.get('granulation_kernels', 2)

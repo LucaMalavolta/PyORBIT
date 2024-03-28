@@ -171,7 +171,7 @@ class CommonStarParameters(AbstractCommon):
         """
 
         for keyword in keywords_stellar_rotation:
-            self.use_stellar_rotation = kwargs.get(keyword, self.use_stellar_rotation)
+            self.use_stellar_rotation_period = kwargs.get(keyword, self.use_stellar_rotation_period)
         if self.use_stellar_rotation:
             self.use_equatorial_velocity = False
             self.use_stellar_inclination = True

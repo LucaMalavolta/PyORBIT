@@ -53,7 +53,7 @@ class Celerite2_SHO(AbstractModel):
                 break
 
         for keyword in keywords_stellar_rotation:
-            self.use_stellar_rotation = kwargs.get(keyword, self.use_stellar_rotation)
+            self.use_stellar_rotation_period = kwargs.get(keyword, self.use_stellar_rotation_period)
 
         self.retrieve_rho_tau = self._internal_transformation_mod00
 
