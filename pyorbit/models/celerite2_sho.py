@@ -1,5 +1,6 @@
 from pyorbit.subroutines.common import np
 from pyorbit.models.abstract_model import AbstractModel
+from pyorbit.keywords_definitions import *
 
 try:
     import celerite2
@@ -51,23 +52,18 @@ class Celerite2_SHO(AbstractModel):
                 self.use_stellar_rotation_period = getattr(mc.common_models[common_ref], 'use_stellar_rotation_period', False)
                 break
 
-        self.use_stellar_rotation_period =  kwargs.get('use_stellar_rotation_period', self.use_stellar_rotation_period)
+        for keyword in keywords_stellar_rotation:
+            self.use_stellar_rotation_period = kwargs.get(keyword, self.use_stellar_rotation_period)
 
         self.retrieve_rho_tau = self._internal_transformation_mod00
 
-        change_variable_names = [
-            'use_GPquasiperiod_notation',
-            'use_GPquasiperiodic_notation',
-            'use_Prot_Pdec_notation',
-            'use_Prot_Pdec'
-        ]
 
         if self.use_stellar_rotation_period:
             self.list_pams_common.update(['rotation_period'])
             self.list_pams_common.discard('sho_period')
             self.retrieve_rho_tau = self._internal_transformation_mod02
 
-        for dict_name in change_variable_names:
+        for dict_name in keywords_change_variable_names:
             if kwargs.get(dict_name, False):
 
                 self.list_pams_common.update(['Pdec'])

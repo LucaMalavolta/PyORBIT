@@ -41,7 +41,7 @@ class RossiterMcLaughlin_Ohta(AbstractModel, AbstractTransit):
 
         mc.common_models[self.stellar_ref].use_stellar_inclination = True
         if not (mc.common_models[self.stellar_ref].use_projected_velocity
-                or mc.common_models[self.stellar_ref].use_stellar_rotation):
+                or mc.common_models[self.stellar_ref].use_stellar_rotation_period):
             mc.common_models[self.stellar_ref].use_equatorial_velocity = True
             mc.common_models[self.stellar_ref].use_stellar_radius = True
 

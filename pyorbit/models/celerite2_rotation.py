@@ -1,5 +1,6 @@
 from pyorbit.subroutines.common import np
 from pyorbit.models.abstract_model import AbstractModel
+from pyorbit.keywords_definitions import *
 
 try:
     import celerite2
@@ -69,17 +70,15 @@ class Celerite2_Rotation(AbstractModel):
                 self.use_stellar_rotation_period = getattr(mc.common_models[common_ref], 'use_stellar_rotation_period', False)
                 break
 
-        self.use_stellar_rotation_period =  kwargs.get('use_stellar_rotation_period', self.use_stellar_rotation_period)
+        for keyword in keywords_stellar_rotation:
+            self.use_stellar_rotation_period = kwargs.get(keyword, self.use_stellar_rotation_period)
 
         if self.use_stellar_rotation_period:
             self.list_pams_common.update(['rotation_period'])
             self.list_pams_common.discard('Prot')
 
         self.use_shared_hyperparameters = False
-        for keyword in ['use_shared_hyperparameters',
-                        'shared_hyperparameters',
-                        'use_common_hyperparameters',
-                        'common_hyperparameters']:
+        for keyword in keywords_shared_hyperparameters:
             self.use_shared_hyperparameters =  kwargs.get(keyword, self.use_shared_hyperparameters)
         if self.use_shared_hyperparameters:
             pams_copy = self.list_pams_dataset.copy()

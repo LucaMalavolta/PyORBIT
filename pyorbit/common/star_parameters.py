@@ -1,6 +1,6 @@
 from pyorbit.subroutines.common import *
 from pyorbit.common.abstract_common import *
-
+from pyorbit.keywords_definitions import *
 
 class CommonStarParameters(AbstractCommon):
     ''' This class must be used by each planet in the system
@@ -146,18 +146,20 @@ class CommonStarParameters(AbstractCommon):
         super(CommonStarParameters, self).__init__(*args, **kwargs)
 
         self.use_equatorial_velocity = False
-        self.use_stellar_rotation = False
+        self.use_stellar_rotation_period = False
         self.use_stellar_inclination = False
         self.use_cosine_stellar_inclination = False
         self.use_differential_rotation = False
         self.use_stellar_radius = False
         self.use_projected_velocity = True
         self.convective_order = 0
-        self.preserve_density = True
+        self.compute_mass = True
+        self.compute_radius = False
+        self.compute_density = False
 
     def initialize_model(self, mc, **kwargs):
 
-        """ check if the stellar_rotation has to be used as parameter
+        """ check if the stellar_rotation_period has to be used as parameter
             when the stellar rotation period is given as a prior, then the equatorial velcoity
             is computed using the rotational period and the radius of the star.
             The stellar inclination must be used as a free parameter
@@ -167,16 +169,19 @@ class CommonStarParameters(AbstractCommon):
             much more difficult if v_eq and i_star are left as free parameters and
             the output is compared with too many priors
         """
-        self.use_stellar_rotation = kwargs.get('use_stellar_rotation', self.use_stellar_rotation)
-        if self.use_stellar_rotation:
+
+        for keyword in keywords_stellar_rotation:
+            self.use_stellar_rotation_period = kwargs.get(keyword, self.use_stellar_rotation_period)
+        if self.use_stellar_rotation_period:
             self.use_equatorial_velocity = False
             self.use_stellar_inclination = True
             self.use_stellar_radius = True
             self.use_projected_velocity = False
 
-        """ check if the differential rotation should be included in the model"""
-        self.use_differential_rotation = kwargs.get('use_differential_rotation', self.use_differential_rotation)
-        if self.use_differential_rotation and not self.use_stellar_rotation:
+        """ check if the differemntial rotation should be included in the model"""
+        for keyword in keywords_differential_rotation:
+            self.use_differential_rotation = kwargs.get(keyword, self.use_differential_rotation)
+        if self.use_differential_rotation and not self.use_stellar_rotation_period:
             self.use_equatorial_velocity = True
             self.use_stellar_inclination = True
             self.use_projected_velocity = False
@@ -193,16 +198,36 @@ class CommonStarParameters(AbstractCommon):
         self.use_projected_velocity = kwargs.get('use_projected_velocity', self.use_projected_velocity)
 
         """ the user can decide how to deal with the mass-radius-density correlation
-            density and (sometimes) radius can be involved in transit fit, while there is no way to measure the
+            Density and (sometimes) radius can be involved in transit fit, while there is no way to measure the
             mass from the star from radial velocities or photometry, so the mass should have lower priority
             as a free parameter.
         """
-        self.preserve_density = kwargs.get('preserve_density', self.preserve_density)
-        self.preserve_density = ~ kwargs.get('use_mass_radius', ~ self.preserve_density)
+        self.compute_mass = kwargs.get('compute_mass', self.compute_mass)
+        self.compute_radius = kwargs.get('compute_radius', self.compute_radius)
+        self.compute_density = ~ kwargs.get('compute_density', self.compute_density)            
+
+        try:
+            multivariate_pams = self.multivariate_pams
+            self.compute_density = True
+        except AttributeError:
+            pass
+        
+        if self.compute_density:
+            self.compute_radius = False
+            self.compute_mass = False
+        if self.compute_radius:
+            self.compute_density = False
+            self.compute_mass = False
+        if self.compute_mass:
+            self.compute_density = False
+            self.compute_radius = False
+
+        if not (self.compute_mass or self.compute_radius or self.compute_density):
+            self.compute_mass = True
 
         self.convective_order = kwargs.get('convective_order', self.convective_order)
 
-        if self.use_equatorial_velocity and self.use_stellar_inclination and self.use_stellar_rotation and self.use_stellar_radius:
+        if self.use_equatorial_velocity and self.use_stellar_inclination and self.use_stellar_rotation_period and self.use_stellar_radius:
             print('Possible source of unexpected behaviour, I will quit')
             print('These parameters are correlated and should not be all free simultaneously:')
             print('- stellar rotation period ')
@@ -331,6 +356,19 @@ class CommonStarParameters(AbstractCommon):
             self.parameter_index['density'] = [pam00_index, pam01_index]
 
             derived_list.append('density')
+
+        if 'mass' in self.sampler_parameters and  \
+            'density' in self.sampler_parameters and \
+            'radius' not in self.parameter_index:
+
+            pam00_index = self.sampler_parameters['mass']
+            pam01_index = self.sampler_parameters['density']
+
+            self.transformation['radius'] = get_2var_radius
+            self.parameter_index['radius'] = [pam00_index, pam01_index]
+
+            derived_list.append('radius')
+
 
         for pam in derived_list:
             if pam not in self.bounds:

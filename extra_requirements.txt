@@ -16,6 +16,9 @@ pyyaml
 h5py
 tqdm
 pygtc
+cython
+pandas
+semantic-version
 PyDE @ git+https://github.com/hpparvi/PyDE.git
 batman-package
 ###### multiporcessing (not sure if required) - install through conda

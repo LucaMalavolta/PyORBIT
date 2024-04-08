@@ -8,16 +8,6 @@ import pyorbit.subroutines.constants as constants
 import numpy as np
 np.seterr(invalid='ignore')
 
-try:
-    if os.path.isdir('/Users/malavolta/Astro/CODE/others/trades'):
-        sys.path.insert(0, '/Users/malavolta/Astro/CODE/others/trades/pytrades/')
-    elif os.path.isdir('/Users/malavolta/Astro/CODE/trades'):
-        sys.path.insert(0, '/Users/malavolta/Astro/CODE/trades/pytrades/')
-    else:
-        sys.path.insert(0, '/home/malavolta/CODE/others/trades/pytrades/')
-    # from pytrades_lib import pytrades
-except:
-    pass
 
 # old base 2 logarithm
 
@@ -199,6 +189,15 @@ def get_2var_rho(var, fix, i):
         mass = var[:, i[0]]
         radius = var[:, i[1]]
     return mass/radius**3
+
+def get_2var_radius(var, fix, i):
+    if len(np.shape(var)) == 1:
+        mass = var[i[0]]
+        density = var[i[1]]
+    else:
+        mass = var[:, i[0]]
+        density = var[:, i[1]]
+    return np.power(mass/density, 1./3.)
 
 
 def get_2var_mass(var, fix, i):

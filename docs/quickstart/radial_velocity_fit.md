@@ -291,6 +291,4 @@ a_AU_(M)               0.03100     -0.00062      0.00060    (15-84 p)
 When `fixed`, you can change the value of the orbital inclination and obtain updated masses by just running `pyorbit_results` again. 
 ```
 
-# Lightcurve fitting
-
 

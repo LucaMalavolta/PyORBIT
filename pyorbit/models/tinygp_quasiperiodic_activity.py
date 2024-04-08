@@ -1,5 +1,6 @@
 from pyorbit.subroutines.common import *
 from pyorbit.models.abstract_model import *
+from pyorbit.keywords_definitions import *
 
 try:
     import jax
@@ -76,7 +77,23 @@ class TinyGaussianProcess_QuasiPeriodicActivity(AbstractModel):
         else:
             self.rotdec_condition = self._hypercond_00
 
+        for common_ref in self.common_ref:
+            if mc.common_models[common_ref].model_class == 'activity':
+                self.use_stellar_rotation_period = getattr(mc.common_models[common_ref], 'use_stellar_rotation_period', False)
+                break
+
+        for keyword in keywords_stellar_rotation:
+            self.use_stellar_rotation_period = kwargs.get(keyword, self.use_stellar_rotation_period)
+
+        if self.use_stellar_rotation_period:
+            self.list_pams_common.update(['rotation_period'])
+            self.list_pams_common.discard('Prot')
+
     def lnlk_compute(self, parameter_values, dataset):
+
+        if self.use_stellar_rotation_period:
+            parameter_values['Prot'] = parameter_values['rotation_period']
+
         if not self.hyper_condition(parameter_values):
             return -np.inf
         if not self.rotdec_condition(parameter_values):

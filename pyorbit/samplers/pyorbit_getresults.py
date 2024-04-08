@@ -1376,7 +1376,7 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
                                 'descriptor BJD Tc_folded pha val,+- sys mod full val_compare,+- res,+- jit jit_flag off_flag sub_flag \n')
                         else:
                             fileout.write(
-                                '# epoch Tc_folded Tref_folded value value_err offset model full_model val_compare val_compare_err residuals residuals_err jitter jitter_flag offset_flag subset_flag \n')
+                                '# time Tc_folded Tref_folded value value_err offset model full_model val_compare val_compare_err residuals residuals_err jitter jitter_flag offset_flag subset_flag \n')
 
                         try:
                             len(bjd_plot[plot_out_keyword]
@@ -1443,7 +1443,7 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
                             if plot_dictionary.get('veuz_compatibility', False):
                                 fileout.write('descriptor BJD Tc_folded phase_folded mod,+- \n')
                             else:
-                                fileout.write('# epoch Tc_folded Tref_folded model model_err \n')
+                                fileout.write('# time Tc_folded Tref_folded model model_err \n')
 
                             for x, tfc, pha, mod, std in zip(
                                     bjd_plot[dataset_name]['x_plot'],
@@ -1459,7 +1459,7 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
                             if plot_dictionary.get('veuz_compatibility', False):
                                 fileout.write('descriptor BJD Tc_folded phase_folded mod\n')
                             else:
-                                fileout.write('# epoch Tc_folded Tref_folded model \n')
+                                fileout.write('# time Tc_folded Tref_folded model \n')
 
                             for x, tcf, pha, mod in zip(bjd_plot[dataset_name]['x_plot'],
                                                         tc_folded_plot,
@@ -1503,7 +1503,7 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
                             if plot_dictionary.get('veuz_compatibility', False):
                                 fileout.write('descriptor Tc_folded  mod \n')
                             else:
-                                fileout.write('# epoch model \n')
+                                fileout.write('# time model \n')
 
                             for x, mod in zip(x_range, y_plot):
                                 fileout.write('{0:f} {1:f} \n'.format(x, mod))
@@ -1514,7 +1514,7 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
                     if plot_dictionary.get('veuz_compatibility', False):
                         fileout.write('descriptor BJD mod \n')
                     else:
-                        fileout.write( '# epoch model \n')
+                        fileout.write( '# time model \n')
 
                     for x, mod in zip(bjd_plot[dataset_name]['x_plot'],
                                       bjd_plot[plot_x_keyword][dataset_name]['complete']):
@@ -1537,7 +1537,7 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
                         if plot_dictionary.get('veuz_compatibility', False):
                             fileout.write('descriptor x_range  m_kepler \n')
                         else:
-                            fileout.write('# epoch model \n')
+                            fileout.write('# time model \n')
 
                         for x, y in zip(bjd_plot['full']['x_plot'], RV_out):
                             fileout.write('{0:f} {1:f} \n'.format(x, y))

@@ -1,6 +1,10 @@
 from pyorbit.subroutines.common import *
 from pyorbit.common.abstract_common import *
 
+from pyorbit.subroutines.common import np, convert_rho_to_ars, convert_b_to_i
+import pyorbit.subroutines.constants as constants
+import pyorbit.subroutines.kepler_exo as kepler_exo
+
 
 class CommonPlanets(AbstractCommon):
     """
@@ -206,13 +210,19 @@ class CommonPlanets(AbstractCommon):
         self.use_inclination = False
         self.use_semimajor_axis = False
         self.use_time_inferior_conjunction = False
-        self.use_mass_for_planets = False
+        self.use_mass = False
         self.use_shared_ttvs = False
 
         self.omega_star = True
 
         self.period_average = None
         # Variable used only by TRADES
+
+        self.compute_inclination = True
+        self.compute_time_inferior_conjunction = True
+        self.compute_mass = False
+        self.compute_mean_longitude = False
+        self.compute_semimajor_axis = True
 
     def initialize_model(self, mc, **kwargs):
 
@@ -223,7 +233,6 @@ class CommonPlanets(AbstractCommon):
             if self.orbit == 'circular':
                 self.fix_list['e'] = np.asarray([0.000, 0.0000], dtype=np.double)
                 self.fix_list['omega'] = np.asarray([90.0, 0.0000], dtype=np.double)
-            if self.orbit == 'dynamical': mc.dynamical_dict[self.common_ref] = True
 
         else:
             print('ERROR in configuration file - orbital model: not supported')
@@ -240,27 +249,35 @@ class CommonPlanets(AbstractCommon):
             print('ERROR in configuration file - orbital model: not supported')
             quit()
 
-        self.use_inclination = kwargs.get('use_inclination', self.use_inclination)
-        if self.use_inclination :
-            print('Inclination replacing impact parameter as a free parameter: ', True)
-
         self.use_semimajor_axis = kwargs.get('use_semimajor_axis', self.use_semimajor_axis)
-        if self.use_semimajor_axis :
+        if self.use_semimajor_axis:
+            self.compute_semimajor_axis = False
             print('Semi-major axis replacing stellar density as a free parameter: ', True)
 
-        self.use_mass_for_planets = kwargs.get('use_mass_for_planets', self.use_mass_for_planets)
-        if self.use_mass_for_planets :
+        self.use_inclination = kwargs.get('use_inclination', self.use_inclination)
+        if self.use_inclination:
+            self.compute_inclination = False
+            print('Inclination replacing impact parameter as a free parameter: ', True)
+
+        self.use_mass = kwargs.get('use_mass', self.use_mass)
+        if self.use_mass :
             print('Planetary mass replacing RV semi-amplitude as a free parameter: ', True)
 
         self.use_time_inferior_conjunction = kwargs.get('use_time_inferior_conjunction', self.use_time_inferior_conjunction)
-        if self.use_time_inferior_conjunction :
+        if self.use_time_inferior_conjunction:
+            self.compute_time_inferior_conjunction = False
+            self.compute_mean_longitude = True
             print('Time of inferior conjunction replacing mean longitude as a free parameter: ', True)
-
+        else:
+            self.compute_time_inferior_conjunction = True
+            self.compute_mean_longitude = False
+        
         self.use_shared_ttvs = kwargs.get('use_shared_ttvs', self.use_shared_ttvs)
         if self.use_shared_ttvs:
             print('Shared transit-specific time of transits (i.e., TTVs): ', True)
 
         print()
+
 
     def define_derived_parameters(self):
 
@@ -371,3 +388,26 @@ class CommonPlanets(AbstractCommon):
             return True
 
         return False
+
+
+    def update_parameter_values_for_dynamical(self, parameter_values, Tref, prepend=''):
+
+        if self.compute_inclination:
+            if self.compute_semimajor_axis:
+                parameter_values[prepend+'a_Rs'] = convert_rho_to_ars(parameter_values[prepend+'P'], parameter_values['density'])
+            parameter_values[prepend+'i'] = convert_b_to_i(
+                parameter_values[prepend+'b'], parameter_values[prepend+'e'], parameter_values[prepend+'omega'], parameter_values[prepend+'a_Rs'])
+
+        if self.compute_time_inferior_conjunction:
+            parameter_values[prepend+'Tc']= kepler_exo.kepler_phase2Tc_Tref(
+                parameter_values[prepend+'P'],
+                parameter_values[prepend+'mean_long'],
+                parameter_values[prepend+'e'],
+                parameter_values[prepend+'omega']) + Tref
+
+        if self.compute_mean_longitude:
+            parameter_values[prepend+'mean_long'] = kepler_exo.kepler_Tc2phase_Tref(
+                parameter_values[prepend+'P'],
+                parameter_values[prepend+'Tc'] - Tref,
+                parameter_values[prepend+'e'],
+                parameter_values[prepend+'omega'])

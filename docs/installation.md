@@ -2,6 +2,14 @@
 
 # Installing PyORBIT
 
+## Using PyORBIT on Windows
+
+Short version: don't do it.
+Long version: I never tested `PyORBIT` on Windows, so I cannot guarantee that the outcome of the analysis is what it is supposed to be, or if it will work at all.  
+
+Rather than trying to fix `PyORBIT` or Python on Windows, I usually suggest [setting up an Ubuntu machine with Windows Subsystem for Linux 2](https://canonical-ubuntu-wsl.readthedocs-hosted.com/en/latest/). With respect to installing a virtual machine, WSL2 will use fewer computer resources while giving direct access from Windows to Linux files and vice versa. 
+
+
 ## Setting up an environment
 
 Before proceeding with the installation, I suggest creating an environment dedicated to `PyORBIT` using Python \<=3.9 .  At the moment of writing, I have received a few complaints (unrelated to PyORBIT) about Python 3.10, so you may use it at your own risk.
@@ -34,7 +42,7 @@ You can then install `PyORBIT` by using `pip`:
  pip install pyorbit-package
 ```
 
-Note that the name is  `pyorbit-package` and not  `pyorbit`, as the former was already taken by another package in PyPI (although not installable). The name for package importation will still be `pyorbit`:
+Note that the name is `pyorbit-package` and not `pyorbit`, as the former was already taken by another package in PyPI (although not installable). The name for package importation will still be `pyorbit`:
 
 ```{code} bash
  python -c "import pyorbit"

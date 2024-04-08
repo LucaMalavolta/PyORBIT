@@ -29,7 +29,7 @@ Exposure time of each data point in the lightcurve, expressed in seconds. The ke
 
 **nthreads**
 * default is 1, it shouldn't be modified
-* number of CPU used by batman in multiprocessing mode. It seems to cause a clash with ``emcee``, while the better performance of multiprocessing in nested sampling algorithms do not really require the usi of multiple cpu in the computation of the lightcurve model.
+* number of CPU used by ``batman`` in multiprocessing mode. It seems to cause a clash with ``emcee``, while the better performance of multiprocessing in nested sampling algorithms does not really require the usi of multiple cpu in the computation of the lightcurve model.
 
 ### Example
 

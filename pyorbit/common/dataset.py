@@ -24,7 +24,7 @@ class Dataset(AbstractCommon):
         self.generic_list_pams = {'jitter', 'offset', 'subset'}
 
         self.generic_default_priors = {
-            'jitter': ['Uniform', []],
+            'jitter': ['Uniform'  , []],
             'offset': ['Uniform', []]}
 
         self.generic_default_spaces = {
@@ -155,7 +155,7 @@ class Dataset(AbstractCommon):
         if not self.models:
             data_input[:, 3:] = -1
 
-        if self.kind == 'Tcent':
+        if self.kind == 'transit_time':
             """ Special input reading from T0 files """
             self.n_transit = np.asarray(data_input[:, 0], dtype=np.int16)
             self.x = np.asarray(data_input[:, 1], dtype=np.double)

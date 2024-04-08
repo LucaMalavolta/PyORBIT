@@ -1,5 +1,6 @@
 from pyorbit.subroutines.common import *
 from pyorbit.models.abstract_model import *
+from pyorbit.keywords_definitions import *
 
 try:
     import jax
@@ -63,17 +64,15 @@ class TinyGaussianProcess_Matern32Activity(AbstractModel):
         except:
             self.use_stellar_rotation_period = False
 
-        self.use_stellar_rotation_period =  kwargs.get('use_stellar_rotation_period', self.use_stellar_rotation_period)
+        for keyword in keywords_stellar_rotation:
+            self.use_stellar_rotation_period = kwargs.get(keyword, self.use_stellar_rotation_period)
 
         if self.use_stellar_rotation_period:
             self.list_pams_common.update(['rotation_period'])
             self.list_pams_dataset.discard('matern32_rho')
 
         self.use_shared_hyperparameters = False
-        for keyword in ['use_shared_hyperparameters',
-                        'shared_hyperparameters',
-                        'use_common_hyperparameters',
-                        'common_hyperparameters']:
+        for keyword in keywords_shared_hyperparameters:
             self.use_shared_hyperparameters =  kwargs.get(keyword, self.use_shared_hyperparameters)
         if self.use_shared_hyperparameters:
             pams_copy = self.list_pams_dataset.copy()
@@ -82,14 +81,7 @@ class TinyGaussianProcess_Matern32Activity(AbstractModel):
                 self.list_pams_dataset.discard(pam)
 
         self.use_shared_rho = False
-        for keyword in ['use_shared_rho',
-                        'shared_rho',
-                        'use_common_rho',
-                        'common_rho',
-                        'use_shared_timescale',
-                        'shared_timescale',
-                        'use_common_timescale',
-                        'common_timescale']:
+        for keyword in keywords_shared_timescale:
             self.use_shared_rho =  kwargs.get(keyword, self.use_shared_rho)
         if self.use_shared_rho and not self.use_stellar_rotation_period:
             pam = 'matern32_rho'

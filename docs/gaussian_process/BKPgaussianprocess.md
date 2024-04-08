@@ -1,4 +1,4 @@
-(gaussian_process_regression)=
+(gaussian_process_regressionOLD)=
 
 # Gaussian process regression
 

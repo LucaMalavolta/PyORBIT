@@ -302,7 +302,14 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, reload_ze
                 except:
                     pass
 
+                mc.common_models[planet_name].orbit = planet_conf['orbit']
+
+                # special case for dynamical integration
+                if planet_conf['orbit'] == 'dynamical':
+                    mc.dynamical_dict[planet_name] = True
+
                 mc.common_models[planet_name].model_conf = planet_conf.copy()
+
 
         elif model_name == 'star' or model_name=='stars':
 
@@ -345,6 +352,7 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, reload_ze
 
             mc.common_models[model_name] = define_common_type_to_class[model_type](
                 model_name)
+            
             bounds_space_priors_starts_fixed(
                 mc, mc.common_models[model_name], model_conf)
 
@@ -470,9 +478,9 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, reload_ze
                         mc.models[model_name_exp] = \
                             define_type_to_class[model_type]['keplerian'](
                                 model_name_exp, planet_name)
-                        mc.common_models[planet_name].use_mass_for_planets = True
+                        mc.common_models[planet_name].use_mass = True
                         print('Using planetary mass instead of RV semiamplitude: ',
-                              planet_conf['use_mass_for_planets'])
+                              planet_conf['use_mass'])
 
                 except:
                     mc.models[model_name_exp] = \
@@ -484,6 +492,7 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, reload_ze
                 if model_type in transit_time_model:
 
                     for dataset_name, dataset in mc.dataset_dict.items():
+
                         if planet_name in mc.dynamical_dict and \
                                 model_name_exp in dataset.models and \
                                 not keplerian_approximation:

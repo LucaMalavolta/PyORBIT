@@ -185,7 +185,7 @@ class LocalLightcurvePolyDetrending(AbstractModel):
                 try:
                     self.ancillary_order[data_name] = kwargs['ancillary_sets'][data_name]['order']
                 except (KeyError, ValueError):
-                    if data_name == 'time' or data_name == 'epoch':
+                    if data_name == 'time':
                         self.ancillary_order[data_name] = self.time_order
                     else:
                         self.ancillary_order[data_name] = self.anci_order
@@ -199,7 +199,7 @@ class LocalLightcurvePolyDetrending(AbstractModel):
                 try:
                     self.ancillary_order[data_name] = kwargs[data_name]['order']
                 except (KeyError, ValueError):
-                    if data_name == 'time' or data_name == 'epoch':
+                    if data_name == 'time':
                         self.ancillary_order[data_name] = self.time_order
                     else:
                         self.ancillary_order[data_name] = self.anci_order
@@ -209,7 +209,7 @@ class LocalLightcurvePolyDetrending(AbstractModel):
                 self.ancillary_order[data_name] = kwargs[data_name + '_order']
             else:
                 x_zero = np.average(dataset.ancillary[data_name])
-                if data_name == 'time' or data_name == 'epoch':
+                if data_name == 'time':
                     self.ancillary_order[data_name] = self.time_order
                 else:
                     self.ancillary_order[data_name] = self.anci_order

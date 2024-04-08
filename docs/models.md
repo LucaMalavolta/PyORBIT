@@ -13,7 +13,5 @@ All the parameters are inherited from the *common models*, where the boundaries 
 :maxdepth: 1
 models/radial_velocities
 models/correlated_datasets
-models/gaussian_process_regression
 models/multidimensional_gaussian_processes
-models/tinygp_caveats
 ```
