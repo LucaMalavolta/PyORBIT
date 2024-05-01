@@ -31,9 +31,11 @@ def pyorbit_ultranest(config_in, input_datasets=None, return_output=None):
 
     mc.output_directory = './' + config_in['output'] + '/ultranest/'
 
+    os.environ["OMP_NUM_THREADS"] = "1"
+
     try:
         results = ultranest_sampler_load_from_cpickle(mc.output_directory)
-        print('Dynesty results already saved in the respective directory, run PyORBIT_GetResults')
+        print('UltraNest results already saved in the respective directory, run PyORBIT_GetResults')
         if return_output:
             return mc
         else:
