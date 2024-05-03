@@ -9,7 +9,7 @@
 ## Documentation update
 
 I have extensively updated the documentation and  several examples are now available in a new dedicated repository, check them out:
-- [`PyORBIT` 10 Documentation](https://pyorbit.readthedocs.io/en/latest/)
+- [`PyORBIT` 10 Documentation](https://pyorbit.readthedocs.io/)
 - [`PyORBIT` examples repository](https://github.com/LucaMalavolta/PyORBIT_examples)
 
 For nostalgic people, `PyORBIT` 8 and 9 are available as branches of the main repository: [legacy_version8](https://github.com/LucaMalavolta/PyORBIT/tree/legacy_version8) and [legacy_version9](https://github.com/LucaMalavolta/PyORBIT/tree/legacy_version8) respectively.
