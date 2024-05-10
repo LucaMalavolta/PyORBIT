@@ -40,7 +40,7 @@ def pyorbit_ultranest_warmstart(config_in, input_datasets=None, return_output=No
 
     mc.output_directory = './' + config_in['output'] + '/ultranest_warmstart/'
     mc.pyde_dir_output = './' + config_in['output'] + '/pyde_warmup/'
-    mc.emcee_dir_output = './' + config_in['output'] + '/emcee_warmp/'
+    mc.emcee_dir_output = './' + config_in['output'] + '/emcee_warmup/'
 
     try:
         results = ultranest_sampler_load_from_cpickle(mc.output_directory)
@@ -51,6 +51,13 @@ def pyorbit_ultranest_warmstart(config_in, input_datasets=None, return_output=No
             return
     except FileNotFoundError:
         pass
+
+    os.environ["OMP_NUM_THREADS"] = "1"
+    try:
+        num_threads = int(config_in['parameters'].get('cpu_threads',  multiprocessing.cpu_count()))
+    except:
+        print(" Something happened when trying to setup multiprocessing, switching back to 1 CPU")
+        num_threads = 1
 
 
     reloaded_pyde = False
@@ -107,7 +114,8 @@ def pyorbit_ultranest_warmstart(config_in, input_datasets=None, return_output=No
     results_analysis.print_bayesian_info(mc)
     theta_dictionary = results_analysis.get_theta_dictionary(mc)
 
-
+    mc.emcee_parameters = mc.emcee_warmup_parameters
+    mc.pyde_parameters = mc.pyde_warmup_parameters
 
     try:
         import ultranest
@@ -142,12 +150,13 @@ def pyorbit_ultranest_warmstart(config_in, input_datasets=None, return_output=No
     global ultranest_call
     def ultranest_call(theta):
         _, log_likelihood = logprior_loglikelihood(theta)
-        if  np.isnan(log_likelihood):
+        if not np.isfinite(log_likelihood):
             log_likelihood = -0.5e10
         return log_likelihood
 
     global pyde_emcee_call
-    def pyde_emcee_call(theta):
+    def pyde_emcee_call(cube):
+        theta = ultranest_transform(cube)
         log_priors, log_likelihood = logprior_loglikelihood(theta)
 
         return log_priors + log_likelihood
@@ -343,6 +352,10 @@ def pyorbit_ultranest_warmstart(config_in, input_datasets=None, return_output=No
 
 
 
+    mc.emcee_parameters['nwalkers'] = mc.ndim * \
+        mc.emcee_parameters['npop_mult']
+    if mc.emcee_parameters['nwalkers'] % 2 == 1:
+        mc.emcee_parameters['nwalkers'] += 1
 
 
     if reloaded_pyde is False:
@@ -361,7 +374,7 @@ def pyorbit_ultranest_warmstart(config_in, input_datasets=None, return_output=No
         print()
 
         print('Using threading pool for PyDE:',
-            mc.pyde_warmup_parameters['use_threading_pool'])
+            mc.pyde_parameters['use_threading_pool'])
 
         sys.stdout.flush()
 
@@ -369,25 +382,25 @@ def pyorbit_ultranest_warmstart(config_in, input_datasets=None, return_output=No
         boundaries[:, 0] = 0.
         boundaries[:, 1] = 1.
 
-        if mc.pyde_warmup_parameters['use_threading_pool']:
+        if mc.pyde_parameters['use_threading_pool']:
             with multiprocessing.Pool(num_threads) as pool:
 
                 de = DiffEvol(
                     pyde_emcee_call,
                     boundaries,
-                    mc.emcee_warmup_parameters['nwalkers'],
+                    mc.emcee_parameters['nwalkers'],
                     maximize=True,
                     pool=pool)
 
-                de.optimize(int(mc.pyde_warmup_parameters['ngen']))
+                de.optimize(int(mc.pyde_parameters['ngen']))
         else:
             de = DiffEvol(
                 pyde_emcee_call,
                 boundaries,
-                mc.emcee_warmup_parameters['nwalkers'],
+                mc.emcee_parameters['nwalkers'],
                 maximize=True)
 
-            de.optimize(int(mc.pyde_warmup_parameters['ngen']))
+            de.optimize(int(mc.pyde_parameters['ngen']))
 
         population = de.population
         starting_point = np.median(population, axis=0)
@@ -427,18 +440,21 @@ def pyorbit_ultranest_warmstart(config_in, input_datasets=None, return_output=No
         if not os.path.exists(mc.emcee_dir_output):
             os.makedirs(mc.emcee_dir_output)
 
-        nsteps_todo = mc.emcee_warmup_parameters['nsteps']
+        nsteps_todo = mc.emcee_parameters['nsteps']
+        state = None
+        emcee_skip_check = True
 
         sampler = emcee.EnsembleSampler(
-            mc.emcee_warmup_parameters['nwalkers'], mc.ndim, log_priors_likelihood)
+            mc.emcee_parameters['nwalkers'], mc.ndim, pyde_emcee_call)
 
-        if mc.emcee_warmup_parameters['use_threading_pool']:
+
+        if mc.emcee_parameters['use_threading_pool']:
             with multiprocessing.Pool(num_threads) as pool:
                 sampler.pool = pool
                 population, prob, state = sampler.run_mcmc(
                     population,
                     nsteps_todo,
-                    thin=mc.emcee_warmup_parameters['thin'],
+                    thin=mc.emcee_parameters['thin'],
                     rstate0=state,
                     progress=True,
                     skip_initial_state_check=emcee_skip_check)
@@ -448,7 +464,7 @@ def pyorbit_ultranest_warmstart(config_in, input_datasets=None, return_output=No
             population, prob, state = sampler.run_mcmc(
                 population,
                 nsteps_todo,
-                thin=mc.emcee_warmup_parameters['thin'],
+                thin=mc.emcee_parameters['thin'],
                 rstate0=state,
                 progress=True,
                     skip_initial_state_check=emcee_skip_check)
@@ -470,6 +486,7 @@ def pyorbit_ultranest_warmstart(config_in, input_datasets=None, return_output=No
             theta_dict,
             mc.emcee_parameters['thin'])
 
+
         results_analysis.results_summary(mc, flatchain)
 
         print()
@@ -482,10 +499,14 @@ def pyorbit_ultranest_warmstart(config_in, input_datasets=None, return_output=No
         weights = np.ones((len(flatchain), 1)) / len(flatchain)
         logl = np.zeros(len(flatchain)).reshape((-1, 1))
 
+        labels_array = [None] * len(theta_dictionary)
+        for key_name, key_value in theta_dictionary.items():
+            labels_array[key_value] = re.sub('_', '-', key_name)
+
         np.savetxt(
             mc.emcee_dir_output + '/custom-weighted_post_untransformed.txt',
-            np.hstack((weights, logl, usamples)),
-            header=' '.join(['weight', 'logl'] + parameters),
+            np.hstack((weights, logl, flatchain)),
+            header=' '.join(['weight', 'logl'] + labels_array),
             fmt='%f'
         )
 
@@ -499,6 +520,15 @@ def pyorbit_ultranest_warmstart(config_in, input_datasets=None, return_output=No
         if not os.path.exists(mc.output_directory):
             os.makedirs(mc.output_directory)
 
+        print('*** emcee results ***')
+        flatchain = emcee_flatchain(
+            sampler_chain,
+            mc.emcee_parameters['nburn'],
+            mc.emcee_parameters['thin'])
+
+        print('*** printing of emcee results still need to be tested ***')
+        #flatchain_converted = ultranest_transform(flatchain)
+        #results_analysis.results_summary(mc, flatchain)
 
         posterior_upoints_file = mc.emcee_dir_output + '/custom-weighted_post_untransformed.txt'
 
