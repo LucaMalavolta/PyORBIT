@@ -26,8 +26,8 @@ class ModelContainerUltranestWarmstart(ModelContainer):
         self.emcee_warmup_parameters = {'nsave': 0,
                                  'npop_mult': 2,
                                  'thin': 100,
-                                 'nsteps': 5000,
-                                 'nburn': 2000,
+                                 'nsteps': 20000,
+                                 'nburn': 10000,
                                  'multirun': None,
                                  'multirun_iter': 20,
                                  'shutdown_jitter': False,
@@ -35,7 +35,7 @@ class ModelContainerUltranestWarmstart(ModelContainer):
                                  'starts_relative_dispersion': True
                                 }
 
-        self.pyde_warmup_parameters = {'ngen': 2000,
+        self.pyde_warmup_parameters = {'ngen': 50000,
                                 'npop_mult': 2,
                                 'shutdown_jitter': False,
                                 'use_threading_pool': True,
