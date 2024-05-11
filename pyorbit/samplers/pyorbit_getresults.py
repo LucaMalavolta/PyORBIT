@@ -52,10 +52,13 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
 
     oversampled_models = plot_dictionary['oversampled_models']
 
-    if sampler_name == 'emcee' or sampler_name == 'emcee_legacy':
+    if sampler_name[:5] == 'emcee':
         if sampler_name == 'emcee_legacy':
             dir_input = './' + config_in['output'] + '/emcee_legacy/'
             dir_output = './' + config_in['output'] + '/emcee_legacy_plot/'
+        elif sampler_name == 'emcee_warmstart':
+            dir_input = './' + config_in['output'] + '/emcee_warmup/'
+            dir_output = './' + config_in['output'] + '/emcee_warmup_plot/'
         else:
             dir_input = './' + config_in['output'] + '/emcee/'
             dir_output = './' + config_in['output'] + '/emcee_plot/'
@@ -114,9 +117,12 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
         n_samplings, n_pams = np.shape(flat_chain)
 
         print()
-        print('emcee version: ', emcee.__version__)
-        if mc.emcee_parameters['version'] == '2':
-            print('WARNING: upgrading to version 3 is strongly advised')
+        try:
+            print('emcee version: ', emcee.__version__)
+            if mc.emcee_parameters['version'] == '2':
+                print('WARNING: upgrading to version 3 is strongly advised')
+        except:
+            pass
         print()
         print(' Reference Time Tref: {}'.format(mc.Tref))
         print()
@@ -465,13 +471,13 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
         print(' Samples: {}'.format(n_samplings))
 
 
-    if sampler_name == 'ultranest':
+    if sampler_name[:9] == 'ultranest':
 
         import json
 
 
-        dir_input = './' + config_in['output'] + '/ultranest/'
-        dir_output = './' + config_in['output'] + '/ultranest_plot/'
+        dir_input = './' + config_in['output'] + '/' + sampler_name +'/'
+        dir_output = './' + config_in['output'] + '/' + sampler_name +'_plot/'
         os.system('mkdir -p ' + dir_output)
 
 

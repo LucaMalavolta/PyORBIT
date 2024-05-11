@@ -4,10 +4,8 @@ from pyorbit.subroutines.input_parser import yaml_parser, pars_input
 from pyorbit.subroutines.io_subroutines import nested_sampling_save_to_cpickle, \
     nested_sampling_load_from_cpickle, nested_sampling_write_dummy_file, \
     ultranest_sampler_save_to_cpickle, ultranest_sampler_load_from_cpickle
-from pyorbit.subroutines.io_subroutines import pyde_save_to_pickle,\
-    pyde_load_from_cpickle,\
-    emcee_save_to_cpickle, emcee_load_from_cpickle, emcee_flatchain,\
-    emcee_write_dummy_file, starting_point_load_from_cpickle, emcee_simpler_load_from_cpickle
+from pyorbit.subroutines.io_subroutines import *
+
 import pyorbit.subroutines.results_analysis as results_analysis
 
 import pyorbit.subroutines.results_analysis as results_analysis
@@ -89,14 +87,6 @@ def pyorbit_ultranest_warmstart(config_in, input_datasets=None, return_output=No
     print('parameters/safe_reload flag (must be True for tinygp): ', safe_reload)
     print()
 
-    os.environ["OMP_NUM_THREADS"] = "1"
-    try:
-        num_threads = int(config_in['parameters'].get('cpu_threads',  multiprocessing.cpu_count()))
-    except:
-        print(" Something happened when trying to setup multiprocessing, switching back to 1 CPU")
-        num_threads = 1
-
-
 
     if mc.nested_sampling_parameters['shutdown_jitter']:
         'Jitter term not included for evidence calculation'
@@ -150,28 +140,34 @@ def pyorbit_ultranest_warmstart(config_in, input_datasets=None, return_output=No
     global ultranest_call
     def ultranest_call(theta):
         _, log_likelihood = logprior_loglikelihood(theta)
+
+        if not mc.check_bounds(theta):
+            return -0.5e8
+
         if not np.isfinite(log_likelihood):
-            log_likelihood = -0.5e10
+            return -0.5e8
+
         return log_likelihood
 
     global pyde_emcee_call
     def pyde_emcee_call(cube):
         theta = ultranest_transform(cube)
-        log_priors, log_likelihood = logprior_loglikelihood(theta)
-
-        return log_priors + log_likelihood
-
-    global logprior_loglikelihood
-    def logprior_loglikelihood(theta):
-
-        log_priors = 0.00
-        log_likelihood = 0.00
 
         """
         Constant term added either by dataset.model_logchi2() or gp.log_likelihood()
         """
         if not mc.check_bounds(theta):
-            return -np.inf, -np.inf
+            return -np.inf
+
+        log_priors, log_likelihood = logprior_loglikelihood(theta, keep_finite=False)
+
+        return log_priors + log_likelihood
+
+    global logprior_loglikelihood
+    def logprior_loglikelihood(theta, keep_finite=True):
+
+        log_priors = 0.00
+        log_likelihood = 0.00
 
         if mc.dynamical_model is not None:
             """ check if any keyword ahas get the output model from the dynamical tool
@@ -313,7 +309,7 @@ def pyorbit_ultranest_warmstart(config_in, input_datasets=None, return_output=No
                 log_likelihood += dataset.model_logchi2()
 
         """ Correlation between residuals of two datasets through orthogonal distance regression
-            it must be coomputed after any other model has been removed from the
+            it must be computed after any other model has been removed from the
             independent variable, if not provided as ancillary dataset
         """
         for model_name in residuals_analysis:
@@ -343,10 +339,20 @@ def pyorbit_ultranest_warmstart(config_in, input_datasets=None, return_output=No
         for logchi2_gp_model in delayed_lnlk_computation:
             log_likelihood += mc.models[logchi2_gp_model].lnlk_compute()
 
-        """ check for finite log_priors and log_likelihood"""
-        if np.isnan(log_priors) or np.isnan(log_likelihood):
-            log_likelihood = -np.inf
-            log_priors = -np.inf
+        #""" check for finite log_priors and log_likelihood"""
+        #if np.isnan(log_priors) or np.isnan(log_likelihood):
+        #    if keep_finite:
+        #        return -0.5e8, -0.5e8
+        #    else:
+        #        return -np.inf, -np.inf
+
+        if not(np.isfinite(log_priors) and np.isfinite(log_likelihood)):
+            if keep_finite:
+                return -0.5e8, -0.5e8
+            else:
+                return -np.inf, -np.inf
+            #log_likelihood = -np.inf
+            #log_priors = -np.inf
 
         return log_priors, log_likelihood
 
@@ -481,20 +487,27 @@ def pyorbit_ultranest_warmstart(config_in, input_datasets=None, return_output=No
             mc.emcee_parameters['nburn'],
             mc.emcee_parameters['thin'])
 
+        flat_lnprob, sampler_lnprob = emcee_flatlnprob(
+            sampler.lnprobability, mc.emcee_parameters['nburn'], mc.emcee_parameters['thin'], population, mc.emcee_parameters['nwalkers'])
+
         results_analysis.print_integrated_ACF(
             sampler.chain,
             theta_dict,
             mc.emcee_parameters['thin'])
 
+        nsample, npams = np.shape(flatchain)
+        converted_flatchain = np.zeros_like(flatchain)
+        for ii in range(0, nsample):
+            converted_flatchain[ii,:] = ultranest_transform(flatchain[ii,:])
 
-        results_analysis.results_summary(mc, flatchain)
+        results_analysis.results_summary(mc, converted_flatchain)
 
         print()
 
         print()
         print('emcee completed')
         print()
-        print('*** writing up warmup file for ultranest ***') 
+        print('*** writing up warmup file for ultranest ***')
 
         weights = np.ones((len(flatchain), 1)) / len(flatchain)
         logl = np.zeros(len(flatchain)).reshape((-1, 1))
@@ -502,6 +515,11 @@ def pyorbit_ultranest_warmstart(config_in, input_datasets=None, return_output=No
         labels_array = [None] * len(theta_dictionary)
         for key_name, key_value in theta_dictionary.items():
             labels_array[key_value] = re.sub('_', '-', key_name)
+
+        flatchain_mask00 = (flatchain < 0.001)
+        flatchain_mask10 = (flatchain > 0.999)
+        flatchain[flatchain_mask00] = 0.001
+        flatchain[flatchain_mask10] = 0.999
 
         np.savetxt(
             mc.emcee_dir_output + '/custom-weighted_post_untransformed.txt',
@@ -514,24 +532,29 @@ def pyorbit_ultranest_warmstart(config_in, input_datasets=None, return_output=No
         print()
         quit()
 
-    else: 
+    else:
 
         """ Run ultranest"""
         if not os.path.exists(mc.output_directory):
             os.makedirs(mc.output_directory)
 
         print('*** emcee results ***')
+        print()
         flatchain = emcee_flatchain(
             sampler_chain,
             mc.emcee_parameters['nburn'],
             mc.emcee_parameters['thin'])
 
-        print('*** printing of emcee results still need to be tested ***')
-        #flatchain_converted = ultranest_transform(flatchain)
-        #results_analysis.results_summary(mc, flatchain)
+        nsample, npams = np.shape(flatchain)
+        converted_flatchain = np.zeros_like(flatchain)
+        for ii in range(0, nsample):
+            converted_flatchain[ii,:] = ultranest_transform(flatchain[ii,:])
+
+        results_analysis.results_summary(mc, converted_flatchain)
+        print()
+        print()
 
         posterior_upoints_file = mc.emcee_dir_output + '/custom-weighted_post_untransformed.txt'
-
 
         labels_array = [None] * len(theta_dictionary)
         for key_name, key_value in theta_dictionary.items():
@@ -553,6 +576,16 @@ def pyorbit_ultranest_warmstart(config_in, input_datasets=None, return_output=No
         print()
 
         from ultranest.integrator import warmstart_from_similar_file
+
+        all_points = np.genfromtxt(posterior_upoints_file)
+        upoints = all_points[:,2:]
+        sel_min = (upoints <= 0)
+        sel_max = (upoints >= 1)
+        print('******* ', np.sum(sel_min), np.sum(sel_max))
+
+        mask = np.logical_and(upoints > 0, upoints < 1).all(axis=1)
+        assert np.all(mask), (
+            'upoints must be between 0 and 1, have:', upoints[~mask,:])
 
         aux_paramnames, aux_log_likelihood, aux_prior_transform, vectorized = warmstart_from_similar_file(
             posterior_upoints_file, labels_array, ultranest_call, ultranest_transform)

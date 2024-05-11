@@ -69,10 +69,13 @@ def pyorbit_results():
         'dynesty_static': ['dynesty_static', 'DyNesty_static', 'Dynesty_static', 'DYNESTY_static'],
         #'nestle': ['nestle', 'Nestle', 'NESTLE', 'nelste'],
         'ultranest': ['ultranest', 'UltraNest', 'Ultranest', 'ULTRANEST', 'ultra','Unest'],
+        'emcee_warmstart': ['emcee_warmstart', 'emcee_warmup'],
+        'ultranest_warmstart': ['ultranest_warmstart', 'UltraNest_WarmStart', 'Ultranest_Warmstart', 'ULTRANEST_WARMSTART', 'ultra_warm','Unest_WarmS', 'UltraWarm', 'ultrawarm'],
+
         #'optimize': ['optimize', 'scipy', 'Optimize', 'OPTIMIZE'],
     }
 
-    unchained_samplers = ['polychord', 'multinest', 'dynesty', 'dynesty_legacy','dynesty_static', 'nestle', 'ultranest']
+    unchained_samplers = ['ultranest_warmstart','polychord', 'multinest', 'dynesty', 'dynesty_legacy','dynesty_static', 'nestle', 'ultranest']
 
     args = parser.parse_args()
     sampler = args.sampler[0]
