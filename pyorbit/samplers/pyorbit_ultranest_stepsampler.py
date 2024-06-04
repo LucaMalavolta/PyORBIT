@@ -108,7 +108,7 @@ def pyorbit_ultranest_stepsampler(config_in, input_datasets=None, return_output=
         Constant term added either by dataset.model_logchi2() or gp.log_likelihood()
         """
         if not mc.check_bounds(theta):
-            return -np.inf
+            return -0.5e10
 
         if mc.dynamical_model is not None:
             """ check if any keyword ahas get the output model from the dynamical tool
@@ -278,8 +278,7 @@ def pyorbit_ultranest_stepsampler(config_in, input_datasets=None, return_output=
 
         if  np.isnan(log_likelihood):
             log_likelihood = -0.5e10
-        if log_likelihood < -0.5e10:
-            log_likelihood = -0.5e10
+
 
         return log_likelihood
 
@@ -287,17 +286,17 @@ def pyorbit_ultranest_stepsampler(config_in, input_datasets=None, return_output=
 
     sampler = ultranest.ReactiveNestedSampler(
         labels_array,
-        ultranest_call,
-        transform=ultranest_transform,
+        mc.ultranest_call,
+        transform=mc.ultranest_transform,
         log_dir=mc.output_directory, # folder where to store files
         resume=True, # whether to resume from there (otherwise start from scratch)
     )
-    #sampler.stepsampler = ultranest.stepsampler.SliceSampler(
-    #    nsteps=nsteps,
-    #    generate_direction=ultranest.stepsampler.generate_mixture_random_direction,
-    #    # adaptive_nsteps=False,
-    #    # max_nsteps=400
-    #)
+    sampler.stepsampler = ultranest.stepsampler.SliceSampler(
+        nsteps=nsteps,
+        generate_direction=ultranest.stepsampler.generate_mixture_random_direction,
+        # adaptive_nsteps=False,
+        # max_nsteps=400
+    )
     sampler.run(
         min_num_live_points=nlive,
         dlogz=mc.nested_sampling_parameters['desired_accuracy'], # desired accuracy on logz
