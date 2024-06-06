@@ -5,6 +5,8 @@ from pyorbit.keywords_definitions import *
 from scipy.linalg import cho_factor, cho_solve, lapack, LinAlgError
 from scipy import matrix, spatial
 
+__all__ = ['TinyGP_Multidimensional_Matern32Activity']
+
 try:
     import jax
     jax.config.update("jax_enable_x64", True)
@@ -12,72 +14,71 @@ try:
     from tinygp import kernels, GaussianProcess
     from tinygp.helpers import JAXArray
 
+
+
+
+
+    class LatentKernel_Matern32(kernels.Kernel):
+        """A custom kernel based on Matern32
+
+        Args:
+            kernel: The kernel function describing the latent process. This can be any other
+                ``tinygp`` kernel.
+            coeff_prim: The primal coefficients for each class. This can be thought of as how
+                much the latent process itself projects into the observations for that class.
+                This should be an array with an entry for each class of observation.
+            coeff_deriv: The derivative coefficients for each class. This should have the same
+                shape as ``coeff_prim``.
+        """
+
+        try:
+            kernel : kernels
+            coeff_prim: JAXArray | float
+            coeff_deriv: JAXArray | float
+        except:
+            pass
+
+        def __init__(self, kernel, coeff_prim, coeff_deriv):
+            self.kernel = kernel
+            self.coeff_prim, self.coeff_deriv = jnp.broadcast_arrays(
+                jnp.asarray(coeff_prim), jnp.asarray(coeff_deriv)
+            )
+
+        def evaluate(self, X1, X2):
+            t1, label1 = X1
+            t2, label2 = X2
+
+            # Differentiate the kernel function: the first derivative wrt x1
+            Kp = jax.grad(self.kernel.evaluate, argnums=0)
+
+            # ... and the second derivative
+            Kpp = jax.grad(Kp, argnums=1)
+
+            # Evaluate the kernel matrix and all of its relevant derivatives
+            K = self.kernel.evaluate(t1, t2)
+            d2K_dx1dx2 = Kpp(t1, t2)
+
+            # For stationary kernels, these are related just by a minus sign, but we'll
+            # evaluate them both separately for generality's sake
+            dK_dx2 = jax.grad(self.kernel.evaluate, argnums=1)(t1, t2)
+            dK_dx1 = Kp(t1, t2)
+
+            # Extract the coefficients
+            a1 = self.coeff_prim[label1]
+            a2 = self.coeff_prim[label2]
+            b1 = self.coeff_deriv[label1]
+            b2 = self.coeff_deriv[label2]
+
+            # Construct the matrix element
+            return (
+                a1 * a2 * K
+                + a1 * b2 * dK_dx2
+                + b1 * a2 * dK_dx1
+                + b1 * b2 * d2K_dx1dx2
+            )
+
 except:
     pass
-
-
-__all__ = ['TinyGP_Multidimensional_Matern32Activity']
-
-
-class LatentKernel_Matern32(kernels.Kernel):
-    """A custom kernel based on Matern32
-
-    Args:
-        kernel: The kernel function describing the latent process. This can be any other
-            ``tinygp`` kernel.
-        coeff_prim: The primal coefficients for each class. This can be thought of as how
-            much the latent process itself projects into the observations for that class.
-            This should be an array with an entry for each class of observation.
-        coeff_deriv: The derivative coefficients for each class. This should have the same
-            shape as ``coeff_prim``.
-    """
-
-    try:
-        kernel : kernels
-        coeff_prim: JAXArray | float
-        coeff_deriv: JAXArray | float
-    except:
-        pass
-
-    def __init__(self, kernel, coeff_prim, coeff_deriv):
-        self.kernel = kernel
-        self.coeff_prim, self.coeff_deriv = jnp.broadcast_arrays(
-            jnp.asarray(coeff_prim), jnp.asarray(coeff_deriv)
-        )
-
-    def evaluate(self, X1, X2):
-        t1, label1 = X1
-        t2, label2 = X2
-
-        # Differentiate the kernel function: the first derivative wrt x1
-        Kp = jax.grad(self.kernel.evaluate, argnums=0)
-
-        # ... and the second derivative
-        Kpp = jax.grad(Kp, argnums=1)
-
-        # Evaluate the kernel matrix and all of its relevant derivatives
-        K = self.kernel.evaluate(t1, t2)
-        d2K_dx1dx2 = Kpp(t1, t2)
-
-        # For stationary kernels, these are related just by a minus sign, but we'll
-        # evaluate them both separately for generality's sake
-        dK_dx2 = jax.grad(self.kernel.evaluate, argnums=1)(t1, t2)
-        dK_dx1 = Kp(t1, t2)
-
-        # Extract the coefficients
-        a1 = self.coeff_prim[label1]
-        a2 = self.coeff_prim[label2]
-        b1 = self.coeff_deriv[label1]
-        b2 = self.coeff_deriv[label2]
-
-        # Construct the matrix element
-        return (
-            a1 * a2 * K
-            + a1 * b2 * dK_dx2
-            + b1 * a2 * dK_dx1
-            + b1 * b2 * d2K_dx1dx2
-        )
-
 
 
 def _build_tinygp_multidimensional_matern32(params):

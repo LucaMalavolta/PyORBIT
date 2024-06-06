@@ -11,7 +11,7 @@ long_description = (this_directory / "README.md").read_text()
 
 setup(
     name="pyorbit-package",
-    version='10.2.0',
+    version='10.3.0',
     author="Luca Malavolta",
 	author_email = 'luca.malavolta@unipd.it',
 	url = 'https://github.com/LucaMalavolta/PyORBIT',
@@ -51,9 +51,9 @@ setup(
         'h5py',
         'tqdm',
         'pygtc',
-        'jaxlib>=0.3.15',
-        'jax >=0.3.15',
-        'tinygp==0.2.4',
+        'jaxlib>=0.4.28',
+        'jax >=0.4.28',
+        'tinygp>=0.3.0',
         #'schwimmbad'
     ],
     setup_requires=['setuptools']
