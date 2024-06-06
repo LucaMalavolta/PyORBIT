@@ -58,7 +58,7 @@ pip install -r extra_requirements.txt
 The requirement file has weaker constraints on package versioning (see below), so remember to install `PyORBIT` first  to avoid version incompatibilities
 ```
 
-## `starry` support 
+## `starry` support **updated**
 
 The [`starry`](https://starry.readthedocs.io/en/latest/) code package is a suite of tools for mapping stars and exoplanets based on time series data, and it has been implemented in several models within `PyORBIT`. Due to the use of discontinued libraries as [`Theano`](https://github.com/Theano), its installation requires some different steps. 
 
@@ -80,40 +80,49 @@ sudo aptitude install libopenblas-dev
 ```
 In the case of `g++`, I had to take a step further by checking the proposed solutions to solve conflicts.  
 
-Installation on Fedora was much straightforward. 
+Installation on Fedora was much more straightforward. 
 
 ```{code} bash
 sudo yum install gcc-c++
 sudo yum install blas blas-devel
 ```
 
-I'm just reporting these issues for your convenience, if you are running on troubles please check with your IT crowd / best friend.  
+I'm just reporting these issues for your convenience, if you are running into any trouble, please check with your IT crowd / best friend.  
 
 ### installing `starry` 
+
+```{note} 
+Thefollowing instructions will work only with PyORBIT version 10.3.0 or above
+```
+
 
 First of all, create a dedicated environment:
 ```{code} bash
 conda create --name starry python=3.9
 ```
-This step is **strongly**  suggested as the installation of `starry` will downgrade several packages, causing dependencies issues.
+This step is **strongly** suggested as the installation of `starry` will downgrade several packages, causing dependency issues.
 
-The best way to make sure that our packages are compatible with `starry` is to install it as the first package in the newly created environment, together with some extra packages. 
+The best way to make sure that our packages are compatible with `starry` is to install it as the first package in the newly created environment, together with some extra packages.
 
 ```{code} bash
 conda activate starry
-pip install starry
-pip install mkl mkl-service
+
 ```
 
-We then install all the packages required by `PyORBIT`:
+We all the packages required by `starry`, after I painfully checked all the required versions to avoid dependency errors:
 ```{code} bash
-wget https://raw.githubusercontent.com/LucaMalavolta/PyORBIT/main/extra_requirements.txt
-pip install -r extra_requirements.txt
+wget https://raw.githubusercontent.com/LucaMalavolta/PyORBIT/main/starry_requirements.txt
+pip install -r starry_requirements.txt
 ```
+This command will install `starry` as well.
 
 We finally install `PyORBIT` using `pip`, but without checking for dependencies
 ```{code} bash
 pip install --no-dependencies pyorbit-package
+```
+
+```{warning} 
+`tinygp` and all the packages relying on `jax` will not work with this installation.
 ```
 
 You should see something like this:

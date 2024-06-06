@@ -8,6 +8,11 @@ try:
     import jax.numpy as jnp
     from tinygp import kernels, GaussianProcess
 
+    @jax.jit
+    def _loss_tinygp(params):
+        gp = _build_tinygp_quasiperiodic(params)
+        return gp.log_probability(params['y'])
+
 except:
     pass
 
@@ -25,10 +30,7 @@ def _build_tinygp_quasiperiodic(params):
         kernel, params['x0'], diag=jnp.abs(params['diag']), mean=0.0
     )
 
-@jax.jit
-def _loss_tinygp(params):
-    gp = _build_tinygp_quasiperiodic(params)
-    return gp.log_probability(params['y'])
+
 
 
 class TinyGaussianProcess_QuasiPeriodicActivity(AbstractModel):

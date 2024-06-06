@@ -79,26 +79,28 @@ try:
             )
 
 
+
+    def _build_tinygp_multidimensional(params):
+
+        base_kernel = kernels.ExpSquared(scale=jnp.abs(params["Pdec"])) \
+                * kernels.ExpSineSquared(
+                scale=jnp.abs(params["Prot"]),
+                gamma=jnp.abs(params["gamma"]))
+
+        kernel = LatentKernel(base_kernel, params['coeff_prime'], params['coeff_deriv'])
+        return GaussianProcess(
+            kernel, params['X'], diag=jnp.abs(params['diag']), mean=0.0
+        )
+
+    @jax.jit
+    def _loss_tinygp(params):
+        gp = _build_tinygp_multidimensional(params)
+        return gp.log_probability(params['y'])
+
 except:
     pass
 
 
-def _build_tinygp_multidimensional(params):
-
-    base_kernel = kernels.ExpSquared(scale=jnp.abs(params["Pdec"])) \
-            * kernels.ExpSineSquared(
-            scale=jnp.abs(params["Prot"]),
-            gamma=jnp.abs(params["gamma"]))
-
-    kernel = LatentKernel(base_kernel, params['coeff_prime'], params['coeff_deriv'])
-    return GaussianProcess(
-        kernel, params['X'], diag=jnp.abs(params['diag']), mean=0.0
-    )
-
-@jax.jit
-def _loss_tinygp(params):
-    gp = _build_tinygp_multidimensional(params)
-    return gp.log_probability(params['y'])
 
 
 class TinyGP_Multidimensional_QuasiPeriodicActivity(AbstractModel):

@@ -7,6 +7,13 @@ try:
     jax.config.update("jax_enable_x64", True)
     import jax.numpy as jnp
     from tinygp import kernels, GaussianProcess
+
+    @jax.jit
+    def _loss_tinygp(params):
+        gp = _build_tinygp_matern32(params)
+        return gp.log_probability(params['y'])
+
+
 except:
     pass
 
@@ -20,10 +27,6 @@ def _build_tinygp_matern32(params):
         kernel, params['x0'], diag=jnp.abs(params['diag']), mean=0.0
     )
 
-@jax.jit
-def _loss_tinygp(params):
-    gp = _build_tinygp_matern32(params)
-    return gp.log_probability(params['y'])
 
 
 class TinyGaussianProcess_Matern32Activity(AbstractModel):

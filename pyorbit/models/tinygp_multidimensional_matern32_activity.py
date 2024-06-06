@@ -77,23 +77,26 @@ try:
                 + b1 * b2 * d2K_dx1dx2
             )
 
+
+    def _build_tinygp_multidimensional_matern32(params):
+
+        base_kernel = kernels.Matern32(scale=jnp.abs(params["scale"]))
+
+        kernel = LatentKernel_Matern32(base_kernel, params['coeff_prime'], params['coeff_deriv'])
+        return GaussianProcess(
+            kernel, params['X'], diag=jnp.abs(params['diag']), mean=0.0
+        )
+
+    @jax.jit
+    def _loss_tinygp_matern32(params):
+        gp = _build_tinygp_multidimensional_matern32(params)
+        return gp.log_probability(params['y'])
+
+
 except:
     pass
 
 
-def _build_tinygp_multidimensional_matern32(params):
-
-    base_kernel = kernels.Matern32(scale=jnp.abs(params["scale"]))
-
-    kernel = LatentKernel_Matern32(base_kernel, params['coeff_prime'], params['coeff_deriv'])
-    return GaussianProcess(
-        kernel, params['X'], diag=jnp.abs(params['diag']), mean=0.0
-    )
-
-@jax.jit
-def _loss_tinygp_matern32(params):
-    gp = _build_tinygp_multidimensional_matern32(params)
-    return gp.log_probability(params['y'])
 
 
 class TinyGP_Multidimensional_Matern32Activity(AbstractModel):
