@@ -38,15 +38,15 @@ class CommonCheopsModelling(AbstractCommon):
 
 
     parameters_dictionary = {
-        'scale_factor': # Orbital period of the planet
+        'scale_factor': 
             {
                 'bounds': [-5., 20.],
                 'priors': ['Uniform', []],
-                'spaces': 'Log_Base2',
+                'spaces': 'Linear',
                 'fixed' : 1.00,
                 'unit': None,
             },
-        'dfdt': # Orbital period of the planet
+        'dfdt': 
             {
                 'bounds': [-1., 1.],
                 'priors': ['Uniform', []],
@@ -54,7 +54,7 @@ class CommonCheopsModelling(AbstractCommon):
                 'fixed' : 0.00,
                 'unit': None,
             },
-        'd2fdt2': # Orbital period of the planet
+        'd2fdt2': 
             {
                 'bounds': [-1., 1.],
                 'priors': ['Uniform', []],
@@ -62,7 +62,7 @@ class CommonCheopsModelling(AbstractCommon):
                 'fixed' : 0.00,
                 'unit': None,
             },
-        'dfdbg': # Orbital period of the planet
+        'dfdbg': 
             {
                 'bounds': [-1., 1.],
                 'priors': ['Uniform', []],
@@ -70,7 +70,7 @@ class CommonCheopsModelling(AbstractCommon):
                 'fixed' : 0.00,
                 'unit': None,
             },
-        'dfdcontam': # Orbital period of the planet
+        'dfdcontam': 
             {
                 'bounds': [-1., 1.],
                 'priors': ['Uniform', []],
@@ -78,7 +78,7 @@ class CommonCheopsModelling(AbstractCommon):
                 'fixed' : 0.00,
                 'unit': None,
             },
-        'dfdsmear': # Orbital period of the planet
+        'dfdsmear': 
             {
                 'bounds': [-1., 1.],
                 'priors': ['Uniform', []],
@@ -86,7 +86,7 @@ class CommonCheopsModelling(AbstractCommon):
                 'fixed' : 0.00,
                 'unit': None,
             },
-        'dfdx': # Orbital period of the planet
+        'dfdx': 
             {
                 'bounds': [-1., 1.],
                 'priors': ['Uniform', []],
@@ -94,7 +94,7 @@ class CommonCheopsModelling(AbstractCommon):
                 'fixed' : 0.00,
                 'unit': None,
             },
-        'dfdy': # Orbital period of the planet
+        'dfdy': 
             {
                 'bounds': [-1., 1.],
                 'priors': ['Uniform', []],
@@ -102,7 +102,7 @@ class CommonCheopsModelling(AbstractCommon):
                 'fixed' : 0.00,
                 'unit': None,
             },
-        'd2fdx2': # Orbital period of the planet
+        'd2fdx2': 
             {
                 'bounds': [-1., 1.],
                 'priors': ['Uniform', []],
@@ -110,7 +110,7 @@ class CommonCheopsModelling(AbstractCommon):
                 'fixed' : 0.00,
                 'unit': None,
             },
-        'd2fdxdy': # Orbital period of the planet
+        'd2fdxdy': 
             {
                 'bounds': [-1., 1.],
                 'priors': ['Uniform', []],
@@ -118,7 +118,7 @@ class CommonCheopsModelling(AbstractCommon):
                 'fixed' : 0.00,
                 'unit': None,
             },
-        'd2fdy2': # Orbital period of the planet
+        'd2fdy2': 
             {
                 'bounds': [-1., 1.],
                 'priors': ['Uniform', []],
@@ -126,7 +126,7 @@ class CommonCheopsModelling(AbstractCommon):
                 'fixed' : 0.00,
                 'unit': None,
             },
-        'dfdsinphi': # Orbital period of the planet
+        'dfdsinphi': 
             {
                 'bounds': [-1., 1.],
                 'priors': ['Uniform', []],
@@ -134,7 +134,7 @@ class CommonCheopsModelling(AbstractCommon):
                 'fixed' : 0.00,
                 'unit': None,
             },
-        'dfdcosphi': # Orbital period of the planet
+        'dfdcosphi': 
             {
                 'bounds': [-1., 1.],
                 'priors': ['Uniform', []],
@@ -142,7 +142,7 @@ class CommonCheopsModelling(AbstractCommon):
                 'fixed' : 0.00,
                 'unit': None,
             },
-        'dfdcos2phi': # Orbital period of the planet
+        'dfdcos2phi': 
             {
                 'bounds': [-1., 1.],
                 'priors': ['Uniform', []],
@@ -150,7 +150,7 @@ class CommonCheopsModelling(AbstractCommon):
                 'fixed' : 0.00,
                 'unit': None,
             },
-        'dfdsin2phi': # Orbital period of the planet
+        'dfdsin2phi': 
             {
                 'bounds': [-1., 1.],
                 'priors': ['Uniform', []],
@@ -158,7 +158,7 @@ class CommonCheopsModelling(AbstractCommon):
                 'fixed' : 0.00,
                 'unit': None,
             },
-        'dfdcos3phi': # Orbital period of the planet
+        'dfdcos3phi': 
             {
                 'bounds': [-1., 1.],
                 'priors': ['Uniform', []],
@@ -166,7 +166,7 @@ class CommonCheopsModelling(AbstractCommon):
                 'fixed' : 0.00,
                 'unit': None,
             },
-        'dfdsin3phi': # Orbital period of the planet
+        'dfdsin3phi': 
             {
                 'bounds': [-1., 1.],
                 'priors': ['Uniform', []],
