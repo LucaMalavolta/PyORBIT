@@ -4,6 +4,8 @@ from pyorbit.keywords_definitions import *
 
 from scipy.linalg import cho_factor, cho_solve, lapack, LinAlgError
 from scipy import matrix, spatial
+import sys
+
 
 __all__ = ['TinyGP_Multidimensional_Matern32Activity']
 
@@ -12,7 +14,10 @@ try:
     jax.config.update("jax_enable_x64", True)
     import jax.numpy as jnp
     from tinygp import kernels, GaussianProcess
-    from tinygp.helpers import JAXArray
+
+    if sys.version_info[0] < 3.10:
+        raise Warning("You should be using Python 3.10 - tinygp may not work")
+
 
     class LatentKernel_Matern32(kernels.Kernel):
         """A custom kernel based on Matern32

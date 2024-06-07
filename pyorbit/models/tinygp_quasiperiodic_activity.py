@@ -8,6 +8,10 @@ try:
     import jax.numpy as jnp
     from tinygp import kernels, GaussianProcess
 
+    if sys.version_info[0] < 3.10:
+        raise Warning("You should be using Python 3.10 - tinygp may not work")
+
+
     @jax.jit
     def _loss_tinygp(params):
         gp = _build_tinygp_quasiperiodic(params)

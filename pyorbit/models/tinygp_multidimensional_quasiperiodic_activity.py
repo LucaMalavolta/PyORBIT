@@ -15,6 +15,9 @@ try:
     from tinygp import kernels, GaussianProcess
     #from tinygp.helpers import JAXArray
 
+    if sys.version_info[0] < 3.10:
+        raise Warning("You should be using Python 3.10 - tinygp may not work")
+
     class LatentKernel(kernels.Kernel):
         """A custom kernel based on Rajpaul et al. (2015)
 

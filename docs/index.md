@@ -33,6 +33,12 @@ Alternatively, for easy automatization, PyORBIT can be called as a Python functi
 
 ## Updates on version 10
 
+
+```{warning}
+Sarting from version 10.3, `PyORBIT` has been upgraded to support `tinygp` (version 0.3.0), which in turns requires Python **3.10** to work properly. 
+If you are using `PyORBIT` \=> 10.3, follow the installation instructions to create an enviroment with Python 3.10 
+```
+
 - *Improved speed*
 After several failed attempts, I finally managed to apply the advice from the [emcee parallelization page](https://emcee.readthedocs.io/en/stable/tutorials/parallel/) to the rather complex structure of PyORBIT. The speed-up is noticeable for large datasets (e.g., photometry)
 

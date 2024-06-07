@@ -16,6 +16,9 @@ def pyorbit_run():
     #    print('WARNING MESSAGES SUPPRESSED!')
     #print()
 
+    #from packaging.version import Version
+    #Version("2.3.1") < Version(tinygp.__version__)
+
     parser = argparse.ArgumentParser(prog='PyORBIT_run.py', description='PyORBIT runner')
     parser.add_argument('sampler', type=str, nargs=1, help='sampler (emcee or polychord)')
     parser.add_argument('config_file', type=str, nargs=1, help='config file')

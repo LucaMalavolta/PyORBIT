@@ -12,11 +12,12 @@ Rather than trying to fix `PyORBIT` or Python on Windows, I usually suggest [set
 
 ## Setting up an environment
 
-Before proceeding with the installation, I suggest creating an environment dedicated to `PyORBIT` using Python \<=3.9 .  At the moment of writing, I have received a few complaints (unrelated to PyORBIT) about Python 3.10, so you may use it at your own risk.
+Before proceeding with the installation, I suggest creating an environment dedicated to `PyORBIT` using **Python 3.10**. This is the version I'm currently use to test the code.
+
 With conda/anaconda:
 
 ```{code} bash
-conda create --name pyorbit python=3.9
+conda create --name pyorbit python=3.10
 ```
 
 To list the available environments do:
