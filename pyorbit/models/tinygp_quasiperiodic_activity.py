@@ -31,8 +31,6 @@ def _build_tinygp_quasiperiodic(params):
     )
 
 
-
-
 class TinyGaussianProcess_QuasiPeriodicActivity(AbstractModel):
     ''' Three parameters out of four are the same for all the datasets, since they are related to
     the properties of the physical process rather than the observed effects on a dataset

@@ -14,10 +14,6 @@ try:
     from tinygp import kernels, GaussianProcess
     from tinygp.helpers import JAXArray
 
-
-
-
-
     class LatentKernel_Matern32(kernels.Kernel):
         """A custom kernel based on Matern32
 
@@ -32,9 +28,9 @@ try:
         """
 
         try:
-            kernel : kernels
-            coeff_prim: JAXArray | float
-            coeff_deriv: JAXArray | float
+            kernel : kernels.Kernel
+            coeff_prim: jax.Array | float
+            coeff_deriv: jax.Array | float
         except:
             pass
 
@@ -93,8 +89,11 @@ try:
         return gp.log_probability(params['y'])
 
 
+
+
 except:
     pass
+
 
 
 

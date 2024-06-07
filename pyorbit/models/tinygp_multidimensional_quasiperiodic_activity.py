@@ -13,11 +13,7 @@ try:
     jax.config.update("jax_enable_x64", True)
     import jax.numpy as jnp
     from tinygp import kernels, GaussianProcess
-    from tinygp.helpers import JAXArray
-
-
-
-
+    #from tinygp.helpers import JAXArray
 
     class LatentKernel(kernels.Kernel):
         """A custom kernel based on Rajpaul et al. (2015)
@@ -33,9 +29,9 @@ try:
         """
 
         try:
-            kernel : kernels
-            coeff_prim: JAXArray | float
-            coeff_deriv: JAXArray | float
+            kernel : kernels.Kernel
+            coeff_prim: jax.Array | float
+            coeff_deriv: jax.Array | float
         except: 
             pass
 
@@ -77,7 +73,6 @@ try:
                 + b1 * a2 * dK_dx1
                 + b1 * b2 * d2K_dx1dx2
             )
-
 
 
     def _build_tinygp_multidimensional(params):
