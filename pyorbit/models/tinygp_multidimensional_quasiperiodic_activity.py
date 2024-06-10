@@ -4,6 +4,7 @@ from pyorbit.keywords_definitions import *
 
 from scipy.linalg import cho_factor, cho_solve, lapack, LinAlgError
 from scipy import matrix, spatial
+import sys
 
 __all__ = ['TinyGP_Multidimensional_QuasiPeriodicActivity']
 
@@ -15,7 +16,7 @@ try:
     from tinygp import kernels, GaussianProcess
     #from tinygp.helpers import JAXArray
 
-    if sys.version_info[0] < 3.10:
+    if sys.version_info[1] < 10:
         raise Warning("You should be using Python 3.10 - tinygp may not work")
 
     class LatentKernel(kernels.Kernel):
@@ -35,7 +36,7 @@ try:
             kernel : kernels.Kernel
             coeff_prim: jax.Array | float
             coeff_deriv: jax.Array | float
-        except: 
+        except:
             pass
 
         def __init__(self, kernel, coeff_prim, coeff_deriv):
@@ -306,7 +307,7 @@ class TinyGP_Multidimensional_QuasiPeriodicActivity(AbstractModel):
         mu_full = cond_gp.loc # or cond_gp.mean?
         mu = mu_full[l_nstart:l_nend]
         std = np.sqrt(cond_gp.variance)[l_nstart:l_nend]
-        
+
         if return_variance:
             return mu, std
         else:

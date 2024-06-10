@@ -1,6 +1,7 @@
 from pyorbit.subroutines.common import *
 from pyorbit.models.abstract_model import *
 from pyorbit.keywords_definitions import *
+import sys
 
 try:
     import jax
@@ -8,7 +9,7 @@ try:
     import jax.numpy as jnp
     from tinygp import kernels, GaussianProcess
 
-    if sys.version_info[0] < 3.10:
+    if sys.version_info[1] < 10:
         raise Warning("You should be using Python 3.10 - tinygp may not work")
 
 

@@ -1,6 +1,7 @@
 from pyorbit.subroutines.common import *
 from pyorbit.models.abstract_model import *
 from pyorbit.keywords_definitions import *
+import sys
 
 try:
     import jax
@@ -8,7 +9,7 @@ try:
     import jax.numpy as jnp
     from tinygp import kernels, GaussianProcess
 
-    if sys.version_info[0] < 3.10:
+    if sys.version_info[1] < 10:
         raise Warning("You should be using Python 3.10 - tinygp may not work")
 
 
@@ -135,7 +136,7 @@ class TinyGaussianProcess_QuasiPeriodicActivity(AbstractModel):
 
         gp = _build_tinygp_quasiperiodic(theta_dict)
         _, cond_gp = gp.condition(theta_dict['y'], theta_dict['x0_predict'])
-        mu = cond_gp.loc # or cond_gp.mean? 
+        mu = cond_gp.loc # or cond_gp.mean?
         std = np.sqrt(cond_gp.variance)
 
         if return_variance:
@@ -152,7 +153,7 @@ class TinyGaussianProcess_QuasiPeriodicActivity(AbstractModel):
     def _hypercond_01(parameter_values):
         # Condition from Rajpaul 2017, Rajpaul+2021
         # Taking into account that Pdec^2 = 2*lambda_2^2
-        return parameter_values['Pdec']**2 > (3. / 4. / np.pi) * parameter_values['Oamp']**2 * parameter_values['Prot']**2 
+        return parameter_values['Pdec']**2 > (3. / 4. / np.pi) * parameter_values['Oamp']**2 * parameter_values['Prot']**2
 
     @staticmethod
     def _hypercond_02(parameter_values):
