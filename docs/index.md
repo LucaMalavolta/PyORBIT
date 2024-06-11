@@ -1,4 +1,4 @@
-(home)= 
+(home)=
 
 # PyORBIT
 ## a code for exoplanet orbital parameters and stellar activity.
@@ -35,19 +35,21 @@ Alternatively, for easy automatization, PyORBIT can be called as a Python functi
 
 
 ```{warning}
-Sarting from version 10.3, `PyORBIT` has been upgraded to support `tinygp` (version 0.3.0), which in turns requires Python **3.10** to work properly. 
-If you are using `PyORBIT` \=> 10.3, follow the installation instructions to create an enviroment with Python 3.10 
+Starting from version 10.3, `PyORBIT` has been upgraded to support `tinygp` (version 0.3.0), which in turns requires Python **3.10** to work properly.
+If you are using `PyORBIT` \=> 10.3, follow the installation instructions to create an environment with Python 3.10
 ```
 
 - *Improved speed*
-After several failed attempts, I finally managed to apply the advice from the [emcee parallelization page](https://emcee.readthedocs.io/en/stable/tutorials/parallel/) to the rather complex structure of PyORBIT. The speed-up is noticeable for large datasets (e.g., photometry)
+After several failed attempts, I finally managed to apply the advice from the [emcee parallelization page](https://emcee.readthedocs.io/en/stable/tutorials/parallel/) to the rather complex structure of PyORBIT. The speed-up is noticeable for large datasets (e.g., photometry).
 
 - *Rossiter McLaughlin*
 Rossiter McLaughlin effect can now be precisely modelled using the CCF simulation approach employed in [Covino et al. 2013](https://ui.adsabs.harvard.edu/abs/2013A%26A...554A..28C/abstract).
-When the rotation period is known - together with the stellar radius - the stellar inclination can be derived avoiding the bias reported by [Masuda & Winn 2020](https://ui.adsabs.harvard.edu/abs/2020AJ....159...81M/abstract)
+When the rotation period is known - together with the stellar radius - the stellar inclination can be derived avoiding the bias reported by [Masuda & Winn 2020](https://ui.adsabs.harvard.edu/abs/2020AJ....159...81M/abstract).
+This model has been successfully employed in [Mantovan et al. 2024b](https://ui.adsabs.harvard.edu/abs/2024A%26A...684L..17M/abstract) for the characterization of TOI-5398b.
 
 - *Multidimensional Gaussian Process*
-The model was introduced a few years back, but now it can finally take advantage of improved parallelization
+The model was introduced a few years back, but now it can finally take advantage of improved parallelization.
+Recent examples of multidimensional Gaussian Processes through `PyORBIT` can be found in [Nardiello et al. 2023](https://ui.adsabs.harvard.edu/abs/2022A%26A...664A.163N/abstract) and [Mantovan et al. 2024a](https://ui.adsabs.harvard.edu/abs/2024A%26A...682A.129M/abstract).
 
 - *tinyGP for better performances*
 Working on both *classic* and _multidimensional_ Gaussian Processes, although the former is showing some JAX problems when producing the output results.
@@ -58,7 +60,7 @@ If you have been using the development version of V10, you may run into incompat
 ```
 
 ```{warning}
-I must have done something wrong when upgrading to version 10, if you already downloaded the repository before the upgrrade then I advise to to delete the repo and **clone it again**.
+I must have done something wrong when upgrading to version 10, if you already downloaded the repository before the upgrade then I advise to to delete the repo and **clone it again**.
 ```
 
 # Documentation updates
@@ -74,7 +76,7 @@ Documentation is being updated slowly but steadily, with new pages appearing eve
   + Correlated datasets
   + Gaussian processes regression **in progress**
   + Multidimensional GPs
-  + TinyGP caveats **new** 
+  + TinyGP caveats **new**
   + CHEOPS detrending **coming soon**
   + Polynomial **coming soon**
   + Lightcurve detrending

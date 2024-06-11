@@ -16,28 +16,30 @@ For nostalgic people, `PyORBIT` 8 and 9 are available as branches of the main re
 
 ## Updates on version 10
 
-- *Improved speed*
-After several failed attempts, I finally managed to apply the advices from the [emcee parallelization page](https://emcee.readthedocs.io/en/stable/tutorials/parallel/) to the rather complex structure of PyORBIT. The speed up is noticeable for large datasets (e.g., photometry) 
+```{warning}
+Starting from version 10.3, `PyORBIT` has been upgraded to support `tinygp` (version 0.3.0), which in turns requires Python **3.10** to work properly.
+If you are using `PyORBIT` \=> 10.3, follow the installation instructions to create an environment with Python 3.10
+```
 
-- *Rossiter McLaughlin* 
+- *Improved speed*
+After several failed attempts, I finally managed to apply the advice from the [emcee parallelization page](https://emcee.readthedocs.io/en/stable/tutorials/parallel/) to the rather complex structure of PyORBIT. The speed-up is noticeable for large datasets (e.g., photometry).
+
+- *Rossiter McLaughlin*
 Rossiter McLaughlin effect can now be precisely modelled using the CCF simulation approach employed in [Covino et al. 2013](https://ui.adsabs.harvard.edu/abs/2013A%26A...554A..28C/abstract).
-When the rotation period is known - together with the stellar radius - the stellar inclination can be derived avoiding the bias reported by [Masuda & Winn 2020](https://ui.adsabs.harvard.edu/abs/2020AJ....159...81M/abstract)
+When the rotation period is known - together with the stellar radius - the stellar inclination can be derived avoiding the bias reported by [Masuda & Winn 2020](https://ui.adsabs.harvard.edu/abs/2020AJ....159...81M/abstract).
+This model has been successfully employed in [Mantovan et al. 2024b](https://ui.adsabs.harvard.edu/abs/2024A%26A...684L..17M/abstract) for the characterization of TOI-5398b.
 
 - *Multidimensional Gaussian Process*
-The model has been introduced a few years back, but now it can finally take advante of imrpoved parallelization
+The model was introduced a few years back, but now it can finally take advantage of improved parallelization.
+Recent examples of multidimensional Gaussian Processes through `PyORBIT` can be found in [Nardiello et al. 2022](https://ui.adsabs.harvard.edu/abs/2022A%26A...664A.163N/abstract) and [Mantovan et al. 2024a](https://ui.adsabs.harvard.edu/abs/2024A%26A...682A.129M/abstract).
 
 - *tinyGP for better performances*
-Working on both *classic* and *multidimensional* Gaussian Process, although the former is showing some JAX problems when producing the output results.
+Working on both *classic* and _multidimensional_ Gaussian Processes, although the former is showing some JAX problems when producing the output results.
 
 ```{text}
 **No back-compatibility**
 Version 10 is not compatible with the results obtained with version 9.
 If you have been using the development version of V10, you may run into incompatibility issues as well.
-```
-
-```{text}
-**Messed-up repository**
-I must have done something wrong when upgrading to version 10, if you already downloaded the repository before the upgrrade then I advise to to delete the repo and clone it again.
 ```
 
 ## Updates on version 9
@@ -110,12 +112,12 @@ Bayesian evidence estimation can now be performed with:
   * Multinest and Polychord support is still there, but not supported anymore
 
   Just substitute "emcee" with "dynesty" or "ultranest" to when running the code.
-  *Warning* MCMC and Nested Sampling handle prior in a radically different way, as such it s not possible to directly translate some priors from one sampler to another
+  *Warning* MCMC and Nested Sampling handle prior in a radically different way, as such it is not possible to directly translate some priors from one sampler to another
 
 **Documentation**
-  Some incomplete documentation is available [here](http://pyorbit.readthedocs.io/). For any doubt, feel free to contact me at luca.malavolta_at_unipd.it, I'll be happy to work out together any problem that may arise during installation or usage of this software.
+  Some incomplete documentation is available [here](http://pyorbit.readthedocs.io/). For any doubt, feel free to open an issue on GitHub - emails tend to be rather ineffective lately - I'll be happy to work out together any problem that may arise during installation or usage of this software.
 
-  `PyORBIT` handles several kinds of datasets, such as radial velocity (RV), activity indexes, and photometry, to simultaneously characterize the orbital parameters of exoplanets and the noise induced by the activity of the host star. RV computation is performed using either non-interacting Kepler orbits or n-body integration. Stellar activity can be modeled either with sinusoids at the rotational period and its harmonics or gaussian process. Offsets and systematics in measurements from several instruments can be modeled as well. Thanks to the modular approach, new methods for stellar activity modeling or parameter estimation can be easily incorporated into the code.
+  `PyORBIT` handles several kinds of datasets, such as radial velocity (RV), activity indexes, and photometry, to simultaneously characterize the orbital parameters of exoplanets and the noise induced by the activity of the host star. RV computation is performed using either non-interacting Kepler orbits or n-body integration. Stellar activity can be modeled either with sinusoids at the rotational period and its harmonics or Gaussian process. Offsets and systematics in measurements from several instruments can be modeled as well. Thanks to the modular approach, new methods for stellar activity modeling or parameter estimation can be easily incorporated into the code.
 
 **Models**
 Any of these models can be applied to a dataset. The user can choose which models should be used for each dataset.
@@ -146,6 +148,14 @@ Most of the information can be found in [Malavolta et al. (2016)](https://ui.ads
 
 **Papers using PyORBIT**
 
+- Orbital obliquity of the young planet TOI-5398 b and the evolutionary history of the system [Mantovan et al. 2024b](https://ui.adsabs.harvard.edu/abs/2024A%26A...684L..17M/abstract)
+- Gliese 12 b, a temperate Earth-sized planet at 12 parsecs discovered with TESS and CHEOPS [Dholakia & Palethorpe et al. 2024](https://ui.adsabs.harvard.edu/abs/2024MNRAS.531.1276D/abstract)
+- The GAPS Programme at TNG. LIII. New insights on the peculiar XO-2 system [Ruggieri et al. 2024](https://ui.adsabs.harvard.edu/abs/2024A%26A...684A.116R/abstract)
+- The GAPS programme at TNG. L. TOI-4515 b: An eccentric warm Jupiter orbiting a 1.2 Gyr-old G-star [Carleo et al. 2024](https://ui.adsabs.harvard.edu/abs/2024A%26A...682A.135C/abstract)
+- GAPS XLIX. TOI-5398, the youngest compact multi-planet system composed of an inner sub-Neptune and an outer warm Saturn [Mantovan et al. 2024a](https://ui.adsabs.harvard.edu/abs/2024A%26A...682A.129M/abstract).
+- Confronting compositional confusion through the characterization of the sub-Neptune orbiting HD 77946 [Palethorpe et al. 2024](https://ui.adsabs.harvard.edu/abs/2024MNRAS.529.3323P/abstract)
+- TASTE. V. A new ground-based investigation of orbital decay in the ultra-hot Jupiter WASP-12b [Leonardi et al. 2024](https://ui.adsabs.harvard.edu/abs/2024A%26A...686A..84L/abstract)
+- A new dynamical modeling of the WASP-47 system with CHEOPS observations [Nascimbeni et al. 2023](https://ui.adsabs.harvard.edu/abs/2023A%26A...673A..42N/abstract)
 - GAPS XXXVII. A precise density measurement of the young ultra-short period planet TOI-1807 b [Nardiello et al. (2022)](https://ui.adsabs.harvard.edu/abs/2022A%26A...664A.163N/abstract)
 - Investigating the architecture and internal structure of the TOI-561 system planets with CHEOPS, HARPS-N, and TESS [Lacedelli et al. (2022)](https://ui.adsabs.harvard.edu/abs/2022MNRAS.511.4551L/abstract)
 - Independent validation of the temperate Super-Earth HD79211 b using HARPS-N [DiTommaso et al. (2022)](https://ui.adsabs.harvard.edu/abs/2022arXiv221012211D/abstract)
@@ -158,4 +168,4 @@ Most of the information can be found in [Malavolta et al. (2016)](https://ui.ads
 - GAPS XXIX. No detection of reflected light from 51 Peg b using optical high-resolution spectroscopy [Scandariato et al. (2021)](https://ui.adsabs.harvard.edu/abs/2021A%26A...646A.159S/abstract)
 - GAPS XXVIII. A pair of hot-Neptunes orbiting the young star TOI-942 [Carleo et al. (2021)](https://ui.adsabs.harvard.edu/abs/2021A%26A...645A..71C/abstract)
 
-And many more I had no time to include here...
+And many more I may have missed!
