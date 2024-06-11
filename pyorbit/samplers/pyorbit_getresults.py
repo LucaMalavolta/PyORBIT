@@ -1394,7 +1394,7 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
 
                             bjd_plot[plot_x_keyword][dataset_name][model_name] = \
                                 bjd_plot[plot_x_keyword][dataset_name][model_name] * \
-                                np.ones(dataset.n)
+                                np.ones_like(bjd_plot[dataset_name]['x_plot'])
 
                         #print(getattr(dataset, 'input_jitter', False))
                         try:
@@ -1466,6 +1466,8 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
                                 fileout.write('descriptor BJD Tc_folded phase_folded mod\n')
                             else:
                                 fileout.write('# time Tc_folded Tref_folded model \n')
+
+                            # print('****** ****** ', dataset_name, ' ', model_name, '',  len(bjd_plot[dataset_name]['x_plot']), len(bjd_plot[plot_x_keyword][dataset_name][model_name]))
 
                             for x, tcf, pha, mod in zip(bjd_plot[dataset_name]['x_plot'],
                                                         tc_folded_plot,
