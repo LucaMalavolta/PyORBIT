@@ -682,11 +682,19 @@ def get_model(mc, theta, bjd_dict, **kwargs):
                     x0_out = np.empty(x0_len)
                     x0_var = np.empty(x0_len)
 
-                    array_length = int(x0_len / dataset.n)
-                    if low_ram_plot:
-                        array_length = dataset.n
-                    elif plot_split_threshold < array_length:
-                        array_length = plot_split_threshold
+                    if dataset.n < plot_split_threshold/10.:
+
+                        array_length = int(x0_len / dataset.n)
+
+                        if low_ram_plot:
+                            array_length = dataset.n
+                        elif plot_split_threshold < array_length:
+                            array_length = plot_split_threshold
+                    else:
+                        if low_ram_plot:
+                            array_length = int(plot_split_threshold / 10.0)
+                        else:
+                            array_length = plot_split_threshold
 
                     id_start = 0
                     id_end = array_length
@@ -751,17 +759,25 @@ def get_model(mc, theta, bjd_dict, **kwargs):
             x0_out = np.empty(x0_len)
             x0_var = np.empty(x0_len)
 
-            array_length = int(x0_len / dataset.n)
-            if low_ram_plot:
-                array_length = dataset.n
-            elif plot_split_threshold < array_length:
-                array_length = plot_split_threshold
+
+            if dataset.n < plot_split_threshold/10.:
+
+                array_length = int(x0_len / dataset.n)
+
+                if low_ram_plot:
+                    array_length = dataset.n
+                elif plot_split_threshold < array_length:
+                    array_length = plot_split_threshold
+            else:
+                if low_ram_plot:
+                    array_length = int(plot_split_threshold / 10.0)
+                else:
+                    array_length = plot_split_threshold
 
             id_start = 0
             id_end = array_length
 
             max_iterations = x0_len//array_length + 1
-
 
             print('     Splitting the plot array to allow GP prediction of extended datasets, it may take a while...')
             print('     # {0:d} chunks of {1:d} times each'.format(max_iterations, array_length))

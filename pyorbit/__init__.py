@@ -21,4 +21,4 @@ from .samplers.pyorbit_multinest import *
 from .samplers.pyorbit_getresults import *
 from .subroutines.input_parser import yaml_parser
 
-__version__ = "10.3.3"
+__version__ = "10.3.4"
