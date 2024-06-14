@@ -122,6 +122,7 @@ prepare_yaml
 common_objects
 models
 gaussian_process_regression
+multidimensional_gps
 running_pyorbit
 GitHub Repository <https://github.com/LucaMalavolta/PyORBIT>
 ```
