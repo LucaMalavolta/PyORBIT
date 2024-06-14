@@ -161,7 +161,7 @@ solver:
 ```
 
 ```{tip}
-Since the coefficients are always copuled, there is a degenracy between a given set and the opposite one (i.e., all the coefficient with opposite sign). This degeneracy can be solved by force one coefficient to be positive, e.g., `rot_amp` for the `RV_data` in the example.
+Since the coefficients are always coupled, there is a degeneracy between a given set and the opposite one (i.e., all the coefficient with opposite sign). This degeneracy can be solved by force one coefficient to be positive, e.g., `rot_amp` for the `RV_data` in the example.
 ```
 
 A simpler way to prepare the configuration file if you are not specifying the boundaries is to list the datasets with derivatives under the same keyword:
