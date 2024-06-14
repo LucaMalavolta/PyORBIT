@@ -1,29 +1,8 @@
-(multidimensional_gaussian_processes)=
+(quasiperiodic_md_gp)=
 
-# Multidimensional GPs
+### Quasi-periodic kernel
 
-In the original Gaussian process framework ([Rajpaul et al. 2015](https://ui.adsabs.harvard.edu/abs/2015MNRAS.452.2269R/abstract), [Rajpaul et al. 2021](https://ui.adsabs.harvard.edu/abs/2021MNRAS.507.1847R/abstract)) the radial velocity datasets ($\Delta \mathrm{RV}$, after removing the deterministic part) and two activity indicators (in this example, $\mathrm{BIS}$ and  $\log{R^{\prime}_\mathrm{HK}}$) are modeled as a liner combination of an underlying Gaussian proccess $G(t)$  and its first derivative $G^\prime (t)$.
-
-```{math}
-:label: gp_framework_original
-
-\Delta \mathrm{RV} & = V_c G(t) + V_r G^\prime (t) \\
-\mathrm{BIS} & = B_c G(t) + B_r G^\prime (t) \\
-\log{R^{\prime}_\mathrm{HK}} & = L_c G(t) \\
-```
-
-`PyORBIT` implementation produces results that are perfectly consistent with the GP framework by [Rajpaul et al. 2015](https://ui.adsabs.harvard.edu/abs/2015MNRAS.452.2269R/abstract)  and the multidimensional GP by [Barragán et al. 2022](https://ui.adsabs.harvard.edu/abs/2022MNRAS.509..866B/abstract), as shown in [Nardiello et al. 2022, appendix D](https://ui.adsabs.harvard.edu/abs/2022A%26A...664A.163N/abstract). Note that the signs of the coefficients may vary according to the employed defintion of  $\Delta t = (t_i-t_j)$. 
-
-```{admonition} Give credits to the authors
-If you use the multidimensional GP, remeber to cite [Rajpaul et al. 2015](https://ui.adsabs.harvard.edu/abs/2015MNRAS.452.2269R/abstract)  and [Barragán et al. 2022](https://ui.adsabs.harvard.edu/abs/2022MNRAS.509..866B/abstract).
-For more details on the `PyORBIT` implementation of  multidimensional GP, please refer to [Nardiello et al. 2022, appendix D](https://ui.adsabs.harvard.edu/abs/2022A%26A...664A.163N/abstract)
-
-```
-
-
-### Kernels
-
-The only implemented kernel for the underlying GP is the quasi-periodic one, following the expression given by [Grunblatt et al. 2015](https://ui.adsabs.harvard.edu/abs/2015ApJ...808..127G/abstract):
+The quasi-periodic kernel is the preferred choice for the multidimensional GP. We follow the expression given by [Grunblatt et al. 2015](https://ui.adsabs.harvard.edu/abs/2015ApJ...808..127G/abstract):
 
 ```{math}
 :label: quasiperiodic_grunblatt
@@ -31,7 +10,7 @@ The only implemented kernel for the underlying GP is the quasi-periodic one, fol
 \gamma ^{(G,G)}_{i,j} = \exp{ \left \{-\frac{\sin^2{[\pi(t_i - t_j)/\theta]}}{2 w ^2} - \left (\frac{t_i-t_j}{\lambda} \right )^2 \right \} }
 ```
 
-where $\theta$ is equivalent to the rotation period of the star, $w$ is the coherence scale, and $\lambda$ is usually associated to the decay time scale fo the active regions
+where $\theta$ is equivalent to the rotation period of the star, $w$ is the coherence scale, and $\lambda$ is usually associated with the decay time scale of the active regions
 
 ```{important}
 It is common to have a factor 2 in the denominator of the aperiodic variation (i.e., $2 \lambda$ rather than $\lambda$) in {eq}`quasiperiodic_grunblatt`. In such a case, it is sufficient to multiply the value of $\lambda$ of `PyORBIT` by a factor $\sqrt(2)$ - keep it in mind when assigning priors!
@@ -64,7 +43,7 @@ Model-wide keywords, with the default value in bold face.
 **derivative**
 * accepted values: list of dataset using the model
 * if not provided, default is **`True`** for all datasets except `H-alpha` `S_index` `Ca_HK`, and `FWHM`. If provided, default is **`False`** for all the dataset not explicitly mentioned.
-* If **`True`**, the first derivative of the ubderlying Gaussian process is included, otherwise `rot_amp`F is fixed to zero.
+* If **`True`**, the first derivative of the underlying Gaussian process is included, otherwise, `rot_amp`F is fixed to zero.
 
 ## Examples
 
@@ -72,9 +51,9 @@ In the following example, ore RV dataset comes together with two activity indica
 
 Here `gp_multidimensional` is the label that we assign to the `gp_multidimensional_quasiperiodic` model. The label is assigned to each dataset, including the RV dataset for which also the RV model is included.
 
-The `common:planets` section includes three planets, of which one is transiting - with Gaussian priors on the period and time of inferior conjunction -  and two non-transiting planets with a prior on the eccentricity. 
+The `common:planets` section includes three planets, of which one is transiting - with Gaussian priors on the period and time of inferior conjunction -  and two non-transiting planets with a prior on the eccentricity.
 The `common:activity` section provides the hyperparameters for the GP shared among all the datasets. The example shows how to assign boundaries and priors to the parameters.
-The model keywords and the boundaries for the dataset-specific parameters are listed in `models:gp_multidimensional` 
+The model keywords and the boundaries for the dataset-specific parameters are listed in `models:gp_multidimensional`
 
 ```yaml
 inputs:
