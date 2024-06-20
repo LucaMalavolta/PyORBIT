@@ -5,15 +5,18 @@
 The most common and most reliable kernel for stellar activity is the quasi-periodic one, following the expression given by [Grunblatt et al. 2015](https://ui.adsabs.harvard.edu/abs/2015ApJ...808..127G/abstract):
 
 ```{math}
-:label: quasiperiodic_grunblatt
+:label: quasiperiodic_pyorbit
 
-G(t_i, t_j) = h^2  \exp{ \left \{-\frac{\sin^2{[\pi(t_i - t_j)/\theta]}}{2 w ^2} - \left ( \frac{t_i-t_j}{\lambda} \right )^2 \right \} }
+G(t_i, t_j) = H_\mathrm{amp}^2  \exp{ \left \{-\frac{\sin^2{[\pi(t_i - t_j)/ P_\mathrm{rot}]}}{2 O_\mathrm{amp} ^2} - \frac{(t_i-t_j)^2}{2 P_\mathrm{dec}^2} \right \} }
 ```
 
-where $\theta$ is equivalent to the rotation period of the star, $w$ is the coherence scale, and $\lambda$ is usually associated with the decay time scale of the active regions
+where $P_\mathrm{rot}$ is equivalent to the rotation period of the star, $O_\mathrm{amp} is the coherence scale, and $P_\mathrm{dec}$ is usually associated with the decay time scale of the active regions.
 
 ```{important}
-It is common to have a factor 2 in the denominator of the aperiodic variation (i.e., $2 \lambda$ rather than $\lambda$) in {eq}`quasiperiodic_grunblatt`. In such a case, it is sufficient to multiply the value of $\lambda$ of `PyORBIT` by a factor $\sqrt(2)$ - keep it in mind when assigning priors!
+It is common to have a factor 2 in the denominator of the aperiodic variation or in the numerator of the sinusoidal term. In such a case, it is sufficient to multiply/divide the value value of `PyORBIT` by a factor $\sqrt(2)$ - keep it in mind when assigning priors!
+
+A comparison between different formulations of the quasiperiodic kernel is provided in the section [Differences among various parametrizations](differences-among-various-parametrizations) of this page.
+
 ```
 
 ## Model definition and requirements
@@ -47,9 +50,9 @@ The following parameters will be inherited from the common model (column *Common
 
 | Name        | Parameter | Common?  | Definition  | Notes |
 | :---        | :-------- | :-------------  | :-----  | :---- |
-| Prot      | Rotational period of the star $\theta$ | common | ``activity``     | |
-| Pdec      | Decay time scale of active regions $\lambda$ | common | ``activity``     | |
-| Oamp | Coherence scale $w$ | common | ``activity`` |   |
+| Prot      | Rotational period of the star | common | ``activity``     | |
+| Pdec      | Decay time scale of active regions | common | ``activity``     | |
+| Oamp | Coherence scale | common | ``activity`` |   |
 | Hamp  | Amplitude of the kernel | dataset | ``activity``     | |
 
 
@@ -275,4 +278,50 @@ models:
     rotation_decay_condition: True # It forces the decay timescale to be at least twice the rotational period
     boundaries:
       Hamp: [0.0, 100.0] # same range for all datasets
+```
 
+
+## Differences among various parametrizations
+
+`PyORBIT`, following [Rajpaul et al. 2015](https://ui.adsabs.harvard.edu/abs/2015MNRAS.452.2269R/abstract)
+
+```{math}
+:label: quasiperiodic_pyorbit
+
+G(t_i, t_j) = H_\mathrm{amp}^2  \exp{ \left \{-\frac{\sin^2{[\pi(t_i - t_j)/ P_\mathrm{rot}]}}{\mathbf{2} O_\mathrm{amp} ^2} - \frac{(t_i-t_j)^2}{\mathbf{2} P_\mathrm{dec}^2} \right \} }
+```
+
+
+[Rajpaul et al. 2015](https://ui.adsabs.harvard.edu/abs/2015MNRAS.452.2269R/abstract) 
+
+```{math}
+:label: quasiperiodic_rajpaul
+
+G(t_i, t_j) = \eta_1^2  \exp{ \left \{-\frac{\sin^2{[\pi(t_i - t_j)/P]}}{\mathbf{2} \lambda_p^2} - \frac{(t_i-t_j)^2}{\mathbf{2} \lambda_e^2} \right \} }
+```
+
+
+- [Haywood et al. 2014](https://ui.adsabs.harvard.edu/abs/2014MNRAS.443.2517H/abstract)
+
+```{math}
+:label: quasiperiodic_haywood
+
+G(t_i, t_j) = \eta_1^2  \exp{ \left \{-\frac{ \mathbf{2} \sin^2{[\pi(t_i - t_j)/\eta_3]}}{\eta_4^2} - \left ( \frac{t_i-t_j}{\eta_2} \right )^2 \right \} }
+```
+
+
+- [Grunblatt et al. 2015](https://ui.adsabs.harvard.edu/abs/2015ApJ...808..127G/abstract):
+
+```{math}
+:label: quasiperiodic_grunblatt
+
+G(t_i, t_j) = h^2  \exp{ \left \{-\frac{\sin^2{[\pi(t_i - t_j)/\theta]}}{\mathbf{2} w ^2} - \left ( \frac{t_i-t_j}{\lambda} \right )^2 \right \} }
+```
+
+- [Lopez-Morales et al. 2016](https://ui.adsabs.harvard.edu/abs/2016AJ....152..204L/abstract)
+
+```{math}
+:label: quasiperiodic_lopezmorales
+
+G(t_i, t_j) = \eta_1^2  \exp{ \left \{-\frac{ \sin^2{[\pi(t_i - t_j)/\eta_3]}}{\eta_4^2} - \left ( \frac{t_i-t_j}{\eta_2} \right )^2 \right \} }
+```
