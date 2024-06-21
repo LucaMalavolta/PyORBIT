@@ -131,7 +131,7 @@ class SharedPolynomialTrend(AbstractModel):
         """
         self.time_interval = kwargs.get('time_interval', 1.000000000)
 
-        """ A polynome with amplitude variable according to the dataset under analysis"""
+        """ A polynomial with amplitude variable according to the dataset under analysis"""
         self.variable_amplitude = kwargs.get('variable_amplitude', True)
         if self.variable_amplitude:
             self.starting_order = 1
