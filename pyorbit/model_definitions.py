@@ -108,11 +108,13 @@ from pyorbit.models.detrending_matern32 import Detrending_Matern32
 
 from pyorbit.models.celerite2_granulation_oscillation_rotation import Celerite2_Granulation_Oscillation_Rotation
 from pyorbit.models.tinygp_quasiperiodic_activity import TinyGaussianProcess_QuasiPeriodicActivity
-from pyorbit.models.tinygp_quasiperiodicsemiexponential_activity import TinyGaussianProcess_QuasiPeriodicSemiExponentialActivity,
+from pyorbit.models.tinygp_quasiperiodicsquaredexponential_activity import TinyGaussianProcess_QuasiPeriodicSquaredExponentialActivity
 
 from pyorbit.models.tinygp_matern32_activity import TinyGaussianProcess_Matern32Activity
 from pyorbit.models.tinygp_multidimensional_quasiperiodic_activity import TinyGP_Multidimensional_QuasiPeriodicActivity
 from pyorbit.models.tinygp_multidimensional_matern32_activity import TinyGP_Multidimensional_Matern32Activity
+from pyorbit.models.tinygp_multidimensional_quasiperiodicsquaredexponential_activity import TinyGP_Multidimensional_QuasiPeriodicSquaredExponentialActivity
+from pyorbit.models.tinygp_multiquasiperiodic_trainedsquaredexponential_activity import TinyGP_MultiQuasiPeriodic_TrainedSquaredExponential_Activity
 
 from pyorbit.models.rossitermclaughlin_ohta import RossiterMcLaughlin_Ohta
 from pyorbit.models.rossitermclaughlin_precise import RossiterMcLaughlin_Precise
@@ -262,10 +264,14 @@ define_type_to_class = {
     #'lightcurve_poly_detrending': LightcurvePolyDetrending,
     #'local_lightcurve_poly_detrending': LocalLightcurvePolyDetrending,
     'tinygp_quasiperiodic': TinyGaussianProcess_QuasiPeriodicActivity,
-    'tinygp_quasiperiodicsemiexponential': TinyGaussianProcess_QuasiPeriodicSemiExponentialActivity,
-    'tinygp_quasiperiodic_semiexponential': TinyGaussianProcess_QuasiPeriodicSemiExponentialActivity,
+    'tinygp_quasiperiodicsquaredexponential': TinyGaussianProcess_QuasiPeriodicSquaredExponentialActivity,
+    'tinygp_quasiperiodic_squaredexponential': TinyGaussianProcess_QuasiPeriodicSquaredExponentialActivity,
     'tinygp_matern32': TinyGaussianProcess_Matern32Activity,
     'tinygp_multidimensional_quasiperiodic': TinyGP_Multidimensional_QuasiPeriodicActivity,
+    'tinygp_multidimensional_quasiperiodicsquaredexponential': TinyGP_Multidimensional_QuasiPeriodicSquaredExponentialActivity,
+    'tinygp_multidimensional_quasiperiodic_squaredexponential': TinyGP_Multidimensional_QuasiPeriodicSquaredExponentialActivity,
+    'tinygp_multidiquasiperiodic_trainedsquaredexponential': TinyGP_MultiQuasiPeriodic_TrainedSquaredExponential_Activity,
+    'tinygp_multiquasiperiodictrainedsquaredexponential': TinyGP_MultiQuasiPeriodic_TrainedSquaredExponential_Activity,
     'tinygp_multidimensional_matern32': TinyGP_Multidimensional_Matern32Activity,
     'rossitermclaughlin_ohta': RossiterMcLaughlin_Ohta,
     'rossitermclaughlin_precise': RossiterMcLaughlin_Precise,

@@ -12,32 +12,32 @@ try:
     if sys.version_info[1] < 10:
         raise Warning("You should be using Python 3.10 - tinygp may not work")
 
+    def _build_tinygp_quasiperiodic_squaredexponential(params):
+        kernel = jnp.power(params['Hamp'], 2.0) \
+            * kernels.ExpSquared(scale=jnp.abs(params["Pdec"])) \
+                * kernels.ExpSineSquared(
+                scale=jnp.abs(params["Prot"]),
+                gamma=jnp.abs(params["gamma"])) +  \
+                jnp.power(params['Camp'], 2.0) \
+                * kernels.ExpSquared(scale=jnp.abs(params["Pcyc"]))
+        return GaussianProcess(
+            kernel, params['x0'], diag=jnp.abs(params['diag']), mean=0.0
+        )
 
     @jax.jit
     def _loss_tinygp(params):
-        gp = _build_tinygp_quasiperiodic(params)
+        gp = _build_tinygp_quasiperiodic_squaredexponential(params)
         return gp.log_probability(params['y'])
 
 except:
     pass
 
 
-__all__ = ['TinyGaussianProcess_QuasiPeriodicSemiExponentialActivity']
-
-def _build_tinygp_quasiperiodic_semiexponential(params):
-    kernel = jnp.power(params['Hamp'], 2.0) \
-        * kernels.ExpSquared(scale=jnp.abs(params["Pdec"])) \
-            * kernels.ExpSineSquared(
-            scale=jnp.abs(params["Prot"]),
-            gamma=jnp.abs(params["gamma"])) +  \
-            jnp.power(params['Camp'], 2.0) \
-            * kernels.ExpSquared(scale=jnp.abs(params["Pcyc"]))
-    return GaussianProcess(
-        kernel, params['x0'], diag=jnp.abs(params['diag']), mean=0.0
-    )
+__all__ = ['TinyGaussianProcess_QuasiPeriodicSquaredExponentialActivity']
 
 
-class TinyGaussianProcess_QuasiPeriodicSemiExponentialActivity(AbstractModel):
+
+class TinyGaussianProcess_QuasiPeriodicSquaredExponentialActivity(AbstractModel):
     ''' Three parameters out of four are the same for all the datasets, since they are related to
     the properties of the physical process rather than the observed effects on a dataset
      From Grunblatt+2015, Affer+2016

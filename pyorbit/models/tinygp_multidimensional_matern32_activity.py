@@ -19,7 +19,7 @@ try:
         raise Warning("You should be using Python 3.10 - tinygp may not work")
 
 
-    class LatentKernel_Matern32(kernels.Kernel):
+    class LatentKernel_Multi_Matern32(kernels.Kernel):
         """A custom kernel based on Matern32
 
         Args:
@@ -83,17 +83,15 @@ try:
 
         base_kernel = kernels.Matern32(scale=jnp.abs(params["scale"]))
 
-        kernel = LatentKernel_Matern32(base_kernel, params['coeff_prime'], params['coeff_deriv'])
+        kernel = LatentKernel_Multi_Matern32(base_kernel, params['coeff_prime'], params['coeff_deriv'])
         return GaussianProcess(
             kernel, params['X'], diag=jnp.abs(params['diag']), mean=0.0
         )
 
     @jax.jit
-    def _loss_tinygp_matern32(params):
+    def _loss_tinygp_multi_matern32(params):
         gp = _build_tinygp_multidimensional_matern32(params)
         return gp.log_probability(params['y'])
-
-
 
 
 except:
@@ -240,7 +238,7 @@ class TinyGP_Multidimensional_Matern32Activity(AbstractModel):
             coeff_deriv=self.internal_coeff_deriv
         )
 
-        return _loss_tinygp_matern32(theta_dict)
+        return _loss_tinygp_multi_matern32(theta_dict)
 
 
     def sample_predict(self, dataset, x0_input=None, return_covariance=False, return_variance=False):
