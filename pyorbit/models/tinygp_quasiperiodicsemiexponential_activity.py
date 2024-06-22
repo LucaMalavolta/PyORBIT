@@ -31,16 +31,13 @@ def _build_tinygp_quasiperiodic_semiexponential(params):
             scale=jnp.abs(params["Prot"]),
             gamma=jnp.abs(params["gamma"])) +  \
             jnp.power(params['Camp'], 2.0) \
-            * kernels.ExpSquared(scale=jnp.abs(params["Pcyc"])) \
-                * kernels.ExpSineSquared(
-                scale=jnp.abs(params["Prot"]),
-                gamma=jnp.abs(params["gamma"])) 
+            * kernels.ExpSquared(scale=jnp.abs(params["Pcyc"]))
     return GaussianProcess(
         kernel, params['x0'], diag=jnp.abs(params['diag']), mean=0.0
     )
 
 
-class TinyGaussianProcess_QuasiPeriodicActivity(AbstractModel):
+class TinyGaussianProcess_QuasiPeriodicSemiExponentialActivity(AbstractModel):
     ''' Three parameters out of four are the same for all the datasets, since they are related to
     the properties of the physical process rather than the observed effects on a dataset
      From Grunblatt+2015, Affer+2016
@@ -67,11 +64,13 @@ class TinyGaussianProcess_QuasiPeriodicActivity(AbstractModel):
         self.list_pams_common = {
             'Prot',  # Rotational period of the star
             'Pdec',  # Decay timescale of activity
+            'Pcyc',  # Cycle timescale
             'Oamp'  # Granulation of activity
         }
 
         self.list_pams_dataset = {
             'Hamp'  # Amplitude of the signal in the covariance matrix
+            'Camp'  # Amplitude of the cycle
         }
 
     def initialize_model(self, mc,  **kwargs):
@@ -111,8 +110,10 @@ class TinyGaussianProcess_QuasiPeriodicActivity(AbstractModel):
         theta_dict =  dict(
             gamma=1. / (2.*parameter_values['Oamp'] ** 2),
             Hamp=parameter_values['Hamp'],
+            Camp=parameter_values['Camp'],
             Pdec=parameter_values['Pdec'],
             Prot=parameter_values['Prot'],
+            Pcyc=parameter_values['Pcyc'],
             diag=dataset.e ** 2.0 + dataset.jitter ** 2.0,
             x0=dataset.x0,
             y=dataset.residuals
@@ -130,8 +131,10 @@ class TinyGaussianProcess_QuasiPeriodicActivity(AbstractModel):
         theta_dict =  dict(
             gamma=1. / (2.*parameter_values['Oamp'] ** 2),
             Hamp=parameter_values['Hamp'],
+            Camp=parameter_values['Camp'],
             Pdec=parameter_values['Pdec'],
             Prot=parameter_values['Prot'],
+            Pcyc=parameter_values['Pcyc'],
             diag=dataset.e ** 2.0 + dataset.jitter ** 2.0,
             x0=dataset.x0,
             y=dataset.residuals,

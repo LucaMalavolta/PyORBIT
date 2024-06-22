@@ -108,6 +108,8 @@ from pyorbit.models.detrending_matern32 import Detrending_Matern32
 
 from pyorbit.models.celerite2_granulation_oscillation_rotation import Celerite2_Granulation_Oscillation_Rotation
 from pyorbit.models.tinygp_quasiperiodic_activity import TinyGaussianProcess_QuasiPeriodicActivity
+from pyorbit.models.tinygp_quasiperiodicsemiexponential_activity import TinyGaussianProcess_QuasiPeriodicSemiExponentialActivity,
+
 from pyorbit.models.tinygp_matern32_activity import TinyGaussianProcess_Matern32Activity
 from pyorbit.models.tinygp_multidimensional_quasiperiodic_activity import TinyGP_Multidimensional_QuasiPeriodicActivity
 from pyorbit.models.tinygp_multidimensional_matern32_activity import TinyGP_Multidimensional_Matern32Activity
@@ -260,6 +262,8 @@ define_type_to_class = {
     #'lightcurve_poly_detrending': LightcurvePolyDetrending,
     #'local_lightcurve_poly_detrending': LocalLightcurvePolyDetrending,
     'tinygp_quasiperiodic': TinyGaussianProcess_QuasiPeriodicActivity,
+    'tinygp_quasiperiodicsemiexponential': TinyGaussianProcess_QuasiPeriodicSemiExponentialActivity,
+    'tinygp_quasiperiodic_semiexponential': TinyGaussianProcess_QuasiPeriodicSemiExponentialActivity,
     'tinygp_matern32': TinyGaussianProcess_Matern32Activity,
     'tinygp_multidimensional_quasiperiodic': TinyGP_Multidimensional_QuasiPeriodicActivity,
     'tinygp_multidimensional_matern32': TinyGP_Multidimensional_Matern32Activity,
