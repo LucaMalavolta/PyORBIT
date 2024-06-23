@@ -12,31 +12,32 @@ try:
     if sys.version_info[1] < 10:
         raise Warning("You should be using Python 3.10 - tinygp may not work")
 
+    def _build_tinygp_quasiperiodic_cosine(params):
+
+        kernel = kernels.ExpSquared(scale=jnp.abs(params["Pdec"])) * (
+            jnp.power(params['Hamp'], 2.0) * kernels.ExpSineSquared(
+                scale=jnp.abs(params["Prot"]),
+                gamma=jnp.abs(params["gamma"])) +  \
+                jnp.power(params['Camp'], 2.0) * kernels.Cosine(scale= jnp.abs(params["Prot"]/2.)))
+
+        return GaussianProcess(
+            kernel, params['x0'], diag=jnp.abs(params['diag']), mean=0.0
+        )
 
     @jax.jit
-    def _loss_tinygp(params):
-        gp = _build_tinygp_quasiperiodic(params)
+    def _loss_tinygp_QPcosine(params):
+        gp = _build_tinygp_quasiperiodic_cosine(params)
         return gp.log_probability(params['y'])
 
 except:
     pass
 
 
-__all__ = ['TinyGaussianProcess_QuasiPeriodicActivity']
-
-def _build_tinygp_quasiperiodic(params):
-    kernel = jnp.power(params['Hamp'], 2.0) \
-        * kernels.ExpSquared(scale=jnp.abs(params["Pdec"])) \
-            * kernels.ExpSineSquared(
-            scale=jnp.abs(params["Prot"]),
-            gamma=jnp.abs(params["gamma"]))
-
-    return GaussianProcess(
-        kernel, params['x0'], diag=jnp.abs(params['diag']), mean=0.0
-    )
+__all__ = ['TinyGaussianProcess_QuasiPeriodicCosineActivity']
 
 
-class TinyGaussianProcess_QuasiPeriodicActivity(AbstractModel):
+
+class TinyGaussianProcess_QuasiPeriodicCosineActivity(AbstractModel):
     ''' Three parameters out of four are the same for all the datasets, since they are related to
     the properties of the physical process rather than the observed effects on a dataset
      From Grunblatt+2015, Affer+2016
@@ -57,7 +58,7 @@ class TinyGaussianProcess_QuasiPeriodicActivity(AbstractModel):
             print("ERROR: tinygp or jax not installed, this will not work")
             quit()
 
-        self.model_class = 'gp_quasiperiodic'
+        self.model_class = 'gp_quasiperiodic_cosine'
         self.internal_likelihood = True
 
         self.list_pams_common = {
@@ -68,6 +69,7 @@ class TinyGaussianProcess_QuasiPeriodicActivity(AbstractModel):
 
         self.list_pams_dataset = {
             'Hamp'  # Amplitude of the signal in the covariance matrix
+            'Camp'  # Amplitude of the cycle
         }
 
     def initialize_model(self, mc,  **kwargs):
@@ -107,13 +109,14 @@ class TinyGaussianProcess_QuasiPeriodicActivity(AbstractModel):
         theta_dict =  dict(
             gamma=1. / (2.*parameter_values['Oamp'] ** 2),
             Hamp=parameter_values['Hamp'],
+            Camp=parameter_values['Camp'],
             Pdec=parameter_values['Pdec'],
             Prot=parameter_values['Prot'],
             diag=dataset.e ** 2.0 + dataset.jitter ** 2.0,
             x0=dataset.x0,
             y=dataset.residuals
         )
-        return _loss_tinygp(theta_dict)
+        return _loss_tinygp_QPcosine(theta_dict)
 
 
     def sample_predict(self, parameter_values, dataset, x0_input=None, return_covariance=False, return_variance=False):
@@ -126,6 +129,7 @@ class TinyGaussianProcess_QuasiPeriodicActivity(AbstractModel):
         theta_dict =  dict(
             gamma=1. / (2.*parameter_values['Oamp'] ** 2),
             Hamp=parameter_values['Hamp'],
+            Camp=parameter_values['Camp'],
             Pdec=parameter_values['Pdec'],
             Prot=parameter_values['Prot'],
             diag=dataset.e ** 2.0 + dataset.jitter ** 2.0,
@@ -134,7 +138,7 @@ class TinyGaussianProcess_QuasiPeriodicActivity(AbstractModel):
             x0_predict = x0
         )
 
-        gp = _build_tinygp_quasiperiodic(theta_dict)
+        gp = _build_tinygp_quasiperiodic_cosine(theta_dict)
         _, cond_gp = gp.condition(theta_dict['y'], theta_dict['x0_predict'])
         mu = cond_gp.loc # or cond_gp.mean?
         std = np.sqrt(cond_gp.variance)
@@ -152,7 +156,6 @@ class TinyGaussianProcess_QuasiPeriodicActivity(AbstractModel):
     @staticmethod
     def _hypercond_01(parameter_values):
         # Condition from Rajpaul 2017, Rajpaul+2021
-        # Taking into account that Pdec^2 = 2*lambda_2^2
         return parameter_values['Pdec']**2 > (3. / 2. / np.pi) * parameter_values['Oamp']**2 * parameter_values['Prot']**2
 
     @staticmethod

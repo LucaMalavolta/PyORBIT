@@ -303,7 +303,7 @@ class TinyGP_MultiQuasiPeriodic_TrainedSquaredExponential_Activity(AbstractModel
             #coeff_SE_deriv=self.internal_coeff_SE_deriv
         )
 
-        return _loss_tinygp_MultiQPSE(theta_dict)
+        return _loss_tinygp_multiQP_trainedSE(theta_dict)
 
 
     def sample_predict(self, dataset, x0_input=None, return_covariance=False, return_variance=False):
@@ -366,7 +366,7 @@ class TinyGP_MultiQuasiPeriodic_TrainedSquaredExponential_Activity(AbstractModel
     def _hypercond_01(parameter_values):
         # Condition from Rajpaul 2017, Rajpaul+2021
         # Taking into account that Pdec^2 = 2*lambda_2^2
-        return parameter_values['Pdec']**2 > (3. / 4. / np.pi) * parameter_values['Oamp']**2 * parameter_values['Prot']**2
+        return parameter_values['Pdec']**2 > (3. / 2. / np.pi) * parameter_values['Oamp']**2 * parameter_values['Prot']**2
 
     @staticmethod
     def _hypercond_02(parameter_values):

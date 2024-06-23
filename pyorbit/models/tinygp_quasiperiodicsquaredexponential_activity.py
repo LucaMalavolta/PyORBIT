@@ -25,7 +25,7 @@ try:
         )
 
     @jax.jit
-    def _loss_tinygp(params):
+    def _loss_tinygp_QPSE(params):
         gp = _build_tinygp_quasiperiodic_squaredexponential(params)
         return gp.log_probability(params['y'])
 
@@ -118,7 +118,7 @@ class TinyGaussianProcess_QuasiPeriodicSquaredExponentialActivity(AbstractModel)
             x0=dataset.x0,
             y=dataset.residuals
         )
-        return _loss_tinygp(theta_dict)
+        return _loss_tinygp_QPSE(theta_dict)
 
 
     def sample_predict(self, parameter_values, dataset, x0_input=None, return_covariance=False, return_variance=False):
@@ -141,7 +141,7 @@ class TinyGaussianProcess_QuasiPeriodicSquaredExponentialActivity(AbstractModel)
             x0_predict = x0
         )
 
-        gp = _build_tinygp_quasiperiodic(theta_dict)
+        gp = _build_tinygp_quasiperiodic_squaredexponential(theta_dict)
         _, cond_gp = gp.condition(theta_dict['y'], theta_dict['x0_predict'])
         mu = cond_gp.loc # or cond_gp.mean?
         std = np.sqrt(cond_gp.variance)
@@ -160,7 +160,7 @@ class TinyGaussianProcess_QuasiPeriodicSquaredExponentialActivity(AbstractModel)
     def _hypercond_01(parameter_values):
         # Condition from Rajpaul 2017, Rajpaul+2021
         # Taking into account that Pdec^2 = 2*lambda_2^2
-        return parameter_values['Pdec']**2 > (3. / 4. / np.pi) * parameter_values['Oamp']**2 * parameter_values['Prot']**2
+        return parameter_values['Pdec']**2 > (3. / 2. / np.pi) * parameter_values['Oamp']**2 * parameter_values['Prot']**2
 
     @staticmethod
     def _hypercond_02(parameter_values):

@@ -6,7 +6,7 @@ from scipy.linalg import cho_factor, cho_solve, lapack, LinAlgError
 from scipy import matrix, spatial
 import sys
 
-__all__ = ['TinyGP_Multidimensional_QuasiPeriodicActivity']
+__all__ = ['TinyGP_Multidimensional_QuasiPeriodicCosineActivity']
 
 
 try:
@@ -19,8 +19,8 @@ try:
     if sys.version_info[1] < 10:
         raise Warning("You should be using Python 3.10 - tinygp may not work")
 
-    class LatentKernel(kernels.Kernel):
-        """A custom kernel based on Rajpaul et al. (2015)
+    class LatentKernel_Multi_QuasiPeriodicCosine(kernels.Kernel):
+        """A custom kernel based on
 
         Args:
             kernel: The kernel function describing the latent process. This can be any other
@@ -33,67 +33,94 @@ try:
         """
 
         try:
-            kernel : kernels.Kernel
-            coeff_prim: jax.Array | float
-            coeff_deriv: jax.Array | float
+            kernel_QP : kernels.Kernel
+            kernel_CO : kernels.Kernel
+            coeff_QP_prim: jax.Array | float
+            coeff_QP_deriv: jax.Array | float
+            coeff_CO_prim: jax.Array | float
+            coeff_CO_deriv: jax.Array | float
         except:
             pass
 
-        def __init__(self, kernel, coeff_prim, coeff_deriv):
-            self.kernel = kernel
-            self.coeff_prim, self.coeff_deriv = jnp.broadcast_arrays(
-                jnp.asarray(coeff_prim), jnp.asarray(coeff_deriv)
+        def __init__(self, kernel_QP, kernel_CO, coeff_QP_prim, coeff_QP_deriv, coeff_CO_prim, coeff_CO_deriv):
+            self.kernel_QP = kernel_QP
+            self.kernel_CO = kernel_CO
+            self.coeff_QP_prim, self.coeff_QP_deriv = jnp.broadcast_arrays(
+                jnp.asarray(coeff_QP_prim), jnp.asarray(coeff_QP_deriv)
             )
-
+            self.coeff_CO_prim, self.coeff_CO_deriv = jnp.broadcast_arrays(
+                jnp.asarray(coeff_CO_prim), jnp.asarray(coeff_CO_deriv)
+            )
         def evaluate(self, X1, X2):
             t1, label1 = X1
             t2, label2 = X2
 
             # Differentiate the kernel function: the first derivative wrt x1
-            Kp = jax.grad(self.kernel.evaluate, argnums=0)
+            QP_Kp = jax.grad(self.kernel_QP.evaluate, argnums=0)
+            CO_Kp = jax.grad(self.kernel_CO.evaluate, argnums=0)
 
             # ... and the second derivative
-            Kpp = jax.grad(Kp, argnums=1)
+            QP_Kpp = jax.grad(QP_Kp, argnums=1)
+            CO_Kpp = jax.grad(CO_Kp, argnums=1)
 
             # Evaluate the kernel matrix and all of its relevant derivatives
-            K = self.kernel.evaluate(t1, t2)
-            d2K_dx1dx2 = Kpp(t1, t2)
+            QP_K = self.kernel_QP.evaluate(t1, t2)
+            QP_d2K_dx1dx2 = QP_Kpp(t1, t2)
+
+            CO_K = self.kernel_CO.evaluate(t1, t2)
+            CO_d2K_dx1dx2 = CO_Kpp(t1, t2)
 
             # For stationary kernels, these are related just by a minus sign, but we'll
             # evaluate them both separately for generality's sake
-            dK_dx2 = jax.grad(self.kernel.evaluate, argnums=1)(t1, t2)
-            dK_dx1 = Kp(t1, t2)
+            QP_dK_dx2 = jax.grad(self.kernel_QP.evaluate, argnums=1)(t1, t2)
+            QP_dK_dx1 = QP_Kp(t1, t2)
+
+            CO_dK_dx2 = jax.grad(self.kernel_CO.evaluate, argnums=1)(t1, t2)
+            CO_dK_dx1 = CO_Kp(t1, t2)
 
             # Extract the coefficients
-            a1 = self.coeff_prim[label1]
-            a2 = self.coeff_prim[label2]
-            b1 = self.coeff_deriv[label1]
-            b2 = self.coeff_deriv[label2]
+            a1 = self.coeff_QP_prim[label1]
+            a2 = self.coeff_QP_prim[label2]
+            b1 = self.coeff_QP_deriv[label1]
+            b2 = self.coeff_QP_deriv[label2]
+
+            c1 = self.coeff_CO_prim[label1]
+            c2 = self.coeff_CO_prim[label2]
+            d1 = self.coeff_CO_deriv[label1]
+            d2 = self.coeff_CO_deriv[label2]
 
             # Construct the matrix element
             return (
-                a1 * a2 * K
-                + a1 * b2 * dK_dx2
-                + b1 * a2 * dK_dx1
-                + b1 * b2 * d2K_dx1dx2
+                a1 * a2 * QP_K
+                + a1 * b2 * QP_dK_dx2
+                + b1 * a2 * QP_dK_dx1
+                + b1 * b2 * QP_d2K_dx1dx2
+                + c1 * c2 * CO_K
+                + c1 * d2 * CO_dK_dx2
+                + d1 * c2 * CO_dK_dx1
+                + d1 * d2 * CO_d2K_dx1dx2
             )
 
 
-    def _build_tinygp_multidimensional(params):
+    def _build_tinygp_multidimensional_QPCos(params):
 
-        base_kernel = kernels.ExpSquared(scale=jnp.abs(params["Pdec"])) \
+        base_kernel_QP = kernels.ExpSquared(scale=jnp.abs(params["Pdec"])) \
                 * kernels.ExpSineSquared(
                 scale=jnp.abs(params["Prot"]),
                 gamma=jnp.abs(params["gamma"]))
 
-        kernel = LatentKernel(base_kernel, params['coeff_prime'], params['coeff_deriv'])
+        base_kernel_CO = kernels.ExpSquared(scale=jnp.abs(params["Pdec"])) *  kernels.Cosine(scale=jnp.abs(params["Prot"]/2.))
+
+        kernel = LatentKernel_Multi_QuasiPeriodicCosine(base_kernel_QP, base_kernel_CO,
+                                        params['coeff_QP_prime'], params['coeff_QP_deriv'],
+                                        params['coeff_CO_prime'], params['coeff_CO_deriv'])
         return GaussianProcess(
             kernel, params['X'], diag=jnp.abs(params['diag']), mean=0.0
         )
 
     @jax.jit
-    def _loss_tinygp(params):
-        gp = _build_tinygp_multidimensional(params)
+    def _loss_tinygp_MultiQPCos(params):
+        gp = _build_tinygp_multidimensional_QPCos(params)
         return gp.log_probability(params['y'])
 
 except:
@@ -102,7 +129,7 @@ except:
 
 
 
-class TinyGP_Multidimensional_QuasiPeriodicActivity(AbstractModel):
+class TinyGP_Multidimensional_QuasiPeriodicCosineActivity(AbstractModel):
     ''' Three parameters out of four are the same for all the datasets, since they are related to
     the properties of the physical process rather than the observed effects on a dataset
      From Grunblatt+2015, Affer+2016
@@ -116,7 +143,7 @@ class TinyGP_Multidimensional_QuasiPeriodicActivity(AbstractModel):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.model_class = 'gp_multidimensional_quasiperiodic_activity'
+        self.model_class = 'gp_multidimensional_quasiperiodicsquaredexponential_activity'
 
         self.internal_likelihood = True
         self.delayed_lnlk_computation = True
@@ -125,10 +152,13 @@ class TinyGP_Multidimensional_QuasiPeriodicActivity(AbstractModel):
             'Prot',  # Rotational period of the star
             'Pdec',  # Decay timescale of activity
             'Oamp',  # Granulation of activity
+
         }
         self.list_pams_dataset = {
             'rot_amp', # Amplitude of the covariance matrix
             'con_amp' # Amplitude of the first derivative of the covariance matrix
+            'cos_amp', # Amplitude of the covariance matrix
+            'cos_der' # Amplitude of the first derivative of the covariance matrix
         }
 
 
@@ -148,8 +178,10 @@ class TinyGP_Multidimensional_QuasiPeriodicActivity(AbstractModel):
 
         self.use_derivative_dict = {}
 
-        self.internal_coeff_prime = []
-        self.internal_coeff_deriv = []
+        self.internal_coeff_QP_prime = []
+        self.internal_coeff_QP_deriv = []
+        self.internal_coeff_CO_prime = []
+        self.internal_coeff_CO_deriv = []
 
         self._dataset_ej2 = []
         self._dataset_res = []
@@ -206,8 +238,10 @@ class TinyGP_Multidimensional_QuasiPeriodicActivity(AbstractModel):
         self._dataset_ej2 = self._dataset_e2 * 1.
         self._dataset_res = self._dataset_e2 * 0.
 
-        self.internal_coeff_prime = np.empty(self._added_datasets)
-        self.internal_coeff_deriv = np.empty(self._added_datasets)
+        self.internal_coeff_QP_prime = np.empty(self._added_datasets)
+        self.internal_coeff_QP_deriv = np.empty(self._added_datasets)
+        self.internal_coeff_CO_prime = np.empty(self._added_datasets)
+        self.internal_coeff_CO_deriv = np.empty(self._added_datasets)
         self._X = (self._dataset_x0, self._dataset_label.astype(int))
 
         if 'derivative'in kwargs:
@@ -223,8 +257,24 @@ class TinyGP_Multidimensional_QuasiPeriodicActivity(AbstractModel):
             else:
                 use_derivative = True
 
-        if not use_derivative:
+        if 'derivative_quasiperiodic'in kwargs:
+            use_derivative_QP = kwargs['derivative_quasiperiodic'].get(dataset.name_ref, False)
+        elif dataset.name_ref in kwargs:
+            use_derivative_QP = kwargs[dataset.name_ref].get('derivative_quasiperiodic', False)
+        else:
+            use_derivative_QP = True
+
+        if 'derivative_squaredexponential'in kwargs:
+            use_derivative_SE = kwargs['derivative_squaredexponential'].get(dataset.name_ref, False)
+        elif dataset.name_ref in kwargs:
+            use_derivative_SE= kwargs[dataset.name_ref].get('derivative_squaredexponential', False)
+        else:
+            use_derivative_SE = True
+
+        if not use_derivative or not use_derivative_QP:
             self.fix_list[dataset.name_ref] = {'rot_amp': [0., 0.]}
+        if not use_derivative or not use_derivative_SE:
+            self.fix_list[dataset.name_ref] = {'cos_der': [0., 0.]}
 
 
         return
@@ -242,8 +292,10 @@ class TinyGP_Multidimensional_QuasiPeriodicActivity(AbstractModel):
         self._dataset_ej2[d_nstart:d_nend] = self._dataset_e2[d_nstart:d_nend] + dataset.jitter**2.0
         self._dataset_res[d_nstart:d_nend] = dataset.residuals
 
-        self.internal_coeff_prime[d_ind] = parameter_values['con_amp']
-        self.internal_coeff_deriv[d_ind] = parameter_values['rot_amp']
+        self.internal_coeff_QP_prime[d_ind] = parameter_values['con_amp']
+        self.internal_coeff_QP_deriv[d_ind] = parameter_values['rot_amp']
+        self.internal_coeff_CO_prime[d_ind] = parameter_values['cos_amp']
+        self.internal_coeff_CO_deriv[d_ind] = parameter_values['cos_der']
 
     def lnlk_compute(self):
         if not self.hyper_condition(self.internal_parameter_values):
@@ -255,14 +307,17 @@ class TinyGP_Multidimensional_QuasiPeriodicActivity(AbstractModel):
             gamma=1. / (2.*self.internal_parameter_values['Oamp'] ** 2),
             Pdec=self.internal_parameter_values['Pdec'],
             Prot=self.internal_parameter_values['Prot'],
+            Pcyc=self.internal_parameter_values['Pcyc'],
             diag=self._dataset_ej2,
             X=self._X,
             y=self._dataset_res,
-            coeff_prime=self.internal_coeff_prime,
-            coeff_deriv=self.internal_coeff_deriv
+            coeff_QP_prime=self.internal_coeff_QP_prime,
+            coeff_QP_deriv=self.internal_coeff_QP_deriv,
+            coeff_CO_prime=self.internal_coeff_CO_prime,
+            coeff_CO_deriv=self.internal_coeff_CO_deriv
         )
 
-        return _loss_tinygp(theta_dict)
+        return _loss_tinygp_MultiQPCos(theta_dict)
 
 
     def sample_predict(self, dataset, x0_input=None, return_covariance=False, return_variance=False):
@@ -294,12 +349,14 @@ class TinyGP_Multidimensional_QuasiPeriodicActivity(AbstractModel):
             diag=self._dataset_ej2,
             X=self._X,
             y=self._dataset_res,
-            coeff_prime=self.internal_coeff_prime,
-            coeff_deriv=self.internal_coeff_deriv,
+            coeff_QP_prime=self.internal_coeff_QP_prime,
+            coeff_QP_deriv=self.internal_coeff_QP_deriv,
+            coeff_CO_prime=self.internal_coeff_CO_prime,
+            coeff_CO_deriv=self.internal_coeff_CO_deriv,
             x0_predict = X_input
         )
 
-        gp = _build_tinygp_multidimensional(theta_dict)
+        gp = _build_tinygp_multidimensional_QPCos(theta_dict)
         _, cond_gp = gp.condition(theta_dict['y'], theta_dict['x0_predict'])
 
         #mu = cond_gp.mean

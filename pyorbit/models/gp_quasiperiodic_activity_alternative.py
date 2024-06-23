@@ -73,7 +73,7 @@ class GaussianProcess_QuasiPeriodicActivity_Alternative(AbstractModel):
             self.rotdec_condition = self._hypercond_02
         else:
             self.rotdec_condition = self._hypercond_00
-        
+
         for common_ref in self.common_ref:
             if mc.common_models[common_ref].model_class == 'activity':
                 self.use_stellar_rotation_period = getattr(mc.common_models[common_ref], 'use_stellar_rotation_period', False)
@@ -186,7 +186,7 @@ class GaussianProcess_QuasiPeriodicActivity_Alternative(AbstractModel):
     def _hypercond_01(parameter_values):
         # Condition from Rajpaul 2017, Rajpaul+2021
         # Taking into account that Pdec^2 = 2*lambda_2^2
-        return parameter_values['Pdec']**2 > (3. / 4. / np.pi) * parameter_values['Oamp']**2 * parameter_values['Prot']**2 
+        return parameter_values['Pdec']**2 > (3. / 2. / np.pi) * parameter_values['Oamp']**2 * parameter_values['Prot']**2
 
     @staticmethod
     def _hypercond_02(parameter_values):
