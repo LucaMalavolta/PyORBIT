@@ -40,10 +40,13 @@ def pyorbit_pyde(config_in, input_datasets=None, return_output=None):
     except:
         num_threads = multiprocessing.cpu_count()-1
 
+    multiprocessing.set_start_method('fork')
+
     print()
     print('reloaded_pyde: ', reloaded_pyde)
     print()
     print('number of multiprocessing threads:', num_threads )
+    print("multiprocessing method (should be fork): ", multiprocessing.get_start_method())
     print()
 
     if reloaded_pyde:
