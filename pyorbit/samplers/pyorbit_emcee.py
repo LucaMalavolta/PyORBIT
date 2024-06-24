@@ -29,6 +29,8 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
         print(" Something happened when trying to setup multiprocessing, switching back to 1 CPU")
         num_threads = 1
 
+    multiprocessing.set_start_method('fork')
+
     optimize_dir_output = './' + config_in['output'] + '/optimize/'
     pyde_dir_output = './' + config_in['output'] + '/pyde/'
     emcee_dir_output = './' + config_in['output'] + '/emcee/'
@@ -67,6 +69,7 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
     print('reloaded_emcee: ', reloaded_emcee)
     print()
     print('number of multiprocessing threads:', num_threads)
+    print("multiprocessing method (should be fork): ", multiprocessing.get_start_method())
     print()
 
     safe_reload = config_in['parameters'].get('safe_reload', False)
