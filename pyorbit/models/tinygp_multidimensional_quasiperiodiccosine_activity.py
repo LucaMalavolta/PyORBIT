@@ -156,7 +156,7 @@ class TinyGP_Multidimensional_QuasiPeriodicCosineActivity(AbstractModel):
         }
         self.list_pams_dataset = {
             'rot_amp', # Amplitude of the covariance matrix
-            'con_amp' # Amplitude of the first derivative of the covariance matrix
+            'con_amp', # Amplitude of the first derivative of the covariance matrix
             'cos_amp', # Amplitude of the covariance matrix
             'cos_der' # Amplitude of the first derivative of the covariance matrix
         }

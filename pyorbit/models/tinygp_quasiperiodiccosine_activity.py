@@ -68,7 +68,7 @@ class TinyGaussianProcess_QuasiPeriodicCosineActivity(AbstractModel):
         }
 
         self.list_pams_dataset = {
-            'Hamp'  # Amplitude of the signal in the covariance matrix
+            'Hamp',  # Amplitude of the signal in the covariance matrix
             'Camp'  # Amplitude of the cycle
         }
 

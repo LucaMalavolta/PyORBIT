@@ -157,7 +157,7 @@ class TinyGP_Multidimensional_QuasiPeriodicSquaredExponentialActivity(AbstractMo
         }
         self.list_pams_dataset = {
             'rot_amp', # Amplitude of the covariance matrix
-            'con_amp' # Amplitude of the first derivative of the covariance matrix
+            'con_amp', # Amplitude of the first derivative of the covariance matrix
             'cyc_amp', # Amplitude of the covariance matrix
             'cyc_der' # Amplitude of the first derivative of the covariance matrix
         }
