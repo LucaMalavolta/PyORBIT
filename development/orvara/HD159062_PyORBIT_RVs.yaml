@@ -1,0 +1,36 @@
+inputs:
+  HD159062_RV_PyORBIT:
+    file: data/HD159062_RV_PyORBIT.dat
+    kind: RV
+    models:
+      - radial_velocities
+common:
+  planets:
+    b:
+      orbit: keplerian
+      boundaries:
+        P: [140000, 160000]
+        K: [0.01, 300.0]
+        e: [0.00, 0.400]
+  star:
+    star_parameters:
+      priors:
+        mass: ['Gaussian', 0.80, 0.05]
+models:
+  radial_velocities:
+    planets:
+      - b
+parameters:
+  Tref:  2455197.5
+solver:
+  pyde:
+    ngen: 50000
+    npop_mult: 4
+  emcee:
+    npop_mult: 4
+    nsteps: 50000
+    nburn: 20000
+    thin: 100
+  nested_sampling:
+    nlive: 1000
+  recenter_bounds: True

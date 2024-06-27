@@ -23,6 +23,14 @@ class CommonActivity(AbstractCommon):
                 'fixed' : None,
                 'unit': 'days',
             },
+        'Pcyc':  # Decay timescale of activity
+            {
+                'bounds': [50.0, 10000.0],
+                'priors': ['Uniform', []],
+                'spaces': 'Linear',
+                'fixed' : None,
+                'unit': 'days',
+            },
         'Oamp':  # Granulation of activity
             {
                 'bounds': [0.0001, 2.0],
@@ -171,6 +179,38 @@ class CommonActivity(AbstractCommon):
                 'unit': 'as input',
             },
         'con_amp': # the convective blueshift suppression term
+            {
+                'bounds': [-500.0, 500.0],
+                'priors': ['Uniform', []],
+                'spaces': 'Linear',
+                'fixed' : None,
+                'unit': 'as input',
+            },
+        'cos_amp': # the rotational term
+            {
+                'bounds': [-500.0, 500.0],
+                'priors': ['Uniform', []],
+                'spaces': 'Linear',
+                'fixed' : None,
+                'unit': 'as input',
+            },
+        'cos_der': # the convective blueshift suppression term
+            {
+                'bounds': [-500.0, 500.0],
+                'priors': ['Uniform', []],
+                'spaces': 'Linear',
+                'fixed' : None,
+                'unit': 'as input',
+            },
+        'cyc_amp': # the rotational term
+            {
+                'bounds': [-500.0, 500.0],
+                'priors': ['Uniform', []],
+                'spaces': 'Linear',
+                'fixed' : None,
+                'unit': 'as input',
+            },
+        'cyc_der': # the convective blueshift suppression term
             {
                 'bounds': [-500.0, 500.0],
                 'priors': ['Uniform', []],
