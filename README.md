@@ -81,7 +81,7 @@ If you have been using the development version of V10, you may run into incompat
 
   Also, `batman_ld_quadratic` and `pytransit_ld_quadratic` have been merged into `ld_quadratic`.
 
-  Note: the Mean Longitude is defined assuming the longitude of the ascending node $\Omega$ equal to zero, thus corresponding to the angle defined in section 4.3 of  [(Ford 2006)](https://ui.adsabs.harvard.edu/abs/2006ApJ...642..505F/abstract) and simply called _phase_ in [Malavolta et al. (2016)](https://ui.adsabs.harvard.edu//#abs/2016A&A...588A.118M/abstract)
+  Note: the Mean Longitude is defined assuming the longitude of the ascending node $\Omega$ equal to zero, thus corresponding to the angle defined in section 4.3 of  [(Ford 2006)](https://ui.adsabs.harvard.edu/abs/2006ApJ...642..505F/abstract) and simply called _phase_ in [Malavolta et al. (2016)](https://ui.adsabs.harvard.edu/abs/2016A%26A...588A.118M/abstract)
 
 * Overall reorganization of the code
 
@@ -142,9 +142,9 @@ These priors can be applied to any of the parameters (it's up to the user to cho
 `Jeffreys` and `Modified Jeffreys` priors are actually `Truncated Jeffreys` and `Truncated Modified Jeffreys`, with truncation defined by the boundaries of the parameter space.
 
 **Parameter exploration**
-The user can choice between `Linear` and `Logarithmic`. Note that in the second case the parameter space is transformed into base-2 logarithm.
+The user can choose between `Linear` and `Logarithmic`. Note that in the second case the parameter space is transformed into base-2 logarithm.
 
-Most of the information can be found in [Malavolta et al. (2016)](https://ui.adsabs.harvard.edu//#abs/2016A&A...588A.118M/abstract) and [Malavolta et al. (2018)](https://ui.adsabs.harvard.edu//#abs/2018AJ....155..107M/abstract).
+Most of the information can be found in [Malavolta et al. (2016)](https://ui.adsabs.harvard.edu/abs/2016A%26A...588A.118M/abstract) and [Malavolta et al. (2018)](https://ui.adsabs.harvard.edu/abs/2018AJ....155..107M/abstract).
 
 **Papers using PyORBIT**
 
