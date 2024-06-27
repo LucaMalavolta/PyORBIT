@@ -276,7 +276,7 @@ define_type_to_class = {
     'tinygp_multidimensional_quasiperiodic_squaredexponential': TinyGP_Multidimensional_QuasiPeriodicSquaredExponentialActivity,
     'tinygp_multidimensional_quasiperiodiccosine': TinyGP_Multidimensional_QuasiPeriodicCosineActivity,
     'tinygp_multidimensional_quasiperiodic_cosine': TinyGP_Multidimensional_QuasiPeriodicCosineActivity,
-    'tinygp_multidiquasiperiodic_trainedsquaredexponential': TinyGP_MultiQuasiPeriodic_TrainedSquaredExponential_Activity,
+    'tinygp_multiquasiperiodic_trainedsquaredexponential': TinyGP_MultiQuasiPeriodic_TrainedSquaredExponential_Activity,
     'tinygp_multiquasiperiodictrainedsquaredexponential': TinyGP_MultiQuasiPeriodic_TrainedSquaredExponential_Activity,
     'tinygp_multidimensional_matern32': TinyGP_Multidimensional_Matern32Activity,
     'rossitermclaughlin_ohta': RossiterMcLaughlin_Ohta,
