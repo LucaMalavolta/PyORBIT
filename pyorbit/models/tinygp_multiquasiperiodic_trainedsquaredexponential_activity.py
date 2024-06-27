@@ -41,7 +41,7 @@ try:
         except:
             pass
 
-        def __init__(self, kernel_QP, kernel_SE, coeff_QP_prim, coeff_QP_deriv, coeff_SE_prim, coeff_SE_deriv):
+        def __init__(self, kernel_QP, kernel_SE, coeff_QP_prim, coeff_QP_deriv, coeff_SE_prim):
             self.kernel_QP = kernel_QP
             self.kernel_SE = kernel_SE
             self.coeff_QP_prim, self.coeff_QP_deriv, self.coeff_SE_prim = jnp.broadcast_arrays(
