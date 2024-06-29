@@ -1,4 +1,4 @@
-(quasiperiodic_md_gp)=
+(md_quasiperiodic)=
 
 ### Quasi-periodic kernel
 
@@ -7,13 +7,13 @@ The quasi-periodic kernel is the preferred choice for the multidimensional GP. W
 ```{math}
 :label: quasiperiodic_grunblatt
 
-\gamma ^{(G,G)}_{i,j} = \exp{ \left \{-\frac{\sin^2{[\pi(t_i - t_j)/\theta]}}{2 w ^2} - \left (\frac{t_i-t_j}{\lambda} \right )^2 \right \} }
+\gamma ^{(G,G)}_{i,j} = \exp{ \left \{-\frac{\sin^2{[\pi(t_i - t_j)/ P_\mathrm{rot}]}}{2 O_\mathrm{amp} ^2} - \frac{(t_i-t_j)^2}{2 P_\mathrm{dec}^2} \right \} }
 ```
 
-where $\theta$ is equivalent to the rotation period of the star, $w$ is the coherence scale, and $\lambda$ is usually associated with the decay time scale of the active regions
+Where $P_\mathrm{rot}$ is equivalent to the rotation period of the star, $O_\mathrm{amp}$ is the coherence scale, and $P_\mathrm{dec}$ is usually associated with the decay time scale of the active regions.
 
-```{important}
-It is common to have a factor 2 in the denominator of the aperiodic variation (i.e., $2 \lambda$ rather than $\lambda$) in {eq}`quasiperiodic_grunblatt`. In such a case, it is sufficient to multiply the value of $\lambda$ of `PyORBIT` by a factor $\sqrt(2)$ - keep it in mind when assigning priors!
+```{note}
+Check the documentation page on the [quasi-periodic kernel](../gaussian_process/quasiperiodic_kernel) for additional information on this kernel
 ```
 
 
@@ -25,8 +25,19 @@ The coefficients $X_c$ and $X_c$ are thus renamed in *con_amp* and *rot_amp*, wi
 
 ## Model definition and requirements
 
-- model name: ``gp_multidimensional_quasiperiodic``
-- required common objects : ``activity``
+**model name**: ``tinygp_multidimensional_quasiperiodic``
+- required common objects: ``activity``
+- GPU acceleration supported (instruction incoming)
+- Read [Caveats on the use of `tinyGP`](../running_pyorbit/tinygp_caveats) carefully
+
+**model name**: ``gp_multidimensional_quasiperiodic``
+- required common objects: ``activity``
+- *direct* implementation using `numpy` and `scipy` packages.
+
+**model name**: ``gp_multidimensional_quasiperiodic_numba``
+- required common objects: ``activity``
+- *direct* implementation using `numpy` and `scipy` packages with `numba` acceleration.
+
 
 ## Keywords
 
@@ -41,13 +52,13 @@ Model-wide keywords, with the default value in bold face.
 * if activated, it ensures that the decay time scale of the activity regions $\lambda$ is at least twice the rotational period of the star $\theta$
 
 **derivative**
-* accepted values: list of dataset using the model
-* if not provided, default is **`True`** for all datasets except `H-alpha` `S_index` `Ca_HK`, and `FWHM`. If provided, default is **`False`** for all the dataset not explicitly mentioned.
+* accepted values: list of datasets using the model
+* if not provided, default is **`True`** for all datasets except `H-alpha` `S_index` `Ca_HK`, and `FWHM`. If provided, default is **`False`** for all the datasets not explicitly mentioned.
 * If **`True`**, the first derivative of the underlying Gaussian process is included, otherwise, `rot_amp`F is fixed to zero.
 
 ## Examples
 
-In the following example, one RV dataset comes together with two activity indicators, the `BIS` and the `FWHM` of the CCF, the latter as replacement of  $\log{R^{\prime}_\mathrm{HK}}$.
+In the following example, one RV dataset comes together with two activity indicators, the `BIS` and the `FWHM` of the CCF, the latter as a replacement of  $\log{R^{\prime}_\mathrm{HK}}$.
 
 Here `gp_multidimensional` is the label that we assign to the `gp_multidimensional_quasiperiodic` model. The label is assigned to each dataset, including the RV dataset for which also the RV model is included.
 

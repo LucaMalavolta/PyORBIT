@@ -26,7 +26,7 @@ The original implementation based on `george` is still available. An independent
 
 **model name**: `tinygp_quasiperiodic`
 - required common object: `activity`
-- *direct* implemented using  `tinygp` (version 0.2.3, [link to documentation](https://tinygp.readthedocs.io/en/stable/))
+- implemented using  `tinygp` (version 0.3.0, [link to documentation](https://tinygp.readthedocs.io/en/stable/))
 - GPU acceleration supported (instruction incoming)
 - Read [Caveats on the use of `tinyGP`](../running_pyorbit/tinygp_caveats) carefully
 
