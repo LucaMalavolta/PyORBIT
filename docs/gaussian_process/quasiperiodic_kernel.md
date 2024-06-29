@@ -2,7 +2,7 @@
 
 # Quasi-periodic kernel
 
-The most common and most reliable kernel for stellar activity is the quasi-periodic one, following the expression given by [Grunblatt et al. 2015](https://ui.adsabs.harvard.edu/abs/2015ApJ...808..127G/abstract):
+The most common and most reliable kernel for stellar activity is the quasi-periodic one, following the expression given by [Rajpaul et al. 2015](https://ui.adsabs.harvard.edu/abs/2015MNRAS.452.2269R/abstract)
 
 ```{math}
 :label: quasiperiodic_pyorbit
@@ -10,24 +10,19 @@ The most common and most reliable kernel for stellar activity is the quasi-perio
 G(t_i, t_j) = H_\mathrm{amp}^2  \exp{ \left \{-\frac{\sin^2{[\pi(t_i - t_j)/ P_\mathrm{rot}]}}{2 O_\mathrm{amp} ^2} - \frac{(t_i-t_j)^2}{2 P_\mathrm{dec}^2} \right \} }
 ```
 
-where $P_\mathrm{rot}$ is equivalent to the rotation period of the star, $O_\mathrm{amp} is the coherence scale, and $P_\mathrm{dec}$ is usually associated with the decay time scale of the active regions.
+where $P_\mathrm{rot}$ is equivalent to the rotation period of the star, $O_\mathrm{amp}$ is the coherence scale, and $P_\mathrm{dec}$ is usually associated with the decay time scale of the active regions.
 
 ```{important}
 It is common to have a factor 2 in the denominator of the aperiodic variation or in the numerator of the sinusoidal term. In such a case, it is sufficient to multiply/divide the value value of `PyORBIT` by a factor $\sqrt(2)$ - keep it in mind when assigning priors!
 
-A comparison between different formulations of the quasiperiodic kernel is provided in the section [Differences among various parametrizations](differences-among-various-parametrizations) of this page.
+A comparison between different formulations of the quasi-periodic kernel is provided in the section [Differences among various parametrization](differences-among-various-parametrizations) of this page.
 
 ```
 
 ## Model definition and requirements
 
-This kernel relies on the `george` package. An independent implementation relying only on basic packages is available, however it is much slower. 
-A new implementation using `tinyGP` is now available, but it requires a few extra tricks in the configuration file and execution (see [Caveats on the use of `tinyGP`](../running_pyorbit/tinygp_caveats)
-)
-
-**model name**: `gp_quasiperiodic`
-- required common object: `activity`
-- implemented using  `george` (version 0.4.0, [Ambikasaram et al. 2015](https://ui.adsabs.harvard.edu/abs/2015ITPAM..38..252A), [link to documentation](https://george.readthedocs.io/))
+The fastest implementation relies on `tinyGP`, but it requires a few extra tricks in the configuration file and execution (see [Caveats on the use of `tinyGP`](../running_pyorbit/tinygp_caveats) )
+The original implementation based on `george` is still available. An independent implementation relying only on basic packages is available, however it is much slower.
 
 **model name**: `tinygp_quasiperiodic`
 - required common object: `activity`
@@ -35,13 +30,17 @@ A new implementation using `tinyGP` is now available, but it requires a few extr
 - GPU acceleration supported (instruction incoming)
 - Read [Caveats on the use of `tinyGP`](../running_pyorbit/tinygp_caveats) carefully
 
+**model name**: `gp_quasiperiodic`
+- required common object: `activity`
+- implemented using  `george` (version 0.4.0, [Ambikasaram et al. 2015](https://ui.adsabs.harvard.edu/abs/2015ITPAM..38..252A), [link to documentation](https://george.readthedocs.io/))
+
 '''warning
-At the moment of writing (March 2024), version >=0.3 of `tinygp` is not supported yet
+Starting with `PyORBIT 10.3`, only version >=0.3 of `tinygp` is supported. 
 '''
 
 **model name**: `gp_quasiperiodic_alternative`
 - required common object: `activity`
-- *direct* implementation relying only on `numpy` and `scipy` 
+- *direct* implementation relying only on `numpy` and `scipy`
 
 
 ## Model parameters
@@ -260,7 +259,7 @@ models:
       - b
   gp_quasiperiodic_s01:
     model: gp_quasiperiodic
-    common: 
+    common:
       - activity_s01
       - star_parameters
     use_stellar_rotation_period: True
@@ -270,7 +269,7 @@ models:
       Hamp: [0.0, 100.0] # same range for all datasets
   gp_quasiperiodic_s02:
     model: gp_quasiperiodic
-    common: 
+    common:
       - activity_s02
       - star_parameters
     use_stellar_rotation_period: True
@@ -292,7 +291,7 @@ G(t_i, t_j) = H_\mathrm{amp}^2  \exp{ \left \{-\frac{\sin^2{[\pi(t_i - t_j)/ P_\
 ```
 
 
-[Rajpaul et al. 2015](https://ui.adsabs.harvard.edu/abs/2015MNRAS.452.2269R/abstract) 
+[Rajpaul et al. 2015](https://ui.adsabs.harvard.edu/abs/2015MNRAS.452.2269R/abstract)
 
 ```{math}
 :label: quasiperiodic_rajpaul

@@ -5,31 +5,33 @@
 
 This kernel has been introduced by [Perger et al. 2021](https://ui.adsabs.harvard.edu/abs/2021A%26A...645A..58P/abstract). The kernel has been implemented in `PyORBIT` without relying on any other package.
 
-If we define $\tau = t_i-t_j$ : 
+If we define $\tau = t_i-t_j$ :
 
 ```{math}
 :label: quasiperiodic_cosine
 
-G(\tau ) = \exp{\frac{-2 \tau^2}{\lambda^2}} *  \left [ h_1^2 \exp{-\frac {
-  \sin^2{( \pi \tau / \theta )}}{2 w ^2}} + h_2^2  \cos \frac{ 4\pi \tau}{\theta} \right ]
+G(\tau ) = \exp{\frac{-2 \tau^2}{P_\mathrm{dec}^2}} *  \left [ H_\mathrm{amp}^2 \exp{-\frac {
+  \sin^2{( \pi \tau / P_\mathrm{rot} )}}{2 O_\mathrm{amp} ^2}} + C_\mathrm{amp}^2  \cos \frac{ 4\pi \tau}{P_\mathrm{rot}} \right ]
 
 ```
 
-where $\theta$ is equivalent to the rotation period of the star, $w$ is the coherence scale, and $\lambda$ is usually associated with the decay time scale of the active regions. Within `PyORBIT`, the amplitude of the quasi-periodic part of the kernel $h_1$ and the amplitude of the cosine part $h_2$ have been labeled as `Hamp` and `Camp` respectively.
+where $P_\mathrm{rot}$  is equivalent to the rotation period of the star, $O_\mathrm{amp}$ is the coherence scale, and $P_\mathrm{dec} $ is usually associated with the decay time scale of the active regions. Within `PyORBIT`, the amplitude of the quasi-periodic part of the kernel $h_1$ and the amplitude of the cosine part $h_2$ have been labeled as `Hamp` and `Camp` respectively.
 
 
 ```{important}
-As for the quasi-periodic kewrnel, mind the possible presence of a factor 2 in the denominator of the aperiodic variation (i.e., $2 \lambda$ rather than $\lambda$)
+As for the quasi-periodic kernel, mind the possible presence of a factor 2 in the denominator of the aperiodic variation (i.e., $2 \lambda$ rather than $\lambda$)
 ```
 
 
 ## Model definition and requirements
 
-The only implementation of this kernel relies on `numpy` and `scipy`.
+**model name**: `tinygp_quasiperiodic_cosine`
+- required common object: `activity`
+- this model relies on `tinygp`
 
 **model name**: `gp_quasiperiodic_cosine`
 - required common object: `activity`
-- *direct* implementation relying only on `scipy` 
+- *direct* implementation relying only on `scipy` and `numpy`
 
 
 ## Model parameters
