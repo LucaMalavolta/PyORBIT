@@ -177,7 +177,7 @@ class SPLEAF_Multidimensional_ESP(AbstractModel):
                                                                 self.internal_parameter_values['Prot'],
                                                                 self.internal_parameter_values['Pdec'],
                                                                 self.internal_parameter_values['Oamp'],
-                                                                n_harm=self.n_harmonics),
+                                                                nharm=self.n_harmonics),
                                             self.spleaf_series_index,
                                             self.internal_coeff_prime,
                                             self.internal_coeff_deriv))
@@ -199,7 +199,7 @@ class SPLEAF_Multidimensional_ESP(AbstractModel):
                                                                 self.internal_parameter_values['Prot'],
                                                                 self.internal_parameter_values['Pdec'],
                                                                 self.internal_parameter_values['Oamp'],
-                                                                n_harm=self.n_harmonics),
+                                                                nharm=self.n_harmonics),
                                             self.spleaf_series_index,
                                             self.internal_coeff_prime,
                                             self.internal_coeff_deriv))
