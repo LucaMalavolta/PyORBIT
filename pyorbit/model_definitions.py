@@ -118,6 +118,8 @@ from pyorbit.models.tinygp_multidimensional_matern32_activity import TinyGP_Mult
 from pyorbit.models.tinygp_multidimensional_quasiperiodicsquaredexponential_activity import TinyGP_Multidimensional_QuasiPeriodicSquaredExponentialActivity
 from pyorbit.models.tinygp_multiquasiperiodic_trainedsquaredexponential_activity import TinyGP_MultiQuasiPeriodic_TrainedSquaredExponential_Activity
 
+from pyorbit.models.spleaf_multidimensional_esp_activity import SPLEAF_Multidimensional_ESP
+
 from pyorbit.models.rossitermclaughlin_ohta import RossiterMcLaughlin_Ohta
 from pyorbit.models.rossitermclaughlin_precise import RossiterMcLaughlin_Precise
 from pyorbit.models.rossitermclaughlin_reloaded import RossiterMcLaughlin_Reloaded
@@ -279,6 +281,8 @@ define_type_to_class = {
     'tinygp_multiquasiperiodic_trainedsquaredexponential': TinyGP_MultiQuasiPeriodic_TrainedSquaredExponential_Activity,
     'tinygp_multiquasiperiodictrainedsquaredexponential': TinyGP_MultiQuasiPeriodic_TrainedSquaredExponential_Activity,
     'tinygp_multidimensional_matern32': TinyGP_Multidimensional_Matern32Activity,
+    'spleaf_multidimensional_esp': SPLEAF_Multidimensional_ESP,
+    'spleaf_multidimensional_exponentialsineperiodic': SPLEAF_Multidimensional_ESP,
     'rossitermclaughlin_ohta': RossiterMcLaughlin_Ohta,
     'rossitermclaughlin_precise': RossiterMcLaughlin_Precise,
     'rossitermclaughlin_reloaded': RossiterMcLaughlin_Reloaded,
