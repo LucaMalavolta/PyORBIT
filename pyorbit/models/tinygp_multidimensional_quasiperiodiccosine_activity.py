@@ -307,7 +307,6 @@ class TinyGP_Multidimensional_QuasiPeriodicCosineActivity(AbstractModel):
             gamma=1. / (2.*self.internal_parameter_values['Oamp'] ** 2),
             Pdec=self.internal_parameter_values['Pdec'],
             Prot=self.internal_parameter_values['Prot'],
-            Pcyc=self.internal_parameter_values['Pcyc'],
             diag=self._dataset_ej2,
             X=self._X,
             y=self._dataset_res,
