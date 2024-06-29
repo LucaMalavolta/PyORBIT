@@ -61,7 +61,7 @@ Model-wide keywords, with the default value in boldface.
 
 **hyperparameters_condition**
 * accepted values: `True` | **`False`**
-* activate the conditions $ \lambda ^ 2 > (3/4 \pi) \theta ^2 w ^ 2 $ (adapted from [Rajpaul 2017](https://ui.adsabs.harvard.edu/abs/2017PhDT.......229R/abstract) and [Rajpaul et al. 2021](https://ui.adsabs.harvard.edu/abs/2021MNRAS.507.1847R/abstract) to take into account the factor 2 in the denominator of the aperiodic variation) to ensure that the QP function has at least one non-trivial turning point.
+* activate the conditions $ P_\mathrm{rot}  ^ 2 > \frac{3}{2 \pi} P_\mathrm{rot} ^2 O_\mathrm{amp} ^ 2 $ from [Rajpaiul 2017](https://ui.adsabs.harvard.edu/abs/2017PhDT.......229R/abstract) and [Rajpaul et al. 2021](https://ui.adsabs.harvard.edu/abs/2021MNRAS.507.1847R/abstract), to ensure that the QP function has at least one non-trivial turning point.
 
 **rotation_decay_condition**
 * accepted values: `True` | **`False`**
@@ -291,7 +291,7 @@ G(t_i, t_j) = H_\mathrm{amp}^2  \exp{ \left \{-\frac{\sin^2{[\pi(t_i - t_j)/ P_\
 ```
 
 
-[Rajpaul et al. 2015](https://ui.adsabs.harvard.edu/abs/2015MNRAS.452.2269R/abstract)
+- [Rajpaul et al. 2015](https://ui.adsabs.harvard.edu/abs/2015MNRAS.452.2269R/abstract)
 
 ```{math}
 :label: quasiperiodic_rajpaul
@@ -305,7 +305,7 @@ G(t_i, t_j) = \eta_1^2  \exp{ \left \{-\frac{\sin^2{[\pi(t_i - t_j)/P]}}{\mathbf
 ```{math}
 :label: quasiperiodic_haywood
 
-G(t_i, t_j) = \eta_1^2  \exp{ \left \{-\frac{ \mathbf{2} \sin^2{[\pi(t_i - t_j)/\eta_3]}}{\eta_4^2} - \left ( \frac{t_i-t_j}{\eta_2} \right )^2 \right \} }
+G(t_i, t_j) = \eta_1^2  \exp{ \left \{-\frac{ \mathbf{2} \sin^2{[\pi(t_i - t_j)/\eta_3]}}{\eta_4^2} - \left ( \frac{t_i-t_j}{\mathbf{2} \eta_2} \right )^2 \right \} }
 ```
 
 

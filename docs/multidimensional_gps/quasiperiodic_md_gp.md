@@ -34,7 +34,7 @@ Model-wide keywords, with the default value in bold face.
 
 **hyperparameters_condition**
 * accepted values: `True` | **`False`**
-* activate the conditions $ P_\mathrm{rot}  ^ 2 > (3/(2 \pi)) P_\mathrm{rot} ^2 O_\mathrm{amp} ^ 2 $ (adapted from [Rajpaiul 2017](https://ui.adsabs.harvard.edu/abs/2017PhDT.......229R/abstract) and [Rajpaul et al. 2021](https://ui.adsabs.harvard.edu/abs/2021MNRAS.507.1847R/abstract) to take into account the factor 2 in the denominator of the aperiodic variation) to ensure that the QP function has at least one non-trivial turning point.
+* activate the conditions $ P_\mathrm{rot}  ^ 2 > \frac{3}{2 \pi} P_\mathrm{rot} ^2 O_\mathrm{amp} ^ 2 $ from [Rajpaiul 2017](https://ui.adsabs.harvard.edu/abs/2017PhDT.......229R/abstract) and [Rajpaul et al. 2021](https://ui.adsabs.harvard.edu/abs/2021MNRAS.507.1847R/abstract), to ensure that the QP function has at least one non-trivial turning point.
 
 **rotation_decay_condition**
 * accepted values: `True` | **`False`**
@@ -47,7 +47,7 @@ Model-wide keywords, with the default value in bold face.
 
 ## Examples
 
-In the following example, ore RV dataset comes together with two activity indicators, the `BIS` and the `FWHM` of the CCF, the latter as replacement of  $\log{R^{\prime}_\mathrm{HK}}$.
+In the following example, one RV dataset comes together with two activity indicators, the `BIS` and the `FWHM` of the CCF, the latter as replacement of  $\log{R^{\prime}_\mathrm{HK}}$.
 
 Here `gp_multidimensional` is the label that we assign to the `gp_multidimensional_quasiperiodic` model. The label is assigned to each dataset, including the RV dataset for which also the RV model is included.
 
