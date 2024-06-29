@@ -11,6 +11,7 @@ jaxlib >=0.4.28
 jax >=0.4.28
 tinygp >=0.3.0
 ###### Requirements without Version Specifiers ######
+spleaf
 argparse
 pyyaml
 h5py
