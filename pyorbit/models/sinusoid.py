@@ -122,7 +122,8 @@ class SinusoidPolynomialModulation(AbstractModel):
         self.time_interval = 1.0000000
         self.time_offset = False
         self.count_dataset = 0
-
+        self.reference_dataset = None
+        self.reference_kind = None
 
     def initialize_model(self, mc, **kwargs):
 
@@ -138,6 +139,14 @@ class SinusoidPolynomialModulation(AbstractModel):
         self.time_interval = kwargs.get('time_interval', 1.000000000)
 
         self.time_offset = kwargs.get('time_offset', False)
+        if self.time_offset:
+            self.list_pams_dataset.update(['x_offset'])
+
+            try:
+                self.reference_dataset = kwargs.get('reference_dataset')
+            except:
+                self.reference_kind = kwargs.get('reference_kind', 'RV')
+
 
         for i_order in range(self.starting_order, self.order+1):
             par = 'poly_c'+repr(i_order)
@@ -159,9 +168,8 @@ class SinusoidPolynomialModulation(AbstractModel):
                 self.x_zero = np.average(dataset.x)
             mc.common_models[self.common_poly_ref].fix_list['x_zero'] = np.asarray([self.x_zero, 0.0000])
 
-        if self.time_offset and self.count_dataset > 0:
-            self.list_pams_dataset.update(['x_offset'])
-        self.count_dataset  += 1
+        if dataset.name_ref == self.reference_dataset or dataset.kind == self.reference_kind:
+            self.fix_list[dataset.name_ref]['x_offset'] = np.asarray([0.0000, 0.0000])
 
         mc.common_models[self.common_poly_ref].fix_list['poly_c0'] = np.asarray([1.000000, 0.0000])
         #mc.common_models[self.common_poly_ref].fix_list['poly_c1'] = np.asarray([1.000000, 0.0000])

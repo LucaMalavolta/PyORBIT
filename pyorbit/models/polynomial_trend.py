@@ -109,6 +109,8 @@ class SharedPolynomialTrend(AbstractModel):
         self.variable_amplitude = True
         self.time_offset = False
         self.count_dataset = 0
+        self.reference_dataset = None
+        self.reference_kind = None
 
 
     def initialize_model(self, mc, **kwargs):
@@ -141,6 +143,11 @@ class SharedPolynomialTrend(AbstractModel):
         if self.time_offset:
             self.list_pams_dataset.update(['x_offset'])
 
+            try:
+                self.reference_dataset = kwargs.get('reference_dataset')
+            except:
+                self.reference_kind = kwargs.get('reference_kind', 'RV')
+
         for i_order in range(self.starting_order, self.order+1):
             par = 'poly_c'+repr(i_order)
             self.list_pams_common.update([par])
@@ -161,9 +168,9 @@ class SharedPolynomialTrend(AbstractModel):
                 self.x_zero = np.average(dataset.x)
             mc.common_models[self.common_poly_ref].fix_list['x_zero'] = np.asarray([self.x_zero, 0.0000])
 
-        if self.count_dataset == 0:
+
+        if dataset.name_ref == self.reference_dataset or dataset.kind == self.reference_kind:
             self.fix_list[dataset.name_ref]['x_offset'] = np.asarray([0.0000, 0.0000])
-        self.count_dataset  += 1
 
         if self.normalization_model:
             mc.common_models[self.common_poly_ref].fix_list['poly_c0'] = np.asarray([1.000000, 0.0000])
