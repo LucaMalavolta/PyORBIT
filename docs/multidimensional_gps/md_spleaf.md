@@ -1,6 +1,12 @@
-(md_quasiperiodic)=
+(md_spleaf)=
 
-### Quasi-periodic kernel
+### Exponential-sine periodic kernel (S+LEAF)
+
+The Exponential-sine periodic (ESP) kernel is an approximation of the quasi-periodic (QP) kernel implemented in the `S+LEAF` software.
+In the [`S+LEAF documentation`](https://obswww.unige.ch/~delisle/spleaf/doc/_autosummary/spleaf.term.ESPKernel.html#spleaf.term.ESPKernel), the QP kernel is referred to as the squared-exponential periodic (SEP) kernel. Despite the different name, the QP periodic kernel definition is the same as the one implemented in `PyORBIT` in either the [trained](../gaussian_process/quasiperiodic_kernel) or the [multidimensional](./md_quasiperiodic) approach. 
+
+
+
 
 The quasi-periodic kernel is the preferred choice for the multidimensional GP. We follow the expression given by [Rajpaul et al. 2015](https://ui.adsabs.harvard.edu/abs/2015MNRAS.452.2269R/abstract):
 
@@ -8,40 +14,32 @@ The quasi-periodic kernel is the preferred choice for the multidimensional GP. W
 :label: quasiperiodic_grunblatt
 
 \gamma ^{(G,G)}_{i,j} = \exp{ \left \{-\frac{\sin^2{[\pi(t_i - t_j)/ P_\mathrm{rot}]}}{2 O_\mathrm{amp} ^2} - \frac{(t_i-t_j)^2}{2 P_\mathrm{dec}^2} \right \} }
-```
 
-Where $P_\mathrm{rot}$ is equivalent to the rotation period of the star, $O_\mathrm{amp}$ is the coherence scale, and $P_\mathrm{dec}$ is usually associated with the decay time scale of the active regions.
 
 ```{note}
-Check the documentation page on the [quasi-periodic kernel](../gaussian_process/quasiperiodic_kernel) for additional information on this kernel
+If you use the multidimensional GP through `S+LEAF`, please don't forget to cite [Delisle et al. 2020](https://ui.adsabs.harvard.edu/abs/2020A%26A...638A..95D/abstract) and [Delisle et al. 2022](https://ui.adsabs.harvard.edu/abs/2022A%26A...659A.182D/abstract)
 ```
 
 
-### Improvements
+### Implementation of the `S+LEAF` package
 
-In `PyORBIT` the framework implementation has been expanded to support an unlimited number of datasets. Additionally, it is not required for the datasets to have the same dimensions, thus allowing the use of several RV datasets even if activity indicators are not available for all of them.
+As `PyORBIT` naturally supports an unlimited number of datasets with heterogeneous cadences, the inclusion of the `S+LEAF` package has been quite straightforward. 
+The GP hyperparameters preserve the same name as in the other kernels: the rotation period of the star $P_\mathrm{rot}$, the coherence scale $O_\mathrm{amp}$, and the decay time scale of the active regions $P_\mathrm{dec}$, corresponds to $P$, $\eta$, $\rho$ in `S+LEAF` documentation.
 
-The coefficients $X_c$ and $X_c$ are thus renamed in *con_amp* and *rot_amp*, with the reference dataset easily identifiable from the terminal output.
+The coefficients $\alpha$ and $\beta$ introduced in the [`S+LEAF` multiGP [example](https://obswww.unige.ch/~delisle/spleaf/doc/multi.html)  are consequently renamed in *con_amp* and *rot_amp*, with the reference dataset easily identifiable from the terminal output.
 
 ## Model definition and requirements
 
-**model name**: ``tinygp_multidimensional_quasiperiodic``
+**model name**: ``spleaf_multidimensional_esp``
 - required common objects: ``activity``
-- GPU acceleration supported (instruction incoming)
-- Read [Caveats on the use of `tinyGP`](../running_pyorbit/tinygp_caveats) carefully
-
-**model name**: ``gp_multidimensional_quasiperiodic``
-- required common objects: ``activity``
-- *direct* implementation using `numpy` and `scipy` packages.
-
-**model name**: ``gp_multidimensional_quasiperiodic_numba``
-- required common objects: ``activity``
-- *direct* implementation using `numpy` and `scipy` packages with `numba` acceleration.
-
 
 ## Keywords
 
 Model-wide keywords, with the default value in bold face.
+
+**n_harmonics**
+* accepted values: integer | **4**
+* Number of harmonics to include in the ESP approximation of the QP kernel
 
 **hyperparameters_condition**
 * accepted values: `True` | **`False`**
@@ -60,11 +58,10 @@ Model-wide keywords, with the default value in bold face.
 
 In the following example, one RV dataset comes together with two activity indicators, the `BIS` and the `FWHM` of the CCF, the latter as a replacement of  $\log{R^{\prime}_\mathrm{HK}}$.
 
-Here `gp_multidimensional` is the label that we assign to the `tinygp_multidimensional_quasiperiodic` model. The label is assigned to each dataset, including the RV dataset for which also the RV model is included.
-
-The `common:planets` section includes three planets, of which one is transiting - with Gaussian priors on the period and time of inferior conjunction -  and two non-transiting planets with a prior on the eccentricity.
-The `common:activity` section provides the hyperparameters for the GP shared among all the datasets. The example shows how to assign boundaries and priors to the parameters.
-The model keywords and the boundaries for the dataset-specific parameters are listed in `models:gp_multidimensional`
+This example is nearly identical to the one presented for the [multidimensional QP kernel](md_quasiperiodic). The three main differences are:
+- The model `spleaf_multidimensional_esp` is replacing `tinygp_multidimensional_quasiperiodic`
+- the additional keyword `n_harmonics` is included in the example
+- the `safe_reload` keyword in the `parameters` section is not longer required
 
 ```yaml
 inputs:
@@ -133,8 +130,9 @@ models:
       - c
       - d
   gp_multidimensional:
-    model: tinygp_multidimensional_quasiperiodic
+    model: spleaf_multidimensional_esp
     common: activity
+    n_harmonics: 4
     hyperparameters_condition: True
     rotation_decay_condition: True
     RVdata:
@@ -153,7 +151,6 @@ models:
       derivative: False
 parameters:
   Tref: 59200.00
-  safe_reload: True
   low_ram_plot: True
   plot_split_threshold: 1000
   cpu_threads: 16

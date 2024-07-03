@@ -21,4 +21,6 @@ For more details on the `PyORBIT` implementation of multidimensional GP, please 
 ```{toctree}
 :maxdepth: 1
 multidimensional_gps/md_quasiperiodic.md
+multidimensional_gps/md_spleaf.md
+
 ```
