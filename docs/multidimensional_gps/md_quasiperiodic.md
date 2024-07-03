@@ -17,6 +17,7 @@ Check the documentation page on the [quasi-periodic kernel](../gaussian_process/
 ```
 
 
+
 ### Improvements
 
 In `PyORBIT` the framework implementation has been expanded to support an unlimited number of datasets. Additionally, it is not required for the datasets to have the same dimensions, thus allowing the use of several RV datasets even if activity indicators are not available for all of them.

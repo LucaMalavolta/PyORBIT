@@ -31,8 +31,9 @@ Alternatively, for easy automatization, PyORBIT can be called as a Python functi
   the same hyper-parameters.
 -->
 
-## Updates on version 10
+[**Check the poster**](https://k-poster.kuoni-congress.info/eas-2024/poster/bcefa082-f961-4539-a5f8-3b13783b520c) presented at the European Astronomical Society Annual Meeting in Padova
 
+## Updates on version 10
 
 ```{warning}
 Starting from version 10.3, `PyORBIT` has been upgraded to support `tinygp` (version 0.3.0), which in turns requires Python **3.10** to work properly.
@@ -60,7 +61,7 @@ If you have been using the development version of V10, you may run into incompat
 ```
 
 ```{warning}
-I must have done something wrong when upgrading to version 10, if you already downloaded the repository before the upgrade then I advise to to delete the repo and **clone it again**.
+In the previous version of the documentation and in several papers, it was reported that `PyORBIT` was relying on the quasi-periodic kernel definiton by [Grunblatt et al. 2015](https://ui.adsabs.harvard.edu/abs/2015ApJ...808..127G/abstract). I came to realize only recently that the factor $2$ accompanying the decay time-scale of the activity regions $P_\mathrm{dec}$ was implicitely included in the exponenitial-squared kernel as defined in `george` and `tinygp`, making the kernel definiton identical to the one reported in [Rajpaul et al. 2015](https://ui.adsabs.harvard.edu/abs/2015MNRAS.452.2269R/abstract). Please keep this problem in mind when comparing your results with other analysis.
 ```
 
 # Documentation updates
@@ -75,11 +76,10 @@ Documentation is being updated slowly but steadily, with new pages appearing eve
   + Planetary RV signal
   + Correlated datasets
   + Gaussian processes regression **in progress**
-  + Multidimensional GPs
+  + Multidimensional GPs **new**
   + TinyGP caveats **new**
   + CHEOPS detrending **coming soon**
   + Polynomial **coming soon**
-  + Lightcurve detrending
 
 ```{tip}
 The configuration files used in this documentation can be found at [this repository](https://github.com/LucaMalavolta/PyORBIT_examples)
