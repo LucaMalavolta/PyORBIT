@@ -87,9 +87,9 @@ class SPLEAF_ESP(AbstractModel):
         if self.use_stellar_rotation_period:
             parameter_values['Prot'] = parameter_values['rotation_period']
 
-        if not self.hyper_condition(self.internal_parameter_values):
+        if not self.hyper_condition(parameter_values):
             return -np.inf
-        if not self.rotdec_condition(self.internal_parameter_values):
+        if not self.rotdec_condition(parameter_values):
             return -np.inf
 
         """ I'm creating the kernel here has """
