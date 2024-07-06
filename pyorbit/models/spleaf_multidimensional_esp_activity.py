@@ -30,7 +30,7 @@ class SPLEAF_Multidimensional_ESP(AbstractModel):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.model_class = 'spleaf_multidimensional_mep_activity'
+        self.model_class = 'spleaf_multidimensional_esp'
 
         self.internal_likelihood = True
         self.delayed_lnlk_computation = True

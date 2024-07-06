@@ -1,43 +1,22 @@
 from pyorbit.subroutines.common import *
 from pyorbit.models.abstract_model import *
 from pyorbit.keywords_definitions import *
+
+from scipy.linalg import cho_factor, cho_solve, lapack, LinAlgError
+from scipy import matrix, spatial
 import sys
 
+__all__ = ['SPLEAF_ESP']
+
+
 try:
-    import jax
-    jax.config.update("jax_enable_x64", True)
-    import jax.numpy as jnp
-    from tinygp import kernels, GaussianProcess
-
-    if sys.version_info[1] < 10:
-        raise Warning("You should be using Python 3.10 - tinygp may not work")
-
-    def _build_tinygp_quasiperiodic_cosine(params):
-
-        kernel = kernels.ExpSquared(scale=jnp.abs(params["Pdec"])) * (
-            jnp.power(params['Hamp'], 2.0) * kernels.ExpSineSquared(
-                scale=jnp.abs(params["Prot"]),
-                gamma=jnp.abs(params["gamma"])) +  \
-                jnp.power(params['Camp'], 2.0) * kernels.Cosine(scale= jnp.abs(params["Prot"]/2.)))
-
-        return GaussianProcess(
-            kernel, params['x0'], diag=jnp.abs(params['diag']), mean=0.0
-        )
-
-    @jax.jit
-    def _loss_tinygp_QPcosine(params):
-        gp = _build_tinygp_quasiperiodic_cosine(params)
-        return gp.log_probability(params['y'])
-
-except:
+    from spleaf import cov as spleaf_cov
+    from spleaf import term as spleaf_term
+except ImportError:
     pass
 
 
-__all__ = ['TinyGaussianProcess_QuasiPeriodicCosineActivity']
-
-
-
-class TinyGaussianProcess_QuasiPeriodicCosineActivity(AbstractModel):
+class SPLEAF_ESP(AbstractModel):
     ''' Three parameters out of four are the same for all the datasets, since they are related to
     the properties of the physical process rather than the observed effects on a dataset
      From Grunblatt+2015, Affer+2016
@@ -51,28 +30,34 @@ class TinyGaussianProcess_QuasiPeriodicCosineActivity(AbstractModel):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        try:
-            import jax
-            jax.config.update("jax_enable_x64", True)
-        except ImportError:
-            print("ERROR: tinygp or jax not installed, this will not work")
-            quit()
+        self.model_class = 'spleaf_esp'
 
-        self.model_class = 'gp_quasiperiodic_cosine'
         self.internal_likelihood = True
 
         self.list_pams_common = {
             'Prot',  # Rotational period of the star
             'Pdec',  # Decay timescale of activity
-            'Oamp'  # Granulation of activity
+            'Oamp',  # Granulation of activity
+        }
+        self.list_pams_dataset = {
+            'Hamp'  # Amplitude of the signal in the covariance matrix
         }
 
-        self.list_pams_dataset = {
-            'Hamp',  # Amplitude of the signal in the covariance matrix
-            'Camp'  # Amplitude of the cycle
-        }
+        try:
+            from spleaf import cov as spleaf_cov
+            from spleaf import term as spleaf_term
+        except ImportError:
+            print("ERROR: S+LEAF package not installed, this will not work")
+            quit()
+
+        self.n_harmonics = 4
+
 
     def initialize_model(self, mc,  **kwargs):
+
+        self.n_harmonics = kwargs.get('n_harmonics', self.n_harmonics)
+        print(' S+LEAF model, number of harmonics:', self.n_harmonics)
+        print()
 
         if kwargs.get('hyperparameters_condition', False):
             self.hyper_condition = self._hypercond_01
@@ -96,27 +81,29 @@ class TinyGaussianProcess_QuasiPeriodicCosineActivity(AbstractModel):
             self.list_pams_common.update(['rotation_period'])
             self.list_pams_common.discard('Prot')
 
+
     def lnlk_compute(self, parameter_values, dataset):
 
         if self.use_stellar_rotation_period:
             parameter_values['Prot'] = parameter_values['rotation_period']
 
-        if not self.hyper_condition(parameter_values):
+        if not self.hyper_condition(self.internal_parameter_values):
             return -np.inf
-        if not self.rotdec_condition(parameter_values):
+        if not self.rotdec_condition(self.internal_parameter_values):
             return -np.inf
 
-        theta_dict =  dict(
-            gamma=1. / (2.*parameter_values['Oamp'] ** 2),
-            Hamp=parameter_values['Hamp'],
-            Camp=parameter_values['Camp'],
-            Pdec=parameter_values['Pdec'],
-            Prot=parameter_values['Prot'],
-            diag=dataset.e ** 2.0 + dataset.jitter ** 2.0,
-            x0=dataset.x0,
-            y=dataset.residuals
-        )
-        return _loss_tinygp_QPcosine(theta_dict)
+        """ I'm creating the kernel here has """
+        D = spleaf_cov.Cov(dataset.x0,
+            err=spleaf_term.Error(dataset.e ** 2.0 + dataset.jitter ** 2.0),
+            GP=spleaf_term.ESPKernel(parameter_values['Hamp'],
+                                    parameter_values['Prot'],
+                                    parameter_values['Pdec'],
+                                    parameter_values['Oamp'],
+                                    nharm=self.n_harmonics))
+
+
+
+        return D.loglike(dataset.residuals)
 
 
     def sample_predict(self, parameter_values, dataset, x0_input=None, return_covariance=False, return_variance=False):
@@ -124,32 +111,24 @@ class TinyGaussianProcess_QuasiPeriodicCosineActivity(AbstractModel):
         if self.use_stellar_rotation_period:
             parameter_values['Prot'] = parameter_values['rotation_period']
 
-
+        """ I'm creating the kernel here has """
+        D = spleaf_cov.Cov(dataset.x0,
+            err=spleaf_term.Error(dataset.e ** 2.0 + dataset.jitter ** 2.0),
+            GP=spleaf_term.ESPKernel(parameter_values['Hamp'],
+                                    parameter_values['Prot'],
+                                    parameter_values['Pdec'],
+                                    parameter_values['Oamp'],
+                                    nharm=self.n_harmonics))
 
         if x0_input is None:
-            x0 = dataset.x0
+            t_predict = dataset.x0
         else:
-            x0 = x0_input
+            t_predict = x0_input
 
-        theta_dict =  dict(
-            gamma=1. / (2.*parameter_values['Oamp'] ** 2),
-            Hamp=parameter_values['Hamp'],
-            Camp=parameter_values['Camp'],
-            Pdec=parameter_values['Pdec'],
-            Prot=parameter_values['Prot'],
-            diag=dataset.e ** 2.0 + dataset.jitter ** 2.0,
-            x0=dataset.x0,
-            y=dataset.residuals,
-            x0_predict = x0
-        )
-
-        gp = _build_tinygp_quasiperiodic_cosine(theta_dict)
-        _, cond_gp = gp.condition(theta_dict['y'], theta_dict['x0_predict'])
-        mu = cond_gp.loc # or cond_gp.mean?
-        std = np.sqrt(cond_gp.variance)
+        mu, var = D.conditional(dataset.residuals, t_predict, calc_cov='diag')
 
         if return_variance:
-            return mu, std
+            return mu, np.sqrt(var)
         else:
             return mu
 
@@ -161,10 +140,10 @@ class TinyGaussianProcess_QuasiPeriodicCosineActivity(AbstractModel):
     @staticmethod
     def _hypercond_01(parameter_values):
         # Condition from Rajpaul 2017, Rajpaul+2021
+        # Taking into account that Pdec^2 = 2*lambda_2^2
         return parameter_values['Pdec']**2 > (3. / 2. / np.pi) * parameter_values['Oamp']**2 * parameter_values['Prot']**2
 
     @staticmethod
     def _hypercond_02(parameter_values):
         #Condition on Rotation period and decay timescale
         return parameter_values['Pdec'] > 2. * parameter_values['Prot']
-

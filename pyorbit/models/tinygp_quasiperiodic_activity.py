@@ -118,6 +118,10 @@ class TinyGaussianProcess_QuasiPeriodicActivity(AbstractModel):
 
     def sample_predict(self, parameter_values, dataset, x0_input=None, return_covariance=False, return_variance=False):
 
+        if self.use_stellar_rotation_period:
+            parameter_values['Prot'] = parameter_values['rotation_period']
+
+
         if x0_input is None:
             x0 = dataset.x0
         else:
