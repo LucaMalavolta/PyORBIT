@@ -123,10 +123,12 @@ class ModelContainer(object):
                 self.ndim, output_lists = self.models[model_name].define_parameter_properties(
                     self.ndim, output_lists, dataset.name_ref)
 
+
         self.bounds = np.asarray(output_lists['bounds'])
         self.spaces = output_lists['spaces']
         self.priors = output_lists['priors']
         self.range = self.bounds[:, 1] - self.bounds[:, 0]
+
 
     def initialize_logchi2(self):
 
