@@ -50,7 +50,7 @@ class AbstractTransit(object):
             self.list_pams_common.discard('omega')
 
             self.list_pams_common.update(['sre_coso'])
-            self.list_pams_common.update(['sre_sino'])        
+            self.list_pams_common.update(['sre_sino'])
 
         try:
             multivariate_pams = mc.common_models[self.stellar_ref].multivariate_pams
@@ -99,7 +99,7 @@ class AbstractTransit(object):
     def _prepare_star_parameters(self, mc, **kwargs):
         """ Additional stellar parameters
         """
-        
+
         self.use_differential_rotation = kwargs.get(mc.common_models[self.stellar_ref].use_differential_rotation, False)
         for keyword in keywords_differential_rotation:
             self.use_differential_rotation = kwargs.get(keyword, self.use_differential_rotation)

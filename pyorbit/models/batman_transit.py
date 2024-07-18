@@ -95,7 +95,7 @@ class Batman_Transit(AbstractModel, AbstractTransit):
                                 supersample_factor=self.code_options[dataset.name_ref]['sample_factor'],
                                 exp_time=self.code_options[dataset.name_ref]['exp_time'],
                                 nthreads=self.code_options['nthreads'])
-        
+
         #self.time_inferior_conjunction_boundaries[dataset.name_ref] = \
         #    [np.amin(dataset.x), np.amax(dataset.x)]
 
