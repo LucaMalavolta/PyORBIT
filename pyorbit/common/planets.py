@@ -150,7 +150,7 @@ class CommonPlanets(AbstractCommon):
             },
         'lambda':
             {
-                'bounds': [-90.0000, 90.0000],
+                'bounds': [-180.0000, 180.0000],
                 'priors': ['Uniform', []],
                 'spaces': 'Linear',
                 'fixed' : 0.0,
