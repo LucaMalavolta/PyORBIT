@@ -594,7 +594,7 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, reload_ze
             if mc.models[model_name].model_class in model_requires_limb_darkening:
 
                 try:
-                    common_name = mc.models[model_name].model_conf['limb_darkening']
+                    common_name = model_conf['limb_darkening']
                 except:
                     common_name = 'limb_darkening'
 
@@ -612,7 +612,7 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, reload_ze
             """ Adding the stellar parameters common model by default """
             if mc.models[model_name].model_class in model_requires_star:
                 try:
-                    common_name = mc.models[model_name].model_conf['star_parameters']
+                    common_name = model_conf['star_parameters']
                 except:
                     common_name = 'star_parameters'
                 mc.models[model_name].common_ref.append(common_name)
