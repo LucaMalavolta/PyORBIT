@@ -62,10 +62,16 @@ class SPLEAF_Multidimensional_ESP(AbstractModel):
 
         self._dataset_x0 = []
         self._dataset_label = []
-        self._dataset_e2 = []
+        self._dataset_err = []
         self._dataset_names = {}
 
+        self._jitter_mask = []
+        self._dataset_jitmask = []
+
         self._dataset_nindex = {}
+        self._dataset_njitter = {}
+
+
 
         #self.use_derivative_dict = {}
 
@@ -76,8 +82,13 @@ class SPLEAF_Multidimensional_ESP(AbstractModel):
         self._dataset_res = None
 
         self._added_datasets = 0
-
+        self._added_jitters = 0
         self.n_harmonics = 4
+
+        self.D_spleaf = None
+        self.D_param = None
+        self.input_param = None
+
 
         #self.pi2 = np.pi * np.pi
 
@@ -119,17 +130,52 @@ class SPLEAF_Multidimensional_ESP(AbstractModel):
             return
 
         self._dataset_x0.append(dataset.x0)
-        self._dataset_e2.append(dataset.e**2)
+        self._dataset_err.append(dataset.e)
         self._dataset_nindex[dataset.name_ref] = self._added_datasets
+        
+        self._dataset_njitter[dataset.name_ref] = []
+
+
+        temporary_jitmask = []
+
+        for var in dataset.list_pams:
+            if dataset.variable_expanded[var] != 'jitter':
+                continue
+            temporary_jitmask.append(dataset.mask[var])
+            self._dataset_njitter[dataset.name_ref].append(self._added_jitters)
+            self._added_jitters += 1
+
+        self.spleaf_time, self.spleaf_res, spleaf_err, self.spleaf_series_index = \
+            spleaf_cov.merge_series(self._dataset_x0, self._dataset_err, self._dataset_err)
+
+
+        temporary_mask = self.spleaf_series_index[self._added_datasets]
+        for jit_list in temporary_jitmask:
+            self._dataset_jitmask.append(jit_list)
+            self._jitter_mask.append(temporary_mask[jit_list])
 
         self._added_datasets += 1
 
-        self.internal_coeff_prime = np.empty(self._added_datasets)
-        self.internal_coeff_deriv = np.empty(self._added_datasets)
+        self.internal_jitter = np.ones(self._added_jitters)
+        self.internal_coeff_prime = np.ones(self._added_datasets)
+        self.internal_coeff_deriv = np.ones(self._added_datasets)
 
-        self.spleaf_time, self.spleaf_res, self.spleaf_err, self.spleaf_series_index = \
-            spleaf_cov.merge_series(self._dataset_x0, self._dataset_e2, self._dataset_e2)
+        kwargs = {
+            'err': spleaf_term.Error(spleaf_err),
+            'GP': spleaf_term.MultiSeriesKernel(spleaf_term.ESPKernel(10,
+                                                                    2., 
+                                                                    1000.0, 
+                                                                    0.35,
+                                                                    nharm=self.n_harmonics),
+                                            self.spleaf_series_index,
+                                            self.internal_coeff_prime,
+                                            self.internal_coeff_deriv)
+        }
+        for n_jit in range(0, self._added_jitters):
+            kwargs['jitter_'+repr(n_jit)] = spleaf_term.InstrumentJitter(self._jitter_mask[n_jit], 0.0001)
 
+        self.D_spleaf = spleaf_cov.Cov(self.spleaf_time, **kwargs)
+        self.D_param = self.D_spleaf.param[1:]
 
         if 'derivative'in kwargs:
             use_derivative = kwargs['derivative'].get(dataset.name_ref, False)
@@ -157,58 +203,52 @@ class SPLEAF_Multidimensional_ESP(AbstractModel):
         self.internal_parameter_values = parameter_values
 
         d_ind = self._dataset_nindex[dataset.name_ref]
+        j_ind = self._dataset_njitter[dataset.name_ref]
 
         self.spleaf_res[self.spleaf_series_index[d_ind]] = dataset.residuals
-        self.spleaf_err[self.spleaf_series_index[d_ind]] = np.sqrt(self._dataset_e2[d_ind] + dataset.jitter**2.0)
 
-        #self.internal_jitter[d_ind] =  dataset.jitter
+        for j_jit in j_ind:
+            self.internal_jitter[j_jit] =  dataset.jitter[self._dataset_jitmask[j_jit]][0]
         self.internal_coeff_prime[d_ind] = parameter_values['con_amp']
         self.internal_coeff_deriv[d_ind] = parameter_values['rot_amp']
 
+
     def lnlk_compute(self):
+
+
         if not self.hyper_condition(self.internal_parameter_values):
             return -np.inf
         if not self.rotdec_condition(self.internal_parameter_values):
             return -np.inf
 
-        """ I'm creating the kernel here has """
-        D = spleaf_cov.Cov(self.spleaf_time,
-            err=spleaf_term.Error(self.spleaf_err),
-            GP=spleaf_term.MultiSeriesKernel(spleaf_term.ESPKernel(1.0,
-                                                                self.internal_parameter_values['Prot'],
-                                                                self.internal_parameter_values['Pdec'],
-                                                                self.internal_parameter_values['Oamp'],
-                                                                nharm=self.n_harmonics),
-                                            self.spleaf_series_index,
-                                            self.internal_coeff_prime,
-                                            self.internal_coeff_deriv))
+        input_param = np.concatenate(([self.internal_parameter_values['Prot'], 
+                        self.internal_parameter_values['Pdec'],
+                        self.internal_parameter_values['Oamp']],
+                        self.internal_coeff_prime,
+                        self.internal_coeff_deriv,
+                        self.internal_jitter))
+        self.D_spleaf.set_param(input_param, self.D_param)
 
-
-
-        return D.loglike(self.spleaf_res)
+        #print(input_param, self.spleaf_res, self.internal_jitter,  self.D_spleaf.loglike(self.spleaf_res))
+        return self.D_spleaf.loglike(self.spleaf_res)
 
 
     def sample_predict(self, dataset, x0_input=None, return_covariance=False, return_variance=False):
 
 
+        input_param = np.concatenate(([self.internal_parameter_values['Prot'], 
+                        self.internal_parameter_values['Pdec'],
+                        self.internal_parameter_values['Oamp']],
+                        self.internal_coeff_prime,
+                        self.internal_coeff_deriv,
+                        self.internal_jitter))
 
-
+        self.D_spleaf.set_param(input_param, self.D_param)
         """ I'm creating the kernel here has """
-        D = spleaf_cov.Cov(self.spleaf_time,
-            err=spleaf_term.Error(self.spleaf_err),
-            GP=spleaf_term.MultiSeriesKernel(spleaf_term.ESPKernel(1.0,
-                                                                self.internal_parameter_values['Prot'],
-                                                                self.internal_parameter_values['Pdec'],
-                                                                self.internal_parameter_values['Oamp'],
-                                                                nharm=self.n_harmonics),
-                                            self.spleaf_series_index,
-                                            self.internal_coeff_prime,
-                                            self.internal_coeff_deriv))
-
 
         d_ind = self._dataset_nindex[dataset.name_ref]
 
-        D.kernel['GP'].set_conditional_coef(series_id=d_ind)
+        self.D_spleaf.kernel['GP'].set_conditional_coef(series_id=d_ind)
 
 
         if x0_input is None:
@@ -216,7 +256,7 @@ class SPLEAF_Multidimensional_ESP(AbstractModel):
         else:
             t_predict = x0_input
 
-        mu, var = D.conditional(self.spleaf_res, t_predict, calc_cov='diag')
+        mu, var = self.D_spleaf.conditional(self.spleaf_res, t_predict, calc_cov='diag')
 
         if return_variance:
             return mu, np.sqrt(var)

@@ -244,9 +244,9 @@ class TinyGP_MultiQuasiPeriodic_TrainedSquaredExponential_Activity(AbstractModel
                 use_derivative = True
 
         if 'derivative_quasiperiodic'in kwargs:
-            use_derivative_QP = kwargs['derivative_quasiperiodic'].get(dataset.name_ref, False)
+            use_derivative_QP = kwargs['derivative_quasiperiodic'].get(dataset.name_ref, True)
         elif dataset.name_ref in kwargs:
-            use_derivative_QP = kwargs[dataset.name_ref].get('derivative_quasiperiodic', False)
+            use_derivative_QP = kwargs[dataset.name_ref].get('derivative_quasiperiodic', True)
         else:
             use_derivative_QP = True
 
