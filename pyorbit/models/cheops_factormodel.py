@@ -16,7 +16,7 @@ class CheopsFactorModel(AbstractModel):
         self.unitary_model = False
         self.normalization_model = True
 
-        self.list_pams_dataset = {
+        self.list_pams_dataset = OrderedSet([
             "scale_factor",
             "dfdbg",
             "dfdcontam",
@@ -26,16 +26,16 @@ class CheopsFactorModel(AbstractModel):
             "d2fdx2",
             "d2fdxdy",
             "d2fdy2",
-        }
+        ])
 
-        self.roll_angle_parameters = {
+        self.roll_angle_parameters = OrderedSet([
             "dfdsinphi",
             "dfdcosphi",
             "dfdcos2phi",
             "dfdsin2phi",
             "dfdcos3phi",
             "dfdsin3phi",
-        }
+        ])
 
         self.cheops_diagnostics = {
             'roll_angle': {

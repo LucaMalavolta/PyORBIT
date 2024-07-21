@@ -29,15 +29,15 @@ class SpectralRotation(AbstractModel):
         self.ld_ncoeff = 2
         self.parametrization = 'Standard'
 
-        self.list_pams_common = {
+        self.list_pams_common = OrderedSet([
             'line_contrast',
             'line_fwhm',
             'v_sini',
-        }
+        ])
 
-        self.list_pams_dataset = {
+        self.list_pams_dataset = OrderedSet([
             'rv_center',
-        }
+        ])
 
     def initialize_model(self, mc, **kwargs):
 
@@ -106,13 +106,13 @@ class SubsetSpectralRotation(AbstractModel):
         self.ld_ncoeff = 2
         self.parametrization = 'Standard'
 
-        self.list_pams_common = {
+        self.list_pams_common = OrderedSet([
             'line_contrast',
             'line_fwhm',
             'v_sini',
-        }
+        ])
 
-        self.list_pams_dataset = set()
+        self.list_pams_dataset = OrderedSet()
 
     def initialize_model(self, mc, **kwargs):
 
@@ -197,13 +197,13 @@ class SubsetSpectralRotationPolynomial(AbstractModel):
         self.ld_ncoeff = 2
         self.parametrization = 'Standard'
 
-        self.list_pams_common = {
+        self.list_pams_common = OrderedSet([
             'line_contrast',
             'line_fwhm',
             'v_sini',
-        }
+        ])
 
-        self.list_pams_dataset = set()
+        self.list_pams_dataset = OrderedSet()
 
         self.order = 1
         self.starting_order = 1

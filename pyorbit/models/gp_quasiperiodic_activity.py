@@ -31,15 +31,15 @@ class GaussianProcess_QuasiPeriodicActivity(AbstractModel):
         self.model_class = 'gp_quasiperiodic'
         self.internal_likelihood = True
 
-        self.list_pams_common = {
+        self.list_pams_common = OrderedSet([
             'Prot',  # Rotational period of the star
             'Pdec',  # Decay timescale of activity
             'Oamp'  # Granulation of activity
-        }
+        ])
 
-        self.list_pams_dataset = {
+        self.list_pams_dataset = OrderedSet([
             'Hamp'  # Amplitude of the signal in the covariance matrix
-        }
+        ])
 
         self.n_pams = 4
 

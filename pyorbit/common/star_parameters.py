@@ -139,7 +139,7 @@ class CommonStarParameters(AbstractCommon):
             },
 
     }
-    recenter_pams = set()
+    recenter_pams = OrderedSet()
 
 
     def __init__(self, *args, **kwargs):

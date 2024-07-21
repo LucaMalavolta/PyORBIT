@@ -29,16 +29,16 @@ class GaussianProcess_QuasiPeriodicActivity_Derivative(AbstractModel):
         self.model_class = 'gp_quasiperiodic_derivative'
         self.internal_likelihood = True
 
-        self.list_pams_common = {
+        self.list_pams_common = OrderedSet([
             'Prot',  # Rotational period of the star
             'Pdec',  # Decay timescale of activity
             'Oamp'  # Granulation of activity
-        }
+        ])
 
-        self.list_pams_dataset = {
+        self.list_pams_dataset = OrderedSet([
             'Hamp',  # Amplitude of the signal in the covariance matrix
             'Camp'  # Amplitude of the convective term of the covariance matrix
-        }
+        ])
 
         self._dist_t1 = {}
         self._dist_t2 = {}

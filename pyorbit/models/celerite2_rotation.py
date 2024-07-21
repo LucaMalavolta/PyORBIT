@@ -1,4 +1,4 @@
-from pyorbit.subroutines.common import np
+from pyorbit.subroutines.common import np, OrderedSet
 from pyorbit.models.abstract_model import AbstractModel
 from pyorbit.keywords_definitions import *
 
@@ -49,16 +49,16 @@ class Celerite2_Rotation(AbstractModel):
         self.model_class = 'celerite2_rotation'
         self.internal_likelihood = True
 
-        self.list_pams_common = {
+        self.list_pams_common = OrderedSet([
             'Prot',
             'rot_Q0',
             'rot_deltaQ',
             'rot_fmix',
-        }
+        ])
 
-        self.list_pams_dataset = {
+        self.list_pams_dataset = OrderedSet([
             'rot_sigma'
-        }
+        ])
 
         self.n_pams = 5
         self.gp = {}

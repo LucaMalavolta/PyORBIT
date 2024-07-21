@@ -1,4 +1,4 @@
-from pyorbit.subroutines.common import np
+from pyorbit.subroutines.common import np, OrderedSet
 from pyorbit.models.abstract_model import AbstractModel
 from pyorbit.models.abstract_transit import AbstractTransit
 
@@ -21,12 +21,12 @@ class Batman_Transit_RpRs_Subset(AbstractModel, AbstractTransit):
             print("ERROR: batman not installed, this will not work")
             quit()
 
-        self.list_pams_common = {
+        self.list_pams_common = OrderedSet([
             'P',  # Period, log-uniform prior
             'e',  # eccentricity, uniform prior
             'omega',  # argument of pericenter (in radians)
             'R_Rs',  # planet radius (in units of stellar radii)
-        }
+        ])
 
         """ Model-specifc parameters, not declared in the abstract class """
         self.batman_params = None

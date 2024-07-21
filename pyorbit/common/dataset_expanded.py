@@ -1,4 +1,4 @@
-from pyorbit.subroutines.common import np
+from pyorbit.subroutines.common import np, OrderedSet
 from pyorbit.common.abstract_common import AbstractCommon
 from pyorbit.common.dataset import Dataset
 from pyorbit.model_definitions import datatype_definition
@@ -17,7 +17,7 @@ class DatasetExpanded(Dataset):
     def __init__(self,  model_name, kind, models):
         AbstractCommon.__init__(self, None)
 
-        
+
         for kind_name, kind_list in datatype_definition.items():
             if kind in kind_list:
                 self.kind = kind_name
@@ -30,7 +30,7 @@ class DatasetExpanded(Dataset):
         self.dynamical = False
         self.planet_name = None
 
-        self.generic_list_pams = {'jitter', 'offset', 'subset'}
+        self.generic_list_pams = OrderedSet(['jitter', 'offset', 'subset'])
 
         self.generic_default_priors = {
             'jitter': ['Uniform', []],
@@ -48,7 +48,7 @@ class DatasetExpanded(Dataset):
         self.variable_expanded = {}
 
         self.model_class = 'dataset'
-        self.list_pams = set()
+        self.list_pams = OrderedSet()
         self.default_bounds = {}
         self.default_spaces = {}
         self.default_priors = {}
@@ -70,7 +70,7 @@ class DatasetExpanded(Dataset):
         self.ancillary = None
 
         self.compute_plot = False
-        
+
 
 
     def append_ancillary(self, input_file, input_array=False, input_array_str=False):

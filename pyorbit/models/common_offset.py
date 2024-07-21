@@ -11,7 +11,7 @@ class Offset(AbstractModel):
         self.model_class = 'common_offset'
         self.systematic_model = True
 
-        self.list_pams_common = {'offset'}
+        self.list_pams_common = OrderedSet(['offset'])
 
         self.common_offset_ref = None
 

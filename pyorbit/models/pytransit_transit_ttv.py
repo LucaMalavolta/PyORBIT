@@ -1,5 +1,5 @@
 
-from pyorbit.subroutines.common import np, constants
+from pyorbit.subroutines.common import np, constants, OrderedSet
 from pyorbit.models.abstract_model import AbstractModel
 from pyorbit.models.abstract_transit import AbstractTransit
 
@@ -25,12 +25,12 @@ class PyTransit_Transit_TTV(AbstractModel, AbstractTransit):
             quit()
 
         # Must be moved here because it will updated depending on the selected limb darkening
-        self.list_pams_common = {
+        self.list_pams_common = OrderedSet([
             'P',  # Period, log-uniform prior
             'e',  # eccentricity, uniform prior
             'omega',  # argument of pericenter (in radians)
             'R_Rs',  # planet radius (in units of stellar radii)
-        }
+        ])
 
         self.pytransit_models = {}
         self.pytransit_plot = {}

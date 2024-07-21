@@ -119,7 +119,7 @@ from pyorbit.models.tinygp_multidimensional_quasiperiodicsquaredexponential_acti
 from pyorbit.models.tinygp_multiquasiperiodic_trainedsquaredexponential_activity import TinyGP_MultiQuasiPeriodic_TrainedSquaredExponential_Activity
 
 from pyorbit.models.spleaf_multidimensional_esp_activity import SPLEAF_Multidimensional_ESP
-from pyorbit.models.slow_spleaf_multidimensional_esp_activity import SLOW_SPLEAF_Multidimensional_ESP
+from pyorbit.models.test_spleaf_multidimensional_esp_activity import TEST_SPLEAF_Multidimensional_ESP
 from pyorbit.models.spleaf_esp_activity import SPLEAF_ESP
 
 from pyorbit.models.rossitermclaughlin_ohta import RossiterMcLaughlin_Ohta
@@ -285,8 +285,8 @@ define_type_to_class = {
     'tinygp_multiquasiperiodic_trainedsquaredexponential': TinyGP_MultiQuasiPeriodic_TrainedSquaredExponential_Activity,
     'tinygp_multiquasiperiodictrainedsquaredexponential': TinyGP_MultiQuasiPeriodic_TrainedSquaredExponential_Activity,
     'tinygp_multidimensional_matern32': TinyGP_Multidimensional_Matern32Activity,
-    'slow_spleaf_multidimensional_esp': SLOW_SPLEAF_Multidimensional_ESP,
-    'slow_spleaf_multidimensional_exponentialsineperiodic': SLOW_SPLEAF_Multidimensional_ESP,
+    'test_spleaf_multidimensional_esp': TEST_SPLEAF_Multidimensional_ESP,
+    'test_spleaf_multidimensional_exponentialsineperiodic': TEST_SPLEAF_Multidimensional_ESP,
     'spleaf_multidimensional_esp': SPLEAF_Multidimensional_ESP,
     'spleaf_multidimensional_exponentialsineperiodic': SPLEAF_Multidimensional_ESP,
     'rossitermclaughlin_ohta': RossiterMcLaughlin_Ohta,

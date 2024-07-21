@@ -13,11 +13,11 @@ class Sinusoid(AbstractModel):
 
         self.model_class = 'sinusoid'
 
-        self.list_pams_common = {
+        self.list_pams_common = OrderedSet([
             'sine_period'  # Period, log-uniform prior
             'sine_amp',
             'sine_phase'
-        }
+        ])
 
     def compute(self, parameter_values, dataset, x0_input=None):
         if x0_input is None:
@@ -36,11 +36,11 @@ class LocalSinusoid(AbstractModel):
 
         self.model_class = 'sinusoid'
 
-        self.list_pams_dataset = {
+        self.list_pams_dataset = OrderedSet([
             'sine_period'  # Period, log-uniform prior
             'sine_amp',
             'sine_phase'
-        }
+        ])
 
     def compute(self, parameter_values, dataset, x0_input=None):
         if x0_input is None:
@@ -58,14 +58,14 @@ class SinusoidCommonPeriod(AbstractModel):
 
         self.model_class = 'sinusoid_common_period'
 
-        self.list_pams_common = {
+        self.list_pams_common = OrderedSet([
             'sine_period'  # Period, log-uniform prior
-        }
+        ])
 
-        self.list_pams_dataset = {
+        self.list_pams_dataset = OrderedSet([
             'sine_amp',
             'sine_phase'
-        }
+        ])
 
     def compute(self, parameter_values, dataset, x0_input=None):
         if x0_input is None:
@@ -98,15 +98,15 @@ class SinusoidPolynomialModulation(AbstractModel):
 
         self.model_class = 'sinusoid_polynomial_modulation'
 
-        self.list_pams_common = {
+        self.list_pams_common = OrderedSet([
             'sine_period',  # Period, log-uniform prior
             'sine_phase',
             'x_zero'
-        }
+        ])
 
-        self.list_pams_dataset = {
+        self.list_pams_dataset = OrderedSet([
             'sine_amp',
-        }
+        ])
 
         self.order = 1
         self.starting_order = 0

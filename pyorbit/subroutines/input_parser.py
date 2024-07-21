@@ -13,7 +13,7 @@ import yaml
 import copy
 from scipy.stats import gaussian_kde, multivariate_normal
 
-from pyorbit.subroutines.common import np, get_2darray_from_val
+from pyorbit.subroutines.common import np, get_2darray_from_val, OrderedSet
 
 __all__ = ["pars_input", "yaml_parser", "yaml_fix_nested"]
 
@@ -352,7 +352,7 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, reload_ze
 
             mc.common_models[model_name] = define_common_type_to_class[model_type](
                 model_name)
-            
+
             bounds_space_priors_starts_fixed(
                 mc, mc.common_models[model_name], model_conf)
 
@@ -459,7 +459,7 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, reload_ze
                         dataset.models.remove(model_name)
                         dataset.models.extend(model_name_expanded)
 
-                        if len(list(set(planet_list) & set(mc.dynamical_dict))) and not keplerian_approximation:
+                        if len(list(OrderedSet(planet_list) & OrderedSet(mc.dynamical_dict))) and not keplerian_approximation:
                             dataset.dynamical = True
 
             for model_name_exp, planet_name in zip(model_name_expanded, planet_list):

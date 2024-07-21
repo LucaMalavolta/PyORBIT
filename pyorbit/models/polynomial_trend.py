@@ -11,7 +11,7 @@ class PolynomialTrend(AbstractModel):
 
         self.model_class = 'polynomial_trend'
 
-        self.list_pams_common = {'x_zero'}
+        self.list_pams_common = OrderedSet(['x_zero'])
 
         self.order = 1
         self.starting_order = 1
@@ -92,7 +92,7 @@ class SharedPolynomialTrend(AbstractModel):
 
         self.model_class = 'polynomial_trend'
 
-        self.list_pams_common = {'x_zero'}
+        self.list_pams_common = OrderedSet(['x_zero'])
 
         self.order = 1
         self.starting_order = 1
@@ -209,9 +209,9 @@ class LocalPolynomialTrend(AbstractModel):
 
         self.model_class = 'local_polynomial_trend'
 
-        self.list_pams_common = set()
+        self.list_pams_common = OrderedSet()
 
-        self.list_pams_dataset = {'x_zero'}
+        self.list_pams_dataset = OrderedSet(['x_zero'])
 
         self.order = 1
         self.starting_order = 1
@@ -304,9 +304,9 @@ class SubsetPolynomialTrend(AbstractModel):
 
         self.model_class = 'subset_polynomial_trend'
 
-        self.list_pams_common = set()
+        self.list_pams_common = OrderedSet()
 
-        self.list_pams_dataset = set()
+        self.list_pams_dataset = OrderedSet()
 
         self.order = 1
         self.starting_order = 1

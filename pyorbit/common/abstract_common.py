@@ -1,4 +1,4 @@
-from pyorbit.subroutines.common import np
+from pyorbit.subroutines.common import np, OrderedSet
 from pyorbit.subroutines.common import get_var_exp, get_var_log
 from pyorbit.subroutines.common import get_var_exp_base2, get_var_log_base2
 from pyorbit.subroutines.common import get_var_exp_base10, get_var_log_base10
@@ -24,8 +24,8 @@ class AbstractCommon(object):
         self.stellar_ref = 'star_parameters'
         self.multiple_planets = []
 
-        self.list_pams_common = set()
-        self.list_pams_dataset = set()
+        self.list_pams_common = OrderedSet()
+        self.list_pams_dataset = OrderedSet()
 
         self.sampler_parameters = {}
 
@@ -54,7 +54,7 @@ class AbstractCommon(object):
             of parameters
         """
         if hasattr(self, 'parameters_dictionary'):
-            self.list_pams = set()
+            self.list_pams = OrderedSet()
             self.default_bounds = {}
             self.default_priors = {}
             self.default_spaces = {}
@@ -84,12 +84,13 @@ class AbstractCommon(object):
             will be actually used in the complete model.
         """
 
-        for pam in list(set(parameters_list) & set(self.list_pams)):
+        for pam in list(OrderedSet(parameters_list) & OrderedSet(self.list_pams)):
             """We check for each parameter (except eccentricity and omega) if
                 the parameter is a fixed value or a free parameter, and move the
                 parameter into the requested spaces. Notice that 'e' and 'w'
                 are not yet included in list_pams[pl_name] at this stage
             """
+
 
             # ndim, output_lists, applied = \
             #     self.define_special_parameter_properties(
@@ -197,8 +198,8 @@ class AbstractCommon(object):
 
     def define_starting_point(self, starting_point):
 
-        for sampler_pam in list(set(self.starts)
-                                and set(self.sampler_parameters)):
+        for sampler_pam in list(OrderedSet(self.starts)
+                                and OrderedSet(self.sampler_parameters)):
 
             if self.define_starting_point_from_derived(starting_point, sampler_pam):
                 continue
@@ -266,7 +267,7 @@ class AbstractCommon(object):
 
     def index_recenter_bounds(self):
         ind_list = []
-        for pam in list(set(self.recenter_pams) & set(self.sampler_parameters)):
+        for pam in list(OrderedSet(self.recenter_pams) & OrderedSet(self.sampler_parameters)):
             ind_list.append(self.sampler_parameters[pam])
         return ind_list
 

@@ -18,8 +18,8 @@ class LightcurveDetrending(AbstractModel):
         self.time_independent_model = True
 
 
-        self.list_pams_common = set()
-        self.list_pams_dataset = set()
+        self.list_pams_common = OrderedSet()
+        self.list_pams_dataset = OrderedSet()
 
         self.ancillary_skip_first_column = True
 
@@ -126,8 +126,8 @@ class LocalLightcurveDetrending(AbstractModel):
         self.time_independent_model = True
 
 
-        self.list_pams_common = set()
-        self.list_pams_dataset = set()
+        self.list_pams_common = OrderedSet()
+        self.list_pams_dataset = OrderedSet()
 
         self.ancillary_skip_first_column = True
 

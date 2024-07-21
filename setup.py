@@ -54,6 +54,7 @@ setup(
         'jaxlib>=0.4.28',
         'jax >=0.4.28',
         'tinygp>=0.3.0',
+        'orderedset'
         #'schwimmbad'
     ],
     setup_requires=['setuptools']

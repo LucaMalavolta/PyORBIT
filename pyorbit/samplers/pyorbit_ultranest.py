@@ -65,8 +65,6 @@ def pyorbit_ultranest(config_in, input_datasets=None, return_output=None):
     for key_name, key_value in theta_dictionary.items():
         labels_array[key_value] = re.sub('_', '-', key_name)
 
-
-
     if 'nlive_mult' in mc.nested_sampling_parameters:
         nlive = mc.ndim * mc.nested_sampling_parameters['nlive_mult']
     else:
@@ -88,11 +86,18 @@ def pyorbit_ultranest(config_in, input_datasets=None, return_output=None):
         print("ERROR: ultranest not installed, this will not work")
         quit()
 
+    global ultranest_transform
+    def ultranest_transform(cube):
+        return mc.ultranest_transform(cube)
+
+    global ultranest_call
+    def ultranest_call(theta):
+        return mc.ultranest_call(theta)
 
     sampler = ReactiveNestedSampler(
         labels_array,
-        mc.ultranest_call,
-        transform=mc.ultranest_transform,
+        ultranest_call,
+        transform=ultranest_transform,
         log_dir=mc.output_directory, # folder where to store files
         resume=True, # whether to resume from there (otherwise start from scratch)
     )

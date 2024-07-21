@@ -1,4 +1,4 @@
-from pyorbit.subroutines.common import np
+from pyorbit.subroutines.common import np, OrderedSet
 from pyorbit.common.abstract_common import AbstractCommon
 from pyorbit.model_definitions import datatype_definition
 
@@ -21,7 +21,7 @@ class Dataset(AbstractCommon):
         self.dynamical = False
         self.planet_name = None
 
-        self.generic_list_pams = {'jitter', 'offset', 'subset'}
+        self.generic_list_pams = OrderedSet(['jitter', 'offset', 'subset'])
 
         self.generic_default_priors = {
             'jitter': ['Uniform'  , []],
@@ -39,7 +39,7 @@ class Dataset(AbstractCommon):
         self.variable_expanded = {}
 
         self.model_class = 'dataset'
-        self.list_pams = set()
+        self.list_pams = OrderedSet()
         self.default_bounds = {}
         self.default_spaces = {}
         self.default_priors = {}

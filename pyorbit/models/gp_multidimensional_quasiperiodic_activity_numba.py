@@ -9,7 +9,7 @@ from numba.experimental import jitclass
 
 try:
     from numba import jit
-    print('**** USING NUMBA ****')
+
     @jit(nopython=True)
     def _compute_submatrix(dist_t1, dist_t2, Prot, Prot2, Pdec2, Oamp2):
         phi = 2. * np.pi * dist_t1 / Prot
@@ -71,15 +71,15 @@ class GP_Multidimensional_QuasiPeriodicActivity_Numba(AbstractModel):
         self.internal_likelihood = True
         self.delayed_lnlk_computation = True
 
-        self.list_pams_common = {
+        self.list_pams_common = OrderedSet([
             'Prot',  # Rotational period of the star
             'Pdec',  # Decay timescale of activity
             'Oamp',  # Granulation of activity
-        }
-        self.list_pams_dataset = {
+        ])
+        self.list_pams_dataset = OrderedSet([
             'rot_amp', # Amplitude of the first derivative of the covariance matrix
             'con_amp' # Amplitude of the covariance matrix
-        }
+        ])
 
 
         self.internal_parameter_values = None

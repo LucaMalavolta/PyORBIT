@@ -6,7 +6,7 @@ from scipy.linalg import cho_factor, cho_solve, lapack, LinAlgError
 from scipy import matrix, spatial
 import sys
 
-__all__ = ['SPLEAF_Multidimensional_ESP']
+__all__ = ['TEST_SPLEAF_Multidimensional_ESP']
 
 
 try:
@@ -16,7 +16,7 @@ except ImportError:
     pass
 
 
-class SPLEAF_Multidimensional_ESP(AbstractModel):
+class TEST_SPLEAF_Multidimensional_ESP(AbstractModel):
     ''' Three parameters out of four are the same for all the datasets, since they are related to
     the properties of the physical process rather than the observed effects on a dataset
      From Grunblatt+2015, Affer+2016
@@ -35,15 +35,15 @@ class SPLEAF_Multidimensional_ESP(AbstractModel):
         self.internal_likelihood = True
         self.delayed_lnlk_computation = True
 
-        self.list_pams_common = {
+        self.list_pams_common = OrderedSet([
             'Prot',  # Rotational period of the star
             'Pdec',  # Decay timescale of activity
             'Oamp',  # Granulation of activity
-        }
-        self.list_pams_dataset = {
+        ])
+        self.list_pams_dataset = OrderedSet([
             'rot_amp', # Amplitude of the covariance matrix
             'con_amp' # Amplitude of the first derivative of the covariance matrix
-        }
+        ])
 
         try:
             from spleaf import cov as spleaf_cov
@@ -132,7 +132,7 @@ class SPLEAF_Multidimensional_ESP(AbstractModel):
         self._dataset_x0.append(dataset.x0)
         self._dataset_err.append(dataset.e)
         self._dataset_nindex[dataset.name_ref] = self._added_datasets
-        
+
         self._dataset_njitter[dataset.name_ref] = []
 
 
@@ -145,7 +145,7 @@ class SPLEAF_Multidimensional_ESP(AbstractModel):
             self._dataset_njitter[dataset.name_ref].append(self._added_jitters)
             self._added_jitters += 1
 
-        self.spleaf_time, self.spleaf_res, spleaf_err, self.spleaf_series_index = \
+        self.spleaf_time, self.spleaf_res, self.spleaf_err, self.spleaf_series_index = \
             spleaf_cov.merge_series(self._dataset_x0, self._dataset_err, self._dataset_err)
 
 
@@ -156,26 +156,18 @@ class SPLEAF_Multidimensional_ESP(AbstractModel):
 
         self._added_datasets += 1
 
+
+        self.internal_parameter_values = {
+            'Prot': 30.0,
+            'Pdec': 100.0,
+            'Oamp': 0.35
+        }
+
         self.internal_jitter = np.ones(self._added_jitters)
         self.internal_coeff_prime = np.ones(self._added_datasets)
         self.internal_coeff_deriv = np.ones(self._added_datasets)
 
-        kwargs = {
-            'err': spleaf_term.Error(spleaf_err),
-            'GP': spleaf_term.MultiSeriesKernel(spleaf_term.ESPKernel(10,
-                                                                    2., 
-                                                                    1000.0, 
-                                                                    0.35,
-                                                                    nharm=self.n_harmonics),
-                                            self.spleaf_series_index,
-                                            self.internal_coeff_prime,
-                                            self.internal_coeff_deriv)
-        }
-        for n_jit in range(0, self._added_jitters):
-            kwargs['jitter_'+repr(n_jit)] = spleaf_term.InstrumentJitter(self._jitter_mask[n_jit], 0.0001)
-
-        self.D_spleaf = spleaf_cov.Cov(self.spleaf_time, **kwargs)
-        self.D_param = self.D_spleaf.param[1:]
+        self._reset_kernel()
 
         if 'derivative'in kwargs:
             use_derivative = kwargs['derivative'].get(dataset.name_ref, False)
@@ -209,6 +201,7 @@ class SPLEAF_Multidimensional_ESP(AbstractModel):
 
         for j_jit in j_ind:
             self.internal_jitter[j_jit] =  dataset.jitter[self._dataset_jitmask[j_jit]][0]
+
         self.internal_coeff_prime[d_ind] = parameter_values['con_amp']
         self.internal_coeff_deriv[d_ind] = parameter_values['rot_amp']
 
@@ -221,13 +214,20 @@ class SPLEAF_Multidimensional_ESP(AbstractModel):
         if not self.rotdec_condition(self.internal_parameter_values):
             return -np.inf
 
-        input_param = np.concatenate(([self.internal_parameter_values['Prot'], 
+        input_param = np.concatenate(([self.internal_parameter_values['Prot'],
                         self.internal_parameter_values['Pdec'],
                         self.internal_parameter_values['Oamp']],
                         self.internal_coeff_prime,
                         self.internal_coeff_deriv,
                         self.internal_jitter))
         self.D_spleaf.set_param(input_param, self.D_param)
+
+        #print('AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA')
+        #print(self.internal_jitter)
+        #print(self.internal_coeff_prime)
+        #print(self.internal_coeff_deriv)
+
+        #self._reset_kernel()
 
         #print(input_param, self.spleaf_res, self.internal_jitter,  self.D_spleaf.loglike(self.spleaf_res))
         return self.D_spleaf.loglike(self.spleaf_res)
@@ -236,7 +236,7 @@ class SPLEAF_Multidimensional_ESP(AbstractModel):
     def sample_predict(self, dataset, x0_input=None, return_covariance=False, return_variance=False):
 
 
-        input_param = np.concatenate(([self.internal_parameter_values['Prot'], 
+        input_param = np.concatenate(([self.internal_parameter_values['Prot'],
                         self.internal_parameter_values['Pdec'],
                         self.internal_parameter_values['Oamp']],
                         self.internal_coeff_prime,
@@ -263,6 +263,28 @@ class SPLEAF_Multidimensional_ESP(AbstractModel):
         else:
             return mu
 
+    def _reset_kernel(self):
+
+        kwargs = {
+            'err': spleaf_term.Error(self.spleaf_err),
+            'GP': spleaf_term.MultiSeriesKernel(spleaf_term.ESPKernel(1.,
+                                                                    self.internal_parameter_values['Prot'],
+                                                                    self.internal_parameter_values['Pdec'],
+                                                                    self.internal_parameter_values['Oamp'],
+                                                                    nharm=self.n_harmonics),
+                                            self.spleaf_series_index,
+                                            self.internal_coeff_prime,
+                                            self.internal_coeff_deriv)
+        }
+        for n_jit in range(0, self._added_jitters):
+            kwargs['jitter_'+repr(n_jit)] = spleaf_term.InstrumentJitter(self._jitter_mask[n_jit], self.internal_jitter[n_jit])
+
+        #print(kwargs)
+
+        self.D_spleaf = spleaf_cov.Cov(self.spleaf_time, **kwargs)
+        self.D_param = self.D_spleaf.param[1:]
+        #print(self.D_param)
+
     @staticmethod
     def _hypercond_00(parameter_values):
         #Condition from Rajpaul 2017, Rajpaul+2021
@@ -278,3 +300,4 @@ class SPLEAF_Multidimensional_ESP(AbstractModel):
     def _hypercond_02(parameter_values):
         #Condition on Rotation period and decay timescale
         return parameter_values['Pdec'] > 2. * parameter_values['Prot']
+

@@ -1,4 +1,4 @@
-from pyorbit.subroutines.common import np
+from pyorbit.subroutines.common import np, OrderedSet
 from pyorbit.models.abstract_model import AbstractModel
 from pyorbit.keywords_definitions import *
 
@@ -32,14 +32,14 @@ class Celerite2_SHO(AbstractModel):
         self.model_class = 'celerite2_sho'
         self.internal_likelihood = True
 
-        self.list_pams_common = {
+        self.list_pams_common = OrderedSet([
             'sho_period',
             'sho_tau'
-        }
+        ])
 
-        self.list_pams_dataset = {
+        self.list_pams_dataset = OrderedSet([
             'sho_sigma',  # sigma
-        }
+        ])
 
         self.n_pams = 3
         self.gp = {}

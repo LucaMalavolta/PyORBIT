@@ -9,8 +9,8 @@ class Harmonics(AbstractModel):
 
         self.model_class = 'harmonics'
 
-        self.list_pams_common = set()
-        self.list_pams_dataset = set()
+        self.list_pams_common = OrderedSet()
+        self.list_pams_dataset = OrderedSet()
 
         self.sine_harmonics = [1, 2]
         self.cosine_harmonics = [1]

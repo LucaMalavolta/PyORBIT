@@ -24,8 +24,8 @@ class Detrending(AbstractModel):
         self.local_model = True
         self.use_median_xzero = True
 
-        self.list_pams_common = set()
-        self.list_pams_dataset = set()
+        self.list_pams_common = OrderedSet()
+        self.list_pams_dataset = OrderedSet()
 
         self.order = 1
         self.x_zero = 0.0
