@@ -12,7 +12,7 @@ class Jitter(AbstractModel):
         self.model_class = 'common_jitter'
         self.jitter_model = True
 
-        self.list_pams_common = {'jitter'}
+        self.list_pams_common = OrderedSet(['jitter'])
 
         self.common_jitter_ref = None
 

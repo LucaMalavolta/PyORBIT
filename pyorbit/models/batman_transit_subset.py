@@ -1,4 +1,4 @@
-from pyorbit.subroutines.common import np
+from pyorbit.subroutines.common import np, OrderedSet
 from pyorbit.models.abstract_model import AbstractModel
 from pyorbit.models.abstract_transit import AbstractTransit
 
@@ -21,12 +21,12 @@ class Batman_Transit_TTV_Subset(AbstractModel, AbstractTransit):
             print("ERROR: batman not installed, this will not work")
             quit()
 
-        self.list_pams_common = {
+        self.list_pams_common = OrderedSet([
             'P',  # Period, log-uniform prior
             'e',  # eccentricity, uniform prior
             'omega',  # argument of pericenter (in radians)
             'R_Rs',  # planet radius (in units of stellar radii)
-        }
+        ])
 
         self.batman_params = None
         self.batman_models = {}
@@ -76,13 +76,13 @@ class Batman_Transit_TTV_Subset(AbstractModel, AbstractTransit):
         self.batman_params.u = np.ones(kwargs['limb_darkening_ncoeff'],
                                        dtype=np.double) * 0.1  # limb darkening coefficients
 
-        
+
     def initialize_model_dataset(self, mc, dataset, **kwargs):
         """ Reading some code-specific keywords from the configuration file"""
         self._prepare_dataset_options(mc, dataset, **kwargs)
 
         for i_sub in range(0, dataset.submodel_flag):
-            
+
             sub_dataset = dataset.x[(dataset.submodel_id == i_sub)]
 
             for par_original in self.subset_parameters:
@@ -92,7 +92,7 @@ class Batman_Transit_TTV_Subset(AbstractModel, AbstractTransit):
 
                 if par_original != 'Tc':
                     continue
-                
+
                 if kwargs[dataset.name_ref].get('boundaries', False):
                     par_update = kwargs[dataset.name_ref]['boundaries'].get(
                         par_subset, [min(sub_dataset), max(sub_dataset)])

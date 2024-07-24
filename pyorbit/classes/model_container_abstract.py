@@ -56,7 +56,7 @@ class ModelContainer(object):
             self.ordered_planets = {}
 
         # First step: setting up the correct associations between models and dataset
-        
+
         for model_name, model in self.common_models.items():
             try:
                 model_conf = model.model_conf
@@ -79,7 +79,7 @@ class ModelContainer(object):
             model.initialize_model(self, **model_conf)
             model.change_parameter_status(self, **model_conf)
 
-            for dataset_name in list(set(model_conf) & set(self.dataset_dict)):
+            for dataset_name in list(OrderedSet(model_conf) & OrderedSet(self.dataset_dict)):
                 model.initialize_model_dataset(
                     self, self.dataset_dict[dataset_name], **model_conf)
 
@@ -327,6 +327,8 @@ class ModelContainer(object):
                     self.models[model_name].convert(theta, dataset_name))
 
                 """ residuals will be computed following the definition in Dataset class
+                    This section has never been tested
+                """
                 if getattr(self.models[model_name], 'residuals_analysis', False):
 
                     skip_loglikelihood = True
@@ -351,8 +353,6 @@ class ModelContainer(object):
                         residuals_analysis[model_name]['y_gp_model'] = None
                         residuals_analysis[model_name]['y_gp_parameters'] = None
                     continue
-
-                """
 
                 if getattr(self.models[model_name], 'internal_likelihood', False):
                     logchi2_gp_model = model_name

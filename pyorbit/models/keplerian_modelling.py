@@ -12,11 +12,12 @@ class RVkeplerian(AbstractModel):
 
         self.model_class = 'radial_velocities'
 
-        self.list_pams_common = {
+        self.list_pams_common = OrderedSet([
             'P',  # Period
             'K',  # RV semi-amplitude
             'e',  # eccentricity, uniform prior - to be fixed
-            'omega'}  # argument of pericenter
+            'omega'  # argument of pericenter
+        ])
 
         self.use_time_inferior_conjunction = False
         self.use_mass = False
@@ -98,9 +99,9 @@ class TransitTimeKeplerian(AbstractModel):
         super(TransitTimeKeplerian, self).__init__(*args, **kwargs)
         self.use_time_inferior_conjunction = False
 
-        self.list_pams_common = {'P'}  # Period
+        self.list_pams_common = OrderedSet(['P'])  # Period
 
-        self.list_pams_dataset = set()
+        self.list_pams_dataset = OrderedSet()
 
     def initialize_model(self, mc, **kwargs):
 

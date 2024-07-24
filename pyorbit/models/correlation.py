@@ -13,8 +13,8 @@ class LocalCorrelation(AbstractModel):
         self.unitary_model = False
         self.normalization_model = False
 
-        self.list_pams_common = set()
-        self.list_pams_dataset = {'x_zero'}
+        self.list_pams_common = OrderedSet()
+        self.list_pams_dataset = OrderedSet(['x_zero'])
 
         self.use_median_xzero = True
 

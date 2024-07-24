@@ -1,4 +1,4 @@
-from pyorbit.subroutines.common import np
+from pyorbit.subroutines.common import np, OrderedSet
 import pyorbit.subroutines.constants as constants
 import pyorbit.subroutines.kepler_exo as kepler_exo
 from pyorbit.models.abstract_model import AbstractModel
@@ -26,21 +26,21 @@ class RossiterMcLaughlin_Revolutions(AbstractModel, AbstractTransit):
         self.unitary_model = False
 
         # Must be moved here because it will updated depending on the selected limb darkening
-        self.list_pams_common = {
+        self.list_pams_common = OrderedSet([
             'P',  # Period, log-uniform prior
             'e',  # eccentricity, uniform prior
             'omega',  # argument of pericenter (in radians)
             'lambda', # Sky-projected angle between stellar rotation axis and normal of orbit plane [deg]
             'R_Rs',  # planet radius (in units of stellar radii)
             #'v_sini' # projected rotational velocity of the star
-        }
-        self.list_pams_dataset = {
+        ])
+        self.list_pams_dataset = OrderedSet([
             'contrast_m', #
             'contrast_q',
             'fwhm_m',
             'fwhm_q',
             'rv_offset'
-        }
+        ])
 
         self.planet_grid = {}   # write an empty dictionary
 

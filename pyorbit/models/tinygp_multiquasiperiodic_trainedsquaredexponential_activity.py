@@ -136,18 +136,18 @@ class TinyGP_MultiQuasiPeriodic_TrainedSquaredExponential_Activity(AbstractModel
         self.internal_likelihood = True
         self.delayed_lnlk_computation = True
 
-        self.list_pams_common = {
+        self.list_pams_common = OrderedSet([
             'Prot',  # Rotational period of the star
             'Pdec',  # Decay timescale of activity
             'Oamp',  # Granulation of activity
-            'Pcyc',  # timescale od magnetic sycle
+            'Pcyc',  # timescale od magnetic cycle
+        ])
 
-        }
-        self.list_pams_dataset = {
+        self.list_pams_dataset = OrderedSet([
             'rot_amp', # Amplitude of the covariance matrix
             'con_amp', # Amplitude of the first derivative of the covariance matrix
             'cyc_amp', # Amplitude of the covariance matrix
-        }
+        ])
 
 
         self.internal_parameter_values = None
@@ -244,9 +244,9 @@ class TinyGP_MultiQuasiPeriodic_TrainedSquaredExponential_Activity(AbstractModel
                 use_derivative = True
 
         if 'derivative_quasiperiodic'in kwargs:
-            use_derivative_QP = kwargs['derivative_quasiperiodic'].get(dataset.name_ref, False)
+            use_derivative_QP = kwargs['derivative_quasiperiodic'].get(dataset.name_ref, True)
         elif dataset.name_ref in kwargs:
-            use_derivative_QP = kwargs[dataset.name_ref].get('derivative_quasiperiodic', False)
+            use_derivative_QP = kwargs[dataset.name_ref].get('derivative_quasiperiodic', True)
         else:
             use_derivative_QP = True
 

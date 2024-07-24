@@ -178,201 +178,11 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
         nsteps_todo = mc.emcee_parameters['nsteps']
 
 
-
     global log_priors_likelihood
     def log_priors_likelihood(theta):
 
-        log_priors = 0.00
-        log_likelihood = 0.00
-
-        """
-        Constant term added either by dataset.model_logchi2() or gp.log_likelihood()
-        """
-        if not mc.check_bounds(theta):
-            return -np.inf
-
-        if mc.dynamical_model is not None:
-            """ check if any keyword ahas get the output model from the dynamical tool
-            we must do it here because all the planet are involved"""
-            dynamical_output = mc.dynamical_model.compute(mc, theta)
-
-        for model_name, model in mc.common_models.items():
-            log_priors += model.return_priors(theta)
-
-        delayed_lnlk_computation = []
-        residuals_analysis = {}
-
-        for dataset_name, dataset in mc.dataset_dict.items():
-
-            logchi2_gp_model = None
-            compute_gp_residuals = False
-
-            dataset.model_reset()
-            parameter_values = dataset.convert(theta)
-            dataset.compute(parameter_values)
-
-            log_priors += dataset.return_priors(theta)
-
-            if 'none' in dataset.models or 'None' in dataset.models:
-                continue
-            if not dataset.models:
-                continue
-
-            skip_loglikelihood = False
-
-            for model_name in dataset.models:
-
-                log_priors += mc.models[model_name].return_priors(
-                    theta, dataset_name)
-
-                parameter_values = {}
-                for common_ref in mc.models[model_name].common_ref:
-                    parameter_values.update(
-                        mc.common_models[common_ref].convert(theta))
-
-                #TODO: remove try-except starting from version 11 !!
-                #TODO results_analysis:get_model needs to be updated as well
-                try:
-                    for planet_name in mc.models[model_name].multiple_planets:
-                        parameter_values.update(
-                            mc.common_models[planet_name].convert_with_name(theta, planet_name))
-                except:
-                    pass
-
-                parameter_values.update(
-                    mc.models[model_name].convert(theta, dataset_name))
-
-                """ residuals will be computed following the definition in Dataset class
-                """
-                if getattr(mc.models[model_name], 'residuals_analysis', False):
-
-                    skip_loglikelihood = True
-                    if mc.models[model_name].gp_before_correlation:
-                        compute_gp_residuals = True
-
-
-                    try:
-                        residuals_analysis[model_name]['parameter_values'] = parameter_values
-                    except:
-                        residuals_analysis[model_name] = {'parameter_values': parameter_values}
-
-                    if dataset_name == mc.models[model_name].x_dataset:
-                        residuals_dataset_label = 'x'
-                        residuals_analysis[model_name]['x_gp_model'] = None
-                        residuals_analysis[model_name]['x_gp_parameters'] = None
-                    else:
-                        """ Subtract the priors previously added, to avoid including the priors twice """
-                        log_priors -= mc.models[model_name].return_priors(theta, dataset_name)
-
-                        residuals_dataset_label = 'y'
-                        residuals_analysis[model_name]['y_gp_model'] = None
-                        residuals_analysis[model_name]['y_gp_parameters'] = None
-                    continue
-
-
-                if getattr(mc.models[model_name], 'internal_likelihood', False):
-                    logchi2_gp_model = model_name
-                    continue
-
-                # if getattr(mc.models[model_name], 'model_class', None) is 'common_jitter':
-                if getattr(mc.models[model_name], 'jitter_model', False):
-                    dataset.jitter += mc.models[model_name].compute(
-                        parameter_values, dataset)
-                    continue
-
-                if getattr(dataset, 'dynamical', False):
-                    dataset.external_model = dynamical_output[dataset_name]
-
-
-                if dataset.normalization_model is None and (mc.models[model_name].unitary_model or mc.models[model_name].normalization_model):
-                    dataset.normalization_model = np.ones(dataset.n, dtype=np.double)
-
-                if mc.models[model_name].unitary_model:
-                    dataset.unitary_model += mc.models[model_name].compute(
-                    parameter_values, dataset)
-                elif mc.models[model_name].normalization_model:
-                    dataset.normalization_model *= mc.models[model_name].compute(
-                        parameter_values, dataset)
-                else:
-                    dataset.additive_model += mc.models[model_name].compute(
-                        parameter_values, dataset)
-
-            dataset.compute_model()
-            dataset.compute_residuals()
-
-            """ Gaussian Process check MUST be the last one or the program will fail
-             that's because for the GP to work we need to know the _deterministic_ part of the model
-             (i.e. the theoretical values you get when you feed your model with the parameter values) """
-
-            if logchi2_gp_model:
-
-                parameter_values = {}
-                for common_ref in mc.models[logchi2_gp_model].common_ref:
-                    parameter_values.update(
-                        mc.common_models[common_ref].convert(theta))
-
-                parameter_values.update(
-                    mc.models[logchi2_gp_model].convert(theta, dataset_name))
-
-                """ GP Log-likelihood is not computed now because a single matrix must be
-                    computed with the joint dataset"""
-                if hasattr(mc.models[logchi2_gp_model], 'delayed_lnlk_computation'):
-
-                    mc.models[logchi2_gp_model].add_internal_dataset(parameter_values, dataset)
-                    if logchi2_gp_model not in delayed_lnlk_computation:
-                        delayed_lnlk_computation.append(logchi2_gp_model)
-                elif skip_loglikelihood:
-                    residuals_analysis[model_name][residuals_dataset_label+'_gp_model'] = logchi2_gp_model
-                    residuals_analysis[model_name][residuals_dataset_label+'_gp_parameters'] = parameter_values
-                else:
-                    log_likelihood += mc.models[logchi2_gp_model].lnlk_compute(
-                        parameter_values, dataset)
-
-                if compute_gp_residuals:
-                    dataset.residuals_for_regression -= mc.models[logchi2_gp_model].sample_predict(parameter_values, dataset)
-                    residuals_analysis[model_name][residuals_dataset_label+'_gp_model'] = None
-
-            elif not skip_loglikelihood:
-                log_likelihood += dataset.model_logchi2()
-
-        """ Correlation between residuals of two datasets through orthogonal distance regression
-            it must be coomputed after any other model has been removed from the
-            independent variable, if not provided as ancillary dataset
-        """
-        for model_name in residuals_analysis:
-            parameter_values =  residuals_analysis[model_name]['parameter_values']
-            x_dataset = mc.dataset_dict[mc.models[model_name].x_dataset]
-            y_dataset = mc.dataset_dict[mc.models[model_name].y_dataset]
-            modelout_xx, modelout_yy = mc.models[model_name].compute(parameter_values, x_dataset, y_dataset)
-
-            x_dataset.residuals -= modelout_xx
-            if residuals_analysis[model_name]['x_gp_model']:
-                logchi2_gp_model = residuals_analysis[model_name]['x_gp_model']
-                parameter_values = residuals_analysis[model_name]['x_gp_parameters']
-                log_likelihood += mc.models[logchi2_gp_model].lnlk_compute(parameter_values, x_dataset)
-            else:
-                log_likelihood += x_dataset.model_logchi2()
-
-            y_dataset.residuals -= modelout_yy
-            if residuals_analysis[model_name]['y_gp_model']:
-                logchi2_gp_model = residuals_analysis[model_name]['y_gp_model']
-                parameter_values = residuals_analysis[model_name]['y_gp_parameters']
-                log_likelihood += mc.models[logchi2_gp_model].lnlk_compute(parameter_values, y_dataset)
-            else:
-                log_likelihood += y_dataset.model_logchi2()
-
-
-        """ In case there is more than one GP model """
-        for logchi2_gp_model in delayed_lnlk_computation:
-            log_likelihood += mc.models[logchi2_gp_model].lnlk_compute()
-
-        """ check for finite log_priors and log_likelihood"""
-        if np.isnan(log_priors) or np.isnan(log_likelihood):
-            log_likelihood = -np.inf
-            log_priors = -np.inf
-
-        return log_priors+ log_likelihood
-
+        log_priors, log_likelihood = mc.log_priors_likelihood(theta)
+        return log_priors + log_likelihood
 
     if reloaded_emcee:
         state, sampler = emcee_simpler_load_from_cpickle(emcee_dir_output)
@@ -389,11 +199,6 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
     if mc.emcee_parameters['version'] == '2':
         mc.emcee_parameters['use_threading_pool'] = False
 
-    #if not mc.pyde_parameters.get('use_threading_pool', False):
-    #    mc.pyde_parameters['use_threading_pool'] = False
-
-    #if not mc.emcee_parameters.get('use_threading_pool', False):
-    #    mc.emcee_parameters['use_threading_pool'] = False
     if reloaded_emcee:
         sys.stdout.flush()
         pass
@@ -408,7 +213,7 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
 
         for theta_name, theta_i in theta_dict.items():
             population[:, theta_i] = population_legacy[:,
-                                                       theta_dict_legacy[theta_name]]
+                                                        theta_dict_legacy[theta_name]]
             mc.bounds[theta_i] = previous_boundaries[theta_dict_legacy[theta_name]]
 
         starting_point = np.median(population, axis=0)
@@ -457,7 +262,7 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
        #     print(population[ii, :])
 
         print('to write a synthetic population extremely close to the starting values.')
-        print('Undefned values have a uniform random value withing the boundaries.')
+        print('Undefined values have a uniform random value withing the boundaries.')
         print('WARNING: Initial state check of emcee will ne skipped')
         print()
         emcee_skip_check = True
@@ -531,9 +336,6 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
             print(' No worries, your PyDE results have been saved!')
             quit()
 
-
-
-
     if reloaded_emcee:
         print('Original starting point of emcee:')
         print()
@@ -559,8 +361,6 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
     else:
         sampler = emcee.EnsembleSampler(
             mc.emcee_parameters['nwalkers'], mc.ndim, log_priors_likelihood)
-
-
 
     if mc.emcee_parameters['nsave'] > 0:
         print('Saving temporary steps')

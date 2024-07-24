@@ -32,12 +32,12 @@ class GaussianProcess_QuasiPeriodicActivity_Common(AbstractModel):
         self.internal_likelihood = True
         self.delayed_lnlk_computation = True
 
-        self.list_pams_common = {
+        self.list_pams_common = OrderedSet([
             'Prot',  # Rotational period of the star
             'Pdec',  # Decay timescale of activity
             'Oamp',  # Granulation of activity
             'Hamp'  # Amplitude of the signal in the covariance matrix
-        }
+        ])
 
         self.n_pams = 4
 

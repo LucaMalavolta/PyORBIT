@@ -5,7 +5,7 @@ from pyorbit.subroutines.common import \
     get_fix_val,\
     get_2darray_from_val,\
     giveback_priors,\
-    nested_sampling_prior_prepare
+    nested_sampling_prior_prepare, OrderedSet
 
 from pyorbit.subroutines.common import get_var_exp, get_var_log
 from pyorbit.subroutines.common import get_var_exp_base2, get_var_log_base2
@@ -33,7 +33,7 @@ class AbstractModel(object):
         When making new objects, always pay attention to avoid duplicate names
         for parameters
         """
-        self.list_pams_common = set()
+        self.list_pams_common = OrderedSet()
 
         """ Dataset-specific parameters must be listed here. A given model will
         be re-computed for each dataset using the corresponding values of the
@@ -43,14 +43,14 @@ class AbstractModel(object):
         will be characterized by its own covariance amplitude (listed in
         list_pams_dataset).
         """
-        self.list_pams_dataset = set()
+        self.list_pams_dataset = OrderedSet()
 
         """ For some circular parameters it is convenient to recenter the
         boundaries so that tha mode is near the center of the interval defined
         by the boundaries, in such a way the computation of the median and the
         confidence interval are less prone to errors
         """
-        self.recenter_pams_dataset = set()
+        self.recenter_pams_dataset = OrderedSet()
 
         self.unitary_model = False
         self.normalization_model = False
@@ -267,7 +267,7 @@ class AbstractModel(object):
         """
 
         if getattr(self, 'multivariate_priors', False):
-            if len(set(self.multivariate_pams[dataset_name]) & set(self.list_pams_dataset[dataset_name])) > 0:
+            if len(OrderedSet(self.multivariate_pams[dataset_name]) & OrderedSet(self.list_pams_dataset[dataset_name])) > 0:
                 multi_par = [parameter_values[ii]
                              for ii in self.multivariate_pams[dataset_name]]
                 pdf = self.multivariate_func[dataset_name].pdf(multi_par)
@@ -297,8 +297,8 @@ class AbstractModel(object):
 
     def index_recenter_bounds(self, dataset_name):
         ind_list = []
-        for par in list(set(self.recenter_pams_dataset)
-                        & set(self.sampler_parameters[dataset_name])):
+        for par in list(OrderedSet(self.recenter_pams_dataset)
+                        & OrderedSet(self.sampler_parameters[dataset_name])):
             ind_list.append(self.sampler_parameters[dataset_name][par])
 
         return ind_list

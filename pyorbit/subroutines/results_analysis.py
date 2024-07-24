@@ -117,7 +117,7 @@ def results_summary(mc, theta,
             recenter_pams = {}
             parameter_values_med = model.convert(chain_med)
 
-            for par in list(set(model.recenter_pams) & set(parameter_values_med)):
+            for par in list(OrderedSet(model.recenter_pams) & OrderedSet(parameter_values_med)):
                 recenter_pams[par] = [parameter_values_med[par],
                                       model.default_bounds[par][1] - model.default_bounds[par][0]]
             print_dictionary(parameter_values, recenter=recenter_pams, fixed_warning=fixed_warning)

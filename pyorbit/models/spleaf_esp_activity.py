@@ -34,14 +34,14 @@ class SPLEAF_ESP(AbstractModel):
 
         self.internal_likelihood = True
 
-        self.list_pams_common = {
+        self.list_pams_common = OrderedSet([
             'Prot',  # Rotational period of the star
             'Pdec',  # Decay timescale of activity
             'Oamp',  # Granulation of activity
-        }
-        self.list_pams_dataset = {
+        ])
+        self.list_pams_dataset = OrderedSet([
             'Hamp'  # Amplitude of the signal in the covariance matrix
-        }
+        ])
 
         try:
             from spleaf import cov as spleaf_cov

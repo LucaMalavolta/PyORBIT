@@ -6,6 +6,7 @@ from scipy.interpolate import splrep, splev
 import pyorbit.subroutines.constants as constants
 
 import numpy as np
+from orderedset import OrderedSet
 np.seterr(invalid='ignore')
 
 

@@ -1,4 +1,4 @@
-from pyorbit.subroutines.common import np
+from pyorbit.subroutines.common import np, OrderedSet
 from pyorbit.models.abstract_model import AbstractModel
 from pyorbit.keywords_definitions import *
 
@@ -52,8 +52,8 @@ class Celerite2_Granulation_Oscillation_Rotation(AbstractModel):
         self.model_class = 'celerite2_granulation_rotation'
         self.internal_likelihood = True
 
-        self.list_pams_common = set()
-        self.list_pams_dataset = set()
+        self.list_pams_common = OrderedSet()
+        self.list_pams_dataset = OrderedSet()
 
         self.n_pams = 7
         self.Q_granulation = 1./np.sqrt(2.)
@@ -85,7 +85,7 @@ class Celerite2_Granulation_Oscillation_Rotation(AbstractModel):
                 self.list_pams_common.update(['rotation_period'])
             else:
                 self.list_pams_common.update(['Prot'])
-            
+
             self.list_pams_common.update(['rot_Q0'])
             self.list_pams_common.update(['rot_deltaQ'])
             self.list_pams_common.update(['rot_fmix'])

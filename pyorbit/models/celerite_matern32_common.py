@@ -1,4 +1,4 @@
-from pyorbit.subroutines.common import np
+from pyorbit.subroutines.common import np, OrderedSet
 from pyorbit.models.abstract_model import AbstractModel
 from pyorbit.keywords_definitions import *
 
@@ -32,10 +32,10 @@ class Celerite_Matern32_Common(AbstractModel):
         self.model_class = 'celerite_matern32_common'
         self.internal_likelihood = True
 
-        self.list_pams_common = {
+        self.list_pams_common = OrderedSet([
             'matern32_sigma',  # sigma
             'matern32_rho',  # rho
-        }
+        ])
 
         self.n_pams = 2
         self.gp = {}

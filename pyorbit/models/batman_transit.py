@@ -1,5 +1,5 @@
 
-from pyorbit.subroutines.common import np
+from pyorbit.subroutines.common import np, OrderedSet
 from pyorbit.models.abstract_model import AbstractModel
 from pyorbit.models.abstract_transit import AbstractTransit
 
@@ -23,12 +23,12 @@ class Batman_Transit(AbstractModel, AbstractTransit):
             quit()
 
         # Must be moved here because it will updated depending on the selected limb darkening
-        self.list_pams_common = {
+        self.list_pams_common = OrderedSet([
             'P',  # Period, log-uniform prior
             'e',  # eccentricity, uniform prior
             'omega',  # argument of pericenter (in degrees)
             'R_Rs',  # planet radius (in units of stellar radii)
-        }
+        ])
 
         """ Model-specifc parameters, not declared in the abstract class """
         self.batman_params = None
@@ -95,7 +95,7 @@ class Batman_Transit(AbstractModel, AbstractTransit):
                                 supersample_factor=self.code_options[dataset.name_ref]['sample_factor'],
                                 exp_time=self.code_options[dataset.name_ref]['exp_time'],
                                 nthreads=self.code_options['nthreads'])
-        
+
         #self.time_inferior_conjunction_boundaries[dataset.name_ref] = \
         #    [np.amin(dataset.x), np.amax(dataset.x)]
 

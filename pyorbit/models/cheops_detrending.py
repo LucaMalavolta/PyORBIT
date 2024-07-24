@@ -16,7 +16,7 @@ class CheopsDetrending(AbstractModel):
         self.unitary_model = True
         self.normalization_model = False
 
-        self.list_pams_dataset = {
+        self.list_pams_dataset = OrderedSet([
             "dfdbg",
             "dfdcontam",
             "dfdsmear",
@@ -25,18 +25,18 @@ class CheopsDetrending(AbstractModel):
             "d2fdx2",
             "d2fdxdy",
             "d2fdy2",
-        }
+        ])
 
         self.fit_roll_angle = True
 
-        self.roll_angle_parameters = {
+        self.roll_angle_parameters = OrderedSet([
             "dfdsinphi",
             "dfdcosphi",
             "dfdcos2phi",
             "dfdsin2phi",
             "dfdcos3phi",
             "dfdsin3phi",
-        }
+        ])
 
         self.cheops_diagnostics = {
             'roll_angle': {

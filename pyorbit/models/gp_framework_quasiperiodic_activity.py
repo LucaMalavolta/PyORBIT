@@ -25,7 +25,7 @@ class GP_Framework_QuasiPeriodicActivity(AbstractModel):
         self.internal_likelihood = True
         self.delayed_lnlk_computation = True
 
-        self.list_pams_common = {
+        self.list_pams_common = OrderedSet([
             'Prot',  # Rotational period of the star
             'Pdec',  # Decay timescale of activity
             'Oamp',  # Granulation of activity
@@ -34,7 +34,7 @@ class GP_Framework_QuasiPeriodicActivity(AbstractModel):
             'Lc',
             'Bc',
             'Br'
-        }
+        ])
 
         self.internal_parameter_values = None
         self._x0 = None

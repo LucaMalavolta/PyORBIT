@@ -15,20 +15,21 @@ class AbstractDynamical(object):
     def __init__(self, *args, **kwargs):
 
         ''' Orbital parameters to be used in the dynamical fit '''
-        self.list_pams_common = {
+        self.list_pams_common = OrderedSet([
             'P',     # Period in days
             'M_Me',  # Mass in Earth masses
             'Omega', # longitude of ascending node
             'e',     # eccentricity, uniform prior - to be fixed
             'R_Rs',  # planet radius (in units of stellar radii)
-            'omega'} # argument of pericenter
+            'omega' # argument of pericenter
+        ])
 
-        self.list_pams_dataset = set()
+        self.list_pams_dataset = OrderedSet()
         self.warning_given = False
 
     # brainless workaround
     def _initialize_model(self, mc, **kwargs):
-        
+
         if mc.common_models[self.planet_ref].parametrization[:8] == 'Ford2006' \
             and mc.common_models[self.planet_ref].orbit != 'circular':
             self.list_pams_common.discard('e')
@@ -204,7 +205,7 @@ class PhotoDynamical(AbstractModel, AbstractDynamical):
         for par, i_par in self.ldvars.items():
             ld_par[i_par] = parameter_values[par]
         return ld_par
-    
+
     def _limb_darkening_quadratic(self, ld_par, mu):
         return  1 - ld_par[0]*(1. - mu) - ld_par[1]*(1. - mu)**2
 
@@ -312,7 +313,7 @@ class DynamicalIntegrator:
 
         # TRADES initialization
         pytrades.args_init(
-            self.n_body, 
+            self.n_body,
             self.duration_check,
             t_epoch=self.ti_ref,
             t_start=self.ti_beg,

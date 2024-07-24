@@ -139,7 +139,7 @@ class CommonStarParameters(AbstractCommon):
             },
 
     }
-    recenter_pams = set()
+    recenter_pams = OrderedSet()
 
 
     def __init__(self, *args, **kwargs):
@@ -204,14 +204,15 @@ class CommonStarParameters(AbstractCommon):
         """
         self.compute_mass = kwargs.get('compute_mass', self.compute_mass)
         self.compute_radius = kwargs.get('compute_radius', self.compute_radius)
-        self.compute_density = ~ kwargs.get('compute_density', self.compute_density)            
+        self.compute_density = kwargs.get('compute_density', self.compute_density)
 
         try:
             multivariate_pams = self.multivariate_pams
-            self.compute_density = True
+            if len(multivariate_pams) > 0:
+                self.compute_density = True
         except AttributeError:
             pass
-        
+
         if self.compute_density:
             self.compute_radius = False
             self.compute_mass = False
@@ -236,7 +237,6 @@ class CommonStarParameters(AbstractCommon):
             print('- equatorial velocity')
             print()
             quit()
-
 
 
     def define_derived_parameters(self):

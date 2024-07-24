@@ -1,4 +1,4 @@
-from pyorbit.subroutines.common import np, convert_ars_to_a, convert_RTaAU_to_insol
+from pyorbit.subroutines.common import np, OrderedSet, convert_ars_to_a, convert_RTaAU_to_insol
 import pyorbit.subroutines.constants as constants
 import pyorbit.subroutines.kepler_exo as kepler_exo
 from pyorbit.models.abstract_model import AbstractModel
@@ -15,7 +15,7 @@ class Spiderman_Thermal(AbstractModel, AbstractTransit):
         unitary_model = True
 
         # Must be moved here because it will updated depending on the selected limb darkening
-        self.list_pams_common = {
+        self.list_pams_common = OrderedSet([
             'P',  # Period, log-uniform prior
             'e',  # eccentricity, uniform prior
             'omega',  # argument of pericenter (in radians)
@@ -23,7 +23,7 @@ class Spiderman_Thermal(AbstractModel, AbstractTransit):
             'albedo',  # Bond Albedo
             'redist',  # Heat redistribution
             #'insol'
-        }
+        ])
 
         self.use_semimajor_axis = False
         self.use_inclination = False

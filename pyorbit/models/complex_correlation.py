@@ -14,8 +14,8 @@ class ComplexCorrelation(AbstractModel):
         self.time_independent_model = True
         self.residuals_analysis = True
 
-        self.list_pams_common = {'x_zero'}
-        self.list_pams_dataset = set()
+        self.list_pams_common = OrderedSet(['x_zero'])
+        self.list_pams_dataset = OrderedSet()
 
         self.order = 1
         self.starting_order = 1

@@ -208,5 +208,5 @@ The following parameters will be inherited from the common model (column *Common
 | Prot      | rotational period of the star $\theta$ | common | ``activity``     | |
 | Pdec      | Decay time scale of active regions $\lambda$ | common | ``activity``     | |
 | Oamp | Coherence scale $w$ | common | ``activity`` |   |
-| rot_amp    | coefficient of $G(t)$ component | dataset | ``activity``     | |
-| con_amp    | coefficient of $G^\prime (t)$ component | dataset | ``activity``     | |
+| con_amp    | coefficient of $G(t)$ component | dataset | ``activity``     | |
+| rot_amp    | coefficient of $G^\prime (t)$ component | dataset | ``activity``     | |

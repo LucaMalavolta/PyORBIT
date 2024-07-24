@@ -35,15 +35,15 @@ class SPLEAF_Multidimensional_ESP(AbstractModel):
         self.internal_likelihood = True
         self.delayed_lnlk_computation = True
 
-        self.list_pams_common = {
+        self.list_pams_common = OrderedSet([
             'Prot',  # Rotational period of the star
             'Pdec',  # Decay timescale of activity
             'Oamp',  # Granulation of activity
-        }
-        self.list_pams_dataset = {
+        ])
+        self.list_pams_dataset = OrderedSet([
             'rot_amp', # Amplitude of the covariance matrix
             'con_amp' # Amplitude of the first derivative of the covariance matrix
-        }
+        ])
 
         try:
             from spleaf import cov as spleaf_cov
@@ -161,6 +161,7 @@ class SPLEAF_Multidimensional_ESP(AbstractModel):
         self.spleaf_res[self.spleaf_series_index[d_ind]] = dataset.residuals
         self.spleaf_err[self.spleaf_series_index[d_ind]] = np.sqrt(self._dataset_e2[d_ind] + dataset.jitter**2.0)
 
+        #self.internal_jitter[d_ind] =  dataset.jitter
         self.internal_coeff_prime[d_ind] = parameter_values['con_amp']
         self.internal_coeff_deriv[d_ind] = parameter_values['rot_amp']
 

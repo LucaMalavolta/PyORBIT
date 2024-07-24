@@ -10,13 +10,13 @@ class LocalCorrelatedJitter(AbstractModel):
         self.model_class = 'local_correlated_jitter'
         self.jitter_model = True
 
-        self.list_pams_common = set()
-        self.list_pams_dataset = {'x_zero'}
+        self.list_pams_common = OrderedSet()
+        self.list_pams_dataset = OrderedSet(['x_zero'])
         self.default_bounds = {'x_zero': [-10**5, 10**5]}
         self.default_spaces = {'x_zero': 'Linear'}
         self.default_priors = {'x_zero': ['Uniform', []]}
 
-        self.recenter_pams_dataset = set()
+        self.recenter_pams_dataset = OrderedSet()
 
         self.order = 1
         self.x_vals = None

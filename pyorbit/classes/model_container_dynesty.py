@@ -34,6 +34,8 @@ class ModelContainerDynesty(ModelContainer):
 
         chi_out = self(theta, self.include_priors)
 
-        if chi_out < -0.5e10:
-            return -0.5e10
+        """ check for finite log_likelihood"""
+        if  np.isnan(chi_out):
+            chi_out = -np.inf
+
         return chi_out

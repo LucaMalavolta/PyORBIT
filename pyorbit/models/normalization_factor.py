@@ -12,9 +12,9 @@ class NormalizationFactor(AbstractModel):
         self.unitary_model = False
         self.normalization_model = True
 
-        self.list_pams_common = {
+        self.list_pams_common = OrderedSet([
             'n_factor',  # Normalization factor, expressed as all_other_stars / star_A ratio of flux
-            }
+        ])
 
     def compute(self, parameter_values, dataset, x0_input=None):
 
@@ -38,9 +38,9 @@ class LocalNormalizationFactor(AbstractModel):
         self.unitary_model = False
         self.normalization_model = True
 
-        self.list_pams_dataset = {
+        self.list_pams_dataset = OrderedSet([
             'n_factor',  # Normalization factor, expressed as all_other_stars / star_A ratio of flux
-            }
+        ])
 
     def compute(self, parameter_values, dataset, x0_input=None):
 
@@ -65,7 +65,7 @@ class SubsetNormalizationFactor(AbstractModel):
         self.unitary_model = False
         self.normalization_model = True
 
-        self.list_pams_dataset = set()
+        self.list_pams_dataset = OrderedSet()
 
     def initialize_model_dataset(self, mc, dataset, **kwargs):
 

@@ -1,4 +1,4 @@
-from pyorbit.subroutines.common import np
+from pyorbit.subroutines.common import np, OrderedSet
 import pyorbit.subroutines.constants as constants
 import pyorbit.subroutines.kepler_exo as kepler_exo
 from pyorbit.models.abstract_model import AbstractModel
@@ -23,7 +23,7 @@ class RossiterMcLaughling_Starry(AbstractModel, AbstractTransit):
             quit()
 
         # Must be moved here because it will updated depending on the selected limb darkening
-        self.list_pams_common = {
+        self.list_pams_common = OrderedSet([
             'P',  # Period, log-uniform prior
             'e',  # eccentricity, uniform prior
             'omega',  # argument of pericenter (in radians)
@@ -32,7 +32,7 @@ class RossiterMcLaughling_Starry(AbstractModel, AbstractTransit):
             'o_star',
             'i_star',  # Inclination of the star
             #'v_sini'  # projected rotational velocity of the star
-        }
+        ])
 
         self.use_stellar_radius = True
         self.unitary_model = False

@@ -12,9 +12,9 @@ class DilutionFactor(AbstractModel):
         self.model_class = 'dilution_factor'
         self.unitary_model = True
 
-        self.list_pams_common = {
+        self.list_pams_common = OrderedSet([
             'd_factor',  # Dilution factor, expressed as all_other_stars / star_A ratio of flux
-        }
+        ])
 
     def compute(self, parameter_values, dataset, x0_input=None):
         """
@@ -37,9 +37,9 @@ class LocalDilutionFactor(AbstractModel):
         self.model_class = 'local_dilution_factor'
         self.unitary_model = True
 
-        self.list_pams_dataset = {
+        self.list_pams_dataset = OrderedSet([
             'd_factor',  # Dilution factor, expressed as all_other_stars / star_A ratio of flux
-        }
+        ])
 
     def compute(self, parameter_values, dataset, x0_input=None):
         """

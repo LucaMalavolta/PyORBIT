@@ -118,13 +118,13 @@ class TinyGP_Multidimensional_Matern32Activity(AbstractModel):
         self.internal_likelihood = True
         self.delayed_lnlk_computation = True
 
-        self.list_pams_common = {
+        self.list_pams_common = OrderedSet([
             'matern32_rho',  # time scale of the Matern32
-        }
-        self.list_pams_dataset = {
+        ])
+        self.list_pams_dataset = OrderedSet([
             'matern32_multigp_sigma', # Amplitude of the covariance matrix
             'matern32_multigp_sigma_deriv' # Amplitude of the first derivative of the covariance matrix
-        }
+        ])
 
 
         self.internal_parameter_values = None

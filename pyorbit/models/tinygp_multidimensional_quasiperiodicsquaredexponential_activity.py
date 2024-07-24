@@ -148,19 +148,19 @@ class TinyGP_Multidimensional_QuasiPeriodicSquaredExponentialActivity(AbstractMo
         self.internal_likelihood = True
         self.delayed_lnlk_computation = True
 
-        self.list_pams_common = {
+        self.list_pams_common = OrderedSet([
             'Prot',  # Rotational period of the star
             'Pdec',  # Decay timescale of activity
             'Oamp',  # Granulation of activity
-            'Pcyc',  # timescale od magnetic sycle
+            'Pcyc',  # timescale od magnetic cycle
+        ])
 
-        }
-        self.list_pams_dataset = {
+        self.list_pams_dataset = OrderedSet([
             'rot_amp', # Amplitude of the covariance matrix
             'con_amp', # Amplitude of the first derivative of the covariance matrix
             'cyc_amp', # Amplitude of the covariance matrix
             'cyc_der' # Amplitude of the first derivative of the covariance matrix
-        }
+        ])
 
 
         self.internal_parameter_values = None

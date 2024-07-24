@@ -33,10 +33,10 @@ class Detrending_Matern32(AbstractModel):
 
         self.local_model = True
 
-        self.list_pams_common = set()
-        self.list_pams_dataset = {
+        self.list_pams_common = OrderedSet()
+        self.list_pams_dataset = OrderedSet([
             'det_m32_sigma',  # sigma
-        }
+        ])
         self.interpolated = {}
         self.gp_ndim = None
         self.gp_rvector = {}

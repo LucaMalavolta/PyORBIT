@@ -10,6 +10,7 @@ import pyorbit.subroutines.results_analysis as results_analysis
 import os
 import sys
 import multiprocessing
+from time import time
 
 __all__ = ["pyorbit_emcee_mpi"]
 
@@ -28,17 +29,17 @@ def pyorbit_emcee_mpi(config_in, input_datasets=None, return_output=None):
         print("ERROR: schwimmbad not installed, this will not work")
         quit()
 
-    # Check how many CPU threads (I guess) should be used
-    omp_num_threads = config_in['parameters'].get('cpu_threads', "1")
-    if type(omp_num_threads) == type("1"):
-        os.environ["OMP_NUM_THREADS"] = omp_num_threads
-    else:
-        os.environ["OMP_NUM_THREADS"] = "{0:.0f}".format(omp_num_threads)
+    os.environ["OMP_NUM_THREADS"] = "12"
+    try:
+        num_threads = int(config_in['parameters'].get('cpu_threads',  multiprocessing.cpu_count()))
+    except:
+        print(" Something happened when trying to setup multiprocessing, switching back to 1 CPU")
+        num_threads = 1
 
+    multiprocessing.set_start_method('fork')
 
     optimize_dir_output = './' + config_in['output'] + '/optimize/'
     pyde_dir_output = './' + config_in['output'] + '/pyde/'
-
     emcee_dir_output = './' + config_in['output'] + '/emcee/'
 
     reloaded_optimize = False
@@ -58,7 +59,7 @@ def pyorbit_emcee_mpi(config_in, input_datasets=None, return_output=None):
         mc, starting_point, population, prob, sampler_chain, \
             sampler_lnprobability, _, theta_dict = \
             emcee_load_from_cpickle(emcee_dir_output)
-        state, sampler = emcee_simpler_load_from_cpickle(emcee_dir_output)
+        #state, sampler = emcee_simpler_load_from_cpickle(emcee_dir_output)
         reloaded_emcee = True
     except FileNotFoundError:
         pass
@@ -75,7 +76,15 @@ def pyorbit_emcee_mpi(config_in, input_datasets=None, return_output=None):
     print('reloaded_pyde: ', reloaded_pyde)
     print('reloaded_emcee: ', reloaded_emcee)
     print()
-    print('number of system threads:', omp_num_threads )
+    print('number of multiprocessing threads:', num_threads)
+    print("multiprocessing method (should be fork): ", multiprocessing.get_start_method())
+    print()
+
+    safe_reload = config_in['parameters'].get('safe_reload', False)
+    print('parameters/safe_reload flag (must be True for emcee MPI): ', safe_reload)
+    if safe_reload != True:
+        print('WARNING: overriding input value for safe_reload, setting to True')
+        safe_reload = True
     print()
 
     if reloaded_pyde or reloaded_emcee:
@@ -96,7 +105,9 @@ def pyorbit_emcee_mpi(config_in, input_datasets=None, return_output=None):
             sampler_chain, mc.emcee_parameters['nburn'], mc.emcee_parameters['thin'])
         mc.model_setup()
         mc.initialize_logchi2()
+
         results_analysis.print_bayesian_info(mc)
+
 
         results_analysis.print_integrated_ACF(
             sampler_chain, theta_dict, mc.emcee_parameters['thin'])
@@ -132,13 +143,6 @@ def pyorbit_emcee_mpi(config_in, input_datasets=None, return_output=None):
             else:
                 return
 
-        elif not sampler:
-            print('Sampler file is missing - only analysis performed with PyORBIT >8.1 cn be resumed')
-            if return_output:
-                return mc, sampler_chain, sampler_lnprobability
-            else:
-                return
-
     if reloaded_emcee:
         sampled = mc.emcee_parameters['completed_nsteps']
         nsteps_todo = mc.emcee_parameters['nsteps'] \
@@ -165,6 +169,7 @@ def pyorbit_emcee_mpi(config_in, input_datasets=None, return_output=None):
         mc.model_setup()
         mc.boundaries_setup()
         mc.initialize_logchi2()
+
         results_analysis.print_bayesian_info(mc)
 
         mc.pyde_dir_output = pyde_dir_output
@@ -182,6 +187,17 @@ def pyorbit_emcee_mpi(config_in, input_datasets=None, return_output=None):
         sampled = 0
         nsteps_todo = mc.emcee_parameters['nsteps']
 
+
+    global log_priors_likelihood
+    def log_priors_likelihood(theta):
+
+        log_priors, log_likelihood = mc.log_priors_likelihood(theta)
+        return log_priors + log_likelihood
+
+    if reloaded_emcee:
+        state, sampler = emcee_simpler_load_from_cpickle(emcee_dir_output)
+
+
     print('Include priors: ', mc.include_priors)
     print()
     print('Reference Time Tref: ', mc.Tref)
@@ -189,7 +205,6 @@ def pyorbit_emcee_mpi(config_in, input_datasets=None, return_output=None):
     print('Dimensions = ', mc.ndim)
     print('Nwalkers = ', mc.emcee_parameters['nwalkers'])
     print()
-
 
     if reloaded_emcee:
         sys.stdout.flush()
@@ -205,7 +220,7 @@ def pyorbit_emcee_mpi(config_in, input_datasets=None, return_output=None):
 
         for theta_name, theta_i in theta_dict.items():
             population[:, theta_i] = population_legacy[:,
-                                                       theta_dict_legacy[theta_name]]
+                                                        theta_dict_legacy[theta_name]]
             mc.bounds[theta_i] = previous_boundaries[theta_dict_legacy[theta_name]]
 
         starting_point = np.median(population, axis=0)
@@ -234,8 +249,17 @@ def pyorbit_emcee_mpi(config_in, input_datasets=None, return_output=None):
             [mc.emcee_parameters['nwalkers'], mc.ndim], dtype=np.double)
 
         for jj, val in enumerate(starting_point):
+
             if np.isfinite(val):
-                population[:, jj] = np.random.normal(val, np.abs(val)*0.0001, size=mc.emcee_parameters['nwalkers'])
+
+                if mc.emcee_parameters.get('starts_relative_dispersion', True):
+                    if val == 0.00:
+                        population[:, jj] = np.random.normal(val, 0.0001, size=mc.emcee_parameters['nwalkers'])
+                    else:
+                        population[:, jj] = np.random.normal(val, np.abs(val)*0.0001, size=mc.emcee_parameters['nwalkers'])
+                else:
+                    population[:, jj] = np.random.normal(val, 0.0001, size=mc.emcee_parameters['nwalkers'])
+
             else:
                 population[:, jj] = np.random.uniform(mc.bounds[jj,0], mc.bounds[jj,1], size=mc.emcee_parameters['nwalkers'])
 
@@ -245,7 +269,7 @@ def pyorbit_emcee_mpi(config_in, input_datasets=None, return_output=None):
        #     print(population[ii, :])
 
         print('to write a synthetic population extremely close to the starting values.')
-        print('Undefned values have a uniform random value withing the boundaries.')
+        print('Undefined values have a uniform random value withing the boundaries.')
         print('WARNING: Initial state check of emcee will ne skipped')
         print()
         emcee_skip_check = True
@@ -259,6 +283,8 @@ def pyorbit_emcee_mpi(config_in, input_datasets=None, return_output=None):
             print('ERROR! PyDE is not installed, run first with optimize instead of emcee')
             quit()
 
+        time_start_pyde = time()
+
         if not os.path.exists(mc.pyde_dir_output):
             os.makedirs(mc.pyde_dir_output)
 
@@ -271,7 +297,7 @@ def pyorbit_emcee_mpi(config_in, input_datasets=None, return_output=None):
                 sys.exit(0)
 
             de = DiffEvol(
-                mc,
+                log_priors_likelihood,
                 mc.bounds,
                 mc.emcee_parameters['nwalkers'],
                 maximize=True,
@@ -298,9 +324,16 @@ def pyorbit_emcee_mpi(config_in, input_datasets=None, return_output=None):
 
         pyde_save_to_pickle(mc, population, starting_point, theta_dict)
 
-        print('PyDE completed')
+        time_end_pyde=time()
+        print('PyDE completed, it took {0:12.1f} seconds'.format(time_end_pyde-time_start_pyde))
         print()
         sys.stdout.flush()
+
+        if safe_reload:
+            print(' safe_reload flag on True, the program will now quit ')
+            print(' You have to relaunch it again in order for emcee to work properly')
+            print(' No worries, your PyDE results have been saved!')
+            quit()
 
     if reloaded_emcee:
         print('Original starting point of emcee:')
@@ -325,7 +358,7 @@ def pyorbit_emcee_mpi(config_in, input_datasets=None, return_output=None):
         print()
     else:
         sampler = emcee.EnsembleSampler(
-            mc.emcee_parameters['nwalkers'], mc.ndim, mc)
+            mc.emcee_parameters['nwalkers'], mc.ndim, log_priors_likelihood)
 
     if mc.emcee_parameters['nsave'] > 0:
         print('Saving temporary steps')
@@ -370,6 +403,12 @@ def pyorbit_emcee_mpi(config_in, input_datasets=None, return_output=None):
             print(sampled, '  steps completed, average lnprob:, ', np.median(prob))
             print()
             sys.stdout.flush()
+
+            if safe_reload:
+                print(' safe_reload flag on True, the program will now quit ')
+                print(' You have to relaunch it again in order for emcee to work properly')
+                print(' No worries, your PyDE results have been saved!')
+                quit()
 
             # It turns out that reloading the sampler from the file will
             # result in faster parallelization...
