@@ -6,9 +6,9 @@ Let's suppose we want to measure the transit depth of a planet orbiting the prim
 If the spatial resolution of our instrument is not good enough to completely separate the two stars (i.e., the projected pixel size on the plane of the sky is comparable with the angular separation of the two stars), the light of the target and the light of the secondary will fall into the same aperture. As a consequence, the planetary transit will result shallower, as the baseline flux will be given to the sum of the fluxes of the two stars. This is valid for any star entering the photometric aperture, not just in the case of a binary star.
 
 
-If the magnitude of the target and contaminant tars in the passband of the instrument are known, it is possible to compute the flux ratio added by the contaminants and include it in the model. This factor is called *dilution factor*.
+If the magnitude of the target and contaminant tars in the passband of the instrument are known, it is possible to compute the flux ratio added by the contaminants and include it in the model. This factor is here called *dilution factor*.
 
-In `PyORBIT`, the dilution factor is modeled as the ratio between the total flux of the *contaminant* stars over the flux of the *target* star.
+In `PyORBIT`, the dilution factor is modeled as the ratio between the total flux of the *contaminant* stars over the flux of the *target* star. This facto is sometimes called *contamination ratio*.
 Given $N$ contaminant stars whose flux is fully captured by the aperture around the target star, the dilution factor is given by this equation:
 
 ```{math}
@@ -16,20 +16,22 @@ Given $N$ contaminant stars whose flux is fully captured by the aperture around 
 d = \frac{\sum_{i=1}^{N} F_i}{F_{\mathrm{target}}}
 ```
 
-With this definition, the dilution factor is equal to zero in the absence of contaminants, equal to one if the flux of the contaminants is equal to the flux of the target, etc. 
+With this definition, the dilution factor is equal to zero in the absence of contaminants, equal to one if the flux of the contaminants is equal to the flux of the target, etc.. 
+Be sure to always use the same bandpasses for the contaminant and reference stars.
 
 
 ```{warning}
 The are several definition of the dilution factor in the literature. Remember to always check the definition before taking a value from the paper. 
 ```
 
-If you are observing with TESS, the dilution factor can be computed by using the TESS magnitudes $T$ from the [TESS input catalog](https://tess.mit.edu/science/tess-input-catalogue/):
+If you are observing with TESS, and you are *certain* that all the lights of the contaminants is falling within the aperture, the dilution factor can be computed by using the TESS magnitudes $T$ from the [TESS input catalog](https://tess.mit.edu/science/tess-input-catalogue/):
 ```{math}
 :label: dilution_Factor_magnitudes
 d = \frac{\sum_{i=1}^{N} 10^{(-0.4 * T_{i})}}{10^{(-0.4 * T_{\mathrm{target}})}}
 ```
 
-Be sure to always use the same bandpasses for the contaminant and reference stars.
+Generally speaking,  you should compute the fraction of light of the stellar Point Spread Function that falls into a given photometric aperture ($k$ parameter) for each star (target and contaminants), and then derive the dilution factor (and its associated error) following equation {numref}`dilution_factor_fluxes`, e.g., as done in [Mantovan et al. (2022)](https://ui.adsabs.harvard.edu/abs/2022MNRAS.516.4432M/abstract).
+
 
 ### Prior on the dilution factor
 
