@@ -49,7 +49,7 @@ In conclusion, **it is strongly advised to always use a normalization factor in 
 - model_name: ``dilution_factor`` or ``local_dilution_factor``
 - required common objects: ``dilution_factor``
 
-The boundaries of the dilution factor are automatically set to `[0.0, 1.0]`. While the dilution factor must be positive, it may be necessary to expand the lower boundaries for extreme cases when the integrated flux of the contaminants is similar or higher to the one of the target star.
+The boundaries of the dilution factor are automatically set to `[0.0, 1.0]`. While the dilution factor must be positive, it may be necessary to expand the upper boundaries for extreme cases when the integrated flux of the contaminants is similar or higher to the one of the target star.
 
 ## Keywords
 
