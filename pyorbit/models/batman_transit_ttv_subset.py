@@ -48,10 +48,6 @@ class Batman_Transit_TTV_Subset(AbstractModel, AbstractTransit):
         except:
             self.code_options['nthreads'] = 1
 
-        #if not batman.openmp.detect():
-        #    print('OpenMP not supported, batman nthreads automatically lowered to 1')
-        #    self.code_options['nthreads'] = 1
-
         self.batman_params = batman.TransitParams()
 
         """ Initialization with random transit parameters"""
@@ -79,7 +75,15 @@ class Batman_Transit_TTV_Subset(AbstractModel, AbstractTransit):
         """ Reading some code-specific keywords from the configuration file"""
         self._prepare_dataset_options(mc, dataset, **kwargs)
 
-        for i_sub in range(0, dataset.submodel_flag):
+        #TODO remove in version 11
+        try:
+            self.start_flag = dataset.submodel_minflag
+            self.end_flag = dataset.submodel_maxflag
+        except AttributeError:
+            self.start_flag = 0
+            self.end_flag = dataset.submodel_flag
+
+        for i_sub in range(self.start_flag, self.end_flag):
 
             par_original = 'Tc'
             par_subset = 'Tc_'+repr(i_sub)
@@ -97,7 +101,6 @@ class Batman_Transit_TTV_Subset(AbstractModel, AbstractTransit):
                 par_update = [min(sub_dataset), max(sub_dataset)]
 
             self.bounds[dataset.name_ref].update({par_subset: par_update})
-
 
             self.batman_models[dataset.name_ref + '_'+repr(i_sub)] = \
                 batman.TransitModel(self.batman_params,
@@ -165,9 +168,7 @@ class Batman_Transit_TTV_Subset(AbstractModel, AbstractTransit):
         #    if parameter_values['b'] > 1. + parameter_values['R_Rs'] :
         #        return y_output
 
-
-
-        for i_sub in range(0,dataset.submodel_flag):
+        for i_sub in range(self.start_flag, self.end_flag):
 
             par_subset = 'Tc_'+repr(i_sub)
             self.batman_params.t0 = parameter_values[par_subset] - dataset.Tref

@@ -40,7 +40,7 @@ from pyorbit.models.pytransit_transit_ttv_ancillary import PyTransit_Transit_TTV
 from pyorbit.models.batman_transit import Batman_Transit
 from pyorbit.models.batman_transit_ttv import Batman_Transit_TTV
 from pyorbit.models.batman_transit_ttv_subset import Batman_Transit_TTV_Subset
-from pyorbit.models.batman_transit_ttv_subset_faster import Batman_Transit_TTV_Subset_Faster
+#from pyorbit.models.batman_transit_ttv_subset_faster import Batman_Transit_TTV_Subset_Faster
 
 from pyorbit.models.batman_transit_rprs_subset import Batman_Transit_RpRs_Subset
 
@@ -213,8 +213,8 @@ define_type_to_class = {
     'batman_transit': Batman_Transit,
     'batman_transit_ttv_subset': Batman_Transit_TTV_Subset,
     'subset_batman_transit_ttv': Batman_Transit_TTV_Subset,
-    'batman_transit_ttv_subset_faster': Batman_Transit_TTV_Subset_Faster,
-    'subset_batman_transit_faster_ttv': Batman_Transit_TTV_Subset_Faster,
+#    'batman_transit_ttv_subset_faster': Batman_Transit_TTV_Subset_Faster,
+#    'subset_batman_transit_faster_ttv': Batman_Transit_TTV_Subset_Faster,
     'batman_transit_ttv': Batman_Transit_TTV,
     'batman_transit_rprs_subset': Batman_Transit_RpRs_Subset,
     'subset_batman_transit_rprs': Batman_Transit_RpRs_Subset,

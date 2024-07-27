@@ -17,7 +17,6 @@ class DatasetExpanded(Dataset):
     def __init__(self,  model_name, kind, models):
         AbstractCommon.__init__(self, None)
 
-
         for kind_name, kind_list in datatype_definition.items():
             if kind in kind_list:
                 self.kind = kind_name
@@ -174,10 +173,16 @@ class DatasetExpanded(Dataset):
         self._setup_systematic_mask('offset', data_dictionary['offset'])
 
         if np.amax(data_dictionary['subset']) > 0:
-            self.submodel_flag = np.int(np.amax(data_dictionary['subset'])) + 1
+            sel = data_dictionary['subset'] >= -0.5
+            self.submodel_minflag = np.int64(np.amin(data_dictionary['subset']))
+            self.submodel_maxflag = np.int64(np.amax(data_dictionary['subset'])) + 1
+            self.submodel_flag = np.int64(np.amax(data_dictionary['subset'])) + 1
             self.submodel_id = data_dictionary['subset']
         else:
+            self.submodel_minflag = None
+            self.submodel_maxflag = None
             self.submodel_flag = None
+
 
         self.model_reset()
 

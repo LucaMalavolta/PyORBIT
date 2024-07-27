@@ -55,8 +55,13 @@ class PyTransit_Transit_TTV_Ancillary(AbstractModel, AbstractTransit):
 
         """ extracting the central time of transit and the transit duration
         for the planet under analysis"""
+
         Tc_selected = dataset.ancillary['transit_time'][planet_selection]
-        Td_selected = dataset.ancillary['duration'][planet_selection]
+        try:
+            Td_selected = dataset.ancillary['transit_window'][planet_selection]
+        except:
+            Td_selected = dataset.ancillary['duration'][planet_selection]
+
         try:
             transit_id = dataset.ancillary['transit_id'][planet_selection]
         except:

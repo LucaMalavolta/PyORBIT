@@ -50,11 +50,20 @@ class PyTransit_Transit_TTV_Subset(AbstractModel, AbstractTransit):
         """ Reading some code-specific keywords from the configuration file"""
         self._prepare_dataset_options(mc, dataset, **kwargs)
 
-        self.Tc_number = int(dataset.submodel_flag)
+        #TODO remove in version 11
+        try:
+            self.start_flag = dataset.submodel_minflag
+            self.end_flag = dataset.submodel_maxflag
+        except AttributeError:
+            self.start_flag = 0
+            self.end_flag = dataset.submodel_flag
+
+
+        self.Tc_number = int(self.end_flag)
         self.Tc_names[dataset.name_ref] = []
         self.Tc_array[dataset.name_ref] = np.zeros(self.Tc_number, dtype=np.double)
 
-        for i_sub in range(0, dataset.submodel_flag):
+        for i_sub in range(self.start_flag, self.end_flag):
             par_original = 'Tc'
             par_subset = 'Tc_'+repr(i_sub)
 

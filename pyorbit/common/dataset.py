@@ -198,9 +198,14 @@ class Dataset(AbstractCommon):
         self._setup_systematic_mask('offset', data_input[:, 4])
 
         if np.amax(data_input[:, 5]) > 0:
+            sel = data_input[:, 5] >= -0.5
+            self.submodel_minflag = np.int64(np.amin(data_input[sel, 5]))
+            self.submodel_maxflag = np.int64(np.amax(data_input[:, 5])) + 1
             self.submodel_flag = np.int64(np.amax(data_input[:, 5])) + 1
             self.submodel_id = data_input[:, 5]
         else:
+            self.submodel_minflag = None
+            self.submodel_maxflag = None
             self.submodel_flag = None
 
         if np.amax(data_input[:, 3]) > 0:

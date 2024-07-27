@@ -34,11 +34,6 @@ class Batman_Transit(AbstractModel, AbstractTransit):
         self.batman_params = None
         self.batman_models = {}
         self.code_options = {}
-        #self.time_inferior_conjunction_boundaries = {}
-
-        self.dataset_x0 ={}
-        self.dataset_Tref = {}
-        #self.copied_dataset = True
 
     def initialize_model(self, mc, **kwargs):
 
@@ -78,26 +73,16 @@ class Batman_Transit(AbstractModel, AbstractTransit):
         self.batman_params.u = np.ones(
             kwargs['limb_darkening_ncoeff'], dtype=np.double) * 0.1
 
-        self.code_options['initialization_counter'] = 5000
-
     def initialize_model_dataset(self, mc, dataset, **kwargs):
 
         self._prepare_dataset_options(mc, dataset, **kwargs)
-        #self.batman_models[dataset.name_ref] = \
-        #    batman.TransitModel(self.batman_params,
-        #                        dataset.x0,
-        #                        supersample_factor=self.code_options[dataset.name_ref]['sample_factor'],
-        #                        exp_time=self.code_options[dataset.name_ref]['exp_time'],
-        #                        nthreads=self.code_options['nthreads'])
+
         self.batman_models[dataset.name_ref] = \
             batman.TransitModel(self.batman_params,
                                 dataset.x0,
                                 supersample_factor=self.code_options[dataset.name_ref]['sample_factor'],
                                 exp_time=self.code_options[dataset.name_ref]['exp_time'],
                                 nthreads=self.code_options['nthreads'])
-
-        #self.time_inferior_conjunction_boundaries[dataset.name_ref] = \
-        #    [np.amin(dataset.x), np.amax(dataset.x)]
 
     def compute(self, parameter_values, dataset, x0_input=None):
         """
@@ -137,11 +122,6 @@ class Batman_Transit(AbstractModel, AbstractTransit):
         for par, i_par in self.ldvars.items():
             self.batman_params.u[i_par] = parameter_values[par]
 
-        #if not self.use_inclination:
-        #    if parameter_values['b'] > 1. + parameter_values['R_Rs']/2. :
-        #        return -1000000000.00000
-
-
         """
         From the batman manual:
         Reinitializing the model is by far the slowest component of batman,
@@ -166,10 +146,10 @@ class Batman_Transit(AbstractModel, AbstractTransit):
 
         else:
             temporary_model = batman.TransitModel(self.batman_params,
-                                                  x0_input,
-                                                  supersample_factor=self.code_options[
-                                                      dataset.name_ref]['sample_factor'],
-                                                  exp_time=self.code_options[dataset.name_ref]['exp_time'],
-                                                  nthreads=self.code_options['nthreads'])
+                                                    x0_input,
+                                                    supersample_factor=self.code_options[
+                                                        dataset.name_ref]['sample_factor'],
+                                                    exp_time=self.code_options[dataset.name_ref]['exp_time'],
+                                                    nthreads=self.code_options['nthreads'])
 
             return temporary_model.light_curve(self.batman_params) - 1.

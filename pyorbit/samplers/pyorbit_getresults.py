@@ -1497,6 +1497,12 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
 
                             x_range = np.arange(
                                 -parameter_values['P']/2., parameter_values['P']/2., 0.001)
+
+                            for i_sub in range(0,20):
+                                if 'Tc_'+repr(i_sub) in parameter_values and 'Tc' not in parameter_values:
+                                    parameter_values['Tc'] = parameter_values['Tc_'+repr(i_sub)]
+                                    break
+
                             try:
                                 delta_T = parameter_values['Tc']-dataset.Tref
                             except KeyError:

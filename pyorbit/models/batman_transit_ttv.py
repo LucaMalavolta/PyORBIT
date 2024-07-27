@@ -48,10 +48,6 @@ class Batman_Transit_TTV(AbstractModel, AbstractTransit):
         except:
             self.code_options['nthreads'] = 1
 
-        #if not batman.openmp.detect():
-        #    print('OpenMP not supported, batman nthreads automatically lowered to 1')
-        #    self.code_options['nthreads'] = 1
-
         self.batman_params = batman.TransitParams()
 
         """ Initialization with random transit parameters"""
@@ -86,16 +82,6 @@ class Batman_Transit_TTV(AbstractModel, AbstractTransit):
                                 supersample_factor=self.code_options[dataset.name_ref]['sample_factor'],
                                 exp_time=self.code_options[dataset.name_ref]['exp_time'],
                                 nthreads=self.code_options['nthreads'])
-
-    #def define_special_parameter_properties(self,
-    #                                       ndim,
-    #                                       output_lists,
-    #                                       dataset_name,
-    #                                       par):
-
-    #    if par == 'Tc' and (par not in self.bounds[dataset_name]):
-    #        self.bounds[dataset_name][par] = self.code_options[dataset_name]['Tc_boundaries']
-    #    return ndim, output_lists, False
 
     def compute(self, parameter_values, dataset, x0_input=None):
         """
@@ -135,11 +121,6 @@ class Batman_Transit_TTV(AbstractModel, AbstractTransit):
         for par, i_par in self.ldvars.items():
             self.batman_params.u[i_par] = parameter_values[par]
 
-        #if not self.use_inclination:
-        #    if parameter_values['b'] > 1. + parameter_values['R_Rs'] :
-        #        return 0.00
-
-
         """
         From the batman manual:
         Reinitializing the model is by far the slowest component of batman,
@@ -153,21 +134,21 @@ class Batman_Transit_TTV(AbstractModel, AbstractTransit):
         random_selector = np.random.randint(1000)
         if random_selector == 50:
             self.batman_models[dataset.name_ref] = batman.TransitModel(self.batman_params,
-                                                                       dataset.x0,
-                                                                       supersample_factor=self.code_options[
-                                                                           dataset.name_ref]['sample_factor'],
-                                                                       exp_time=self.code_options[dataset.name_ref]['exp_time'],
-                                                                       nthreads=self.code_options['nthreads'])
+                                                                        dataset.x0,
+                                                                        supersample_factor=self.code_options[
+                                                                            dataset.name_ref]['sample_factor'],
+                                                                        exp_time=self.code_options[dataset.name_ref]['exp_time'],
+                                                                        nthreads=self.code_options['nthreads'])
 
         if x0_input is None:
             return self.batman_models[dataset.name_ref].light_curve(self.batman_params) - 1.
 
         else:
             temporary_model = batman.TransitModel(self.batman_params,
-                                                  x0_input,
-                                                  supersample_factor=self.code_options[
-                                                      dataset.name_ref]['sample_factor'],
-                                                  exp_time=self.code_options[dataset.name_ref]['exp_time'],
-                                                  nthreads=self.code_options['nthreads'])
+                                                    x0_input,
+                                                    supersample_factor=self.code_options[
+                                                        dataset.name_ref]['sample_factor'],
+                                                    exp_time=self.code_options[dataset.name_ref]['exp_time'],
+                                                    nthreads=self.code_options['nthreads'])
 
             return temporary_model.light_curve(self.batman_params) - 1.
