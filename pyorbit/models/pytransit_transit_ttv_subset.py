@@ -37,6 +37,7 @@ class PyTransit_Transit_TTV_Subset(AbstractModel, AbstractTransit):
         self.Tc_names = {}
         self.Tc_arrays = {}
 
+
     def initialize_model(self, mc, **kwargs):
         """ Force the use of the time of inferior conjunction"""
         mc.common_models[self.planet_ref].use_time_inferior_conjunction = True
@@ -58,19 +59,25 @@ class PyTransit_Transit_TTV_Subset(AbstractModel, AbstractTransit):
             self.start_flag = 0
             self.end_flag = dataset.submodel_flag
 
+        subset_flag = np.zeros_like(dataset.x, dtype=int) - 1
 
         self.Tc_number = int(self.end_flag)
         self.Tc_names[dataset.name_ref] = []
-        self.Tc_array[dataset.name_ref] = np.zeros(self.Tc_number, dtype=np.double)
 
+        transit_index = 0
         for i_sub in range(self.start_flag, self.end_flag):
             par_original = 'Tc'
             par_subset = 'Tc_'+repr(i_sub)
 
+            if np.amin(np.abs(dataset.submodel_id-i_sub)) > 0.5: continue
+
             self.Tc_names[dataset.name_ref].append(par_subset)
+            subset_flag[(dataset.submodel_id == i_sub)] = transit_index
+
             self.transfer_parameter_properties(mc, dataset, par_original, par_subset, dataset_pam=True)
 
             sub_dataset = dataset.x[(dataset.submodel_id == i_sub)]
+
             if kwargs[dataset.name_ref].get('boundaries', False):
                 par_update = kwargs[dataset.name_ref]['boundaries'].get(
                     par_subset, [min(sub_dataset), max(sub_dataset)])
@@ -81,11 +88,16 @@ class PyTransit_Transit_TTV_Subset(AbstractModel, AbstractTransit):
 
             self.bounds[dataset.name_ref].update({par_subset: par_update})
 
+            transit_index += 1
+
+        transit_id = np.arange(0, transit_index, dtype=int)
+
         if self.limb_darkening_model == 'quadratic':
             self.pytransit_models[dataset.name_ref] = QuadraticModel()
             self.pytransit_plot[dataset.name_ref] = QuadraticModel()
 
         self.pytransit_models[dataset.name_ref].set_data(dataset.x0,
+                                                            lcids=subset_flag, epids=transit_id,
                                                             exptimes=self.code_options[dataset.name_ref]['exp_time'],
                                                             nsamples=self.code_options[dataset.name_ref]['sample_factor'])
 
@@ -103,14 +115,15 @@ class PyTransit_Transit_TTV_Subset(AbstractModel, AbstractTransit):
         for par, i_par in self.ldvars.items():
             self.ld_vars[i_par] = parameter_values[par]
 
-        for i_tc, n_tc in enumerate(self.Tc_names[dataset.name_ref]):
-            self.Tc_array[dataset.name_ref][i_tc] = parameter_values[n_tc] - dataset.Tref
+        Tc_array = []
+        for n_tc in self.Tc_names[dataset.name_ref]:
+            Tc_array.append(parameter_values[n_tc] - dataset.Tref)
 
         if x0_input is None:
             return self.pytransit_models[dataset.name_ref].evaluate_ps(
                 parameter_values['R_Rs'],
                 self.ld_vars,
-                self.Tc_array[dataset.name_ref],
+                Tc_array,
                 parameter_values['P'],
                 parameter_values['a_Rs'],
                 parameter_values['i'],
@@ -122,10 +135,10 @@ class PyTransit_Transit_TTV_Subset(AbstractModel, AbstractTransit):
                                                             exptimes=self.code_options[dataset.name_ref]['exp_time'],
                                                             nsamples=self.code_options[dataset.name_ref]['sample_factor'])
 
-            return self.pytransit_plot[dataset.name_ref].evaluate_ps(
+            return self.pytransit_plot[dataset.name_ref].evaluate(
                 parameter_values['R_Rs'],
                 self.ld_vars,
-                self.Tc_array[dataset.name_ref],
+                Tc_array,
                 parameter_values['P'],
                 parameter_values['a_Rs'],
                 parameter_values['i'],

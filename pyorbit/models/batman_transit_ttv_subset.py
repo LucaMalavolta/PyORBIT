@@ -32,6 +32,9 @@ class Batman_Transit_TTV_Subset(AbstractModel, AbstractTransit):
         self.batman_models = {}
         self.code_options = {}
 
+        self.Tc_number = {}
+        self.Tc_names = {}
+
     def initialize_model(self, mc, **kwargs):
         """ Force the use of the time of inferior conjunction"""
         mc.common_models[self.planet_ref].use_time_inferior_conjunction = True
@@ -71,6 +74,8 @@ class Batman_Transit_TTV_Subset(AbstractModel, AbstractTransit):
         self.list_pams_common.discard('Tc')
         # self.list_pams_dataset.update(['Tc'])
 
+        self.subset_flag = {}
+
     def initialize_model_dataset(self, mc, dataset, **kwargs):
         """ Reading some code-specific keywords from the configuration file"""
         self._prepare_dataset_options(mc, dataset, **kwargs)
@@ -83,12 +88,20 @@ class Batman_Transit_TTV_Subset(AbstractModel, AbstractTransit):
             self.start_flag = 0
             self.end_flag = dataset.submodel_flag
 
+        self.Tc_number[dataset.name_ref] = []
+        self.Tc_names[dataset.name_ref] = []
+
         for i_sub in range(self.start_flag, self.end_flag):
 
             par_original = 'Tc'
             par_subset = 'Tc_'+repr(i_sub)
 
-            self.transfer_parameter_properties(mc, dataset, par_original, par_subset, keywords=kwargs, dataset_pam=True)
+            if np.amin(np.abs(dataset.submodel_id-i_sub)) > 0.5: continue
+
+            self.Tc_number[dataset.name_ref].append(i_sub)
+            self.Tc_names[dataset.name_ref].append(par_subset)
+
+            #self.transfer_parameter_properties(mc, dataset, par_original, par_subset, keywords=kwargs, dataset_pam=True)
 
             sub_dataset = dataset.x[(dataset.submodel_id == i_sub)]
 
@@ -100,7 +113,14 @@ class Batman_Transit_TTV_Subset(AbstractModel, AbstractTransit):
             else:
                 par_update = [min(sub_dataset), max(sub_dataset)]
 
-            self.bounds[dataset.name_ref].update({par_subset: par_update})
+            if self.use_shared_ttvs:
+                self.transfer_parameter_properties(mc, dataset, par_original, par_subset, keywords=kwargs, common_pam=True)
+                mc.common_models[self.planet_ref].bounds.update({par_subset: par_update})
+
+            else:
+                self.transfer_parameter_properties(mc, dataset, par_original, par_subset, keywords=kwargs, dataset_pam=True)
+                self.bounds[dataset.name_ref].update({par_subset: par_update})
+
 
             self.batman_models[dataset.name_ref + '_'+repr(i_sub)] = \
                 batman.TransitModel(self.batman_params,
@@ -108,6 +128,8 @@ class Batman_Transit_TTV_Subset(AbstractModel, AbstractTransit):
                                     supersample_factor=self.code_options[dataset.name_ref]['sample_factor'],
                                     exp_time=self.code_options[dataset.name_ref]['exp_time'],
                                     nthreads=self.code_options['nthreads'])
+
+
 
     def compute(self, parameter_values, dataset, x0_input=None):
         """
@@ -168,11 +190,12 @@ class Batman_Transit_TTV_Subset(AbstractModel, AbstractTransit):
         #    if parameter_values['b'] > 1. + parameter_values['R_Rs'] :
         #        return y_output
 
-        for i_sub in range(self.start_flag, self.end_flag):
+        #for i_sub in range(self.start_flag, self.end_flag):
+        for i_tc, n_tc in enumerate(self.Tc_names[dataset.name_ref]):
 
-            par_subset = 'Tc_'+repr(i_sub)
+            i_sub = self.Tc_number[dataset.name_ref][i_tc]
+            par_subset = n_tc
             self.batman_params.t0 = parameter_values[par_subset] - dataset.Tref
-
 
             if x0_input is None:
                 sel_data = (dataset.submodel_id==i_sub)

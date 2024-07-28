@@ -94,7 +94,7 @@ class AbstractTransit(object):
             self.compute_time_inferior_conjunction = True
             # mean longitude = argument of pericenter + mean anomaly at Tref
 
-        self.use_shared_ttvs = mc.common_models[self.planet_ref].use_shared_ttvs
+        self.use_shared_ttvs =  kwargs.get('use_shared_ttvs', mc.common_models[self.planet_ref].use_shared_ttvs)
 
     def _prepare_star_parameters(self, mc, **kwargs):
         """ Additional stellar parameters
