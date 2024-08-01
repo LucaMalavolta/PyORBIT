@@ -199,6 +199,12 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
     if mc.emcee_parameters['version'] == '2':
         mc.emcee_parameters['use_threading_pool'] = False
 
+    try:
+        progress_bar = config_in['solver']['emcee'].get('progress_bar', True) and config_in['parameters'].get('progress_bar', True)
+    except:
+        progress_bar = True
+
+
     if reloaded_emcee:
         sys.stdout.flush()
         pass
@@ -377,7 +383,7 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
                         int(mc.emcee_parameters['nsave']),
                         thin=mc.emcee_parameters['thin'],
                         rstate0=state,
-                        progress=True,
+                        progress=progress_bar,
                         skip_initial_state_check=emcee_skip_check)
             else:
                 population, prob, state = sampler.run_mcmc(
@@ -385,7 +391,7 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
                     int(mc.emcee_parameters['nsave']),
                     thin=mc.emcee_parameters['thin'],
                     rstate0=state,
-                    progress=True,
+                    progress=progress_bar,
                     skip_initial_state_check=emcee_skip_check)
 
             sampled += mc.emcee_parameters['nsave']
@@ -430,7 +436,7 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
                     nsteps_todo,
                     thin=mc.emcee_parameters['thin'],
                     rstate0=state,
-                    progress=True,
+                    progress=progress_bar,
                     skip_initial_state_check=emcee_skip_check)
 
         else:
@@ -440,7 +446,7 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
                 nsteps_todo,
                 thin=mc.emcee_parameters['thin'],
                 rstate0=state,
-                progress=True,
+                progress=progress_bar,
                     skip_initial_state_check=emcee_skip_check)
 
         sampled += nsteps_todo

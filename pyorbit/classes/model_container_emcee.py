@@ -18,7 +18,8 @@ class ModelContainerEmcee(ModelContainer):
                                  'multirun_iter': 20,
                                  'shutdown_jitter': False,
                                  'use_threading_pool': True,
-                                 'starts_relative_dispersion': True
+                                 'starts_relative_dispersion': True,
+                                 #'progress_bar': True
                                 }
 
         self.pyde_parameters = {'ngen': 8000,

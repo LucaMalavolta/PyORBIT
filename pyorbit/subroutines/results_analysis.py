@@ -496,6 +496,8 @@ def get_model(mc, theta, bjd_dict, **kwargs):
 
     delayed_lnlk_computation = {}
 
+    progress_bar = kwargs.get('progress_bar', True)
+
     if mc.dynamical_model is not None:
         """ check if any keyword ahas get the output model from the dynamical tool
         we must do it here because all the planet are involved"""
@@ -705,21 +707,39 @@ def get_model(mc, theta, bjd_dict, **kwargs):
                     print('     # {0:d} chunks of {1:d} times each'.format(max_iterations, array_length))
                     print('     Check the documentation if the code is taking too long or if it crashes...')
 
-                    for i_gp in tqdm(range(max_iterations)):
+                    if progress_bar:
 
-                        if (id_end+array_length >= x0_len):
-                            id_end = -1
+                        for i_gp in tqdm(range(max_iterations)):
 
-                        x0_temp = x0_plot[id_start:id_end]
+                            if (id_end+array_length >= x0_len):
+                                id_end = -1
 
-                        x0_out[id_start:id_end], x0_var[id_start:id_end] = \
-                            mc.models[logchi2_gp_model].sample_predict(
-                            parameter_values, dataset, x0_temp, return_variance=True)
+                            x0_temp = x0_plot[id_start:id_end]
 
-                        if id_end < 0: break
+                            x0_out[id_start:id_end], x0_var[id_start:id_end] = \
+                                mc.models[logchi2_gp_model].sample_predict(
+                                parameter_values, dataset, x0_temp, return_variance=True)
 
-                        id_start += array_length
-                        id_end += array_length
+                            if id_end < 0: break
+
+                            id_start += array_length
+                            id_end += array_length
+                    else:
+                        for i_gp in range(max_iterations):
+
+                            if (id_end+array_length >= x0_len):
+                                id_end = -1
+
+                            x0_temp = x0_plot[id_start:id_end]
+
+                            x0_out[id_start:id_end], x0_var[id_start:id_end] = \
+                                mc.models[logchi2_gp_model].sample_predict(
+                                parameter_values, dataset, x0_temp, return_variance=True)
+
+                            if id_end < 0: break
+
+                            id_start += array_length
+                            id_end += array_length
 
                 else:
                     print('     computing GP prediction for the whole temporal range, it may take a while...')
@@ -783,24 +803,44 @@ def get_model(mc, theta, bjd_dict, **kwargs):
             print('     # {0:d} chunks of {1:d} times each'.format(max_iterations, array_length))
             print('     Check the documentation if the code is taking too long or if it crashes...')
 
+            if progress_bar:
 
-            for i_gp in tqdm(range(max_iterations)):
+                for i_gp in tqdm(range(max_iterations)):
 
-                #print("{0:4.1f}%".format(100/max_iterations*i_gp), end = '')
+                    #print("{0:4.1f}%".format(100/max_iterations*i_gp), end = '')
 
-                if (id_end+array_length >= x0_len):
-                    id_end = -1
+                    if (id_end+array_length >= x0_len):
+                        id_end = -1
 
-                x0_temp = x0_plot[id_start:id_end]
+                    x0_temp = x0_plot[id_start:id_end]
 
-                x0_out[id_start:id_end], x0_var[id_start:id_end] = \
-                    mc.models[logchi2_gp_model].sample_predict(
-                    mc.dataset_dict[dataset_name], x0_temp, return_variance=True)
+                    x0_out[id_start:id_end], x0_var[id_start:id_end] = \
+                        mc.models[logchi2_gp_model].sample_predict(
+                        mc.dataset_dict[dataset_name], x0_temp, return_variance=True)
 
-                if id_end < 0: break
+                    if id_end < 0: break
 
-                id_start += array_length
-                id_end += array_length
+                    id_start += array_length
+                    id_end += array_length
+
+            else:
+                for i_gp in range(max_iterations):
+
+                    #print("{0:4.1f}%".format(100/max_iterations*i_gp), end = '')
+
+                    if (id_end+array_length >= x0_len):
+                        id_end = -1
+
+                    x0_temp = x0_plot[id_start:id_end]
+
+                    x0_out[id_start:id_end], x0_var[id_start:id_end] = \
+                        mc.models[logchi2_gp_model].sample_predict(
+                        mc.dataset_dict[dataset_name], x0_temp, return_variance=True)
+
+                    if id_end < 0: break
+
+                    id_start += array_length
+                    id_end += array_length
 
             #print('   ...Done')
         else:

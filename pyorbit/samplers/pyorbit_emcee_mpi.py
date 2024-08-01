@@ -187,6 +187,12 @@ def pyorbit_emcee_mpi(config_in, input_datasets=None, return_output=None):
         sampled = 0
         nsteps_todo = mc.emcee_parameters['nsteps']
 
+    try:
+        progress_bar = config_in['solver']['emcee'].get('progress_bar', True) and config_in['parameters'].get('progress_bar', True)
+    except:
+        progress_bar = True
+
+
 
     global log_priors_likelihood
     def log_priors_likelihood(theta):
@@ -378,7 +384,7 @@ def pyorbit_emcee_mpi(config_in, input_datasets=None, return_output=None):
                     int(mc.emcee_parameters['nsave']),
                     thin=mc.emcee_parameters['thin'],
                     rstate0=state,
-                    progress=True,
+                    progress=progress_bar,
                     skip_initial_state_check=emcee_skip_check)
 
             sampled += mc.emcee_parameters['nsave']
@@ -425,7 +431,7 @@ def pyorbit_emcee_mpi(config_in, input_datasets=None, return_output=None):
                 nsteps_todo,
                 thin=mc.emcee_parameters['thin'],
                 rstate0=state,
-                progress=True,
+                progress=progress_bar,
                 skip_initial_state_check=emcee_skip_check)
 
         sampled += nsteps_todo
