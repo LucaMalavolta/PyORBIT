@@ -1,5 +1,5 @@
 ###### Requirements with Version Specifiers ######
-setuptools==51.3.3
+setuptools==70.0.0
 numpy <=1.20
 numba ==0.53.1
 scipy ==1.5.4
