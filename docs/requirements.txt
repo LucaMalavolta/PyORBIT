@@ -17,4 +17,4 @@ jaxlib
 jax
 tinygp
 pygtc
-orderedset
+ordered-set

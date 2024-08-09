@@ -7,7 +7,7 @@ The most common and most reliable kernel for stellar activity is the quasi-perio
 ```{math}
 :label: quasiperiodic_pyorbit
 
-G(t_i, t_j) = H_\mathrm{amp}^2  \exp{ \left \{-\frac{\sin^2{[\pi(t_i - t_j)/ P_\mathrm{rot}]}}{2 O_\mathrm{amp} ^2} - \frac{(t_i-t_j)^2}{2 P_\mathrm{dec}^2} \right \} }
+\gamma (t_i, t_j) = H_\mathrm{amp}^2  \exp{ \left \{-\frac{\sin^2{[\pi(t_i - t_j)/ P_\mathrm{rot}]}}{2 O_\mathrm{amp} ^2} - \frac{(t_i-t_j)^2}{2 P_\mathrm{dec}^2} \right \} }
 ```
 
 where $P_\mathrm{rot}$ is equivalent to the rotation period of the star, $O_\mathrm{amp}$ is the coherence scale, and $P_\mathrm{dec}$ is usually associated with the decay time scale of the active regions.
