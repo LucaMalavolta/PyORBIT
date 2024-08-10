@@ -4,6 +4,7 @@ from pyorbit.common.abstract_common import *
 from pyorbit.subroutines.common import np, convert_rho_to_ars, convert_b_to_i
 import pyorbit.subroutines.constants as constants
 import pyorbit.subroutines.kepler_exo as kepler_exo
+from pyorbit.keywords_definitions import *
 
 
 class CommonPlanets(AbstractCommon):
@@ -275,6 +276,12 @@ class CommonPlanets(AbstractCommon):
         self.use_shared_ttvs = kwargs.get('use_shared_ttvs', self.use_shared_ttvs)
         if self.use_shared_ttvs:
             print('Shared transit-specific time of transits (i.e., TTVs): ', True)
+
+        for tc_flag in keywords_tc_list:
+            self.tc_list = kwargs.get(tc_flag, None)
+            if self.tc_list:
+                print('List of times of inferior conjuctions: ', self.tc_list)
+                break
 
         print()
 

@@ -36,3 +36,5 @@ keywords_detrending_common_parameters = ['use_common_parameters',
                                         'common_parameters', 
                                         'use_common_model', 
                                         'common_model']
+
+keywords_tc_list = ['tc_list', 'Tc_list', 'tclist', 'Tclist']

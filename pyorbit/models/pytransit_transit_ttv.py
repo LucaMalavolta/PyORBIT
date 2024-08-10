@@ -39,6 +39,10 @@ class PyTransit_Transit_TTV(AbstractModel, AbstractTransit):
         """ Force the use of the time of inferior conjunction"""
         mc.common_models[self.planet_ref].use_time_inferior_conjunction = True
 
+        self.use_roadrunner = kwargs.get('use_roadrunner', True)
+        if self.use_roadrunner:
+            print('Using RoadRunner Model from PyTransit')
+
         self._prepare_planetary_parameters(mc, **kwargs)
         self._prepare_limb_darkening_coefficients(mc, **kwargs)
 
@@ -48,23 +52,16 @@ class PyTransit_Transit_TTV(AbstractModel, AbstractTransit):
     def initialize_model_dataset(self, mc, dataset, **kwargs):
         self._prepare_dataset_options(mc, dataset, **kwargs)
 
-        if self.limb_darkening_model == 'quadratic':
+        if self.use_roadrunner:
+            self.pytransit_models[dataset.name_ref] = RoadRunnerModel(self.limb_darkening_model)
+            self.pytransit_plot[dataset.name_ref] = RoadRunnerModel(self.limb_darkening_model)
+        elif self.limb_darkening_model == 'quadratic':
             self.pytransit_models[dataset.name_ref] = QuadraticModel()
             self.pytransit_plot[dataset.name_ref] = QuadraticModel()
 
         self.pytransit_models[dataset.name_ref].set_data(dataset.x0,
                                                             exptimes=self.code_options[dataset.name_ref]['exp_time'],
                                                             nsamples=self.code_options[dataset.name_ref]['sample_factor'])
-
-    #def define_special_parameter_properties(self,
-    #                                        ndim,
-    #                                        output_lists,
-    #                                        dataset_name,
-    #                                        par):
-
-    #    if par == 'Tc' and (par not in self.bounds[dataset_name]):
-    #        self.bounds[dataset_name][par] = self.code_options[dataset_name]['Tc_boundaries']
-    #    return ndim, output_lists, False
 
     def compute(self, parameter_values, dataset, x0_input=None):
         """
@@ -94,7 +91,7 @@ class PyTransit_Transit_TTV(AbstractModel, AbstractTransit):
                                                             exptimes=self.code_options[dataset.name_ref]['exp_time'],
                                                             nsamples=self.code_options[dataset.name_ref]['sample_factor'])
 
-            return self.pytransit_plot[dataset.name_ref].evaluate_ps(
+            return self.pytransit_plot[dataset.name_ref].evaluate(
                 parameter_values['R_Rs'],
                 self.ld_vars,
                 parameter_values['Tc'] - dataset.Tref,

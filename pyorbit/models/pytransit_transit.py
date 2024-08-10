@@ -36,16 +36,20 @@ class PyTransit_Transit(AbstractModel, AbstractTransit):
         self.pytransit_plot = {}
 
     def initialize_model(self, mc, **kwargs):
+
+        self.use_roadrunner = kwargs.get('use_roadrunner', True)
+        if self.use_roadrunner:
+            print('Using RoadRunner Model from PyTransit')
+
         self._prepare_planetary_parameters(mc, **kwargs)
         self._prepare_limb_darkening_coefficients(mc, **kwargs)
 
     def initialize_model_dataset(self, mc, dataset, **kwargs):
         self._prepare_dataset_options(mc, dataset, **kwargs)
 
-        if kwargs.get('use_roadrunner', False):
-            self.pytransit_models[dataset.name_ref] = RoadRunnerModel()
-            self.pytransit_plot[dataset.name_ref] = RoadRunnerModel()
-            print('Using RoadRunner Model from PyTransit')
+        if self.use_roadrunner:
+            self.pytransit_models[dataset.name_ref] = RoadRunnerModel(self.limb_darkening_model)
+            self.pytransit_plot[dataset.name_ref] = RoadRunnerModel(self.limb_darkening_model)
         elif self.limb_darkening_model == 'quadratic':
             self.pytransit_models[dataset.name_ref] = QuadraticModel()
             self.pytransit_plot[dataset.name_ref] = QuadraticModel()

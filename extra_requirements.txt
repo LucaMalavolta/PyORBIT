@@ -30,7 +30,7 @@ schwimmbad
 arviz
 celerite >= 0.4.1
 corner
-pytransit >= 2.5.21
+pytransit >= 2.6.8
 ###### GP regression
 celerite2 == 0.2.1
 george >= 0.4.0
