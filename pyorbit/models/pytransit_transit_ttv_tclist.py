@@ -11,7 +11,7 @@ except ImportError:
     pass
 
 
-class PyTransit_Transit_TTV_Subset(AbstractModel, AbstractTransit):
+class PyTransit_Transit_TTV_TClist(AbstractModel, AbstractTransit):
 
     def __init__(self, *args, **kwargs):
 
@@ -42,6 +42,7 @@ class PyTransit_Transit_TTV_Subset(AbstractModel, AbstractTransit):
         self.Tc_names = {}
         self.Tc_arrays = {}
         self.subset_selection = {}
+        self.subset_flag = {}
 
 
     def initialize_model(self, mc, **kwargs):
@@ -55,34 +56,40 @@ class PyTransit_Transit_TTV_Subset(AbstractModel, AbstractTransit):
         self._prepare_planetary_parameters(mc, **kwargs)
         self._prepare_limb_darkening_coefficients(mc, **kwargs)
 
+        self.tc_data = np.genfromtxt(mc.common_models[self.planet_ref].tc_list, names=True)
+        self.code_options['minimum_number_of_observations'] = kwargs.get('minimum_number_of_observations', 20)
+
         self.list_pams_common.discard('Tc')
+
 
     def initialize_model_dataset(self, mc, dataset, **kwargs):
         """ Reading some code-specific keywords from the configuration file"""
         self._prepare_dataset_options(mc, dataset, **kwargs)
 
-        self.start_flag = dataset.submodel_minflag
-        self.end_flag = dataset.submodel_maxflag
-
-        subset_flag = np.zeros_like(dataset.x, dtype=int) - 1
-
         self.Tc_number[dataset.name_ref] = []
         self.Tc_names[dataset.name_ref] = []
 
+        self.subset_flag[dataset.name_ref] = np.zeros_like(dataset.x, dtype=int) - 1
+
         transit_index = 0
-        for i_sub in range(self.start_flag, self.end_flag):
+        for transit_id, transit_time, transit_duration in zip(
+            self.tc_data['transit_id'],
+            self.tc_data['transit_time'],
+            self.tc_data['transit_window']):
+
+            i_tc = int(transit_id)
 
             par_original = 'Tc'
-            par_subset = 'Tc_'+repr(i_sub)
+            par_subset = 'Tc_'+repr(i_tc)
 
-            if np.amin(np.abs(dataset.submodel_id-i_sub)) > 0.5: continue
+            tc_sel = (np.abs(dataset.x-transit_time) < transit_duration/2.)
+            if np.sum(tc_sel) < self.code_options['minimum_number_of_observations'] : continue
 
+            self.Tc_number[dataset.name_ref].append(i_tc)
             self.Tc_names[dataset.name_ref].append(par_subset)
-            self.Tc_number[dataset.name_ref].append(i_sub)
 
-            subset_flag[(dataset.submodel_id == i_sub)] = transit_index
-
-            sub_dataset = dataset.x[(dataset.submodel_id == i_sub)]
+            self.subset_flag[dataset.name_ref][tc_sel] = transit_index
+            sub_dataset = dataset.x[tc_sel]
 
             if kwargs[dataset.name_ref].get('boundaries', False):
                 par_update = kwargs[dataset.name_ref]['boundaries'].get(
@@ -117,10 +124,10 @@ class PyTransit_Transit_TTV_Subset(AbstractModel, AbstractTransit):
         exptimes= np.ones(transit_index) * self.code_options[dataset.name_ref]['exp_time']
         nsamples= np.ones(transit_index) * self.code_options[dataset.name_ref]['sample_factor']
         
-        self.subset_selection[dataset.name_ref] = (subset_flag >= 0)
+        self.subset_selection[dataset.name_ref] = (self.subset_flag[dataset.name_ref] >= 0)
 
         self.pytransit_models[dataset.name_ref].set_data(dataset.x0[self.subset_selection[dataset.name_ref]],
-                                                            lcids=subset_flag[self.subset_selection[dataset.name_ref]],
+                                                            lcids=self.subset_flag[dataset.name_ref][self.subset_selection[dataset.name_ref]],
                                                             epids=transit_id,
                                                             exptimes=exptimes,
                                                             nsamples=nsamples)
@@ -168,10 +175,11 @@ class PyTransit_Transit_TTV_Subset(AbstractModel, AbstractTransit):
             transit_id = np.arange(0, len(Tc_array), dtype=int)
 
             for i_tc, n_tc in enumerate(self.Tc_number[dataset.name_ref]):
+                sel_data = (self.subset_flag[dataset.name_ref]==i_tc)
                 original_dataset = dataset.x0[(dataset.submodel_id==n_tc)]
                 sel_data = (x0_input >= np.amin(original_dataset)) &  (x0_input <= np.amax(original_dataset))
                 subset_flag[sel_data] = i_tc
-            
+
             subset_selection = (subset_flag >= 0)
 
             self.pytransit_plot[dataset.name_ref].set_data(x0_input[subset_selection],

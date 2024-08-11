@@ -37,4 +37,7 @@ keywords_detrending_common_parameters = ['use_common_parameters',
                                         'use_common_model', 
                                         'common_model']
 
-keywords_tc_list = ['tc_list', 'Tc_list', 'tclist', 'Tclist']
+keywords_tc_list = ['tc_list', 'Tc_list', 'tclist', 'Tclist',
+                    'ttv_tc_list', 'TTV_Tc_list', 'TTV_tc_list']
+keywords_tc_flag = ['tc_flag', 'Tc_flag', 'tcflag', 'Tcflag',
+                    'ttv_tc_flag', 'TTV_Tv_flag', 'TTV_tc_flag']

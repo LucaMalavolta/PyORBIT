@@ -283,6 +283,12 @@ class CommonPlanets(AbstractCommon):
                 print('List of times of inferior conjuctions: ', self.tc_list)
                 break
 
+        for tc_flag in keywords_tc_flag:
+            self.tc_flag = kwargs.get(tc_flag, None)
+            if self.tc_flag:
+                print('Dataset flag of times of inferior conjuctions: ', self.tc_flag)
+                break
+
         print()
 
 

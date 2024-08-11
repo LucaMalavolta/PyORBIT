@@ -22,4 +22,4 @@ from .samplers.pyorbit_getresults import *
 from .subroutines.input_parser import yaml_parser
 
 
-__version__ = "10.5.5"
+__version__ = "10.6.0"

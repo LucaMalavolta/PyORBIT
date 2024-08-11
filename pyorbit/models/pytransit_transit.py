@@ -78,7 +78,7 @@ class PyTransit_Transit(AbstractModel, AbstractTransit):
                 parameter_values['Tc'] - dataset.Tref,
                 parameter_values['P'],
                 parameter_values['a_Rs'],
-                parameter_values['i'],
+                parameter_values['i']* constants.deg2rad,
                 parameter_values['e'],
                 parameter_values['omega'] * constants.deg2rad) - 1.
 
@@ -93,6 +93,6 @@ class PyTransit_Transit(AbstractModel, AbstractTransit):
                 parameter_values['Tc'] - dataset.Tref,
                 parameter_values['P'],
                 parameter_values['a_Rs'],
-                parameter_values['i'],
+                parameter_values['i']* constants.deg2rad,
                 parameter_values['e'],
                 parameter_values['omega'] * constants.deg2rad) - 1.

@@ -35,6 +35,7 @@ from pyorbit.models.harmonics import Harmonics
 from pyorbit.models.pytransit_transit import PyTransit_Transit
 from pyorbit.models.pytransit_transit_ttv import PyTransit_Transit_TTV
 from pyorbit.models.pytransit_transit_ttv_subset import PyTransit_Transit_TTV_Subset
+from pyorbit.models.pytransit_transit_ttv_tclist import PyTransit_Transit_TTV_TClist
 from pyorbit.models.pytransit_transit_ttv_ancillary import PyTransit_Transit_TTV_Ancillary
 
 from pyorbit.models.batman_transit import Batman_Transit
@@ -211,6 +212,8 @@ define_type_to_class = {
     'subset_pytransit_transit_ttv': PyTransit_Transit_TTV_Subset,
     'pytransit_transit_ttv_ancillary': PyTransit_Transit_TTV_Ancillary,
     'ancillary_pytransit_transit_ttv': PyTransit_Transit_TTV_Ancillary,
+    'pytransit_transit_ttv_tclist': PyTransit_Transit_TTV_TClist,
+    'tclist_pytransit_transit_ttv': PyTransit_Transit_TTV_TClist,
     'batman_transit': Batman_Transit,
     'batman_transit_ttv_subset': Batman_Transit_TTV_Subset,
     'subset_batman_transit_ttv': Batman_Transit_TTV_Subset,

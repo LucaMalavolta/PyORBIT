@@ -8,7 +8,7 @@ except ImportError:
     pass
 
 
-class Batman_Transit_TTV_TClist(AbstractModel, AbstractTransit):
+class Batman_Transit_TTV_Ancillary(AbstractModel, AbstractTransit):
 
     def __init__(self, *args, **kwargs):
         # this calls all constructors up to AbstractModel
@@ -34,8 +34,6 @@ class Batman_Transit_TTV_TClist(AbstractModel, AbstractTransit):
 
         self.Tc_number = {}
         self.Tc_names = {}
-        self.subset_flag = {}
-
 
     def initialize_model(self, mc, **kwargs):
         """ Force the use of the time of inferior conjunction"""
@@ -44,8 +42,7 @@ class Batman_Transit_TTV_TClist(AbstractModel, AbstractTransit):
         self._prepare_planetary_parameters(mc, **kwargs)
         self._prepare_limb_darkening_coefficients(mc, **kwargs)
 
-        self.tc_data = np.genfromtxt(mc.common_models[self.planet_ref].tc_list, names=True)
-        self.code_options['minimum_number_of_observations'] = kwargs.get('minimum_number_of_observations', 20)
+        self.tc_flag_name = mc.common_models[self.planet_ref].tc_flag
 
         self.code_options['nthreads'] = kwargs.get('nthreads', 1)
         try:
@@ -77,36 +74,33 @@ class Batman_Transit_TTV_TClist(AbstractModel, AbstractTransit):
 
         """ And now we remove the time of inferior conjunction from the common parameters, and add it back as a dataset-specific parameter """
         self.list_pams_common.discard('Tc')
+        # self.list_pams_dataset.update(['Tc'])
+
+        self.subset_flag = {}
 
     def initialize_model_dataset(self, mc, dataset, **kwargs):
         """ Reading some code-specific keywords from the configuration file"""
         self._prepare_dataset_options(mc, dataset, **kwargs)
 
+        submodel_id = dataset.ancillary[self.tc_flag_name]
+        flag_sel = (submodel_id >= -0.5)
+        self.start_flag = np.int64(np.amin(submodel_id[flag_sel]))
+        self.end_flag = np.int64(np.amax(submodel_id[flag_sel])) + 1
+
         self.Tc_number[dataset.name_ref] = []
         self.Tc_names[dataset.name_ref] = []
 
-        self.subset_flag[dataset.name_ref] = np.zeros_like(dataset.x) - 1.234
-
-        for transit_id, transit_time, transit_duration in zip(
-            self.tc_data['transit_id'],
-            self.tc_data['transit_time'],
-            self.tc_data['transit_window']):
-
-            i_tc = int(transit_id)
+        for i_sub in range(self.start_flag, self.end_flag):
 
             par_original = 'Tc'
-            par_subset = 'Tc_'+repr(i_tc)
+            par_subset = 'Tc_'+repr(i_sub)
 
-            tc_sel = (np.abs(dataset.x-transit_time) < transit_duration/2.)
-            if np.sum(tc_sel) < self.code_options['minimum_number_of_observations'] : continue
+            if np.amin(np.abs(submodel_id-i_sub)) > 0.5: continue
 
-            self.Tc_number[dataset.name_ref].append(i_tc)
+            self.Tc_number[dataset.name_ref].append(i_sub)
             self.Tc_names[dataset.name_ref].append(par_subset)
 
-            #self.transfer_parameter_properties(mc, dataset, par_original, par_subset, keywords=kwargs, dataset_pam=True)
-
-            self.subset_flag[dataset.name_ref][tc_sel] = i_tc
-            sub_dataset = dataset.x[tc_sel]
+            sub_dataset = dataset.x[(submodel_id == i_sub)]
 
             if kwargs[dataset.name_ref].get('boundaries', False):
                 par_update = kwargs[dataset.name_ref]['boundaries'].get(
@@ -124,12 +118,14 @@ class Batman_Transit_TTV_TClist(AbstractModel, AbstractTransit):
                 self.transfer_parameter_properties(mc, dataset, par_original, par_subset, keywords=kwargs, dataset_pam=True)
                 self.bounds[dataset.name_ref].update({par_subset: par_update})
 
-            self.batman_models[dataset.name_ref + '_'+repr(i_tc)] = \
+
+            self.batman_models[dataset.name_ref + '_'+repr(i_sub)] = \
                 batman.TransitModel(self.batman_params,
                                     sub_dataset,
                                     supersample_factor=self.code_options[dataset.name_ref]['sample_factor'],
                                     exp_time=self.code_options[dataset.name_ref]['exp_time'],
                                     nthreads=self.code_options['nthreads'])
+
 
 
     def compute(self, parameter_values, dataset, x0_input=None):
@@ -187,11 +183,6 @@ class Batman_Transit_TTV_TClist(AbstractModel, AbstractTransit):
         else:
             y_output = x0_input * 0.
 
-        #if not self.use_inclination:
-        #    if parameter_values['b'] > 1. + parameter_values['R_Rs'] :
-        #        return y_output
-
-        #for i_sub in range(self.start_flag, self.end_flag):
         for i_tc, n_tc in enumerate(self.Tc_names[dataset.name_ref]):
 
             i_sub = self.Tc_number[dataset.name_ref][i_tc]
@@ -199,7 +190,7 @@ class Batman_Transit_TTV_TClist(AbstractModel, AbstractTransit):
             self.batman_params.t0 = parameter_values[par_subset] - dataset.Tref
 
             if x0_input is None:
-                sel_data = (self.subset_flag[dataset.name_ref]==i_sub)
+                sel_data = (dataset.ancillary[self.tc_flag_name]==i_sub)
 
                 if random_selector == 50:
                     self.batman_models[dataset.name_ref + '_'+repr(i_sub)] = \
@@ -213,7 +204,7 @@ class Batman_Transit_TTV_TClist(AbstractModel, AbstractTransit):
                 y_output[sel_data] = self.batman_models[dataset.name_ref+ '_'+repr(i_sub)].light_curve(self.batman_params) - 1.
 
             else:
-                original_dataset = dataset.x0[(self.subset_flag[dataset.name_ref]==i_sub)]
+                original_dataset = dataset.x0[(dataset.ancillary[self.tc_flag_name]==i_sub)]
                 sel_data = (x0_input >= np.amin(original_dataset)) &  (x0_input <= np.amax(original_dataset))
 
                 temporary_model = batman.TransitModel(self.batman_params,
