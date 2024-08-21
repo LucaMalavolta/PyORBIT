@@ -32,6 +32,11 @@ keywords_change_variable_names = [
             'use_Prot_Pdec'
         ]
 
+keywords_shared_ttv = ['use_shared_ttvs', 'use_shared_ttv', 
+                        'use_shared_TTVs', 'use_shared_TTV',
+                        'shared_ttvs', 'shared_ttv', 
+                        'shared_TTVs', 'shared_TTV']
+
 keywords_detrending_common_parameters = ['use_common_parameters', 
                                         'common_parameters', 
                                         'use_common_model', 
@@ -40,4 +45,4 @@ keywords_detrending_common_parameters = ['use_common_parameters',
 keywords_tc_list = ['tc_list', 'Tc_list', 'tclist', 'Tclist',
                     'ttv_tc_list', 'TTV_Tc_list', 'TTV_tc_list']
 keywords_tc_flag = ['tc_flag', 'Tc_flag', 'tcflag', 'Tcflag',
-                    'ttv_tc_flag', 'TTV_Tv_flag', 'TTV_tc_flag']
+                    'ttv_tc_flag', 'TTV_Tc_flag', 'TTV_tc_flag']

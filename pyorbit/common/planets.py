@@ -273,12 +273,14 @@ class CommonPlanets(AbstractCommon):
             self.compute_time_inferior_conjunction = True
             self.compute_mean_longitude = False
         
-        self.use_shared_ttvs = kwargs.get('use_shared_ttvs', self.use_shared_ttvs)
-        if self.use_shared_ttvs:
-            print('Shared transit-specific time of transits (i.e., TTVs): ', True)
 
-        for tc_flag in keywords_tc_list:
-            self.tc_list = kwargs.get(tc_flag, None)
+        for use_shared_ttvs in keywords_shared_ttv:
+            self.use_shared_ttvs = kwargs.get(use_shared_ttvs, self.use_shared_ttvs)
+            if self.use_shared_ttvs:
+                break
+
+        for tc_list in keywords_tc_list:
+            self.tc_list = kwargs.get(tc_list, None)
             if self.tc_list:
                 print('List of times of inferior conjuctions: ', self.tc_list)
                 break

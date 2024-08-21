@@ -94,7 +94,12 @@ class AbstractTransit(object):
             self.compute_time_inferior_conjunction = True
             # mean longitude = argument of pericenter + mean anomaly at Tref
 
-        self.use_shared_ttvs =  kwargs.get('use_shared_ttvs', mc.common_models[self.planet_ref].use_shared_ttvs)
+        self.use_shared_ttvs =  mc.common_models[self.planet_ref].use_shared_ttvs
+        for use_shared_ttvs in keywords_shared_ttv:
+            self.use_shared_ttvs = kwargs.get(use_shared_ttvs, self.use_shared_ttvs)
+            if self.use_shared_ttvs:
+                print('Shared transit-specific time of transits (i.e., TTVs): ', True)
+                break
 
     def _prepare_star_parameters(self, mc, **kwargs):
         """ Additional stellar parameters
