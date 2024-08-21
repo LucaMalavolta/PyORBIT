@@ -1,6 +1,6 @@
 (md_quasiperiodic)=
 
-### Quasi-periodic kernel
+# Quasi-periodic kernel
 
 The quasi-periodic kernel is the preferred choice for the multidimensional GP. We follow the expression given by [Rajpaul et al. 2015](https://ui.adsabs.harvard.edu/abs/2015MNRAS.452.2269R/abstract):
 

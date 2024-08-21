@@ -1,6 +1,6 @@
 (md_spleaf)=
 
-### Exponential-sine periodic kernel (S+LEAF)
+# Exponential-sine periodic kernel (S+LEAF)
 
 The Exponential-sine periodic (ESP) kernel is an approximation of the quasi-periodic (QP) kernel implemented in the `S+LEAF` software.
 In the [`S+LEAF documentation`](https://obswww.unige.ch/~delisle/spleaf/doc/_autosummary/spleaf.term.ESPKernel.html#spleaf.term.ESPKernel), the QP kernel is referred to as the squared-exponential periodic (SEP) kernel. Despite the different name, the QP periodic kernel definition is the same as the one implemented in `PyORBIT` in either the [trained](../gaussian_process/quasiperiodic_kernel) or the [multidimensional](./md_quasiperiodic) approach. 
