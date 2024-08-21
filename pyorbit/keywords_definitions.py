@@ -3,6 +3,10 @@ keywords_stellar_rotation = ['use_stellar_rotation',
                             'use_rotation_period',
                             'use_rotation']
 
+keywords_stellar_activity_decay = ['use_stellar_activity_decay',
+                            'use_activity_decay',
+                            'use_stellar_decay',
+                            'use_decay']
 
 keywords_differential_rotation = ['use_stellar_differential_rotation',
                                 'use_differential_rotation'

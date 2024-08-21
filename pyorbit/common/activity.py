@@ -1,4 +1,5 @@
 from pyorbit.common.abstract_common import *
+from pyorbit.keywords_definitions import *
 
 class CommonActivity(AbstractCommon):
 
@@ -384,4 +385,10 @@ class CommonActivity(AbstractCommon):
 
     def initialize_model(self, mc, **kwargs):
 
-        self.use_stellar_rotation_period = kwargs.get('use_stellar_rotation_period', False)
+        self.use_stellar_rotation_period = False
+        for keyword in keywords_stellar_rotation:
+            self.use_stellar_rotation_period = kwargs.get(keyword, self.use_stellar_rotation_period)
+
+        self.use_stellar_activity_decay = False
+        for keyword in keywords_stellar_activity_decay:
+            self.use_stellar_activity_decay = kwargs.get(keyword, self.use_stellar_activity_decay)

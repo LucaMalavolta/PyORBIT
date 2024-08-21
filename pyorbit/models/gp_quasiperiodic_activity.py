@@ -117,6 +117,19 @@ class GaussianProcess_QuasiPeriodicActivity(AbstractModel):
             self.list_pams_common.update(['rotation_period'])
             self.list_pams_common.discard('Prot')
 
+        for common_ref in self.common_ref:
+            if mc.common_models[common_ref].model_class == 'activity':
+                self.use_stellar_activity_decay = getattr(mc.common_models[common_ref], 'use_stellar_activity_decay', False)
+                break
+
+        for keyword in keywords_stellar_activity_decay:
+            self.use_stellar_activity_decay = kwargs.get(keyword, self.use_stellar_activity_decay)
+
+        if self.use_stellar_activity_decay:
+            self.list_pams_common.update(['activity_decay'])
+            self.list_pams_common.discard('Pdec')
+
+
     def initialize_model_dataset(self, mc, dataset, **kwargs):
         self.define_kernel(dataset)
         return
@@ -166,6 +179,9 @@ class GaussianProcess_QuasiPeriodicActivity(AbstractModel):
         if self.use_stellar_rotation_period:
             parameter_values['Prot'] = parameter_values['rotation_period']
 
+        if self.use_stellar_activity_decay:
+            parameter_values['Pdec'] = parameter_values['activity_decay']
+
         if not self.hyper_condition(parameter_values):
             return -np.inf
         if not self.rotdec_condition(parameter_values):
@@ -183,6 +199,9 @@ class GaussianProcess_QuasiPeriodicActivity(AbstractModel):
         if self.use_stellar_rotation_period:
             parameter_values['Prot'] = parameter_values['rotation_period']
 
+        if self.use_stellar_activity_decay:
+            parameter_values['Pdec'] = parameter_values['activity_decay']
+
         gp_pams = self.convert_val2gp(parameter_values)
 
         env = np.sqrt(dataset.e ** 2.0 + dataset.jitter ** 2.0)
@@ -197,6 +216,9 @@ class GaussianProcess_QuasiPeriodicActivity(AbstractModel):
 
         if self.use_stellar_rotation_period:
             parameter_values['Prot'] = parameter_values['rotation_period']
+
+        if self.use_stellar_activity_decay:
+            parameter_values['Pdec'] = parameter_values['activity_decay']
 
         gp_pams = self.convert_val2gp(parameter_values)
 

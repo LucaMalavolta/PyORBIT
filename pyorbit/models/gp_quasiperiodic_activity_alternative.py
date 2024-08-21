@@ -86,6 +86,19 @@ class GaussianProcess_QuasiPeriodicActivity_Alternative(AbstractModel):
             self.list_pams_common.update(['rotation_period'])
             self.list_pams_common.discard('Prot')
 
+        for common_ref in self.common_ref:
+            if mc.common_models[common_ref].model_class == 'activity':
+                self.use_stellar_activity_decay = getattr(mc.common_models[common_ref], 'use_stellar_activity_decay', False)
+                break
+
+        for keyword in keywords_stellar_activity_decay:
+            self.use_stellar_activity_decay = kwargs.get(keyword, self.use_stellar_activity_decay)
+
+        if self.use_stellar_activity_decay:
+            self.list_pams_common.update(['activity_decay'])
+            self.list_pams_common.discard('Pdec')
+
+
     def initialize_model_dataset(self, mc, dataset, **kwargs):
 
         self._dist_t1[dataset.name_ref], self._dist_t2[dataset.name_ref] = \
@@ -98,6 +111,9 @@ class GaussianProcess_QuasiPeriodicActivity_Alternative(AbstractModel):
 
         if self.use_stellar_rotation_period:
             parameter_values['Prot'] = parameter_values['rotation_period']
+
+        if self.use_stellar_activity_decay:
+            parameter_values['Pdec'] = parameter_values['activity_decay']
 
         if not self.hyper_condition(parameter_values):
             return -np.inf
@@ -132,6 +148,9 @@ class GaussianProcess_QuasiPeriodicActivity_Alternative(AbstractModel):
 
         if self.use_stellar_rotation_period:
             parameter_values['Prot'] = parameter_values['rotation_period']
+
+        if self.use_stellar_activity_decay:
+            parameter_values['Pdec'] = parameter_values['activity_decay']
 
         env = dataset.e ** 2.0 + dataset.jitter ** 2.0
         cov_matrix = self._compute_cov_matrix(parameter_values,
@@ -173,6 +192,9 @@ class GaussianProcess_QuasiPeriodicActivity_Alternative(AbstractModel):
 
         if self.use_stellar_rotation_period:
             parameter_values['Prot'] = parameter_values['rotation_period']
+
+        if self.use_stellar_activity_decay:
+            parameter_values['Pdec'] = parameter_values['activity_decay']
 
         val, std = self.sample_predict(parameter_values, dataset, x0_input)
         return val

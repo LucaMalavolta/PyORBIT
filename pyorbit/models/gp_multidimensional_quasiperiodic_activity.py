@@ -84,6 +84,20 @@ class GP_Multidimensional_QuasiPeriodicActivity(AbstractModel):
             self.list_pams_common.update(['rotation_period'])
             self.list_pams_common.discard('Prot')
 
+
+        for common_ref in self.common_ref:
+            if mc.common_models[common_ref].model_class == 'activity':
+                self.use_stellar_activity_decay = getattr(mc.common_models[common_ref], 'use_stellar_activity_decay', False)
+                break
+
+        for keyword in keywords_stellar_activity_decay:
+            self.use_stellar_activity_decay = kwargs.get(keyword, self.use_stellar_activity_decay)
+
+        if self.use_stellar_activity_decay:
+            self.list_pams_common.update(['activity_decay'])
+            self.list_pams_common.discard('Pdec')
+
+
     def initialize_model_dataset(self, mc, dataset, **kwargs):
 
         """ when reloading the .p files, the object is not reinitialized, so we have to skip the
@@ -140,6 +154,9 @@ class GP_Multidimensional_QuasiPeriodicActivity(AbstractModel):
 
         if self.use_stellar_rotation_period:
             parameter_values['Prot'] = parameter_values['rotation_period']
+
+        if self.use_stellar_activity_decay:
+            parameter_values['Pdec'] = parameter_values['activity_decay']
 
         self.internal_parameter_values = parameter_values
 
