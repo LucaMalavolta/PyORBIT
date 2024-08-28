@@ -37,6 +37,10 @@ except:
                 out[i,j, :] = istar[i, j] * (1. - A * np.exp(-(x - x0[i, j]) ** 2 /const))
         return out
 
+try:
+    from lmfit.models import GaussianModel
+except (ModuleNotFoundError, ImportError):
+    pass
 
 class RossiterMcLaughlin_MultiPlanets_Precise(AbstractModel, AbstractTransit):
 
@@ -214,10 +218,17 @@ class RossiterMcLaughlin_MultiPlanets_Precise(AbstractModel, AbstractTransit):
 
         # RV unperturbed CCF
         ccf_broad = gaussian_filter1d(ccf_total/np.amax(ccf_total), self.ccf_variables['instrumental_broadening']/self.star_grid['rv_step'])
-        parameters, _ = curve_fit(CCF_gauss, self.star_grid['zz'], ccf_broad, p0=p0, check_finite =False)
-        rv_unperturbed = parameters[1] * 1000.
 
-        p0 = (parameters[0], 0.00, parameters[2])
+        gaussian = GaussianModel()
+        
+        params = gaussian.make_params()
+        guess = gaussian.guess(1.-ccf_broad, x=self.star_grid['zz'])
+        results = gaussian.fit(1.-ccf_broad, x=self.star_grid['zz'],  params=guess)
+        rv_unperturbed = results.params['center'].value * 1000.
+
+        #parameters, _ = curve_fit(CCF_gauss, self.star_grid['zz'], ccf_broad, p0=p0, check_finite =False)
+        #rv_unperturbed = parameters[1] * 1000.
+        #p0 = (parameters[0], 0.00, parameters[2])
 
 
         n_oversampling = int(np.amax(exptime / self.star_grid['time_step']))
@@ -308,8 +319,16 @@ class RossiterMcLaughlin_MultiPlanets_Precise(AbstractModel, AbstractTransit):
 
                 ccf_broad = gaussian_filter1d(ccf_out, self.ccf_variables['instrumental_broadening']/self.star_grid['rv_step'])
                 try:
-                    parameters, _ = curve_fit(CCF_gauss, self.star_grid['zz'], ccf_broad, p0=p0, check_finite =False)
-                    rv_rml[i_obs] = parameters[1] * 1000. - rv_unperturbed
+                    #parameters, _ = curve_fit(CCF_gauss, self.star_grid['zz'], ccf_broad, p0=p0, check_finite =False)
+                    #rv_rml[i_obs] = parameters[1] * 1000. - rv_unperturbed
+                    gaussian = GaussianModel()
+        
+                    params = gaussian.make_params()
+                    guess = gaussian.guess(1.-ccf_broad, x=self.star_grid['zz'])
+                    results = gaussian.fit(1.-ccf_broad, x=self.star_grid['zz'],  params=guess)
+                    rv_rml[i_obs] = results.params['center'].value * 1000. - rv_unperturbed
+                
+                
                 except:
                     rv_rml[i_obs] = 0.00
 
