@@ -16,11 +16,9 @@ For nostalgic people, `PyORBIT` 8 and 9 are available as branches of the main re
 
 ## Updates on version 10
 
-```{important}
-**Updated TTV measurement and harmonic models (starting from version 10.6)**
-- TTV measurement models have been all revised and improved to support a variety of cases.
-- in RML modelling, `curve_fit` has been replaced with the [`lmfit` package](https://lmfit.github.io/lmfit-py/) from improved numerical stability
-```
+- *Updated TTV measurement and harmonic models (starting from version 10.6)*
+TTV measurement models have been all revised and improved to support a variety of cases. in RML modelling, `curve_fit` has been replaced with the [`lmfit` package](https://lmfit.github.io/lmfit-py/) from improved numerical stability
+
 
 - *updated TTV measurement and harmonic models (starting from version 10.6)*
 TTV measurement models have been all revised and improved to support a variety of cases.
