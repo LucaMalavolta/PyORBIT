@@ -19,30 +19,39 @@ class Harmonics(AbstractModel):
 
     def initialize_model(self, mc, **kwargs):
 
-        if 'sine_harmonics' in kwargs:
-            self.sine_harmonics = np.arange(
-                1, kwargs['sine_harmonics']+1, dtpye=np.int16)
-        if 'sine_harmonics_selection' in kwargs:
+
+        if kwargs.get('sine_harmonics_selection', False):
             self.sine_harmonics = kwargs['sine_harmonics_selection']
+        else:
+            n_sines = kwargs.get('sine_harmonics', 2)
+            self.sine_harmonics = np.arange(1, n_sines+1, dtype=np.int16)
+        if self.sine_harmonics is None or self.sine_harmonics == 'None':
+            self.sine_harmonics = []
 
         for i_order in self.sine_harmonics:
+            if i_order == 0: continue
             par = 'amp_S'+repr(i_order)
             self.list_pams_dataset.update([par])
 
-        if 'cosine_harmonics' in kwargs:
-            self.cosine_harmonics = np.arange(
-                1, kwargs['cosine_harmonics']+1, dtpye=np.int16)
-        if 'cosine_harmonics_selection' in kwargs:
+        if kwargs.get('cosine_harmonics_selection', False):
             self.cosine_harmonics = kwargs['cosine_harmonics_selection']
+        else:
+            n_cosines = kwargs.get('cosine_harmonics', 1)
+            self.cosine_harmonics = np.arange(1, n_cosines+1, dtype=np.int16)
+        if self.cosine_harmonics is None or self.cosine_harmonics == 'None':
+            self.cosine_harmonics = []
 
         for i_order in self.cosine_harmonics:
+            if i_order == 0: continue
             par = 'amp_C'+repr(i_order)
             self.list_pams_dataset.update([par])
+
+
 
         if kwargs.get('use_common_independent_phases', False):
             if kwargs.get('use_T0', False):
                 print(
-                    "Harmonics model: independent phases and T0 are not compatible options")
+                    "Harmonics model: independent phases and T0s are not compatible options")
             for i_order in self.sine_harmonics:
                 par = 'pha_S'+repr(i_order)
                 self.list_pams_common.update([par])
@@ -52,7 +61,7 @@ class Harmonics(AbstractModel):
         elif kwargs.get('use_independent_phases', False):
             if kwargs.get('use_T0', False) or kwargs.get('use_common_T0', False):
                 print(
-                    "Harmonics model: independent phases and T0 are not compatible options")
+                    "Harmonics model: independent phases and T0s are not compatible options")
             for i_order in self.sine_harmonics:
                 par = 'pha_S'+repr(i_order)
                 self.list_pams_dataset.update([par])
