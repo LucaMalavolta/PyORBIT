@@ -16,10 +16,16 @@ For nostalgic people, `PyORBIT` 8 and 9 are available as branches of the main re
 
 ## Updates on version 10
 
-```{warning}
-Starting from version 10.3, `PyORBIT` has been upgraded to support `tinygp` (version 0.3.0), which in turns requires Python **3.10** to work properly.
-If you are using `PyORBIT` \=> 10.3, follow the installation instructions to create an environment with Python 3.10
+```{important}
+**Updated TTV measurement and harmonic models (starting from version 10.6)**
+- TTV measurement models have been all revised and improved to support a variety of cases.
+- in RML modelling, `curve_fit` has been replaced with the [`lmfit` package](https://lmfit.github.io/lmfit-py/) from improved numerical stability
 ```
+
+- *updated TTV measurement and harmonic models (starting from version 10.6)*
+TTV measurement models have been all revised and improved to support a variety of cases.
+in RML modelling, `curve_fit` has been replaced with the [`lmfit` package](https://lmfit.github.io/lmfit-py/) from improved numerical stability
+
 
 - *Improved speed*
 After several failed attempts, I finally managed to apply the advice from the [emcee parallelization page](https://emcee.readthedocs.io/en/stable/tutorials/parallel/) to the rather complex structure of PyORBIT. The speed-up is noticeable for large datasets (e.g., photometry).
@@ -35,6 +41,11 @@ Recent examples of multidimensional Gaussian Processes through `PyORBIT` can be 
 
 - *tinyGP for better performances*
 Working on both *classic* and _multidimensional_ Gaussian Processes, although the former is showing some JAX problems when producing the output results.
+
+```{warning}
+Starting from version 10.3, `PyORBIT` has been upgraded to support `tinygp` (version 0.3.0), which in turns requires Python **3.10** to work properly.
+If you are using `PyORBIT` \=> 10.3, follow the installation instructions to create an environment with Python 3.10
+```
 
 ```{text}
 **No back-compatibility**
