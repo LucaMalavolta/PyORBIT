@@ -35,6 +35,11 @@ Alternatively, for easy automatization, PyORBIT can be called as a Python functi
 
 ## Updates on version 10
 
+```{attention}
+** Update to PyORBIT 10.6**
+Current version of `PyORBIT` is [![PyPI version fury.io](https://badge.fury.io/py/pyorbit-package.svg)](https://pypi.python.org/pypi/pyprbot-package/), keep the software updated forimproved performances and new models by running `pip install --update pyorbit-package` on your terminal 
+```
+
 ```{important}
 **Updated TTV measurement and harmonic models (starting from version 10.6)**
 - TTV measurement models have been all revised and improved to support a variety of cases.

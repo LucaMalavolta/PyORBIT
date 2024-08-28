@@ -3,7 +3,7 @@
 
 ### A code for exoplanet orbital parameters and stellar activity.
 ***
-## `PyORBIT` version 10 by Luca Malavolta - July 2024
+## `PyORBIT` version 10 by Luca Malavolta - August 2024
 
 
 ## Documentation update
