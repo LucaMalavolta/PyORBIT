@@ -35,13 +35,27 @@ import pyorbit
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = ['myst_parser',
+    'sphinx_design',
     "sphinx.ext.autosummary",
     'sphinx.ext.autodoc',
     'sphinx.ext.mathjax',
     "sphinx.ext.viewcode",
     'sphinx.ext.napoleon']
 
-myst_enable_extensions = ["amsmath", "dollarmath", "colon_fence"]
+myst_enable_extensions = ["amsmath",
+    "attrs_inline",
+    "colon_fence",
+    "deflist",
+    "dollarmath",
+    "fieldlist",
+    "html_admonition",
+    "html_image",
+    #"linkify",
+    "replacements",
+    "smartquotes",
+    "strikethrough",
+    "substitution",
+    "tasklist" ]
 
 myst_number_code_blocks = ["yaml"]
 
@@ -65,7 +79,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'PyORBIT'
-copyright = u'2016-2023, Luca Malavolta'
+copyright = u'2016-2024, Luca Malavolta'
 author = u'Luca Malavolta'
 contact = 'luca.malavolta at unipd.it'
 

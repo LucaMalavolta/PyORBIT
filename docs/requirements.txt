@@ -1,4 +1,5 @@
 sphinx-book-theme
+sphinx-design
 myst-parser
 myst-nb
 matplotlib
