@@ -5,7 +5,7 @@ from pyorbit.models.abstract_transit import AbstractTransit
 
 try:
     import batman
-except ImportError:
+except (ModuleNotFoundError,ImportError):
     pass
 
 
@@ -18,7 +18,7 @@ class Batman_Transit(AbstractModel, AbstractTransit):
 
         try:
             import batman
-        except ImportError:
+        except (ModuleNotFoundError,ImportError):
             print("ERROR: batman package not installed, this will not work")
             quit()
 

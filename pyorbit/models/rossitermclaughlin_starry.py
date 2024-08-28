@@ -18,8 +18,8 @@ class RossiterMcLaughling_Starry(AbstractModel, AbstractTransit):
             import starry
             starry.config.lazy = False
             starry.config.quiet = True
-        except ImportError:
-            print("ERROR: PyAstronomy not installed, this will not work")
+        except (ModuleNotFoundError,ImportError):
+            print("ERROR: starry not installed, this will not work")
             quit()
 
         # Must be moved here because it will updated depending on the selected limb darkening

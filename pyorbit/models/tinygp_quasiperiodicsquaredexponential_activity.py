@@ -54,7 +54,7 @@ class TinyGaussianProcess_QuasiPeriodicSquaredExponentialActivity(AbstractModel)
         try:
             import jax
             jax.config.update("jax_enable_x64", True)
-        except ImportError:
+        except (ModuleNotFoundError,ImportError):
             print("ERROR: tinygp or jax not installed, this will not work")
             quit()
 

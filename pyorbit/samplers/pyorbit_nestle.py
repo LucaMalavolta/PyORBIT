@@ -80,7 +80,7 @@ def pyorbit_nestle(config_in, input_datasets=None, return_output=None):
         import nestle
         print('Nestle version: {}'.format(nestle.__version__))
         print()
-    except ImportError:
+    except (ModuleNotFoundError,ImportError):
         print("ERROR: nestle not installed, this will not work")
         quit()
 

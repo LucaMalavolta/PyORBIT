@@ -20,7 +20,7 @@ class Detrending_Matern32(AbstractModel):
 
         try:
             import george
-        except:
+        except (ModuleNotFoundError,ImportError):
             print("ERROR: george not installed, this will not work")
             quit()
 

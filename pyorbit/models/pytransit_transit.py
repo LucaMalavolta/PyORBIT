@@ -7,7 +7,7 @@ try:
     from pytransit import QuadraticModel
     from pytransit import RoadRunnerModel
     from pytransit import QPower2Model
-except ImportError:
+except (ModuleNotFoundError,ImportError):
     pass
 
 
@@ -20,7 +20,7 @@ class PyTransit_Transit(AbstractModel, AbstractTransit):
 
         try:
             from pytransit import QuadraticModel
-        except ImportError:
+        except (ModuleNotFoundError,ImportError):
             print("ERROR: PyTransit not installed, this will not work")
             quit()
 

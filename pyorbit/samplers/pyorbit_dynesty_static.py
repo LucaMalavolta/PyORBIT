@@ -272,7 +272,7 @@ def pyorbit_dynesty_static(config_in, input_datasets=None, return_output=None):
 
     try:
         import dynesty
-    except ImportError:
+    except (ModuleNotFoundError,ImportError):
         print("ERROR: dynesty not installed, this will not work")
         quit()
 

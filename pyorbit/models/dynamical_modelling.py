@@ -6,7 +6,7 @@ import pyorbit.subroutines.kepler_exo as kepler_exo
 
 try:
     from pytrades import pytrades
-except ImportError:
+except (ModuleNotFoundError,ImportError):
     pass
 
 

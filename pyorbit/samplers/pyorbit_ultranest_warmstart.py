@@ -110,7 +110,7 @@ def pyorbit_ultranest_warmstart(config_in, input_datasets=None, return_output=No
     try:
         import ultranest
         import ultranest.stepsampler
-    except ImportError:
+    except (ModuleNotFoundError,ImportError):
         print("ERROR: ultranest not installed, this will not work")
         quit()
 
@@ -122,7 +122,7 @@ def pyorbit_ultranest_warmstart(config_in, input_datasets=None, return_output=No
 
     try:
         from pyde.de import DiffEvol
-    except ImportError:
+    except (ModuleNotFoundError,ImportError):
         print('ERROR! PyDE is not installed, run first with optimize instead of emcee')
         quit()
 

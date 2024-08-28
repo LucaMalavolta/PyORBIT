@@ -5,7 +5,7 @@ from scipy import interpolate
 
 try:
     import batman
-except ImportError:
+except (ModuleNotFoundError,ImportError):
     pass
 
 
@@ -18,7 +18,7 @@ class Batman_Transit_TTV_Subset_Faster(AbstractModel, AbstractTransit):
 
         try:
             import batman
-        except ImportError:
+        except (ModuleNotFoundError,ImportError):
             print("ERROR: batman not installed, this will not work")
             quit()
 

@@ -12,7 +12,7 @@ __all__ = ['SPLEAF_ESP']
 try:
     from spleaf import cov as spleaf_cov
     from spleaf import term as spleaf_term
-except ImportError:
+except (ModuleNotFoundError,ImportError):
     pass
 
 
@@ -46,7 +46,7 @@ class SPLEAF_ESP(AbstractModel):
         try:
             from spleaf import cov as spleaf_cov
             from spleaf import term as spleaf_term
-        except ImportError:
+        except (ModuleNotFoundError,ImportError):
             print("ERROR: S+LEAF package not installed, this will not work")
             quit()
 

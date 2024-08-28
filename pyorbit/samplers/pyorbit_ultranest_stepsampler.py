@@ -85,7 +85,7 @@ def pyorbit_ultranest_stepsampler(config_in, input_datasets=None, return_output=
     try:
         import ultranest
         import ultranest.stepsampler
-    except ImportError:
+    except (ModuleNotFoundError,ImportError):
         print("ERROR: ultranest not installed, this will not work")
         quit()
 

@@ -24,7 +24,7 @@ class GaussianProcess_QuasiPeriodicActivity_Common(AbstractModel):
 
         try:
             import george
-        except ImportError:
+        except (ModuleNotFoundError,ImportError):
             print("ERROR: george not installed, this will not work")
             quit()
 

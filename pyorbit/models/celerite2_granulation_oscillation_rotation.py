@@ -5,7 +5,7 @@ from pyorbit.keywords_definitions import *
 try:
     import celerite2
     from celerite2 import terms
-except ImportError:
+except (ModuleNotFoundError,ImportError):
     pass
 
 
@@ -45,7 +45,7 @@ class Celerite2_Granulation_Oscillation_Rotation(AbstractModel):
 
         try:
             import celerite2
-        except ImportError:
+        except (ModuleNotFoundError,ImportError):
             print("ERROR: celerite2 not installed, this will not work")
             quit()
 

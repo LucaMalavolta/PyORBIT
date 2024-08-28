@@ -6,7 +6,7 @@ from pyorbit.models.abstract_transit import AbstractTransit
 
 try:
     from PyAstronomy import modelSuite as PyAstroModelSuite
-except ImportError:
+except (ModuleNotFoundError,ImportError):
     pass
 
 class RossiterMcLaughlin_Ohta(AbstractModel, AbstractTransit):
@@ -18,7 +18,7 @@ class RossiterMcLaughlin_Ohta(AbstractModel, AbstractTransit):
 
         try:
             from PyAstronomy import modelSuite as PyAstroModelSuite
-        except ImportError:
+        except (ModuleNotFoundError,ImportError):
             print("ERROR: PyAstronomy not installed, this will not work")
             quit()
 

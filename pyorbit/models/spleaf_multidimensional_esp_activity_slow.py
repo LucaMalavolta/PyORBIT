@@ -12,7 +12,7 @@ __all__ = ['SPLEAF_Multidimensional_ESP_slow']
 try:
     from spleaf import cov as spleaf_cov
     from spleaf import term as spleaf_term
-except ImportError:
+except (ModuleNotFoundError,ImportError):
     pass
 
 
@@ -48,7 +48,7 @@ class SPLEAF_Multidimensional_ESP_slow(AbstractModel):
         try:
             from spleaf import cov as spleaf_cov
             from spleaf import term as spleaf_term
-        except ImportError:
+        except (ModuleNotFoundError,ImportError):
             print("ERROR: S+LEAF package not installed, this will not work")
             quit()
 

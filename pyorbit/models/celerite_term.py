@@ -52,5 +52,5 @@ try:
                 0.5 * w0 / Q * f,
             )
 
-except ImportError:
+except (ModuleNotFoundError,ImportError):
     pass

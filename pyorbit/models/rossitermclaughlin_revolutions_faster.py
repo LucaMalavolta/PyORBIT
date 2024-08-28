@@ -6,7 +6,7 @@ from pyorbit.models.abstract_transit import *
 
 try:
     import batman
-except ImportError:
+except (ModuleNotFoundError,ImportError):
     pass
 
 class RossiterMcLaughlin_Revolutions_Faster(AbstractModel, AbstractTransit):
@@ -19,7 +19,7 @@ class RossiterMcLaughlin_Revolutions_Faster(AbstractModel, AbstractTransit):
 
         try:
             import batman
-        except ImportError:
+        except (ModuleNotFoundError,ImportError):
             print("ERROR: batman package not installed, this will not work")
             quit()
 

@@ -39,7 +39,7 @@ class Spiderman_Thermal(AbstractModel, AbstractTransit):
         # Workarounf to allow spiderman import only when the code is axtually needed
         try:
             import spiderman
-        except ImportError:
+        except (ModuleNotFoundError,ImportError):
             print("ERROR: spiderman not installed, this will not work")
             quit()
 

@@ -26,7 +26,7 @@ class GP_Pyaneti_QuasiPeriodicActivity(AbstractModel):
 
         try:
             import pyaneti
-        except ImportError:
+        except (ModuleNotFoundError,ImportError):
             print("ERROR: pyaneti not installed, this will not work")
             quit()
 

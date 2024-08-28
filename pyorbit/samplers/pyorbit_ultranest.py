@@ -82,7 +82,7 @@ def pyorbit_ultranest(config_in, input_datasets=None, return_output=None):
 
     try:
         from ultranest import ReactiveNestedSampler
-    except ImportError:
+    except (ModuleNotFoundError,ImportError):
         print("ERROR: ultranest not installed, this will not work")
         quit()
 

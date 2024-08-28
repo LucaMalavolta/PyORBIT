@@ -17,7 +17,7 @@ class SpectralRotation(AbstractModel):
 
         try:
             from PyAstronomy.pyasl import fastRotBroad as PyAstroFastRotBroad
-        except ImportError:
+        except (ModuleNotFoundError,ImportError):
             print("ERROR: PyAstronomy not installed, this will not work")
             quit()
 
@@ -94,7 +94,7 @@ class SubsetSpectralRotation(AbstractModel):
 
         try:
             from PyAstronomy.pyasl import rotBroad as PyAstroRotBroad
-        except ImportError:
+        except (ModuleNotFoundError,ImportError):
             print("ERROR: PyAstronomy not installed, this will not work")
             quit()
 
@@ -185,7 +185,7 @@ class SubsetSpectralRotationPolynomial(AbstractModel):
 
         try:
             from PyAstronomy.pyasl import rotBroad as PyAstroRotBroad
-        except ImportError:
+        except (ModuleNotFoundError,ImportError):
             print("ERROR: PyAstronomy not installed, this will not work")
             quit()
 

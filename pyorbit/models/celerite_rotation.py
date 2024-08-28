@@ -4,7 +4,7 @@ from pyorbit.keywords_definitions import *
 
 try:
     from pyorbit.models.celerite_term import celerite, SHOTerm
-except ImportError:
+except (ModuleNotFoundError,ImportError):
     pass
 
 
@@ -39,7 +39,7 @@ class Celerite_Rotation(AbstractModel):
 
         try:
             from pyorbit.models.celerite_term import celerite, SHOTerm
-        except:
+        except (ModuleNotFoundError,ImportError):
             print("ERROR: celerite not installed, this will not work")
             quit()
 

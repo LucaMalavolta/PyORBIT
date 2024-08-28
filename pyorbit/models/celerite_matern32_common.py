@@ -4,7 +4,7 @@ from pyorbit.keywords_definitions import *
 
 try:
     import celerite
-except ImportError:
+except (ModuleNotFoundError,ImportError):
     pass
 
 
@@ -25,7 +25,7 @@ class Celerite_Matern32_Common(AbstractModel):
 
         try:
             import celerite
-        except:
+        except (ModuleNotFoundError,ImportError):
             print("ERROR: celerite not installed, this will not work")
             quit()
 

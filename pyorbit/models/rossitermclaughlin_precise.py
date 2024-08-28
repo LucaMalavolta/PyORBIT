@@ -37,6 +37,10 @@ except:
                 out[i,j, :] = istar[i, j] * (1. - A * np.exp(-(x - x0[i, j]) ** 2 /const))
         return out
 
+try:
+    from lmfit.models import GaussianModel
+except ModuleNotFoundError:
+    pass
 
 class RossiterMcLaughlin_Precise(AbstractModel, AbstractTransit):
     model_class = 'rossiter_mclaughlin'
@@ -44,6 +48,12 @@ class RossiterMcLaughlin_Precise(AbstractModel, AbstractTransit):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)  # this calls all constructors up to AbstractModel
         super(AbstractModel, self).__init__(*args, **kwargs)
+
+        try:
+            from lmfit.models import GaussianModel
+        except (ModuleNotFoundError,ImportError):
+            print("ERROR: lmfit not installed, this will not work")
+            quit()
 
         import warnings
         from scipy.optimize import OptimizeWarning

@@ -3,12 +3,6 @@ import pyorbit.subroutines.constants as constants
 import pyorbit.subroutines.kepler_exo as kepler_exo
 from pyorbit.models.abstract_model import AbstractModel
 from pyorbit.models.abstract_transit import *
-from time import time
-
-try:
-    from PyAstronomy import modelSuite as PyAstroModelSuite
-except ImportError:
-    pass
 
 class RossiterMcLaughlin_Reloaded_Faster(AbstractModel, AbstractTransit):
     model_class = 'rossiter_mclaughlin'

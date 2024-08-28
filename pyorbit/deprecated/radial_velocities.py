@@ -236,7 +236,7 @@ class DynamicalIntegrator:
         if self.dynamical_integrator == 'TRADES':
             try:
                 from pytrades import pytrades
-            except ImportError:
+            except (ModuleNotFoundError,ImportError):
                 print("ERROR: TRADES not installed, this will not work")
                 quit()
 
@@ -245,7 +245,7 @@ class DynamicalIntegrator:
         if self.dynamical_integrator == 'ttvfast':
             try:
                 import ttvfast
-            except ImportError:
+            except (ModuleNotFoundError,ImportError):
                 print("ERROR: ttvfast not installed, this will not work")
                 quit()
 

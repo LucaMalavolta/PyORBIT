@@ -285,7 +285,7 @@ def pyorbit_emcee_mpi(config_in, input_datasets=None, return_output=None):
         """ None of the previous cases has been satisfied, we have to run PyDE """
         try:
             from pyde.de import DiffEvol
-        except ImportError:
+        except (ModuleNotFoundError,ImportError):
             print('ERROR! PyDE is not installed, run first with optimize instead of emcee')
             quit()
 
