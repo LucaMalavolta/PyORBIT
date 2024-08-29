@@ -36,9 +36,9 @@ import pyorbit
 # ones.
 extensions = ['myst_parser',
     'sphinx_design',
-    'sphinx-copybutton',
-    'sphinx-tippy',
-    'sphinx-hoverxref',
+    'sphinx_copybutton',
+    'sphinx_tippy',
+    #'sphinx-hoverxref',
     'sphinx.ext.autosummary',
     'sphinx.ext.autodoc',
     'sphinx.ext.mathjax',
