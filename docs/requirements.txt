@@ -1,5 +1,8 @@
 sphinx-book-theme
 sphinx-design
+sphinx-copybutton
+sphinx-tippy
+sphinx-hoverxref
 myst-parser
 myst-nb
 matplotlib

@@ -37,7 +37,7 @@ Alternatively, for easy automatization, PyORBIT can be called as a Python functi
 
 
 :::{admonition} Keep `PyORBIT` updated!
-Current version of `PyORBIT` is [![PyPI version fury.io](https://badge.fury.io/py/pyorbit-package.svg)](https://pypi.python.org/pypi/pyprbot-package/), keep the software updated forimproved performances and new models by running `pip install --update pyorbit-package` on your terminal 
+Current version of `PyORBIT` is [![PyPI version fury.io](https://badge.fury.io/py/pyorbit-package.svg)](https://pypi.python.org/pypi/pyprbot-package/), keep the software updated forimproved performances and new models by running `pip install --upgrade pyorbit-package` on your terminal 
 :::
 
 :::{versionadded} 10.6
