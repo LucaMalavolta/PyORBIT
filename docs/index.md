@@ -35,8 +35,8 @@ Alternatively, for easy automatization, PyORBIT can be called as a Python functi
 
 ## Updates on version 10
 
-:::{note} 
-**Update to version 10.6**
+
+:::{admonition} Keep `PyORBIT` updated!
 Current version of `PyORBIT` is [![PyPI version fury.io](https://badge.fury.io/py/pyorbit-package.svg)](https://pypi.python.org/pypi/pyprbot-package/), keep the software updated forimproved performances and new models by running `pip install --update pyorbit-package` on your terminal 
 :::
 
@@ -64,15 +64,14 @@ Recent examples of multidimensional Gaussian Processes through `PyORBIT` can be 
 - *tinyGP for better performances*
 Working on both *classic* and _multidimensional_ Gaussian Processes, although the former is showing some JAX problems when producing the output results.
 
-```{warning}
-Starting from version 10.3, `PyORBIT` has been upgraded to support `tinygp` (version 0.3.0), which in turns requires Python **3.10** to work properly.
-If you are using `PyORBIT` \=> 10.3, follow the installation instructions to create an environment with Python 3.10
-```
-
-```{admonition} No back-compatibility
-Version 10 is not compatible with the results obtained with version 9.
+:::{admonition} Compatiblity issues with older versions
+- Version 10 is not compatible with the results obtained with version 9.
 If you have been using the development version of V10, you may run into incompatibility issues as well.
-```
+
+- Starting from version 10.3, `PyORBIT` has been upgraded to support `tinygp` (version 0.3.0), which in turns requires Python **3.10** to work properly.
+If you are using `PyORBIT` \=> 10.3, follow the installation instructions to create an environment with Python 3.10
+:::
+
 
 ```{warning}
 In the previous version of the documentation and in several papers, it was reported that `PyORBIT` was relying on the quasi-periodic kernel definiton by [Grunblatt et al. 2015](https://ui.adsabs.harvard.edu/abs/2015ApJ...808..127G/abstract). I came to realize only recently that the factor $2$ accompanying the decay time-scale of the activity regions $P_\mathrm{dec}$ was implicitely included in the exponenitial-squared kernel as defined in `george` and `tinygp`, making the kernel definiton identical to the one reported in [Rajpaul et al. 2015](https://ui.adsabs.harvard.edu/abs/2015MNRAS.452.2269R/abstract). Please keep this problem in mind when comparing your results with other analysis.
