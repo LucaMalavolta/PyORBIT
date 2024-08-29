@@ -49,6 +49,7 @@ Current version of `PyORBIT` is [![PyPI version fury.io](https://badge.fury.io/p
 - In RML modelling, `curve_fit` has been replaced with the [`lmfit` package](https://lmfit.github.io/lmfit-py/) from improved numerical stability
 :::
 
+
 - *Improved speed*
 After several failed attempts, I finally managed to apply the advice from the [emcee parallelization page](https://emcee.readthedocs.io/en/stable/tutorials/parallel/) to the rather complex structure of PyORBIT. The speed-up is noticeable for large datasets (e.g., photometry).
 
