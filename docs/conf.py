@@ -39,6 +39,7 @@ extensions = ['myst_parser',
     'sphinx_copybutton',
     'sphinx_tippy',
     #'sphinx-hoverxref',
+    'sphinx.ext.intersphinx',
     'sphinx.ext.autosummary',
     'sphinx.ext.autodoc',
     'sphinx.ext.mathjax',
@@ -149,6 +150,7 @@ html_theme_options = {
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ['_static']
+html_css_files = ["tippy.css"]
 
 
 # Custom sidebar templates, must be a dictionary that maps document names
