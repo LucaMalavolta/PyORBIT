@@ -68,6 +68,9 @@ class PyTransit_Transit(AbstractModel, AbstractTransit):
 
         self.update_parameter_values(parameter_values, dataset.Tref)
 
+        if parameter_values['i'] == 0.0:
+            return -np.inf
+
         for par, i_par in self.ldvars.items():
             self.ld_vars[i_par] = parameter_values[par]
 
