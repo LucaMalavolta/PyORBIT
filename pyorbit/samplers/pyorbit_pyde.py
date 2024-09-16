@@ -21,9 +21,9 @@ def pyorbit_pyde(config_in, input_datasets=None, return_output=None):
     # else:
     #     os.environ["OMP_NUM_THREADS"] = "{0:.0f}".format(omp_num_threads)
     #
-    # pyde_dir_output = './' + config_in['output'] + '/pyde/'
-    #
-    # reloaded_pyde = False
+    pyde_dir_output = './' + config_in['output'] + '/pyde/'
+    
+    reloaded_pyde = False
 
 
     try:
@@ -69,6 +69,13 @@ def pyorbit_pyde(config_in, input_datasets=None, return_output=None):
 
     mc.pyde_dir_output = pyde_dir_output
 
+    mc.pyde_parameters['nwalkers'] = mc.ndim * \
+        mc.pyde_parameters['npop_mult']
+    if mc.pyde_parameters['nwalkers'] % 2 == 1:
+        mc.pyde_parameters['nwalkers'] += 1
+
+
+
     print('Include priors: ', mc.include_priors)
     print()
     print('Reference Time Tref: ', mc.Tref)
@@ -99,7 +106,7 @@ def pyorbit_pyde(config_in, input_datasets=None, return_output=None):
             de = DiffEvol(
                 mc,
                 mc.bounds,
-                mc.emcee_parameters['nwalkers'],
+                mc.pyde_parameters['nwalkers'],
                 maximize=True,
                 pool=pool)
 
@@ -108,7 +115,7 @@ def pyorbit_pyde(config_in, input_datasets=None, return_output=None):
         de = DiffEvol(
             mc,
             mc.bounds,
-            mc.emcee_parameters['nwalkers'],
+            mc.pyde_parameters['nwalkers'],
             maximize=True)
 
         de.optimize(int(mc.pyde_parameters['ngen']))

@@ -10,6 +10,7 @@ from .samplers.pyorbit_emcee_mpi import *
 from .samplers.pyorbit_zeus_legacy import *
 from .samplers.pyorbit_optimize import *
 from .samplers.pyorbit_polychord import *
+from .samplers.pyorbit_pyde import *
 from .samplers.pyorbit_dynesty import *
 from .samplers.pyorbit_dynesty_static import *
 from .samplers.pyorbit_dynesty_legacy import *
@@ -22,4 +23,4 @@ from .samplers.pyorbit_getresults import *
 from .subroutines.input_parser import yaml_parser
 
 
-__version__ = "10.6.0"
+__version__ = "10.6.1"
