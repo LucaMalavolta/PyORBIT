@@ -141,7 +141,7 @@ class PyTransit_Transit_TTV_Ancillary(AbstractModel, AbstractTransit):
         self.update_parameter_values(parameter_values, dataset.Tref)
 
         if parameter_values['i'] == 0.0:
-            return -np.inf
+            return 0.
 
         for key, key_val in parameter_values.items():
             if np.isnan(key_val):
