@@ -37,7 +37,7 @@ Alternatively, for easy automatization, PyORBIT can be called as a Python functi
 
 
 :::{admonition} Keep `PyORBIT` updated!
-Current version of `PyORBIT` is [![PyPI version fury.io](https://badge.fury.io/py/pyorbit-package.svg)](https://pypi.python.org/pypi/pyprbot-package/), keep the software updated forimproved performances and new models by running `pip install --upgrade pyorbit-package` on your terminal 
+Current version of `PyORBIT` is [![PyPI version fury.io](https://badge.fury.io/py/pyorbit-package.svg)](https://pypi.python.org/pypi/pyprbot-package/), keep the software updated for improved performances and new models by running `pip install --upgrade pyorbit-package` on your terminal 
 :::
 
 :::{versionadded} 10.6
@@ -80,7 +80,7 @@ In the previous version of the documentation and in several papers, it was repor
 
 # Documentation updates
 
-Documentation is being updated slowly but steadily, with new pages appearing every week. Below you can check which pages have been updated recently (last update: 28/07/2023).
+Documentation is being updated slowly but steadily, with new pages appearing every week. Below you can check which pages have been updated recently (last update: August 2024).
 
 - *Quickstart*
   + Radial velocities
@@ -89,9 +89,9 @@ Documentation is being updated slowly but steadily, with new pages appearing eve
 - *Data modeling*
   + Planetary RV signal
   + Correlated datasets
-  + Gaussian processes regression **in progress**
-  + Multidimensional GPs **new**
-  + TinyGP caveats **new**
+  + Gaussian processes regression **updated**
+  + Multidimensional GPs **updated**
+  + TinyGP caveats
   + CHEOPS detrending **coming soon**
   + Polynomial **coming soon**
 
