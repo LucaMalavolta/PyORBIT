@@ -312,6 +312,12 @@ def pyorbit_dynesty(config_in, input_datasets=None, return_output=None, run_nest
     #nested_sampling_save_to_cpickle(mc)
     dynesty_results_save_to_cpickle(mc.output_directory, results)
 
+    try:
+        os.remove(save_checkpoint)
+        os.remove(save_checkpoint_maxevidence)
+    except:
+        pass
+    
     if return_output:
         return mc
     else:

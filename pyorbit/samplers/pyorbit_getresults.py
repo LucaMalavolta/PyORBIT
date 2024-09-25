@@ -1116,7 +1116,7 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
 
         P_minimum = 2.0  # this temporal range will be divided in 20 subsets
         for key_name, key_val in planet_parameters_med.items():
-            P_minimum = min(key_val.get('P', 2.0), P_minimum)
+            P_minimum = max(key_val.get('P', 2.0), P_minimum)
 
         for dataset_name, dataset in mc.dataset_dict.items():
 
@@ -1152,7 +1152,6 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
                         bjd_plot[dataset_name]['range'] / dataset.n / 10.)
             else:
                 step_size =  min(P_minimum / 20., bjd_plot[dataset_name]['range'] / dataset.n / 10.)
-
 
             bjd_plot[dataset_name]['x_plot'] = \
                 np.arange(bjd_plot[dataset_name]['start'],
