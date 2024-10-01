@@ -241,6 +241,15 @@ class SPLEAF_Multidimensional_ESP(AbstractModel):
         if not self.rotdec_condition(self.internal_parameter_values):
             return -np.inf
     
+        """
+        Randomly reset the kernel with a probability of 0.1% 
+        To prevent memory allocations issues I suspect are happening
+        """
+        random_selector = np.random.randint(1000)
+        if random_selector == 50:
+            self._reset_kernel()
+
+
         input_param = np.concatenate(([self.internal_parameter_values['Prot'],
                         self.internal_parameter_values['Pdec'],
                         self.internal_parameter_values['Oamp']],
