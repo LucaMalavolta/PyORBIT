@@ -81,11 +81,27 @@ class SPLEAF_ESP(AbstractModel):
             self.list_pams_common.update(['rotation_period'])
             self.list_pams_common.discard('Prot')
 
+        for common_ref in self.common_ref:
+            if mc.common_models[common_ref].model_class == 'activity':
+                self.use_stellar_activity_decay = getattr(mc.common_models[common_ref], 'use_stellar_activity_decay', False)
+                break
+
+        for keyword in keywords_stellar_activity_decay:
+            self.use_stellar_activity_decay = kwargs.get(keyword, self.use_stellar_activity_decay)
+
+
+        if self.use_stellar_activity_decay:
+            self.list_pams_common.update(['activity_decay'])
+            self.list_pams_common.discard('Pdec')
+
 
     def lnlk_compute(self, parameter_values, dataset):
 
         if self.use_stellar_rotation_period:
             parameter_values['Prot'] = parameter_values['rotation_period']
+
+        if self.use_stellar_activity_decay:
+            parameter_values['Pdec'] = parameter_values['activity_decay']
 
         if not self.hyper_condition(parameter_values):
             return -np.inf
@@ -94,7 +110,7 @@ class SPLEAF_ESP(AbstractModel):
 
         """ I'm creating the kernel here has """
         D = spleaf_cov.Cov(dataset.x0,
-            err=spleaf_term.Error(dataset.e ** 2.0 + dataset.jitter ** 2.0),
+            err=spleaf_term.Error(np.sqrt(dataset.e ** 2.0 + dataset.jitter ** 2.0)),
             GP=spleaf_term.ESPKernel(parameter_values['Hamp'],
                                     parameter_values['Prot'],
                                     parameter_values['Pdec'],
