@@ -52,6 +52,9 @@ class SPLEAF_ESP(AbstractModel):
 
         self.n_harmonics = 4
 
+        self._jitter_mask = {}
+        self._n_jitter = {}
+        self.D_spleaf = {}
 
     def initialize_model(self, mc,  **kwargs):
 
@@ -95,6 +98,35 @@ class SPLEAF_ESP(AbstractModel):
             self.list_pams_common.discard('Pdec')
 
 
+    def initialize_model_dataset(self, mc, dataset, **kwargs):
+
+        """ when reloading the .p files, the object is not reinitialized, so we have to skip the
+        incremental addition of datasets if they are already present  """
+        if dataset.name_ref in self._n_jitter:
+            return
+
+        self._jitter_mask[dataset.name_ref] = []
+        self._n_jitter[dataset.name_ref] = 0
+
+        temporary_mask = np.arange(0, dataset.n, 1, dtype=int)
+        for var in dataset.list_pams:
+            if dataset.variable_expanded[var] != 'jitter':
+                continue
+            temporary_jitmask = dataset.mask[var]
+
+            self._jitter_mask[dataset.name_ref].append(temporary_mask[temporary_jitmask])
+            self._n_jitter[dataset.name_ref] += 1
+
+        parameter_values = {
+            'Hamp': 10.0,
+            'Prot': 30.0,
+            'Pdec': 100.0,
+            'Oamp': 0.35
+        }
+
+        self._reset_kernel(parameter_values, dataset)
+
+
     def lnlk_compute(self, parameter_values, dataset):
 
         if self.use_stellar_rotation_period:
@@ -108,18 +140,28 @@ class SPLEAF_ESP(AbstractModel):
         if not self.rotdec_condition(parameter_values):
             return -np.inf
 
-        """ I'm creating the kernel here has """
-        D = spleaf_cov.Cov(dataset.x0,
-            err=spleaf_term.Error(np.sqrt(dataset.e ** 2.0 + dataset.jitter ** 2.0)),
-            GP=spleaf_term.ESPKernel(parameter_values['Hamp'],
+        """
+        Randomly reset the kernel with a probability of 0.1% 
+        To prevent memory allocations issues I suspect are happening
+        """
+        random_selector = np.random.randint(1000)
+        if random_selector == 50:
+            self._reset_kernel(parameter_values, dataset)
+
+
+        jitter_values = np.zeros(self._n_jitter[dataset.name_ref])
+        for n_jit in range(0, self._n_jitter[dataset.name_ref]):
+            jitter_values[n_jit] = dataset.jitter[self._jitter_mask[dataset.name_ref][n_jit]][0]
+
+        input_param = np.concatenate(([parameter_values['Hamp'],
                                     parameter_values['Prot'],
                                     parameter_values['Pdec'],
-                                    parameter_values['Oamp'],
-                                    nharm=self.n_harmonics))
+                                    parameter_values['Oamp']],
+                                    jitter_values))
 
 
-
-        return D.loglike(dataset.residuals)
+        self.D_spleaf[dataset.name_ref].set_param(input_param, self.D_spleaf[dataset.name_ref].param)
+        return  self.D_spleaf[dataset.name_ref].loglike(dataset.residuals)
 
 
     def sample_predict(self, parameter_values, dataset, x0_input=None, return_covariance=False, return_variance=False):
@@ -163,3 +205,19 @@ class SPLEAF_ESP(AbstractModel):
     def _hypercond_02(parameter_values):
         #Condition on Rotation period and decay timescale
         return parameter_values['Pdec'] > 2. * parameter_values['Prot']
+
+
+    def _reset_kernel(self, parameter_values, dataset):
+        kwargs = {
+            'err': spleaf_term.Error(dataset.e),
+            'GP': spleaf_term.ESPKernel(parameter_values['Hamp'],
+                                    parameter_values['Prot'],
+                                    parameter_values['Pdec'],
+                                    parameter_values['Oamp'],
+                                    nharm=self.n_harmonics)
+        }
+        for n_jit in range(0, self._n_jitter[dataset.name_ref]):
+            kwargs['jitter_'+repr(n_jit)] = spleaf_term.InstrumentJitter(self._jitter_mask[dataset.name_ref][n_jit], 
+                                                                            dataset.jitter[self._jitter_mask[dataset.name_ref][n_jit]][0])
+
+        self.D_spleaf[dataset.name_ref] = spleaf_cov.Cov(dataset.x0, **kwargs)

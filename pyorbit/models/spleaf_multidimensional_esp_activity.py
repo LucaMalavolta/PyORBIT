@@ -166,7 +166,7 @@ class SPLEAF_Multidimensional_ESP(AbstractModel):
         self._dataset_jitmask = []
         for dataset_name, temporary_jitmask in self._dataset_temporary_jitmask.items():
             d_ind = self._dataset_nindex[dataset_name]
-            
+
             temporary_mask = self.spleaf_series_index[d_ind]
             for jit_list in temporary_jitmask:
                 self._dataset_jitmask.append(jit_list)

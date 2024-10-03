@@ -123,6 +123,7 @@ from pyorbit.models.tinygp_multiquasiperiodic_trainedsquaredexponential_activity
 from pyorbit.models.spleaf_multidimensional_esp_activity import SPLEAF_Multidimensional_ESP
 from pyorbit.models.spleaf_multidimensional_esp_activity_slow import SPLEAF_Multidimensional_ESP_slow
 from pyorbit.models.spleaf_esp_activity import SPLEAF_ESP
+from pyorbit.models.spleaf_esp_activity_slow import SPLEAF_ESP_slow
 
 from pyorbit.models.rossitermclaughlin_ohta import RossiterMcLaughlin_Ohta
 from pyorbit.models.rossitermclaughlin_precise import RossiterMcLaughlin_Precise
@@ -283,6 +284,8 @@ define_type_to_class = {
     'tinygp_matern32': TinyGaussianProcess_Matern32Activity,
     'spleaf_esp': SPLEAF_ESP,
     'spleaf_exponentialsineperiodic': SPLEAF_ESP,
+    'spleaf_esp_slow': SPLEAF_ESP_slow,
+    'spleaf_exponentialsineperiodic_slow': SPLEAF_ESP_slow,
     'tinygp_multidimensional_quasiperiodic': TinyGP_Multidimensional_QuasiPeriodicActivity,
     'tinygp_multidimensional_quasiperiodicsquaredexponential': TinyGP_Multidimensional_QuasiPeriodicSquaredExponentialActivity,
     'tinygp_multidimensional_quasiperiodic_squaredexponential': TinyGP_Multidimensional_QuasiPeriodicSquaredExponentialActivity,
@@ -292,7 +295,7 @@ define_type_to_class = {
     'tinygp_multiquasiperiodictrainedsquaredexponential': TinyGP_MultiQuasiPeriodic_TrainedSquaredExponential_Activity,
     'tinygp_multidimensional_matern32': TinyGP_Multidimensional_Matern32Activity,
     'spleaf_multidimensional_esp_slow': SPLEAF_Multidimensional_ESP_slow,
-    'slow_spleaf_multidimensional_exponentialsineperiodic_slow': SPLEAF_Multidimensional_ESP_slow,
+    'spleaf_multidimensional_exponentialsineperiodic_slow': SPLEAF_Multidimensional_ESP_slow,
     'spleaf_multidimensional_esp': SPLEAF_Multidimensional_ESP,
     'spleaf_multidimensional_exponentialsineperiodic': SPLEAF_Multidimensional_ESP,
     'rossitermclaughlin_ohta': RossiterMcLaughlin_Ohta,
