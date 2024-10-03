@@ -135,7 +135,6 @@ class TinyGP_Multidimensional_QuasiPeriodicActivity(AbstractModel):
         self.internal_parameter_values = None
         self._dist_t1 = None
         self._dist_t2 = None
-        self._added_datasets = 0
         self.dataset_ordering = {}
         self.inds_cache = None
 
