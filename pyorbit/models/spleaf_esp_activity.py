@@ -129,7 +129,7 @@ class SPLEAF_ESP(AbstractModel):
 
         """ I'm creating the kernel here has """
         D = spleaf_cov.Cov(dataset.x0,
-            err=spleaf_term.Error(dataset.e ** 2.0 + dataset.jitter ** 2.0),
+            err=spleaf_term.Error(np.sqrt(dataset.e ** 2.0 + dataset.jitter ** 2.0)),
             GP=spleaf_term.ESPKernel(parameter_values['Hamp'],
                                     parameter_values['Prot'],
                                     parameter_values['Pdec'],
