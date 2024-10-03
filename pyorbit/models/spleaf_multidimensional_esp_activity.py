@@ -139,7 +139,7 @@ class SPLEAF_Multidimensional_ESP(AbstractModel):
 
         """ when reloading the .p files, the object is not reinitialized, so we have to skip the
         incremental addition of datasets if they are already present  """
-        if dataset.name_ref in self._dataset_names:
+        if dataset.name_ref in self._dataset_nindex:
             return
 
         self._dataset_x0.append(dataset.x0)
