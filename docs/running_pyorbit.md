@@ -69,8 +69,8 @@ The samplers listed above are those that I use more frequently, and I have verif
 
 ```{toctree}
 :maxdepth: 1
-running_pyorbit/mcmc_nested_caveats
-running_pyorbit/tinygp_caveats
 running_pyorbit/terminal_output
 running_pyorbit/results_flags
+running_pyorbit/mcmc_nested_caveats
+running_pyorbit/tinygp_caveats
 ```

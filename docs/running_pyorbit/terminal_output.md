@@ -2,13 +2,13 @@
 
 # Interpreting the results
 
-`pyorbit_results` will produce several files depending on the flags provided at runtime. The following sections will provide you with a detailed description  
+`pyorbit_results` will produce several files depending on the flags provided at runtime. The following sections will provide you with a detailed description.
 
 
 :::{admonition} Documentation update!
 :class: tip
 
-This page was updated  on October 2024 to reflect the updates of version 10 of `PyORBIT`
+This page was updated  on October 2024 to reflect the updates of version 10 of `PyORBIT`.
 :::
 
 
@@ -16,33 +16,31 @@ This page was updated  on October 2024 to reflect the updates of version 10 of `
 ## Confidence intervals
 
 Confidence intervals and/or associated errors are computed using the 15.865th
-and the 84.135th percentiles of the distribution. The median value of the
+and the 84.135th percentile of the distribution. The median value of the
 distribution (50th percentile) is then subtracted from
 these two values. For clarity, these values are always followed by the string
 `(15-84 p)`.
 The following values:
 
 ```text
-jitter_0             25.641528         -1.200384         1.372232 (15-84 p)
+----- dataset:  RV_data
+jitter_0                  2.04        -0.34         0.35    (15-84 p)
 ```
 
-read as $\mathrm{jitter}_0 = 25.6_{-1.2}^{+1.4} \, ms^{-1}$ (in case of radial velocities).
+read as $\mathrm{jitter}_0 = 2.04_{-0.34}^{+0.35} \, ms^{-1}$, or equivalently  $\mathrm{jitter}_0 = 2.04 \pm 0.35 \, ms^{-1}$
 
 ```{note}
 The code will format the output according to the significant figures of a measurement. 
-The unformatted value can always be retrieved from the posterior distribution. In case of  [reparametrization](##reparametrization-target), be sure to employ the correct posterior distribution.
+The unformatted value can always be retrieved from the posterior distribution. 
+In case of  [reparametrisation](#reparametrisation-target), please be sure to use the correct posterior distribution.
 ```
 
-The associated error is not provided for the starting point of the MCMC analysis
-or the MAP values.
-
-
-
+The associated error is not provided for the starting point of the MCMC analysis, the MAP values, fixed values, or, in general, when the percentile of the distribution cannot be computed.
 
 
 ## Terminal output
 
-The terminal output will produce a detailed summary of the analysis, and it cannot be turned off, but you can easily redirect the output to a *log* text file:
+The terminal output will produce a detailed summary of the analysis. It cannot be turned off, but you can easily redirect the output to a *log* text file:
 
 ```bash
 pyorbit_results emcee my_file.yaml -all > my_file_emcee_res.log 
@@ -75,19 +73,20 @@ of plot preparation and plot printing. Those are detailed in the corresponding s
 
 ## Basic model selection
 
-The code provides the *log-probability* function, with its two components (the
+The code provides the *log-probability* value, with its two components (the
 *log-priors* and the *log-likelihood*) explicitly reported right below.
 
 ```text
- LN posterior:  -319.565121      -2.851297     2.207220 (15-84 p)
+ LN posterior:  -419.758906      -4.028171     3.223933 (15-84 p) 
 
- Median log_priors     = -177.66943313873546
- Median log_likelihood = -136.37527830557443
+ Median log_priors     = -27.54775920683063
+ Median log_likelihood = -381.9071666017402
 ```
+The error associated to the log-probability is computed 
 
 The code computes the Bayesian Information Criterion (BIC), the Akaike
 Information Criterion (AIC) and the AIC with a correction for small sample sizes
-(AIC). These values are computed using the median value of the log-probability / log-likelihood.
+(AICc). These values are computed using the median value of the log-probability / log-likelihood.
 Formally, these three criteria should be computed using the *log-likelihood*,
 but I've seen several cases where the *log-probability* is used instead. The
 appropriate choice is left to the user.
@@ -358,10 +357,9 @@ will have slightly different output:
 The additional outputs follow closely the examples reported in the
 documentation of each sampler, so they will not be detailed here.
 
-## Note on reparametrization and transformation of parameters
-{##reparametrization-target}
+## Note on reparametrisation and transformation of parameters
 
-
+{#reparametrisation-target}
 Median values and confidence intervals for model and derived parameters are
 computed directly on the transformed posterior, rather than on the reported
 values for of the sampler parameters. In other words, each set of parameters
