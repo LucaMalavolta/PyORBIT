@@ -260,40 +260,24 @@ This is the caption of the figure (a simple paragraph).
 
 ```
 
+Test
 
 :::{subfigure} 2
 :subcaptions: below
 :class-grid: outline
 
-```{image} _static/chain_b_b.png
-:height: 100px
+```{image} plots/chain_b_b.png
+:height: 50 %
 :alt: Figure A
 ```
 
-```{image} _static/chain_b_b_dots.png
-:height: 100px
+```{image} plots/chain_b_b_dots.png
+:height: 50 %
 :alt: Figure B
 ```
 Sub-figure with captions below
 
 :::
-
-
-
-.. subfigure:: A|B
-   :layout-sm: A|B
-   :gap: 8px
-   :subcaptions: above
-   :name: test_figure
-   :class-grid: outline
-
-   .. image:: plots/chain_b_b_dots.png
-      :alt: Image A
-
-   .. image:: plots/chain_b_b_dots.png
-      :alt: Image B
-
-    Figure Caption
 
 
 
