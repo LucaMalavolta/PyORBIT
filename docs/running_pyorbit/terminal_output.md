@@ -280,6 +280,12 @@ Sub-figure with captions below
 :::
 
 
+.. subfigure:: AB
+
+   .. image:: plots/chain_b_b.png
+
+   .. image:: plots/chain_b_b_dots.png
+
 
 ## Confidence intervals of the parameters
 
