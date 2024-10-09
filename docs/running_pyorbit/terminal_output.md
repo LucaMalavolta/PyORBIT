@@ -254,13 +254,13 @@ Suggested value for burnin: 30362
 
 We can have a look at the *trace plot* (also referred as *chain plot*) to visually inspect if convergence has been reached:
 
-```{figure} plots/chain_b_b_dots.png
+```{figure} plots/chain_b_b.png
 :alt: map to buried treasure
 :width: 80 %
 Chain plot as a function of thinned iteration number (step) for the impact parameter. Each color identifies a different *walker*.
 ```
 
-```{figure} plots/chain_b_b.png
+```{figure} plots/chain_b_b_dots.png
 :alt: map to buried treasure
 :width: 80 %
 The same data as the above plot, this time using dots to show the parameter distribution as a function of the thinned iteration number.
@@ -273,6 +273,10 @@ To further check if the chain has converged, i.e., if the parameter has reached 
 :width: 80 %
 Parameter distribution for different ranges of thinned iteration numbers.
 ```
+
+Even if the ACF is telling differently, we don't have any reason to believe that the chain has not converged already at 200/300 thinned steps. 
+
+
 
 
 ## Confidence intervals of the parameters
@@ -312,13 +316,14 @@ light curve fitting:
 ====================================================================================================
 
 ----- common model:  b
------ common model:  b
 P                0       3.54233     -0.00021      0.00019   (15-84 p)   [    3.4402,     3.6402]
 R_Rs             1        0.0423      -0.0013       0.0013   (15-84 p)   [    0.0000,     0.5000]
 sre_coso         2          0.00        -0.21         0.21   (15-84 p)   [   -1.0000,     1.0000]
 sre_sino         3          0.03        -0.21         0.18   (15-84 p)   [   -1.0000,     1.0000]
 b                4          0.39        -0.19         0.12   (15-84 p)   [    0.0000,     2.0000]
-Tc               5  2459474.8566      -0.0013       0.0014   (15-84 p)   [2459473.1000, 2459475.1000]```
+Tc               5  2459474.8566      -0.0013       0.0014   (15-84 p)   [2459473.1000, 2459475.1000]
+
+```
 
 When reporting the sampler results, the name of the parameter is followed by a
 number indicating its position in the array of parameters passed to the
@@ -354,6 +359,7 @@ b                         0.39        -0.19         0.12    (15-84 p)
 Tc                2459474.8566      -0.0013       0.0014    (15-84 p)
 e                        0.061       -0.042        0.059    (15-84 p)
 omega                     -147         -117          139    (15-84 p)
+
 ```
 
 The main difference concerning the previous table is that the columns of the parameter index and the parameter boundaries are not listed here, as not all the parameters may have been directly involved in the optimisation procedure.
