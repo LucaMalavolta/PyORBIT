@@ -255,7 +255,7 @@ Suggested value for burnin: 30362
 
 ```{figure} plots/chain_b_b_dots.png
 :alt: map to buried treasure
-
+:width: 50 %
 This is the caption of the figure (a simple paragraph).
 
 ```
