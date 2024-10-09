@@ -809,6 +809,7 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
         print(' Plotting the chains... ')
 
         os.system('mkdir -p ' + dir_output + 'chains')
+        os.system('mkdir -p ' + dir_output + 'chains_points')
         for theta_name, ii in theta_dictionary.items():
             file_name = dir_output + 'chains/' + \
                 repr(ii) + '_' + theta_name + '.png'
@@ -817,6 +818,22 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
             plt.axvline(nburnin / nthin, c='r')
             plt.savefig(file_name, bbox_inches='tight', dpi=300)
             plt.close(fig)
+
+            
+            plot_x_length = len(sampler_chain[0, :, ii])
+            plot_x_nwalkers = len(sampler_chain[:, 0, ii])
+            x_range = np.arange(0, plot_x_length, 1.)
+            file_name = dir_output + 'chains_points/' + \
+                repr(ii) + '_' + theta_name + '.png'
+
+            fig = plt.figure(figsize=(12, 12))
+            for xw in range(0, plot_x_nwalkers): 
+                plt.scatter(x_range, sampler_chain[xw, :, ii], s=2, alpha=0.2, c='k')
+            plt.axvline(nburnin / nthin, c='r')
+            plt.savefig(file_name, bbox_inches='tight', dpi=300)
+            plt.close(fig)
+
+
 
         print()
         print('****************************************************************************************************')
