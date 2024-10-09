@@ -252,39 +252,20 @@ PyORBIT should keep running for about 23547 more steps to reach 100*ACF
 Suggested value for burnin: 30362
 ```
 
+We can have a look at the *trace plot* (also referred as *chain plot*) to visually inspect if convergence has been reached:
 
 ```{figure} plots/chain_b_b_dots.png
 :alt: map to buried treasure
 :width: 80 %
-This is the caption of the figure (a simple paragraph).
-
+Chain plot as a function of thinned iteration number (step) for the impact parameter. Each color identifies a different *walker*.
 ```
-
-Test
-
-:::{subfigure} 2
-:subcaptions: below
-:class-grid: outline
 
 ```{figure} plots/chain_b_b.png
-:width: 45 %
-:alt: Figure A
+:alt: map to buried treasure
+:width: 80 %
+Same data as the above plot, this time using dots to show the parameter ditribution as a function of the thinned iteration number.
 ```
 
-```{figure} plots/chain_b_b_dots.png
-:width: 45 %
-:alt: Figure B
-```
-Sub-figure with captions below
-
-:::
-
-
-.. subfigure:: AB
-
-   .. image:: plots/chain_b_b.png
-
-   .. image:: plots/chain_b_b_dots.png
 
 
 ## Confidence intervals of the parameters
