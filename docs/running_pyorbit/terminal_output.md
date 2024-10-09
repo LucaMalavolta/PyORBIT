@@ -32,7 +32,7 @@ read as $\mathrm{jitter}_0 = 2.04_{-0.34}^{+0.35} \, ms^{-1}$, or equivalently  
 ```{note}
 The code will format the output according to the significant figures of a measurement. 
 The unformatted value can always be retrieved from the posterior distribution. 
-In case of  [reparametrisation](#reparametrisation-target), please be sure to use the correct posterior distribution.
+In case of  [reparametrisation](#note-on-reparametrisation-and-transformation-of-parameters), please be sure to use the correct posterior distribution.
 ```
 
 The associated error is not provided for the starting point of the MCMC analysis, the MAP values, fixed values, or, in general, when the percentile of the distribution cannot be computed.
@@ -87,18 +87,18 @@ The error associated to the log-probability is computed
 The code computes the Bayesian Information Criterion (BIC), the Akaike
 Information Criterion (AIC) and the AIC with a correction for small sample sizes
 (AICc). These values are computed using the median value of the log-probability / log-likelihood.
-Formally, these three criteria should be computed using the *log-likelihood*,
+These three criteria should be computed using the *log-likelihood*,
 but I've seen several cases where the *log-probability* is used instead. The
 appropriate choice is left to the user.
 
 ```text
- Median BIC  (using likelihood) = 355.9106421289588
- Median AIC  (using likelihood) = 298.75055661114885
- Median AICc (using likelihood) = 299.37171702070515
+ Median BIC  (using likelihood) = 895.0232335681574
+ Median AIC  (using likelihood) = 805.8143332034804
+ Median AICc (using likelihood) = 807.680999870147
 
- Median BIC  (using posterior)  = 711.2495084064296
- Median AIC  (using posterior)  = 654.0894228886198
- Median AICc (using posterior)  = 654.7105832981761
+ Median BIC  (using posterior)  = 950.1187519818186
+ Median AIC  (using posterior)  = 860.9098516171416
+ Median AICc (using posterior)  = 862.7765182838083
 ```
 
 The *maximum a posteriori* (MAP) set of parameters is computed by picking the
@@ -108,27 +108,26 @@ log-likelihood or the log-probability are reported here, with the difference
 that now the corresponding *MAP* value is used rather than the corresponding *median* value.
 
 ```text
- MAP log_priors     = -177.66943313873546
- MAP log_likelihood = -136.28166552722797
+ MAP log_priors     = -27.937645542438936
+ MAP log_likelihood = -383.0025104725866
 
- MAP BIC  (using likelihood) = 355.7234165722658
- MAP AIC  (using likelihood) = 298.56333105445594
- MAP AICc (using likelihood) = 299.18449146401224
+ MAP BIC  (using likelihood) = 897.2139213098502
+ MAP AIC  (using likelihood) = 808.0050209451732
+ MAP AICc (using likelihood) = 809.8716876118399
 
- MAP BIC  (using posterior)  = 711.0622828497367
- MAP AIC  (using posterior)  = 653.9021973319268
- MAP AICc (using posterior)  = 654.5233577414831
+ MAP BIC  (using posterior)  = 953.0892123947281
+ MAP AIC  (using posterior)  = 863.8803120300511
+ MAP AICc (using posterior)  = 865.7469786967177
 ```
 
-Finally, the code provides a suggestion regarding the use of either AIC or AICc
-following the standard definition
+Finally, the code suggests the use of either AIC or AICc according to the standard definition
 
 ```text
- AIC suggested over AICs because NDATA (   600 ) > 40 * NDIM (    13 )
+ AICc suggested over AIC because NDATA ( 517 ) < 40 * NDIM ( 21 )
 ```
 
 ```{warning}
-No check over the applicability of BIS/AIC/AICc is performed! Be sure that the underlying assumptions are valid in your specific case.
+No check over BIS/AIC/AICc statistical validity is performed! Be sure that the underlying assumptions are valid in your specific case.
 ```
 
 ## Autocorrelation analysis
@@ -137,11 +136,15 @@ If the posteriors have been computed using an MCMC sampler, as `emcee`, an autoc
 is performed automatically using the methods implemented in the sampler. For
 more information, please check the [Autocorrelation analysis and
 convergence
-page](https://emcee.readthedocs.io/en/stable/tutorials/autocorr/#autocorr) from
-the `emcee` documentation.
+page](https://emcee.readthedocs.io/en/stable/tutorials/autocorr/#autocorr) from the `emcee` documentation.
+
+:::{important}
+The sampler chains used to compute the ACF include the burn-in values.
+:::
+
 
 `PyORBIT` will first compute the *integrated autocorrelation time* for each
-variable using the built-in method in `emcee`. This method automatically check
+variable using the built-in method in `emcee`. This method automatically checks
 if the chains are long enough for a reliable autocorrelation analysis.
 If everything is fine, you'll get this message:
 
@@ -151,13 +154,16 @@ The chains are more than 50 times longer than the ACF, the estimate can be trust
 
 If the chains are too short, the `tolerance` parameter (i.e., the minimum number
 of autocorrelation times needed to trust the estimate) will be lowered to 20,
-with a warning and a(likely overestimated) suggestion for the appropriate chain length.
+with a warning and a (*likely overestimated*) suggestion for the appropriate chain length.
 
 ```text
 ***** WARNING ******
 The integrated autocorrelation time cannot be reliably estimated likely the chains are too short, and ACF analysis is not fully reliable
 emcee.autocorr.integrated_time tolerance lowered to 20
 If you still get a warning, you should drop these results entirely
++
+
+
 Chains too short to apply convergence criteria
 They should be at least 2800*nthin = 280000
  ```
@@ -169,7 +175,7 @@ size) in the following analysis
 ```text
 Computing the autocorrelation time of the chains
 Reference thinning used in the analysis: 100
-Step length used in the analysis: 13*nthin = 1300
+Step length used in the analysis: 14*nthin = 1400
 ```
 
 The convergence criteria are clearly stated out, for your benefit:
@@ -182,35 +188,64 @@ Negative values: not converged yet
 
 Finally, you'll get a (badly formatted) table to identify misbehaving variables,
 and a suggestion regarding the number of steps required to satisfy the criterion
-reported above and the (minimum) value for the burn-in.
+reported above for each parameter.
 
-| sampler parameter       | ACF | ACF*nthin  | converged at  |  nteps/ACF |
-| :--------------        | :-------- | :--------  | :--------  | :-------- |
-| RVdata_offset_0      |   8.441  |    844.1  |      764     |    117.6 |
-| RVdata_jitter_0      |  12.740  |   1274.0  |     2064     |     76.9 |
-| BISdata_offset_0     |   8.183  |    818.3  |      764     |    121.3 |
-| BISdata_jitter_0     |   9.140  |    914.0  |      764     |    108.6 |
-| ... | ... | ...| ... | ... |
+| sampler parameter       | ACF | ACF*nthin  | converged at  |  nsteps/ACF | to 100*ACF |
+| :--------------        | :-------- | :--------  | :--------  | :-------- | :-------- |
+| RVdata_jitter_0             |    4.94  |      494  |    27600     |      45    |   26976 
+| RVdata_offset_0             |    5.45  |      545  |    30000     |      37    |   34504 
+| BISdata_jitter_0            |    4.92  |      492  |    26400     |      48    |   25600 
+| BISdata_offset_0            |    4.81  |      481  |    32400     |      37    |   30533 
+| ... | ... | ...| ... | ... | ... |
 
 Legend:
 
-- sampler parameter: the parameter explored by the sampler (it may be different
+- `sampler parameter`: the parameter explored by the sampler (it may be different
   from the parameter of the model)
-- ACF: the integrated autocorrelation time, computed on the thinned chains.
-- ACF*nthin: the integrated autocorrelation time, in units of sampler steps
-- converged at: number of sampler steps at which the chain
+- `ACF`: the integrated autocorrelation time computed on the thinned chains.
+- `ACF*nthin`: the integrated autocorrelation time in units of sampler steps
+- `converged at`: number of sampler steps at which the chain converged
+- `nsteps/ACF`: number of steps in unit of ACF performed *after* reaching convergence
+- `to 100*ACF`: number of steps required to reach a length equal to 100 times the ACF 
+
+
+The code provides the average estimate of additional steps required to reach 50 times and 100 times the ACF lenght. 
 
 ```text
-All the chains are longer than 50\*ACF, but some are shorter than 100\*ACF
-PyORBIT should keep running for at least     34713 more steps to reach 100\*ACF
-Suggested value for burnin:  2064
+All the chains have converged, but PyORBIT should keep running for about:
+53068 more steps to reach 50*ACF,
+27186 more steps to reach 100*ACF
 ```
 
-```{admonition} Don't rely too much on the ACF
-From my personal experience, when the analysis of light curve is involved the ACF analysis wil suggest you to keep running the sampler even if convergence has been reached.
+The average is computed over the parameters that have yet to cross those thresholds. It's important to note that misbehaving parameters can significantly influence these suggestions towards higher values.
+Before blindly relaunching the analysis to reach the suggested value, a visual inspection of the chains may help determine whether continuing with the analysis is a worthy investment of time. 
+
+The suggested value for the burn-in is computed as the average value of the convergence point of each parameter:
+
+```
+Suggested value for burnin: 42067
 ```
 
-Two rows of asterisks delimit the end of this section
+Two rows of asterisks delimit the end of this section.
+
+
+### Unconstrained parameters and their effects on the ACF 
+
+In my empirical experience, unconstrained parameters may result in unreliable values for the ACF and the convergence point.
+Let's take the outcome of a fit of a lightcurve as an example:
+
+| sampler parameter       | ACF | ACF*nthin  | converged at  |  nsteps/ACF | to 100*ACF |
+| :--------------        | :-------- | :--------  | :--------  | :-------- | :-------- |
+| b_P                            |    4.44  |      444  |    28000     |     162    |       0
+| b_R_Rs                         |    5.05  |      505  |    29400     |     140    |       0
+| b_sre_coso                     |    5.02  |      502  |    28700     |     142    |       0
+| b_sre_sino                     |    6.18  |      618  |    35700     |     104    |       0
+| b_b                            |    7.87  |      787  |    44800     |      70    |   23547
+| b_Tc                           |    4.24  |      424  |    26600     |     173    |       0
+
+All the parameter are well converged except for the impact parameter. 
+
+
 
 ## Confidence intervals of the parameters
 
@@ -359,7 +394,6 @@ documentation of each sampler, so they will not be detailed here.
 
 ## Note on reparametrisation and transformation of parameters
 
-{#reparametrisation-target}
 Median values and confidence intervals for model and derived parameters are
 computed directly on the transformed posterior, rather than on the reported
 values for of the sampler parameters. In other words, each set of parameters
