@@ -178,7 +178,7 @@ Reference thinning used in the analysis: 100
 Step length used in the analysis: 14*nthin = 1400
 ```
 
-The convergence criteria are clearly stated out, for your benefit:
+The convergence criteria are clearly stated out for your benefit:
 
 ```text
 Convergence criteria: less than 1% variation in ACF after 50 times the integrated ACF
@@ -263,38 +263,45 @@ Chain plot as a function of thinned iteration number (step) for the impact param
 ```{figure} plots/chain_b_b.png
 :alt: map to buried treasure
 :width: 80 %
-Same data as the above plot, this time using dots to show the parameter ditribution as a function of the thinned iteration number.
+The same data as the above plot, this time using dots to show the parameter distribution as a function of the thinned iteration number.
 ```
 
+To further check if the chain has converged, i.e., if the parameter has reached a stationary distribution independent of the lenght of the chain, we can plot the parameter distribution for ranges of 100 thinned steps.
+
+```{figure} plots/b_b_histogram_values.png
+:alt: map to buried treasure
+:width: 80 %
+Parameter distribution for different ranges of thinned iteration numbers.
+```
 
 
 ## Confidence intervals of the parameters
 
-Confidence intervals of the posteriors are provided 34.135th
+Confidence intervals of the posteriors are provided at 34.135th
 percentiles from the median on the left and right sides, in addition to the
-median as well, as specified in the [previous section](#confidence-intervals).
+median, as specified in the [previous section](#confidence-intervals).
 
-This section is divided in three groups:
+This section is divided into three groups:
 
 - *Statistics on the posterior of the sampler parameters*: the direct output of the
-  sampler. If the parameters have been parametrized (including exploration in
-  logarithmic  space), the values displayed here
+  sampler. If the parameters have been parametrised (including exploration in
+  logarithmic space), the values displayed here
   may not be physically meaningful.
-- *Statistics on the model parameters obtained from the posteriors samples*:
+- *Statistics on the model parameters obtained from the posterior samples*:
   confidence intervals of the model parameters (i.e., before
-  re parametrization) as they should appear in the physical model. If no
-  reparametrization has been applied to a given parameter, the *model* posterior
+  re-parametrisation) as they should appear in the physical model. If no
+  reparametrisation has been applied to a given parameter, the *model* posterior
   will be identical to the *sampler* posterior.
-- *Statistics on the derived parameters obtained from the posteriors samples*:
+- *Statistics on the derived parameters obtained from the posterior samples*:
   confidence intervals of those parameters that are not directly involved in the
-  optimization procedure, but are derived from the model parameters through an
+  optimisation procedure, but are derived from the model parameters through an
   analytical transformation.
 
 The scheme will be repeated two times: once to print the confidence intervals of
-sampler/model/derived parameters, and again to print the corresponding MAP values.
+sampler/model/derived parameters, and again, to print the corresponding MAP values.
 
 
-Let's take an example involving the determination of a planetary radius though
+Let's take an example involving the determination of a planetary radius through
 light curve fitting:
 
 ### Statistics on the posterior of the sampler variables
@@ -305,13 +312,13 @@ light curve fitting:
 ====================================================================================================
 
 ----- common model:  b
-P                0     -2.157173      -0.000002      0.000002 (15-84 p) ([-2.251539, -2.058894])
-Tc               1  59144.616223      -0.000286      0.000285 (15-84 p) ([59144.600000, 59144.630000])
-b                2      0.483160      -0.041884      0.034602 (15-84 p) ([ 0.000000,  2.000000])
-R_Rs             3      0.020650      -0.000464      0.000448 (15-84 p) ([ 0.000010,  0.500000])
-sre_coso         4      0.016803      -0.199241      0.192704 (15-84 p) ([-1.000000,  1.000000])
-sre_sino         5      0.059049      -0.212933      0.198307 (15-84 p) ([-1.000000,  1.000000])
-```
+----- common model:  b
+P                0       3.54233     -0.00021      0.00019   (15-84 p)   [    3.4402,     3.6402]
+R_Rs             1        0.0423      -0.0013       0.0013   (15-84 p)   [    0.0000,     0.5000]
+sre_coso         2          0.00        -0.21         0.21   (15-84 p)   [   -1.0000,     1.0000]
+sre_sino         3          0.03        -0.21         0.18   (15-84 p)   [   -1.0000,     1.0000]
+b                4          0.39        -0.19         0.12   (15-84 p)   [    0.0000,     2.0000]
+Tc               5  2459474.8566      -0.0013       0.0014   (15-84 p)   [2459473.1000, 2459475.1000]```
 
 When reporting the sampler results, the name of the parameter is followed by a
 number indicating its position in the array of parameters passed to the
@@ -333,38 +340,31 @@ parametrized as $\sqrt{e} \sin \omega$ (*sre_sino*) and $\sqrt{e} \cos \omega$
 **I should make priors and spaces more explicit at
 output**
 
-### Statistics on the model parameters obtained from the posteriors samples
+### Statistics on the model parameters obtained from the posterior samples
 
 ```text
 ====================================================================================================
-     Statistics on the physical parameters obtained from the posteriors samples
+     Statistics on the physical parameters obtained from the posterior samples
 ====================================================================================================
 
 ----- common model:  b
-P                 2.241951e-01     -3.188571e-07     2.983407e-07 (15-84 p)
-Tc                59144.616223         -0.000286         0.000285 (15-84 p)
-b                     0.483160         -0.041884         0.034602 (15-84 p)
-R_Rs                  0.020650         -0.000464         0.000448 (15-84 p)
-e                     0.060706         -0.042746         0.066179 (15-84 p)
-omega               122.589193        -86.415897       136.651806 (15-84 p)
+P                      3.54233     -0.00021      0.00019    (15-84 p)
+R_Rs                    0.0423      -0.0013       0.0013    (15-84 p)
+b                         0.39        -0.19         0.12    (15-84 p)
+Tc                2459474.8566      -0.0013       0.0014    (15-84 p)
+e                        0.061       -0.042        0.059    (15-84 p)
+omega                     -147         -117          139    (15-84 p)
 ```
 
-The main difference with respect to the previous table is that the columns of
-the parameter index and the parameter boundaries are not listed here, as not all
-the parameters may have been directly involved in the optimization procedure.
-The orbital period *P* is now expressed in the correct unit (days) as it has
-been converted from logarithmic to natural space.
-, while the
-other parameters *b*, *Tc*, and *R_Rs* are identical as they did not go through
-any transformation.
-The *argument of pericenter* (*omega*) and the eccentricity *e* are now
-explicitly reported, as they are the actual parameters of the physical model.
+The main difference concerning the previous table is that the columns of the parameter index and the parameter boundaries are not listed here, as not all the parameters may have been directly involved in the optimisation procedure.
+The orbital period *P* is now expressed in the correct unit (days) as it has been converted from logarithmic to natural space, while the other parameters *b*, *Tc*, and *R_Rs* are identical as they did not go through any transformation.
+The *argument of pericenter* (*omega*) and the eccentricity *e* are now explicitly reported, as they are the actual parameters of the physical model.
 
 In the case of a circular orbit, *sre_sino* and *sre_coso* would not be listed
 in the sampler parameters output, while the eccentricity *e* and the argument of
 periastron *\omega* would be listed as *fixed parameters* and without confidence
-interval, as the model still require these terms although they are not involved
-in the optimization procedure.
+interval, as the model still requires these terms, although they are not involved
+in the optimisation procedure.
 
 ```text
 ...
@@ -381,14 +381,14 @@ omega                90.000000
 ====================================================================================================
 
 ----- common model:  b
-a_Rs                  2.150072         -0.021830         0.021366 (15-84 p)
-i                    77.018467         -1.040808         1.206541 (15-84 p)
-mean_long           102.186949         -0.370244         0.392672 (15-84 p)
-R_Rj                  0.125422         -0.002961         0.002917 (15-84 p)
-R_Re                  1.405843         -0.033195         0.032702 (15-84 p)
-T_41                  0.031653         -0.000485         0.000543 (15-84 p)
-T_32                  0.029880         -0.000534         0.000604 (15-84 p)
-a_AU_(rho,R)          0.006241         -0.000080         0.000080 (15-84 p)
+a_Rs                     11.28        -0.19         0.19    (15-84 p)
+i                        88.01        -0.52         0.95    (15-84 p)
+mean_long                 71.2         -7.0          7.0    (15-84 p)
+R_Rj                     0.339       -0.011        0.011    (15-84 p)
+R_Re                      3.80        -0.12         0.12    (15-84 p)
+T_41                    0.0967      -0.0052       0.0051    (15-84 p)
+T_32                    0.0875      -0.0060       0.0059    (15-84 p)
+a_AU_(rho,R)           0.04320     -0.00082      0.00080    (15-84 p)
 ```
 
 This table looks a lot like the *physical parameters* table, the main difference
@@ -415,9 +415,9 @@ documentation of each sampler, so they will not be detailed here.
 
 ## Note on reparametrisation and transformation of parameters
 
-Median values and confidence intervals for model and derived parameters are
+Median values and confidence intervals for the model and derived parameters are
 computed directly on the transformed posterior, rather than on the reported
-values for of the sampler parameters. In other words, each set of parameters
+values for the sampler parameters. In other words, each set of parameters
 from the posterior distribution is converted into the model/derived parameters,
 generating a new distribution for each new parameter, then the median and the
 confidence intervals are computed on newly generated distribution.
@@ -425,10 +425,9 @@ For this reason, the median of a model parameter may not correspond to the
 direct conversion of the median of the sampler parameters. Using the example
 shown before:
 
-$$\sqrt{e} \sin{\omega} = 0.017 \\
-  \sqrt{e} \cos{\omega} = 0.059$$
+$$\sqrt{e} \sin{\omega} = 0.03 \\
+  \sqrt{e} \cos{\omega} = 0.00$$
 $$e_{\mathrm{sampler}} = (\sqrt{e} \sin{\omega})^2 + (\sqrt{e} \cos{\omega} )^2
-  = 0.004$$
+  = 0.0009$$
 
-while the reported median value for the eccentricity in the model parameters
-section is (correctly) $e = 0.061$.
+while the reported median value for the eccentricity in the model parameters section is (correctly) $e = 0.061$.
