@@ -1,39 +1,17 @@
 (terminal_output)=
 
-# Interpreting terminal output
+# Interpreting the results
 
-`PyORBIT_results` will produce several files depending on the flags provided at
-runtime. The terminal output is always present
+`pyorbit_results` will produce several files depending on the flags provided at runtime. The following sections will provide you with a detailed description  
 
-```{danger} 
-This page is based on the ouput of `PyORBIT` version 9. Version 10 provides some more advanced outputs that are not yet described here
-```
 
-## Terminal output
+:::{admonition} Documentation update!
+:class: tip
 
-First thing you will get is a list of a few characteristics of your system. This
-section may change depending on your computer configuration and the employed sampler.
+This page was updated  on October 2024 to reflect the updates of version 10 of `PyORBIT`
+:::
 
-```text
-PyORBIT v9.1.0
 
-Python version in use:
-3.9.12 (main, Apr  5 2022, 06:56:58)
-[GCC 7.5.0]
- LaTeX disabled by default
-
-emcee version:  3.1.2
-
- Reference Time Tref: 59200.0
-
- Dimensions = 17
- Nwalkers = 68
-
- Steps: 50000
-```
-
-If you used the `-all` flag, you will get several log messages regarding the status
-of plot preparation and plot printing. Those are detailed in the corresponding section.
 
 ## Confidence intervals
 
@@ -48,15 +26,51 @@ The following values:
 jitter_0             25.641528         -1.200384         1.372232 (15-84 p)
 ```
 
-read as $\mathrm{jitter}_0 = 25.6_{-1.2}^{+1.4} ms^{-1}$ (in case of radial
-velocities).
+read as $\mathrm{jitter}_0 = 25.6_{-1.2}^{+1.4} \, ms^{-1}$ (in case of radial velocities).
 
 ```{note}
-The code will not try to format the output according to the significant figures of a measurement. Unit measurements and priors will not be displayed, at least for now.
+The code will format the output according to the significant figures of a measurement. 
+The unformatted value can always be retrieved from the posterior distribution. In case of  [reparametrization](##reparametrization-target), be sure to employ the correct posterior distribution.
 ```
 
 The associated error is not provided for the starting point of the MCMC analysis
 or the MAP values.
+
+
+
+
+
+## Terminal output
+
+The terminal output will produce a detailed summary of the analysis, and it cannot be turned off, but you can easily redirect the output to a *log* text file:
+
+```bash
+pyorbit_results emcee my_file.yaml -all > my_file_emcee_res.log 
+```
+
+First thing you will get is a list of a few characteristics of your system. This
+section may change depending on your computer configuration and the employed sampler.
+
+```text
+PyORBIT v10.6.3
+
+Python version in use:
+3.10.14 (main, May  6 2024, 19:42:50) [GCC 11.2.0]
+
+LaTeX disabled by default
+
+emcee version:  3.1.6
+
+ Reference Time Tref: 56456
+
+ Dimensions = 21
+ Nwalkers = 84
+
+ Steps: 50000
+```
+
+If you use the `-all` flag, you will get several log messages regarding the status
+of plot preparation and plot printing. Those are detailed in the corresponding section.
 
 
 ## Basic model selection
@@ -345,6 +359,8 @@ The additional outputs follow closely the examples reported in the
 documentation of each sampler, so they will not be detailed here.
 
 ## Note on reparametrization and transformation of parameters
+{##reparametrization-target}
+
 
 Median values and confidence intervals for model and derived parameters are
 computed directly on the transformed posterior, rather than on the reported
