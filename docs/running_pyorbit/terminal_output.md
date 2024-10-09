@@ -255,7 +255,7 @@ Suggested value for burnin: 30362
 
 ```{figure} plots/chain_b_b_dots.png
 :alt: map to buried treasure
-:width: 50 %
+:width: 80 %
 This is the caption of the figure (a simple paragraph).
 
 ```
@@ -266,13 +266,13 @@ Test
 :subcaptions: below
 :class-grid: outline
 
-```{image} plots/chain_b_b.png
-:height: 50 %
+```{figure} plots/chain_b_b.png
+:width: 45 %
 :alt: Figure A
 ```
 
-```{image} plots/chain_b_b_dots.png
-:height: 50 %
+```{figure} plots/chain_b_b_dots.png
+:width: 45 %
 :alt: Figure B
 ```
 Sub-figure with captions below
