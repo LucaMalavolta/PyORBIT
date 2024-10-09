@@ -3,6 +3,7 @@ sphinx-design
 sphinx-copybutton
 sphinx-tippy
 sphinx-hoverxref
+sphinx-subfigure
 myst-parser
 myst-nb
 matplotlib

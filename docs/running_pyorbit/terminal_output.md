@@ -243,7 +243,58 @@ Let's take the outcome of a fit of a lightcurve as an example:
 | b_b                            |    7.87  |      787  |    44800     |      70    |   23547
 | b_Tc                           |    4.24  |      424  |    26600     |     173    |       0
 
-All the parameter are well converged except for the impact parameter. 
+All the planetary parameters were sampled for a number of steps greater than 100 times the ACF, except for the impact parameter. 
+This is the automatic suggestion you get from PyORBIT:
+
+```text
+All the chains are longer than 50*ACF, but some are shorter than 100*ACF
+PyORBIT should keep running for about 23547 more steps to reach 100*ACF
+Suggested value for burnin: 30362
+```
+
+
+```{figure} plots/chain_b_b_dots.png
+:scale: 50 %
+:alt: map to buried treasure
+
+This is the caption of the figure (a simple paragraph).
+
+```
+
+
+:::{subfigure} 2
+:subcaptions: below
+:class-grid: outline
+
+```{image} _static/chain_b_b.png
+:height: 100px
+:alt: Figure A
+```
+
+```{image} _static/chain_b_b_dots.png
+:height: 100px
+:alt: Figure B
+```
+Sub-figure with captions below
+
+:::
+
+
+
+.. subfigure:: A|B
+   :layout-sm: A|B
+   :gap: 8px
+   :subcaptions: above
+   :name: test_figure
+   :class-grid: outline
+
+   .. image:: plots/chain_b_b_dots.png
+      :alt: Image A
+
+   .. image:: plots/chain_b_b_dots.png
+      :alt: Image B
+
+    Figure Caption
 
 
 

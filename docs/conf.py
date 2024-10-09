@@ -35,6 +35,7 @@ import pyorbit
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = ['myst_parser',
+    'sphinx_subfigure',
     'sphinx_design',
     'sphinx_copybutton',
     'sphinx_tippy',
@@ -171,3 +172,4 @@ html_css_files = ["tippy.css"]
 # Output file base name for HTML help builder.
 htmlhelp_basename = 'PyORBITdoc'
 
+numfig = True  # optional
