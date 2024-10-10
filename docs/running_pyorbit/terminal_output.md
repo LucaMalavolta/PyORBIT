@@ -230,9 +230,9 @@ Suggested value for burnin: 42067
 Two rows of asterisks delimit the end of this section.
 
 
-### Unconstrained parameters and their effects on the ACF 
+### Skewed posteriors and their effects on the ACF 
 
-In my empirical experience, unconstrained parameters may result in unreliable values for the ACF and the convergence point.
+In my empirical experience, parameters with posterior distribution significantly deviating from a Normal distribution may result in unreliable values for the ACF and the convergence point.
 Let's take the outcome of a fit of a lightcurve as an example:
 
 | sampler parameter       | ACF | ACF*nthin  | converged at  |  nsteps/ACF | to 100*ACF |
@@ -275,9 +275,9 @@ To further check if the chain has converged, i.e., if the parameter has reached 
 Parameter distribution for different ranges of thinned iteration numbers.
 ```
 
-Even if the ACF is telling differently, we don't have any reason to believe that the chain has not converged already at 200/300 thinned steps. 
+Even if the ACF tells us differently, we don't have any reason to believe that the chain has not already converged at 200/300 thinned steps. 
 
-
+In conclusion, the ACF provides reliable results most of the time. When ACF convergence warnings are restricted to a few parameters, a simple visual inspection or an independent check of the chains' behaviour may be sufficient. 
 
 
 ## Confidence intervals of the parameters
@@ -294,7 +294,7 @@ This section is divided into three groups:
   may not be physically meaningful.
 - *Statistics on the model parameters obtained from the posterior samples*:
   confidence intervals of the model parameters (i.e., before
-  re-parametrisation) as they should appear in the physical model. If no
+  reparametrisation) as they should appear in the physical model. If no
   reparametrisation has been applied to a given parameter, the *model* posterior
   will be identical to the *sampler* posterior.
 - *Statistics on the derived parameters obtained from the posterior samples*:
@@ -306,7 +306,7 @@ The scheme will be repeated two times: once to print the confidence intervals of
 sampler/model/derived parameters, and again, to print the corresponding MAP values.
 
 
-Let's take an example involving the determination of a planetary radius through
+Let us take an example involving the determination of a planetary radius through
 light curve fitting:
 
 ### Statistics on the posterior of the sampler variables
