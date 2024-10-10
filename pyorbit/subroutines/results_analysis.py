@@ -1071,7 +1071,7 @@ def print_integrated_ACF(sampler_chain, theta_dict, nthin):
     try:
         acf_len = int(np.nanmax(integrated_ACF))  # 1000//nthin
     except:
-        print('Error in computing max integrated ACF, skipped ')
+        print('Error in computing the maximum integrated ACF, skipped ')
         print()
         return None, None, None, None
 
@@ -1141,6 +1141,7 @@ def print_integrated_ACF(sampler_chain, theta_dict, nthin):
 
         print()
         print('Reference thinning used in the analysis:', nthin)
+        print('Maximum value of the integrated ACF: {0:3.1}'.format(acf_len))
         print(
             'Step length used in the analysis: {0:d}*nthin = {1:d}'.format(acf_len, acf_len*nthin))
         print()

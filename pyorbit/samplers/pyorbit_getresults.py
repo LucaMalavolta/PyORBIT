@@ -118,7 +118,7 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
 
         print()
         try:
-            print('emcee version: ', emcee.__version__)
+            print(' emcee version: ', emcee.__version__)
             if mc.emcee_parameters['version'] == '2':
                 print('WARNING: upgrading to version 3 is strongly advised')
         except:
