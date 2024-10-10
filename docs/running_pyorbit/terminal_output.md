@@ -178,13 +178,14 @@ Reference thinning used in the analysis: 100
 Step length used in the analysis: 14*nthin = 1400
 ```
 
-The convergence criteria are clearly stated out for your benefit:
+The convergence criteria are clearly stated out for your benefit. After discardind the first `tolerance' steps, the relative variation between to consecutive steps must be lower than  0.01 (1%). To avoid underestimating convergence time due to statistical variations, the 1% criterion must be satisfied five times before validating the convergence.  
 
 ```text
 Convergence criteria: less than 1% variation in ACF after 50 times the integrated ACF
 At least 50*ACF after convergence, 100*ACF would be ideal
 Negative values: not converged yet
 ```
+
 
 Finally, you'll get a (badly formatted) table to identify misbehaving variables,
 and a suggestion regarding the number of steps required to satisfy the criterion
