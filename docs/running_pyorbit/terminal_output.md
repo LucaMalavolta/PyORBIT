@@ -158,18 +158,17 @@ with a warning and a (*likely overestimated*) suggestion for the appropriate cha
 
 ```text
 ***** WARNING ******
-The integrated autocorrelation time cannot be reliably estimated likely the chains are too short, and ACF analysis is not fully reliable
+The integrated autocorrelation time cannot be reliably estimated
+likely the chains are too short, and ACF analysis is not fully reliable
 emcee.autocorr.integrated_time tolerance lowered to 20
 If you still get a warning, you should drop these results entirely
-+
-
 
 Chains too short to apply convergence criteria
 They should be at least 2800*nthin = 280000
  ```
 
 The maximum value of the integrated time is then used as step length (or step
-size) in the following analysis
+size) in the following analysis.
 
 
 ```text
@@ -178,8 +177,7 @@ Reference thinning used in the analysis: 100
 Step length used in the analysis: 14*nthin = 1400
 ```
 
-The convergence criteria are clearly stated out for your benefit. After discardind the first `tolerance' steps, the relative variation between to consecutive steps must be lower than  0.01 (1%). To avoid underestimating convergence time due to statistical variations, the 1% criterion must be satisfied five times before validating the convergence.  
-
+The convergence criteria are clearly stated for your benefit. After discarding the first `tolerance' steps, the relative variation between two consecutive steps must be lower than  0.01 (1%). The 1% criterion must be satisfied five times before validating the convergence to avoid underestimating convergence time due to statistical variations.  
 ```text
 Convergence criteria: less than 1% variation in ACF after 50 times the integrated ACF
 At least 50*ACF after convergence, 100*ACF would be ideal
