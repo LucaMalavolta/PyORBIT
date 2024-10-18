@@ -14,6 +14,10 @@ def funcname(self,  parameter_list):
     pass
 
 
+def generic_save_to_cpickle(output_directory, dictionary_name, dictionary, postfix=None):
+    add_postfix = ('_' + postfix if postfix else '')
+    pickle.dump(dictionary, open(output_directory + dictionary_name + add_postfix + ".p", "wb"))
+
 def pyde_write_dummy_file(mc, prefix=''):
     add_prefix = (prefix + '_' if prefix else '')
     file_dummy = open(mc.pyde_dir_output + add_prefix + "dummy_file", "wb")

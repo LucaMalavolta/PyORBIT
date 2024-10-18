@@ -381,8 +381,6 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
             print('Computation of statistical+sampling errors skipped - workaround after dynesty>1.2 update')
 
 
-
-
         labels_array = [None] * len(theta_dictionary)
         for key_name, key_value in theta_dictionary.items():
             labels_array[key_value] = re.sub('_', '-', key_name)
@@ -564,17 +562,71 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
         print()
         print(' Samples: {}'.format(n_samplings))
 
+    dir_dictionaries = dir_output + 'dictionaries/'
+    os.system('mkdir -p ' + dir_dictionaries)
+
+
+    dict_sampler_posteriors = {}
+    theta_tree = {}
+    for dataset_name, dataset in mc.dataset_dict.items():
+        dict_sampler_posteriors[dataset_name] = {'dataset_variables': {}}
+        for pam_name, pam_dict in dataset.sampler_parameters.items():
+            theta_name = dataset_name + '_' + pam_name
+            theta_id = theta_dictionary[theta_name]
+            theta_tree[theta_name] = [dataset_name, pam_name]
+            dict_sampler_posteriors[dataset_name]['dataset_variables'][pam_name] = flat_chain[:,theta_id]
+        
+        for model_name in dataset.models:
+            dict_sampler_posteriors[dataset_name][model_name] = {}
+            for pam_name, pam_dict in mc.models[model_name].sampler_parameters[dataset_name].items():
+                theta_name = dataset_name + '_' + model_name + '_' + pam_name
+                theta_id = theta_dictionary[theta_name]
+                theta_tree[theta_name] = [dataset_name, model_name, pam_name]
+                dict_sampler_posteriors[dataset_name][model_name][pam_name] = flat_chain[:,theta_id]
+
+    for model_name, model in mc.common_models.items():
+        dict_sampler_posteriors[model_name] = {}
+        for pam_name, pam_dict in model.sampler_parameters.items():
+            theta_name =  model_name + '_' + pam_name
+            theta_id = theta_dictionary[theta_name]
+            theta_tree[theta_name] = [model_name, pam_name]
+            dict_sampler_posteriors[model_name][pam_name] = flat_chain[:,theta_id]
+
+
+    generic_save_to_cpickle(dir_dictionaries, 'theta_dictionary', theta_dictionary)
+    generic_save_to_cpickle(dir_dictionaries, 'theta_tree', theta_tree)
+
+    dict_sampler_posteriors['lnprob'] = flat_lnprob
+    generic_save_to_cpickle(dir_dictionaries, 'sampler_posteriors', dict_sampler_posteriors)
+    generic_save_to_cpickle(dir_dictionaries, 'theta_dictionary', theta_dictionary)
+    generic_save_to_cpickle(dir_dictionaries, 'theta_tree', theta_tree)
+
+    del dict_sampler_posteriors
 
     print()
     print(' LN posterior: {0:12f}   {1:12f} {2:12f} (15-84 p) '.format(
         lnprob_med[0], lnprob_med[2], lnprob_med[1]))
 
+    dict_basic_statistics = {}
+
+
     med_log_priors, med_log_likelihood = mc.log_priors_likelihood(
         chain_med[:, 0])
+    med_log_posterior = med_log_likelihood + med_log_priors
+
+    dict_basic_statistics['ndata'] = mc.ndata
+    dict_basic_statistics['ndim'] = mc.ndim
+
     BIC = -2.0 * med_log_likelihood + np.log(mc.ndata) * mc.ndim
     AIC = -2.0 * med_log_likelihood + 2.0 * mc.ndim
     AICc = AIC + (2.0 + 2.0 * mc.ndim) * mc.ndim / (mc.ndata - mc.ndim - 1.0)
     # AICc for small sample
+    dict_basic_statistics['median_log_priors'] = med_log_priors
+    dict_basic_statistics['median_log_likelihood'] = med_log_likelihood
+    dict_basic_statistics['median_log_posterior'] = med_log_posterior
+    dict_basic_statistics['median_BIC_likelihood'] = BIC
+    dict_basic_statistics['median_AIC_likelihood'] = AIC
+    dict_basic_statistics['median_AICc_likelihood'] = AICc
 
     print()
     print(' Median log_priors     = {}'.format(med_log_priors))
@@ -584,21 +636,34 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
     print(' Median AIC  (using likelihood) = {}'.format(AIC))
     print(' Median AICc (using likelihood) = {}'.format(AICc))
 
-    med_log_posterior = med_log_likelihood + med_log_priors
+
     BIC = -2.0 * med_log_posterior + np.log(mc.ndata) * mc.ndim
     AIC = -2.0 * med_log_posterior + 2.0 * mc.ndim
     AICc = AIC + (2.0 + 2.0 * mc.ndim) * mc.ndim / (mc.ndata - mc.ndim - 1.0)
+
+    dict_basic_statistics['median_BIC_posterior'] = BIC
+    dict_basic_statistics['median_AIC_posterior'] = AIC
+    dict_basic_statistics['median_AICc_posterior'] = AICc
 
     print()
     print(' Median BIC  (using posterior)  = {}'.format(BIC))
     print(' Median AIC  (using posterior)  = {}'.format(AIC))
     print(' Median AICc (using posterior)  = {}'.format(AICc))
 
+
     MAP_log_priors, MAP_log_likelihood = mc.log_priors_likelihood(chain_MAP)
+    MAP_log_posterior = MAP_log_likelihood + MAP_log_priors
     BIC = -2.0 * MAP_log_likelihood + np.log(mc.ndata) * mc.ndim
     AIC = -2.0 * MAP_log_likelihood + 2.0 * mc.ndim
     AICc = AIC + (2.0 + 2.0 * mc.ndim) * mc.ndim / (mc.ndata - mc.ndim - 1.0)
     # AICc for small sample
+
+    dict_basic_statistics['MAP_log_priors'] = MAP_log_priors
+    dict_basic_statistics['MAP_log_likelihood'] = MAP_log_likelihood
+    dict_basic_statistics['MAP_log_posterior'] = MAP_log_posterior
+    dict_basic_statistics['MAP_BIC_likelihood'] = BIC
+    dict_basic_statistics['MAP_AIC_likelihood'] = AIC
+    dict_basic_statistics['MAP_AICc_likelihood'] = AICc
 
     print()
     print(' MAP log_priors     = {}'.format(MAP_log_priors))
@@ -608,10 +673,14 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
     print(' MAP AIC  (using likelihood) = {}'.format(AIC))
     print(' MAP AICc (using likelihood) = {}'.format(AICc))
 
-    MAP_log_posterior = MAP_log_likelihood + MAP_log_priors
+
     BIC = -2.0 * MAP_log_posterior + np.log(mc.ndata) * mc.ndim
     AIC = -2.0 * MAP_log_posterior + 2.0 * mc.ndim
     AICc = AIC + (2.0 + 2.0 * mc.ndim) * mc.ndim / (mc.ndata - mc.ndim - 1.0)
+
+    dict_basic_statistics['MAP_BIC_posterior'] = BIC
+    dict_basic_statistics['MAP_AIC_posterior'] = AIC
+    dict_basic_statistics['MAP_AICc_posterior'] = AICc
 
     print()
     print(' MAP BIC  (using posterior)  = {}'.format(BIC))
@@ -622,20 +691,37 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
         print()
         print(
             ' AICc suggested over AIC because NDATA ( {0:.0f} ) < 40 * NDIM ( {1:.0f} )'.format(mc.ndata, mc.ndim))
+        dict_basic_statistics['suggested_AIC_criterion'] = 'AICc'
+
     else:
         print()
         print(
             ' AIC suggested over AICs because NDATA ( {0:.0f} ) > 40 * NDIM ( {1:.0f} )'.format(mc.ndata, mc.ndim))
+        dict_basic_statistics['suggested_criterion'] = 'AIC'
+
+
+    generic_save_to_cpickle(dir_dictionaries, 'basic_statistics', dict_basic_statistics)
+    del dict_basic_statistics
+
 
     print()
     print('****************************************************************************************************')
     print()
 
+
+
     if plot_dictionary['print_acf']:
 
-        i_sampler, acf_trace, acf_diff, converged = \
+        i_sampler, acf_trace, acf_diff, converged, dict_acf = \
         results_analysis.print_integrated_ACF(
             sampler_chain, theta_dictionary, nthin)
+        
+        generic_save_to_cpickle(dir_dictionaries, 'sampler_acf', dict_acf)
+
+        if i_sampler is None:
+            print(' ACF computation failed, no plot will be generated ')
+            print()
+
 
         if i_sampler is not None and plot_dictionary['plot_acf']:
 
@@ -668,10 +754,11 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
             print()
 
         sys.stdout.flush()
+        del i_sampler, acf_trace, acf_diff, converged, dict_acf
 
-    results_analysis.print_bayesian_info(mc)
+    dict_bayesian_info = results_analysis.print_bayesian_info(mc)
+    generic_save_to_cpickle(dir_dictionaries, 'sampler_bayesian_info', dict_bayesian_info)
     print()
-
 
     print('****************************************************************************************************')
     print('****************************************************************************************************')
@@ -679,8 +766,12 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
     print(' Confidence intervals (median value, 34.135th percentile from the median on the left and right side)')
     print()
 
-    planet_parameters = results_analysis.results_summary(
+    planet_parameters, dict_sampler_summary, dict_parameters_summary, dict_derived_summary = results_analysis.results_summary(
         mc, flat_chain, chain_med=chain_MAP, return_samples=True)
+
+    generic_save_to_cpickle(dir_dictionaries, 'summary_sampler', dict_sampler_summary)
+    generic_save_to_cpickle(dir_dictionaries, 'summary_parameters', dict_parameters_summary)
+    generic_save_to_cpickle(dir_dictionaries, 'summary_derived', dict_derived_summary)
 
     print()
     print('****************************************************************************************************')
@@ -689,7 +780,7 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
     print()
 
     results_analysis.results_summary(mc, chain_MAP, is_MAP=True)
-
+    quit()
 
     print()
     print('****************************************************************************************************')
@@ -710,7 +801,7 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
     # Computation of all the planetary parameters
     planet_parameters_med = results_analysis.get_planet_parameters(
         mc, chain_med[:, 0])
-    star_parameters = results_analysis.get_stellar_parameters(
+    star_parameters_med = results_analysis.get_stellar_parameters(
         mc, chain_med[:, 0])
 
     planet_parameters_MAP = results_analysis.get_planet_parameters(mc, chain_MAP)
@@ -886,6 +977,8 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
             }
             parameter_values = common_model.convert(flat_chain)
             parameter_median = common_model.convert(chain_med[:, 0])
+
+            print(parameter_values)
 
             if len(parameter_median) < 1.:
                 continue

@@ -527,9 +527,28 @@ def compute_value_sigma(samples):
             list(map(lambda v: (v[1], v[2] - v[1], v[1] - v[0]), zip(*np.percentile(samples, [15.865, 50, 84.135], axis=0)))))
 
     else:
-        print('ERROR!!! ')
+        print(' Error on computing the median and 1-sigma of the distributions! ')
         return None
     return sample_med
+
+
+def compute_percentiles(samples):
+    if np.size(np.shape(samples)) == 1:
+        sample_percentiles = np.zeros(7)
+
+        # 1 sigma: 0.6827 
+        # 2 sigma: 0.9545 
+        # 1 sigma: 0.9973 
+        sample_percentiles = np.percentile(samples, [0.135, 2.275, 15.865, 50.00, 84.135, 97.725, 99.865], axis=0)
+
+    elif np.size(np.shape(samples)) == 2:
+        sample_percentiles = np.percentile(samples, [0.135, 2.275, 15.865, 50.00, 84.135, 97.725, 99.865], axis=0).T
+
+    else:
+        print(' Error on computing the percentiles of the distributions! ')
+        return None
+    return sample_percentiles
+
 
 
 def pick_MAP_parameters(samples, lnprob):

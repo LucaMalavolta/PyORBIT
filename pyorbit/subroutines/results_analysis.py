@@ -11,16 +11,19 @@ __all__ = ["print_bayesian_info", "results_summary", "results_derived", "get_pla
 
 def print_bayesian_info(mc):
 
+    dict_bayesian_info = {}
+
     print()
     print('====================================================================================================')
     print('     Ids, spaces (s), boundaries (b) and priors (p) of the sampler parameters     ')
     print('====================================================================================================')
     print()
+
     for dataset_name, dataset in mc.dataset_dict.items():
 
         print('----- dataset: ', dataset_name)
-
-        print_analysis_info(dataset.sampler_parameters,
+        dict_bayesian_info[dataset_name] = {}
+        dict_bayesian_info[dataset_name]['dataset_variables'] = print_analysis_info(dataset.sampler_parameters,
                             mc.bounds,
                             mc.spaces,
                             mc.priors,
@@ -30,6 +33,8 @@ def print_bayesian_info(mc):
         for model_name in dataset.models:
             if len(mc.models[model_name].sampler_parameters[dataset_name])==0: continue
             print('----- dataset: {0:25s} ----- model: {1:30s}'.format(dataset_name,model_name))
+
+            dict_bayesian_info[dataset_name][model_name] = \
             print_analysis_info(mc.models[model_name].sampler_parameters[dataset_name],
                                 mc.bounds,
                                 mc.spaces,
@@ -39,6 +44,7 @@ def print_bayesian_info(mc):
 
     for model_name, model in mc.common_models.items():
         print('----- common model: ', model_name)
+        dict_bayesian_info[model_name] = \
         print_analysis_info(model.sampler_parameters,
                             mc.bounds,
                             mc.spaces,
@@ -46,6 +52,7 @@ def print_bayesian_info(mc):
                             model.prior_kind,
                             model.prior_pams)
 
+    return dict_bayesian_info
 
 def results_summary(mc, theta,
                     skip_theta=False,
@@ -73,19 +80,24 @@ def results_summary(mc, theta,
     print('====================================================================================================')
     print()
 
+    dict_sampler_summary = {}
+
     for dataset_name, dataset in mc.dataset_dict.items():
 
         print('----- dataset: ', dataset_name)
-        print_theta_bounds(dataset.sampler_parameters, theta, mc.bounds)
-
-
+        dict_sampler_summary[dataset_name] = {}
+        dict_sampler_summary[dataset_name]['dataset_variables'] = print_theta_bounds(dataset.sampler_parameters, 
+                                                                                    theta, 
+                                                                                    mc.bounds)
         for model_name in dataset.models:
             if len(mc.models[model_name].sampler_parameters[dataset_name])==0: continue
             print('----- dataset: {0:25s} ----- model: {1:30s}'.format(dataset_name,model_name))
+            dict_sampler_summary[dataset_name][model_name] = \
             print_theta_bounds(mc.models[model_name].sampler_parameters[dataset_name], theta, mc.bounds)
 
     for model_name, model in mc.common_models.items():
         print('----- common model: ', model_name)
+        dict_sampler_summary[model_name] = \
         print_theta_bounds(model.sampler_parameters, theta, mc.bounds)
 
 
@@ -97,10 +109,14 @@ def results_summary(mc, theta,
     print('====================================================================================================')
     print()
 
+    dict_parameters_summary = {}
+
     for dataset_name, dataset in mc.dataset_dict.items():
+        dict_parameters_summary[dataset_name] = {}
+
         print('----- dataset: ', dataset_name)
         parameter_values = dataset.convert(theta)
-        print_dictionary(parameter_values, fixed_warning=fixed_warning)
+        dict_parameters_summary[dataset_name]['dataset_variables'] = print_dictionary(parameter_values, fixed_warning=fixed_warning)
 
         print()
         for model_name in dataset.models:
@@ -108,7 +124,7 @@ def results_summary(mc, theta,
                 theta, dataset_name)
             if len(parameter_values)==0: continue
             print('----- dataset: {0:25s} ----- model: {1:30s}'.format(dataset_name,model_name))
-            print_dictionary(parameter_values, fixed_warning=fixed_warning)
+            dict_parameters_summary[dataset_name][model_name] = print_dictionary(parameter_values, fixed_warning=fixed_warning)
 
     for model_name, model in mc.common_models.items():
         print('----- common model: ', model_name)
@@ -120,9 +136,11 @@ def results_summary(mc, theta,
             for par in list(OrderedSet(model.recenter_pams) & OrderedSet(parameter_values_med)):
                 recenter_pams[par] = [parameter_values_med[par],
                                       model.default_bounds[par][1] - model.default_bounds[par][0]]
+            dict_parameters_summary[model_name] = \
             print_dictionary(parameter_values, recenter=recenter_pams, fixed_warning=fixed_warning)
 
         else:
+            dict_parameters_summary[model_name] = \
             print_dictionary(parameter_values, fixed_warning=fixed_warning)
 
     print('====================================================================================================')
@@ -133,7 +151,7 @@ def results_summary(mc, theta,
     print('====================================================================================================')
     print()
 
-    returned_samples = get_planet_parameters(mc, theta, verbose=True)
+    returned_samples, dict_derived_summary = get_planet_parameters(mc, theta, verbose=True)
 
     if compute_lnprob:
         print()
@@ -161,8 +179,12 @@ def results_summary(mc, theta,
     print()
     print()
 
+    #print(dict_sampler_summary)
+    print(dict_parameters_summary)
+    #print(dict_derived_summary)
+
     if return_samples:
-        return returned_samples
+        return returned_samples, dict_sampler_summary, dict_parameters_summary, dict_derived_summary
 
 
 def get_stellar_parameters(mc, theta, warnings=True, stellar_ref=None):
@@ -280,7 +302,7 @@ def get_stellar_parameters(mc, theta, warnings=True, stellar_ref=None):
 
 
 def results_derived(mc, theta):
-    _ = get_planet_parameters(mc, theta, verbose=True)
+    _, _ = get_planet_parameters(mc, theta, verbose=True)
 
 
 def get_planet_parameters(mc, theta, verbose=False):
@@ -297,8 +319,10 @@ def get_planet_parameters(mc, theta, verbose=False):
         n_samplings = 1
 
     planet_parameters = {}
+    derived_percentiles = {}
 
     for common_name, common_model in mc.common_models.items():
+
         parameter_values = common_model.convert(theta)
         derived_parameters = {}
 
@@ -458,10 +482,13 @@ def get_planet_parameters(mc, theta, verbose=False):
                     del parameter_values[par]
 
             if verbose:
+                derived_percentiles[common_name] = \
                 print_dictionary(parameter_values, fixed_warning=False)
 
-    return planet_parameters
-
+    if verbose:
+        return planet_parameters, derived_percentiles
+    else:
+        return planet_parameters
 
 def get_theta_dictionary(mc):
     # * give back a parameter name associated to each value in the result array
@@ -873,9 +900,12 @@ def get_model(mc, theta, bjd_dict, **kwargs):
 def print_theta_bounds(i_dict, theta, bounds):
     format_string = '{0:12s}  {1:4d}  {2:12f} [{3:10.4f}, {4:10.4f}]'
 
+    dict_out = {}
+
     for par, i in i_dict.items():
         if len(np.shape(theta)) == 2:
 
+            dict_out[par] = compute_percentiles(theta[:, i])
             theta_med = compute_value_sigma(theta[:, i])
             s0, s1 = return_significant_figures(theta_med[0], theta_med[2], theta_med[1])
             format_string_long = '{0:12s}  {1:4d}  {2:12.'+repr(max(s0,s1))+'f} {3:12.'+repr(s0)+'f} {4:12.'+repr(s1)+'f}   (15-84 p)   [{5:10.4f}, {6:10.4f}]'
@@ -883,25 +913,40 @@ def print_theta_bounds(i_dict, theta, bounds):
             print(
                 format_string_long.format(par, i, theta_med[0], theta_med[2], theta_med[1], bounds[i, 0], bounds[i, 1]))
         else:
+            dict_out[par] = theta[i]
             print(format_string.format(
                 par, i, theta[i], bounds[i, 0], bounds[i, 1]))
     print()
+    return dict_out
 
 
 def print_analysis_info(i_dict, bounds, spaces, priors, additional_kind, additonal_pams):
     format_string_v1 = '{0:12s}  id:{1:4d}  s:{2:11s} b:[{3:12.4f}, {4:12.4f}]   p:{5:s}  '
     format_string_v2 = '{0:12s}  derived (no id, space, bound) {1:25s} p:{2:s}  '
-
+    dict_output = {}
+    
     for par, i in i_dict.items():
         print(format_string_v1.format(
                 par, i, spaces[i], bounds[i, 0], bounds[i, 1],priors[i][0]), priors[i][1])
+        dict_output[par] = {
+            'theta_index': i,
+            'spaces': spaces[i],
+            'boundaries': [bounds[i, 0], bounds[i, 1]],
+            'prior_type': priors[i][0],
+            'prior_pam': priors[i][1]
+        }
 
     for par in additional_kind:
         if par not in i_dict:
             print(format_string_v2.format(par, '', additional_kind[par]), additonal_pams[par])
+            dict_output[par] = {
+                'additional_kind': additional_kind[par],
+                'additonal_pams': additonal_pams[par],
+            }
+
 
     print()
-
+    return dict_output
 
 
 def return_significant_figures(perc0, perc1=None, perc2=None, are_percentiles=False):
@@ -972,7 +1017,7 @@ def return_significant_figures(perc0, perc1=None, perc2=None, are_percentiles=Fa
 
 def print_dictionary(parameter_values, recenter=[], fixed_warning=True):
     format_boundary = 0.00001
-
+    dict_out = {}
     for par_names, par_vals in parameter_values.items():
         if np.size(par_vals) > 1:
             if par_names in recenter:
@@ -986,7 +1031,10 @@ def print_dictionary(parameter_values, recenter=[], fixed_warning=True):
                 perc0, perc1, perc2 = np.percentile(
                     par_vals_recentered, [15.865, 50, 84.135], axis=0)
 
+                dict_out[par_names] = compute_percentiles(par_vals_recentered)
+
             else:
+                dict_out[par_names] = compute_percentiles(par_vals)
                 perc0, perc1, perc2 = np.percentile(
                     par_vals, [15.865, 50, 84.135], axis=0)
 
@@ -1019,6 +1067,8 @@ def print_dictionary(parameter_values, recenter=[], fixed_warning=True):
             except:
                 par_temp = par_vals
 
+            dict_out[par_names] =  par_vals
+
             s0 = return_significant_figures(par_temp)
             if fixed_warning:
                 format_string = '{0:12s}   {1:15.'+repr(s0)+'f}                              [fixed]'
@@ -1028,6 +1078,7 @@ def print_dictionary(parameter_values, recenter=[], fixed_warning=True):
             print(format_string.format(par_names, par_temp))
 
     print()
+    return dict_out
 
 
 def print_integrated_ACF(sampler_chain, theta_dict, nthin):
@@ -1040,6 +1091,7 @@ def print_integrated_ACF(sampler_chain, theta_dict, nthin):
     print()
     print('Computing the autocorrelation time of the chains')
 
+    dict_output = {}
 
     try:
         tolerance = 50
@@ -1047,6 +1099,7 @@ def print_integrated_ACF(sampler_chain, theta_dict, nthin):
             swapped_chains, tol=tolerance, quiet=False)
         print()
         print('The chains are more than 50 times longer than the ACF, the estimate can be trusted')
+    
     except (AutocorrError):
         tolerance = 20
         print()
@@ -1061,7 +1114,9 @@ def print_integrated_ACF(sampler_chain, theta_dict, nthin):
         print()
         print('Old version of emcee, this function is not implemented')
         print()
-        return None, None, None, None
+        return None, None, None, None, None
+
+    dict_output['tolerance'] = tolerance
 
     """ computing the autocorrelation time every 1000 steps, skipping the first 5000 """
 
@@ -1073,14 +1128,18 @@ def print_integrated_ACF(sampler_chain, theta_dict, nthin):
     except:
         print('Error in computing the maximum integrated ACF, skipped ')
         print()
-        return None, None, None, None
+        dict_output['error'] = 'Error in computing the maximum integrated ACF, skipped '
+        return None, None, None, None, dict_output
 
     if acf_len==0:
         print('Error in computing integrated ACF, chains too short, skipped ')
         print()
-        return None, None, None, None
+        dict_output['error'] = 'Error in computing integrated ACF, chains too short, skipped '
+        return None, None, None, None, dict_output
 
     c = 5
+    dict_output['c_value'] = c
+    dict_output['nthin'] = nthin
 
     if n_sam > acf_len*tolerance:
 
@@ -1126,7 +1185,7 @@ def print_integrated_ACF(sampler_chain, theta_dict, nthin):
 
             #if np.sum((acf_converged_at > 0), dtype=np.int64) == n_dim:
             #    break
-
+        dict_output['step_sampler'] = i_sampler
 
         acf_converged_flag = (acf_converged_at>0)
         how_many_ACT = (n_sam - acf_converged_at/nthin)/integrated_ACF
@@ -1139,9 +1198,10 @@ def print_integrated_ACF(sampler_chain, theta_dict, nthin):
         still_required_100_flag = (still_required_100 > 0)
         still_required_100[~still_required_100_flag] = 0
 
+
         print()
         print('Reference thinning used in the analysis:', nthin)
-        print('Maximum value of the integrated ACF: {0:3.1}'.format(acf_len))
+        print('Maximum value of the integrated ACF: {0:d}'.format(acf_len))
         print(
             'Step length used in the analysis: {0:d}*nthin = {1:d}'.format(acf_len, acf_len*nthin))
         print()
@@ -1154,6 +1214,16 @@ def print_integrated_ACF(sampler_chain, theta_dict, nthin):
         print('                                  |          |           |              |            | ')
 
         for key_name, key_val in theta_dict.items():
+
+            dict_output[key_name]={}
+            dict_output[key_name]['integrated_ACF']= integrated_ACF[key_val]
+            dict_output[key_name]['integrated_ACF*nthin']= integrated_ACF[key_val]*nthin
+            dict_output[key_name]['converged_at']= acf_converged_at[key_val]*nthin
+            dict_output[key_name]['nsteps/ACF']= how_many_ACT[key_val]
+            dict_output[key_name]['nsteps_to_50*ACF']= still_required_050[key_val]
+            dict_output[key_name]['nsteps_to_100*ACF']= still_required_100[key_val]
+
+
             print('   {0:30s} | {1:7.2f}  | {2:8.0f}  |  {3:7.0f}     |  {4:6.0f}    | {5:7.0f} '.format(key_name,
                                                                                                    integrated_ACF[key_val],
                                                                                                     integrated_ACF[key_val] *
@@ -1167,23 +1237,35 @@ def print_integrated_ACF(sampler_chain, theta_dict, nthin):
         if np.sum((acf_converged_at > 0), dtype=np.int64) == n_dim:
             if np.sum(how_many_ACT > 100, dtype=np.int64) == n_dim:
                 print('All the chains are longer than 100*ACF ')
+                dict_output['result'] = 'All the chains are longer than 100*ACF '
             elif (np.sum(how_many_ACT > 50, dtype=np.int64) == n_dim):
                 print("""All the chains are longer than 50*ACF, but some are shorter than 100*ACF
 PyORBIT should keep running for about {0:.0f} more steps to reach 100*ACF""".format(np.average(still_required_100[still_required_100_flag])))
+                dict_output['result'] = """All the chains are longer than 50*ACF, but some are shorter than 100*ACF
+PyORBIT should keep running for about {0:.0f} more steps to reach 100*ACF""".format(np.average(still_required_100[still_required_100_flag]))
+            
             else:
                 print("""All the chains have converged, but PyORBIT should keep running for about:
 {0:.0f} more steps to reach 50*ACF,
 {1:.0f} more steps to reach 100*ACF""".format(np.average(still_required_050[still_required_050_flag]), np.average(still_required_100[still_required_100_flag])))
+                dict_output['result'] = """All the chains have converged, but PyORBIT should keep running for about:
+{0:.0f} more steps to reach 50*ACF,
+{1:.0f} more steps to reach 100*ACF""".format(np.average(still_required_050[still_required_050_flag]), np.average(still_required_100[still_required_100_flag]))
+
 
             print('Suggested value for burnin: {0:.0f}'.format(np.average(acf_converged_at)))
+            dict_output['suggested_burnin'] = np.average(acf_converged_at)
 
         else:
             print(' {0:5.0f} chains have not converged yet, keep going '.format(
                 np.sum((acf_converged_at < 0), dtype=np.int64)))
 
         print()
+        print('Check the documentation for the correct interpretation of these results:')
+        print('https://pyorbit.readthedocs.io/running_pyorbit/terminal_output/#autocorrelation-analysis')
+        print()
 
-        return i_sampler, acf_trace, acf_diff, acf_converged_at
+        return i_sampler, acf_trace, acf_diff, acf_converged_at, dict_output
 
     else:
         print("Chains too short to apply convergence criteria")
@@ -1191,4 +1273,7 @@ PyORBIT should keep running for about {0:.0f} more steps to reach 100*ACF""".for
             "They should be at least {0:d}*nthin = {1:d}".format(50*acf_len, 50*acf_len*nthin))
         print()
 
-        return None, None, None, None
+        dict_output['result'] = """Chains too short to apply convergence criteria, 
+            they should be at least {0:d}*nthin = {1:d}""".format(50*acf_len, 50*acf_len*nthin)
+
+        return None, None, None, None, dict_output

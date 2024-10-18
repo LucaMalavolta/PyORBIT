@@ -31,6 +31,10 @@ class Dataset(AbstractCommon):
             'jitter': 'Linear',
             'offset': 'Linear'}
 
+        self.generic_default_fixed = {
+            'jitter': [0.00, 0.00],
+            'offset': [0.00, 0.00]}
+
         if self.kind == 'Tcent':
             self.generic_default_spaces['jitter'] = 'Logarithmic'
             self.generic_default_priors['jitter'] = ['Uniform', []]
@@ -222,7 +226,6 @@ class Dataset(AbstractCommon):
             self.input_subset = np.asarray(data_input[:, 5], dtype=np.double)
         else:
             self.input_subset = None
-
         self.model_reset()
 
     def _setup_systematic_dictionaries(self, var_generic, dataset_vals):
@@ -234,6 +237,7 @@ class Dataset(AbstractCommon):
             self.default_bounds[var] = self.generic_default_bounds[var_generic]
             self.default_spaces[var] = self.generic_default_spaces[var_generic]
             self.default_priors[var] = self.generic_default_priors[var_generic]
+            self.default_fixed[var] = self.generic_default_fixed[var_generic]
             self.variable_compressed[var_generic][var] = None
             self.variable_expanded[var] = var_generic
 
@@ -255,6 +259,7 @@ class Dataset(AbstractCommon):
             self.default_bounds.pop(var, None)
             self.default_spaces.pop(var, None)
             self.default_priors.pop(var, None)
+            self.default_fixed.pop(var, None)
             self.variable_expanded.pop(var, None)
             self.mask.pop(var)
         self.variable_compressed[var_generic] = {}
@@ -321,19 +326,30 @@ class Dataset(AbstractCommon):
         for var_generic in list(set(self.bounds) & set(self.variable_compressed)):
             for var in self.variable_compressed[var_generic]:
                 self.bounds[var] = self.bounds[var_generic]
+            self.bounds.pop(var_generic, None)
+
 
         for var_generic in list(set(self.spaces) & set(self.variable_compressed)):
             for var in self.variable_compressed[var_generic]:
                 self.spaces[var] = self.spaces[var_generic]
+            self.spaces.pop(var_generic, None)
 
         for var_generic in list(set(self.prior_pams) & set(self.variable_compressed)):
             for var in self.variable_compressed[var_generic]:
                 self.prior_pams[var] = self.prior_pams[var_generic]
                 self.prior_kind[var] = self.prior_kind[var_generic]
+            self.prior_pams.pop(var_generic)
+            self.prior_kind.pop(var_generic)
+
+        for var_generic in list(set(self.fixed) & set(self.variable_compressed)):
+            for var in self.variable_compressed[var_generic]:
+                self.fixed[var] = self.fixed[var_generic]
+            self.fixed.pop(var_generic, None)
 
         for var_generic in list(set(self.starts) & set(self.variable_compressed)):
             for var in self.variable_compressed[var_generic]:
                 self.starts[var] = self.starts[var_generic]
+            self.starts.pop(var_generic, None)
 
     def has_jitter(self):
         for var in self.list_pams:

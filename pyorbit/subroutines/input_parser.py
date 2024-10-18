@@ -250,12 +250,35 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, reload_ze
             for par in space_conf:
                 mc.dataset_dict[dataset_name].spaces[par] = space_conf[par]
 
+        if 'priors' in dataset_conf:
+            prior_conf = dataset_conf['priors']
+            for par in prior_conf:
+                prior_pams = np.atleast_1d(prior_conf[par])
+                mc.dataset_dict[dataset_name].prior_kind[par] = prior_pams[0]
+
+                if prior_pams[0] == 'File':
+                    data_file = np.genfromtxt(prior_pams[1])
+                    mc.dataset_dict[dataset_name].prior_pams[par] = \
+                        gaussian_kde(data_file)
+                    data_file = None
+                elif np.size(prior_pams) > 1:
+                    mc.dataset_dict[dataset_name].prior_pams[par] = \
+                        np.asarray(prior_pams[1:], dtype=np.double)
+                else:
+                    mc.dataset_dict[dataset_name].prior_pams[par] = \
+                        np.asarray([0.00], dtype=np.double)
+
         if 'starts' in dataset_conf:
             mc.starting_point_flag = True
             starts_conf = dataset_conf['starts']
             for par in starts_conf:
                 mc.dataset_dict[dataset_name].starts[par] = np.asarray(
                     starts_conf[par], dtype=np.double)
+
+        if 'fixed' in dataset_conf:
+            fixed_conf = dataset_conf['fixed']
+            for par in fixed_conf:
+                mc.dataset_dict[dataset_name].fix_list[par] = get_2darray_from_val(fixed_conf[par])
 
         mc.dataset_dict[dataset_name].update_bounds_spaces_priors_starts()
 
@@ -955,7 +978,7 @@ def bounds_space_priors_starts_fixed(mc,
                     model_obj.multivariate_cov = np.cov(cov_data)
                     model_obj.multivariate_med = np.median(data_file, axis=0)
                     model_obj.multivariate_func = multivariate_normal(model_obj.multivariate_med,
-                                                                      model_obj.multivariate_cov)
+                                                                    model_obj.multivariate_cov)
 
                     #multi_var = [parameter_value[ii] for ii in model_obj.multivariate_pams]
                     #pdf = self.multivariate_func.pdf(multi_var)
