@@ -59,6 +59,31 @@ pip install -r extra_requirements.txt
 The requirement file has weaker constraints on package versioning (see below), so remember to install `PyORBIT` first  to avoid version incompatibilities
 ```
 
+## Annoying `findfont` problem **updated**
+
+You may get this problem, caused by the fact that Matplotlib is trying to use MicroSoft fonts not installed on your computer.
+```{code} bash
+findfont: Font family 'Arial' not found.
+```
+I found several solutions around, the only ones that worked for me are 
+[Alexander Lab @ WHOI](https://alexanderlabwhoi.github.io/post/2021-03-missingfont/) and on [StackOverflow](https://stackoverflow.com/questions/42097053/matplotlib-cannot-find-basic-fonts)
+
+In the first solution, you install the fonts through `conda`:
+```{code} bash
+conda activate pyorbit
+conda install -c conda-forge mscorefonts
+rm ~/.cache/matplotlib -rf 
+```
+In my WSL2 Ubuntu 22.04, this solution did not work, so I tried the one suggested in StackOverflow:
+
+```{code} bash
+sudo apt install msttcorefonts -qq
+rm ~/.cache/matplotlib -rf           # remove cache
+```
+One of the comments suggested reinstalling `findfont`, but it wasn't needed in my case.
+
+Note that this one will only work on Ubuntu or systems using Ubuntu's *Advanced Packaging Tool* (APT)
+
 ## `starry` support **updated**
 
 The [`starry`](https://starry.readthedocs.io/en/latest/) code package is a suite of tools for mapping stars and exoplanets based on time series data, and it has been implemented in several models within `PyORBIT`. Due to the use of discontinued libraries as [`Theano`](https://github.com/Theano), its installation requires some different steps. 
