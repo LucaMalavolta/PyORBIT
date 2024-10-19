@@ -6,8 +6,6 @@ The Exponential-sine periodic (ESP) kernel is an approximation of the quasi-peri
 In the [`S+LEAF documentation`](https://obswww.unige.ch/~delisle/spleaf/doc/_autosummary/spleaf.term.ESPKernel.html#spleaf.term.ESPKernel), the QP kernel is referred to as the squared-exponential periodic (SEP) kernel. Despite the different name, the QP periodic kernel definition is the same as the one implemented in `PyORBIT` in either the [trained](../gaussian_process/quasiperiodic_kernel) or the [multidimensional](./md_quasiperiodic) approach. 
 
 
-
-
 The quasi-periodic kernel is the preferred choice for the multidimensional GP. We follow the expression given by [Rajpaul et al. 2015](https://ui.adsabs.harvard.edu/abs/2015MNRAS.452.2269R/abstract):
 
 ```{math}
@@ -15,6 +13,7 @@ The quasi-periodic kernel is the preferred choice for the multidimensional GP. W
 
 \gamma ^{(G,G)}_{i,j} = \exp{ \left \{-\frac{\sin^2{[\pi(t_i - t_j)/ P_\mathrm{rot}]}}{2 O_\mathrm{amp} ^2} - \frac{(t_i-t_j)^2}{2 P_\mathrm{dec}^2} \right \} }
 ```
+
 
 ```{note}
 If you use the multidimensional GP through `S+LEAF`, please don't forget to cite [Delisle et al. 2020](https://ui.adsabs.harvard.edu/abs/2020A%26A...638A..95D/abstract) and [Delisle et al. 2022](https://ui.adsabs.harvard.edu/abs/2022A%26A...659A.182D/abstract)
@@ -26,7 +25,7 @@ If you use the multidimensional GP through `S+LEAF`, please don't forget to cite
 As `PyORBIT` naturally supports an unlimited number of datasets with heterogeneous cadences, the inclusion of the `S+LEAF` package has been quite straightforward. 
 The GP hyperparameters preserve the same name as in the other kernels: the rotation period of the star $P_\mathrm{rot}$, the coherence scale $O_\mathrm{amp}$, and the decay time scale of the active regions $P_\mathrm{dec}$, corresponds to $P$, $\eta$, $\rho$ in `S+LEAF` documentation.
 
-The coefficients $\alpha$ and $\beta$ introduced in the [`S+LEAF` multiGP [example](https://obswww.unige.ch/~delisle/spleaf/doc/multi.html)  are consequently renamed in *con_amp* and *rot_amp*, with the reference dataset easily identifiable from the terminal output.
+The coefficients $\alpha$ and $\beta$ introduced in the [`S+LEAF` multiGP example](https://obswww.unige.ch/~delisle/spleaf/doc/multi.html) are consequently renamed in *con_amp* and *rot_amp*, with the reference dataset easily identifiable from the terminal output.
 
 ## Model definition and requirements
 

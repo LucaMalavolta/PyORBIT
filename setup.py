@@ -51,8 +51,8 @@ setup(
         'h5py',
         'tqdm',
         'pygtc',
-        'jaxlib>=0.4.28',
-        'jax >=0.4.28',
+        'jaxlib==0.4.31',
+        'jax ==0.4.31',
         'tinygp>=0.3.0',
         'ordered-set'
         #'schwimmbad'
