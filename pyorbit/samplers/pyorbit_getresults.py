@@ -769,9 +769,9 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
     planet_parameters, dict_sampler_summary, dict_parameters_summary, dict_derived_summary = results_analysis.results_summary(
         mc, flat_chain, chain_med=chain_MAP, return_samples=True)
 
-    generic_save_to_cpickle(dir_dictionaries, 'summary_sampler', dict_sampler_summary)
-    generic_save_to_cpickle(dir_dictionaries, 'summary_parameters', dict_parameters_summary)
-    generic_save_to_cpickle(dir_dictionaries, 'summary_derived', dict_derived_summary)
+    generic_save_to_cpickle(dir_dictionaries, 'summary_percentiles_sampler', dict_sampler_summary)
+    generic_save_to_cpickle(dir_dictionaries, 'summary_percentiles_parameters', dict_parameters_summary)
+    generic_save_to_cpickle(dir_dictionaries, 'summary_percentiles_derived', dict_derived_summary)
 
     print()
     print('****************************************************************************************************')
@@ -779,8 +779,11 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
     print(' Parameters corresponding to the Maximum a Posteriori probability ( {} )'.format(lnprob_MAP))
     print()
 
-    results_analysis.results_summary(mc, chain_MAP, is_MAP=True)
-    quit()
+    
+    _, dict_sampler_summary, dict_parameters_summary, dict_derived_summary = results_analysis.results_summary(mc, chain_MAP,return_samples=True, is_MAP=True)
+    generic_save_to_cpickle(dir_dictionaries, 'summary_MAP_sampler', dict_sampler_summary)
+    generic_save_to_cpickle(dir_dictionaries, 'summary_MAP_parameters', dict_parameters_summary)
+    generic_save_to_cpickle(dir_dictionaries, 'summary_MAP_derived', dict_derived_summary)
 
     print()
     print('****************************************************************************************************')
@@ -788,7 +791,10 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
     print(' Parameters corresponding to the sample closest to the median values ( {} )'.format(lnprob_sampleMED))
     print()
 
-    results_analysis.results_summary(mc, chain_sampleMED, is_MAP=True)
+    _, dict_sampler_summary, dict_parameters_summary, dict_derived_summary = results_analysis.results_summary(mc, chain_sampleMED,return_samples=True, is_MAP=True)
+    generic_save_to_cpickle(dir_dictionaries, 'summary_sampleMED_sampler', dict_sampler_summary)
+    generic_save_to_cpickle(dir_dictionaries, 'summary_sampleMED_parameters', dict_parameters_summary)
+    generic_save_to_cpickle(dir_dictionaries, 'summary_sampleMED_derived', dict_derived_summary)
 
     print()
     print('****************************************************************************************************')

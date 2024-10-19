@@ -179,10 +179,6 @@ def results_summary(mc, theta,
     print()
     print()
 
-    #print(dict_sampler_summary)
-    print(dict_parameters_summary)
-    #print(dict_derived_summary)
-
     if return_samples:
         return returned_samples, dict_sampler_summary, dict_parameters_summary, dict_derived_summary
 
