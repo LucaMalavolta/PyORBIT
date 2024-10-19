@@ -49,7 +49,7 @@ Note that the name is `pyorbit-package` and not `pyorbit`, as the former was alr
  python -c "import pyorbit"
 ```
 
-`PyORBIT` only comes with the basic packages; to exploit its full potential, follow the instructions in the section [Requirements](Requirements). For the impatient, just do:
+`PyORBIT` only comes with the basic packages; to exploit its full potential, follow the instructions in the section [Requirements](requirements). For the impatient, just do:
 ```{code} bash
 wget https://raw.githubusercontent.com/LucaMalavolta/PyORBIT/main/extra_requirements.txt
 pip install -r extra_requirements.txt

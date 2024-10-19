@@ -16,5 +16,4 @@ In `PyORBIT` unlimited number of additional datasets can be included for the sim
 :maxdepth: 1
 gaussian_process/quasiperiodic_kernel.md
 gaussian_process/quasiperiodic_cosine_kernel.md
-gaussian_process/multidimensional_gaussian_processes
 ```

@@ -14,7 +14,7 @@ The quasi-periodic kernel is the preferred choice for the multidimensional GP. W
 :label: quasiperiodic_grunblatt
 
 \gamma ^{(G,G)}_{i,j} = \exp{ \left \{-\frac{\sin^2{[\pi(t_i - t_j)/ P_\mathrm{rot}]}}{2 O_\mathrm{amp} ^2} - \frac{(t_i-t_j)^2}{2 P_\mathrm{dec}^2} \right \} }
-
+```
 
 ```{note}
 If you use the multidimensional GP through `S+LEAF`, please don't forget to cite [Delisle et al. 2020](https://ui.adsabs.harvard.edu/abs/2020A%26A...638A..95D/abstract) and [Delisle et al. 2022](https://ui.adsabs.harvard.edu/abs/2022A%26A...659A.182D/abstract)
