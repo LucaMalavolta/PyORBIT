@@ -615,7 +615,7 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
 
 
 
-    if mc.ndata <= (mc.ndim - 1.0):
+    if mc.ndata <= (mc.ndim + 1.0):
         print()
         print()
         print('WARNING: NDATA ( {0:.0f} ) < NDIM ( {1:.0f} ) + 1'.format(mc.ndata, mc.ndim))
