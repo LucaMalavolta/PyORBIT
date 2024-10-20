@@ -607,101 +607,115 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
     print(' LN posterior: {0:12f}   {1:12f} {2:12f} (15-84 p) '.format(
         lnprob_med[0], lnprob_med[2], lnprob_med[1]))
 
-    dict_basic_statistics = {}
 
 
     med_log_priors, med_log_likelihood = mc.log_priors_likelihood(
         chain_med[:, 0])
     med_log_posterior = med_log_likelihood + med_log_priors
 
-    dict_basic_statistics['ndata'] = mc.ndata
-    dict_basic_statistics['ndim'] = mc.ndim
-
-    BIC = -2.0 * med_log_likelihood + np.log(mc.ndata) * mc.ndim
-    AIC = -2.0 * med_log_likelihood + 2.0 * mc.ndim
-    AICc = AIC + (2.0 + 2.0 * mc.ndim) * mc.ndim / (mc.ndata - mc.ndim - 1.0)
-    # AICc for small sample
-    dict_basic_statistics['median_log_priors'] = med_log_priors
-    dict_basic_statistics['median_log_likelihood'] = med_log_likelihood
-    dict_basic_statistics['median_log_posterior'] = med_log_posterior
-    dict_basic_statistics['median_BIC_likelihood'] = BIC
-    dict_basic_statistics['median_AIC_likelihood'] = AIC
-    dict_basic_statistics['median_AICc_likelihood'] = AICc
-
-    print()
-    print(' Median log_priors     = {}'.format(med_log_priors))
-    print(' Median log_likelihood = {}'.format(med_log_likelihood))
-    print()
-    print(' Median BIC  (using likelihood) = {}'.format(BIC))
-    print(' Median AIC  (using likelihood) = {}'.format(AIC))
-    print(' Median AICc (using likelihood) = {}'.format(AICc))
 
 
-    BIC = -2.0 * med_log_posterior + np.log(mc.ndata) * mc.ndim
-    AIC = -2.0 * med_log_posterior + 2.0 * mc.ndim
-    AICc = AIC + (2.0 + 2.0 * mc.ndim) * mc.ndim / (mc.ndata - mc.ndim - 1.0)
-
-    dict_basic_statistics['median_BIC_posterior'] = BIC
-    dict_basic_statistics['median_AIC_posterior'] = AIC
-    dict_basic_statistics['median_AICc_posterior'] = AICc
-
-    print()
-    print(' Median BIC  (using posterior)  = {}'.format(BIC))
-    print(' Median AIC  (using posterior)  = {}'.format(AIC))
-    print(' Median AICc (using posterior)  = {}'.format(AICc))
-
-
-    MAP_log_priors, MAP_log_likelihood = mc.log_priors_likelihood(chain_MAP)
-    MAP_log_posterior = MAP_log_likelihood + MAP_log_priors
-    BIC = -2.0 * MAP_log_likelihood + np.log(mc.ndata) * mc.ndim
-    AIC = -2.0 * MAP_log_likelihood + 2.0 * mc.ndim
-    AICc = AIC + (2.0 + 2.0 * mc.ndim) * mc.ndim / (mc.ndata - mc.ndim - 1.0)
-    # AICc for small sample
-
-    dict_basic_statistics['MAP_log_priors'] = MAP_log_priors
-    dict_basic_statistics['MAP_log_likelihood'] = MAP_log_likelihood
-    dict_basic_statistics['MAP_log_posterior'] = MAP_log_posterior
-    dict_basic_statistics['MAP_BIC_likelihood'] = BIC
-    dict_basic_statistics['MAP_AIC_likelihood'] = AIC
-    dict_basic_statistics['MAP_AICc_likelihood'] = AICc
-
-    print()
-    print(' MAP log_priors     = {}'.format(MAP_log_priors))
-    print(' MAP log_likelihood = {}'.format(MAP_log_likelihood))
-    print()
-    print(' MAP BIC  (using likelihood) = {}'.format(BIC))
-    print(' MAP AIC  (using likelihood) = {}'.format(AIC))
-    print(' MAP AICc (using likelihood) = {}'.format(AICc))
-
-
-    BIC = -2.0 * MAP_log_posterior + np.log(mc.ndata) * mc.ndim
-    AIC = -2.0 * MAP_log_posterior + 2.0 * mc.ndim
-    AICc = AIC + (2.0 + 2.0 * mc.ndim) * mc.ndim / (mc.ndata - mc.ndim - 1.0)
-
-    dict_basic_statistics['MAP_BIC_posterior'] = BIC
-    dict_basic_statistics['MAP_AIC_posterior'] = AIC
-    dict_basic_statistics['MAP_AICc_posterior'] = AICc
-
-    print()
-    print(' MAP BIC  (using posterior)  = {}'.format(BIC))
-    print(' MAP AIC  (using posterior)  = {}'.format(AIC))
-    print(' MAP AICc (using posterior)  = {}'.format(AICc))
-
-    if mc.ndata < 40 * mc.ndim:
+    if mc.ndata <= (mc.ndim - 1.0):
         print()
-        print(
-            ' AICc suggested over AIC because NDATA ( {0:.0f} ) < 40 * NDIM ( {1:.0f} )'.format(mc.ndata, mc.ndim))
-        dict_basic_statistics['suggested_AIC_criterion'] = 'AICc'
+        print()
+        print('WARNING: NDATA ( {0:.0f} ) < NDIM ( {1:.0f} ) + 1'.format(mc.ndata, mc.ndim))
+        print('Unable to compute statistical criteria. The analysis is likely to be unreliable.')
+        print('This condition may cause unexpected errors along the way')
+        print()
+        print()
 
     else:
+
+        dict_basic_statistics = {}
+
+        dict_basic_statistics['ndata'] = mc.ndata
+        dict_basic_statistics['ndim'] = mc.ndim
+        
+        BIC = -2.0 * med_log_likelihood + np.log(mc.ndata) * mc.ndim
+        AIC = -2.0 * med_log_likelihood + 2.0 * mc.ndim
+        AICc = AIC + (2.0 + 2.0 * mc.ndim) * mc.ndim / (mc.ndata - mc.ndim - 1.0)
+        # AICc for small sample
+        dict_basic_statistics['median_log_priors'] = med_log_priors
+        dict_basic_statistics['median_log_likelihood'] = med_log_likelihood
+        dict_basic_statistics['median_log_posterior'] = med_log_posterior
+        dict_basic_statistics['median_BIC_likelihood'] = BIC
+        dict_basic_statistics['median_AIC_likelihood'] = AIC
+        dict_basic_statistics['median_AICc_likelihood'] = AICc
+
         print()
-        print(
-            ' AIC suggested over AICs because NDATA ( {0:.0f} ) > 40 * NDIM ( {1:.0f} )'.format(mc.ndata, mc.ndim))
-        dict_basic_statistics['suggested_criterion'] = 'AIC'
+        print(' Median log_priors     = {}'.format(med_log_priors))
+        print(' Median log_likelihood = {}'.format(med_log_likelihood))
+        print()
+        print(' Median BIC  (using likelihood) = {}'.format(BIC))
+        print(' Median AIC  (using likelihood) = {}'.format(AIC))
+        print(' Median AICc (using likelihood) = {}'.format(AICc))
 
 
-    generic_save_to_cpickle(dir_dictionaries, 'basic_statistics', dict_basic_statistics)
-    del dict_basic_statistics
+        BIC = -2.0 * med_log_posterior + np.log(mc.ndata) * mc.ndim
+        AIC = -2.0 * med_log_posterior + 2.0 * mc.ndim
+        AICc = AIC + (2.0 + 2.0 * mc.ndim) * mc.ndim / (mc.ndata - mc.ndim - 1.0)
+
+        dict_basic_statistics['median_BIC_posterior'] = BIC
+        dict_basic_statistics['median_AIC_posterior'] = AIC
+        dict_basic_statistics['median_AICc_posterior'] = AICc
+
+        print()
+        print(' Median BIC  (using posterior)  = {}'.format(BIC))
+        print(' Median AIC  (using posterior)  = {}'.format(AIC))
+        print(' Median AICc (using posterior)  = {}'.format(AICc))
+
+
+        MAP_log_priors, MAP_log_likelihood = mc.log_priors_likelihood(chain_MAP)
+        MAP_log_posterior = MAP_log_likelihood + MAP_log_priors
+        BIC = -2.0 * MAP_log_likelihood + np.log(mc.ndata) * mc.ndim
+        AIC = -2.0 * MAP_log_likelihood + 2.0 * mc.ndim
+        AICc = AIC + (2.0 + 2.0 * mc.ndim) * mc.ndim / (mc.ndata - mc.ndim - 1.0)
+        # AICc for small sample
+
+        dict_basic_statistics['MAP_log_priors'] = MAP_log_priors
+        dict_basic_statistics['MAP_log_likelihood'] = MAP_log_likelihood
+        dict_basic_statistics['MAP_log_posterior'] = MAP_log_posterior
+        dict_basic_statistics['MAP_BIC_likelihood'] = BIC
+        dict_basic_statistics['MAP_AIC_likelihood'] = AIC
+        dict_basic_statistics['MAP_AICc_likelihood'] = AICc
+
+        print()
+        print(' MAP log_priors     = {}'.format(MAP_log_priors))
+        print(' MAP log_likelihood = {}'.format(MAP_log_likelihood))
+        print()
+        print(' MAP BIC  (using likelihood) = {}'.format(BIC))
+        print(' MAP AIC  (using likelihood) = {}'.format(AIC))
+        print(' MAP AICc (using likelihood) = {}'.format(AICc))
+
+
+        BIC = -2.0 * MAP_log_posterior + np.log(mc.ndata) * mc.ndim
+        AIC = -2.0 * MAP_log_posterior + 2.0 * mc.ndim
+        AICc = AIC + (2.0 + 2.0 * mc.ndim) * mc.ndim / (mc.ndata - mc.ndim - 1.0)
+
+        dict_basic_statistics['MAP_BIC_posterior'] = BIC
+        dict_basic_statistics['MAP_AIC_posterior'] = AIC
+        dict_basic_statistics['MAP_AICc_posterior'] = AICc
+
+        print()
+        print(' MAP BIC  (using posterior)  = {}'.format(BIC))
+        print(' MAP AIC  (using posterior)  = {}'.format(AIC))
+        print(' MAP AICc (using posterior)  = {}'.format(AICc))
+
+        if mc.ndata < 40 * mc.ndim:
+            print()
+            print(
+                ' AICc suggested over AIC because NDATA ( {0:.0f} ) < 40 * NDIM ( {1:.0f} )'.format(mc.ndata, mc.ndim))
+            dict_basic_statistics['suggested_AIC_criterion'] = 'AICc'
+
+        else:
+            print()
+            print(
+                ' AIC suggested over AICs because NDATA ( {0:.0f} ) > 40 * NDIM ( {1:.0f} )'.format(mc.ndata, mc.ndim))
+            dict_basic_statistics['suggested_criterion'] = 'AIC'
+
+
+        generic_save_to_cpickle(dir_dictionaries, 'basic_statistics', dict_basic_statistics)
+        del dict_basic_statistics
 
 
     print()
