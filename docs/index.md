@@ -47,6 +47,10 @@ Current version of `PyORBIT` is [![PyPI version fury.io](https://badge.fury.io/p
 
 :::
 
+:::{tip} **Back-compatibility with version 10.6**
+`pyorbit_results from version `10.7` is compatible with analysis run with `pyorbit_run` version `10.6`, as most of the differences regard the introduction of new models not affecting the pre-existing ones and the visualization of the results
+
+:::
 
 :::{versionadded} 10.6
 
