@@ -21,10 +21,6 @@ or keep it fixed if necessary. Thanks to abstraction, it is virtually possible t
 Every information you need to analyze your data is contained in an easy-to-use and portable configuration file in the ``yaml`` format.
 Alternatively, for easy automatization, PyORBIT can be called as a Python function by passing a dictionary instead of a configuration file.
 
-:::{admonition} Small bugfix in `pyorbit_results`!
-A small bug (one letter!) in 10.6.4 was causing `pyorbit_results` to quit abruptly after computing the autocorrelation function. The bug has been fixed in 10.6.5
-:::
-
 
 [**Check the poster**](https://k-poster.kuoni-congress.info/eas-2024/poster/bcefa082-f961-4539-a5f8-3b13783b520c) presented at the European Astronomical Society Annual Meeting in Padova
 
@@ -33,23 +29,24 @@ A small bug (one letter!) in 10.6.4 was causing `pyorbit_results` to quit abrupt
 
 :::{admonition} Keep `PyORBIT` updated!
 
-A small bug (one letter!) in `10.6.4` was causing pyorbit_results to quit abruptly after computing the autocorrelation function. The bug has been fixed in `10.6.5`.
-
 Current version of `PyORBIT` is [![PyPI version fury.io](https://badge.fury.io/py/pyorbit-package.svg)](https://pypi.python.org/pypi/pyprbot-package/), keep the software updated for improved performances and new models by running `pip install --upgrade pyorbit-package` on your terminal 
 :::
 
 
-:::{versionadded} 10.6.3
+:::{versionadded} 10.7
 
 **S+LEAF exponential-sine periodic kernel now supported**
 
-The exponential-sine periodic (ESP) kernel is a fast approximation of the quasi-periodic (QP) kernel, implemented in the `S+LEAF` software by [Delisle et al., 2020](https://ui.adsabs.harvard.edu/abs/2020A%26A...638A..95D/abstract) and [Delisle et al. 2022](https://ui.adsabs.harvard.edu/abs/2022A%26A...659A.182D/abstract)
+- The exponential-sine periodic (ESP) kernel is a fast approximation of the quasi-periodic (QP) kernel, implemented in the `S+LEAF` software by [Delisle et al., 2020](https://ui.adsabs.harvard.edu/abs/2020A%26A...638A..95D/abstract) and [Delisle et al. 2022](https://ui.adsabs.harvard.edu/abs/2022A%26A...659A.182D/abstract). The kernel has been implemented and tested in `PyORBIT`, and it can be used as a faster replacement of `tinyGP`
 
-The kernel has been implemented and tested in `PyORBIT`, and it can be used as a faster replacement of `tinyGP`
+- Textual output is now also saved as dictionaries in the corresponding *dictionaries* folder.
+
+- A small bug (one letter!) in `10.6.4` was causing pyorbit_results to quit abruptly after computing the autocorrelation function. The bug has been fixed.
+
 :::
 
 
-:::{versionadded} 10.6.0
+:::{versionadded} 10.6
 
 **Updated TTV measurement and harmonic models**
 
