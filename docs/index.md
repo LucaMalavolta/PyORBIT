@@ -41,6 +41,8 @@ Current version of `PyORBIT` is [![PyPI version fury.io](https://badge.fury.io/p
 
 - Textual output is now also saved as dictionaries in the corresponding *dictionaries* folder.
 
+- I fixed some inconsistencies with package requirements. 
+
 - A small bug (one letter!) in `10.6.4` was causing pyorbit_results to quit abruptly after computing the autocorrelation function. The bug has been fixed.
 
 :::
