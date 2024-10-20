@@ -16,14 +16,13 @@ For nostalgic people, `PyORBIT` 8 and 9 are available as branches of the main re
 
 ## Updates on version 10
 
-- *Updated TTV measurement and harmonic models (starting from version 10.6)*
-TTV measurement models have been all revised and improved to support a variety of cases. in RML modelling, `curve_fit` has been replaced with the [`lmfit` package](https://lmfit.github.io/lmfit-py/) from improved numerical stability
+- The **exponential-sine periodic (ESP)** kernel is a fast approximation of the quasi-periodic (QP) kernel, implemented in the **`S+LEAF`** software by [Delisle et al., 2020](https://ui.adsabs.harvard.edu/abs/2020A%26A...638A..95D/abstract) and [Delisle et al. 2022](https://ui.adsabs.harvard.edu/abs/2022A%26A...659A.182D/abstract). The kernel has been implemented and tested in `PyORBIT`, and it can be used as a faster replacement of `tinyGP`
 
+- Textual output is now also saved as dictionaries in the corresponding *dictionaries* folder.
 
 - *updated TTV measurement and harmonic models (starting from version 10.6)*
 TTV measurement models have been all revised and improved to support a variety of cases.
 in RML modelling, `curve_fit` has been replaced with the [`lmfit` package](https://lmfit.github.io/lmfit-py/) from improved numerical stability
-
 
 - *Improved speed*
 After several failed attempts, I finally managed to apply the advice from the [emcee parallelization page](https://emcee.readthedocs.io/en/stable/tutorials/parallel/) to the rather complex structure of PyORBIT. The speed-up is noticeable for large datasets (e.g., photometry).
