@@ -176,7 +176,7 @@ class SPLEAF_ESP(AbstractModel):
         temp_sorting = self._sorting_mask[dataset.name_ref]
 
         """ I'm creating the kernel here """
-        D = spleaf_cov.Cov(dataset.x0,
+        D = spleaf_cov.Cov(dataset.x0[temp_sorting],
             err=spleaf_term.Error(np.sqrt(dataset.e[temp_sorting] ** 2.0 + dataset.jitter[temp_sorting] ** 2.0)),
             GP=spleaf_term.ESPKernel(parameter_values['Hamp'],
                                     parameter_values['Prot'],
