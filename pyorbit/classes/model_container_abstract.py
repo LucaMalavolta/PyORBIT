@@ -458,6 +458,45 @@ class ModelContainer(object):
         else:
             return log_priors, log_likelihood
 
+    def log_priors(self, theta):
+
+        log_priors = 0.00
+
+        if self.include_priors:
+            return log_priors
+
+        for model_name, model in self.common_models.items():
+            log_priors += model.return_priors(theta)
+
+        for dataset_name, dataset in self.dataset_dict.items():
+            dataset.model_reset()
+            parameter_values = dataset.convert(theta)
+            dataset.compute(parameter_values)
+
+            log_priors += dataset.return_priors(theta)
+            if 'none' in dataset.models or 'None' in dataset.models:
+                continue
+            if not dataset.models:
+                continue
+            for model_name in dataset.models:
+                log_priors += self.models[model_name].return_priors(
+                    theta, dataset_name)
+
+                if getattr(self.models[model_name], 'residuals_analysis', False):
+
+                    if dataset_name == self.models[model_name].x_dataset:
+                        pass
+                    else:
+                        # Subtract the priors previously added, to avoid including the priors twice
+                        log_priors -= self.models[model_name].return_priors(theta, dataset_name)
+
+        if np.isnan(log_priors):
+            log_priors = -np.inf
+
+        return log_priors
+
+
+
     def recenter_bounds(self, pop_mean, recenter=True):
         # This function recenters the bounds limits for circular parameters
         # Also, it extends the range of a parameter if the output of PyDE is a fixed number

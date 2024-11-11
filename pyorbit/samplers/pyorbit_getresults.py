@@ -126,10 +126,9 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
         print()
         print(' Reference Time Tref: {}'.format(mc.Tref))
         print()
-        print(' Dimensions = {}'.format(mc.ndim))
-        print(' Nwalkers = {}'.format(mc.emcee_parameters['nwalkers']))
-        print()
-        print(' Steps: {}'.format(nsteps))
+        print(' Dimensions: {}'.format(mc.ndim))
+        print(' Nwalkers:   {}'.format(mc.emcee_parameters['nwalkers']))
+        print(' Steps:      {}'.format(nsteps))
         print()
 
     if sampler_name == 'zeus' or sampler_name == 'zeus_legacy':
@@ -193,10 +192,9 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
         print()
         print(' Reference Time Tref: {}'.format(mc.Tref))
         print()
-        print(' Dimensions = {}'.format(mc.ndim))
-        print(' Nwalkers = {}'.format(mc.zeus_parameters['nwalkers']))
-        print()
-        print(' Steps: {}'.format(nsteps))
+        print(' Dimensions: {}'.format(mc.ndim))
+        print(' Nwalkers:   {}'.format(mc.zeus_parameters['nwalkers']))
+        print(' Steps:      {}'.format(nsteps))
 
         #results_analysis.print_integrated_ACF(
         #    sampler_chain, theta_dictionary, nthin)
@@ -234,8 +232,7 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
         print(' Reference Time Tref: {}'.format(mc.Tref))
         print()
         print(' Dimensions: {}'.format(mc.ndim))
-        print()
-        print(' Samples: {}'.format(n_samplings))
+        print(' Samples:    {}'.format(n_samplings))
 
     if sampler_name == 'polychord':
 
@@ -272,8 +269,7 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
         print(' Reference Time Tref: {}'.format(mc.Tref))
         print()
         print(' Dimensions: {}'.format(mc.ndim))
-        print()
-        print(' Samples: {}'.format(n_samplings))
+        print(' Samples:    {}'.format(n_samplings))
 
 
     if sampler_name in ['dynesty', 'dynesty_legacy', 'dynesty_static', 'dynesty_restore']:
@@ -432,6 +428,7 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
         print('Weighted mean and convariance from original samplings')
         for key_name, key_value in theta_dictionary.items():
             print('  {0:s}  {1:15.6f} +- {2:15.6f}'.format(key_name, mean[key_value], cov[key_value, key_value]))
+        print()
         print('From now on, all results are from weighted samples')
 
 
@@ -465,8 +462,7 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
         print(' Reference Time Tref: {}'.format(mc.Tref))
         print()
         print(' Dimensions: {}'.format(mc.ndim))
-        print()
-        print(' Samples: {}'.format(n_samplings))
+        print(' Samples:    {}'.format(n_samplings))
 
 
     if sampler_name[:9] == 'ultranest':
@@ -559,8 +555,7 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
         print(' Reference Time Tref: {}'.format(mc.Tref))
         print()
         print(' Dimensions: {}'.format(mc.ndim))
-        print()
-        print(' Samples: {}'.format(n_samplings))
+        print(' Samples:    {}'.format(n_samplings))
 
     dir_dictionaries = dir_output + 'dictionaries/'
     os.system('mkdir -p ' + dir_dictionaries)
@@ -575,7 +570,7 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
             theta_id = theta_dictionary[theta_name]
             theta_tree[theta_name] = [dataset_name, pam_name]
             dict_sampler_posteriors[dataset_name]['dataset_variables'][pam_name] = flat_chain[:,theta_id]
-        
+
         for model_name in dataset.models:
             dict_sampler_posteriors[dataset_name][model_name] = {}
             for pam_name, pam_dict in mc.models[model_name].sampler_parameters[dataset_name].items():
@@ -593,26 +588,51 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
             dict_sampler_posteriors[model_name][pam_name] = flat_chain[:,theta_id]
 
 
+    med_ln_priors, med_ln_likelihood = mc.log_priors_likelihood(chain_med[:, 0])
+
+    if mc.include_priors:
+
+        print()
+        print('Recomputing ln-prior, it may take a while...')
+        flat_lnprior = np.zeros_like(flat_lnprob)
+        try:
+            for ii in range(0,n_samplings):
+                flat_lnprior[ii] = mc.log_priors(flat_chain[ii,:])
+        except:
+            print('ln-prior recomputation failed, using the average value')
+            flat_lnprior = np.ones_like(flat_lnprob) * med_ln_priors
+
+        lnprior_med = common.compute_value_sigma(flat_lnprior)
+    else:
+        flat_lnprior = np.zeros_like(flat_lnprob)
+        med_ln_priors = 0.
+        lnprior_med = [0.0, 0.0, 0.0]
+
+    med_ln_posterior = med_ln_likelihood + med_ln_priors
+
+    lnlike_med = common.compute_value_sigma(flat_lnprob - flat_lnprior)
+
     generic_save_to_cpickle(dir_dictionaries, 'theta_dictionary', theta_dictionary)
     generic_save_to_cpickle(dir_dictionaries, 'theta_tree', theta_tree)
 
     dict_sampler_posteriors['lnprob'] = flat_lnprob
+    dict_sampler_posteriors['lnprior'] = flat_lnprior
+    dict_sampler_posteriors['lnlike'] = flat_lnprob - flat_lnprior
+
     generic_save_to_cpickle(dir_dictionaries, 'sampler_posteriors', dict_sampler_posteriors)
     generic_save_to_cpickle(dir_dictionaries, 'theta_dictionary', theta_dictionary)
     generic_save_to_cpickle(dir_dictionaries, 'theta_tree', theta_tree)
 
     del dict_sampler_posteriors
 
+
     print()
     print('log-probability posterior: {0:9.2f}   {1:9.2f} {2:9.2f} (15-84 p) '.format(
         lnprob_med[0], lnprob_med[2], lnprob_med[1]))
-
-
-
-    med_ln_priors, med_ln_likelihood = mc.log_priors_likelihood(
-        chain_med[:, 0])
-    med_ln_posterior = med_ln_likelihood + med_ln_priors
-
+    print('log-prior       posterior: {0:9.2f}   {1:9.2f} {2:9.2f} (15-84 p) '.format(
+        lnprior_med[0], lnprior_med[2], lnprior_med[1]))
+    print('log-likelihood  posterior: {0:9.2f}   {1:9.2f} {2:9.2f} (15-84 p) '.format(
+        lnlike_med[0], lnlike_med[2], lnlike_med[1]))
 
 
     if mc.ndata <= (mc.ndim + 1.0):
@@ -626,21 +646,19 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
 
     else:
 
-        print()
-        print()
-        print('*** Information criteria using the ln-probability distribution')
-
-        ICs_err = [-2*lnprob_med[1], -2*lnprob_med[2]]
-
         dict_basic_statistics = {}
 
         dict_basic_statistics['ndata'] = mc.ndata
         dict_basic_statistics['ndim'] = mc.ndim
 
+        print()
+        print()
+        print('*** Information criteria using the parameter posterior distributions')
 
         BIC = -2.0 * lnprob_med[0] + np.log(mc.ndata) * mc.ndim
         AIC = -2.0 * lnprob_med[0] + 2.0 * mc.ndim
         AICc = AIC + (2.0 + 2.0 * mc.ndim) * mc.ndim / (mc.ndata - mc.ndim - 1.0)
+        ICs_err = [-2*lnprob_med[1], -2*lnprob_med[2]]
 
         dict_basic_statistics['dist_BIC_posterior'] = BIC
         dict_basic_statistics['dist_AIC_posterior'] = AIC
@@ -652,6 +670,20 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
         print(' AIC from distribution  (using posterior)  = {0:9.2f}   {0:7.2f} {1:7.2f} (15-84 p)'.format(AIC,ICs_err[0], ICs_err[1]))
         print(' AICc from distribution (using posterior)  = {0:9.2f}   {0:7.2f} {1:7.2f} (15-84 p)'.format(AICc,ICs_err[0], ICs_err[1]))
 
+        BIC = -2.0 * lnlike_med[0] + np.log(mc.ndata) * mc.ndim
+        AIC = -2.0 * lnlike_med[0] + 2.0 * mc.ndim
+        AICc = AIC + (2.0 + 2.0 * mc.ndim) * mc.ndim / (mc.ndata - mc.ndim - 1.0)
+        ICs_err = [-2*lnlike_med[1], -2*lnlike_med[2]]
+
+        dict_basic_statistics['dist_BIC_likelihood'] = BIC
+        dict_basic_statistics['dist_AIC_likelihood'] = AIC
+        dict_basic_statistics['dist_AICc_likelihood'] = AICc
+        dict_basic_statistics['dist_ICs_error'] = ICs_err
+
+        print()
+        print(' BIC from distribution  (using likelihood)  = {0:9.2f}   {0:7.2f} {1:7.2f} (15-84 p)'.format(BIC,ICs_err[0], ICs_err[1]))
+        print(' AIC from distribution  (using likelihood)  = {0:9.2f}   {0:7.2f} {1:7.2f} (15-84 p)'.format(AIC,ICs_err[0], ICs_err[1]))
+        print(' AICc from distribution (using likelihood)  = {0:9.2f}   {0:7.2f} {1:7.2f} (15-84 p)'.format(AICc,ICs_err[0], ICs_err[1]))
 
 
         print()
@@ -692,7 +724,7 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
         print(' Median BIC  (using posterior)  = {0:9.2f}'.format(BIC))
         print(' Median AIC  (using posterior)  = {0:9.2f}'.format(AIC))
         print(' Median AICc (using posterior)  = {0:9.2f}'.format(AICc))
-        
+
         print()
         print()
         print('*** Information criteria using the MAP parameter set')
@@ -762,7 +794,7 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
         i_sampler, acf_trace, acf_diff, converged, dict_acf = \
         results_analysis.print_integrated_ACF(
             sampler_chain, theta_dictionary, nthin)
-        
+
         generic_save_to_cpickle(dir_dictionaries, 'sampler_acf', dict_acf)
 
         if i_sampler is None:
@@ -826,7 +858,7 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
     print(' Parameters corresponding to the Maximum a Posteriori probability ( {} )'.format(lnprob_MAP))
     print()
 
-    
+
     _, dict_sampler_summary, dict_parameters_summary, dict_derived_summary = results_analysis.results_summary(mc, chain_MAP,return_samples=True, is_MAP=True)
     generic_save_to_cpickle(dir_dictionaries, 'summary_MAP_sampler', dict_sampler_summary)
     generic_save_to_cpickle(dir_dictionaries, 'summary_MAP_parameters', dict_parameters_summary)
@@ -963,7 +995,7 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
             plt.savefig(file_name, bbox_inches='tight', dpi=300)
             plt.close(fig)
 
-            
+
             plot_x_length = len(sampler_chain[0, :, ii])
             plot_x_nwalkers = len(sampler_chain[:, 0, ii])
             x_range = np.arange(0, plot_x_length, 1.)
@@ -971,7 +1003,7 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
                 repr(ii) + '_' + theta_name + '.png'
 
             fig = plt.figure(figsize=(12, 12))
-            for xw in range(0, plot_x_nwalkers): 
+            for xw in range(0, plot_x_nwalkers):
                 plt.scatter(x_range, sampler_chain[xw, :, ii], s=2, alpha=0.2, c='k')
             plt.axvline(nburnin / nthin, c='r')
             plt.savefig(file_name, bbox_inches='tight', dpi=300)
