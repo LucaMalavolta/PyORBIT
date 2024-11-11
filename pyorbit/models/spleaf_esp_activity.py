@@ -173,6 +173,13 @@ class SPLEAF_ESP(AbstractModel):
         if self.use_stellar_rotation_period:
             parameter_values['Prot'] = parameter_values['rotation_period']
 
+        if x0_input is None:
+            t_predict = dataset.x0
+            sorting_predict = np.argsort(dataset.x0)
+        else:
+            t_predict = x0_input
+            sorting_predict = np.argsort(x0_input)
+
         temp_sorting = self._sorting_mask[dataset.name_ref]
 
         """ I'm creating the kernel here """
@@ -184,12 +191,10 @@ class SPLEAF_ESP(AbstractModel):
                                     parameter_values['Oamp'],
                                     nharm=self.n_harmonics))
 
-        if x0_input is None:
-            t_predict = dataset.x0
-        else:
-            t_predict = x0_input
 
-        mu, var = D.conditional(dataset.residuals[temp_sorting], t_predict, calc_cov='diag')
+        mu = np.empty_like(t_predict)
+        var = np.empty_like(t_predict)
+        mu[sorting_predict], var[sorting_predict] = D.conditional(dataset.residuals[temp_sorting], t_predict[sorting_predict], calc_cov='diag')
 
         if return_variance:
             return mu, np.sqrt(var)

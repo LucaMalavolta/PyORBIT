@@ -1048,7 +1048,7 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
 
     if plot_dictionary['common_corner']:
 
-        print(' Plotting the common models corner plots')
+        print('Plotting the common models corner plots')
 
         for common_name, common_model in mc.common_models.items():
 
@@ -1062,8 +1062,6 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
             }
             parameter_values = common_model.convert(flat_chain)
             parameter_median = common_model.convert(chain_med[:, 0])
-
-            print(parameter_values)
 
             if len(parameter_median) < 1.:
                 continue
@@ -1121,7 +1119,7 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
 
     if plot_dictionary['dataset_corner']:
 
-        print(' Dataset + models corner plots ')
+        print('Plotting the dataset + models corner plots ')
         print()
 
         for dataset_name, dataset in mc.dataset_dict.items():
