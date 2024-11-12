@@ -601,23 +601,24 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
         except:
             print('ln-prior recomputation failed, using the average value')
             flat_lnprior = np.ones_like(flat_lnprob) * med_ln_priors
-
         lnprior_med = common.compute_value_sigma(flat_lnprior)
     else:
         flat_lnprior = np.zeros_like(flat_lnprob)
         med_ln_priors = 0.
         lnprior_med = [0.0, 0.0, 0.0]
 
+    flat_lnlike = flat_lnprob - flat_lnprior
+
     med_ln_posterior = med_ln_likelihood + med_ln_priors
 
-    lnlike_med = common.compute_value_sigma(flat_lnprob - flat_lnprior)
+    lnlike_med = common.compute_value_sigma(flat_lnlike)
 
     generic_save_to_cpickle(dir_dictionaries, 'theta_dictionary', theta_dictionary)
     generic_save_to_cpickle(dir_dictionaries, 'theta_tree', theta_tree)
 
     dict_sampler_posteriors['lnprob'] = flat_lnprob
     dict_sampler_posteriors['lnprior'] = flat_lnprior
-    dict_sampler_posteriors['lnlike'] = flat_lnprob - flat_lnprior
+    dict_sampler_posteriors['lnlike'] = flat_lnlike
 
     generic_save_to_cpickle(dir_dictionaries, 'sampler_posteriors', dict_sampler_posteriors)
     generic_save_to_cpickle(dir_dictionaries, 'theta_dictionary', theta_dictionary)
@@ -627,11 +628,11 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
 
 
     print()
-    print('log-probability posterior: {0:9.2f}   {1:9.2f} {2:9.2f} (15-84 p) '.format(
+    print('ln-probability distribution: {0:9.2f}   {1:9.2f} {2:9.2f} (15-84 p) '.format(
         lnprob_med[0], lnprob_med[2], lnprob_med[1]))
-    print('log-prior       posterior: {0:9.2f}   {1:9.2f} {2:9.2f} (15-84 p) '.format(
+    print('ln-prior       distribution: {0:9.2f}   {1:9.2f} {2:9.2f} (15-84 p) '.format(
         lnprior_med[0], lnprior_med[2], lnprior_med[1]))
-    print('log-likelihood  posterior: {0:9.2f}   {1:9.2f} {2:9.2f} (15-84 p) '.format(
+    print('ln-likelihood  distribution: {0:9.2f}   {1:9.2f} {2:9.2f} (15-84 p) '.format(
         lnlike_med[0], lnlike_med[2], lnlike_med[1]))
 
 
@@ -653,37 +654,45 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
 
         print()
         print()
-        print('*** Information criteria using the parameter posterior distributions')
+        print('*** Information criteria using the likelihood distribution')
 
-        BIC = -2.0 * lnprob_med[0] + np.log(mc.ndata) * mc.ndim
-        AIC = -2.0 * lnprob_med[0] + 2.0 * mc.ndim
-        AICc = AIC + (2.0 + 2.0 * mc.ndim) * mc.ndim / (mc.ndata - mc.ndim - 1.0)
-        ICs_err = [-2*lnprob_med[1], -2*lnprob_med[2]]
+        #BIC = -2.0 * lnprob_med[0] + np.log(mc.ndata) * mc.ndim
+        #AIC = -2.0 * lnprob_med[0] + 2.0 * mc.ndim
+        #AICc = AIC + (2.0 + 2.0 * mc.ndim) * mc.ndim / (mc.ndata - mc.ndim - 1.0)
+        #ICs_err = [-2*lnprob_med[1], -2*lnprob_med[2]]
 
-        dict_basic_statistics['dist_BIC_posterior'] = BIC
-        dict_basic_statistics['dist_AIC_posterior'] = AIC
-        dict_basic_statistics['dist_AICc_posterior'] = AICc
-        dict_basic_statistics['dist_ICs_error'] = ICs_err
+        #dict_basic_statistics['dist_BIC_posterior'] = BIC
+        #dict_basic_statistics['dist_AIC_posterior'] = AIC
+        #dict_basic_statistics['dist_AICc_posterior'] = AICc
+        #dict_basic_statistics['dist_ICs_error'] = ICs_err
 
-        print()
-        print(' BIC from distribution  (using posterior)  = {0:9.2f}   {0:7.2f} {1:7.2f} (15-84 p)'.format(BIC,ICs_err[0], ICs_err[1]))
-        print(' AIC from distribution  (using posterior)  = {0:9.2f}   {0:7.2f} {1:7.2f} (15-84 p)'.format(AIC,ICs_err[0], ICs_err[1]))
-        print(' AICc from distribution (using posterior)  = {0:9.2f}   {0:7.2f} {1:7.2f} (15-84 p)'.format(AICc,ICs_err[0], ICs_err[1]))
+        #print()
+        #print(' BIC from distribution  (using posterior)  = {0:9.2f}   {0:7.2f} {1:7.2f} (15-84 p)'.format(BIC,ICs_err[0], ICs_err[1]))
+        #print(' AIC from distribution  (using posterior)  = {0:9.2f}   {0:7.2f} {1:7.2f} (15-84 p)'.format(AIC,ICs_err[0], ICs_err[1]))
+        #print(' AICc from distribution (using posterior)  = {0:9.2f}   {0:7.2f} {1:7.2f} (15-84 p)'.format(AICc,ICs_err[0], ICs_err[1]))
 
         BIC = -2.0 * lnlike_med[0] + np.log(mc.ndata) * mc.ndim
         AIC = -2.0 * lnlike_med[0] + 2.0 * mc.ndim
         AICc = AIC + (2.0 + 2.0 * mc.ndim) * mc.ndim / (mc.ndata - mc.ndim - 1.0)
         ICs_err = [-2*lnlike_med[1], -2*lnlike_med[2]]
 
-        dict_basic_statistics['dist_BIC_likelihood'] = BIC
-        dict_basic_statistics['dist_AIC_likelihood'] = AIC
-        dict_basic_statistics['dist_AICc_likelihood'] = AICc
-        dict_basic_statistics['dist_ICs_error'] = ICs_err
+        dict_basic_statistics['distribution_ln_priors'] = lnprior_med
+        dict_basic_statistics['distribution_ln_likelihood'] = lnlike_med
+        dict_basic_statistics['distribution_ln_posterior'] = lnprob_med
+
+        dict_basic_statistics['distribution_BIC'] = BIC
+        dict_basic_statistics['distribution_AIC'] = AIC
+        dict_basic_statistics['distribution_AICc'] = AICc
+        dict_basic_statistics['distribution_ICs_error'] = ICs_err
+
+        dict_basic_statistics['full_distribution_BIC'] = -2.0 * flat_lnlike + np.log(mc.ndata) * mc.ndim
+        dict_basic_statistics['full_distribution_AIC'] = -2.0 * flat_lnlike + 2.0 * mc.ndim
+        dict_basic_statistics['full_distribution_AICc'] = dict_basic_statistics['full_distribution_AIC'] + (2.0 + 2.0 * mc.ndim) * mc.ndim / (mc.ndata - mc.ndim - 1.0)
 
         print()
-        print(' BIC from distribution  (using likelihood)  = {0:9.2f}   {0:7.2f} {1:7.2f} (15-84 p)'.format(BIC,ICs_err[0], ICs_err[1]))
-        print(' AIC from distribution  (using likelihood)  = {0:9.2f}   {0:7.2f} {1:7.2f} (15-84 p)'.format(AIC,ICs_err[0], ICs_err[1]))
-        print(' AICc from distribution (using likelihood)  = {0:9.2f}   {0:7.2f} {1:7.2f} (15-84 p)'.format(AICc,ICs_err[0], ICs_err[1]))
+        print(' BIC from distribution  (using likelihood)  = {0:9.2f}   {1:7.2f} {2:7.2f} (15-84 p)'.format(BIC,ICs_err[0], ICs_err[1]))
+        print(' AIC from distribution  (using likelihood)  = {0:9.2f}   {1:7.2f} {2:7.2f} (15-84 p)'.format(AIC,ICs_err[0], ICs_err[1]))
+        print(' AICc from distribution (using likelihood)  = {0:9.2f}   {1:7.2f} {2:7.2f} (15-84 p)'.format(AICc,ICs_err[0], ICs_err[1]))
 
 
         print()
@@ -711,19 +720,18 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
         print(' Median AIC  (using likelihood) = {0:9.2f}'.format(AIC))
         print(' Median AICc (using likelihood) = {0:9.2f}'.format(AICc))
 
+        #BIC = -2.0 * med_ln_posterior + np.log(mc.ndata) * mc.ndim
+        #AIC = -2.0 * med_ln_posterior + 2.0 * mc.ndim
+        #AICc = AIC + (2.0 + 2.0 * mc.ndim) * mc.ndim / (mc.ndata - mc.ndim - 1.0)
 
-        BIC = -2.0 * med_ln_posterior + np.log(mc.ndata) * mc.ndim
-        AIC = -2.0 * med_ln_posterior + 2.0 * mc.ndim
-        AICc = AIC + (2.0 + 2.0 * mc.ndim) * mc.ndim / (mc.ndata - mc.ndim - 1.0)
+        #dict_basic_statistics['median_BIC_posterior'] = BIC
+        #dict_basic_statistics['median_AIC_posterior'] = AIC
+        #dict_basic_statistics['median_AICc_posterior'] = AICc
 
-        dict_basic_statistics['median_BIC_posterior'] = BIC
-        dict_basic_statistics['median_AIC_posterior'] = AIC
-        dict_basic_statistics['median_AICc_posterior'] = AICc
-
-        print()
-        print(' Median BIC  (using posterior)  = {0:9.2f}'.format(BIC))
-        print(' Median AIC  (using posterior)  = {0:9.2f}'.format(AIC))
-        print(' Median AICc (using posterior)  = {0:9.2f}'.format(AICc))
+        #print()
+        #print(' Median BIC  (using posterior)  = {0:9.2f}'.format(BIC))
+        #print(' Median AIC  (using posterior)  = {0:9.2f}'.format(AIC))
+        #print(' Median AICc (using posterior)  = {0:9.2f}'.format(AICc))
 
         print()
         print()
@@ -753,18 +761,18 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
         print(' MAP AICc (using likelihood)    = {0:9.2f}'.format(AICc))
 
 
-        BIC = -2.0 * MAP_ln_posterior + np.log(mc.ndata) * mc.ndim
-        AIC = -2.0 * MAP_ln_posterior + 2.0 * mc.ndim
-        AICc = AIC + (2.0 + 2.0 * mc.ndim) * mc.ndim / (mc.ndata - mc.ndim - 1.0)
+        #BIC = -2.0 * MAP_ln_posterior + np.log(mc.ndata) * mc.ndim
+        #AIC = -2.0 * MAP_ln_posterior + 2.0 * mc.ndim
+        #AICc = AIC + (2.0 + 2.0 * mc.ndim) * mc.ndim / (mc.ndata - mc.ndim - 1.0)
 
-        dict_basic_statistics['MAP_BIC_posterior'] = BIC
-        dict_basic_statistics['MAP_AIC_posterior'] = AIC
-        dict_basic_statistics['MAP_AICc_posterior'] = AICc
+        #dict_basic_statistics['MAP_BIC_posterior'] = BIC
+        #dict_basic_statistics['MAP_AIC_posterior'] = AIC
+        #dict_basic_statistics['MAP_AICc_posterior'] = AICc
 
-        print()
-        print(' MAP BIC  (using posterior)     = {0:9.2f}'.format(BIC))
-        print(' MAP AIC  (using posterior)     = {0:9.2f}'.format(AIC))
-        print(' MAP AICc (using posterior)     = {0:9.2f}'.format(AICc))
+        #print()
+        #print(' MAP BIC  (using posterior)     = {0:9.2f}'.format(BIC))
+        #print(' MAP AIC  (using posterior)     = {0:9.2f}'.format(AIC))
+        #print(' MAP AICc (using posterior)     = {0:9.2f}'.format(AICc))
 
         if mc.ndata < 40 * mc.ndim:
             print()
@@ -776,7 +784,7 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
             print()
             print(
                 ' AIC suggested over AICs because NDATA ( {0:.0f} ) > 40 * NDIM ( {1:.0f} )'.format(mc.ndata, mc.ndim))
-            dict_basic_statistics['suggested_criterion'] = 'AIC'
+            dict_basic_statistics['suggested_AIC_criterion'] = 'AIC'
 
 
         generic_save_to_cpickle(dir_dictionaries, 'basic_statistics', dict_basic_statistics)

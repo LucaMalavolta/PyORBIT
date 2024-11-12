@@ -462,7 +462,7 @@ class ModelContainer(object):
 
         log_priors = 0.00
 
-        if self.include_priors:
+        if not self.include_priors:
             return log_priors
 
         for model_name, model in self.common_models.items():
