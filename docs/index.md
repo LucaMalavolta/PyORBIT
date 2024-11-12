@@ -33,6 +33,10 @@ Current version of `PyORBIT` is [![PyPI version fury.io](https://badge.fury.io/p
 :::
 
 
+:::{versionadded} 10.8
+
+**Additional BIC/AIC/AICc information** in output and in dictionaries when running `pyorbit_results`. Information criteria computed through the ln-posterior (in addition to the ln-likelihood) have been dropped, as definitely wrong. This version is fully compatible with version **10.7**, as the only changes are in the analysis of the results. There is also a small bugfix regarding datasets not in chronological order which was preventing analysis with `spleaf_esp` model from starting altogether.
+
 :::{versionadded} 10.7
 
 **S+LEAF exponential-sine periodic kernel now supported**

@@ -23,4 +23,4 @@ from .samplers.pyorbit_getresults import *
 from .subroutines.input_parser import yaml_parser
 
 
-__version__ = "10.7.3"
+__version__ = "10.8.0"
