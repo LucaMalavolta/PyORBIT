@@ -144,13 +144,20 @@ class SPLEAF_ESP(AbstractModel):
         if not self.rotdec_condition(parameter_values):
             return -np.inf
 
+        try:
+            temp_sorting = self._sorting_mask[dataset.name_ref]
+        except:
+            temp_sorting = np.argsort(dataset.x0)
+
+
+
         """
         Randomly reset the kernel with a probability of 0.1%
         To prevent memory allocations issues I suspect are happening
         """
         random_selector = np.random.randint(1000)
         if random_selector == 50:
-            self._reset_kernel(parameter_values, dataset)
+            self._reset_kernel(parameter_values, dataset, temp_sorting)
 
 
         jitter_values = np.zeros(self._n_jitter[dataset.name_ref])
@@ -165,7 +172,7 @@ class SPLEAF_ESP(AbstractModel):
 
 
         self.D_spleaf[dataset.name_ref].set_param(input_param, self.D_spleaf[dataset.name_ref].param)
-        return  self.D_spleaf[dataset.name_ref].loglike(dataset.residuals[self._sorting_mask[dataset.name_ref]])
+        return  self.D_spleaf[dataset.name_ref].loglike(dataset.residuals[temp_sorting])
 
 
     def sample_predict(self, parameter_values, dataset, x0_input=None, return_covariance=False, return_variance=False):
@@ -218,12 +225,10 @@ class SPLEAF_ESP(AbstractModel):
         return parameter_values['Pdec'] > 2. * parameter_values['Prot']
 
 
-    def _reset_kernel(self, parameter_values, dataset):
-
-        temp_sorting = self._sorting_mask[dataset.name_ref]
+    def _reset_kernel(self, parameter_values, dataset, argsorting):
 
         kwargs = {
-            'err': spleaf_term.Error(dataset.e[temp_sorting]),
+            'err': spleaf_term.Error(dataset.e[argsorting]),
             'GP': spleaf_term.ESPKernel(parameter_values['Hamp'],
                                     parameter_values['Prot'],
                                     parameter_values['Pdec'],
@@ -234,4 +239,4 @@ class SPLEAF_ESP(AbstractModel):
             kwargs['jitter_'+repr(n_jit)] = spleaf_term.InstrumentJitter(self._jitter_mask[dataset.name_ref][n_jit],
                                                                             dataset.jitter[self._jitter_mask[dataset.name_ref][n_jit]][0])
 
-        self.D_spleaf[dataset.name_ref] = spleaf_cov.Cov(dataset.x0[temp_sorting], **kwargs)
+        self.D_spleaf[dataset.name_ref] = spleaf_cov.Cov(dataset.x0[argsorting], **kwargs)
