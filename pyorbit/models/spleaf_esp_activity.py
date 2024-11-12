@@ -180,7 +180,7 @@ class SPLEAF_ESP(AbstractModel):
             t_predict = x0_input
             sorting_predict = np.argsort(x0_input)
 
-        temp_sorting = self._sorting_mask[dataset.name_ref]
+        temp_sorting = np.argsort(dataset.x0)
 
         """ I'm creating the kernel here """
         D = spleaf_cov.Cov(dataset.x0[temp_sorting],
