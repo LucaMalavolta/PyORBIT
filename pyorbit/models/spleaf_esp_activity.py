@@ -128,7 +128,7 @@ class SPLEAF_ESP(AbstractModel):
             'Oamp': 0.35
         }
 
-        self._reset_kernel(parameter_values, dataset)
+        self._reset_kernel(parameter_values, dataset, temp_sorting)
 
 
     def lnlk_compute(self, parameter_values, dataset):
@@ -149,15 +149,16 @@ class SPLEAF_ESP(AbstractModel):
         except:
             temp_sorting = np.argsort(dataset.x0)
 
-
-
         """
         Randomly reset the kernel with a probability of 0.1%
         To prevent memory allocations issues I suspect are happening
         """
         random_selector = np.random.randint(1000)
         if random_selector == 50:
-            self._reset_kernel(parameter_values, dataset, temp_sorting)
+            try:
+                self._reset_kernel(parameter_values, dataset, temp_sorting)
+            except TypeError:
+                self._reset_kernel(parameter_values, dataset)
 
 
         jitter_values = np.zeros(self._n_jitter[dataset.name_ref])
@@ -225,7 +226,10 @@ class SPLEAF_ESP(AbstractModel):
         return parameter_values['Pdec'] > 2. * parameter_values['Prot']
 
 
-    def _reset_kernel(self, parameter_values, dataset, argsorting):
+    def _reset_kernel(self, parameter_values, dataset, argsorting=None):
+
+        if argsorting is None:
+            argsorting = np.argsort(dataset.x0)
 
         kwargs = {
             'err': spleaf_term.Error(dataset.e[argsorting]),
