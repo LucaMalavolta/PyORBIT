@@ -240,9 +240,9 @@ class SPLEAF_Multidimensional_ESP(AbstractModel):
             return -np.inf
         if not self.rotdec_condition(self.internal_parameter_values):
             return -np.inf
-    
+
         """
-        Randomly reset the kernel with a probability of 0.1% 
+        Randomly reset the kernel with a probability of 0.1%
         To prevent memory allocations issues I suspect are happening
         """
         random_selector = np.random.randint(1000)
@@ -281,10 +281,14 @@ class SPLEAF_Multidimensional_ESP(AbstractModel):
 
         if x0_input is None:
             t_predict = dataset.x0
+            sorting_predict = np.argsort(dataset.x0)
         else:
             t_predict = x0_input
+            sorting_predict = np.argsort(x0_input)
 
-        mu, var = self.D_spleaf.conditional(self.spleaf_res, t_predict, calc_cov='diag')
+        mu = np.empty_like(t_predict)
+        var = np.empty_like(t_predict)
+        mu[sorting_predict], var[sorting_predict]  = self.D_spleaf.conditional(self.spleaf_res, t_predict[sorting_predict], calc_cov='diag')
 
         if return_variance:
             return mu, np.sqrt(var)
