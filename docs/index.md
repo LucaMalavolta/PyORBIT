@@ -29,13 +29,14 @@ Alternatively, for easy automatization, PyORBIT can be called as a Python functi
 
 :::{admonition} Keep `PyORBIT` updated!
 
-Current version of `PyORBIT` is [![PyPI version fury.io](https://badge.fury.io/py/pyorbit-package.svg)](https://pypi.python.org/pypi/pyprbot-package/), keep the software updated for improved performances and new models by running `pip install --upgrade pyorbit-package` on your terminal 
+Current version of `PyORBIT` is [![PyPI version fury.io](https://badge.fury.io/py/pyorbit-package.svg)](https://pypi.python.org/pypi/pyprbot-package/), keep the software updated for improved performances and new models by running `pip install --upgrade pyorbit-package` on your terminal
 :::
 
 
 :::{versionadded} 10.8
 
 **Additional BIC/AIC/AICc information** in output and in dictionaries when running `pyorbit_results`. Information criteria computed through the ln-posterior (in addition to the ln-likelihood) have been dropped, as definitely wrong. This version is fully compatible with version **10.7**, as the only changes are in the analysis of the results. There is also a small bugfix regarding datasets not in chronological order which was preventing analysis with `spleaf_esp` model from starting altogether.
+:::
 
 :::{versionadded} 10.7
 
@@ -45,14 +46,14 @@ Current version of `PyORBIT` is [![PyPI version fury.io](https://badge.fury.io/p
 
 - Textual output is now also saved as dictionaries in the corresponding *dictionaries* folder.
 
-- I fixed some inconsistencies with package requirements. 
+- I fixed some inconsistencies with package requirements.
 
 - A small bug (one letter!) in `10.6.4` was causing pyorbit_results to quit abruptly after computing the autocorrelation function. The bug has been fixed.
 
 :::
 
 :::{tip} **Back-compatibility with version 10.6**
-`pyorbit_results from version `10.7` is compatible with analysis run with `pyorbit_run` version `10.6`, as most of the differences regard the introduction of new models not affecting the pre-existing ones and the visualization of the results
+`pyorbit_results` from version `10.7` is compatible with analysis run with `pyorbit_run` version `10.6`, as most of the differences regard the introduction of new models not affecting the pre-existing ones and the visualization of the results
 
 :::
 
