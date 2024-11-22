@@ -123,6 +123,11 @@ class GaussianProcess_QuasiPeriodicActivity_Common(AbstractModel):
         else:
             self.rotdec_condition = self._hypercond_00
 
+        if kwargs.get('halfrotation_decay_condition', False):
+            self.halfrotdec_condition = self._hypercond_03
+        else:
+            self.halfrotdec_condition = self._hypercond_00
+
         for keyword in keywords_stellar_rotation:
             self.use_stellar_rotation_period = kwargs.get(keyword, self.use_stellar_rotation_period)
 
@@ -217,6 +222,8 @@ class GaussianProcess_QuasiPeriodicActivity_Common(AbstractModel):
             return -np.inf
         if not self.rotdec_condition(self.internal_parameter_values):
             return -np.inf
+        if not self.halfrotdec_condition(self.internal_parameter_values):
+            return -np.inf
 
         self.gp.set_parameter_vector(self.internal_gp_pams)
         self.gp.compute(self._dataset_x0, np.sqrt(self._dataset_ej2))
@@ -257,4 +264,9 @@ class GaussianProcess_QuasiPeriodicActivity_Common(AbstractModel):
     def _hypercond_02(parameter_values):
         #Condition on Rotation period and decay timescale
         return parameter_values['Pdec'] > 2. * parameter_values['Prot']
+
+    @staticmethod
+    def _hypercond_03(parameter_values):
+        #Condition on Rotation period and decay timescale
+        return parameter_values['Pdec'] > 0.5 * parameter_values['Prot']
 
