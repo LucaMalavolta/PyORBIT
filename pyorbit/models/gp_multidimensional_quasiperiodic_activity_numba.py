@@ -5,7 +5,7 @@ from pyorbit.keywords_definitions import *
 from scipy.linalg import cho_factor, cho_solve, lapack, LinAlgError
 from scipy import matrix, spatial
 
-from numba.experimental import jitclass
+#from numba.experimental import jitclass
 
 try:
     from numba import jit
