@@ -110,6 +110,11 @@ class SPLEAF_Multidimensional_ESP(AbstractModel):
         else:
             self.rotdec_condition = self._hypercond_00
 
+        if kwargs.get('halfrotation_decay_condition', False):
+            self.halfrotdec_condition = self._hypercond_03
+        else:
+            self.halfrotdec_condition = self._hypercond_00
+
         for common_ref in self.common_ref:
             if mc.common_models[common_ref].model_class == 'activity':
                 self.use_stellar_rotation_period = getattr(mc.common_models[common_ref], 'use_stellar_rotation_period', False)
@@ -240,6 +245,8 @@ class SPLEAF_Multidimensional_ESP(AbstractModel):
             return -np.inf
         if not self.rotdec_condition(self.internal_parameter_values):
             return -np.inf
+        if not self.halfrotdec_condition(self.internal_parameter_values):
+            return -np.inf
 
         """
         Randomly reset the kernel with a probability of 0.1%
@@ -330,4 +337,9 @@ class SPLEAF_Multidimensional_ESP(AbstractModel):
     def _hypercond_02(parameter_values):
         #Condition on Rotation period and decay timescale
         return parameter_values['Pdec'] > 2. * parameter_values['Prot']
+
+    @staticmethod
+    def _hypercond_03(parameter_values):
+        #Condition on Rotation period and decay timescale
+        return parameter_values['Pdec'] > 0.5 * parameter_values['Prot']
 
