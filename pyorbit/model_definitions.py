@@ -122,6 +122,7 @@ from pyorbit.models.tinygp_multiquasiperiodic_trainedsquaredexponential_activity
 
 from pyorbit.models.spleaf_multidimensional_esp_activity import SPLEAF_Multidimensional_ESP
 from pyorbit.models.spleaf_multidimensional_esp_activity_slow import SPLEAF_Multidimensional_ESP_slow
+from pyorbit.models.spleaf_multidimensional_esp_activity_devel import SPLEAF_Multidimensional_ESP_devel
 from pyorbit.models.spleaf_esp_activity import SPLEAF_ESP
 from pyorbit.models.spleaf_esp_activity_slow import SPLEAF_ESP_slow
 
@@ -295,6 +296,7 @@ define_type_to_class = {
     'tinygp_multiquasiperiodictrainedsquaredexponential': TinyGP_MultiQuasiPeriodic_TrainedSquaredExponential_Activity,
     'tinygp_multidimensional_matern32': TinyGP_Multidimensional_Matern32Activity,
     'spleaf_multidimensional_esp_slow': SPLEAF_Multidimensional_ESP_slow,
+    'spleaf_multidimensional_esp_devel': SPLEAF_Multidimensional_ESP_devel,
     'spleaf_multidimensional_exponentialsineperiodic_slow': SPLEAF_Multidimensional_ESP_slow,
     'spleaf_multidimensional_esp': SPLEAF_Multidimensional_ESP,
     'spleaf_multidimensional_exponentialsineperiodic': SPLEAF_Multidimensional_ESP,
