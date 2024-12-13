@@ -90,6 +90,7 @@ class SPLEAF_Multidimensional_ESP_devel(AbstractModel):
         self.D_param = None
         self.input_param = None
 
+        self.matrix_regularization = {}
 
         #self.pi2 = np.pi * np.pi
 
@@ -154,6 +155,8 @@ class SPLEAF_Multidimensional_ESP_devel(AbstractModel):
         self._dataset_njitter[dataset.name_ref] = []
 
 
+        self.matrix_regularization[dataset.name_ref] = np.nanmedian(dataset.e)
+
         self._dataset_temporary_jitmask[dataset.name_ref] = []
 
         for var in dataset.list_pams:
@@ -164,7 +167,9 @@ class SPLEAF_Multidimensional_ESP_devel(AbstractModel):
             self._added_jitters += 1
 
         self.spleaf_time, self.spleaf_res, self.spleaf_err, self.spleaf_series_index = \
-            spleaf_cov.merge_series(self._dataset_x0, self._dataset_err, self._dataset_err)
+            spleaf_cov.merge_series(self._dataset_x0, 
+                                    self._dataset_err/self.matrix_regularization[dataset.name_ref], 
+                                    self._dataset_err/self.matrix_regularization[dataset.name_ref])
 
 
         self._jitter_mask = []
@@ -182,9 +187,9 @@ class SPLEAF_Multidimensional_ESP_devel(AbstractModel):
 
 
         d_ind = self._dataset_nindex[dataset.name_ref]
-        j_ind = self._dataset_njitter[dataset.name_ref]
+        #j_ind = self._dataset_njitter[dataset.name_ref]
 
-        self.spleaf_res[self.spleaf_series_index[d_ind]] = dataset.residuals
+        self.spleaf_res[self.spleaf_series_index[d_ind]] = dataset.residuals 
 
         self.internal_parameter_values = {
             'Prot': 30.0,
@@ -229,13 +234,13 @@ class SPLEAF_Multidimensional_ESP_devel(AbstractModel):
         d_ind = self._dataset_nindex[dataset.name_ref]
         j_ind = self._dataset_njitter[dataset.name_ref]
 
-        self.spleaf_res[self.spleaf_series_index[d_ind]] = dataset.residuals
+        self.spleaf_res[self.spleaf_series_index[d_ind]] = dataset.residuals / self.matrix_regularization[dataset.name_ref]
 
         for j_jit in j_ind:
-            self.internal_jitter[j_jit] =  dataset.jitter[self._dataset_jitmask[j_jit]][0]
+            self.internal_jitter[j_jit] =  dataset.jitter[self._dataset_jitmask[j_jit]][0] / self.matrix_regularization[dataset.name_ref]
 
-        self.internal_coeff_prime[d_ind] = parameter_values['con_amp']
-        self.internal_coeff_deriv[d_ind] = parameter_values['rot_amp']
+        self.internal_coeff_prime[d_ind] = parameter_values['con_amp'] / self.matrix_regularization[dataset.name_ref]
+        self.internal_coeff_deriv[d_ind] = parameter_values['rot_amp'] / self.matrix_regularization[dataset.name_ref]
 
 
     def lnlk_compute(self):
@@ -298,9 +303,9 @@ class SPLEAF_Multidimensional_ESP_devel(AbstractModel):
         mu[sorting_predict], var[sorting_predict]  = self.D_spleaf.conditional(self.spleaf_res, t_predict[sorting_predict], calc_cov='diag')
 
         if return_variance:
-            return mu, np.sqrt(var)
+            return mu*self.matrix_regularization[dataset.name_ref], np.sqrt(var)*self.matrix_regularization[dataset.name_ref]
         else:
-            return mu
+            return mu*self.matrix_regularization[dataset.name_ref]
 
     def _reset_kernel(self):
 
