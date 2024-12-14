@@ -156,6 +156,7 @@ models
 gaussian_process_regression
 multidimensional_gps
 running_pyorbit
+advanced_use
 GitHub Repository <https://github.com/LucaMalavolta/PyORBIT>
 ```
 
