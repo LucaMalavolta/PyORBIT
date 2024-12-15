@@ -183,4 +183,48 @@ solver:
   recenter_bounds: True
 ```
 
-## 
+## Sharing only some of the hyperparameters
+
+The previous configuration assumes that you want to share the rotational period of the star `Prot`, the decay time scale of active regions `Pdec`, and the coherence scale `Oamp` among all the datasets. There are reasons to believe that the `Pdec` may change with time, and `Oamp` may change from datasets to dataset, depending on the specific aspects of stellar activity captured by each observational method.
+To share only some of the hyperparameters involved in the GP regression, we associated the photometric and the spectroscopic models to two separate common activity models. In this way, the hyperparameters will be independent.
+Since it would not make sense to have *all* the hyperparameters being independent (as it wold be equivalent to run two independent fits), we specify that the rotational period of the star `Prot` will be extracted from the stellar properties rather then from the activity model by setting the `use_stellar_rotation_period` flag to `True`:
+
+```{code-block} yaml
+  activity_photometry:
+    model: activity
+    use_stellar_rotation_period: True
+    boundaries:
+      #Prot: [10.0, 20.0]
+      Pdec: [20.0, 1000.0]
+      Oamp: [0.001, 1.0]
+  activity_spectroscopy:
+    model: activity
+    use_stellar_rotation_period: True
+    boundaries:
+      #Prot: [10.0, 20.0]
+      Pdec: [20.0, 1000.0]
+      Oamp: [0.001, 1.0]
+```
+
+Note how we have to specify two different names for the models, `activity_photometry` and `activity_spectroscopy`, while declaring that they are both `model:activity`. Since the rotational period hyperparameter is not taken from the activity model anymore, there is no need to specify its boundaries in the activity model.
+
+```{code-block} yaml
+
+  star:
+    star_parameters:
+      boundaries:
+        rotation_period []
+      priors:
+        mass: ['Gaussian', 0.708, 0.028]
+        radius: ['Gaussian', 0.681, 0.018]
+        density: ['Gaussian', 2.65, 0.08]
+    limb_darkening:
+      type: ld_quadratic
+      priors:
+        ld_c1: ['Gaussian', 0.68, 0.10]
+        ld_c2: ['Gaussian', 0.05, 0.10]
+
+
+   #use_stellar_activity_decay
+   #activity_decay
+```
