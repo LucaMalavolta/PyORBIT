@@ -2,11 +2,11 @@
 
 # Light curve fit
 
-We will start this example by considering the [TESS](https://www.nasa.gov/tess-transiting-exoplanet-survey-satellite) light curve of HD189733, also known as [TOI 4470](https://exofop.ipac.caltech.edu/tess/target.php?id=256364928). 
+We will start this example by considering the [TESS](https://www.nasa.gov/tess-transiting-exoplanet-survey-satellite) light curve of HD189733, also known as [TOI 4470](https://exofop.ipac.caltech.edu/tess/target.php?id=256364928).
 
 For the purposes of this example, the light curve has been already *flattened* using `wōtan` [Hippke et al. 2019](https://ui.adsabs.harvard.edu/abs/2019AJ....158..143H/abstract), although one could perform light curve flattening within `PyORBIT` as well.
 
-## Dataset 
+## Dataset
 
 Light curve datasets differ from radial velocity or activity datasets for a fundamental aspect: the effect of planets or stellar activity is a *multiplicative* effect, rather than *additive*. For example, a Jupiter-like transiting a Sun-like star will cause a drop in light of about 1% regardless of the absolute value of the flux recorded on the ground. Thus, removing an additive offset from the light curve would inevitably affect the observed transit depth. For this reason, a light curve dataset *must always have* the offset flag deactivated:
 
@@ -31,7 +31,7 @@ Keep in mind that **0** activates a flag, **-1** deactivates it, following the P
 
 ## Configuration file
 
-In this example, the full configuration file to fit a TESS lightcurve is reported
+In this example, the full configuration file to fit a TESS light curve is reported
 
 ```{code-block} yaml
 :lineno-start: 1
@@ -88,7 +88,7 @@ solver:
 There is a lot to process:
 
 **Fit of the time of inferior conjuction $T_c$** (equivalent to the central time of transit in the case of a circular orbit) is the way to go, as we now we have a good guess of the orbital period and time of transit. Although the $P$ and $T_C$ boundaries are quite tight, they can still be considered uninformative priors as the final posteriors will have much narrow distributions.
-To enable the use of $T_C$ instead of the mean longitude `mean_long`, you need to activate the flag `use_time_inferior_conjunction`. 
+To enable the use of $T_C$ instead of the mean longitude `mean_long`, you need to activate the flag `use_time_inferior_conjunction`.
 
 ```{code-block} yaml
 :lineno-start: 7
@@ -112,10 +112,11 @@ common:
 
 **Linear space for Period** will avoid the logarithmic transformation of this parameter, which is not required given the small range of the period.
 
-## Multiband photometry 
+(quickstart_multiband_photometry)=
+## Multiband photometry
 
 Multiband photometry with specific limb darkening parameters is easy to accomodate.
-In this example, we will add four lightcurves in Ic(Cousins) band from [Bakos et al. 2006](https://ui.adsabs.harvard.edu/abs/2006ApJ...641L..57B/abstract) to the TESS photometry
+In this example, we will add four light curves in Ic(Cousins) band from [Bakos et al. 2006](https://ui.adsabs.harvard.edu/abs/2006ApJ...641L..57B/abstract) to the TESS photometry
 
 ```{code-block} yaml
 :lineno-start: 1
@@ -210,9 +211,9 @@ Note the main differences:
 ```{attention} In this example we assumed that the transit depth is independent from wavelength.
 ```
 
-It is indeed possible to obtain independent radius estimates for different photometric bands by using some of the advanced features of `PyORBIT`. An example will be provided in a dedicated tutorial. 
+It is indeed possible to obtain independent radius estimates for different photometric bands by using some of the advanced features of `PyORBIT`. An example will be provided in a dedicated tutorial.
 
 ```{warning}
-`batman` may get stuck in a loop when eccentricity is higher than 0.95. 
+`batman` may get stuck in a loop when eccentricity is higher than 0.95.
 
 ```
