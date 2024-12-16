@@ -166,7 +166,7 @@ model_requires_limb_darkening = ['transit',
                                 'subset_spectral_rotation_polynomial',
                                 'rossiter_mclaughlin']
 
-model_requires_star = ['rossiter_mclaughlin', 'transit_times']
+model_requires_star = ['rossiter_mclaughlin', 'transit_times', 'gaussian_process', 'multidimensional_gaussian_process']
 model_requires_multiple_planets = ['rossiter_mclaughlin']
 
 define_common_type_to_class = {

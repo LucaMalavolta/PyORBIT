@@ -30,7 +30,7 @@ class SPLEAF_Multidimensional_ESP_devel(AbstractModel):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.model_class = 'spleaf_multidimensional_esp'
+        self.model_class = 'multidimensional_gaussian_process'
 
         self.internal_likelihood = True
         self.delayed_lnlk_computation = True
@@ -91,6 +91,7 @@ class SPLEAF_Multidimensional_ESP_devel(AbstractModel):
         self.input_param = None
 
         self.matrix_regularization = {}
+        self.squared_residuals_flag = {}
 
         #self.pi2 = np.pi * np.pi
 

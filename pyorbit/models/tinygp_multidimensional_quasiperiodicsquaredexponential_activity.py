@@ -143,7 +143,7 @@ class TinyGP_Multidimensional_QuasiPeriodicSquaredExponentialActivity(AbstractMo
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.model_class = 'gp_multidimensional_quasiperiodicsquaredexponential_activity'
+        self.model_class = 'multidimensional_gaussian_process'
 
         self.internal_likelihood = True
         self.delayed_lnlk_computation = True

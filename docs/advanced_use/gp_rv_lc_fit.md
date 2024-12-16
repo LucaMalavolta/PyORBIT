@@ -185,6 +185,11 @@ solver:
 
 ## Sharing only some of the hyperparameters
 
+:::{tip} **Improved interface starting from 10.9**
+The following example applies to analysis performed with `PyORBIT` version >= 10.9
+Previous version salready implemented the following analysis, with a less user-friendly interface. 
+:::
+
 The previous configuration assumes that you want to share the rotational period of the star `Prot`, the decay time scale of active regions `Pdec`, and the coherence scale `Oamp` among all the datasets. There are reasons to believe that the `Pdec` may change with time, and `Oamp` may change from datasets to dataset, depending on the specific aspects of stellar activity captured by each observational method.
 To share only some of the hyperparameters involved in the GP regression, we associated the photometric and the spectroscopic models to two separate common activity models. In this way, the hyperparameters will be independent.
 Since it would not make sense to have *all* the hyperparameters being independent (as it wold be equivalent to run two independent fits), we specify that the rotational period of the star `Prot` will be extracted from the stellar properties rather then from the activity model by setting the `use_stellar_rotation_period` flag to `True`:
@@ -206,14 +211,15 @@ Since it would not make sense to have *all* the hyperparameters being independen
       Oamp: [0.001, 1.0]
 ```
 
-Note how we have to specify two different names for the models, `activity_photometry` and `activity_spectroscopy`, while declaring that they are both `model:activity`. Since the rotational period hyperparameter is not taken from the activity model anymore, there is no need to specify its boundaries in the activity model.
+In this way, there will be independent `Pdec` and `Oamp` depending on which *common* activity model each model will recall.
+
+Note how we have to specify two different names for the models, `activity_photometry` and `activity_spectroscopy`, while declaring that they are both `model:activity`. Since the rotational period hyperparameter is not taken from the activity model anymore, there is no need to specify its boundaries in the activity model. Instead , you can specifiy boundaries, prior, and space foir the `rotation_period` in the `star_parameters` section. 
 
 ```{code-block} yaml
-
   star:
     star_parameters:
       boundaries:
-        rotation_period []
+        rotation_period: [10.0, 20.0]
       priors:
         mass: ['Gaussian', 0.708, 0.028]
         radius: ['Gaussian', 0.681, 0.018]
@@ -223,8 +229,95 @@ Note how we have to specify two different names for the models, `activity_photom
       priors:
         ld_c1: ['Gaussian', 0.68, 0.10]
         ld_c2: ['Gaussian', 0.05, 0.10]
-
-
    #use_stellar_activity_decay
    #activity_decay
 ```
+
+Finally, remember to associate the corresponding *common* activity to the model used for each dataset, as in the example below (with some omessions to highlight the differences with respect to the previous code block). 
+
+```{code-block} yaml
+models:
+  spleaf_esp:
+    model: spleaf_esp
+    common: activity_photometry 
+    n_harmonics: 4
+    hyperparameters_condition: True
+    ...
+  gp_multidimensional:
+    model: tinygp_multidimensional_quasiperiodic
+    common: activity_spectroscopy
+    hyperparameters_condition: True
+    ...
+```
+
+The `rotation_period` parameter will be taken automatically from the stellar porperties. If there is only one stellar model, the association will be automatic without requiring the explicit declaration in the `models:*model_name*:common` section.
+
+If you want to share also the decay time scale `Pdec`, you can follow the same procedure as the rotational period `Prot`, noting that the flag to be activated is `use_stellar_activity_decay` rather than `use_stellar_rotation_period`. In the example below, both the `Prot` and `Pdec` are shared among the models.
+
+```{code-block} yaml
+  activity_photometry:
+    model: activity
+    use_stellar_rotation_period: True
+    use_stellar_activity_decay: True
+    boundaries:
+      #Prot: [10.0, 20.0]
+      #Pdec: [20.0, 1000.0]
+      Oamp: [0.001, 1.0]
+  activity_spectroscopy:
+    model: activity
+    use_stellar_rotation_period: True
+    use_stellar_activity_decay: True
+    boundaries:
+      #Prot: [10.0, 20.0]
+      #Pdec: [20.0, 1000.0]
+      Oamp: [0.001, 1.0]
+```
+
+In the stellar properties, the decay time scale takes the name of `activity_decay`:
+
+```{code-block} yaml
+  star:
+    star_parameters:
+      boundaries:
+        rotation_period: [10.0, 20.0]
+        activity_decay: [20.0, 1000.0]
+      priors:
+        mass: ['Gaussian', 0.708, 0.028]
+        ...
+```
+
+The `models` ection would be the same as in the case of the shared rotational period. 
+
+Finally, it is possible to create mixed cases where a given hyperparameters is shared among some datasets but not with others. In the following (fictional) examples, the `Prot` is shared among all the parameters, while `Pdec' is shared only among the photometric models.
+
+```{code-block} yaml
+  activity_ground_photometry:
+    model: activity
+    use_stellar_rotation_period: True
+    use_stellar_activity_decay: True
+    boundaries:
+      #Prot: [10.0, 20.0]
+      #Pdec: [20.0, 1000.0]
+      Oamp: [0.001, 1.0]
+  activity_space_photometry:
+    model: activity
+    use_stellar_rotation_period: True
+    use_stellar_activity_decay: True
+    boundaries:
+      #Prot: [10.0, 20.0]
+      #Pdec: [20.0, 1000.0]
+      Oamp: [0.001, 1.0]
+activity_spectroscopy:
+    model: activity
+    use_stellar_rotation_period: True
+    boundaries:
+      #Prot: [10.0, 20.0]
+      Pdec: [20.0, 1000.0]
+      Oamp: [0.001, 1.0]
+```
+
+Note that omitting the declaration for `use_stellar_activity_decay` is equivalent to declare `use_stellar_activity_decay: False`.
+
+:::{admonition}
+For now, there is no flag to share the coherence scale `Oamp`, as this value is the last one you want to share among models. In other words, if you inclided to share `Oamp`, then likely you wantto share `Prot` and `Pdec` as well, following back to the case highlighted at the beginning of this page.
+::: 

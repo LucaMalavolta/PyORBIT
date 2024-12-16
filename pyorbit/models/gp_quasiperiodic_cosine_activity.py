@@ -24,7 +24,7 @@ class GaussianProcess_QuasiPeriodicCosineActivity(AbstractModel):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.model_class = 'gp_quasiperiodic_cosine'
+        self.model_class = 'gaussian_process'
         self.internal_likelihood = True
 
         self.list_pams_common = OrderedSet([

@@ -50,7 +50,7 @@ class TinyGaussianProcess_Matern32Activity(AbstractModel):
             print("ERROR: tinygp or jax not installed, this will not work")
             quit()
 
-        self.model_class = 'tinygp_matern32'
+        self.model_class = 'gaussian_process'
         self.internal_likelihood = True
 
         self.list_pams_dataset = OrderedSet([

@@ -30,7 +30,7 @@ class SPLEAF_Multidimensional_ESP(AbstractModel):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.model_class = 'spleaf_multidimensional_esp'
+        self.model_class = 'multidimensional_gaussian_process'
 
         self.internal_likelihood = True
         self.delayed_lnlk_computation = True
@@ -97,7 +97,7 @@ class SPLEAF_Multidimensional_ESP(AbstractModel):
     def initialize_model(self, mc,  **kwargs):
 
         self.n_harmonics = kwargs.get('n_harmonics', self.n_harmonics)
-        print(' S+LEAF model, number of harmonics:', self.n_harmonics)
+        print(self.model_name,  ' S+LEAF model, number of harmonics:', self.n_harmonics)
         print()
 
         if kwargs.get('hyperparameters_condition', False):
@@ -117,6 +117,7 @@ class SPLEAF_Multidimensional_ESP(AbstractModel):
 
         for common_ref in self.common_ref:
             if mc.common_models[common_ref].model_class == 'activity':
+                print(mc.common_models[common_ref].use_stellar_rotation_period)
                 self.use_stellar_rotation_period = getattr(mc.common_models[common_ref], 'use_stellar_rotation_period', False)
                 break
 
@@ -126,7 +127,6 @@ class SPLEAF_Multidimensional_ESP(AbstractModel):
         if self.use_stellar_rotation_period:
             self.list_pams_common.update(['rotation_period'])
             self.list_pams_common.discard('Prot')
-
 
         for common_ref in self.common_ref:
             if mc.common_models[common_ref].model_class == 'activity':

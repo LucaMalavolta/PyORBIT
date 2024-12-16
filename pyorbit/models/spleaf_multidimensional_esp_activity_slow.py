@@ -30,7 +30,7 @@ class SPLEAF_Multidimensional_ESP_slow(AbstractModel):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.model_class = 'spleaf_multidimensional_esp'
+        self.model_class = 'multidimensional_gaussian_process'
 
         self.internal_likelihood = True
         self.delayed_lnlk_computation = True

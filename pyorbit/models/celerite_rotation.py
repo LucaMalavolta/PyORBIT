@@ -43,7 +43,7 @@ class Celerite_Rotation(AbstractModel):
             print("ERROR: celerite not installed, this will not work")
             quit()
 
-        self.model_class = 'celerite_rotation'
+        self.model_class = 'gaussian_process'
         self.internal_likelihood = True
 
         self.list_pams_common = OrderedSet([

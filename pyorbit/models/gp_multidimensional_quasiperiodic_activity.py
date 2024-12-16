@@ -19,7 +19,7 @@ class GP_Multidimensional_QuasiPeriodicActivity(AbstractModel):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.model_class = 'gp_multidimensional_quasiperiodic_activity'
+        self.model_class = 'multidimensional_gaussian_process'
 
         self.internal_likelihood = True
         self.delayed_lnlk_computation = True

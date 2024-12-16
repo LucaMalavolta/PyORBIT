@@ -26,7 +26,7 @@ class GaussianProcess_QuasiPeriodicActivity_Derivative(AbstractModel):
             print("ERROR: george not installed, this will not work")
             quit()
 
-        self.model_class = 'gp_quasiperiodic_derivative'
+        self.model_class = 'gaussian_process'
         self.internal_likelihood = True
 
         self.list_pams_common = OrderedSet([

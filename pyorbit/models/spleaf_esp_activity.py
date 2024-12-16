@@ -30,7 +30,7 @@ class SPLEAF_ESP(AbstractModel):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.model_class = 'spleaf_esp'
+        self.model_class = 'gaussian_process'
 
         self.internal_likelihood = True
 

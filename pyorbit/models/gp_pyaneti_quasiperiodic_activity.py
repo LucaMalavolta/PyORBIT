@@ -30,7 +30,7 @@ class GP_Pyaneti_QuasiPeriodicActivity(AbstractModel):
             print("ERROR: pyaneti not installed, this will not work")
             quit()
 
-        self.model_class = 'gp_pyaneti_quasiperiodic_activity'
+        self.model_class = 'multidimensional_gaussian_process'
 
         self.internal_likelihood = True
         self.delayed_lnlk_computation = True

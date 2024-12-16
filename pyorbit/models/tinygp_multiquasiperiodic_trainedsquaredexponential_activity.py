@@ -131,7 +131,7 @@ class TinyGP_MultiQuasiPeriodic_TrainedSquaredExponential_Activity(AbstractModel
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.model_class = 'gp_multiquasiperiodic_trainedsquaredexponential_activity'
+        self.model_class = 'multidimensional_gaussian_process'
 
         self.internal_likelihood = True
         self.delayed_lnlk_computation = True

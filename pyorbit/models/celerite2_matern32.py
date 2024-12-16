@@ -29,7 +29,7 @@ class Celerite2_Matern32(AbstractModel):
             print("ERROR: celerite2 not installed, this will not work")
             quit()
 
-        self.model_class = 'celerite2_matern32'
+        self.model_class = 'gaussian_process'
         self.internal_likelihood = True
 
         self.list_pams_common = OrderedSet()

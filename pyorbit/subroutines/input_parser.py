@@ -379,6 +379,8 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, reload_ze
             bounds_space_priors_starts_fixed(
                 mc, mc.common_models[model_name], model_conf)
 
+            mc.common_models[model_name].model_conf = model_conf.copy()
+
             """ Automatic detection of common models without dataset-specific parameters
                 If the required parameters are included in the "model-specific section",
                 the relative dictionary is created and the keywords are copied there
@@ -399,7 +401,6 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, reload_ze
                         conf_models[model_name]['common'] = model_name
                     except:
                         conf_models[model_name] = {'common': model_name}
-
 
         # Add the stellar parameter class anyway
         #if 'star_parameters' not in mc.common_models:

@@ -20,7 +20,7 @@ class GP_Framework_QuasiPeriodicActivity(AbstractModel):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.model_class = 'gp_framework_semiperiod_activity'
+        self.model_class = 'gaussian_process'
 
         self.internal_likelihood = True
         self.delayed_lnlk_computation = True
