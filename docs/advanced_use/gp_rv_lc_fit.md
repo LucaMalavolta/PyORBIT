@@ -185,7 +185,7 @@ solver:
 
 ## Sharing only some of the hyperparameters
 
-:::{admonition} **Improved interface starting from 10.9**
+:::{admonition} Improved interface starting from version 10.9
 The following example applies to analysis performed with `PyORBIT` version >= 10.9
 Previous version salready implemented the following analysis, with a less user-friendly interface. 
 :::
