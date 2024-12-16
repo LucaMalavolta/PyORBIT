@@ -185,7 +185,7 @@ solver:
 
 ## Sharing only some of the hyperparameters
 
-:::{tip} **Improved interface starting from 10.9**
+:::{admonition} **Improved interface starting from 10.9**
 The following example applies to analysis performed with `PyORBIT` version >= 10.9
 Previous version salready implemented the following analysis, with a less user-friendly interface. 
 :::
@@ -318,6 +318,6 @@ activity_spectroscopy:
 
 Note that omitting the declaration for `use_stellar_activity_decay` is equivalent to declare `use_stellar_activity_decay: False`.
 
-:::{admonition}
+:::{tip}
 For now, there is no flag to share the coherence scale `Oamp`, as this value is the last one you want to share among models. In other words, if you inclided to share `Oamp`, then likely you wantto share `Prot` and `Pdec` as well, following back to the case highlighted at the beginning of this page.
 ::: 
