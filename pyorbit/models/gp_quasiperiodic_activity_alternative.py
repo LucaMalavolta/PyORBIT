@@ -1,12 +1,13 @@
 from pyorbit.subroutines.common import *
-from pyorbit.models.abstract_model import *
+from pyorbit.models.abstract_model import AbstractModel
+from pyorbit.models.abstract_gaussian_processes import AbstractGaussianProcesses
 from pyorbit.keywords_definitions import *
 
 from scipy.linalg import cho_factor, cho_solve, lapack
 from scipy import spatial
 
 
-class GaussianProcess_QuasiPeriodicActivity_Alternative(AbstractModel):
+class GaussianProcess_QuasiPeriodicActivity_Alternative(AbstractModel, AbstractGaussianProcesses):
     '''
     This is an altervative version of GaussianProcess_QuasiPeriodicActivity class,
     the only practical difference is that we don't use the george package
@@ -23,6 +24,7 @@ class GaussianProcess_QuasiPeriodicActivity_Alternative(AbstractModel):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        super(AbstractModel, self).__init__(*args, **kwargs)
 
         self.model_class = 'gaussian_process'
         self.internal_likelihood = True
@@ -63,46 +65,10 @@ class GaussianProcess_QuasiPeriodicActivity_Alternative(AbstractModel):
         return cov_matrix
 
     def initialize_model(self, mc,  **kwargs):
-
-        if kwargs.get('hyperparameters_condition', False):
-            self.hyper_condition = self._hypercond_01
-        else:
-            self.hyper_condition = self._hypercond_00
-
-        if kwargs.get('rotation_decay_condition', False):
-            self.rotdec_condition = self._hypercond_02
-        else:
-            self.rotdec_condition = self._hypercond_00
-
-        if kwargs.get('halfrotation_decay_condition', False):
-            self.halfrotdec_condition = self._hypercond_03
-        else:
-            self.halfrotdec_condition = self._hypercond_00
-
-        for common_ref in self.common_ref:
-            if mc.common_models[common_ref].model_class == 'activity':
-                self.use_stellar_rotation_period = getattr(mc.common_models[common_ref], 'use_stellar_rotation_period', False)
-                break
-
-        for keyword in keywords_stellar_rotation:
-            self.use_stellar_rotation_period = kwargs.get(keyword, self.use_stellar_rotation_period)
-
-        if self.use_stellar_rotation_period:
-            self.list_pams_common.update(['rotation_period'])
-            self.list_pams_common.discard('Prot')
-
-        for common_ref in self.common_ref:
-            if mc.common_models[common_ref].model_class == 'activity':
-                self.use_stellar_activity_decay = getattr(mc.common_models[common_ref], 'use_stellar_activity_decay', False)
-                break
-
-        for keyword in keywords_stellar_activity_decay:
-            self.use_stellar_activity_decay = kwargs.get(keyword, self.use_stellar_activity_decay)
-
-        if self.use_stellar_activity_decay:
-            self.list_pams_common.update(['activity_decay'])
-            self.list_pams_common.discard('Pdec')
-
+        
+        self._prepare_hyperparameter_conditions(mc, **kwargs)
+        self._prepare_rotation_replacement(mc, **kwargs)
+        self._prepare_decay_replacement(mc, **kwargs)
 
     def initialize_model_dataset(self, mc, dataset, **kwargs):
 
@@ -114,18 +80,11 @@ class GaussianProcess_QuasiPeriodicActivity_Alternative(AbstractModel):
 
     def lnlk_compute(self, parameter_values, dataset):
 
-        if self.use_stellar_rotation_period:
-            parameter_values['Prot'] = parameter_values['rotation_period']
-
-        if self.use_stellar_activity_decay:
-            parameter_values['Pdec'] = parameter_values['activity_decay']
-
-        if not self.hyper_condition(parameter_values):
-            return -np.inf
-        if not self.rotdec_condition(parameter_values):
-            return -np.inf
-        if not self.halfrotdec_condition(parameter_values):
-            return -np.inf
+        self.update_parameter_values(parameter_values)
+        
+        pass_conditions = self.check_hyperparameter_values(parameter_values)
+        if not pass_conditions:
+            return pass_conditions
 
         env = dataset.e ** 2.0 + dataset.jitter ** 2.0
         cov_matrix = self._compute_cov_matrix(parameter_values,
@@ -153,11 +112,7 @@ class GaussianProcess_QuasiPeriodicActivity_Alternative(AbstractModel):
 
     def sample_predict(self, parameter_values, dataset, x0_input=None, return_covariance=False, return_variance=False):
 
-        if self.use_stellar_rotation_period:
-            parameter_values['Prot'] = parameter_values['rotation_period']
-
-        if self.use_stellar_activity_decay:
-            parameter_values['Pdec'] = parameter_values['activity_decay']
+        self.update_parameter_values(parameter_values)
 
         env = dataset.e ** 2.0 + dataset.jitter ** 2.0
         cov_matrix = self._compute_cov_matrix(parameter_values,
@@ -197,32 +152,8 @@ class GaussianProcess_QuasiPeriodicActivity_Alternative(AbstractModel):
 
     def sample_conditional(self, parameter_values, dataset, x0_input=None):
 
-        if self.use_stellar_rotation_period:
-            parameter_values['Prot'] = parameter_values['rotation_period']
-
-        if self.use_stellar_activity_decay:
-            parameter_values['Pdec'] = parameter_values['activity_decay']
+        self.update_parameter_values(parameter_values)
 
         val, std = self.sample_predict(parameter_values, dataset, x0_input)
         return val
 
-    @staticmethod
-    def _hypercond_00(parameter_values):
-        #Condition from Rajpaul 2017, Rajpaul+2021
-        return True
-
-    @staticmethod
-    def _hypercond_01(parameter_values):
-        # Condition from Rajpaul 2017, Rajpaul+2021
-        # Taking into account that Pdec^2 = 2*lambda_2^2
-        return parameter_values['Pdec']**2 > (3. / 2. / np.pi) * parameter_values['Oamp']**2 * parameter_values['Prot']**2
-
-    @staticmethod
-    def _hypercond_02(parameter_values):
-        #Condition on Rotation period and decay timescale
-        return parameter_values['Pdec'] > 2. * parameter_values['Prot']
-
-    @staticmethod
-    def _hypercond_03(parameter_values):
-        #Condition on Rotation period and decay timescale
-        return parameter_values['Pdec'] > 0.5 * parameter_values['Prot']

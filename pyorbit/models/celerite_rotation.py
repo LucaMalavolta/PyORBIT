@@ -1,5 +1,6 @@
 from pyorbit.subroutines.common import np, OrderedSet
 from pyorbit.models.abstract_model import AbstractModel
+from pyorbit.models.abstract_gaussian_processes import AbstractGaussianProcesses
 from pyorbit.keywords_definitions import *
 
 try:
@@ -8,7 +9,7 @@ except (ModuleNotFoundError,ImportError):
     pass
 
 
-class Celerite_Rotation(AbstractModel):
+class Celerite_Rotation(AbstractModel, AbstractGaussianProcesses):
 
     r"""A mixture of two SHO terms that can be used to model stellar rotation
     This term has two modes in Fourier space: one at ``period`` and one at
@@ -36,6 +37,7 @@ class Celerite_Rotation(AbstractModel):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        super(AbstractModel, self).__init__(*args, **kwargs)
 
         try:
             from pyorbit.models.celerite_term import celerite, SHOTerm
@@ -109,6 +111,7 @@ class Celerite_Rotation(AbstractModel):
             self.list_pams_common.discard('Prot')
 
     def initialize_model_dataset(self, mc, dataset, **kwargs):
+        self._prepare_rotation_replacement(mc, parameter_name='matern32_rho', **kwargs)
         self.define_kernel(dataset)
         return
 
@@ -138,8 +141,7 @@ class Celerite_Rotation(AbstractModel):
            1) theta parameters must be converted in physical units (e.g. from logarithmic to linear spaces)
            2) physical values must be converted to {\tt george} input parameters
         """
-        if self.use_stellar_rotation_period:
-            parameter_values['Prot'] = parameter_values['rotation_period']
+        self.update_parameter_values(parameter_values)
 
         gp_pams = self.convert_val2gp(parameter_values)
 
@@ -151,8 +153,7 @@ class Celerite_Rotation(AbstractModel):
 
     def sample_predict(self, parameter_values, dataset, x0_input=None, return_covariance=False, return_variance=False):
 
-        if self.use_stellar_rotation_period:
-            parameter_values['Prot'] = parameter_values['rotation_period']
+        self.update_parameter_values(parameter_values)
 
         gp_pams = self.convert_val2gp(parameter_values)
 
@@ -167,8 +168,7 @@ class Celerite_Rotation(AbstractModel):
 
     def sample_conditional(self, parameter_values, dataset,  x0_input=None):
 
-        if self.use_stellar_rotation_period:
-            parameter_values['Prot'] = parameter_values['rotation_period']
+        self.update_parameter_values(parameter_values)
 
         gp_pams = self.convert_val2gp(parameter_values)
 

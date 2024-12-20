@@ -1,5 +1,6 @@
 from pyorbit.subroutines.common import *
-from pyorbit.models.abstract_model import *
+from pyorbit.models.abstract_model import AbstractModel
+from pyorbit.models.abstract_gaussian_processes import AbstractGaussianProcesses
 from pyorbit.keywords_definitions import *
 import sys
 
@@ -31,7 +32,7 @@ __all__ = ['TinyGaussianProcess_Matern32Activity']
 
 
 
-class TinyGaussianProcess_Matern32Activity(AbstractModel):
+class TinyGaussianProcess_Matern32Activity(AbstractModel, AbstractGaussianProcesses):
     '''
     - matern32_rho: the scale of the Matern32 kernel;
     - matern32_sigma: the amplitude of the correlations;
@@ -42,6 +43,7 @@ class TinyGaussianProcess_Matern32Activity(AbstractModel):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        super(AbstractModel, self).__init__(*args, **kwargs)
 
         try:
             import jax
@@ -61,21 +63,6 @@ class TinyGaussianProcess_Matern32Activity(AbstractModel):
 
     def initialize_model(self, mc,  **kwargs):
 
-        try:
-            for common_ref in self.common_ref:
-                if mc.common_models[common_ref].model_class == 'activity':
-                    self.use_stellar_rotation_period = getattr(mc.common_models[common_ref], 'use_stellar_rotation_period', False)
-                    break
-        except:
-            self.use_stellar_rotation_period = False
-
-        for keyword in keywords_stellar_rotation:
-            self.use_stellar_rotation_period = kwargs.get(keyword, self.use_stellar_rotation_period)
-
-        if self.use_stellar_rotation_period:
-            self.list_pams_common.update(['rotation_period'])
-            self.list_pams_dataset.discard('matern32_rho')
-
         self.use_shared_hyperparameters = False
         for keyword in keywords_shared_hyperparameters:
             self.use_shared_hyperparameters =  kwargs.get(keyword, self.use_shared_hyperparameters)
@@ -88,15 +75,20 @@ class TinyGaussianProcess_Matern32Activity(AbstractModel):
         self.use_shared_rho = False
         for keyword in keywords_shared_timescale:
             self.use_shared_rho =  kwargs.get(keyword, self.use_shared_rho)
-        if self.use_shared_rho and not self.use_stellar_rotation_period:
+        if self.use_shared_rho:
             pam = 'matern32_rho'
             self.list_pams_common.update([pam])
             self.list_pams_dataset.discard(pam)
 
+        self._prepare_rotation_replacement(mc, 
+                                            parameter_name='matern32_rho', 
+                                            common_pam=self.use_shared_rho,
+                                            **kwargs)
+
+
 
     def lnlk_compute(self, parameter_values, dataset):
-        if self.use_stellar_rotation_period:
-            parameter_values['matern32_rho'] = parameter_values['rotation_period']
+        self.update_parameter_values(parameter_values, replace_rotation='matern32_rho')
 
         theta_dict =  dict(
             scale=parameter_values['matern32_rho'],
@@ -110,8 +102,7 @@ class TinyGaussianProcess_Matern32Activity(AbstractModel):
 
     def sample_predict(self, parameter_values, dataset, x0_input=None, return_covariance=False, return_variance=False):
 
-        if self.use_stellar_rotation_period:
-            parameter_values['matern32_rho'] = parameter_values['rotation_period']
+        self.update_parameter_values(parameter_values, replace_rotation='matern32_rho')
 
         if x0_input is None:
             x0 = dataset.x0

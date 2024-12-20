@@ -4,9 +4,11 @@ from pyorbit.keywords_definitions import *
 class AbstractGaussianProcesses(object):
 
     def __init__(self, *args, **kwargs):
-        pass
+        self.use_stellar_rotation_period = False
+        self.use_stellar_activity_decay = False
 
-    def _prepare_hyperparameters_conditions(self, mc, **kwargs):
+
+    def _prepare_hyperparameter_conditions(self, mc, **kwargs):
 
         if kwargs.get('hyperparameters_condition', False):
             self.hyper_condition = self._hypercond_01
@@ -55,7 +57,7 @@ class AbstractGaussianProcesses(object):
             self.list_pams_common.update(['activity_decay'])
             self.list_pams_common.discard(parameter_name)
 
-    def _set_derivative_option(self, mc, dataset, **kwargs):
+    def _set_derivative_option(self, mc, dataset, return_flag=False, **kwargs):
         
         if 'derivative'in kwargs:
             use_derivative = kwargs['derivative'].get(dataset.name_ref, False)
@@ -70,18 +72,26 @@ class AbstractGaussianProcesses(object):
             else:
                 use_derivative = True
 
+        """ instead of taking an action on the parameter, the flag is returned"""
+        if return_flag:
+            return use_derivative
+
         if not use_derivative:
             self.fix_list[dataset.name_ref] = {'rot_amp': [0., 0.]}
         
-    def update_parameter_values(self, parameter_values, prepend=''):
+    def update_parameter_values(self, 
+                                parameter_values, 
+                                prepend='',
+                                replace_rotation='Prot',
+                                replace_decay='Pdec'):
 
         if self.use_stellar_rotation_period:
-            parameter_values['Prot'] = parameter_values['rotation_period']
+            parameter_values[replace_rotation] = parameter_values['rotation_period']
 
         if self.use_stellar_activity_decay:
-            parameter_values['Pdec'] = parameter_values['activity_decay']
+            parameter_values[replace_decay] = parameter_values['activity_decay']
 
-    def check_parameter_values(self, parameter_values):
+    def check_hyperparameter_values(self, parameter_values):
 
         if not self.hyper_condition(parameter_values):
             return -np.inf

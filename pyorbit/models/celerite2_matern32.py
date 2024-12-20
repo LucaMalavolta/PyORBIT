@@ -1,5 +1,6 @@
 from pyorbit.subroutines.common import np, OrderedSet
 from pyorbit.models.abstract_model import AbstractModel
+from pyorbit.models.abstract_gaussian_processes import AbstractGaussianProcesses
 from pyorbit.keywords_definitions import *
 
 try:
@@ -8,7 +9,7 @@ except (ModuleNotFoundError,ImportError):
     pass
 
 
-class Celerite2_Matern32(AbstractModel):
+class Celerite2_Matern32(AbstractModel, AbstractGaussianProcesses):
 
     r"""A term that approximates a Matern-3/2 function
 
@@ -22,6 +23,7 @@ class Celerite2_Matern32(AbstractModel):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        super(AbstractModel, self).__init__(*args, **kwargs)
 
         try:
             import celerite2
@@ -45,21 +47,6 @@ class Celerite2_Matern32(AbstractModel):
 
     def initialize_model(self, mc,  **kwargs):
 
-        try:
-            for common_ref in self.common_ref:
-                if mc.common_models[common_ref].model_class == 'activity':
-                    self.use_stellar_rotation_period = getattr(mc.common_models[common_ref], 'use_stellar_rotation_period', False)
-                    break
-        except:
-            self.use_stellar_rotation_period = False
-
-        for keyword in keywords_stellar_rotation:
-            self.use_stellar_rotation_period = kwargs.get(keyword, self.use_stellar_rotation_period)
-
-        if self.use_stellar_rotation_period:
-            self.list_pams_common.update(['rotation_period'])
-            self.list_pams_dataset.discard('matern32_rho')
-
         self.use_shared_hyperparameters = False
         for keyword in keywords_shared_hyperparameters:
             self.use_shared_hyperparameters =  kwargs.get(keyword, self.use_shared_hyperparameters)
@@ -72,10 +59,15 @@ class Celerite2_Matern32(AbstractModel):
         self.use_shared_rho = False
         for keyword in keywords_shared_timescale:
             self.use_shared_rho =  kwargs.get(keyword, self.use_shared_rho)
-        if self.use_shared_rho and not self.use_stellar_rotation_period:
+        if self.use_shared_rho:
             pam = 'matern32_rho'
             self.list_pams_common.update([pam])
             self.list_pams_dataset.discard(pam)
+
+        self._prepare_rotation_replacement(mc, 
+                                            parameter_name='matern32_rho', 
+                                            common_pam=self.use_shared_rho,
+                                            **kwargs)
 
     def initialize_model_dataset(self, mc, dataset, **kwargs):
         self.define_kernel(dataset)
@@ -100,8 +92,7 @@ class Celerite2_Matern32(AbstractModel):
         In celerite2 the old function "set_parameter_vector" has been removed
         and the kernel has to be defined every time
         """
-        if self.use_stellar_rotation_period:
-            parameter_values['matern32_rho'] = parameter_values['rotation_period']
+        self.update_parameter_values(parameter_values, replace_rotation='matern32_rho')
 
         self.gp[dataset.name_ref].mean = 0.
         self.gp[dataset.name_ref].kernel = celerite2.terms.Matern32Term(
@@ -115,8 +106,7 @@ class Celerite2_Matern32(AbstractModel):
 
     def sample_predict(self, parameter_values, dataset, x0_input=None, return_covariance=False, return_variance=False):
 
-        if self.use_stellar_rotation_period:
-            parameter_values['matern32_rho'] = parameter_values['rotation_period']
+        self.update_parameter_values(parameter_values, replace_rotation='matern32_rho')
 
         self.gp[dataset.name_ref].mean = 0.
         self.gp[dataset.name_ref].kernel = celerite2.terms.Matern32Term(
@@ -133,8 +123,7 @@ class Celerite2_Matern32(AbstractModel):
 
     def sample_conditional(self, parameter_values, dataset,  x0_input=None):
 
-        if self.use_stellar_rotation_period:
-            parameter_values['matern32_rho'] = parameter_values['rotation_period']
+        self.update_parameter_values(parameter_values, replace_rotation='matern32_rho')
 
         self.gp[dataset.name_ref].mean = 0.
         self.gp[dataset.name_ref].kernel = celerite2.terms.Matern32Term(

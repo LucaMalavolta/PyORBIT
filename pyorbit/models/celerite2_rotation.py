@@ -1,5 +1,6 @@
 from pyorbit.subroutines.common import np, OrderedSet
 from pyorbit.models.abstract_model import AbstractModel
+from pyorbit.models.abstract_gaussian_processes import AbstractGaussianProcesses
 from pyorbit.keywords_definitions import *
 
 try:
@@ -9,7 +10,7 @@ except (ModuleNotFoundError,ImportError):
     pass
 
 
-class Celerite2_Rotation(AbstractModel):
+class Celerite2_Rotation(AbstractModel, AbstractGaussianProcesses):
 
     r"""A mixture of two SHO terms that can be used to model stellar rotation
     This term has two modes in Fourier space: one at ``period`` and one at
@@ -39,6 +40,7 @@ class Celerite2_Rotation(AbstractModel):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        super(AbstractModel, self).__init__(*args, **kwargs)
 
         try:
             import celerite2
@@ -65,18 +67,6 @@ class Celerite2_Rotation(AbstractModel):
 
     def initialize_model(self, mc,  **kwargs):
 
-        for common_ref in self.common_ref:
-            if mc.common_models[common_ref].model_class == 'activity':
-                self.use_stellar_rotation_period = getattr(mc.common_models[common_ref], 'use_stellar_rotation_period', False)
-                break
-
-        for keyword in keywords_stellar_rotation:
-            self.use_stellar_rotation_period = kwargs.get(keyword, self.use_stellar_rotation_period)
-
-        if self.use_stellar_rotation_period:
-            self.list_pams_common.update(['rotation_period'])
-            self.list_pams_common.discard('Prot')
-
         self.use_shared_hyperparameters = False
         for keyword in keywords_shared_hyperparameters:
             self.use_shared_hyperparameters =  kwargs.get(keyword, self.use_shared_hyperparameters)
@@ -85,6 +75,8 @@ class Celerite2_Rotation(AbstractModel):
             for pam in pams_copy:
                 self.list_pams_common.update([pam])
                 self.list_pams_dataset.discard(pam)
+
+        self._prepare_rotation_replacement(mc, **kwargs)
 
 
     def initialize_model_dataset(self, mc, dataset, **kwargs):
@@ -111,8 +103,7 @@ class Celerite2_Rotation(AbstractModel):
         In celerite2 the old function "set_parameter_vector" has been removed
         and the kernel has to be defined every time
         """
-        if self.use_stellar_rotation_period:
-            parameter_values['Prot'] = parameter_values['rotation_period']
+        self.update_parameter_values(parameter_values)
 
         self.gp[dataset.name_ref].mean = 0.
         self.gp[dataset.name_ref].kernel = terms.RotationTerm(sigma=parameter_values['rot_sigma'],
@@ -127,8 +118,8 @@ class Celerite2_Rotation(AbstractModel):
         return self.gp[dataset.name_ref].log_likelihood(dataset.residuals)
 
     def sample_predict(self, parameter_values, dataset, x0_input=None, return_covariance=False, return_variance=False):
-        if self.use_stellar_rotation_period:
-            parameter_values['Prot'] = parameter_values['rotation_period']
+
+        self.update_parameter_values(parameter_values)
 
         self.gp[dataset.name_ref].mean = 0.
         self.gp[dataset.name_ref].kernel = terms.RotationTerm(sigma=parameter_values['rot_sigma'],
@@ -146,8 +137,8 @@ class Celerite2_Rotation(AbstractModel):
             return self.gp[dataset.name_ref].predict(dataset.residuals, x0_input, return_cov=return_covariance, return_var=return_variance)
 
     def sample_conditional(self, parameter_values, dataset,  x0_input=None):
-        if self.use_stellar_rotation_period:
-            parameter_values['Prot'] = parameter_values['rotation_period']
+
+        self.update_parameter_values(parameter_values)
 
         self.gp[dataset.name_ref].mean = 0.
         self.gp[dataset.name_ref].kernel = terms.RotationTerm(sigma=parameter_values['rot_sigma'],

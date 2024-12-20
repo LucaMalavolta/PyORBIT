@@ -1,5 +1,6 @@
 from pyorbit.subroutines.common import np, OrderedSet
 from pyorbit.models.abstract_model import AbstractModel
+from pyorbit.models.abstract_gaussian_processes import AbstractGaussianProcesses
 from pyorbit.keywords_definitions import *
 
 try:
@@ -8,7 +9,7 @@ except (ModuleNotFoundError,ImportError):
     pass
 
 
-class Celerite_Matern32_Common(AbstractModel):
+class Celerite_Matern32_Common(AbstractModel, AbstractGaussianProcesses):
 
     r"""A term that approximates a Matern-3/2 function
 
@@ -22,6 +23,7 @@ class Celerite_Matern32_Common(AbstractModel):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        super(AbstractModel, self).__init__(*args, **kwargs)
 
         try:
             import celerite
@@ -39,21 +41,9 @@ class Celerite_Matern32_Common(AbstractModel):
 
         self.n_pams = 2
         self.gp = {}
-        self.use_stellar_rotation_period = False
 
     def initialize_model(self, mc,  **kwargs):
-
-        for common_ref in self.common_ref:
-            if mc.common_models[common_ref].model_class == 'activity':
-                self.use_stellar_rotation_period = getattr(mc.common_models[common_ref], 'use_stellar_rotation_period', False)
-                break
-
-        for keyword in keywords_stellar_rotation:
-            self.use_stellar_rotation_period = kwargs.get(keyword, self.use_stellar_rotation_period)
-
-        if self.use_stellar_rotation_period:
-            self.list_pams_common.update(['rotation_period'])
-            self.list_pams_common.discard('Prot')
+        self._prepare_rotation_replacement(mc, parameter_name='matern32_rho', **kwargs)
 
     def initialize_model_dataset(self, mc, dataset, **kwargs):
         self.define_kernel(dataset)
@@ -78,8 +68,7 @@ class Celerite_Matern32_Common(AbstractModel):
            2) physical values must be converted to {\tt george} input parameters
         """
 
-        if self.use_stellar_rotation_period:
-            parameter_values['Prot'] = parameter_values['rotation_period']
+        self.update_parameter_values(parameter_values, replace_rotation='matern32_rho')
 
         gp_pams = np.asarray(
             [np.log10(parameter_values['matern32_sigma']), np.log10(parameter_values['matern32_rho'])])
@@ -92,8 +81,7 @@ class Celerite_Matern32_Common(AbstractModel):
 
     def sample_predict(self, parameter_values, dataset, x0_input=None, return_covariance=False, return_variance=False):
 
-        if self.use_stellar_rotation_period:
-            parameter_values['Prot'] = parameter_values['rotation_period']
+        self.update_parameter_values(parameter_values, replace_rotation='matern32_rho')
 
         gp_pams = np.asarray(
             [np.log10(parameter_values['matern32_sigma']), np.log10(parameter_values['matern32_rho'])])
@@ -109,8 +97,7 @@ class Celerite_Matern32_Common(AbstractModel):
 
     def sample_conditional(self, parameter_values, dataset,  x0_input=None):
 
-        if self.use_stellar_rotation_period:
-            parameter_values['Prot'] = parameter_values['rotation_period']
+        self.update_parameter_values(parameter_values, replace_rotation='matern32_rho')
 
         gp_pams = np.asarray(
             [np.log10(parameter_values['matern32_sigma']), np.log10(parameter_values['matern32_rho'])])

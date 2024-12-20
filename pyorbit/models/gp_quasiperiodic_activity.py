@@ -1,5 +1,6 @@
 from pyorbit.subroutines.common import *
-from pyorbit.models.abstract_model import *
+from pyorbit.models.abstract_model import AbstractModel
+from pyorbit.models.abstract_gaussian_processes import AbstractGaussianProcesses
 from pyorbit.keywords_definitions import *
 
 try:
@@ -8,7 +9,7 @@ except:
     pass
 
 
-class GaussianProcess_QuasiPeriodicActivity(AbstractModel):
+class GaussianProcess_QuasiPeriodicActivity(AbstractModel, AbstractGaussianProcesses):
     ''' Three parameters out of four are the same for all the datasets, since they are related to
     the properties of the physical process rather than the observed effects on a dataset
      From Grunblatt+2015, Affer+2016
@@ -21,6 +22,7 @@ class GaussianProcess_QuasiPeriodicActivity(AbstractModel):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        super(AbstractModel, self).__init__(*args, **kwargs)
 
         try:
             import george
@@ -95,45 +97,9 @@ class GaussianProcess_QuasiPeriodicActivity(AbstractModel):
         if 'use_HODLR' in kwargs:
             self.use_HODLR = kwargs['use_HODLR']
 
-        if kwargs.get('hyperparameters_condition', False):
-            self.hyper_condition = self._hypercond_01
-        else:
-            self.hyper_condition = self._hypercond_00
-
-        if kwargs.get('rotation_decay_condition', False):
-            self.rotdec_condition = self._hypercond_02
-        else:
-            self.rotdec_condition = self._hypercond_00
-
-        if kwargs.get('halfrotation_decay_condition', False):
-            self.halfrotdec_condition = self._hypercond_03
-        else:
-            self.halfrotdec_condition = self._hypercond_00
-
-        for common_ref in self.common_ref:
-            if mc.common_models[common_ref].model_class == 'activity':
-                self.use_stellar_rotation_period = getattr(mc.common_models[common_ref], 'use_stellar_rotation_period', False)
-                break
-
-        for keyword in keywords_stellar_rotation:
-            self.use_stellar_rotation_period = kwargs.get(keyword, self.use_stellar_rotation_period)
-
-        if self.use_stellar_rotation_period:
-            self.list_pams_common.update(['rotation_period'])
-            self.list_pams_common.discard('Prot')
-
-        for common_ref in self.common_ref:
-            if mc.common_models[common_ref].model_class == 'activity':
-                self.use_stellar_activity_decay = getattr(mc.common_models[common_ref], 'use_stellar_activity_decay', False)
-                break
-
-        for keyword in keywords_stellar_activity_decay:
-            self.use_stellar_activity_decay = kwargs.get(keyword, self.use_stellar_activity_decay)
-
-        if self.use_stellar_activity_decay:
-            self.list_pams_common.update(['activity_decay'])
-            self.list_pams_common.discard('Pdec')
-
+        self._prepare_hyperparameter_conditions(mc, **kwargs)
+        self._prepare_rotation_replacement(mc, **kwargs)
+        self._prepare_decay_replacement(mc, **kwargs)
 
     def initialize_model_dataset(self, mc, dataset, **kwargs):
         self.define_kernel(dataset)
@@ -181,19 +147,12 @@ class GaussianProcess_QuasiPeriodicActivity(AbstractModel):
            2) physical values must be converted to {\tt george} input parameters
         """
 
-        if self.use_stellar_rotation_period:
-            parameter_values['Prot'] = parameter_values['rotation_period']
-
-        if self.use_stellar_activity_decay:
-            parameter_values['Pdec'] = parameter_values['activity_decay']
-
-        if not self.hyper_condition(parameter_values):
-            return -np.inf
-        if not self.rotdec_condition(parameter_values):
-            return -np.inf
-        if not self.halfrotdec_condition(parameter_values):
-            return -np.inf
-
+        self.update_parameter_values(parameter_values)
+        
+        pass_conditions = self.check_hyperparameter_values(parameter_values)
+        if not pass_conditions:
+            return pass_conditions
+        
         gp_pams = self.convert_val2gp(parameter_values)
         env = np.sqrt(dataset.e ** 2.0 + dataset.jitter ** 2.0)
         self.gp[dataset.name_ref].set_parameter_vector(gp_pams)
@@ -203,12 +162,8 @@ class GaussianProcess_QuasiPeriodicActivity(AbstractModel):
 
     def sample_predict(self, parameter_values, dataset, x0_input=None, return_covariance=False, return_variance=False):
 
-        if self.use_stellar_rotation_period:
-            parameter_values['Prot'] = parameter_values['rotation_period']
-
-        if self.use_stellar_activity_decay:
-            parameter_values['Pdec'] = parameter_values['activity_decay']
-
+        self.update_parameter_values(parameter_values)
+        
         gp_pams = self.convert_val2gp(parameter_values)
 
         env = np.sqrt(dataset.e ** 2.0 + dataset.jitter ** 2.0)
@@ -221,11 +176,7 @@ class GaussianProcess_QuasiPeriodicActivity(AbstractModel):
 
     def sample_conditional(self, parameter_values, dataset, x0_input=None):
 
-        if self.use_stellar_rotation_period:
-            parameter_values['Prot'] = parameter_values['rotation_period']
-
-        if self.use_stellar_activity_decay:
-            parameter_values['Pdec'] = parameter_values['activity_decay']
+        self.update_parameter_values(parameter_values)
 
         gp_pams = self.convert_val2gp(parameter_values)
 
@@ -236,25 +187,3 @@ class GaussianProcess_QuasiPeriodicActivity(AbstractModel):
             return self.gp[dataset.name_ref].sample_conditional(dataset.residuals, dataset.x0)
         else:
             return self.gp[dataset.name_ref].sample_conditional(dataset.residuals, x0_input)
-
-    @staticmethod
-    def _hypercond_00(parameter_values):
-        #Condition from Rajpaul 2017, Rajpaul+2021
-        return True
-
-    @staticmethod
-    def _hypercond_01(parameter_values):
-        # Condition from Rajpaul 2017, Rajpaul+2021
-        # Taking into account that Pdec^2 = 2*lambda_2^2
-        return parameter_values['Pdec']**2 > (3. / 2. / np.pi) * parameter_values['Oamp']**2 * parameter_values['Prot']**2
-
-    @staticmethod
-    def _hypercond_02(parameter_values):
-        #Condition on Rotation period and decay timescale
-        return parameter_values['Pdec'] > 2. * parameter_values['Prot']
-
-    @staticmethod
-    def _hypercond_03(parameter_values):
-        #Condition on Rotation period and decay timescale
-        return parameter_values['Pdec'] > 0.5 * parameter_values['Prot']
-

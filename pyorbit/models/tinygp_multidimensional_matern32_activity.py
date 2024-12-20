@@ -1,5 +1,6 @@
 from pyorbit.subroutines.common import *
-from pyorbit.models.abstract_model import *
+from pyorbit.models.abstract_model import AbstractModel
+from pyorbit.models.abstract_gaussian_processes import AbstractGaussianProcesses
 from pyorbit.keywords_definitions import *
 
 from scipy.linalg import cho_factor, cho_solve, lapack, LinAlgError
@@ -101,7 +102,7 @@ except:
 
 
 
-class TinyGP_Multidimensional_Matern32Activity(AbstractModel):
+class TinyGP_Multidimensional_Matern32Activity(AbstractModel, AbstractGaussianProcesses):
     '''
     - matern32_rho: the scale of the Matern32 kernel;
     - matern32_multigp_sigma: the amplitude of the correlations;
@@ -112,6 +113,7 @@ class TinyGP_Multidimensional_Matern32Activity(AbstractModel):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        super(AbstractModel, self).__init__(*args, **kwargs)
 
         self.model_class = 'multidimensional_gaussian_process'
 
@@ -158,20 +160,8 @@ class TinyGP_Multidimensional_Matern32Activity(AbstractModel):
 
     def initialize_model(self, mc,  **kwargs):
 
-        try:
-            for common_ref in self.common_ref:
-                if mc.common_models[common_ref].model_class == 'activity':
-                    self.use_stellar_rotation_period = getattr(mc.common_models[common_ref], 'use_stellar_rotation_period', False)
-                    break
-        except:
-            self.use_stellar_rotation_period = False
-
-        for keyword in keywords_stellar_rotation:
-            self.use_stellar_rotation_period = kwargs.get(keyword, self.use_stellar_rotation_period)
-
-        if self.use_stellar_rotation_period:
-            self.list_pams_common.update(['rotation_period'])
-            self.list_pams_common.discard('matern32_rho')
+        self._prepare_rotation_replacement(mc, parameter_name='matern32_rho', 
+                                            **kwargs)
 
     def initialize_model_dataset(self, mc, dataset, **kwargs):
 
@@ -213,10 +203,8 @@ class TinyGP_Multidimensional_Matern32Activity(AbstractModel):
 
     def add_internal_dataset(self, parameter_values, dataset):
 
+        self.update_parameter_values(parameter_values, replace_rotation='matern32_rho')
         self.internal_parameter_values = parameter_values
-
-        if self.use_stellar_rotation_period:
-            self.internal_parameter_values['matern32_rho'] = parameter_values['rotation_period']
 
         d_ind = self._dataset_names[dataset.name_ref]
         d_nstart, d_nend = self._dataset_nindex[d_ind]
