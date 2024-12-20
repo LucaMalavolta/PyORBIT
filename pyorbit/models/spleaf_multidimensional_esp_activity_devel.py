@@ -1,5 +1,6 @@
 from pyorbit.subroutines.common import *
 from pyorbit.models.abstract_model import *
+from pyorbit.models.abstract_gaussian_processes import *
 from pyorbit.keywords_definitions import *
 
 from scipy.linalg import cho_factor, cho_solve, lapack, LinAlgError
@@ -16,7 +17,7 @@ except (ModuleNotFoundError,ImportError):
     pass
 
 
-class SPLEAF_Multidimensional_ESP_devel(AbstractModel):
+class SPLEAF_Multidimensional_ESP_devel(AbstractModel, AbstractGaussianProcesses):
     ''' Three parameters out of four are the same for all the datasets, since they are related to
     the properties of the physical process rather than the observed effects on a dataset
      From Grunblatt+2015, Affer+2016
@@ -28,7 +29,9 @@ class SPLEAF_Multidimensional_ESP_devel(AbstractModel):
     default_common = 'activity'
 
     def __init__(self, *args, **kwargs):
+
         super().__init__(*args, **kwargs)
+        super(AbstractModel, self).__init__(*args, **kwargs)
 
         self.model_class = 'multidimensional_gaussian_process'
 
@@ -102,45 +105,9 @@ class SPLEAF_Multidimensional_ESP_devel(AbstractModel):
         print(' S+LEAF model, number of harmonics:', self.n_harmonics)
         print()
 
-        if kwargs.get('hyperparameters_condition', False):
-            self.hyper_condition = self._hypercond_01
-        else:
-            self.hyper_condition = self._hypercond_00
-
-        if kwargs.get('rotation_decay_condition', False):
-            self.rotdec_condition = self._hypercond_02
-        else:
-            self.rotdec_condition = self._hypercond_00
-
-        if kwargs.get('halfrotation_decay_condition', False):
-            self.halfrotdec_condition = self._hypercond_03
-        else:
-            self.halfrotdec_condition = self._hypercond_00
-
-        for common_ref in self.common_ref:
-            if mc.common_models[common_ref].model_class == 'activity':
-                self.use_stellar_rotation_period = getattr(mc.common_models[common_ref], 'use_stellar_rotation_period', False)
-                break
-
-        for keyword in keywords_stellar_rotation:
-            self.use_stellar_rotation_period = kwargs.get(keyword, self.use_stellar_rotation_period)
-
-        if self.use_stellar_rotation_period:
-            self.list_pams_common.update(['rotation_period'])
-            self.list_pams_common.discard('Prot')
-
-
-        for common_ref in self.common_ref:
-            if mc.common_models[common_ref].model_class == 'activity':
-                self.use_stellar_activity_decay = getattr(mc.common_models[common_ref], 'use_stellar_activity_decay', False)
-                break
-
-        for keyword in keywords_stellar_activity_decay:
-            self.use_stellar_activity_decay = kwargs.get(keyword, self.use_stellar_activity_decay)
-
-        if self.use_stellar_activity_decay:
-            self.list_pams_common.update(['activity_decay'])
-            self.list_pams_common.discard('Pdec')
+        self._prepare_hyperparameters_conditions(mc, **kwargs)
+        self._prepare_rotation_replacement(mc, **kwargs)
+        self._prepare_decay_replacement(mc, **kwargs)
 
     def initialize_model_dataset(self, mc, dataset, **kwargs):
 
@@ -204,31 +171,13 @@ class SPLEAF_Multidimensional_ESP_devel(AbstractModel):
 
         self._reset_kernel()
 
-        if 'derivative'in kwargs:
-            use_derivative = kwargs['derivative'].get(dataset.name_ref, False)
-        elif dataset.name_ref in kwargs:
-            use_derivative = kwargs[dataset.name_ref].get('derivative', False)
-        else:
-            if dataset.kind == 'H-alpha' or \
-                dataset.kind == 'S_index' or \
-                dataset.kind == 'Ca_HK' or \
-                dataset.kind == 'FWHM':
-                    use_derivative = False
-            else:
-                use_derivative = True
-
-        if not use_derivative:
-            self.fix_list[dataset.name_ref] = {'rot_amp': [0., 0.]}
+        self._set_derivative_option(mc, dataset, **kwargs) 
 
         return
 
     def add_internal_dataset(self, parameter_values, dataset):
 
-        if self.use_stellar_rotation_period:
-            parameter_values['Prot'] = parameter_values['rotation_period']
-
-        if self.use_stellar_activity_decay:
-            parameter_values['Pdec'] = parameter_values['activity_decay']
+        self.update_parameter_values(parameter_values)
 
         self.internal_parameter_values = parameter_values
 
@@ -246,13 +195,9 @@ class SPLEAF_Multidimensional_ESP_devel(AbstractModel):
 
     def lnlk_compute(self):
 
-
-        if not self.hyper_condition(self.internal_parameter_values):
-            return -np.inf
-        if not self.rotdec_condition(self.internal_parameter_values):
-            return -np.inf
-        if not self.halfrotdec_condition(self.internal_parameter_values):
-            return -np.inf
+        pass_conditions = self.check_parameter_values(self.internal_parameter_values)
+        if not pass_conditions:
+            return pass_conditions
 
         """
         Randomly reset the kernel with a probability of 0.1%
@@ -326,26 +271,5 @@ class SPLEAF_Multidimensional_ESP_devel(AbstractModel):
 
         self.D_spleaf = spleaf_cov.Cov(self.spleaf_time, **kwargs)
         self.D_param = self.D_spleaf.param[1:]
-        #print(self.D_param)
 
-    @staticmethod
-    def _hypercond_00(parameter_values):
-        #Condition from Rajpaul 2017, Rajpaul+2021
-        return True
-
-    @staticmethod
-    def _hypercond_01(parameter_values):
-        # Condition from Rajpaul 2017, Rajpaul+2021
-        # Taking into account that Pdec^2 = 2*lambda_2^2
-        return parameter_values['Pdec']**2 > (3. / 2. / np.pi) * parameter_values['Oamp']**2 * parameter_values['Prot']**2
-
-    @staticmethod
-    def _hypercond_02(parameter_values):
-        #Condition on Rotation period and decay timescale
-        return parameter_values['Pdec'] > 2. * parameter_values['Prot']
-
-    @staticmethod
-    def _hypercond_03(parameter_values):
-        #Condition on Rotation period and decay timescale
-        return parameter_values['Pdec'] > 0.5 * parameter_values['Prot']
 
