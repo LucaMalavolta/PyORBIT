@@ -228,7 +228,7 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, reload_ze
                 data_input = mc.dataset_dict[dataset_name].convert_dataset_from_file(
                     dataset_conf['file'])
             except:
-                print('Either a file or an input dataset must be provided')
+                print('There was en error while processing input data')
                 quit()
 
         mc.dataset_dict[dataset_name].define_dataset_base(

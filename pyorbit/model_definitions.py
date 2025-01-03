@@ -104,7 +104,7 @@ from pyorbit.models.cheops_factormodel import CheopsFactorModel
 #from pyorbit.models.lightcurve_detrending import LightcurveDetrending, LocalLightcurveDetrending
 #from pyorbit.models.lightcurve_poly_detrending import LightcurvePolyDetrending, LocalLightcurvePolyDetrending
 
-from pyorbit.models.detrending import Detrending, PolynomialDetrending, ExponentialDetrending
+from pyorbit.models.detrending import FullDetrending, PolynomialDetrending, ExponentialDetrending
 #from pyorbit.models.exponential_detrending import ExponentialDetrending
 from pyorbit.models.detrending_matern32 import Detrending_Matern32
 
@@ -308,7 +308,9 @@ define_type_to_class = {
     'rossitermclaughlin_multiplanets_precise': RossiterMcLaughlin_MultiPlanets_Precise,
     'polynomial_detrending': PolynomialDetrending,
     'exponential_detrending': ExponentialDetrending,
-    'detrending': Detrending,
+    'detrending': FullDetrending,
+    'full_detrending': FullDetrending,
+    'lightcurve_detrending': FullDetrending,
     'detrending_matern32': Detrending_Matern32,
     'matern32_detrending': Detrending_Matern32,
 }
