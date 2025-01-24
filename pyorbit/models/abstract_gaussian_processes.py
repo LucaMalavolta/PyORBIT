@@ -30,11 +30,15 @@ class AbstractGaussianProcesses(object):
 
         for common_ref in self.common_ref:
             if mc.common_models[common_ref].model_class == 'activity':
-                self.use_stellar_rotation_period = getattr(mc.common_models[common_ref], 'use_stellar_rotation_period', False)
+                for keyword in keywords_stellar_rotation:
+
+                    self.use_stellar_rotation_period = getattr(mc.common_models[common_ref], keyword, self.use_stellar_rotation_period)
                 break
+
 
         for keyword in keywords_stellar_rotation:
             self.use_stellar_rotation_period = kwargs.get(keyword, self.use_stellar_rotation_period)
+
 
         if self.use_stellar_rotation_period:
             self.list_pams_common.update(['rotation_period'])

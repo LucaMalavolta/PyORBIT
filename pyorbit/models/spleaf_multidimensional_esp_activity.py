@@ -156,7 +156,6 @@ class SPLEAF_Multidimensional_ESP(AbstractModel, AbstractGaussianProcesses):
     def add_internal_dataset(self, parameter_values, dataset):
 
         self.update_parameter_values(parameter_values)
-
         self.internal_parameter_values = parameter_values
 
         d_ind = self._dataset_nindex[dataset.name_ref]
@@ -174,7 +173,7 @@ class SPLEAF_Multidimensional_ESP(AbstractModel, AbstractGaussianProcesses):
     def lnlk_compute(self):
 
         pass_conditions = self.check_hyperparameter_values(self.internal_parameter_values)
-        if not pass_conditions:
+        if not np.isfinite(pass_conditions):
             return pass_conditions
 
         """
