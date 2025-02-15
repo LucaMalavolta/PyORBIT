@@ -25,6 +25,17 @@ class AbstractGaussianProcesses(object):
         else:
             self.halfrotdec_condition = self._hypercond_00
 
+        if kwargs.get('decay_rotation_factor', False):
+            self.decay_rotation_factor = kwargs.get('decay_rotation_factor', 0)
+            self.rotdec_factor_condition = self._hypercond_04
+        else:
+            self.rotdec_factor_condition = self._hypercond_00
+
+        if kwargs.get('rotation_decay_factor', False):
+            self.decay_rotation_factor = kwargs.get('rotation_decay_factor', 0)
+            self.rotdec_factor_condition = self._hypercond_04
+        else:
+            self.rotdec_factor_condition = self._hypercond_00
 
     def _prepare_rotation_replacement(self, mc, parameter_name ='Prot', common_pam=True, **kwargs):
 
@@ -62,7 +73,7 @@ class AbstractGaussianProcesses(object):
             self.list_pams_common.discard(parameter_name)
 
     def _set_derivative_option(self, mc, dataset, return_flag=False, **kwargs):
-        
+
         if 'derivative'in kwargs:
             use_derivative = kwargs['derivative'].get(dataset.name_ref, False)
         elif dataset.name_ref in kwargs:
@@ -82,9 +93,9 @@ class AbstractGaussianProcesses(object):
 
         if not use_derivative:
             self.fix_list[dataset.name_ref] = {'rot_amp': [0., 0.]}
-        
-    def update_parameter_values(self, 
-                                parameter_values, 
+
+    def update_parameter_values(self,
+                                parameter_values,
                                 prepend='',
                                 replace_rotation='Prot',
                                 replace_decay='Pdec'):
@@ -103,8 +114,14 @@ class AbstractGaussianProcesses(object):
             return -np.inf
         if not self.halfrotdec_condition(parameter_values):
             return -np.inf
-        
+        if not self.rotdec_factor_condition(parameter_values):
+            return -np.inf
+
         return True
+
+    def _hypercond_04(self, parameter_values):
+        #Condition on Rotation period and decay timescale
+        return parameter_values['Pdec'] > self.decay_rotation_factor * parameter_values['Prot']
 
     @staticmethod
     def _hypercond_00(parameter_values):
@@ -126,3 +143,4 @@ class AbstractGaussianProcesses(object):
     def _hypercond_03(parameter_values):
         #Condition on Rotation period and decay timescale
         return parameter_values['Pdec'] > 0.5 * parameter_values['Prot']
+
