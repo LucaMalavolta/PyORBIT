@@ -6,6 +6,7 @@ class AbstractGaussianProcesses(object):
     def __init__(self, *args, **kwargs):
         self.use_stellar_rotation_period = False
         self.use_stellar_activity_decay = False
+        self.model_class = 'gaussian_process'
 
 
     def _prepare_hyperparameter_conditions(self, mc, **kwargs):
