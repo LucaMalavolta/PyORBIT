@@ -590,6 +590,9 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
 
     med_ln_priors, med_ln_likelihood = mc.log_priors_likelihood(chain_med[:, 0])
 
+    #log_rv = mc.rv_log_likelihood(chain_med[:, 0])
+    #print('aaaaaaaa', log_rv)
+    #quit()
     if mc.include_priors:
 
         print()
