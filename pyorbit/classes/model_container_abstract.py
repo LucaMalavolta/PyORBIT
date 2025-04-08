@@ -462,7 +462,7 @@ class ModelContainer(object):
 
     def rv_log_likelihood(self, theta):
 
-        rv_log_likelihood = 0.00
+        log_likelihood = 0.00
 
         if self.dynamical_model is not None:
             """ check if any keyword ahas get the output model from the dynamical tool
