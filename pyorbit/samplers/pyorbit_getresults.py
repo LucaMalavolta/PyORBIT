@@ -590,13 +590,13 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
 
     med_ln_priors, med_ln_likelihood = mc.log_priors_likelihood(chain_med[:, 0])
 
-    try:
-        log_rv = mc.rv_log_likelihood(chain_med[:, 0])
-        print('aaaaaaaa', log_rv)
-        quit()
-    except:
-        print()
-        print('Analysis ran using PyORBIT version < 10.10, RV-only log_likelihood not available')
+    #try:
+    #    log_rv = mc.rv_log_likelihood(chain_med[:, 0])
+    #    print('aaaaaaaa', log_rv)
+    #    quit()
+    #except:
+    #    print()
+    #    print('Analysis ran using PyORBIT version < 10.10, RV-only log_likelihood not available')
 
     if mc.include_priors:
 
