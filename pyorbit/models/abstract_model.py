@@ -259,13 +259,10 @@ class AbstractModel(object):
         return parameter_values
 
 
-    def convert_with_flag(self, theta, flag,  dataset_name):
-        parameter_values = {}
+    def check_theta_flag(self, dataset_name, flag):
         for pam in self.list_pams_dataset:
-            parameter_values[pam] = self.transformation[dataset_name][pam](
-                theta, self.fixed, self.parameter_index[dataset_name][pam])
             flag[self.parameter_index[dataset_name][pam]] = True
-        return parameter_values, flag
+        return flag
 
 
     def return_priors(self, theta, dataset_name):

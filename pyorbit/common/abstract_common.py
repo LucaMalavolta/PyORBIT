@@ -193,13 +193,10 @@ class AbstractCommon(object):
                 theta, self.fixed, self.parameter_index[pam])
         return parameter_values
 
-    def convert_with_flag(self, theta, flag):
-        parameter_values = {}
+    def check_theta_flag(self, flag):
         for pam in self.parameter_index:
-            parameter_values[pam] = self.transformation[pam](
-                theta, self.fixed, self.parameter_index[pam])
             flag[self.parameter_index[pam]] = True
-        return parameter_values, flag
+        return flag
 
     def define_starting_point_from_derived(self, starting_point, var):
         return False

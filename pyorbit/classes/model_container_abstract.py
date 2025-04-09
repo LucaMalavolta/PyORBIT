@@ -459,12 +459,12 @@ class ModelContainer(object):
         else:
             return log_priors, log_likelihood
 
-    def rv_count_ndata_ndim(self, theta):
+    def rv_count_ndata_ndim(self):
 
         ndata = 0
         ndim = 0
 
-        theta_flag = np.zeros_like(theta, dtype=bool)
+        theta_flag = np.zeros(self.ndim, dtype=bool)
 
         for dataset_name, dataset in self.dataset_dict.items():
 
@@ -479,17 +479,17 @@ class ModelContainer(object):
                 continue
 
             ndata += dataset.n
-            parameter_values, theta_flag = dataset.convert_with_flag(theta, theta_flag)
+            theta_flag = dataset.check_theta_flag(theta_flag)
 
             for model_name in dataset.models:
 
                 for common_ref in self.models[model_name].common_ref:
-                    parameter_values, theta_flag = self.common_models[common_ref].convert_with_flag(theta, theta_flag)
+                    theta_flag = self.common_models[common_ref].check_theta_flag(theta_flag)
 
                 for planet_name in self.models[model_name].multiple_planets:
-                    parameter_values, theta_flag = self.common_models[planet_name].convert_with_flag(theta, theta_flag)
+                    theta_flag = self.common_models[planet_name].check_theta_flag(theta_flag)
 
-                parameter_values, theta_flag = self.models[model_name].convert_with_flag(theta, theta_flag, dataset_name)
+                theta_flag = self.models[model_name].check_theta_flag(dataset_name, theta_flag)
 
                 if getattr(self.models[model_name], 'internal_likelihood', False):
                     logchi2_gp_model = model_name
@@ -501,9 +501,9 @@ class ModelContainer(object):
             if logchi2_gp_model:
 
                 for common_ref in self.models[logchi2_gp_model].common_ref:
-                    parameter_values, theta_flag =  self.common_models[common_ref].convert_with_flag(theta)
+                    theta_flag =  self.common_models[common_ref].check_theta_flag(theta_flag)
 
-                parameter_values, theta_flag = self.models[logchi2_gp_model].convert_with_flag(theta, theta_flag, dataset_name)
+                theta_flag = self.models[logchi2_gp_model].convert_with_flag(dataset_name, theta_flag)
 
         ndim = np.sum(theta_flag)
 

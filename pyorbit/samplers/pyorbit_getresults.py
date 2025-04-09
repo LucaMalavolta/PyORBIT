@@ -136,6 +136,7 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
         print()
         print(' Reference Time Tref: {}'.format(mc.Tref))
         print()
+        print(' Data points:{}'.format(mc.ndata))
         print(' Dimensions: {}'.format(mc.ndim))
         print(' Nwalkers:   {}'.format(mc.emcee_parameters['nwalkers']))
         print(' Steps:      {}'.format(nsteps))
@@ -210,6 +211,7 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
         print()
         print(' Reference Time Tref: {}'.format(mc.Tref))
         print()
+        print(' Data points:{}'.format(mc.ndata))
         print(' Dimensions: {}'.format(mc.ndim))
         print(' Nwalkers:   {}'.format(mc.zeus_parameters['nwalkers']))
         print(' Steps:      {}'.format(nsteps))
@@ -256,6 +258,7 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
         print()
         print(' Reference Time Tref: {}'.format(mc.Tref))
         print()
+        print(' Data points:{}'.format(mc.ndata))
         print(' Dimensions: {}'.format(mc.ndim))
         print(' Samples:    {}'.format(n_samplings))
 
@@ -300,6 +303,7 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
         print()
         print(' Reference Time Tref: {}'.format(mc.Tref))
         print()
+        print(' Data points:{}'.format(mc.ndata))
         print(' Dimensions: {}'.format(mc.ndim))
         print(' Samples:    {}'.format(n_samplings))
 
@@ -502,6 +506,7 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
         print()
         print(' Reference Time Tref: {}'.format(mc.Tref))
         print()
+        print(' Data points:{}'.format(mc.ndata))
         print(' Dimensions: {}'.format(mc.ndim))
         print(' Samples:    {}'.format(n_samplings))
 
@@ -603,6 +608,7 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
         print()
         print(' Reference Time Tref: {}'.format(mc.Tref))
         print()
+        print(' Data points:{}'.format(mc.ndata))
         print(' Dimensions: {}'.format(mc.ndim))
         print(' Samples:    {}'.format(n_samplings))
 
@@ -638,17 +644,20 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
 
 
     med_ln_priors, med_ln_likelihood = mc.log_priors_likelihood(chain_med[:, 0])
-    med_rv_ln_likelihood = mc.rv_log_likelihood(chain_med[:, 0])    
 
     print()
     print('Number of samplings:',  n_samplings)
 
 
     flat_rv_lnlike = np.zeros(n_samplings)
+    med_rv_ln_likelihood = med_ln_likelihood * 0.0
+    MAP_rv_ln_likelihood = 0.0
     try:
         print('Recomputing RV ln-likelihood, it may take a while...')
         for ii in tqdm(range(n_samplings)):
             flat_rv_lnlike[ii] = mc.rv_log_likelihood(flat_chain[ii,:])
+        med_rv_ln_likelihood = mc.rv_log_likelihood(chain_med[:, 0])
+        MAP_rv_ln_likelihood = mc.rv_log_likelihood(chain_MAP)
     except:
         print('Analysis ran using PyORBIT version < 10.10, RV-only log_likelihood not available')
 
@@ -753,7 +762,6 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
         print(' AIC from distribution  (using likelihood)  = {0:9.2f}   {1:7.2f} {2:7.2f} (15-84 p)'.format(AIC,ICs_err[0], ICs_err[1]))
         print(' AICc from distribution (using likelihood)  = {0:9.2f}   {1:7.2f} {2:7.2f} (15-84 p)'.format(AICc,ICs_err[0], ICs_err[1]))
 
-
         print()
         print()
         print('*** Information criteria using the median parameter set')
@@ -771,105 +779,9 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
         dict_basic_statistics['median_AICc_likelihood'] = AICc
 
         print()
-        print(' Median ln_probability = {0:9.2f}'.format(med_ln_posterior))
-        print(' Median ln_priors      = {0:9.2f}'.format(med_ln_priors))
-        print(' Median ln_likelihood  = {0:9.2f}'.format(med_ln_likelihood))
-        print()
-        print(' Median BIC  (using likelihood) = {0:9.2f}'.format(BIC))
-        print(' Median AIC  (using likelihood) = {0:9.2f}'.format(AIC))
-        print(' Median AICc (using likelihood) = {0:9.2f}'.format(AICc))
-
-        #BIC = -2.0 * med_ln_posterior + np.log(mc.ndata) * mc.ndim
-        #AIC = -2.0 * med_ln_posterior + 2.0 * mc.ndim
-        #AICc = AIC + (2.0 + 2.0 * mc.ndim) * mc.ndim / (mc.ndata - mc.ndim - 1.0)
-
-        #dict_basic_statistics['median_BIC_posterior'] = BIC
-        #dict_basic_statistics['median_AIC_posterior'] = AIC
-        #dict_basic_statistics['median_AICc_posterior'] = AICc
-
-        #print()
-        #print(' Median BIC  (using posterior)  = {0:9.2f}'.format(BIC))
-        #print(' Median AIC  (using posterior)  = {0:9.2f}'.format(AIC))
-        #print(' Median AICc (using posterior)  = {0:9.2f}'.format(AICc))
-
-        print()
-        print()
-        print('*** Information criteria using the MAP parameter set')
-
-        MAP_ln_priors, MAP_ln_likelihood = mc.log_priors_likelihood(chain_MAP)
-        MAP_ln_posterior = MAP_ln_likelihood + MAP_ln_priors
-        BIC = -2.0 * MAP_ln_likelihood + np.log(mc.ndata) * mc.ndim
-        AIC = -2.0 * MAP_ln_likelihood + 2.0 * mc.ndim
-        AICc = AIC + (2.0 + 2.0 * mc.ndim) * mc.ndim / (mc.ndata - mc.ndim - 1.0)
-        # AICc for small sample
-
-        dict_basic_statistics['MAP_ln_priors'] = MAP_ln_priors
-        dict_basic_statistics['MAP_ln_likelihood'] = MAP_ln_likelihood
-        dict_basic_statistics['MAP_ln_posterior'] = MAP_ln_posterior
-        dict_basic_statistics['MAP_BIC_likelihood'] = BIC
-        dict_basic_statistics['MAP_AIC_likelihood'] = AIC
-        dict_basic_statistics['MAP_AICc_likelihood'] = AICc
-
-        print()
-        print(' MAP ln_priors     = {0:9.2f}'.format(MAP_ln_posterior))
-        print(' MAP ln_priors     = {0:9.2f}'.format(MAP_ln_priors))
-        print(' MAP ln_likelihood = {0:9.2f}'.format(MAP_ln_likelihood))
-        print()
-        print(' MAP BIC  (using likelihood)    = {0:9.2f}'.format(BIC))
-        print(' MAP AIC  (using likelihood)    = {0:9.2f}'.format(AIC))
-        print(' MAP AICc (using likelihood)    = {0:9.2f}'.format(AICc))
-
-
-        print()
-        print()
-        print('### Information criteria using the RV ln_likelihood -- EXPERIMENTAL') 
-
-        
-
-        BIC = -2.0 * rv_lnlike_med[0] + np.log(mc.ndata) * mc.ndim
-        AIC = -2.0 * rv_lnlike_med[0] + 2.0 * mc.ndim
-        AICc = AIC + (2.0 + 2.0 * mc.ndim) * mc.ndim / (mc.ndata - mc.ndim - 1.0)
-        ICs_err = [-2*rv_lnlike_med[1], -2*rv_lnlike_med[2]]
-
-        dict_basic_statistics['distribution_ln_priors'] = lnprior_med
-        dict_basic_statistics['distribution_ln_likelihood'] = lnlike_med
-        dict_basic_statistics['distribution_ln_posterior'] = lnprob_med
-
-        dict_basic_statistics['distribution_BIC'] = BIC
-        dict_basic_statistics['distribution_AIC'] = AIC
-        dict_basic_statistics['distribution_AICc'] = AICc
-        dict_basic_statistics['distribution_ICs_error'] = ICs_err
-
-        dict_basic_statistics['full_distribution_BIC'] = -2.0 * flat_lnlike + np.log(mc.ndata) * mc.ndim
-        dict_basic_statistics['full_distribution_AIC'] = -2.0 * flat_lnlike + 2.0 * mc.ndim
-        dict_basic_statistics['full_distribution_AICc'] = dict_basic_statistics['full_distribution_AIC'] + (2.0 + 2.0 * mc.ndim) * mc.ndim / (mc.ndata - mc.ndim - 1.0)
-
-        print()
-        print(' BIC from distribution  (using likelihood)  = {0:9.2f}   {1:7.2f} {2:7.2f} (15-84 p)'.format(BIC,ICs_err[0], ICs_err[1]))
-        print(' AIC from distribution  (using likelihood)  = {0:9.2f}   {1:7.2f} {2:7.2f} (15-84 p)'.format(AIC,ICs_err[0], ICs_err[1]))
-        print(' AICc from distribution (using likelihood)  = {0:9.2f}   {1:7.2f} {2:7.2f} (15-84 p)'.format(AICc,ICs_err[0], ICs_err[1]))
-
-
-        print()
-        print()
-        print('*** Information criteria using the median parameter set')
-
-        BIC = -2.0 * med_ln_likelihood + np.log(mc.ndata) * mc.ndim
-        AIC = -2.0 * med_ln_likelihood + 2.0 * mc.ndim
-        AICc = AIC + (2.0 + 2.0 * mc.ndim) * mc.ndim / (mc.ndata - mc.ndim - 1.0)
-
-        # AICc for small sample
-        dict_basic_statistics['median_ln_priors'] = med_ln_priors
-        dict_basic_statistics['median_ln_likelihood'] = med_ln_likelihood
-        dict_basic_statistics['median_ln_posterior'] = med_ln_posterior
-        dict_basic_statistics['median_BIC_likelihood'] = BIC
-        dict_basic_statistics['median_AIC_likelihood'] = AIC
-        dict_basic_statistics['median_AICc_likelihood'] = AICc
-
-        print()
-        print(' Median ln_probability = {0:9.2f}'.format(med_ln_posterior))
-        print(' Median ln_priors      = {0:9.2f}'.format(med_ln_priors))
-        print(' Median ln_likelihood  = {0:9.2f}'.format(med_ln_likelihood))
+        print(' ln_probability of Median solution = {0:9.2f}'.format(med_ln_posterior))
+        print(' ln_priors of Median solution      = {0:9.2f}'.format(med_ln_priors))
+        print(' ln_likelihood of Median solution  = {0:9.2f}'.format(med_ln_likelihood))
         print()
         print(' Median BIC  (using likelihood) = {0:9.2f}'.format(BIC))
         print(' Median AIC  (using likelihood) = {0:9.2f}'.format(AIC))
@@ -894,19 +806,13 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
         dict_basic_statistics['MAP_AICc_likelihood'] = AICc
 
         print()
-        print(' MAP ln_priors     = {0:9.2f}'.format(MAP_ln_posterior))
-        print(' MAP ln_priors     = {0:9.2f}'.format(MAP_ln_priors))
-        print(' MAP ln_likelihood = {0:9.2f}'.format(MAP_ln_likelihood))
+        print(' ln_probability of MAP solution = {0:9.2f}'.format(MAP_ln_posterior))
+        print(' ln_priors of MAP solution      = {0:9.2f}'.format(MAP_ln_priors))
+        print(' ln_likelihood of MAP solution  = {0:9.2f}'.format(MAP_ln_likelihood))
         print()
         print(' MAP BIC  (using likelihood)    = {0:9.2f}'.format(BIC))
         print(' MAP AIC  (using likelihood)    = {0:9.2f}'.format(AIC))
         print(' MAP AICc (using likelihood)    = {0:9.2f}'.format(AICc))
-
-
-
-
-
-
 
         if mc.ndata < 40 * mc.ndim:
             print()
@@ -923,6 +829,100 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
 
         generic_save_to_cpickle(dir_dictionaries, 'basic_statistics', dict_basic_statistics)
         del dict_basic_statistics
+
+
+        print()
+        print()
+        print('### Information criteria using the RV ln_likelihood -- EXPERIMENTAL')
+
+        rv_ndata, rv_ndim, theta_flag = mc.rv_count_ndata_ndim()
+
+        dict_basic_statistics_rvonly = {}
+
+        dict_basic_statistics_rvonly['ndata'] = rv_ndata
+        dict_basic_statistics_rvonly['ndim'] = rv_ndim
+
+        BIC = -2.0 * rv_lnlike_med[0] + np.log(rv_ndata) * rv_ndim
+        AIC = -2.0 * rv_lnlike_med[0] + 2.0 * rv_ndim
+        AICc = AIC + (2.0 + 2.0 * rv_ndim) * rv_ndim / (rv_ndata - rv_ndim - 1.0)
+        ICs_err = [-2*rv_lnlike_med[1], -2*rv_lnlike_med[2]]
+
+        dict_basic_statistics_rvonly['distribution_ln_likelihood'] = rv_lnlike_med
+
+        dict_basic_statistics_rvonly['distribution_BIC'] = BIC
+        dict_basic_statistics_rvonly['distribution_AIC'] = AIC
+        dict_basic_statistics_rvonly['distribution_AICc'] = AICc
+        dict_basic_statistics_rvonly['distribution_ICs_error'] = ICs_err
+
+        dict_basic_statistics_rvonly['full_distribution_BIC'] = -2.0 * flat_rv_lnlike + np.log(rv_ndata) * rv_ndim
+        dict_basic_statistics_rvonly['full_distribution_AIC'] = -2.0 * flat_rv_lnlike + 2.0 * rv_ndim
+        dict_basic_statistics_rvonly['full_distribution_AICc'] = dict_basic_statistics_rvonly['full_distribution_AIC'] + (2.0 + 2.0 * rv_ndim) * rv_ndim / (rv_ndata - rv_ndim - 1.0)
+
+        print()
+        print(' RV ln-likelihood distribution: {0:9.2f}   {1:9.2f} {2:9.2f} (15-84 p) '.format(
+        rv_lnlike_med[0], rv_lnlike_med[2], rv_lnlike_med[1]))
+        print()
+        print(' BIC from distribution  (using RV likelihood)  = {0:9.2f}   {1:7.2f} {2:7.2f} (15-84 p)'.format(BIC,ICs_err[0], ICs_err[1]))
+        print(' AIC from distribution  (using RV likelihood)  = {0:9.2f}   {1:7.2f} {2:7.2f} (15-84 p)'.format(AIC,ICs_err[0], ICs_err[1]))
+        print(' AICc from distribution (using RV likelihood)  = {0:9.2f}   {1:7.2f} {2:7.2f} (15-84 p)'.format(AICc,ICs_err[0], ICs_err[1]))
+
+        print()
+        print()
+        print('### Information criteria using the median parameter set')
+
+        BIC = -2.0 * med_rv_ln_likelihood + np.log(rv_ndata) * rv_ndim
+        AIC = -2.0 * med_rv_ln_likelihood + 2.0 * rv_ndim
+        AICc = AIC + (2.0 + 2.0 * rv_ndim) * rv_ndim / (rv_ndata - rv_ndim - 1.0)
+
+        # AICc for small sample
+        dict_basic_statistics_rvonly['median_ln_likelihood'] = med_rv_ln_likelihood
+        dict_basic_statistics_rvonly['median_BIC_likelihood'] = BIC
+        dict_basic_statistics_rvonly['median_AIC_likelihood'] = AIC
+        dict_basic_statistics_rvonly['median_AICc_likelihood'] = AICc
+
+        print(' RV ln_likelihood of Median solution  = {0:9.2f}'.format(med_rv_ln_likelihood))
+
+        print()
+        print(' Median BIC  (using RV likelihood) = {0:9.2f}'.format(BIC))
+        print(' Median AIC  (using RV likelihood) = {0:9.2f}'.format(AIC))
+        print(' Median AICc (using RV likelihood) = {0:9.2f}'.format(AICc))
+
+        print()
+        print()
+        print('### Information criteria using the MAP parameter set')
+
+        BIC = -2.0 * MAP_rv_ln_likelihood + np.log(rv_ndata) * rv_ndim
+        AIC = -2.0 * MAP_rv_ln_likelihood + 2.0 * rv_ndim
+        AICc = AIC + (2.0 + 2.0 * rv_ndim) * rv_ndim / (rv_ndata - rv_ndim - 1.0)
+        # AICc for small sample
+
+        dict_basic_statistics_rvonly['MAP_ln_likelihood'] = MAP_rv_ln_likelihood
+        dict_basic_statistics_rvonly['MAP_BIC_likelihood'] = BIC
+        dict_basic_statistics_rvonly['MAP_AIC_likelihood'] = AIC
+        dict_basic_statistics_rvonly['MAP_AICc_likelihood'] = AICc
+
+        print()
+        print(' RV ln_likelihood of MAP solution = {0:9.2f}'.format(MAP_ln_likelihood))
+        print()
+        print(' MAP BIC  (using RV likelihood)    = {0:9.2f}'.format(BIC))
+        print(' MAP AIC  (using RV likelihood)    = {0:9.2f}'.format(AIC))
+        print(' MAP AICc (using RV likelihood)    = {0:9.2f}'.format(AICc))
+
+
+        if rv_ndata < 40 * rv_ndim:
+            print()
+            print(
+                ' AICc suggested over AIC because NDATA ( {0:.0f} ) < 40 * NDIM ( {1:.0f} )'.format(rv_ndata, rv_ndim))
+            dict_basic_statistics_rvonly['suggested_AIC_criterion'] = 'AICc'
+
+        else:
+            print()
+            print(
+                ' AIC suggested over AICs because NDATA ( {0:.0f} ) > 40 * NDIM ( {1:.0f} )'.format(rv_ndata, rv_ndim))
+            dict_basic_statistics_rvonly['suggested_AIC_criterion'] = 'AIC'
+
+        generic_save_to_cpickle(dir_dictionaries, 'basic_statistics_rvonly', dict_basic_statistics_rvonly)
+        del dict_basic_statistics_rvonly
 
 
     print()
