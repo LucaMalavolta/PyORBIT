@@ -459,6 +459,56 @@ class ModelContainer(object):
         else:
             return log_priors, log_likelihood
 
+    def rv_count_ndata_ndim(self, theta):
+
+        ndata = 0
+        ndim = 0
+
+        theta_flag = np.zeros_like(theta, dtype=bool)
+
+        for dataset_name, dataset in self.dataset_dict.items():
+
+            logchi2_gp_model = None
+
+            if not (dataset.kind == 'RV'):
+                continue
+
+            if 'none' in dataset.models or 'None' in dataset.models:
+                continue
+            if not dataset.models:
+                continue
+
+            ndata += dataset.n
+            parameter_values, theta_flag = dataset.convert_with_flag(theta, theta_flag)
+
+            for model_name in dataset.models:
+
+                for common_ref in self.models[model_name].common_ref:
+                    parameter_values, theta_flag = self.common_models[common_ref].convert_with_flag(theta, theta_flag)
+
+                for planet_name in self.models[model_name].multiple_planets:
+                    parameter_values, theta_flag = self.common_models[planet_name].convert_with_flag(theta, theta_flag)
+
+                parameter_values, theta_flag = self.models[model_name].convert_with_flag(theta, theta_flag, dataset_name)
+
+                if getattr(self.models[model_name], 'internal_likelihood', False):
+                    logchi2_gp_model = model_name
+
+            """ Gaussian Process check MUST be the last one or the program will fail
+            that's because for the GP to work we need to know the _deterministic_ part of the model
+            (i.e. the theoretical values you get when you feed your model with the parameter values) """
+
+            if logchi2_gp_model:
+
+                for common_ref in self.models[logchi2_gp_model].common_ref:
+                    parameter_values, theta_flag =  self.common_models[common_ref].convert_with_flag(theta)
+
+                parameter_values, theta_flag = self.models[logchi2_gp_model].convert_with_flag(theta, theta_flag, dataset_name)
+
+        ndim = np.sum(theta_flag)
+
+        return ndata, ndim, theta_flag
+
 
     def rv_log_likelihood(self, theta):
 

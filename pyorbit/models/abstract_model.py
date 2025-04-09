@@ -217,7 +217,7 @@ class AbstractModel(object):
 
         return ndim, output_lists
 
-    def define_starting_point_from_derived(self, starting_point, dataset_name, par):
+    def define_starting_point_from_derived(self, starting_point, dataset_name, pam):
         return False
 
     def define_starting_point(self, starting_point, dataset_name):
@@ -225,38 +225,48 @@ class AbstractModel(object):
         if not bool(self.starts):
             return
 
-        for par in self.starts[dataset_name]:
+        for pam in self.starts[dataset_name]:
             if self.define_starting_point_from_derived(
-                    starting_point, dataset_name, par):
+                    starting_point, dataset_name, pam):
                 continue
 
-            if self.spaces[dataset_name][par] == 'Linear':
-                start_converted = self.starts[dataset_name][par]
-            elif self.spaces[dataset_name][par] == 'Log_Natural':
-                start_converted = np.log(self.starts[dataset_name][par])
-            elif self.spaces[dataset_name][par] == 'Log_Base2':
-                start_converted = np.log2(self.starts[dataset_name][par])
-            elif self.spaces[dataset_name][par] == 'Log_Base10':
-                start_converted = np.log10(self.starts[dataset_name][par])
-            elif self.spaces[dataset_name][par] == 'Logarithmic':
-                start_converted = np.log2(self.starts[dataset_name][par])
-            elif self.spaces[dataset_name][par] == 'Sine_Angle':
-                start_converted = np.arcsin(self.starts[dataset_name][par])*constants.rad2deg
-            elif self.spaces[dataset_name][par] == 'Cosine_Angle':
-                start_converted = np.arccos(self.starts[dataset_name][par])*constants.rad2deg
+            if self.spaces[dataset_name][pam] == 'Linear':
+                start_converted = self.starts[dataset_name][pam]
+            elif self.spaces[dataset_name][pam] == 'Log_Natural':
+                start_converted = np.log(self.starts[dataset_name][pam])
+            elif self.spaces[dataset_name][pam] == 'Log_Base2':
+                start_converted = np.log2(self.starts[dataset_name][pam])
+            elif self.spaces[dataset_name][pam] == 'Log_Base10':
+                start_converted = np.log10(self.starts[dataset_name][pam])
+            elif self.spaces[dataset_name][pam] == 'Logarithmic':
+                start_converted = np.log2(self.starts[dataset_name][pam])
+            elif self.spaces[dataset_name][pam] == 'Sine_Angle':
+                start_converted = np.arcsin(self.starts[dataset_name][pam])*constants.rad2deg
+            elif self.spaces[dataset_name][pam] == 'Cosine_Angle':
+                start_converted = np.arccos(self.starts[dataset_name][pam])*constants.rad2deg
 
             starting_point[self.sampler_parameters[dataset_name]
-                            [par]] = start_converted
+                            [pam]] = start_converted
 
     def convert(self, theta, dataset_name):
         parameter_values = {}
         # If we need the parameters for the prior, we are not providing any
         # name for the dataset
 
-        for par in self.list_pams_dataset:
-            parameter_values[par] = self.transformation[dataset_name][par](
-                theta, self.fixed, self.parameter_index[dataset_name][par])
+        for pam in self.list_pams_dataset:
+            parameter_values[pam] = self.transformation[dataset_name][pam](
+                theta, self.fixed, self.parameter_index[dataset_name][pam])
         return parameter_values
+
+
+    def convert_with_flag(self, theta, flag,  dataset_name):
+        parameter_values = {}
+        for pam in self.list_pams_dataset:
+            parameter_values[pam] = self.transformation[dataset_name][pam](
+                theta, self.fixed, self.parameter_index[dataset_name][pam])
+            flag[self.parameter_index[dataset_name][pam]] = True
+        return parameter_values, flag
+
 
     def return_priors(self, theta, dataset_name):
         prior_out = 0.00
@@ -268,12 +278,12 @@ class AbstractModel(object):
 
         if getattr(self, 'multivariate_priors', False):
             if len(OrderedSet(self.multivariate_pams[dataset_name]) & OrderedSet(self.list_pams_dataset[dataset_name])) > 0:
-                multi_par = [parameter_values[ii]
+                multi_pams = [parameter_values[ii]
                              for ii in self.multivariate_pams[dataset_name]]
-                pdf = self.multivariate_func[dataset_name].pdf(multi_par)
+                pdf = self.multivariate_func[dataset_name].pdf(multi_pams)
                 if pdf > 0:
                     prior_out += np.log(
-                        self.multivariate_func[dataset_name].pdf(multi_par))
+                        self.multivariate_func[dataset_name].pdf(multi_pams))
                 else:
                     return -np.inf
             else:

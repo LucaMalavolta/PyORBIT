@@ -22,6 +22,8 @@ import os
 import matplotlib as mpl
 import sys
 
+from tqdm import tqdm
+
 mpl.use('Agg')
 
 
@@ -30,7 +32,8 @@ __all__ = ["pyorbit_getresults"]
 
 def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
 
-    print(' LaTeX disabled by default')
+    print('LaTeX disabled by default')
+    print()
     use_tex = False
     plt.rc('text', usetex=use_tex)
 
@@ -118,6 +121,13 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
 
         print()
         try:
+            print('### PyORBIT version used in the analysis: ', mc.pyorbit_version)
+        except:
+            print('### You must have used a very outdated version of PyORBIT to run the analysis!')
+            print('### Please update to the latest version of PyORBIT')
+
+        print()
+        try:
             print(' emcee version: ', emcee.__version__)
             if mc.emcee_parameters['version'] == '2':
                 print('WARNING: upgrading to version 3 is strongly advised')
@@ -164,6 +174,14 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
 
         """ Computing a new burn-in if the computation has been interrupted suddenly"""
         nburn, modified = emcee_burnin_check(sampler_chain, nburnin, nthin)
+
+
+        print()
+        try:
+            print('### PyORBIT version used in the analysis: ', mc.pyorbit_version)
+        except:
+            print('### You must have used a very outdated version of PyORBIT to run the analysis!')
+            print('### Please update to the latest version of PyORBIT')
 
         if modified:
             print()
@@ -229,6 +247,13 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
             flat_chain, flat_lnprob)
 
         print()
+        try:
+            print('### PyORBIT version used in the analysis: ', mc.pyorbit_version)
+        except:
+            print('### You must have used a very outdated version of PyORBIT to run the analysis!')
+            print('### Please update to the latest version of PyORBIT')
+
+        print()
         print(' Reference Time Tref: {}'.format(mc.Tref))
         print()
         print(' Dimensions: {}'.format(mc.ndim))
@@ -266,6 +291,13 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
             flat_chain, flat_lnprob)
 
         print()
+        try:
+            print('### PyORBIT version used in the analysis: ', mc.pyorbit_version)
+        except:
+            print('### You must have used a very outdated version of PyORBIT to run the analysis!')
+            print('### Please update to the latest version of PyORBIT')
+
+        print()
         print(' Reference Time Tref: {}'.format(mc.Tref))
         print()
         print(' Dimensions: {}'.format(mc.ndim))
@@ -301,9 +333,18 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
 
         pfrac = mc.nested_sampling_parameters['pfrac']
 
+
+        print()
+        try:
+            print('### PyORBIT version used in the analysis: ', mc.pyorbit_version)
+        except:
+            print('### You must have used a very outdated version of PyORBIT to run the analysis!')
+            print('### Please update to the latest version of PyORBIT')
+
         try:
             results = dynesty_results_maxevidence_load_from_cpickle(dir_input)
             pfrac = 0.000
+            print()
             print('Model evidence from dynesty run with posterior/evidence split = {0:4.3f}'.format(pfrac))
 
             labels_array = [None] * len(theta_dictionary)
@@ -480,6 +521,14 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
         mc.model_setup()
         mc.initialize_logchi2()
 
+        print()
+        try:
+            print('### PyORBIT version used in the analysis: ', mc.pyorbit_version)
+        except:
+            print('### You must have used a very outdated version of PyORBIT to run the analysis!')
+            print('### Please update to the latest version of PyORBIT')
+
+
         with open(dir_input + 'info/results.json') as f:
             results = json.load(f)
 
@@ -589,14 +638,19 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
 
 
     med_ln_priors, med_ln_likelihood = mc.log_priors_likelihood(chain_med[:, 0])
+    med_rv_ln_likelihood = mc.rv_log_likelihood(chain_med[:, 0])    
 
-    #try:
-    #    log_rv = mc.rv_log_likelihood(chain_med[:, 0])
-    #    print('aaaaaaaa', log_rv)
-    #    quit()
-    #except:
-    #    print()
-    #    print('Analysis ran using PyORBIT version < 10.10, RV-only log_likelihood not available')
+    print()
+    print('Number of samplings:',  n_samplings)
+
+
+    flat_rv_lnlike = np.zeros(n_samplings)
+    try:
+        print('Recomputing RV ln-likelihood, it may take a while...')
+        for ii in tqdm(range(n_samplings)):
+            flat_rv_lnlike[ii] = mc.rv_log_likelihood(flat_chain[ii,:])
+    except:
+        print('Analysis ran using PyORBIT version < 10.10, RV-only log_likelihood not available')
 
     if mc.include_priors:
 
@@ -604,7 +658,7 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
         print('Recomputing ln-prior, it may take a while...')
         flat_lnprior = np.zeros_like(flat_lnprob)
         try:
-            for ii in range(0,n_samplings):
+            for ii in tqdm(range(n_samplings)):
                 flat_lnprior[ii] = mc.log_priors(flat_chain[ii,:])
         except:
             print('ln-prior recomputation failed, using the average value')
@@ -621,12 +675,20 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
 
     lnlike_med = common.compute_value_sigma(flat_lnlike)
 
+
+    """ not sure what would happen if the rv_lnlike is all zeros """
+    try:
+        rv_lnlike_med = common.compute_value_sigma(flat_rv_lnlike)
+    except:
+        rv_lnlike_med = np.zeros_like(lnlike_med)
+
     generic_save_to_cpickle(dir_dictionaries, 'theta_dictionary', theta_dictionary)
     generic_save_to_cpickle(dir_dictionaries, 'theta_tree', theta_tree)
 
     dict_sampler_posteriors['lnprob'] = flat_lnprob
     dict_sampler_posteriors['lnprior'] = flat_lnprior
     dict_sampler_posteriors['lnlike'] = flat_lnlike
+    dict_sampler_posteriors['lnlike_rv'] = flat_rv_lnlike
 
     generic_save_to_cpickle(dir_dictionaries, 'sampler_posteriors', dict_sampler_posteriors)
     generic_save_to_cpickle(dir_dictionaries, 'theta_dictionary', theta_dictionary)
@@ -636,12 +698,16 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
 
 
     print()
-    print('ln-probability distribution: {0:9.2f}   {1:9.2f} {2:9.2f} (15-84 p) '.format(
+    print('ln-probability   distribution: {0:9.2f}   {1:9.2f} {2:9.2f} (15-84 p) '.format(
         lnprob_med[0], lnprob_med[2], lnprob_med[1]))
-    print('ln-prior       distribution: {0:9.2f}   {1:9.2f} {2:9.2f} (15-84 p) '.format(
+    print('ln-prior         distribution: {0:9.2f}   {1:9.2f} {2:9.2f} (15-84 p) '.format(
         lnprior_med[0], lnprior_med[2], lnprior_med[1]))
-    print('ln-likelihood  distribution: {0:9.2f}   {1:9.2f} {2:9.2f} (15-84 p) '.format(
+    print('ln-likelihood    distribution: {0:9.2f}   {1:9.2f} {2:9.2f} (15-84 p) '.format(
         lnlike_med[0], lnlike_med[2], lnlike_med[1]))
+    print('RV ln-likelihood distribution: {0:9.2f}   {1:9.2f} {2:9.2f} (15-84 p) '.format(
+        rv_lnlike_med[0], rv_lnlike_med[2], rv_lnlike_med[1]))
+
+
 
 
     if mc.ndata <= (mc.ndim + 1.0):
@@ -663,21 +729,6 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
         print()
         print()
         print('*** Information criteria using the likelihood distribution')
-
-        #BIC = -2.0 * lnprob_med[0] + np.log(mc.ndata) * mc.ndim
-        #AIC = -2.0 * lnprob_med[0] + 2.0 * mc.ndim
-        #AICc = AIC + (2.0 + 2.0 * mc.ndim) * mc.ndim / (mc.ndata - mc.ndim - 1.0)
-        #ICs_err = [-2*lnprob_med[1], -2*lnprob_med[2]]
-
-        #dict_basic_statistics['dist_BIC_posterior'] = BIC
-        #dict_basic_statistics['dist_AIC_posterior'] = AIC
-        #dict_basic_statistics['dist_AICc_posterior'] = AICc
-        #dict_basic_statistics['dist_ICs_error'] = ICs_err
-
-        #print()
-        #print(' BIC from distribution  (using posterior)  = {0:9.2f}   {0:7.2f} {1:7.2f} (15-84 p)'.format(BIC,ICs_err[0], ICs_err[1]))
-        #print(' AIC from distribution  (using posterior)  = {0:9.2f}   {0:7.2f} {1:7.2f} (15-84 p)'.format(AIC,ICs_err[0], ICs_err[1]))
-        #print(' AICc from distribution (using posterior)  = {0:9.2f}   {0:7.2f} {1:7.2f} (15-84 p)'.format(AICc,ICs_err[0], ICs_err[1]))
 
         BIC = -2.0 * lnlike_med[0] + np.log(mc.ndata) * mc.ndim
         AIC = -2.0 * lnlike_med[0] + 2.0 * mc.ndim
@@ -769,18 +820,93 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
         print(' MAP AICc (using likelihood)    = {0:9.2f}'.format(AICc))
 
 
-        #BIC = -2.0 * MAP_ln_posterior + np.log(mc.ndata) * mc.ndim
-        #AIC = -2.0 * MAP_ln_posterior + 2.0 * mc.ndim
-        #AICc = AIC + (2.0 + 2.0 * mc.ndim) * mc.ndim / (mc.ndata - mc.ndim - 1.0)
+        print()
+        print()
+        print('### Information criteria using the RV ln_likelihood -- EXPERIMENTAL') 
 
-        #dict_basic_statistics['MAP_BIC_posterior'] = BIC
-        #dict_basic_statistics['MAP_AIC_posterior'] = AIC
-        #dict_basic_statistics['MAP_AICc_posterior'] = AICc
+        
 
-        #print()
-        #print(' MAP BIC  (using posterior)     = {0:9.2f}'.format(BIC))
-        #print(' MAP AIC  (using posterior)     = {0:9.2f}'.format(AIC))
-        #print(' MAP AICc (using posterior)     = {0:9.2f}'.format(AICc))
+        BIC = -2.0 * rv_lnlike_med[0] + np.log(mc.ndata) * mc.ndim
+        AIC = -2.0 * rv_lnlike_med[0] + 2.0 * mc.ndim
+        AICc = AIC + (2.0 + 2.0 * mc.ndim) * mc.ndim / (mc.ndata - mc.ndim - 1.0)
+        ICs_err = [-2*rv_lnlike_med[1], -2*rv_lnlike_med[2]]
+
+        dict_basic_statistics['distribution_ln_priors'] = lnprior_med
+        dict_basic_statistics['distribution_ln_likelihood'] = lnlike_med
+        dict_basic_statistics['distribution_ln_posterior'] = lnprob_med
+
+        dict_basic_statistics['distribution_BIC'] = BIC
+        dict_basic_statistics['distribution_AIC'] = AIC
+        dict_basic_statistics['distribution_AICc'] = AICc
+        dict_basic_statistics['distribution_ICs_error'] = ICs_err
+
+        dict_basic_statistics['full_distribution_BIC'] = -2.0 * flat_lnlike + np.log(mc.ndata) * mc.ndim
+        dict_basic_statistics['full_distribution_AIC'] = -2.0 * flat_lnlike + 2.0 * mc.ndim
+        dict_basic_statistics['full_distribution_AICc'] = dict_basic_statistics['full_distribution_AIC'] + (2.0 + 2.0 * mc.ndim) * mc.ndim / (mc.ndata - mc.ndim - 1.0)
+
+        print()
+        print(' BIC from distribution  (using likelihood)  = {0:9.2f}   {1:7.2f} {2:7.2f} (15-84 p)'.format(BIC,ICs_err[0], ICs_err[1]))
+        print(' AIC from distribution  (using likelihood)  = {0:9.2f}   {1:7.2f} {2:7.2f} (15-84 p)'.format(AIC,ICs_err[0], ICs_err[1]))
+        print(' AICc from distribution (using likelihood)  = {0:9.2f}   {1:7.2f} {2:7.2f} (15-84 p)'.format(AICc,ICs_err[0], ICs_err[1]))
+
+
+        print()
+        print()
+        print('*** Information criteria using the median parameter set')
+
+        BIC = -2.0 * med_ln_likelihood + np.log(mc.ndata) * mc.ndim
+        AIC = -2.0 * med_ln_likelihood + 2.0 * mc.ndim
+        AICc = AIC + (2.0 + 2.0 * mc.ndim) * mc.ndim / (mc.ndata - mc.ndim - 1.0)
+
+        # AICc for small sample
+        dict_basic_statistics['median_ln_priors'] = med_ln_priors
+        dict_basic_statistics['median_ln_likelihood'] = med_ln_likelihood
+        dict_basic_statistics['median_ln_posterior'] = med_ln_posterior
+        dict_basic_statistics['median_BIC_likelihood'] = BIC
+        dict_basic_statistics['median_AIC_likelihood'] = AIC
+        dict_basic_statistics['median_AICc_likelihood'] = AICc
+
+        print()
+        print(' Median ln_probability = {0:9.2f}'.format(med_ln_posterior))
+        print(' Median ln_priors      = {0:9.2f}'.format(med_ln_priors))
+        print(' Median ln_likelihood  = {0:9.2f}'.format(med_ln_likelihood))
+        print()
+        print(' Median BIC  (using likelihood) = {0:9.2f}'.format(BIC))
+        print(' Median AIC  (using likelihood) = {0:9.2f}'.format(AIC))
+        print(' Median AICc (using likelihood) = {0:9.2f}'.format(AICc))
+
+        print()
+        print()
+        print('*** Information criteria using the MAP parameter set')
+
+        MAP_ln_priors, MAP_ln_likelihood = mc.log_priors_likelihood(chain_MAP)
+        MAP_ln_posterior = MAP_ln_likelihood + MAP_ln_priors
+        BIC = -2.0 * MAP_ln_likelihood + np.log(mc.ndata) * mc.ndim
+        AIC = -2.0 * MAP_ln_likelihood + 2.0 * mc.ndim
+        AICc = AIC + (2.0 + 2.0 * mc.ndim) * mc.ndim / (mc.ndata - mc.ndim - 1.0)
+        # AICc for small sample
+
+        dict_basic_statistics['MAP_ln_priors'] = MAP_ln_priors
+        dict_basic_statistics['MAP_ln_likelihood'] = MAP_ln_likelihood
+        dict_basic_statistics['MAP_ln_posterior'] = MAP_ln_posterior
+        dict_basic_statistics['MAP_BIC_likelihood'] = BIC
+        dict_basic_statistics['MAP_AIC_likelihood'] = AIC
+        dict_basic_statistics['MAP_AICc_likelihood'] = AICc
+
+        print()
+        print(' MAP ln_priors     = {0:9.2f}'.format(MAP_ln_posterior))
+        print(' MAP ln_priors     = {0:9.2f}'.format(MAP_ln_priors))
+        print(' MAP ln_likelihood = {0:9.2f}'.format(MAP_ln_likelihood))
+        print()
+        print(' MAP BIC  (using likelihood)    = {0:9.2f}'.format(BIC))
+        print(' MAP AIC  (using likelihood)    = {0:9.2f}'.format(AIC))
+        print(' MAP AICc (using likelihood)    = {0:9.2f}'.format(AICc))
+
+
+
+
+
+
 
         if mc.ndata < 40 * mc.ndim:
             print()
