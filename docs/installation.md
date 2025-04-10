@@ -20,6 +20,13 @@ With conda/anaconda:
 conda create --name pyorbit python=3.10
 ```
 
+If you are using aMa cwith ARM architecture, the following commmand should force conda to install x86_64 versions of Python and all packages (many thanks to Jinglin Zhao for the tip):
+
+```{code} bash
+CONDA_SUBDIR=osx-64 conda create -n pyorbit python=3.10
+```
+
+
 To list the available environments do:
 
 ```{code} bash
