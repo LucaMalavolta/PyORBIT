@@ -112,6 +112,12 @@ try:
         gp = _build_tinygp_multiQP_trainedSE(params)
         return gp.log_probability(params['y'])
 
+    ### NEW Addded in PyORBIT v10.10
+    @jax.jit
+    def _condition_tinygp_multiQP_trainedSE(params):
+        gp = _build_tinygp_multiQP_trainedSE(params)
+        return gp.condition(params['y'], params['X'])
+
 except:
     pass
 
@@ -180,6 +186,8 @@ class TinyGP_MultiQuasiPeriodic_TrainedSquaredExponential_Activity(AbstractModel
 
         self.pi2 = np.pi * np.pi
 
+        ### NEW Addded in PyORBIT v10.10
+        self._rv_dataset_flag = []
 
     def initialize_model(self, mc,  **kwargs):
 
@@ -193,6 +201,14 @@ class TinyGP_MultiQuasiPeriodic_TrainedSquaredExponential_Activity(AbstractModel
         incremental addition of datasets if they are already present  """
         if dataset.name_ref in self._dataset_names:
             return
+
+        ## NEW Addded in PyORBIT v10.10
+        if dataset.kind == 'RV':
+            rv_flag = np.ones_like(dataset.x0, dtype=bool)
+        else:
+            rv_flag = np.zeros_like(dataset.x0, dtype=bool)
+        self._rv_dataset_flag = np.append(self._rv_dataset_flag, rv_flag).astype(bool)
+
 
         self._dataset_nindex.append([self._n_cov_matrix,
                                     self._n_cov_matrix+dataset.n])
@@ -275,6 +291,32 @@ class TinyGP_MultiQuasiPeriodic_TrainedSquaredExponential_Activity(AbstractModel
         )
 
         return _loss_tinygp_multiQP_trainedSE(theta_dict)
+
+    ## NEW Addded in PyORBIT v10.10
+    def lnlk_rvonly_compute(self):
+
+        theta_dict =  dict(
+            gamma=1. / (2.*self.internal_parameter_values['Oamp'] ** 2),
+            Pdec=self.internal_parameter_values['Pdec'],
+            Prot=self.internal_parameter_values['Prot'],
+            Pcyc=self.internal_parameter_values['Pcyc'],
+            diag=self._dataset_ej2,
+            X=self._X,
+            y=self._dataset_res,
+            coeff_QP_prime=self.internal_coeff_QP_prime,
+            coeff_QP_deriv=self.internal_coeff_QP_deriv,
+            coeff_SE_prime=self.internal_coeff_SE_prime,
+            #coeff_SE_deriv=self.internal_coeff_SE_deriv
+        )
+
+        _, cond_gp = _condition_tinygp_multiQP_trainedSE(theta_dict)
+        gp_model = cond_gp.mean
+        residuals = (self._dataset_res - gp_model)[self._rv_dataset_flag]
+        env = 1.0 / self._dataset_ej2[self._rv_dataset_flag]
+        n = np.sum(self._rv_dataset_flag)
+
+        return -0.5 * (n * np.log(2 * np.pi) +
+                       np.sum(residuals ** 2 * env - np.log(env)))
 
 
     def sample_predict(self, dataset, x0_input=None, return_covariance=False, return_variance=False):

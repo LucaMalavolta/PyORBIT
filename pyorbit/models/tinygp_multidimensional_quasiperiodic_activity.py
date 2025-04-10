@@ -97,6 +97,7 @@ try:
         gp = _build_tinygp_multidimensional(params)
         return gp.log_probability(params['y'])
 
+    ### NEW Addded in PyORBIT v10.10
     @jax.jit
     def _condition_tinygp(params):
         gp = _build_tinygp_multidimensional(params)
@@ -166,7 +167,7 @@ class TinyGP_Multidimensional_QuasiPeriodicActivity(AbstractModel, AbstractGauss
 
         self.pi2 = np.pi * np.pi
 
-        # Addded in PyORBIT v10.10
+        ### NEW Addded in PyORBIT v10.10
         self._rv_dataset_flag = []
 
     def initialize_model(self, mc,  **kwargs):
@@ -182,12 +183,13 @@ class TinyGP_Multidimensional_QuasiPeriodicActivity(AbstractModel, AbstractGauss
         if dataset.name_ref in self._dataset_names:
             return
 
-        # Addded in PyORBIT v10.10
+        ## NEW Addded in PyORBIT v10.10
         if dataset.kind == 'RV':
-            rv_flag = np.ones_like(dataset.x0, dtype=int)
+            rv_flag = np.ones_like(dataset.x0, dtype=bool)
         else:
-            rv_flag = np.zeros_like(dataset.x0, dtype=int)
-        self._rv_dataset_flag = np.append(self._rv_dataset_flag, rv_flag).astype(int)
+            rv_flag = np.zeros_like(dataset.x0, dtype=bool)
+        self._rv_dataset_flag = np.append(self._rv_dataset_flag, rv_flag).astype(bool)
+
 
         self._dataset_nindex.append([self._n_cov_matrix,
                                     self._n_cov_matrix+dataset.n])
@@ -245,9 +247,9 @@ class TinyGP_Multidimensional_QuasiPeriodicActivity(AbstractModel, AbstractGauss
 
         return _loss_tinygp(theta_dict)
 
-    ### Added in PyORBIT 10.01
+    ## NEW Addded in PyORBIT v10.10
     def lnlk_rvonly_compute(self):
-        
+
         theta_dict =  dict(
             gamma=1. / (2.*self.internal_parameter_values['Oamp'] ** 2),
             Pdec=self.internal_parameter_values['Pdec'],
@@ -258,9 +260,10 @@ class TinyGP_Multidimensional_QuasiPeriodicActivity(AbstractModel, AbstractGauss
             coeff_prime=self.internal_coeff_prime,
             coeff_deriv=self.internal_coeff_deriv
         )
-        
+
         _, cond_gp = _condition_tinygp(theta_dict)
         gp_model = cond_gp.mean
+
         residuals = (self._dataset_res - gp_model)[self._rv_dataset_flag]
         env = 1.0 / self._dataset_ej2[self._rv_dataset_flag]
         n = np.sum(self._rv_dataset_flag)

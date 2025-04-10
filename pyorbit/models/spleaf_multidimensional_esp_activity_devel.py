@@ -88,6 +88,11 @@ class SPLEAF_Multidimensional_ESP_devel(AbstractModel, AbstractGaussianProcesses
         self.matrix_regularization = {}
         self.squared_residuals_flag = {}
 
+
+        ### NEW Addded in PyORBIT v10.10
+        self._rv_dataset_flag = []
+
+
     def initialize_model(self, mc,  **kwargs):
 
         self.n_harmonics = kwargs.get('n_harmonics', self.n_harmonics)

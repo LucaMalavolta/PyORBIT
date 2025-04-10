@@ -560,7 +560,7 @@ def get_model(mc, theta, bjd_dict, **kwargs):
                 for planet_name in mc.models[model_name].multiple_planets:
                     parameter_values.update(
                         mc.common_models[planet_name].convert_with_name(theta, planet_name))
-            except:
+            except TypeError:
                 pass
 
             parameter_values.update(

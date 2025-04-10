@@ -320,7 +320,7 @@ class ModelContainer(object):
                     for planet_name in self.models[model_name].multiple_planets:
                         parameter_values.update(
                             self.common_models[planet_name].convert_with_name(theta, planet_name))
-                except:
+                except TypeError:
                     pass
 
                 parameter_values.update(
@@ -486,8 +486,12 @@ class ModelContainer(object):
                 for common_ref in self.models[model_name].common_ref:
                     theta_flag = self.common_models[common_ref].check_theta_flag(theta_flag)
 
-                for planet_name in self.models[model_name].multiple_planets:
-                    theta_flag = self.common_models[planet_name].check_theta_flag(theta_flag)
+                #TODO: remove try-except starting from version 11 !!
+                try:
+                    for planet_name in self.models[model_name].multiple_planets:
+                        theta_flag = self.common_models[planet_name].check_theta_flag(theta_flag)
+                except TypeError:
+                    pass
 
                 theta_flag = self.models[model_name].check_theta_flag(dataset_name, theta_flag)
 
@@ -503,7 +507,7 @@ class ModelContainer(object):
                 for common_ref in self.models[logchi2_gp_model].common_ref:
                     theta_flag =  self.common_models[common_ref].check_theta_flag(theta_flag)
 
-                theta_flag = self.models[logchi2_gp_model].convert_with_flag(dataset_name, theta_flag)
+                theta_flag = self.models[logchi2_gp_model].check_theta_flag(dataset_name, theta_flag)
 
         ndim = np.sum(theta_flag)
 
@@ -551,7 +555,7 @@ class ModelContainer(object):
                     for planet_name in self.models[model_name].multiple_planets:
                         parameter_values.update(
                             self.common_models[planet_name].convert_with_name(theta, planet_name))
-                except:
+                except TypeError:
                     pass
 
                 parameter_values.update(

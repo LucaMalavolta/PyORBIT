@@ -217,7 +217,7 @@ def pyorbit_results():
 
 
     print()
-    print(':::###::: PyORBIT v{0} :::###:::'.format(pyorbit.__version__))
+    print(':::---::: PyORBIT v{0} :::---:::'.format(pyorbit.__version__))
     print()
     print('Python version in use:')
     print(sys.version)
