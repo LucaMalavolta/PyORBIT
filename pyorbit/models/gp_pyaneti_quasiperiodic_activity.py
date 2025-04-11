@@ -74,6 +74,8 @@ class GP_Pyaneti_QuasiPeriodicActivity(AbstractModel, AbstractGaussianProcesses)
 
         self.pi2 = np.pi * np.pi
 
+        ### NEW Addded in PyORBIT v10.10
+        self._dataset_rvflag_dict = {}
 
     def initialize_model(self, mc,  **kwargs):
 
@@ -87,6 +89,12 @@ class GP_Pyaneti_QuasiPeriodicActivity(AbstractModel, AbstractGaussianProcesses)
         incremental addition of datasets if they are already present  """
         if dataset.name_ref in self._dataset_names:
             return
+
+        ## NEW Addded in PyORBIT v10.10
+        if dataset.kind == 'RV':
+            self._dataset_rvflag_dict[dataset.name_ref] = True
+        else:
+            self._dataset_rvflag_dict[dataset.name_ref] = False
 
         self._dataset_nindex.append([self._n_cov_matrix,
                                      self._n_cov_matrix+dataset.n])
@@ -152,6 +160,34 @@ class GP_Pyaneti_QuasiPeriodicActivity(AbstractModel, AbstractGaussianProcesses)
                                 fake_jitter, fake_ljitter)
 
         return output[0]
+
+
+    ## NEW Addded in PyORBIT v10.10
+    def lnlk_rvonly_compute(self):
+
+        rv_loglike = 0.0
+
+        kernel_name = 'MQ' + repr(self._added_datasets)
+        cov_matrix = pyaneti.covfunc(kernel_name,self._gp_pams,self._dataset_x0,self._dataset_x0)
+
+        Ks = cov_matrix - np.diag(self._dataset_ej2)
+
+        alpha = cho_solve(cho_factor(cov_matrix), self._dataset_res)
+        mu = np.dot(Ks, alpha).flatten()
+
+        for dataset_name, d_ind in self._dataset_names.items():
+
+            l_nstart, l_nend = self._dataset_nindex[d_ind]
+
+            env = 1. / self._dataset_ej2[l_nstart:l_nend]
+            residuals = (self._dataset_res[l_nstart:l_nend] - mu[l_nstart:l_nend])
+            n = len(residuals)
+
+            rv_loglike += -0.5 * (n * np.log(2 * np.pi) + np.sum(residuals ** 2 * env - np.log(env)))
+
+        return rv_loglike
+
+
 
     def sample_predict(self, dataset, x0_input=None, return_covariance=False, return_variance=False):
 
