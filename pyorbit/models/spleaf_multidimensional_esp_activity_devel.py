@@ -90,8 +90,7 @@ class SPLEAF_Multidimensional_ESP_devel(AbstractModel, AbstractGaussianProcesses
 
 
         ### NEW Addded in PyORBIT v10.10
-        self._rv_dataset_flag = []
-
+        self._dataset_rvflag_dict = {}
 
     def initialize_model(self, mc,  **kwargs):
 
@@ -109,6 +108,13 @@ class SPLEAF_Multidimensional_ESP_devel(AbstractModel, AbstractGaussianProcesses
         incremental addition of datasets if they are already present  """
         if dataset.name_ref in self._dataset_nindex:
             return
+
+        ## NEW Addded in PyORBIT v10.10
+        if dataset.kind == 'RV':
+            self._dataset_rvflag_dict[dataset.name_ref] = True
+
+        else:
+            self._dataset_rvflag_dict[dataset.name_ref] = False
 
         self._dataset_x0.append(dataset.x0)
         self._dataset_err.append(dataset.e)
@@ -130,9 +136,9 @@ class SPLEAF_Multidimensional_ESP_devel(AbstractModel, AbstractGaussianProcesses
 
         self.spleaf_time, self.spleaf_res, self.spleaf_err, self.spleaf_series_index = \
             spleaf_cov.merge_series(self._dataset_x0, 
-                                    self._dataset_err/self.matrix_regularization[dataset.name_ref], 
+                                    self._dataset_err/self.matrix_regularization[dataset.name_ref],
                                     self._dataset_err/self.matrix_regularization[dataset.name_ref])
-
+        self.spleaf_res = np.zeros_like(self.spleaf_err)
 
         self._jitter_mask = []
         self._dataset_jitmask = []
@@ -208,6 +214,80 @@ class SPLEAF_Multidimensional_ESP_devel(AbstractModel, AbstractGaussianProcesses
         self.D_spleaf.set_param(input_param, self.D_param)
 
         return self.D_spleaf.loglike(self.spleaf_res)
+
+
+    ## NEW Addded in PyORBIT v10.10
+    def lnlk_rvonly_compute(self):
+        """
+        Randomly reset the kernel with a probability of 0.1%
+        To prevent memory allocations issues I suspect are happening
+        """
+        random_selector = np.random.randint(1000)
+        if random_selector == 50:
+            self._reset_kernel()
+
+
+        input_param = np.concatenate(([self.internal_parameter_values['Prot'],
+                        self.internal_parameter_values['Pdec'],
+                        self.internal_parameter_values['Oamp']],
+                        self.internal_coeff_prime,
+                        self.internal_coeff_deriv,
+                        self.internal_jitter))
+        self.D_spleaf.set_param(input_param, self.D_param)
+
+        self.D_spleaf.kernel['GP'].set_conditional_coef(series_id=None)
+        gp_model  = self.D_spleaf.conditional(self.spleaf_res, self.spleaf_time)
+        residuals = (self.spleaf_res - gp_model)
+        env = np.zeros_like(self.spleaf_err)
+
+        rv_loglike = 0.0
+
+        for dataset_name, d_ind in self._dataset_nindex.items():
+            if not self._dataset_rvflag_dict[dataset_name]:
+                continue
+            
+            j_ind = self._dataset_njitter[dataset_name]
+            for j_jit in j_ind:
+                env[self._jitter_mask[j_jit]] = 1. / ((self.spleaf_err[self._jitter_mask[j_jit]]**2 +  self.internal_jitter[j_jit] **2) * self.matrix_regularization[dataset_name]**2)
+        
+            dataset_selection = self.spleaf_series_index[d_ind]
+
+            residuals[dataset_selection] *= self.matrix_regularization[dataset_name]
+            n = len(dataset_selection)
+
+            rv_loglike += -0.5 * (n * np.log(2 * np.pi) + np.sum(residuals[dataset_selection] ** 2 * env[dataset_selection] - np.log(env[dataset_selection])))
+            print(n)
+        return rv_loglike
+
+        """
+
+        if x0_input is None:
+            t_predict = dataset.x0
+            sorting_predict = np.argsort(dataset.x0)
+        else:
+            t_predict = x0_input
+            sorting_predict = np.argsort(x0_input)
+
+        mu = np.empty_like(t_predict)
+        var = np.empty_like(t_predict)
+        mu[sorting_predict], var[sorting_predict]  = self.D_spleaf.conditional(self.spleaf_res, t_predict[sorting_predict], calc_cov='diag')
+
+
+
+            self.spleaf_res[self.spleaf_series_index[d_ind]] = dataset.residuals / self.matrix_regularization[dataset_name]
+
+
+        self.D_spleaf.kernel['GP'].set_conditional_coef(series_id=None)
+        gp_model  = self.D_spleaf.conditional(self.spleaf_res, self.spleaf_time)
+
+        residuals = (self.spleaf_res - gp_model)[self._rv_dataset_flag]
+        env = 1.0 / self._dataset_ej2[self._rv_dataset_flag]
+        n = np.sum(self._rv_dataset_flag)
+
+        return -0.5 * (n * np.log(2 * np.pi) +
+                       np.sum(residuals ** 2 * env - np.log(env)))
+
+        """
 
     def sample_predict(self, dataset, x0_input=None, return_covariance=False, return_variance=False):
 

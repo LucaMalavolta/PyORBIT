@@ -655,6 +655,7 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
     rv_ln_likelihood_success = False
 
     ### NEW in PyORBIT 10.10
+    print()
     try:
         print('Recomputing RV ln-likelihood, it may take a while...')
         for ii in tqdm(range(n_samplings)):
@@ -883,6 +884,7 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
             dict_basic_statistics_rvonly['median_AIC_likelihood'] = AIC
             dict_basic_statistics_rvonly['median_AICc_likelihood'] = AICc
 
+            print()
             print(' RV ln_likelihood of Median solution  = {0:9.2f}'.format(med_rv_ln_likelihood))
 
             print()
@@ -905,7 +907,7 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
             dict_basic_statistics_rvonly['MAP_AICc_likelihood'] = AICc
 
             print()
-            print(' RV ln_likelihood of MAP solution = {0:9.2f}'.format(MAP_ln_likelihood))
+            print(' RV ln_likelihood of MAP solution = {0:9.2f}'.format(MAP_rv_ln_likelihood))
             print()
             print(' MAP BIC  (using RV likelihood)    = {0:9.2f}'.format(BIC))
             print(' MAP AIC  (using RV likelihood)    = {0:9.2f}'.format(AIC))
