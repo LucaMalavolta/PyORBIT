@@ -26,17 +26,14 @@ class AbstractGaussianProcesses(object):
         else:
             self.halfrotdec_condition = self._hypercond_00
 
+        self.rotdec_factor_condition = self._hypercond_00   
         if kwargs.get('decay_rotation_factor', False):
             self.decay_rotation_factor = kwargs.get('decay_rotation_factor', 0)
             self.rotdec_factor_condition = self._hypercond_04
-        else:
-            self.rotdec_factor_condition = self._hypercond_00
 
         if kwargs.get('rotation_decay_factor', False):
             self.decay_rotation_factor = kwargs.get('rotation_decay_factor', 0)
             self.rotdec_factor_condition = self._hypercond_04
-        else:
-            self.rotdec_factor_condition = self._hypercond_00
 
     def _prepare_rotation_replacement(self, mc, parameter_name ='Prot', common_pam=True, **kwargs):
 
