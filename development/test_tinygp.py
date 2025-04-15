@@ -58,6 +58,8 @@ class LatentKernel(tinygp.kernels.Kernel):
             + b1 * b2 * d2K_dx1dx2
         )
     
+
+
 base_kernel = tinygp.kernels.ExpSquared(
     scale=1.5
 ) * tinygp.kernels.ExpSineSquared(scale=2.5, gamma=0.5)
