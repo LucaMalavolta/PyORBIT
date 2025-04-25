@@ -655,6 +655,7 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
     rv_ln_likelihood_success = False
 
     ### NEW in PyORBIT 10.10
+
     print()
     try:
         print('Recomputing RV ln-likelihood, it may take a while...')

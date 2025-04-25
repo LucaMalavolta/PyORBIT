@@ -178,21 +178,29 @@ class SPLEAF_Multidimensional_ESP_slow(AbstractModel, AbstractGaussianProcesses)
                         self.internal_coeff_prime,
                         self.internal_coeff_deriv,
                         self.internal_jitter))
-        self.D_spleaf.set_param(input_param, self.D_param)
 
-        self.D_spleaf.kernel['GP'].set_conditional_coef(series_id=None)
-        gp_model  = self.D_spleaf.conditional(self.spleaf_res, self.spleaf_time)
-        residuals = (self.spleaf_res - gp_model)
+        #self.D_spleaf.set_param(input_param, self.D_param)
+        #self.D_spleaf.kernel['GP'].set_conditional_coef(series_id=None)
+        #gp_model  = self.D_spleaf.conditional(self.spleaf_res, self.spleaf_time)
+        #residuals = (self.spleaf_res - gp_model)
         env = 1. / self.spleaf_err**2
 
         rv_loglike = 0.0
 
         for dataset_name, d_ind in self._dataset_nindex.items():
-
+            if not self._dataset_rvflag_dict[dataset_name]:
+                continue
+            
             dataset_selection = self.spleaf_series_index[d_ind]
             n = len(dataset_selection)
 
-            rv_loglike += -0.5 * (n * np.log(2 * np.pi) + np.sum(residuals[dataset_selection] ** 2 * env[dataset_selection] - np.log(env[dataset_selection])))
+            self.D_spleaf.kernel['GP'].set_conditional_coef(series_id=d_ind)
+            gp_model = self.D_spleaf.conditional(self.spleaf_res, self.spleaf_time[dataset_selection])
+
+            residuals = (self.spleaf_res[dataset_selection] - gp_model)
+            rv_loglike += -0.5 * (n * np.log(2 * np.pi) + np.sum(residuals** 2 * env[dataset_selection] - np.log(env[dataset_selection])))
+
+            #rv_loglike += -0.5 * (n * np.log(2 * np.pi) + np.sum(residuals[dataset_selection] ** 2 * env[dataset_selection] - np.log(env[dataset_selection])))
 
         return rv_loglike
 

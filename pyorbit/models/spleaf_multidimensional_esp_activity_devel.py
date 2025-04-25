@@ -231,11 +231,11 @@ class SPLEAF_Multidimensional_ESP_devel(AbstractModel, AbstractGaussianProcesses
                         self.internal_coeff_prime,
                         self.internal_coeff_deriv,
                         self.internal_jitter))
-        self.D_spleaf.set_param(input_param, self.D_param)
 
-        self.D_spleaf.kernel['GP'].set_conditional_coef(series_id=None)
-        gp_model  = self.D_spleaf.conditional(self.spleaf_res, self.spleaf_time)
-        residuals = (self.spleaf_res - gp_model)
+        #self.D_spleaf.set_param(input_param, self.D_param)
+        #self.D_spleaf.kernel['GP'].set_conditional_coef(series_id=None)
+        #gp_model  = self.D_spleaf.conditional(self.spleaf_res, self.spleaf_time)
+        #residuals = (self.spleaf_res - gp_model)
         env = np.zeros_like(self.spleaf_err)
 
         rv_loglike = 0.0
@@ -249,11 +249,17 @@ class SPLEAF_Multidimensional_ESP_devel(AbstractModel, AbstractGaussianProcesses
                 env[self._jitter_mask[j_jit]] = 1. / ((self.spleaf_err[self._jitter_mask[j_jit]]**2 +  self.internal_jitter[j_jit] **2) * self.matrix_regularization[dataset_name]**2)
 
             dataset_selection = self.spleaf_series_index[d_ind]
-
-            residuals[dataset_selection] *= self.matrix_regularization[dataset_name]
             n = len(dataset_selection)
 
-            rv_loglike += -0.5 * (n * np.log(2 * np.pi) + np.sum(residuals[dataset_selection] ** 2 * env[dataset_selection] - np.log(env[dataset_selection])))
+            self.D_spleaf.kernel['GP'].set_conditional_coef(series_id=d_ind)
+            gp_model = self.D_spleaf.conditional(self.spleaf_res, self.spleaf_time[dataset_selection])
+
+            residuals = (self.spleaf_res[dataset_selection] - gp_model)
+            residuals *= self.matrix_regularization[dataset_name]
+            
+            rv_loglike += -0.5 * (n * np.log(2 * np.pi) + np.sum(residuals** 2 * env[dataset_selection] - np.log(env[dataset_selection])))
+
+            #rv_loglike += -0.5 * (n * np.log(2 * np.pi) + np.sum(residuals[dataset_selection] ** 2 * env[dataset_selection] - np.log(env[dataset_selection])))
 
         return rv_loglike
 
