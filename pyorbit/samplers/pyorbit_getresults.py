@@ -54,6 +54,7 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
     # plt.rcParams["font.family"] = "Times New Roman"
 
     oversampled_models = plot_dictionary['oversampled_models']
+    skip_rv_like = plot_dictionary['skip_rv_like']
 
     if sampler_name[:5] == 'emcee':
         if sampler_name == 'emcee_legacy':
@@ -657,15 +658,16 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
     ### NEW in PyORBIT 10.10
 
     print()
-    try:
-        print('Recomputing RV ln-likelihood, it may take a while...')
-        for ii in tqdm(range(n_samplings)):
-            flat_rv_lnlike[ii] = mc.rv_log_likelihood(flat_chain[ii,:])
-        med_rv_ln_likelihood = mc.rv_log_likelihood(chain_med[:, 0])
-        MAP_rv_ln_likelihood = mc.rv_log_likelihood(chain_MAP)
-        rv_ln_likelihood_success = True
-    except:
-        print('Analysis ran using PyORBIT version < 10.10, RV-only log_likelihood not available')
+    if not skip_rv_like:
+        try:
+            print('Recomputing RV ln-likelihood, it may take a while...')
+            for ii in tqdm(range(n_samplings)):
+                flat_rv_lnlike[ii] = mc.rv_log_likelihood(flat_chain[ii,:])
+            med_rv_ln_likelihood = mc.rv_log_likelihood(chain_med[:, 0])
+            MAP_rv_ln_likelihood = mc.rv_log_likelihood(chain_MAP)
+            rv_ln_likelihood_success = True
+        except:
+            print('Analysis ran using PyORBIT version < 10.10, RV-only log_likelihood not available')
 
     if mc.include_priors:
 
