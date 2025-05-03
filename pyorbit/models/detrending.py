@@ -66,6 +66,7 @@ class Detrending(AbstractModel):
             else:
                 self.baseline_value = kwargs.get('baseline_value', 1.0)
         else:
+            self.unitary_model = True
             self.starting_order = 1
             self.baseline_value = kwargs.get('baseline_value', 0.0)
 
@@ -185,6 +186,7 @@ class Detrending(AbstractModel):
         if x0_input is None:
 
             trend = np.ones(dataset.n) * parameter_values.get('det_c0', self.baseline_value)
+            #val_in = parameter_values.get('det_c0', self.baseline_value)
 
             for data_name, data_order in self.pams_order.items():
 
@@ -194,10 +196,14 @@ class Detrending(AbstractModel):
                     coeff[i_order] = parameter_values[par_addition]
 
                 trend += polynomial.polyval(dataset.ancillary[data_name]-parameter_values['x_zero_'+data_name], coeff)
+
+                #print(val_in, par_addition, coeff, trend[20:23], np.exp(trend[20:23]))
+
                 #if dataset.name_ref == 'GROND_r':
                 #    print(self.model_name, data_name, trend[20:23], coeff)
                 #    print()
             if self.exponential_detrending:
+                ###T https://academic.oup.com/mnras/article/521/2/2163/7060390
                 if self.natural_base:
                     return np.exp(trend)
                 else:
@@ -304,6 +310,7 @@ class FullDetrending(AbstractModel):
             #else:
             #    self.baseline_value = kwargs.get('baseline_value', 1.0)
         else:
+            self.unitary_model = True
             self.starting_order = 1
             self.baseline_value = kwargs.get('baseline_value', 0.0)
 
@@ -445,7 +452,7 @@ class FullDetrending(AbstractModel):
                         trend += 10**(temporary_trend)
                 else:
                     trend += temporary_trend
-                
+
             return trend
 
         else:
@@ -468,5 +475,5 @@ class FullDetrending(AbstractModel):
                         trend += 10**(temporary_trend)
                 else:
                     trend += temporary_trend
-                
+
             return trend

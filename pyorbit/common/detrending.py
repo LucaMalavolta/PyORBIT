@@ -36,7 +36,7 @@ class CommonDetrending(AbstractCommon):
             },
         'det_c0':
             {
-                'bounds': [-100000., 100000.],
+                'bounds': [-1000000., 1000000.],
                 'priors': ['Uniform', []],
                 'spaces': 'Linear',
                 'fixed' : 0.00,
@@ -52,7 +52,7 @@ class CommonDetrending(AbstractCommon):
             },
         'det_m32_rho':
             {
-                'bounds': [0.0001, 1000000.00],
+                'bounds': [0.000001, 1000000.00],
                 'priors': ['Uniform', []],
                 'spaces': 'Log_Base10',
                 'fixed' : None,
@@ -71,7 +71,7 @@ class CommonDetrending(AbstractCommon):
     for i_pol in range(0,10):
         # Coefficient of the i_det order of the polynomial
         parameters_dictionary['det_c'+repr(i_pol)] = {
-                'bounds': [-1e06, 1e06],
+                'bounds': [-1e02, 1e02],
                 'priors': ['Uniform', []],
                 'spaces': 'Linear',
                 'fixed' : 0.00,
