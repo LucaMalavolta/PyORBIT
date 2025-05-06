@@ -49,7 +49,7 @@ class CheopsFactorModel(AbstractModel):
                 },
             'deltaT': {
                 'scale': 'None',
-                'pams': []
+                'pams': ['ramp']
                 },
             'xoff': {
                 'scale': 'range',

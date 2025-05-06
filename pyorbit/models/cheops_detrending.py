@@ -50,7 +50,7 @@ class CheopsDetrending(AbstractModel):
                 },
             'deltaT': {
                 'scale': 'None',
-                'pams': []
+                'pams': ['ramp']
                 },
             'xoff': {
                 'scale': 'range',
@@ -130,7 +130,7 @@ class CheopsDetrending(AbstractModel):
                             / np.ptp(dataset.ancillary[diag_name])
                 else:
                     self.cheops_instrumental[dataset.name_ref][diag_name] = dataset.ancillary[diag_name]
-                print()
+
             else:
                 for pams_fixed  in diag_dict['pams']:
                     self.fix_list[dataset.name_ref][pams_fixed] = np.asarray([0.000000, 0.0000])
