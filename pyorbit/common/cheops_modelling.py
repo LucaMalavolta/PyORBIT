@@ -46,6 +46,14 @@ class CommonCheopsModelling(AbstractCommon):
                 'fixed' : 1.00,
                 'unit': None,
             },
+        'ramp': 
+            {
+                'bounds': [-100., 100.],
+                'priors': ['Uniform', []],
+                'spaces': 'Linear',
+                'fixed' : 0.00,
+                'unit': None,
+            },
         'dfdt': 
             {
                 'bounds': [-1., 1.],

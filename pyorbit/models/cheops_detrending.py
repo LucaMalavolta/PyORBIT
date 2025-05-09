@@ -25,6 +25,7 @@ class CheopsDetrending(AbstractModel):
             "d2fdx2",
             "d2fdxdy",
             "d2fdy2",
+            "ramp",
         ])
 
         self.fit_roll_angle = True
@@ -43,17 +44,13 @@ class CheopsDetrending(AbstractModel):
                 'scale': 'None',
                 'pams': []
                 },
-            'ramp': {
-                'scale': 'max',
-                'pams': []
-                },  # ???
             'smear': {
                 'scale': 'max',
                 'pams': ['dfdsmear']
                 },
             'deltaT': {
                 'scale': 'None',
-                'pams': []
+                'pams': ['ramp']
                 },
             'xoff': {
                 'scale': 'range',
@@ -133,7 +130,7 @@ class CheopsDetrending(AbstractModel):
                             / np.ptp(dataset.ancillary[diag_name])
                 else:
                     self.cheops_instrumental[dataset.name_ref][diag_name] = dataset.ancillary[diag_name]
-                print()
+
             else:
                 for pams_fixed  in diag_dict['pams']:
                     self.fix_list[dataset.name_ref][pams_fixed] = np.asarray([0.000000, 0.0000])
@@ -156,7 +153,7 @@ class CheopsDetrending(AbstractModel):
 
             trend += parameter_values['dfdsmear']* self.cheops_instrumental[dataset.name_ref]['smear']
 
-            trend += self.cheops_instrumental[dataset.name_ref]['ramp'] * self.cheops_instrumental[dataset.name_ref]['deltaT'] /1e6
+            trend += parameter_values['ramp'] * self.cheops_instrumental[dataset.name_ref]['deltaT'] /1e6
 
             trend += parameter_values['dfdx']* self.cheops_instrumental[dataset.name_ref]['xoff'] \
                 + parameter_values['d2fdx2']*self.cheops_instrumental[dataset.name_ref]['xoff']**2
@@ -186,7 +183,7 @@ class CheopsDetrending(AbstractModel):
 
             trend += parameter_values['dfdsmear']* self.cheops_interpolated[dataset.name_ref]['smear'](t)
 
-            trend += self.cheops_interpolated[dataset.name_ref]['ramp'](t) * self.cheops_interpolated[dataset.name_ref]['deltaT'](t) /1e6
+            trend += parameter_values['ramp'] * self.cheops_interpolated[dataset.name_ref]['deltaT'](t) /1e6
 
             trend += parameter_values['dfdx']* self.cheops_interpolated[dataset.name_ref]['xoff'](t) + parameter_values['d2fdx2']*self.cheops_interpolated[dataset.name_ref]['xoff'](t)**2
 
