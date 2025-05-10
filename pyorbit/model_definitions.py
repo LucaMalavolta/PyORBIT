@@ -111,6 +111,7 @@ from pyorbit.models.tinygp_quasiperiodic_activity import TinyGaussianProcess_Qua
 from pyorbit.models.tinygp_quasiperiodicsquaredexponential_activity import TinyGaussianProcess_QuasiPeriodicSquaredExponentialActivity
 from pyorbit.models.tinygp_quasiperiodiccosine_activity import TinyGaussianProcess_QuasiPeriodicCosineActivity
 
+from pyorbit.models.tinygp_sho import TinyGaussianProcess_SHO
 from pyorbit.models.tinygp_matern32_activity import TinyGaussianProcess_Matern32Activity
 from pyorbit.models.tinygp_multidimensional_quasiperiodic_activity import TinyGP_Multidimensional_QuasiPeriodicActivity
 from pyorbit.models.tinygp_multidimensional_quasiperiodiccosine_activity import TinyGP_Multidimensional_QuasiPeriodicCosineActivity
@@ -123,6 +124,7 @@ from pyorbit.models.spleaf_multidimensional_esp_activity_slow import SPLEAF_Mult
 from pyorbit.models.spleaf_multidimensional_esp_activity_devel import SPLEAF_Multidimensional_ESP_devel
 from pyorbit.models.spleaf_esp_activity import SPLEAF_ESP
 from pyorbit.models.spleaf_esp_activity_slow import SPLEAF_ESP_slow
+from pyorbit.models.spleaf_sho import SPLEAF_SHO
 
 from pyorbit.models.rossitermclaughlin_ohta import RossiterMcLaughlin_Ohta
 from pyorbit.models.rossitermclaughlin_precise import RossiterMcLaughlin_Precise
@@ -281,9 +283,11 @@ define_type_to_class = {
     'tinygp_quasiperiodic_cosine': TinyGaussianProcess_QuasiPeriodicCosineActivity,
     'tinygp_matern32': TinyGaussianProcess_Matern32Activity,
     'spleaf_esp': SPLEAF_ESP,
+    'spleaf_sho': SPLEAF_SHO,
     'spleaf_exponentialsineperiodic': SPLEAF_ESP,
     'spleaf_esp_slow': SPLEAF_ESP_slow,
     'spleaf_exponentialsineperiodic_slow': SPLEAF_ESP_slow,
+    'tinygp_sho': TinyGaussianProcess_SHO,
     'tinygp_multidimensional_quasiperiodic': TinyGP_Multidimensional_QuasiPeriodicActivity,
     'tinygp_multidimensional_quasiperiodicsquaredexponential': TinyGP_Multidimensional_QuasiPeriodicSquaredExponentialActivity,
     'tinygp_multidimensional_quasiperiodic_squaredexponential': TinyGP_Multidimensional_QuasiPeriodicSquaredExponentialActivity,

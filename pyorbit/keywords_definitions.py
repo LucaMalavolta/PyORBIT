@@ -30,20 +30,23 @@ keywords_shared_timescale = ['use_shared_rho',
 
 """ Keuwords for celerite2_SHO model"""
 keywords_change_variable_names = [
+            'use_quasiperiod_notation',
+            'use_quasiperiodic_notation',
             'use_GPquasiperiod_notation',
             'use_GPquasiperiodic_notation',
             'use_Prot_Pdec_notation',
-            'use_Prot_Pdec'
+            'use_Prot_Pdec',
+            'use_gp_notation'
         ]
 
-keywords_shared_ttv = ['use_shared_ttvs', 'use_shared_ttv', 
+keywords_shared_ttv = ['use_shared_ttvs', 'use_shared_ttv',
                         'use_shared_TTVs', 'use_shared_TTV',
-                        'shared_ttvs', 'shared_ttv', 
+                        'shared_ttvs', 'shared_ttv',
                         'shared_TTVs', 'shared_TTV']
 
-keywords_detrending_common_parameters = ['use_common_parameters', 
-                                        'common_parameters', 
-                                        'use_common_model', 
+keywords_detrending_common_parameters = ['use_common_parameters',
+                                        'common_parameters',
+                                        'use_common_model',
                                         'common_model']
 
 keywords_tc_list = ['tc_list', 'Tc_list', 'tclist', 'Tclist',

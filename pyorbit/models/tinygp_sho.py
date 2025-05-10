@@ -1,23 +1,40 @@
-from pyorbit.subroutines.common import np, OrderedSet
+from pyorbit.subroutines.common import *
 from pyorbit.models.abstract_model import AbstractModel
 from pyorbit.models.abstract_gaussian_processes import AbstractGaussianProcesses
 from pyorbit.keywords_definitions import *
+import sys
 
 try:
-    import celerite2
-except (ModuleNotFoundError,ImportError):
+    import jax
+    jax.config.update("jax_enable_x64", True)
+    import jax.numpy as jnp
+    from tinygp import kernels, GaussianProcess
+
+    if sys.version_info[1] < 10:
+        raise Warning("You should be using Python 3.10 - tinygp may not work")
+
+    def _build_tinygp_sho(params):
+        kernel = kernels.quasisep.SHO(omega=jnp.abs(params["omega"]),
+                                      quality=jnp.abs(params["quality"]),
+                                      sigma=jnp.abs(params["sigma"]))
+
+        return GaussianProcess(
+            kernel, params['x0'], diag=jnp.abs(params['diag']), mean=0.0
+        )
+
+    @jax.jit
+    def _loss_tinygp_sho(params):
+        gp = _build_tinygp_sho(params)
+        return gp.log_probability(params['y'])
+
+except:
     pass
 
+__all__ = ['TinyGaussianProcess_SHO']
 
-class Celerite2_SHO(AbstractModel, AbstractGaussianProcesses):
 
-    r"""A term representing a stochastically-driven, damped harmonic oscillator
 
-    Args:
-       sho_period (float) - (rho) the undamped period of the oscillator
-       sho_tau (float) - the damping timescale of the process,
-       sho_sigma (Optional[float]) - the standard deviation of the process
-    """
+class TinyGaussianProcess_SHO(AbstractModel, AbstractGaussianProcesses):
 
     default_common = 'activity'
 
@@ -26,9 +43,10 @@ class Celerite2_SHO(AbstractModel, AbstractGaussianProcesses):
         super(AbstractModel, self).__init__(*args, **kwargs)
 
         try:
-            import celerite2
+            import jax
+            jax.config.update("jax_enable_x64", True)
         except (ModuleNotFoundError,ImportError):
-            print("ERROR: celerite2 not installed, this will not work")
+            print("ERROR: tinygp or jax not installed, this will not work")
             quit()
 
         self.model_class = 'gaussian_process'
@@ -43,12 +61,9 @@ class Celerite2_SHO(AbstractModel, AbstractGaussianProcesses):
             'sho_sigma',  # sigma
         ])
 
-        self.n_pams = 3
-        self.gp = {}
         self.use_gp_notation = False
 
-
-    def initialize_model(self, mc, **kwargs):
+    def initialize_model(self, mc,  **kwargs):
 
         self._prepare_hyperparameter_conditions(mc, **kwargs)
 
@@ -91,28 +106,7 @@ class Celerite2_SHO(AbstractModel, AbstractGaussianProcesses):
                     self.list_pams_dataset.discard(pam)
 
 
-    def initialize_model_dataset(self, mc, dataset, **kwargs):
-        self.define_kernel(dataset)
-        return
-
-    def define_kernel(self, dataset):
-        # random initialization
-
-        kernel = celerite2.terms.SHOTerm(rho=1.0, tau=1.0, sigma=1.0)
-        self.gp[dataset.name_ref] = celerite2.GaussianProcess(kernel, mean=0.0)
-
-        """ I've decided to add the jitter in quadrature instead of using a constant kernel to allow the use of
-        different / selective jitter within the dataset
-        """
-        diag = dataset.e ** 2.0 + dataset.jitter ** 2.0
-        self.gp[dataset.name_ref].compute(dataset.x0, diag=diag)
-        return
-
     def lnlk_compute(self, parameter_values, dataset):
-        """ 2 steps:
-        In celerite2 the old function "set_parameter_vector" has been removed
-        and the kernel has to be defined every time
-        """
 
         parameter_values['Prot'] = self.retrieve_rho(parameter_values)
         parameter_values['Pdec'] = self.retrieve_tau(parameter_values)
@@ -120,47 +114,56 @@ class Celerite2_SHO(AbstractModel, AbstractGaussianProcesses):
         if not pass_conditions:
             return pass_conditions
 
-        self.gp[dataset.name_ref].mean = 0.
-        self.gp[dataset.name_ref].kernel = celerite2.terms.SHOTerm(rho=parameter_values['Prot'],
-                                                                    tau=parameter_values['Pdec'],
-                                                                    sigma=parameter_values['sho_sigma'])
+        omega = 2 * np.pi / parameter_values['Prot']
+        quality_factor =  omega * parameter_values['Pdec'] / 2.
 
-        diag = dataset.e ** 2.0 + dataset.jitter ** 2.0
-        self.gp[dataset.name_ref].compute(dataset.x0, diag=diag, quiet=True)
+        theta_dict =  dict(
+            omega=omega,
+            quality=quality_factor,
+            sigma=parameter_values['sho_sigma'],
+            diag=dataset.e ** 2.0 + dataset.jitter ** 2.0,
+            x0=dataset.x0,
+            y=dataset.residuals
+        )
+        return _loss_tinygp_sho(theta_dict)
 
-        return self.gp[dataset.name_ref].log_likelihood(dataset.residuals)
 
     def sample_predict(self, parameter_values, dataset, x0_input=None, return_covariance=False, return_variance=False):
 
-        rho = self.retrieve_rho(parameter_values)
-        tau = self.retrieve_tau(parameter_values)
+        parameter_values['Prot'] = self.retrieve_rho(parameter_values)
+        parameter_values['Pdec'] = self.retrieve_tau(parameter_values)
+        pass_conditions = self.check_hyperparameter_values(parameter_values)
+        if not pass_conditions:
+            return pass_conditions
 
-        self.gp[dataset.name_ref].mean = 0.
-        self.gp[dataset.name_ref].kernel = celerite2.terms.SHOTerm(rho=rho, tau=tau, sigma=parameter_values['sho_sigma'])
+        omega = 2 * np.pi / parameter_values['Prot']
+        quality_factor =  omega * parameter_values['Pdec'] / 2.
 
-        diag = dataset.e ** 2.0 + dataset.jitter ** 2.0
-        self.gp[dataset.name_ref].compute(dataset.x0, diag=diag, quiet=True)
-
-        if x0_input is None:
-            return self.gp[dataset.name_ref].predict(dataset.residuals, dataset.x0, return_cov=return_covariance, return_var=return_variance)
-        else:
-            return self.gp[dataset.name_ref].predict(dataset.residuals, x0_input, return_cov=return_covariance, return_var=return_variance)
-
-    def sample_conditional(self, parameter_values, dataset,  x0_input=None):
-
-        rho = self.retrieve_rho(parameter_values)
-        tau = self.retrieve_tau(parameter_values)
-
-        self.gp[dataset.name_ref].mean = 0.
-        self.gp[dataset.name_ref].kernel = celerite2.terms.SHOTerm(rho=rho, tau=tau, sigma=parameter_values['sho_sigma'])
-
-        diag = dataset.e ** 2.0 + dataset.jitter ** 2.0
-        self.gp[dataset.name_ref].compute(dataset.x0, diag=diag, quiet=True)
 
         if x0_input is None:
-            return self.gp[dataset.name_ref].sample_conditional(dataset.residuals, dataset.x0)
+            x0 = dataset.x0
         else:
-            return self.gp[dataset.name_ref].sample_conditional(dataset.residuals, x0_input)
+            x0 = x0_input
+
+        theta_dict =  dict(
+            omega=omega,
+            quality=quality_factor,
+            sigma=parameter_values['sho_sigma'],
+            diag=dataset.e ** 2.0 + dataset.jitter ** 2.0,
+            x0=dataset.x0,
+            y=dataset.residuals,
+            x0_predict = x0
+        )
+
+        gp = _build_tinygp_sho(theta_dict)
+        _, cond_gp = gp.condition(theta_dict['y'], theta_dict['x0_predict'])
+        mu = cond_gp.loc # or cond_gp.mean?
+        std = np.sqrt(cond_gp.variance)
+
+        if return_variance:
+            return mu, std
+        else:
+            return mu
 
     @staticmethod
     def _internal_transformation_period_mod00(parameter_values):
