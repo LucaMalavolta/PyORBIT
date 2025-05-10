@@ -179,7 +179,7 @@ class SPLEAF_Multidimensional_ESP_slow(AbstractModel, AbstractGaussianProcesses)
                         self.internal_coeff_deriv,
                         self.internal_jitter))
 
-        #self.D_spleaf.set_param(input_param, self.D_param)
+        self.D_spleaf.set_param(input_param, self.D_param)
         #self.D_spleaf.kernel['GP'].set_conditional_coef(series_id=None)
         #gp_model  = self.D_spleaf.conditional(self.spleaf_res, self.spleaf_time)
         #residuals = (self.spleaf_res - gp_model)
