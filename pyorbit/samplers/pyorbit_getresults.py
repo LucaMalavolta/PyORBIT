@@ -650,19 +650,39 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
     print('Number of samplings:',  n_samplings)
 
 
-    flat_rv_lnlike = np.zeros(n_samplings)
+    rv_loglike_samplings = config_in['parameters'].get('rv_loglike_samplings', n_samplings)
+
+    flat_rv_lnlike = np.zeros(rv_loglike_samplings)
     med_rv_ln_likelihood = med_ln_likelihood * 0.0
     MAP_rv_ln_likelihood = 0.0
+    selection = None
     rv_ln_likelihood_success = False
 
     ### NEW in PyORBIT 10.10
 
+    for dataset_name, dataset in mc.dataset_dict.items():
+        data_are_rvs = (dataset.kind == 'RV')
+        if data_are_rvs:
+            break
+    if not data_are_rvs:
+        skip_rv_like = True
+
     print()
     if not skip_rv_like:
         try:
+            print('Number of samplings for RV log-likelihood calculations [rv_loglike_samplings keyword]:', )
             print('Recomputing RV ln-likelihood, it may take a while...')
-            for ii in tqdm(range(n_samplings)):
-                flat_rv_lnlike[ii] = mc.rv_log_likelihood(flat_chain[ii,:])
+
+            if n_samplings == rv_loglike_samplings:
+                selection = np.arange(0,n_samplings, dtype=int)
+            else:
+                select = np.random.default_rng()
+                selection = select.choice(n_samplings, size=rv_loglike_samplings, replace=False)
+
+            for ip in tqdm(range(rv_loglike_samplings)):
+                ii = selection[ip]
+                flat_rv_lnlike[ip] = mc.rv_log_likelihood(flat_chain[ii,:])
+
             med_rv_ln_likelihood = mc.rv_log_likelihood(chain_med[:, 0])
             MAP_rv_ln_likelihood = mc.rv_log_likelihood(chain_MAP)
             rv_ln_likelihood_success = True
@@ -706,6 +726,7 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
     dict_sampler_posteriors['lnprior'] = flat_lnprior
     dict_sampler_posteriors['lnlike'] = flat_lnlike
     dict_sampler_posteriors['lnlike_rv'] = flat_rv_lnlike
+    dict_sampler_posteriors['lnlike_rv_index'] = selection
 
     generic_save_to_cpickle(dir_dictionaries, 'sampler_posteriors', dict_sampler_posteriors)
     generic_save_to_cpickle(dir_dictionaries, 'theta_dictionary', theta_dictionary)
