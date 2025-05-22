@@ -22,10 +22,28 @@ keywords_shared_timescale = ['use_shared_rho',
                         'shared_rho',
                         'use_common_rho',
                         'common_rho',
+                        'use_shared_scale',
+                        'shared_scale',
+                        'use_common_scale',
+                        'common_scale'
                         'use_shared_timescale',
                         'shared_timescale',
                         'use_common_timescale',
                         'common_timescale']
+
+
+keywords_shared_decay = ['use_shared_tau',
+                        'shared_tau',
+                        'use_common_tau',
+                        'common_tau',
+                        'use_shared_decay',
+                        'shared_decay',
+                        'use_common_decay',
+                        'common_decay'
+                        'use_shared_timedecay',
+                        'shared_timedecay',
+                        'use_common_timedecay',
+                        'common_timedecay']
 
 
 """ Keuwords for celerite2_SHO model"""
@@ -38,6 +56,9 @@ keywords_change_variable_names = [
             'use_Prot_Pdec',
             'use_gp_notation'
         ]
+
+keywords_activity_Prot = ['use_activity_Prot', 'use_Prot']
+keywords_activity_Pdec = ['use_activity_Pdec', 'use_Pdec']
 
 keywords_shared_ttv = ['use_shared_ttvs', 'use_shared_ttv',
                         'use_shared_TTVs', 'use_shared_TTV',

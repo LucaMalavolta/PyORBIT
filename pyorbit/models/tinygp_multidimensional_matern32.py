@@ -8,7 +8,7 @@ from scipy import matrix, spatial
 import sys
 
 
-__all__ = ['TinyGP_Multidimensional_Matern32Activity']
+__all__ = ['TinyGP_Multidimensional_Matern32']
 
 try:
     import jax
@@ -107,9 +107,9 @@ except:
 
 
 
-class TinyGP_Multidimensional_Matern32Activity(AbstractModel, AbstractGaussianProcesses):
+class TinyGP_Multidimensional_Matern32(AbstractModel, AbstractGaussianProcesses):
     '''
-    - matern32_rho: the scale of the Matern32 kernel;
+    - matern32_scale: the scale of the Matern32 kernel;
     - matern32_multigp_sigma: the amplitude of the correlations;
     - matern32_multigp_sigma_deriv: amplitude of the first derivative
     '''
@@ -126,7 +126,7 @@ class TinyGP_Multidimensional_Matern32Activity(AbstractModel, AbstractGaussianPr
         self.delayed_lnlk_computation = True
 
         self.list_pams_common = OrderedSet([
-            'matern32_rho',  # time scale of the Matern32
+            'matern32_scale',  # time scale of the Matern32
         ])
         self.list_pams_dataset = OrderedSet([
             'matern32_multigp_sigma', # Amplitude of the covariance matrix
@@ -160,15 +160,27 @@ class TinyGP_Multidimensional_Matern32Activity(AbstractModel, AbstractGaussianPr
         self._n_cov_matrix = 0
 
         self.pi2 = np.pi * np.pi
-        self.use_stellar_rotation_period = False
+
+        self.use_shared_scale = True
 
         ### NEW Addded in PyORBIT v10.10
         self._rv_dataset_flag = []
 
     def initialize_model(self, mc,  **kwargs):
+        self._prepare_shared_hyperparameters(mc, pam_scale='matern32_scale', pam_decay='matern32_scale', **kwargs)
 
-        self._prepare_rotation_replacement(mc, parameter_name='matern32_rho', 
+        self._prepare_rotation_replacement(mc,
+                                            parameter_name='matern32_scale',
+                                            common_pam=self.use_shared_scale,
+                                            check_common=False,
                                             **kwargs)
+        self._prepare_decay_replacement(mc,
+                                            parameter_name='matern32_scale',
+                                            common_pam=self.use_shared_scale,
+                                            check_common=False,
+                                            **kwargs)
+
+        self._check_extra_conditions(self, **kwargs)
 
     def initialize_model_dataset(self, mc, dataset, **kwargs):
 
@@ -217,7 +229,13 @@ class TinyGP_Multidimensional_Matern32Activity(AbstractModel, AbstractGaussianPr
 
     def add_internal_dataset(self, parameter_values, dataset):
 
-        self.update_parameter_values(parameter_values, replace_rotation='matern32_rho')
+        if 'matern32_rho' in parameter_values:
+            parameter_values['matern32_scale'] = parameter_values['matern32_rho']
+
+        self.update_parameter_values(parameter_values,
+                                        replace_rotation='matern32_scale',
+                                        replace_decay='matern32_scale')
+
         self.internal_parameter_values = parameter_values
 
         d_ind = self._dataset_names[dataset.name_ref]
@@ -232,7 +250,7 @@ class TinyGP_Multidimensional_Matern32Activity(AbstractModel, AbstractGaussianPr
     def lnlk_compute(self):
 
         theta_dict =  dict(
-            scale=self.internal_parameter_values['matern32_rho'],
+            scale=self.internal_parameter_values['matern32_scale'],
             diag=self._dataset_ej2,
             X=self._X,
             y=self._dataset_res,
@@ -246,7 +264,7 @@ class TinyGP_Multidimensional_Matern32Activity(AbstractModel, AbstractGaussianPr
     def lnlk_rvonly_compute(self):
 
         theta_dict =  dict(
-            scale=self.internal_parameter_values['matern32_rho'],
+            scale=self.internal_parameter_values['matern32_scale'],
             diag=self._dataset_ej2,
             X=self._X,
             y=self._dataset_res,
@@ -286,7 +304,7 @@ class TinyGP_Multidimensional_Matern32Activity(AbstractModel, AbstractGaussianPr
             X_input = (temp_input, temp_label.astype(int))
 
         theta_dict =  dict(
-            scale=self.internal_parameter_values['matern32_rho'],
+            scale=self.internal_parameter_values['matern32_scale'],
             diag=self._dataset_ej2,
             X=self._X,
             y=self._dataset_res,

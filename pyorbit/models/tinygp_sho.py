@@ -52,14 +52,12 @@ class TinyGaussianProcess_SHO(AbstractModel, AbstractGaussianProcesses):
         self.model_class = 'gaussian_process'
         self.internal_likelihood = True
 
-        self.list_pams_common = OrderedSet([
-            'sho_period',
-            'sho_tau'
-        ])
-
         self.list_pams_dataset = OrderedSet([
+            'sho_scale',
+            'sho_decay'
             'sho_sigma',  # sigma
         ])
+
 
         self.use_gp_notation = False
 
@@ -67,55 +65,34 @@ class TinyGaussianProcess_SHO(AbstractModel, AbstractGaussianProcesses):
 
         self._prepare_hyperparameter_conditions(mc, **kwargs)
 
-        self.retrieve_rho = self._internal_transformation_period_mod00
-        self.retrieve_tau = self._internal_transformation_decay_mod00
+        self._prepare_shared_hyperparameters(mc, pam_scale='sho_scale', pam_decay='sho_decay', **kwargs)
 
-        for dict_name in keywords_change_variable_names:
-            if kwargs.get(dict_name, False):
-
-                self.use_gp_notation = True
-
-                self.list_pams_common.update(['Pdec'])
-                self.list_pams_common.discard('sho_tau')
-
-                self.list_pams_common.update(['Prot'])
-                self.list_pams_common.discard('sho_period')
-
-                self.retrieve_rho = self._internal_transformation_period_mod01
-                self.retrieve_tau = self._internal_transformation_decay_mod01
-
-                self._prepare_rotation_replacement(mc, **kwargs)
-                self._prepare_decay_replacement(mc, **kwargs)
-
-
-        if not self.use_gp_notation:
-            self._prepare_rotation_replacement(mc, **kwargs)
-            self._prepare_decay_replacement(mc, **kwargs)
-
-        if self.use_stellar_rotation_period:
-            self.retrieve_rho = self._internal_transformation_period_mod02
-
-        if self.use_stellar_activity_decay:
-            self.retrieve_tau = self._internal_transformation_decay_mod02
-
-        for dict_name in keywords_shared_hyperparameters:
-            if kwargs.get(dict_name, False):
-                pams_copy = self.list_pams_dataset.copy()
-                for pam in pams_copy:
-                    self.list_pams_common.update([pam])
-                    self.list_pams_dataset.discard(pam)
+        self._prepare_rotation_replacement(mc,
+                                            parameter_name='sho_scale',
+                                            common_pam=self.use_shared_scale,
+                                            check_common=False,
+                                            **kwargs)
+        self._prepare_decay_replacement(mc,
+                                            parameter_name='sho_decay',
+                                            common_pam=self.use_shared_scale,
+                                            check_common=False,
+                                            **kwargs)
 
 
     def lnlk_compute(self, parameter_values, dataset):
 
-        parameter_values['Prot'] = self.retrieve_rho(parameter_values)
-        parameter_values['Pdec'] = self.retrieve_tau(parameter_values)
-        pass_conditions = self.check_hyperparameter_values(parameter_values)
+        self.update_parameter_values(parameter_values,
+                                        replace_rotation='sho_scale',
+                                        replace_decay='sho_decay')
+
+        pass_conditions = self.check_hyperparameter_values(parameter_values,
+                                        pam_scale='sho_scale',
+                                        pam_decay='sho_decay')
         if not pass_conditions:
             return pass_conditions
 
-        omega = 2 * np.pi / parameter_values['Prot']
-        quality_factor =  omega * parameter_values['Pdec'] / 2.
+        omega = 2 * np.pi / parameter_values['sho_scale']
+        quality_factor =  omega * parameter_values['sho_decay'] / 2.
 
         theta_dict =  dict(
             omega=omega,
@@ -130,14 +107,12 @@ class TinyGaussianProcess_SHO(AbstractModel, AbstractGaussianProcesses):
 
     def sample_predict(self, parameter_values, dataset, x0_input=None, return_covariance=False, return_variance=False):
 
-        parameter_values['Prot'] = self.retrieve_rho(parameter_values)
-        parameter_values['Pdec'] = self.retrieve_tau(parameter_values)
-        pass_conditions = self.check_hyperparameter_values(parameter_values)
-        if not pass_conditions:
-            return pass_conditions
+        self.update_parameter_values(parameter_values,
+                                        replace_rotation='sho_scale',
+                                        replace_decay='sho_decay')
 
-        omega = 2 * np.pi / parameter_values['Prot']
-        quality_factor =  omega * parameter_values['Pdec'] / 2.
+        omega = 2 * np.pi / parameter_values['sho_scale']
+        quality_factor =  omega * parameter_values['sho_decay'] / 2.
 
 
         if x0_input is None:
@@ -164,27 +139,3 @@ class TinyGaussianProcess_SHO(AbstractModel, AbstractGaussianProcesses):
             return mu, std
         else:
             return mu
-
-    @staticmethod
-    def _internal_transformation_period_mod00(parameter_values):
-        return  parameter_values['sho_period']
-
-    @staticmethod
-    def _internal_transformation_period_mod01(parameter_values):
-        return  parameter_values['Prot']
-
-    @staticmethod
-    def _internal_transformation_period_mod02(parameter_values):
-        return  parameter_values['rotation_period']
-
-    @staticmethod
-    def _internal_transformation_decay_mod00(parameter_values):
-        return  parameter_values['sho_tau']
-
-    @staticmethod
-    def _internal_transformation_decay_mod01(parameter_values):
-        return  parameter_values['Pdec']
-
-    @staticmethod
-    def _internal_transformation_decay_mod02(parameter_values):
-        return  parameter_values['activity_decay']

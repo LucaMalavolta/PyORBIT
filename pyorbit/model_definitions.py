@@ -75,10 +75,6 @@ from pyorbit.models.celerite2_rotation import Celerite2_Rotation
 from pyorbit.models.celerite2_matern32 import Celerite2_Matern32
 from pyorbit.models.celerite2_sho import Celerite2_SHO
 
-from pyorbit.models.celerite_rotation import Celerite_Rotation
-from pyorbit.models.celerite_matern32 import Celerite_Matern32
-from pyorbit.models.celerite_matern32_common import Celerite_Matern32_Common
-
 from pyorbit.models.correlation import LocalCorrelation
 from pyorbit.models.correlated_jitter import LocalCorrelatedJitter
 from pyorbit.models.complex_correlation import ComplexCorrelation
@@ -112,10 +108,10 @@ from pyorbit.models.tinygp_quasiperiodicsquaredexponential_activity import TinyG
 from pyorbit.models.tinygp_quasiperiodiccosine_activity import TinyGaussianProcess_QuasiPeriodicCosineActivity
 
 from pyorbit.models.tinygp_sho import TinyGaussianProcess_SHO
-from pyorbit.models.tinygp_matern32_activity import TinyGaussianProcess_Matern32Activity
+from pyorbit.models.tinygp_matern32 import TinyGaussianProcess_Matern32
 from pyorbit.models.tinygp_multidimensional_quasiperiodic_activity import TinyGP_Multidimensional_QuasiPeriodicActivity
 from pyorbit.models.tinygp_multidimensional_quasiperiodiccosine_activity import TinyGP_Multidimensional_QuasiPeriodicCosineActivity
-from pyorbit.models.tinygp_multidimensional_matern32_activity import TinyGP_Multidimensional_Matern32Activity
+from pyorbit.models.tinygp_multidimensional_matern32 import TinyGP_Multidimensional_Matern32
 from pyorbit.models.tinygp_multidimensional_quasiperiodicsquaredexponential_activity import TinyGP_Multidimensional_QuasiPeriodicSquaredExponentialActivity
 from pyorbit.models.tinygp_multiquasiperiodic_trainedsquaredexponential_activity import TinyGP_MultiQuasiPeriodic_TrainedSquaredExponential_Activity
 
@@ -241,9 +237,6 @@ define_type_to_class = {
     'celerite2_rotation': Celerite2_Rotation,
     'celerite2_matern32': Celerite2_Matern32,
     'celerite2_sho': Celerite2_SHO,
-    'celerite_matern32': Celerite_Matern32,
-    'celerite_matern32_common': Celerite_Matern32_Common,
-    'celerite_rotation': Celerite_Rotation,
     'local_correlation': LocalCorrelation,
     'correlation': LocalCorrelation,
     'complex_correlation': ComplexCorrelation,
@@ -281,7 +274,7 @@ define_type_to_class = {
     'tinygp_quasiperiodic_squaredexponential': TinyGaussianProcess_QuasiPeriodicSquaredExponentialActivity,
     'tinygp_quasiperiodiccosine': TinyGaussianProcess_QuasiPeriodicCosineActivity,
     'tinygp_quasiperiodic_cosine': TinyGaussianProcess_QuasiPeriodicCosineActivity,
-    'tinygp_matern32': TinyGaussianProcess_Matern32Activity,
+    'tinygp_matern32': TinyGaussianProcess_Matern32,
     'spleaf_esp': SPLEAF_ESP,
     'spleaf_sho': SPLEAF_SHO,
     'spleaf_exponentialsineperiodic': SPLEAF_ESP,
@@ -295,7 +288,7 @@ define_type_to_class = {
     'tinygp_multidimensional_quasiperiodic_cosine': TinyGP_Multidimensional_QuasiPeriodicCosineActivity,
     'tinygp_multiquasiperiodic_trainedsquaredexponential': TinyGP_MultiQuasiPeriodic_TrainedSquaredExponential_Activity,
     'tinygp_multiquasiperiodictrainedsquaredexponential': TinyGP_MultiQuasiPeriodic_TrainedSquaredExponential_Activity,
-    'tinygp_multidimensional_matern32': TinyGP_Multidimensional_Matern32Activity,
+    'tinygp_multidimensional_matern32': TinyGP_Multidimensional_Matern32,
     'spleaf_multidimensional_esp_slow': SPLEAF_Multidimensional_ESP_slow,
     'spleaf_multidimensional_esp_devel': SPLEAF_Multidimensional_ESP_devel,
     'spleaf_multidimensional_exponentialsineperiodic_slow': SPLEAF_Multidimensional_ESP_slow,

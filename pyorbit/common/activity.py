@@ -57,7 +57,7 @@ class CommonActivity(AbstractCommon):
                 'unit': 'as input',
             },
         #celerite 2 parameters
-        'sho_period': # undamped period of the granulation
+        'sho_scale': # undamped period of the granulation
             {
                 'bounds': [1.0, 1000.0],
                 'priors': ['Uniform', []],
@@ -65,7 +65,7 @@ class CommonActivity(AbstractCommon):
                 'fixed' : None,
                 'unit': 'days',
             },
-        'sho_tau': # the standard deviation of the process
+        'sho_decay': # damping period
             {
                 'bounds': [0.00000001, 1000000.0],
                 'priors': ['Uniform', []],

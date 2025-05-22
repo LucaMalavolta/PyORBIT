@@ -37,37 +37,29 @@ class Celerite2_Matern32(AbstractModel, AbstractGaussianProcesses):
         self.list_pams_common = OrderedSet()
 
         self.list_pams_dataset = OrderedSet([
-            'matern32_sigma',  # sigma
-            'matern32_rho',  # rho
+            'matern32_scale',  # time scale of the Matern32
+            'matern32_sigma', # amplitude of the covariance matrix
         ])
 
         self.n_pams = 2
         self.gp = {}
-        self.use_stellar_rotation_period = False
 
     def initialize_model(self, mc,  **kwargs):
 
-        self.use_shared_hyperparameters = False
-        for keyword in keywords_shared_hyperparameters:
-            self.use_shared_hyperparameters =  kwargs.get(keyword, self.use_shared_hyperparameters)
-        if self.use_shared_hyperparameters:
-            pams_copy = self.list_pams_dataset.copy()
-            for pam in pams_copy:
-                self.list_pams_common.update([pam])
-                self.list_pams_dataset.discard(pam)
+        self._prepare_shared_hyperparameters(mc, pam_scale='matern32_scale', pam_decay='matern32_scale', **kwargs)
 
-        self.use_shared_rho = False
-        for keyword in keywords_shared_timescale:
-            self.use_shared_rho =  kwargs.get(keyword, self.use_shared_rho)
-        if self.use_shared_rho:
-            pam = 'matern32_rho'
-            self.list_pams_common.update([pam])
-            self.list_pams_dataset.discard(pam)
-
-        self._prepare_rotation_replacement(mc, 
-                                            parameter_name='matern32_rho', 
-                                            common_pam=self.use_shared_rho,
+        self._prepare_rotation_replacement(mc,
+                                            parameter_name='matern32_scale',
+                                            common_pam=self.use_shared_scale,
+                                            check_common=False,
                                             **kwargs)
+        self._prepare_decay_replacement(mc,
+                                            parameter_name='matern32_scale',
+                                            common_pam=self.use_shared_scale,
+                                            check_common=False,
+                                            **kwargs)
+
+        self._check_extra_conditions(self, **kwargs)
 
     def initialize_model_dataset(self, mc, dataset, **kwargs):
         self.define_kernel(dataset)
@@ -92,12 +84,18 @@ class Celerite2_Matern32(AbstractModel, AbstractGaussianProcesses):
         In celerite2 the old function "set_parameter_vector" has been removed
         and the kernel has to be defined every time
         """
-        self.update_parameter_values(parameter_values, replace_rotation='matern32_rho')
+
+        if 'matern32_rho' in parameter_values:
+            parameter_values['matern32_scale'] = parameter_values['matern32_rho']
+
+        self.update_parameter_values(parameter_values,
+                                        replace_rotation='matern32_scale',
+                                        replace_decay='matern32_scale')
 
         self.gp[dataset.name_ref].mean = 0.
         self.gp[dataset.name_ref].kernel = celerite2.terms.Matern32Term(
             sigma=parameter_values['matern32_sigma'],
-            rho=parameter_values['matern32_rho'])
+            rho=parameter_values['matern32_scale'])
 
         diag = dataset.e ** 2.0 + dataset.jitter ** 2.0
         self.gp[dataset.name_ref].compute(dataset.x0, diag=diag, quiet=True)
@@ -106,12 +104,17 @@ class Celerite2_Matern32(AbstractModel, AbstractGaussianProcesses):
 
     def sample_predict(self, parameter_values, dataset, x0_input=None, return_covariance=False, return_variance=False):
 
-        self.update_parameter_values(parameter_values, replace_rotation='matern32_rho')
+        if 'matern32_rho' in parameter_values:
+            parameter_values['matern32_scale'] = parameter_values['matern32_rho']
+
+        self.update_parameter_values(parameter_values,
+                                        replace_rotation='matern32_scale',
+                                        replace_decay='matern32_scale')
 
         self.gp[dataset.name_ref].mean = 0.
         self.gp[dataset.name_ref].kernel = celerite2.terms.Matern32Term(
             sigma=parameter_values['matern32_sigma'],
-            rho=parameter_values['matern32_rho'])
+            rho=parameter_values['matern32_scale'])
 
         diag = dataset.e ** 2.0 + dataset.jitter ** 2.0
         self.gp[dataset.name_ref].compute(dataset.x0, diag=diag, quiet=True)
@@ -123,12 +126,17 @@ class Celerite2_Matern32(AbstractModel, AbstractGaussianProcesses):
 
     def sample_conditional(self, parameter_values, dataset,  x0_input=None):
 
-        self.update_parameter_values(parameter_values, replace_rotation='matern32_rho')
+        if 'matern32_rho' in parameter_values:
+            parameter_values['matern32_scale'] = parameter_values['matern32_rho']
+
+        self.update_parameter_values(parameter_values,
+                                        replace_rotation='matern32_scale',
+                                        replace_decay='matern32_scale')
 
         self.gp[dataset.name_ref].mean = 0.
         self.gp[dataset.name_ref].kernel = celerite2.terms.Matern32Term(
             sigma=parameter_values['matern32_sigma'],
-            rho=parameter_values['matern32_rho'])
+            rho=parameter_values['matern32_scale'])
 
         diag = dataset.e ** 2.0 + dataset.jitter ** 2.0
         self.gp[dataset.name_ref].compute(dataset.x0, diag=diag, quiet=True)
