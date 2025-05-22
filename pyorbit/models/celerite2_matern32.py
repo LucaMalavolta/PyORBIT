@@ -46,7 +46,7 @@ class Celerite2_Matern32(AbstractModel, AbstractGaussianProcesses):
 
     def initialize_model(self, mc,  **kwargs):
 
-        self._prepare_shared_hyperparameters(mc, pam_scale='matern32_scale', pam_decay='matern32_scale', **kwargs)
+        self._prepare_shared_hyperparameters(pam_scale='matern32_scale', pam_decay='matern32_scale', **kwargs)
 
         self._prepare_rotation_replacement(mc,
                                             parameter_name='matern32_scale',
@@ -59,7 +59,7 @@ class Celerite2_Matern32(AbstractModel, AbstractGaussianProcesses):
                                             check_common=False,
                                             **kwargs)
 
-        self._check_extra_conditions(self, **kwargs)
+        self._check_extra_conditions(**kwargs)
 
     def initialize_model_dataset(self, mc, dataset, **kwargs):
         self.define_kernel(dataset)

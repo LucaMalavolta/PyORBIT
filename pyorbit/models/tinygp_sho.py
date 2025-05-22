@@ -15,8 +15,8 @@ try:
 
     def _build_tinygp_sho(params):
         kernel = kernels.quasisep.SHO(omega=jnp.abs(params["omega"]),
-                                      quality=jnp.abs(params["quality"]),
-                                      sigma=jnp.abs(params["sigma"]))
+                                        quality=jnp.abs(params["quality"]),
+                                        sigma=jnp.abs(params["sigma"]))
 
         return GaussianProcess(
             kernel, params['x0'], diag=jnp.abs(params['diag']), mean=0.0
@@ -54,7 +54,7 @@ class TinyGaussianProcess_SHO(AbstractModel, AbstractGaussianProcesses):
 
         self.list_pams_dataset = OrderedSet([
             'sho_scale',
-            'sho_decay'
+            'sho_decay',
             'sho_sigma',  # sigma
         ])
 
@@ -65,7 +65,7 @@ class TinyGaussianProcess_SHO(AbstractModel, AbstractGaussianProcesses):
 
         self._prepare_hyperparameter_conditions(mc, **kwargs)
 
-        self._prepare_shared_hyperparameters(mc, pam_scale='sho_scale', pam_decay='sho_decay', **kwargs)
+        self._prepare_shared_hyperparameters(pam_scale='sho_scale', pam_decay='sho_decay', **kwargs)
 
         self._prepare_rotation_replacement(mc,
                                             parameter_name='sho_scale',

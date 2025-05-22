@@ -37,7 +37,7 @@ class SPLEAF_SHO(AbstractModel, AbstractGaussianProcesses):
 
         self.list_pams_dataset = OrderedSet([
             'sho_scale',
-            'sho_decay'
+            'sho_decay',
             'sho_sigma',  # sigma
         ])
 
@@ -53,7 +53,7 @@ class SPLEAF_SHO(AbstractModel, AbstractGaussianProcesses):
 
         self._prepare_hyperparameter_conditions(mc, **kwargs)
 
-        self._prepare_shared_hyperparameters(mc, pam_scale='sho_scale', pam_decay='sho_decay', **kwargs)
+        self._prepare_shared_hyperparameters(pam_scale='sho_scale', pam_decay='sho_decay', **kwargs)
 
         self._prepare_rotation_replacement(mc,
                                             parameter_name='sho_scale',

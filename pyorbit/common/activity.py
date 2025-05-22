@@ -228,7 +228,7 @@ class CommonActivity(AbstractCommon):
                 'fixed' : None,
                 'unit': 'as input',
             },
-        'matern32_rho': # Matern kernel,  rho parameter (metric)
+        'matern32_scale': # Matern kernel,  rho parameter (metric)
             {
                 'bounds': [0.001, 1000.00],
                 'priors': ['Uniform', []],

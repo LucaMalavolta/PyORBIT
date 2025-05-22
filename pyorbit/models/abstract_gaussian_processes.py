@@ -21,27 +21,33 @@ class AbstractGaussianProcesses(object):
 
     def _prepare_hyperparameter_conditions(self, mc, **kwargs):
 
+
         if kwargs.get('hyperparameters_condition', False):
+            print('GP model: {0:20s} hyperparameters_condition:    True'.format(self.model_name))
             self.hyper_condition = self._hypercond_01
         else:
             self.hyper_condition = self._hypercond_00
 
         if kwargs.get('rotation_decay_condition', False):
+            print('GP model: {0:20s} rotation_decay_condition:     True'.format(self.model_name))
             self.rotdec_condition = self._hypercond_02
         else:
             self.rotdec_condition = self._hypercond_00
 
         if kwargs.get('halfrotation_decay_condition', False):
+            print('GP model: {0:20s} halfrotation_decay_condition: True'.format(self.model_name))
             self.halfrotdec_condition = self._hypercond_03
         else:
             self.halfrotdec_condition = self._hypercond_00
 
         self.rotdec_factor_condition = self._hypercond_00
         if kwargs.get('decay_rotation_factor', False):
+            print('GP model: {0:20s} decay_rotation_factor:        True'.format(self.model_name))
             self.decay_rotation_factor = kwargs.get('decay_rotation_factor', 0)
             self.rotdec_factor_condition = self._hypercond_04
 
         if kwargs.get('rotation_decay_factor', False):
+            print('GP model: {0:20s} rotation_decay_factor:        True'.format(self.model_name))
             self.decay_rotation_factor = kwargs.get('rotation_decay_factor', 0)
             self.rotdec_factor_condition = self._hypercond_04
 
@@ -50,6 +56,8 @@ class AbstractGaussianProcesses(object):
         for keyword in keywords_shared_hyperparameters:
             self.use_shared_hyperparameters =  kwargs.get(keyword, self.use_shared_hyperparameters)
         if self.use_shared_hyperparameters:
+            self.use_shared_scale  = True
+            self.use_shared_decay  = True
             pams_copy = self.list_pams_dataset.copy()
             for pam in pams_copy:
                 self.list_pams_common.update([pam])
@@ -70,6 +78,7 @@ class AbstractGaussianProcesses(object):
     def _check_extra_conditions(self, **kwargs):
 
         flag_check = [self.use_activity_Prot, self.use_activity_Pdec, self.use_stellar_rotation_period, self.use_stellar_activity_decay]
+        print(flag_check )
         if sum(flag_check) > 1:
             raise ValueError('The rotation and decay flags are mutually exclusive. Please choose one of the following options: '
                                 'use_activity_Prot, use_activity_Pdec, use_stellar_rotation_period, use_stellar_activity_decay')
@@ -119,7 +128,7 @@ class AbstractGaussianProcesses(object):
                     break
 
         for keyword in keywords_activity_Pdec:
-            self.use_activity_Pdec = kwargs.get(keyword, self.use_activity_Prot)
+            self.use_activity_Pdec = kwargs.get(keyword, self.use_activity_Pdec)
 
         if self.use_activity_Pdec:
             self.list_pams_common.update(['Pdec'])

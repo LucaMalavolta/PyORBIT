@@ -566,7 +566,7 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, reload_ze
                     """ New: some data-specific models may noy need a common model, e.g., local polynomial trends,
                         however the code requires that such common model is provided in order to have a fall-back for the
                         default priors, boundaries, spaces, and fixed parameters. Such common model is saved with the same
-                        name of the data-specifc model.
+                        name of the data-specific model.
                         Default common model only works it has been defined in the model class as a Class attribute
                     """
                     common_type = define_type_to_class[model_type].default_common
@@ -612,6 +612,7 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, reload_ze
             else:
                 common_ref = None
 
+            print(' --->  ', common_ref)
             mc.models[model_name] = define_type_to_class[model_type](model_name, common_ref)
 
             """ Check if we need to add the limb darkening parameters to the model"""
@@ -688,7 +689,17 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, reload_ze
             except KeyError:
                 pass
 
-            """ Using default boundaries if one dataset is missing"""
+
+            if type(common_ref) == str:
+                common_list = [common_ref]
+            else:
+                common_list = common_ref
+            for common_mod in common_list:
+                for key_list in ['boundaries', 'spaces', 'priors', 'starts', 'fixed']:
+                    for key, val in mc.common_models[common_mod].model_conf.get(key_list, {}).items():
+                        model_conf[key_list][key] =  model_conf[key_list].get(key, val)
+
+            """ Using default key_list if one dataset is missing"""
             try:
                 for dataset_name, dataset in mc.dataset_dict.items():
 
@@ -1059,7 +1070,6 @@ def bounds_space_priors_starts_fixed(mc,
                     ll = None
                     cov_data = None
                     data_file = None
-
 
 
 

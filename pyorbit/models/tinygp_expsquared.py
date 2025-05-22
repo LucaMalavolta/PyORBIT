@@ -61,7 +61,7 @@ class TinyGaussianProcess_ExpSquared(AbstractModel, AbstractGaussianProcesses):
 
     def initialize_model(self, mc,  **kwargs):
 
-        self._prepare_shared_hyperparameters(mc, pam_scale='expsquared_scale',
+        self._prepare_shared_hyperparameters(pam_scale='expsquared_scale',
                                             pam_decay='expsquared_scale', **kwargs)
 
         self._prepare_rotation_replacement(mc,
@@ -75,7 +75,7 @@ class TinyGaussianProcess_ExpSquared(AbstractModel, AbstractGaussianProcesses):
                                             check_common=False,
                                             **kwargs)
 
-        self._check_extra_conditions(self, **kwargs)
+        self._check_extra_conditions(**kwargs)
 
 
     def lnlk_compute(self, parameter_values, dataset):
