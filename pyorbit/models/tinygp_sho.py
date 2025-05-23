@@ -62,7 +62,7 @@ class TinyGaussianProcess_SHO(AbstractModel, AbstractGaussianProcesses):
 
         """ semi-separable matrix requires the input array to be ordered
             in increasing order of the x0 values.
-        """ 
+        """
         self._sorting_mask = {}
 
     def initialize_model(self, mc,  **kwargs):
@@ -88,7 +88,7 @@ class TinyGaussianProcess_SHO(AbstractModel, AbstractGaussianProcesses):
         incremental addition of datasets if they are already present  """
         if dataset.name_ref in self._sorting_mask:
             return
-        
+
         self._sorting_mask[dataset.name_ref] = np.argsort(dataset.x0)
 
     def lnlk_compute(self, parameter_values, dataset):
@@ -143,7 +143,7 @@ class TinyGaussianProcess_SHO(AbstractModel, AbstractGaussianProcesses):
             sigma=parameter_values['sho_sigma'],
             diag=dataset_ej2[self._sorting_mask[dataset.name_ref]],
             x0=dataset.x0[self._sorting_mask[dataset.name_ref]],
-            y=dataset.residuals[self._sorting_mask[dataset.name_ref]]
+            y=dataset.residuals[self._sorting_mask[dataset.name_ref]],
             x0_predict = x0[sorting_predict]
         )
 
