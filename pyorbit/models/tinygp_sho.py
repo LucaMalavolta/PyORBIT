@@ -58,8 +58,12 @@ class TinyGaussianProcess_SHO(AbstractModel, AbstractGaussianProcesses):
             'sho_sigma',  # sigma
         ])
 
-
         self.use_gp_notation = False
+
+        """ semi-separable matrix requires the input array to be ordered
+            in increasing order of the x0 values.
+        """ 
+        self._sorting_mask = {}
 
     def initialize_model(self, mc,  **kwargs):
 
@@ -78,6 +82,14 @@ class TinyGaussianProcess_SHO(AbstractModel, AbstractGaussianProcesses):
                                             check_common=False,
                                             **kwargs)
 
+    def initialize_model_dataset(self, mc, dataset, **kwargs):
+
+        """ when reloading the .p files, the object is not reinitialized, so we have to skip the
+        incremental addition of datasets if they are already present  """
+        if dataset.name_ref in self._sorting_mask:
+            return
+        
+        self._sorting_mask[dataset.name_ref] = np.argsort(dataset.x0)
 
     def lnlk_compute(self, parameter_values, dataset):
 
@@ -94,13 +106,15 @@ class TinyGaussianProcess_SHO(AbstractModel, AbstractGaussianProcesses):
         omega = 2 * np.pi / parameter_values['sho_scale']
         quality_factor =  omega * parameter_values['sho_decay'] / 2.
 
+        dataset_ej2 = dataset.e ** 2.0 + dataset.jitter ** 2.0
+
         theta_dict =  dict(
             omega=omega,
             quality=quality_factor,
             sigma=parameter_values['sho_sigma'],
-            diag=dataset.e ** 2.0 + dataset.jitter ** 2.0,
-            x0=dataset.x0,
-            y=dataset.residuals
+            diag=dataset_ej2[self._sorting_mask[dataset.name_ref]],
+            x0=dataset.x0[self._sorting_mask[dataset.name_ref]],
+            y=dataset.residuals[self._sorting_mask[dataset.name_ref]]
         )
         return _loss_tinygp_sho(theta_dict)
 
@@ -114,26 +128,32 @@ class TinyGaussianProcess_SHO(AbstractModel, AbstractGaussianProcesses):
         omega = 2 * np.pi / parameter_values['sho_scale']
         quality_factor =  omega * parameter_values['sho_decay'] / 2.
 
-
         if x0_input is None:
             x0 = dataset.x0
+            sorting_predict = self._sorting_mask[dataset.name_ref]
         else:
             x0 = x0_input
+            sorting_predict = np.argsort(x0)
+
+        dataset_ej2 = dataset.e ** 2.0 + dataset.jitter ** 2.0
 
         theta_dict =  dict(
             omega=omega,
             quality=quality_factor,
             sigma=parameter_values['sho_sigma'],
-            diag=dataset.e ** 2.0 + dataset.jitter ** 2.0,
-            x0=dataset.x0,
-            y=dataset.residuals,
-            x0_predict = x0
+            diag=dataset_ej2[self._sorting_mask[dataset.name_ref]],
+            x0=dataset.x0[self._sorting_mask[dataset.name_ref]],
+            y=dataset.residuals[self._sorting_mask[dataset.name_ref]]
+            x0_predict = x0[sorting_predict]
         )
+
+        mu = np.empty_like(sorting_predict)
+        std = np.empty_like(sorting_predict)
 
         gp = _build_tinygp_sho(theta_dict)
         _, cond_gp = gp.condition(theta_dict['y'], theta_dict['x0_predict'])
-        mu = cond_gp.loc # or cond_gp.mean?
-        std = np.sqrt(cond_gp.variance)
+        mu[sorting_predict] = cond_gp.loc # or cond_gp.mean?
+        std[sorting_predict] = np.sqrt(cond_gp.variance)
 
         if return_variance:
             return mu, std
