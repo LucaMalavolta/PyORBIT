@@ -54,7 +54,8 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
     # plt.rcParams["font.family"] = "Times New Roman"
 
     oversampled_models = plot_dictionary['oversampled_models']
-    skip_rv_like = plot_dictionary['skip_rv_like']
+    skip_rv_like = not plot_dictionary['compute_rv_like']
+
 
     if sampler_name[:5] == 'emcee':
         if sampler_name == 'emcee_legacy':
@@ -660,6 +661,7 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
 
     ### NEW in PyORBIT 10.10
 
+    data_are_rvs = False
     for dataset_name, dataset in mc.dataset_dict.items():
         data_are_rvs = (dataset.kind == 'RV')
         if data_are_rvs:

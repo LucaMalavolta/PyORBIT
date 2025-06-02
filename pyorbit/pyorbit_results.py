@@ -28,7 +28,7 @@ def pyorbit_results():
     parser.add_argument('-noacf', type=str, nargs='?', default=False, help='Skip ACF, even when all the flags are active')
     parser.add_argument('-dfm_corner', type=str, nargs='?', default=False, help='Use DFM corner script for corner plots')
     parser.add_argument('-getdist_corner', type=str, nargs='?', default=False, help='Use getdist script for corner plots')
-    parser.add_argument('-skip_rv_like', type=str, nargs='?', default=False, help='Skip RV likelihood calculation')
+    parser.add_argument('-compute_rv_like', type=str, nargs='?', default=False, help='Skip RV likelihood calculation')
 
 
     plot_dictionary = {
@@ -56,7 +56,7 @@ def pyorbit_results():
                                'eclipse_phasecurve',
                                'transit_eclipse_phasecurve',
                                'rv_keplerian'],
-        'skip_rv_like': False,
+        'compute_rv_like': False,
     }
 
     # Moved here from pyorbit_getresults.py for consistency with PyORBIT_run.py
@@ -145,7 +145,6 @@ def pyorbit_results():
         #plot_dictionary['veuz_corner_files'] = True
         plot_dictionary['write_planet_samples'] = True
         plot_dictionary['write_all_samples'] = True
-        plot_dictionary['skip_rv_like'] = False
 
     if args.all_corners is not False:
         plot_dictionary['full_correlation'] = True
@@ -164,8 +163,8 @@ def pyorbit_results():
         plot_dictionary['traces'] = False
         plot_dictionary['P_versus_lnprob'] = True
 
-    if args.skip_rv_like is not False:
-        plot_dictionary['skip_rv_like'] = True
+    if args.compute_rv_like is not False:
+        plot_dictionary['compute_rv_like'] = True
 
 
     """
