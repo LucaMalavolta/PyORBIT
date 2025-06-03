@@ -651,9 +651,11 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
     print('Number of samplings:',  n_samplings)
 
 
-    rv_loglike_samplings = config_in['parameters'].get('rv_loglike_samplings', n_samplings)
+    rv_like_samplings = config_in['parameters'].get('rv_loglike_samplings', n_samplings)
+    rv_like_samplings = config_in['parameters'].get('rv_lnlike_samplings', rv_like_samplings)
+    rv_like_samplings = config_in['parameters'].get('rv_like_samplings', rv_like_samplings)
 
-    flat_rv_lnlike = np.zeros(rv_loglike_samplings)
+    flat_rv_lnlike = np.zeros(rv_like_samplings)
     med_rv_ln_likelihood = med_ln_likelihood * 0.0
     MAP_rv_ln_likelihood = 0.0
     selection = None
@@ -663,7 +665,8 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
 
     data_are_rvs = False
     for dataset_name, dataset in mc.dataset_dict.items():
-        data_are_rvs = (dataset.kind == 'RV')
+        #TODO remove option 'RV' in version 11
+        data_are_rvs = (dataset.kind == 'RV' or dataset.kind == 'radial_velocity')
         if data_are_rvs:
             break
     if not data_are_rvs:
@@ -672,16 +675,16 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
     print()
     if not skip_rv_like:
         try:
-            print('Number of samplings for RV log-likelihood calculations [rv_loglike_samplings keyword]:', )
+            print('Number of samplings for RV log-likelihood calculations [rv_like_samplings keyword]:', )
             print('Recomputing RV ln-likelihood, it may take a while...')
 
-            if n_samplings == rv_loglike_samplings:
+            if n_samplings == rv_like_samplings:
                 selection = np.arange(0,n_samplings, dtype=int)
             else:
                 select = np.random.default_rng()
-                selection = select.choice(n_samplings, size=rv_loglike_samplings, replace=False)
+                selection = select.choice(n_samplings, size=rv_like_samplings, replace=False)
 
-            for ip in tqdm(range(rv_loglike_samplings)):
+            for ip in tqdm(range(rv_like_samplings)):
                 ii = selection[ip]
                 flat_rv_lnlike[ip] = mc.rv_log_likelihood(flat_chain[ii,:])
 
@@ -1508,7 +1511,8 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
             bjd_plot[dataset_name]['start'] -= bjd_plot[dataset_name]['range'] * 0.10
             bjd_plot[dataset_name]['end'] += bjd_plot[dataset_name]['range'] * 0.10
 
-            if dataset.kind == 'Phot':
+            #TODO remove the 'Phot' options in version 11
+            if dataset.kind == 'photometry' or dataset.kind == 'Phot': 
 
                 if bjd_plot[dataset_name]['range'] > P_minimum:
                     # more than one transit:
@@ -1547,9 +1551,10 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
 
         # Special cases
         for dataset_name, dataset in mc.dataset_dict.items():
-            if dataset.kind == 'RV':
+            #TODO remove option 'RV' in version 11
+            if dataset.kind == 'RV' or dataset.kind == 'radial_velocity':
                 bjd_plot[dataset_name] = bjd_plot['full']
-            if dataset.kind == 'Tcent':
+            if dataset.kind == 'transit_time':
                 bjd_plot[dataset_name]['x_plot'] = dataset.x
                 bjd_plot[dataset_name]['x0_plot'] = dataset.x
 

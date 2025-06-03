@@ -249,6 +249,7 @@ class DynamicalIntegrator:
         dataset_rv = 0
         dataset_lc = 0
         int_buffer = dict(rv_time=[], rv_value=[], rv_error=[], rv_ref=[],
+                          lc_time=[], lc_value=[], lc_error=[], lc_ref=[],
                           t0_time=[], t0_error=[], t0_ref=[], key_ref={})
 
 
@@ -257,13 +258,16 @@ class DynamicalIntegrator:
         """
         for dataset_name, dataset in mc.dataset_dict.items():
             if dataset.dynamical is False: continue
-            if dataset.kind == 'RV':
+            if dataset.kind == 'radial_velocity':
                 int_buffer['rv_time'].extend(dataset.x.tolist())
                 int_buffer['rv_value'].extend(dataset.y.tolist())
                 int_buffer['rv_error'].extend(dataset.e.tolist())
                 int_buffer['rv_ref'].extend(dataset.x * 0.0 + dataset_rv)
                 int_buffer['key_ref'][dataset_name] = dataset_rv
                 dataset_rv += 1
+            elif dataset.kind == 'photometry':
+                int_buffer['lc_time'].extend(dataset.x.tolist())
+                dataset_lc += 1
             elif dataset.kind == 'transit_time':
                 int_buffer['t0_time'].extend(dataset.x.tolist())
 

@@ -9,6 +9,7 @@ class Dataset(AbstractCommon):
     def __init__(self, model_name, kind, models):
         super(self.__class__, self).__init__(None)
 
+        self.kind = kind
         for kind_name, kind_list in datatype_definition.items():
             if kind in kind_list:
                 self.kind = kind_name

@@ -16,7 +16,7 @@ setup(
 	author_email = 'luca.malavolta@unipd.it',
 	url = 'https://github.com/LucaMalavolta/PyORBIT',
 	packages =['pyorbit', 'pyorbit.common', 'pyorbit.classes', 'pyorbit.models', 'pyorbit.samplers', 'pyorbit.subroutines'],
-	license = 'MIT License',
+	license = 'MIT',
 	description ='PyORBIT: a code for exoplanet orbital parameters and stellar activity',
     long_description=long_description,
     long_description_content_type='text/markdown',
