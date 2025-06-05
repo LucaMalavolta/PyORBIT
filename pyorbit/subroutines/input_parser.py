@@ -689,14 +689,19 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, reload_ze
                 pass
 
 
-            if type(common_ref) == str:
-                common_list = [common_ref]
-            else:
-                common_list = common_ref
-            for common_mod in common_list:
-                for key_list in ['boundaries', 'spaces', 'priors', 'starts', 'fixed']:
-                    for key, val in mc.common_models[common_mod].model_conf.get(key_list, {}).items():
-                        model_conf[key_list][key] =  model_conf[key_list].get(key, val)
+            """ Using key_list specified in common if missing in model definition"""
+            try:
+                if type(common_ref) == str:
+                    common_list = [common_ref]
+                else:
+                    common_list = common_ref
+                for common_mod in common_list:
+                    for key_list in ['boundaries', 'spaces', 'priors', 'starts', 'fixed']:
+                        for key, val in mc.common_models[common_mod].model_conf.get(key_list, {}).items():
+                            model_conf[key_list][key] =  model_conf[key_list].get(key, val)
+            except (KeyError, TypeError, AttributeError):
+                pass
+
 
             """ Using default key_list if one dataset is missing"""
             try:
@@ -708,10 +713,10 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, reload_ze
                             model_conf[dataset_name] = {}
 
                         bounds_space_priors_starts_fixed(mc,
-                                                         mc.models[model_name],
-                                                         model_conf[dataset_name],
-                                                         dataset=dataset_name,
-                                                         backup_conf=model_conf)
+                                                            mc.models[model_name],
+                                                            model_conf[dataset_name],
+                                                            dataset=dataset_name,
+                                                            backup_conf=model_conf)
 
             except:
                 pass
