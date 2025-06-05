@@ -24,7 +24,7 @@ class CommonPolynomialTrend(AbstractCommon):
             },
         'poly_factor': # reference value of the polynomial
             {
-                'bounds': [-1e09, 1e09],
+                'bounds': [-1e02, 1e02],
                 'priors': ['Uniform', []],
                 'spaces': 'Linear',
                 'fixed' : 0.00,
@@ -35,7 +35,7 @@ class CommonPolynomialTrend(AbstractCommon):
     for i_pol in range(0,10):
         # Coefficient of the i_pol order of the polynomial
         parameters_dictionary['poly_c'+repr(i_pol)] = {
-                'bounds': [-1e06, 1e06],
+                'bounds': [-1e01, 1e01],
                 'priors': ['Uniform', []],
                 'spaces': 'Linear',
                 'fixed' : 0.00,
