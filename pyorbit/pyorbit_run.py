@@ -46,6 +46,7 @@ def pyorbit_run():
         'ultranest_stepsampler': ['ultranest_stepsampler', 'UltraNest_StepSampler', 'Ultranest_Stepsampler', 'ULTRANEST_STEPSAMPLER', 'ultra_step','Unest_StepS'],
         'ultranest_warmstart': ['ultranest_warmstart', 'UltraNest_WarmStart', 'Ultranest_Warmstart', 'ULTRANEST_WARMSTART', 'ultra_warm','Unest_WarmS', 'UltraWarm', 'ultrawarm'],
         'optimize': ['optimize', 'scipy', 'Optimize', 'OPTIMIZE'],
+        'nautilus': ['nautilus', 'Nautilus', 'NAUTILUS'],
     }
 
     if sampler in sampler_keyword['pyde']:
@@ -90,6 +91,10 @@ def pyorbit_run():
     if sampler in sampler_keyword['nestle']:
         config_in = pyorbit.subroutines.input_parser.yaml_fix_nested(config_in)
         pyorbit.pyorbit_nestle(config_in)
+
+    if sampler in sampler_keyword['nautilus']:
+        config_in = pyorbit.subroutines.input_parser.yaml_fix_nested(config_in)
+        pyorbit.pyorbit_nautilus(config_in)
 
     if sampler in sampler_keyword['ultranest']:
         config_in = pyorbit.subroutines.input_parser.yaml_fix_nested(config_in)

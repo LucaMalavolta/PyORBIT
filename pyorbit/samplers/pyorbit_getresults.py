@@ -513,6 +513,84 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
         print(' Samples:    {}'.format(n_samplings))
 
 
+    if sampler_name[:9] == 'nautilus':
+
+        import json
+
+
+        dir_input = './' + config_in['output'] + '/' + sampler_name +'/'
+        dir_output = './' + config_in['output'] + '/' + sampler_name +'_plot/'
+        os.system('mkdir -p ' + dir_output)
+
+
+        mc = nested_sampling_load_from_cpickle(dir_input)
+
+        mc.model_setup()
+        mc.initialize_logchi2()
+
+        print()
+        try:
+            print('### PyORBIT version used in the analysis: ', mc.pyorbit_version)
+        except:
+            print('### You must have used a very outdated version of PyORBIT to run the analysis!')
+            print('### Please update to the latest version of PyORBIT')
+
+
+        results = nautilus_results_load_from_cpickle(mc.output_directory)
+
+
+        theta_dictionary = results_analysis.get_theta_dictionary(mc)
+
+        res = ("success: {:}\n"
+           "effective_sample_size: {:f}\n"
+            "logz: {:6.3f}"
+            .format(results['success'], results['effective_sample_size'], results['log_z']))
+
+        print()
+        print('Summary - \n=======\n'+res)
+
+
+        flat_chain = results['points']
+        n_samplings, n_pams = np.shape(flat_chain)
+
+        """ Filling the lnprob array the hard way """
+        flat_lnprob = np.empty(n_samplings)
+        for ii in range(0,n_samplings):
+            flat_lnprob[ii] = mc.nautilus_call(flat_chain[ii,:])
+
+        lnprob_med = common.compute_value_sigma(flat_lnprob)
+        chain_med = common.compute_value_sigma(flat_chain)
+
+        chain_MAP, lnprob_MAP = common.pick_MAP_parameters(
+            flat_chain, flat_lnprob)
+
+        chain_sampleMED, lnprob_sampleMED = common.pick_sampleMED_parameters(
+            flat_chain, flat_lnprob)
+
+        print('From now on, all results are from weighted samples')
+
+
+        #data_in = np.genfromtxt(dir_input + 'post_equal_weights.dat')
+        #flat_lnprob = data_in[:, -1]
+        #flat_chain = data_in[:, :-1]
+        # nsample = np.size(flat_lnprob)
+        #n_samplings, n_pams = np.shape(flat_chain)
+
+        #lnprob_med = common.compute_value_sigma(flat_lnprob)
+        #chain_med = common.compute_value_sigma(flat_chain)
+        # chain_MAP, lnprob_MAP = common.pick_MAP_parameters(
+        #    flat_chain, flat_lnprob)
+
+        print()
+        print(' Reference Time Tref: {}'.format(mc.Tref))
+        print()
+        print(' Data points:{}'.format(mc.ndata))
+        print(' Dimensions: {}'.format(mc.ndim))
+        print(' Samples:    {}'.format(n_samplings))
+
+
+
+
     if sampler_name[:9] == 'ultranest':
 
         import json

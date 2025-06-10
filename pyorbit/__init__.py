@@ -15,6 +15,7 @@ from .samplers.pyorbit_dynesty import *
 from .samplers.pyorbit_dynesty_static import *
 from .samplers.pyorbit_dynesty_legacy import *
 from .samplers.pyorbit_nestle import *
+from .samplers.pyorbit_nautilus import *
 from .samplers.pyorbit_ultranest import *
 from .samplers.pyorbit_ultranest_stepsampler import *
 from .samplers.pyorbit_ultranest_warmstart import *

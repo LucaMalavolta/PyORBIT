@@ -185,6 +185,27 @@ def nested_sampling_load_from_cpickle(output_directory, prefix=''):
     mc = pickle.load(open(output_directory + add_prefix + "model_container.p", "rb"))
     return mc
 
+def nautilus_results_save_to_cpickle(output_directory, results, prefix=None):
+    add_prefix = (prefix + '_' if prefix else '')
+    pickle.dump(results, open(output_directory + add_prefix + "results.p", "wb"))
+
+
+def nautilus_results_load_from_cpickle(output_directory, prefix=''):
+    add_prefix = (prefix + '_' if prefix else '')
+    results = pickle.load(open(output_directory + add_prefix + "results.p", "rb"))
+    return results
+
+def nautilus_sampler_save_to_cpickle(output_directory, sampler, prefix=None):
+    add_prefix = (prefix + '_' if prefix else '')
+    pickle.dump(sampler, open(output_directory + add_prefix + "sampler.p", "wb"))
+
+
+def nautilus_sampler_load_from_cpickle(output_directory, prefix=''):
+    add_prefix = (prefix + '_' if prefix else '')
+    sampler = pickle.load(open(output_directory + add_prefix + "sampler.p", "rb"))
+    return sampler
+
+
 
 def dynesty_results_save_to_cpickle(output_directory, results, prefix=None):
     add_prefix = (prefix + '_' if prefix else '')

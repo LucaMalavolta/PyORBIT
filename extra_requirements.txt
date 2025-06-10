@@ -12,6 +12,7 @@ jax ==0.4.31
 tinygp >=0.3.0
 ###### Requirements without Version Specifiers ######
 lmfit ==1.3.2
+nautilus-sampler
 spleaf
 argparse
 pyyaml

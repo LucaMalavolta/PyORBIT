@@ -54,7 +54,8 @@ setup(
         'jaxlib==0.4.31',
         'jax ==0.4.31',
         'tinygp>=0.3.0',
-        'ordered-set'
+        'ordered-set',
+        'nautilus-sampler'
         #'schwimmbad'
     ],
     setup_requires=['setuptools']
