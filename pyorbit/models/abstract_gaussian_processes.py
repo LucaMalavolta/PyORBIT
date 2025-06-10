@@ -85,6 +85,9 @@ class AbstractGaussianProcesses(object):
 
     def _prepare_rotation_replacement(self, mc, parameter_name ='Prot', common_pam=True, check_common=True, **kwargs):
 
+        ### TODO: remove in version 11 of PyORBIT
+        self.use_activity_Prot = getattr(self, 'use_activity_Prot', False)
+
         if check_common:
             for common_ref in self.common_ref:
                 if mc.common_models[common_ref].model_class == 'activity':
@@ -93,12 +96,9 @@ class AbstractGaussianProcesses(object):
                         self.use_stellar_rotation_period = getattr(mc.common_models[common_ref], keyword, self.use_stellar_rotation_period)
                     break
 
-            
-        try:
-            for keyword in keywords_activity_Prot:
-                self.use_activity_Prot = kwargs.get(keyword, self.use_activity_Prot)
-        except AttributeError:
-            self.use_activity_Prot = False
+        for keyword in keywords_activity_Prot:
+            self.use_activity_Prot = kwargs.get(keyword, self.use_activity_Prot)
+
 
         if self.use_activity_Prot:
             self.list_pams_common.update(['Prot'])
@@ -123,6 +123,10 @@ class AbstractGaussianProcesses(object):
                                 'use_activity_Prot, use_stellar_rotation_period')
 
     def _prepare_decay_replacement(self, mc, parameter_name ='Pdec', common_pam=True,  check_common=True, **kwargs):
+
+        ### TODO: remove in version 11 of PyORBIT
+        self.use_activity_Pdec = getattr(self, 'use_activity_Pdec', False)
+
 
         if check_common:
             for common_ref in self.common_ref:
