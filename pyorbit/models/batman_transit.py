@@ -30,7 +30,7 @@ class Batman_Transit(AbstractModel, AbstractTransit):
             'R_Rs',  # planet radius (in units of stellar radii)
         ])
 
-        """ Model-specifc parameters, not declared in the abstract class """
+        """ Model-specific parameters, not declared in the abstract class """
         self.batman_params = None
         self.batman_models = {}
         self.code_options = {}
