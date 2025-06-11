@@ -248,9 +248,9 @@ class DynamicalIntegrator:
         """
         dataset_rv = 0
         dataset_lc = 0
-        int_buffer = dict(rv_time=[], rv_value=[], rv_error=[], rv_ref=[],
-                          lc_time=[], lc_value=[], lc_error=[], lc_ref=[],
-                          t0_time=[], t0_error=[], t0_ref=[], key_ref={})
+        int_buffer = dict(rv_time=[], rv_ref=[],
+                          lc_time=[], lc_ref=[],
+                          t0_time=[], t0_ref=[], key_ref={})
 
 
         """ Putting all the RV epochs in the same array, flagging in the temporary buffer
@@ -260,8 +260,6 @@ class DynamicalIntegrator:
             if dataset.dynamical is False: continue
             if dataset.kind == 'radial_velocity':
                 int_buffer['rv_time'].extend(dataset.x.tolist())
-                int_buffer['rv_value'].extend(dataset.y.tolist())
-                int_buffer['rv_error'].extend(dataset.e.tolist())
                 int_buffer['rv_ref'].extend(dataset.x * 0.0 + dataset_rv)
                 int_buffer['key_ref'][dataset_name] = dataset_rv
                 dataset_rv += 1
@@ -280,8 +278,6 @@ class DynamicalIntegrator:
                     (np.asarray(int_buffer['rv_ref']) == int_buffer['key_ref'][dataset_name])
 
         rv_time = np.float64(int_buffer['rv_time'])
-        rv_value = np.float64(int_buffer['rv_value'])
-        rv_error = np.float64(int_buffer['rv_error'])
 
         """ Substituting empty arrays with None to allow minimum determination
             We give for granted that at least one of the two vector is not null, otherwise
@@ -293,11 +289,15 @@ class DynamicalIntegrator:
         if np.size(int_buffer['t0_time']) == 0:
             int_buffer['t0_time'] = int_buffer['rv_time']
 
+        if np.size(int_buffer['lc_time']) == 0:
+            int_buffer['lc_time'] = int_buffer['rv_time']
+
         rv_minmax = [np.amin(int_buffer['rv_time']), np.amax(int_buffer['rv_time'])]
         t0_minmax = [np.amin(int_buffer['t0_time']), np.amax(int_buffer['t0_time'])]
+        lc_minmax = [np.amin(int_buffer['lc_time']), np.amax(int_buffer['lc_time'])]
 
-        self.ti_beg = np.min([rv_minmax[0], t0_minmax[0]]) - 10
-        self.ti_end = np.max([rv_minmax[1], t0_minmax[1]]) + 10
+        self.ti_beg = np.min([rv_minmax[0], t0_minmax[0], lc_minmax[0]]) - 10
+        self.ti_end = np.max([rv_minmax[1], t0_minmax[1], lc_minmax[0]]) + 10
         self.ti_int = self.ti_end - self.ti_beg
         self.ti_ref = np.float64(mc.Tref)
         self.i_step = np.float64(1.e-3)
@@ -314,6 +314,9 @@ class DynamicalIntegrator:
             self.planet_idflag[planet_name] = self.n_body * 1
 
         self.t0_flag = np.zeros(self.n_body, dtype=bool)
+
+
+
 
 
         # TRADES initialization
@@ -335,12 +338,17 @@ class DynamicalIntegrator:
                 mc.dataset_dict[dataset_name].x,
                 mc.dataset_dict[dataset_name].e)
 
-        if len(rv_time)>0:
-            pytrades.set_rv_dataset(rv_time, rv_value, rv_error)#, rv_setid=rv_setid, n_rvset=n_rvset)
-
         self.to_be_initialized = False
 
         return
+
+
+
+
+
+
+
+
 
     def compute_trades(self, mc, theta, x_input=None):
         """ This function compute the expected TTV and RVs for dynamically interacting planets.
