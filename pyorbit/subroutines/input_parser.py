@@ -327,14 +327,30 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, reload_ze
 
                 mc.common_models[planet_name].orbit = planet_conf['orbit']
 
+                mc.common_models[planet_name].model_conf = planet_conf.copy()
+
                 # special case for dynamical integration
                 if planet_conf['orbit'] == 'dynamical':
                     mc.dynamical_dict[planet_name] = True
 
-                mc.common_models[planet_name].model_conf = planet_conf.copy()
+                    print(' Dynamical model for planet {0:s} is enabled'.format(planet_name))
+                    print(' Forcing the use of semimajor axis and inclination for photodynamical modelling')
+                    mc.common_models[planet_name].model_conf['use_semimajor_axis'] = True
+                    mc.common_models[planet_name].model_conf['use_inclination'] = True
+
 
 
         elif model_name == 'star' or model_name=='stars':
+
+            star_dynamical_model = False
+            """ Double check if there is planet using a dynamical model"""
+            for planet_name, planet_conf in conf_common['planets'].items():
+                if planet_conf['orbit'] == 'dynamical':
+                    star_dynamical_model = True
+
+            ### TODO fix from here to get star and mass
+            #### TODO elif mc.common_models[self.stellar_ref].compute_density:
+
 
             """ stellar models can be gathered under a specific label"""
 

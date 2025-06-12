@@ -37,6 +37,7 @@ class PyTransit_Dynamical(AbstractModel, AbstractTransit):
 
     def initialize_model(self, mc, **kwargs):
 
+
         self.use_roadrunner = kwargs.get('use_roadrunner', True)
         if self.use_roadrunner:
             print('Using RoadRunner Model from PyTransit')
