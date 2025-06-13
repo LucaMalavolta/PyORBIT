@@ -334,8 +334,7 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, reload_ze
                     mc.dynamical_dict[planet_name] = True
 
                     print(' Dynamical model for planet {0:s} is enabled'.format(planet_name))
-                    print(' Forcing the use of semimajor axis and inclination for photodynamical modelling')
-                    mc.common_models[planet_name].model_conf['use_semimajor_axis'] = True
+                    print(' Forcing the use of inclination for photodynamical modelling')
                     mc.common_models[planet_name].model_conf['use_inclination'] = True
 
 
@@ -343,14 +342,12 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, reload_ze
         elif model_name == 'star' or model_name=='stars':
 
             star_dynamical_model = False
-            """ Double check if there is planet using a dynamical model"""
+            """ Double check if there is planet using a dynamical model
+                Dynamical models requires mass and radius of the star, the density cannot be treated as a free parameter
+            """
             for planet_name, planet_conf in conf_common['planets'].items():
                 if planet_conf['orbit'] == 'dynamical':
                     star_dynamical_model = True
-
-            ### TODO fix from here to get star and mass
-            #### TODO elif mc.common_models[self.stellar_ref].compute_density:
-
 
             """ stellar models can be gathered under a specific label"""
 
@@ -373,6 +370,13 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, reload_ze
                         conf_models[conf_name] = {'common': conf_name}
 
                 mc.common_models[conf_name].model_conf = star_conf.copy()
+
+                """ Photodynamical models require the use of both mass and radius, left as free parameters with prior
+                    (this is the best way to avoid MCMC going nuts)
+                    Hence, we need to compute the density from mass and radius to avoid discrepancies
+                """
+                if star_dynamical_model:
+                    mc.common_models[conf_name].model_conf['compute_density'] = True
 
         else:
 

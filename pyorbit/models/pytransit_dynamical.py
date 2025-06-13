@@ -42,7 +42,10 @@ class PyTransit_Dynamical(AbstractModel, AbstractTransit):
         if self.use_roadrunner:
             print('Using RoadRunner Model from PyTransit')
 
-        self._prepare_planetary_parameters(mc, **kwargs)
+        """ Planetary parameters initialization is taken care of by the Dynamical integration model"""
+        #self._prepare_planetary_parameters(mc, **kwargs)
+
+
         self._prepare_limb_darkening_coefficients(mc, **kwargs)
 
     def initialize_model_dataset(self, mc, dataset, **kwargs):
@@ -60,9 +63,27 @@ class PyTransit_Dynamical(AbstractModel, AbstractTransit):
                                                             nsamples=self.code_options[dataset.name_ref]['sample_factor'])
 
 
-    def compute_dynamical(self, parameter_values, dataset, x0_input=None):
+    def compute_dynamical(self, dataset,  parameter_values, transits, durations,
+                          rp_rs, per, aRs, inc, ecc, w,
+                          x0_input=None):
 
         ### TODO this one will run inside the dynamical model
+        if x0_input is None:
+
+            t = dataset.x
+            t = np.asarray(dataset.x) # for convenience
+        else:
+            t = np.asarray(x0_input + dataset.Tref) # add the reference time to the input time
+
+        f0 = np.zeros_like(t) # create a model at 0.0 for all time points
+
+        """ compute half duration in days for all the transits of all the planets"""
+        half_dur_d = durations * constants.min2day
+
+        """ select transit times of all planets in the time range """
+        tra_in_t = np.logical_and(transits >= t.min(), transits <= t.max())
+        n_tra = np.sum(tra_in_t)
+
 
         self.update_parameter_values(parameter_values, dataset.Tref)
 
@@ -71,6 +92,62 @@ class PyTransit_Dynamical(AbstractModel, AbstractTransit):
 
         for par, i_par in self.ldvars.items():
             self.ld_vars[i_par] = parameter_values[par]
+
+
+
+        # select partial transits of all planets in the time range
+        tra_dur_in_t = np.logical_and(
+            transits - half_dur_d >= t.min(),
+            transits + half_dur_d <= t.max(),
+        )
+        n_dur = np.sum(tra_dur_in_t)
+        # number of events based on the max between n_tra and n_dur
+        if n_tra >= n_dur:
+            n = n_tra
+            sel_tra = tra_in_t
+        else:
+            n = n_dur
+            sel_tra = tra_dur_in_t
+
+        # compute transit model only if full or partial transits have been found
+        if n > 0:
+            # select transits and parameters
+            tra_sel = np.atleast_1d(transits[sel_tra])
+            rp_rs_sel = np.atleast_1d(rp_rs[sel_tra])
+            per_sel = np.atleast_1d(per[sel_tra])
+            aRs_sel = np.atleast_1d(aRs[sel_tra])
+            inc_sel = np.atleast_1d(inc[sel_tra])
+            ecc_sel = np.atleast_1d(ecc[sel_tra])
+            w_sel = np.atleast_1d(w[sel_tra])
+
+            flux_ = []
+            for itra, tra in enumerate(tra_sel): # loop in the selected transits (independent of the body)
+                ff = f0.copy()
+                sel_t = np.logical_and(
+                    t >= tra - 0.5 * per[itra],
+                    t <= tra + 0.5 * per[itra],
+                ) # select portion of the light curve centered on the transit time that cover a full period
+                self.pytransit_models[dataset.name_ref].set_data(t[sel_t],
+                                                            exptimes=self.code_options[dataset.name_ref]['exp_time'],
+                                                            nsamples=self.code_options[dataset.name_ref]['sample_factor']) # set the pytransit time data with oversampling if needed
+                ff[sel_t] = tm.evaluate(
+                    k=rp_rs_sel[itra],
+                    ldc=self.ld_vars,
+                    t0=tra,
+                    p=per_sel[itra],
+                    a=aRs_sel[itra],
+                    i=inc_sel[itra],
+                    e=ecc_sel[itra],
+                    w=w_sel[itra],
+                ) # compute the model and associate it only for the selected portion close to the transit
+                flux_.append(ff) # append it
+            f2d = np.atleast_2d(flux_)
+            flux = np.sum(f2d - 1.0, axis=0) # in one step it removes 1, sum flux for each time point
+        else: # set to 0.0 the model flux if there are not transits (full or partials) in this photometry
+            flux = f0
+
+        return flux
+
 
 
     def compute(self, parameter_values, dataset, x0_input=None):
