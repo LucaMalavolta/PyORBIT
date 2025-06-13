@@ -280,6 +280,13 @@ class ModelContainer(object):
             """ check if any keyword ahas get the output model from the dynamical tool
             we must do it here because all the planet are involved"""
             dynamical_output = self.dynamical_model.compute(self, theta)
+            print('cccccccccccccccccc', dynamical_output['pass'], dynamical_output)
+            if not (dynamical_output['stable'] and dynamical_output['pass']):
+                print('aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')
+                if return_priors is False:
+                    return -np.inf
+                else:
+                    return -np.inf, -np.inf
 
         for model_name, model in self.common_models.items():
             log_priors += model.return_priors(theta)
@@ -365,7 +372,10 @@ class ModelContainer(object):
                     continue
 
                 if getattr(dataset, 'dynamical', False):
-                    dataset.external_model = dynamical_output[dataset_name]
+                    if dataset.kind == 'photometry' and getattr(self.models[model_name], 'dynamical_model', False):
+                        dataset.external_model = self.models[model_name].compute_dynamical(parameter_values, dataset, dynamical_output[dataset_name])
+                    else:
+                        dataset.external_model = dynamical_output[dataset_name]
 
                 if dataset.normalization_model is None and (self.models[model_name].unitary_model or self.models[model_name].normalization_model):
                     dataset.normalization_model = np.ones(dataset.n, dtype=np.double)

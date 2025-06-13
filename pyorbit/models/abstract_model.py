@@ -55,6 +55,8 @@ class AbstractModel(object):
         self.unitary_model = False
         self.normalization_model = False
 
+        self.dynamical_model = False
+
         self.planet_ref = common_ref
         self.stellar_ref = 'star_parameters'
 

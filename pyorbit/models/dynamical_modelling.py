@@ -21,14 +21,15 @@ class AbstractDynamical(object):
             'Omega', # longitude of ascending node
             'e',     # eccentricity, uniform prior - to be fixed
             'R_Rs',  # planet radius (in units of stellar radii)
-            'omega' # argument of pericenter
+            'omega', # argument of pericenter
+            'i',     # inclination in degrees
         ])
 
         self.list_pams_dataset = OrderedSet()
         self.warning_given = False
 
     # brainless workaround
-    def _initialize_model(self, mc, **kwargs):
+    def _prepare_dynamical_parameters(self, mc, **kwargs):
 
         if mc.common_models[self.planet_ref].parametrization[:8] == 'Ford2006' \
             and mc.common_models[self.planet_ref].orbit != 'circular':
@@ -47,22 +48,17 @@ class AbstractDynamical(object):
             self.list_pams_common.update(['sre_coso'])
             self.list_pams_common.update(['sre_sino'])
 
+        try:
+            multivariate_pams = mc.common_models[self.stellar_ref].multivariate_pams
+        except AttributeError:
+            multivariate_pams = []
+
         if not mc.common_models[self.planet_ref].use_mass:
             print('*** Dynamical modelling requires the mass of the planet as free parameters ***')
             print('*** for efficient exploration of parameter space')
             print('I QUIT')
             quit()
 
-        if mc.common_models[self.planet_ref].use_inclination:
-            """ i is the orbital inclination (in degrees) """
-            self.list_pams_common.update(['i'])
-        else:
-            """ b is the impact parameter """
-            self.list_pams_common.update(['b'])
-            self.list_pams_common.update(['density'])
-
-        if mc.common_models[self.planet_ref].use_semimajor_axis:
-            self.list_pams_common.update(['a_Rs'])
 
         try:
             multivariate_pams = mc.common_models[self.stellar_ref].multivariate_pams
@@ -72,8 +68,7 @@ class AbstractDynamical(object):
         if 'mass' in multivariate_pams and 'radius' in multivariate_pams:
             self.list_pams_common.update(['mass'])
             self.list_pams_common.update(['radius'])
-
-        if mc.common_models[self.stellar_ref].compute_density:
+        elif mc.common_models[self.stellar_ref].compute_density:
             self.list_pams_common.update(['mass'])
             self.list_pams_common.update(['radius'])
         elif mc.common_models[self.stellar_ref].compute_mass:
@@ -98,7 +93,7 @@ class RVdynamical(AbstractModel, AbstractDynamical):
 
     # brainless workaround
     def initialize_model(self, mc, **kwargs):
-        self._initialize_model(mc, **kwargs)
+        self._prepare_dynamical_parameters(mc, **kwargs)
 
 class TransitTimeDynamical(AbstractModel, AbstractDynamical):
     model_class = 'transit_times'
@@ -109,8 +104,7 @@ class TransitTimeDynamical(AbstractModel, AbstractDynamical):
 
     # brainless workaround
     def initialize_model(self, mc, **kwargs):
-        self._initialize_model(mc, **kwargs)
-
+        self._prepare_dynamical_parameters(mc, **kwargs)
 
 
 class DynamicalIntegrator:
@@ -152,8 +146,9 @@ class DynamicalIntegrator:
         """
         dataset_rv = 0
         dataset_lc = 0
-        int_buffer = dict(rv_time=[], rv_value=[], rv_error=[], rv_ref=[],
-                          t0_time=[], t0_error=[], t0_ref=[], key_ref={})
+        int_buffer = dict(rv_time=[], rv_ref=[],
+                          lc_time=[], lc_ref=[],
+                          t0_time=[], t0_ref=[], key_ref={})
 
 
         """ Putting all the RV epochs in the same array, flagging in the temporary buffer
@@ -161,13 +156,14 @@ class DynamicalIntegrator:
         """
         for dataset_name, dataset in mc.dataset_dict.items():
             if dataset.dynamical is False: continue
-            if dataset.kind == 'RV':
+            if dataset.kind == 'radial_velocity':
                 int_buffer['rv_time'].extend(dataset.x.tolist())
-                int_buffer['rv_value'].extend(dataset.y.tolist())
-                int_buffer['rv_error'].extend(dataset.e.tolist())
                 int_buffer['rv_ref'].extend(dataset.x * 0.0 + dataset_rv)
                 int_buffer['key_ref'][dataset_name] = dataset_rv
                 dataset_rv += 1
+            elif dataset.kind == 'photometry':
+                int_buffer['lc_time'].extend(dataset.x.tolist())
+                dataset_lc += 1
             elif dataset.kind == 'transit_time':
                 int_buffer['t0_time'].extend(dataset.x.tolist())
 
@@ -175,29 +171,27 @@ class DynamicalIntegrator:
         """
         for dataset_name, dataset in mc.dataset_dict.items():
             if dataset.dynamical is False: continue
-            if dataset.kind == 'RV':
+            if dataset.kind == 'radial_velocity':
                 self.rv_dataset_idbool[dataset_name] = \
                     (np.asarray(int_buffer['rv_ref']) == int_buffer['key_ref'][dataset_name])
 
-        rv_time = np.float64(int_buffer['rv_time'])
-        rv_value = np.float64(int_buffer['rv_value'])
-        rv_error = np.float64(int_buffer['rv_error'])
+        try:
+            rv_minmax = [np.amin(int_buffer['rv_time']), np.amax(int_buffer['rv_time'])]
+        except ValueError:
+            rv_minmax = [mc.Tref-2, mc.Tref+2]
 
-        """ Substituting empty arrays with None to allow minimum determination
-            We give for granted that at least one of the two vector is not null, otherwise
-            it doesn't make any sense to run the program at all
-        """
-        if np.size(int_buffer['rv_time']) == 0:
-            int_buffer['rv_time'] =  int_buffer['t0_time']
+        try:
+            t0_minmax = [np.amin(int_buffer['t0_time']), np.amax(int_buffer['t0_time'])]
+        except ValueError:
+            t0_minmax = [mc.Tref-2, mc.Tref+2]
 
-        if np.size(int_buffer['t0_time']) == 0:
-            int_buffer['t0_time'] = int_buffer['rv_time']
+        try:
+            lc_minmax = [np.amin(int_buffer['lc_time']), np.amax(int_buffer['lc_time'])]
+        except ValueError:
+            lc_minmax = [mc.Tref-2, mc.Tref+2]
 
-        rv_minmax = [np.amin(int_buffer['rv_time']), np.amax(int_buffer['rv_time'])]
-        t0_minmax = [np.amin(int_buffer['t0_time']), np.amax(int_buffer['t0_time'])]
-
-        self.ti_beg = np.min([rv_minmax[0], t0_minmax[0]]) - 10
-        self.ti_end = np.max([rv_minmax[1], t0_minmax[1]]) + 10
+        self.ti_beg = np.min([rv_minmax[0], t0_minmax[0], lc_minmax[0]]) - 10
+        self.ti_end = np.max([rv_minmax[1], t0_minmax[1], lc_minmax[1]]) + 10
         self.ti_int = self.ti_end - self.ti_beg
         self.ti_ref = np.float64(mc.Tref)
         self.i_step = np.float64(1.e-3)
@@ -208,6 +202,11 @@ class DynamicalIntegrator:
         """
         self.n_body = 1  # The star is included among the bodies
         self.duration_check = 1
+        self.encounter_check=True
+        self.do_hill_check=False
+        self.amd_hill_check=False
+        self.rv_res_gls=False
+
 
         for planet_name in mc.dynamical_dict:
             self.n_body += 1
@@ -215,40 +214,22 @@ class DynamicalIntegrator:
 
         self.t0_flag = np.zeros(self.n_body, dtype=bool)
 
+        self.rv_epochs = np.asarray(int_buffer['rv_time'], dtype=np.float64)
 
-        # TRADES initialization
         pytrades.args_init(
-            self.n_body,
-            self.duration_check,
-            t_epoch=self.ti_ref,
-            t_start=self.ti_beg,
-            t_int=self.ti_int,
+            self.n_body, # mandatory
+            duration_check=self.duration_check, # duration_check # mandatory
+            t_epoch=None, # not needed here
+            t_start=None, # not needed here
+            t_int=None, # not needed here
+            encounter_check=self.encounter_check, # better alway True, we do not want close encounters!
+            do_hill_check=self.do_hill_check, # at will, as input option
+            amd_hill_check=self.amd_hill_check, # at will, as input option
+            rv_res_gls=self.rv_res_gls, # at will, as input option
         )
 
 
-        for planet_name, dataset_name in mc.dynamical_t0_dict.items():
-            n_plan = self.planet_idflag[planet_name]
-            self.t0_flag[n_plan-1] = True
-            pytrades.set_t0_dataset(
-                n_plan,
-                mc.dataset_dict[dataset_name].n_transit,
-                mc.dataset_dict[dataset_name].x,
-                mc.dataset_dict[dataset_name].e)
-
-        if len(rv_time)>0:
-            pytrades.set_rv_dataset(rv_time, rv_value, rv_error)#, rv_setid=rv_setid, n_rvset=n_rvset)
-
         self.to_be_initialized = False
-
-        return
-
-    def compute_trades(self, mc, theta, x_input=None):
-        """ This function compute the expected TTV and RVs for dynamically interacting planets.
-            The user can specify which planets are subject to interactions, e.g. long-period planets can be approximated
-            with a Keplerian function"""
-
-        if self.to_be_initialized:
-            self.prepare_trades(mc)
 
         self.dynamical_pams = {
             'M': np.zeros(self.n_body, dtype=np.float64),
@@ -260,6 +241,18 @@ class DynamicalIntegrator:
             'Omega': np.zeros(self.n_body, dtype=np.float64),
             'mA': np.zeros(self.n_body, dtype=np.float64)
         }
+
+        return
+
+
+    def compute_trades(self, mc, theta, x_input=None):
+        """ This function compute the expected TTV and RVs for dynamically interacting planets.
+            The user can specify which planets are subject to interactions, e.g. long-period planets can be approximated
+            with a Keplerian function"""
+
+        if self.to_be_initialized:
+            self.prepare_trades(mc)
+
 
         """ Adding star parameters"""
 
@@ -296,9 +289,19 @@ class DynamicalIntegrator:
 
         if x_input is None:
 
-            rv_sim, body_id_sim, epoch_sim, t0_sim, durations_sim, kep_elem_sim = pytrades.kelements_to_rv_and_t0s(
-                self.ti_beg,
+            (
+                time_steps,
+                orbits,
+                transits,
+                durations,
+                lambda_rm,
+                kep_elem,
+                body_flag,
+                rv_sim, # {"time": array, "rv": array} the index will match the input t_rv_obs array
+                stable,
+            ) = pytrades.orbital_parameters_to_transits(
                 self.ti_ref,
+                self.ti_beg,
                 self.ti_int,
                 self.dynamical_pams['M'],
                 self.dynamical_pams['R'],
@@ -308,21 +311,25 @@ class DynamicalIntegrator:
                 self.dynamical_pams['mA'],
                 self.dynamical_pams['i'],
                 self.dynamical_pams['Omega'],
-                self.t0_flag,
+                self.rv_epochs # this can be an empty list [] and it will ignore it, otherwise provide a list time at which compute RV
             )
-
-
-
 
 
         else:
 
-            pytrades.set_rv_dataset(x_input, np.zeros_like(x_input), np.zeros_like(x_input))#, rv_setid=rv_setid, n_rvset=n_rvset)
-            self.to_be_initialized = True
-
-            rv_sim, body_id_sim, epoch_sim, t0_sim, durations_sim, kep_elem_sim = pytrades.kelements_to_rv_and_t0s(
-                self.ti_beg,
+            (
+                time_steps,
+                orbits,
+                transits,
+                durations,
+                lambda_rm,
+                kep_elem,
+                body_flag,
+                rv_sim, # {"time": array, "rv": array} the index will match the input t_rv_obs array
+                stable,
+            ) = pytrades.orbital_parameters_to_transits(
                 self.ti_ref,
+                self.ti_beg,
                 self.ti_int,
                 self.dynamical_pams['M'],
                 self.dynamical_pams['R'],
@@ -332,34 +339,64 @@ class DynamicalIntegrator:
                 self.dynamical_pams['mA'],
                 self.dynamical_pams['i'],
                 self.dynamical_pams['Omega'],
-                self.t0_flag,
+                self.x_input # this can be an empty list [] and it will ignore it, otherwise provide a list time at which compute RV
             )
-        output = {}
+        output = {'stable': stable, 'pass': True}
 
-        for dataset_name, dataset in mc.dataset_dict.items():
+        try:
+            for dataset_name, dataset in mc.dataset_dict.items():
 
-            if dataset.dynamical is False: continue
+                if dataset.dynamical is False: continue
 
-            if dataset.kind == 'RV':
-                if x_input is None:
-                    output[dataset_name] = rv_sim[self.rv_dataset_idbool[dataset_name]]
-                else:
-                    output[dataset_name] = rv_sim
+                if dataset.kind == 'radial_velocity':
+                    if x_input is None:
+                        output[dataset_name] = rv_sim['rv'][self.rv_dataset_idbool[dataset_name]]
+                    else:
+                        output[dataset_name] = rv_sim['rv']
 
-            elif dataset.kind == 'transit_time' and dataset.planet_name in mc.dynamical_dict:
+                elif dataset.kind == 'photometry':
 
-                n_plan = self.planet_idflag[dataset.planet_name]
-                data_sel = (body_id_sim==n_plan)
-                output[dataset_name] = t0_sim[data_sel]
-            elif dataset.kind == 'transit_duration' and dataset.planet_name in mc.dynamical_dict:
-                n_plan = self.planet_idflag[planet_name]
-                data_sel = (body_id_sim==n_plan)
-                output[dataset_name] = durations_sim[data_sel]
+                    rp_rs, per, aRs, inc, ecc, w = pytrades.set_transit_parameters(
+                        self.dynamical_pams['R'], transits, body_flag, kep_elem)
 
+                    output[dataset_name]  = {}
 
-            rp_rs, per, aRs, inc, ecc, w = pytrades.set_transit_parameters(
-                R_rsun, transits, body_flag, kep_elem
-            )
+                    for planet_name in mc.dynamical_dict:
+                        n_plan = self.planet_idflag[planet_name]
 
+                        planet_selection = (body_flag==n_plan)
+                        output[dataset_name][planet_name] = {
+                            'Rp_Rs': rp_rs[planet_selection],
+                            'P': per[planet_selection],
+                            'a_Rs': aRs[planet_selection],
+                            'i': inc[planet_selection],
+                            'e': ecc[planet_selection],
+                            'omega': w[planet_selection],
+                            'transits': transits[planet_selection],
+                            'durations': durations[planet_selection],
+                        }
 
+                elif dataset.kind == 'transit_time' and dataset.planet_name in mc.dynamical_dict:
+
+                    n_plan = self.planet_idflag[dataset.planet_name]
+
+                    transits_planets = transits[body_flag==n_plan]
+                    epoch_synthetic =  np.rint( ( transits_planets - dataset.x[0] ) / self.dynamical_pams['P'][n_plan-1] ) + dataset.n_transit[0]
+
+                    find_epoch = np.isin(epoch_synthetic, dataset.n_transit)
+                    output[dataset_name] = transits_planets[find_epoch]
+
+                elif dataset.kind == 'transit_duration' and dataset.planet_name in mc.dynamical_dict:
+                    n_plan = self.planet_idflag[dataset.planet_name]
+
+                    transits_planets = transits[body_flag==n_plan]
+                    durations_planets = durations[body_flag==n_plan]
+                    epoch_synthetic =  np.rint( ( transits_planets - dataset.x[0] ) / self.dynamical_pams['P'][n_plan-1] ) + dataset.n_transit[0]
+
+                    find_epoch = np.isin(epoch_synthetic, dataset.n_transit)
+                    output[dataset_name] = durations_planets[find_epoch]
+        except:
+            print('bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb')
+            output['pass'] = False
+        
         return output

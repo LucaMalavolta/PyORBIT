@@ -33,6 +33,7 @@ from pyorbit.models.dynamical_modelling import  TransitTimeDynamical, RVdynamica
 
 from pyorbit.models.harmonics import Harmonics
 from pyorbit.models.pytransit_transit import PyTransit_Transit
+from pyorbit.models.pytransit_dynamical import PyTransit_Dynamical
 from pyorbit.models.pytransit_transit_ttv import PyTransit_Transit_TTV
 from pyorbit.models.pytransit_transit_ttv_subset import PyTransit_Transit_TTV_Subset
 from pyorbit.models.pytransit_transit_ttv_tclist import PyTransit_Transit_TTV_TClist
@@ -205,6 +206,7 @@ define_type_to_class = {
                       'keplerian': TransitTimeKeplerian,
                       'dynamical': TransitTimeDynamical},
     'pytransit_transit': PyTransit_Transit,
+    'pytransit_dynamical': PyTransit_Dynamical,
     'pytransit_transit_ttv': PyTransit_Transit_TTV,
     'pytransit_transit_ttv_subset': PyTransit_Transit_TTV_Subset,
     'subset_pytransit_transit_ttv': PyTransit_Transit_TTV_Subset,
