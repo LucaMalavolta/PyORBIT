@@ -196,6 +196,7 @@ class DynamicalIntegrator:
         self.ti_ref = np.float64(mc.Tref)
         self.i_step = np.float64(1.e-3)
 
+
         """First iteration to identify the number of transits
         stored for each planet, including the planets in the dynamical
         simulation but without observed transit
@@ -216,7 +217,7 @@ class DynamicalIntegrator:
 
         pytrades.args_init(
             self.n_body, # mandatory
-            duration_check=self.duration_check, # duration_check # mandatory
+            self.duration_check, # duration_check # mandatory
             t_epoch=self.ti_ref, # not needed here
             t_start=self.ti_beg, # not needed here
             t_int=self.ti_int, # not needed here
@@ -282,8 +283,6 @@ class DynamicalIntegrator:
             self.dynamical_pams['omega'][n_plan-1] = parameter_values['omega']
             self.dynamical_pams['Omega'][n_plan-1] = parameter_values['Omega']
             self.dynamical_pams['mA'][n_plan-1] = (parameter_values['mean_long'] - parameter_values['omega'])
-
-            print(self.dynamical_pams)
 
         if x_input is None:
 
