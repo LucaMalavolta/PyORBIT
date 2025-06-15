@@ -174,10 +174,6 @@ class DynamicalIntegrator:
             if dataset.kind == 'radial_velocity':
                 self.rv_dataset_idbool[dataset_name] = \
                     (np.asarray(int_buffer['rv_ref']) == int_buffer['key_ref'][dataset_name])
-                print('RV data', np.asarray(int_buffer['rv_time']))
-                print(int_buffer['key_ref'][dataset_name])
-                print(self.rv_dataset_idbool[dataset_name])
-
 
         try:
             rv_minmax = [np.amin(int_buffer['rv_time']), np.amax(int_buffer['rv_time'])]
@@ -211,12 +207,9 @@ class DynamicalIntegrator:
         self.amd_hill_check=False
         self.rv_res_gls=False
 
-
         for planet_name in mc.dynamical_dict:
             self.n_body += 1
             self.planet_idflag[planet_name] = self.n_body * 1
-
-        self.t0_flag = np.zeros(self.n_body, dtype=bool)
 
         self.rv_epochs_argsort = np.argsort(int_buffer['rv_time'])
         self.rv_epochs = np.asarray(int_buffer['rv_time'], dtype=np.float64)[self.rv_epochs_argsort]
@@ -232,7 +225,6 @@ class DynamicalIntegrator:
             amd_hill_check=self.amd_hill_check, # at will, as input option
             rv_res_gls=self.rv_res_gls, # at will, as input option
         )
-
 
         self.to_be_initialized = False
 
@@ -291,6 +283,7 @@ class DynamicalIntegrator:
             self.dynamical_pams['Omega'][n_plan-1] = parameter_values['Omega']
             self.dynamical_pams['mA'][n_plan-1] = (parameter_values['mean_long'] - parameter_values['omega'])
 
+            print(self.dynamical_pams)
 
         if x_input is None:
 
@@ -352,6 +345,7 @@ class DynamicalIntegrator:
 
         output = {'stable': stable, 'pass': True}
 
+        print('PASSED', self.dynamical_pams)
 
 
         for dataset_name, dataset in mc.dataset_dict.items():
