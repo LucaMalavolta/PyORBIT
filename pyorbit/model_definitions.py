@@ -321,6 +321,7 @@ extended_dataset_keylist = ['expanded_dataset', 'extended_dataset', 'dataset_2d'
 datatype_definition = {
     'radial_velocity': ['RV', 'RVs', 'rv', 'rvs'],
     'transit_time': ['transit_time', 'transit_times', 'Tcent', 'TCent', 'Tc', 'TC', 'T0', 'TT'],
+    'transit_duration': ['transit_duration', 'transit_durations', 'Tdur', 'TDur', 'Td', 'TD', 'T_dur', 'T_Dur'],
     'astrometry': ['astrometry', 'Astrometry', 'AstroMetry', 'Astro', 'astro', 'AM', 'Gaia', 'gaia'],
     'H-alpha': ['H', 'HA', 'h', 'ha', 'Halpha', 'H-alpha', 'halpha', 'h-alpha'],
     'photometry': ['P', 'Ph', 'p', 'ph', 'PHOT', 'Phot', 'phot', 'Photometry', 'photometry'],

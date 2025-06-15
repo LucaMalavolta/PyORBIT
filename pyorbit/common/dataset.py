@@ -176,18 +176,29 @@ class Dataset(AbstractCommon):
             self.x = np.asarray(data_input[:, 1], dtype=np.double)
             self.e = np.asarray(data_input[:, 2], dtype=np.double)
 
-            """ check """
-
+            """ check if the transit numbers are in increasing order"""
+            for i_n in range(1, np.size(self.n_transit)):
+                if self.n_transit[i_n] <= self.n_transit[i_n-1]:
+                    print('Transit numbers in the input file are not in increasing order')
+                    print('Please check the input file')
+                    quit()
 
             """ copy of self.y added for consistency with the rest of the code
             """
             self.y = self.x
         elif self.kind == 'transit_duration':
-            """ Special input reading from Tdur files """
+            """ Special input reading from transit_duration files """
             self.n_transit = np.asarray(data_input[:, 0], dtype=np.int16)
             self.x = np.asarray(data_input[:, 1], dtype=np.double)
             self.y = np.asarray(data_input[:, 2], dtype=np.double)
             self.e = np.asarray(data_input[:, 3], dtype=np.double)
+
+            """ check if the transit numbers are in increasing order"""
+            for i_n in range(1, np.size(self.n_transit)):
+                if self.n_transit[i_n] <= self.n_transit[i_n-1]:
+                    print('Transit numbers in the input file are not in increasing order')
+                    print('Please check the input file')
+                    quit()
 
         else:
             self.x = np.asarray(data_input[:, 0], dtype=np.double)

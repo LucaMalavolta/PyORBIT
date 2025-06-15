@@ -385,13 +385,9 @@ class DynamicalIntegrator:
                 find_epoch = np.isin(epoch_synthetic, dataset.n_transit)
                 output[dataset_name] = transits_planets[find_epoch]
 
-                print(transits)
-                print(epoch_synthetic)
-                print(dataset.n_transit)
-                print(transits_planets[find_epoch])
-                print(dataset.x)
-                print(dataset.n, np.sum(find_epoch), find_epoch)
-                quit()
+                if np.sum(find_epoch) != dataset.n:
+                    output[dataset_name] = np.zeros(dataset.n)
+                    output['pass'] = False
 
             elif dataset.kind == 'transit_duration' and dataset.planet_name in mc.dynamical_dict:
                 n_plan = self.planet_idflag[dataset.planet_name]
@@ -403,6 +399,8 @@ class DynamicalIntegrator:
                 find_epoch = np.isin(epoch_synthetic, dataset.n_transit)
                 output[dataset_name] = durations_planets[find_epoch]
 
-        #output['pass'] = False
+                if np.sum(find_epoch) != dataset.n:
+                    output[dataset_name] = np.zeros(dataset.n)
+                    output['pass'] = False
 
         return output

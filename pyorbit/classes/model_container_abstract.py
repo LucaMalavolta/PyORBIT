@@ -280,13 +280,6 @@ class ModelContainer(object):
             """ check if any keyword ahas get the output model from the dynamical tool
             we must do it here because all the planet are involved"""
             dynamical_output = self.dynamical_model.compute(self, theta)
-            print('cccccccccccccccccc', dynamical_output['pass'], dynamical_output)
-            if not (dynamical_output['stable'] and dynamical_output['pass']):
-                print('aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')
-                if return_priors is False:
-                    return -np.inf
-                else:
-                    return -np.inf, -np.inf
 
         for model_name, model in self.common_models.items():
             log_priors += model.return_priors(theta)
@@ -463,6 +456,11 @@ class ModelContainer(object):
         if np.isnan(log_priors) or np.isnan(log_likelihood):
             log_likelihood = -np.inf
             log_priors = -np.inf
+
+        #if self.dynamical_model is not None:
+        #    if not (dynamical_output['stable'] and dynamical_output['pass']):
+        #        log_likelihood = -np.inf
+        #        log_priors = -np.inf
 
         if return_priors is False:
             return log_likelihood
