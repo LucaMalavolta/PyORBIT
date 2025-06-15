@@ -343,60 +343,66 @@ class DynamicalIntegrator:
             )
         output = {'stable': stable, 'pass': True}
 
-        try:
-            for dataset_name, dataset in mc.dataset_dict.items():
+        for dataset_name, dataset in mc.dataset_dict.items():
 
-                if dataset.dynamical is False: continue
+            if dataset.dynamical is False: continue
 
-                if dataset.kind == 'radial_velocity':
-                    if x_input is None:
-                        output[dataset_name] = rv_sim['rv'][self.rv_dataset_idbool[dataset_name]]
-                    else:
-                        output[dataset_name] = rv_sim['rv']
+            if dataset.kind == 'radial_velocity':
+                if x_input is None:
+                    output[dataset_name] = rv_sim['rv'][self.rv_dataset_idbool[dataset_name]]
+                else:
+                    output[dataset_name] = rv_sim['rv']
 
-                elif dataset.kind == 'photometry':
+            elif dataset.kind == 'photometry':
 
-                    rp_rs, per, aRs, inc, ecc, w = pytrades.set_transit_parameters(
-                        self.dynamical_pams['R'], transits, body_flag, kep_elem)
+                rp_rs, per, aRs, inc, ecc, w = pytrades.set_transit_parameters(
+                    self.dynamical_pams['R'], transits, body_flag, kep_elem)
 
-                    output[dataset_name]  = {}
+                output[dataset_name]  = {}
 
-                    for planet_name in mc.dynamical_dict:
-                        n_plan = self.planet_idflag[planet_name]
+                for planet_name in mc.dynamical_dict:
+                    n_plan = self.planet_idflag[planet_name]
 
-                        planet_selection = (body_flag==n_plan)
-                        output[dataset_name][planet_name] = {
-                            'Rp_Rs': rp_rs[planet_selection],
-                            'P': per[planet_selection],
-                            'a_Rs': aRs[planet_selection],
-                            'i': inc[planet_selection],
-                            'e': ecc[planet_selection],
-                            'omega': w[planet_selection],
-                            'transits': transits[planet_selection],
-                            'durations': durations[planet_selection],
-                        }
+                    planet_selection = (body_flag==n_plan)
+                    output[dataset_name][planet_name] = {
+                        'Rp_Rs': rp_rs[planet_selection],
+                        'P': per[planet_selection],
+                        'a_Rs': aRs[planet_selection],
+                        'i': inc[planet_selection],
+                        'e': ecc[planet_selection],
+                        'omega': w[planet_selection],
+                        'transits': transits[planet_selection],
+                        'durations': durations[planet_selection],
+                    }
 
-                elif dataset.kind == 'transit_time' and dataset.planet_name in mc.dynamical_dict:
+            elif dataset.kind == 'transit_time' and dataset.planet_name in mc.dynamical_dict:
 
-                    n_plan = self.planet_idflag[dataset.planet_name]
+                n_plan = self.planet_idflag[dataset.planet_name]
 
-                    transits_planets = transits[body_flag==n_plan]
-                    epoch_synthetic =  np.rint( ( transits_planets - dataset.x[0] ) / self.dynamical_pams['P'][n_plan-1] ) + dataset.n_transit[0]
+                transits_planets = transits[body_flag==n_plan]
+                epoch_synthetic =  np.rint( ( transits_planets - dataset.x[0] ) / self.dynamical_pams['P'][n_plan-1] ) + dataset.n_transit[0]
 
-                    find_epoch = np.isin(epoch_synthetic, dataset.n_transit)
-                    output[dataset_name] = transits_planets[find_epoch]
+                find_epoch = np.isin(epoch_synthetic, dataset.n_transit)
+                output[dataset_name] = transits_planets[find_epoch]
 
-                elif dataset.kind == 'transit_duration' and dataset.planet_name in mc.dynamical_dict:
-                    n_plan = self.planet_idflag[dataset.planet_name]
+                print(transits)
+                print(epoch_synthetic)
+                print(dataset.n_transit)
+                print(transits_planets[find_epoch])
+                print(dataset.x)
+                print(dataset.n, np.sum(find_epoch), find_epoch)
+                quit()
 
-                    transits_planets = transits[body_flag==n_plan]
-                    durations_planets = durations[body_flag==n_plan]
-                    epoch_synthetic =  np.rint( ( transits_planets - dataset.x[0] ) / self.dynamical_pams['P'][n_plan-1] ) + dataset.n_transit[0]
+            elif dataset.kind == 'transit_duration' and dataset.planet_name in mc.dynamical_dict:
+                n_plan = self.planet_idflag[dataset.planet_name]
 
-                    find_epoch = np.isin(epoch_synthetic, dataset.n_transit)
-                    output[dataset_name] = durations_planets[find_epoch]
-        except:
-            print('bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb')
-            output['pass'] = False
-        
+                transits_planets = transits[body_flag==n_plan]
+                durations_planets = durations[body_flag==n_plan]
+                epoch_synthetic =  np.rint( ( transits_planets - dataset.x[0] ) / self.dynamical_pams['P'][n_plan-1] ) + dataset.n_transit[0]
+
+                find_epoch = np.isin(epoch_synthetic, dataset.n_transit)
+                output[dataset_name] = durations_planets[find_epoch]
+
+        #output['pass'] = False
+
         return output
