@@ -174,6 +174,10 @@ class DynamicalIntegrator:
             if dataset.kind == 'radial_velocity':
                 self.rv_dataset_idbool[dataset_name] = \
                     (np.asarray(int_buffer['rv_ref']) == int_buffer['key_ref'][dataset_name])
+                print('RV data', np.asarray(int_buffer['rv_time']))
+                print(int_buffer['key_ref'][dataset_name])
+                print(self.rv_dataset_idbool[dataset_name])
+
 
         try:
             rv_minmax = [np.amin(int_buffer['rv_time']), np.amax(int_buffer['rv_time'])]
@@ -214,14 +218,15 @@ class DynamicalIntegrator:
 
         self.t0_flag = np.zeros(self.n_body, dtype=bool)
 
-        self.rv_epochs = np.asarray(int_buffer['rv_time'], dtype=np.float64)
+        self.rv_epochs_argsort = np.argsort(int_buffer['rv_time'])
+        self.rv_epochs = np.asarray(int_buffer['rv_time'], dtype=np.float64)[self.rv_epochs_argsort]
 
         pytrades.args_init(
             self.n_body, # mandatory
             duration_check=self.duration_check, # duration_check # mandatory
-            t_epoch=None, # not needed here
-            t_start=None, # not needed here
-            t_int=None, # not needed here
+            t_epoch=self.ti_ref, # not needed here
+            t_start=self.ti_beg, # not needed here
+            t_int=self.ti_int, # not needed here
             encounter_check=self.encounter_check, # better alway True, we do not want close encounters!
             do_hill_check=self.do_hill_check, # at will, as input option
             amd_hill_check=self.amd_hill_check, # at will, as input option
@@ -314,6 +319,8 @@ class DynamicalIntegrator:
                 self.rv_epochs # this can be an empty list [] and it will ignore it, otherwise provide a list time at which compute RV
             )
 
+            rv_sorted = np.zeros_like(rv_sim['rv'], dtype=bool)
+            rv_sorted[self.rv_epochs_argsort] = rv_sim['rv']
 
         else:
 
@@ -341,7 +348,11 @@ class DynamicalIntegrator:
                 self.dynamical_pams['Omega'],
                 self.x_input # this can be an empty list [] and it will ignore it, otherwise provide a list time at which compute RV
             )
+            rv_sorted = rv_sim['rv']
+
         output = {'stable': stable, 'pass': True}
+
+
 
         for dataset_name, dataset in mc.dataset_dict.items():
 
@@ -349,9 +360,9 @@ class DynamicalIntegrator:
 
             if dataset.kind == 'radial_velocity':
                 if x_input is None:
-                    output[dataset_name] = rv_sim['rv'][self.rv_dataset_idbool[dataset_name]]
+                    output[dataset_name] = rv_sorted[self.rv_dataset_idbool[dataset_name]]
                 else:
-                    output[dataset_name] = rv_sim['rv']
+                    output[dataset_name] = rv_sorted
 
             elif dataset.kind == 'photometry':
 
