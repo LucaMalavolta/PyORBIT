@@ -344,7 +344,7 @@ class DynamicalIntegrator:
 
         output = {'stable': stable, 'pass': True}
 
-        print('PASSED', self.dynamical_pams)
+        #print('PASSED', self.dynamical_pams)
 
 
         for dataset_name, dataset in mc.dataset_dict.items():
