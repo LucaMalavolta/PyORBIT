@@ -23,7 +23,7 @@ class AbstractTransit(object):
         self.compute_Omega_rotation = False
         self.compute_Omega_rotation_model = -1
 
-        """ This keywors is specific to TTV analysis analysis
+        """ This keywords is specific to TTV analysis analysis
         Right now implemented only in pytransit_ttv_ancillary
         """
         self.use_shared_ttvs = False
@@ -230,38 +230,20 @@ class AbstractTransit(object):
 
     def _prepare_dataset_options(self, mc, dataset, **kwargs):
 
-        supersample_names = ['supersample_factor',
-                                'supersample',
-                                'supersampling',
-                                'oversample_factor',
-                                'oversample',
-                                'oversampling',
-                                'sample_factor',
-                                'sample',
-                                'sampling'
-                                'nsample_factor',
-                                'nsample',
-                                'nsampling'
-                            ]
+
 
         sample_factor = 1
         exposure_time = 0.01
 
-        for dict_name in supersample_names:
+        """ Check if supersampling options is provided in th econfiguration file"""
+        for dict_name in keywords_supersample:
             if kwargs[dataset.name_ref].get(dict_name, False):
                 sample_factor = kwargs[dataset.name_ref][dict_name]
             elif kwargs.get(dict_name, False):
                 sample_factor = kwargs[dict_name]
 
-        exptime_names = ['exposure_time',
-                            'exposure',
-                            'exp_time',
-                            'exptime',
-                            'obs_duration',
-                            'integration',
-                        ]
-
-        for dict_name in exptime_names:
+        """ Check if lightcurve exposure time is provided in the configuration file"""
+        for dict_name in keywords_exptime:
             if kwargs[dataset.name_ref].get(dict_name, False):
                 exposure_time = kwargs[dataset.name_ref][dict_name]
             elif kwargs.get(dict_name, False):
@@ -272,13 +254,9 @@ class AbstractTransit(object):
             'exp_time': exposure_time / constants.d2s,
         }
 
-        wavebounds_names = [
-            'wavelength_range',
-            'wavelength_boundaries',
-        ]
 
-        """ Lower and upper wavelength boundaries for the filter, in (nm) """
-        for dict_name in wavebounds_names:
+        """ Lower and upper wavelength boundaries for the filter, in (nm), used by SPIDERMAN """
+        for dict_name in kwywords_wavebounds:
             if kwargs[dataset.name_ref].get(dict_name, False):
                 self.code_options[dataset.name_ref]['l1'] = kwargs[dataset.name_ref][dict_name][0] / 10**9
                 self.code_options[dataset.name_ref]['l2'] = kwargs[dataset.name_ref][dict_name][1] / 10**9
@@ -292,35 +270,24 @@ class AbstractTransit(object):
             We also read the priors on Tc, if specified
         """
 
-        tc_boundaries_names = ['Tc_boundaries',
-            'Tc_bounds',
-            'T_boundaries',
-            'T_bounds',
-            'TC_boundaries',
-            'TC_bounds',
-        ]
-
         tc_boundaries = [np.amin(dataset.x), np.amax(dataset.x)]
         if kwargs[dataset.name_ref].get('boundaries', False):
             tc_boundaries = kwargs[dataset.name_ref]['boundaries']['Tc']
         else:
-            for dict_name in tc_boundaries_names:
+            for dict_name in keywords_tc_boundaries:
                 if kwargs[dataset.name_ref].get(dict_name, False):
                     tc_boundaries = kwargs[dataset.name_ref][dict_name]
                 if kwargs.get(dict_name, False):
                     if kwargs[dict_name].get(dataset.name_ref, False):
                         tc_boundaries = kwargs[dict_name][dataset.name_ref]
 
-        tc_priors_names = ['Tc_priors',
-            'T_priors',
-            'TC_priors',
-        ]
+
 
         tc_priors = ['Uniform', 0.00, 0.00]
         if kwargs[dataset.name_ref].get('priors', False):
             tc_priors = np.atleast_1d(kwargs[dataset.name_ref]['priors']['Tc'])
         else:
-            for dict_name in tc_priors_names:
+            for dict_name in keywords_tc_priors:
                 if kwargs[dataset.name_ref].get(dict_name, False):
                     tc_priors = kwargs[dataset.name_ref][dict_name]
                 if kwargs.get(dict_name, False):

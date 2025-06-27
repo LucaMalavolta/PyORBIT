@@ -76,3 +76,46 @@ keywords_tc_flag = ['tc_flag', 'Tc_flag', 'tcflag', 'Tcflag',
                     'ttv_tc_flag', 'TTV_Tc_flag', 'TTV_tc_flag']
 
 keywords_common_detrending = ['use_common_parameters', 'common_parameters', 'use_common_model', 'common_model']
+
+
+keywords_supersample = ['supersample_factor',
+                        'supersample',
+                        'supersampling',
+                        'oversample_factor',
+                        'oversample',
+                        'oversampling',
+                        'sample_factor',
+                        'sample',
+                        'sampling'
+                        'nsample_factor',
+                        'nsample',
+                        'nsampling'
+                    ]
+
+keywords_exptime = ['exposure_time',
+                    'exposure',
+                    'exp_time',
+                    'exptime',
+                    'obs_duration',
+                    'integration',
+                ]
+
+kwywords_wavebounds = [
+    'wavelength_range',
+    'wavelength_boundaries',
+]
+
+""" TTV keywords"""
+
+keywords_tc_boundaries = ['Tc_boundaries',
+            'Tc_bounds',
+            'T_boundaries',
+            'T_bounds',
+            'TC_boundaries',
+            'TC_bounds',
+        ]
+
+keywords_tc_priors = ['Tc_priors',
+            'T_priors',
+            'TC_priors',
+        ]
