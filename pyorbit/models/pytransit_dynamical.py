@@ -22,6 +22,8 @@ class PyTransit_Dynamical(AbstractModel, AbstractTransit, AbstractDynamical):
 
         try:
             from pytransit import QuadraticModel
+            from pytransit import RoadRunnerModel
+            from pytransit import QPower2Model
         except (ModuleNotFoundError,ImportError):
             print("ERROR: PyTransit not installed, this will not work")
             quit()
@@ -40,12 +42,15 @@ class PyTransit_Dynamical(AbstractModel, AbstractTransit, AbstractDynamical):
 
         """ Planetary parameters initialization is taken care of by the Dynamical integration model"""
         self._prepare_dynamical_parameters(mc, **kwargs)
-        #self._prepare_planetary_parameters(mc, **kwargs)
+        self._prepare_planetary_parameters(mc, **kwargs)
 
         self._prepare_limb_darkening_coefficients(mc, **kwargs)
 
     def initialize_model_dataset(self, mc, dataset, **kwargs):
         self._prepare_dataset_options(mc, dataset, **kwargs)
+
+        if self.limb_darkening_model == 'power2':
+            self.limb_darkening_model == 'power-2'
 
         if self.use_roadrunner:
             self.pytransit_models[dataset.name_ref] = RoadRunnerModel(self.limb_darkening_model)
@@ -53,7 +58,9 @@ class PyTransit_Dynamical(AbstractModel, AbstractTransit, AbstractDynamical):
         elif self.limb_darkening_model == 'quadratic':
             self.pytransit_models[dataset.name_ref] = QuadraticModel()
             self.pytransit_plot[dataset.name_ref] = QuadraticModel()
-
+        elif self.limb_darkening_model == 'power-2':
+            self.pytransit_models[dataset.name_ref] = QPower2Model()
+            self.pytransit_plot[dataset.name_ref] = QPower2Model()
 
     def compute_dynamical(self, parameter_values, dataset, dynamical_output, x0_input=None):
 
@@ -84,7 +91,7 @@ class PyTransit_Dynamical(AbstractModel, AbstractTransit, AbstractDynamical):
         self.update_parameter_values(parameter_values, dataset.Tref)
 
         if parameter_values['i'] == 0.0:
-            return 0.
+            return f0
 
         for par, i_par in self.ldvars.items():
             self.ld_vars[i_par] = parameter_values[par]
@@ -121,10 +128,14 @@ class PyTransit_Dynamical(AbstractModel, AbstractTransit, AbstractDynamical):
                     t >= tra - 0.5 * per[itra],
                     t <= tra + 0.5 * per[itra],
                 ) # select portion of the light curve centered on the transit time that cover a full period
+
+                if np.sum(sel_t) == 0:
+                    continue
+
                 self.pytransit_models[dataset.name_ref].set_data(t[sel_t],
                                                             exptimes=self.code_options[dataset.name_ref]['exp_time'],
                                                             nsamples=self.code_options[dataset.name_ref]['sample_factor']) # set the pytransit time data with oversampling if needed
-                ff[sel_t] = tm.evaluate(
+                ff[sel_t] = self.pytransit_models[dataset.name_ref].evaluate(
                     k=rp_rs_sel[itra],
                     ldc=self.ld_vars,
                     t0=tra,
@@ -151,4 +162,4 @@ class PyTransit_Dynamical(AbstractModel, AbstractTransit, AbstractDynamical):
         :return:
         """
 
-        return dataset.external_model
+        return dataset.buffer_model

@@ -27,6 +27,7 @@ class AbstractDynamical(object):
 
         self.list_pams_dataset = OrderedSet()
         self.warning_given = False
+        self.dynamical_model = True
 
     # brainless workaround
     def _prepare_dynamical_parameters(self, mc, **kwargs):

@@ -108,7 +108,7 @@ class LimbDarkening_2Pam(AbstractCommon):
                 del self.parameter_index['ld_q2']
             except:
                 pass
-            
+
             if 'ld_c1' not in self.parameter_index:
                 self.transformation['ld_c1'] = get_2var_c1
                 self.parameter_index['ld_c1'] = [pam00_index, pam01_index]
@@ -194,6 +194,10 @@ class LimbDarkening_4Pam(AbstractCommon):
     default_fixed = {}
     recenter_pams = {}
 
+"""
+pytransit: constant, linear, quadratic, nonlinear, general, power-2, and power-2-pm (?)
+batman: linear, quadratic, square-root, logarithmic, exponential, power2, nonlinear.
+ """
 
 class LimbDarkening_Linear(LimbDarkening_1Pam):
     model_class = 'limb_darkening'
@@ -220,7 +224,7 @@ class LimbDarkening_Exponential(LimbDarkening_2Pam):
     ld_type = 'exponential'
 
 
-class LimbDarkening_Power2(LimbDarkening_1Pam):
+class LimbDarkening_Power2(LimbDarkening_2Pam):
     model_class = 'limb_darkening'
     ld_type = 'power2'
 

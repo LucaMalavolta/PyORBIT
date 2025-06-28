@@ -72,6 +72,7 @@ class DatasetExpanded(Dataset):
         self.model = None
         # this model is compute externally and passed to the compute subroutine of the model
         self.external_model = None
+        self.buffer_model = None
         self.additive_model = None
         self.unitary_model = None
         self.normalization_model = None

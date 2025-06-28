@@ -364,9 +364,9 @@ class ModelContainer(object):
                         parameter_values, dataset)
                     continue
 
-                if getattr(dataset, 'dynamical', False):
-                    if dataset.kind == 'photometry' and getattr(self.models[model_name], 'dynamical_model', False):
-                        dataset.external_model = self.models[model_name].compute_dynamical(parameter_values, dataset, dynamical_output[dataset_name])
+                if getattr(dataset, 'dynamical', False) and getattr(self.models[model_name], 'dynamical_model', False):
+                    if dataset.kind == 'photometry' :
+                        dataset.buffer_model = self.models[model_name].compute_dynamical(parameter_values, dataset, dynamical_output[dataset_name])
                     else:
                         dataset.external_model = dynamical_output[dataset_name]
 

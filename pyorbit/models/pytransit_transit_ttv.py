@@ -20,6 +20,8 @@ class PyTransit_Transit_TTV(AbstractModel, AbstractTransit):
 
         try:
             from pytransit import QuadraticModel
+            from pytransit import RoadRunnerModel
+            from pytransit import QPower2Model
         except (ModuleNotFoundError,ImportError):
             print("ERROR: PyTransit not installed, this will not work")
             quit()
@@ -52,12 +54,18 @@ class PyTransit_Transit_TTV(AbstractModel, AbstractTransit):
     def initialize_model_dataset(self, mc, dataset, **kwargs):
         self._prepare_dataset_options(mc, dataset, **kwargs)
 
+        if self.limb_darkening_model == 'power2':
+            self.limb_darkening_model == 'power-2'
+
         if self.use_roadrunner:
             self.pytransit_models[dataset.name_ref] = RoadRunnerModel(self.limb_darkening_model)
             self.pytransit_plot[dataset.name_ref] = RoadRunnerModel(self.limb_darkening_model)
         elif self.limb_darkening_model == 'quadratic':
             self.pytransit_models[dataset.name_ref] = QuadraticModel()
             self.pytransit_plot[dataset.name_ref] = QuadraticModel()
+        elif self.limb_darkening_model == 'power-2':
+            self.pytransit_models[dataset.name_ref] = QPower2Model()
+            self.pytransit_plot[dataset.name_ref] = QPower2Model()
 
         self.pytransit_models[dataset.name_ref].set_data(dataset.x0,
                                                             exptimes=self.code_options[dataset.name_ref]['exp_time'],

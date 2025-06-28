@@ -72,6 +72,8 @@ class Dataset(AbstractCommon):
         self.model = None
         # this model is compute externally and passed to the compute subroutine of the model
         self.external_model = None
+        self.buffer_model = None
+        # this model is used to compute the additive part of the model
         self.additive_model = None
         self.unitary_model = None
         self.normalization_model = None
@@ -324,6 +326,7 @@ class Dataset(AbstractCommon):
         self.unitary_model = np.zeros(self.n_shape, dtype=np.double)
         self.normalization_model = None
         self.external_model = np.zeros(self.n_shape, dtype=np.double)
+        self.buffer_model = np.zeros(self.n_shape, dtype=np.double)
         self.jitter = np.zeros(self.n_shape, dtype=np.double)
         return
 

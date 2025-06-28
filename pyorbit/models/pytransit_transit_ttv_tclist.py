@@ -111,19 +111,25 @@ class PyTransit_Transit_TTV_TClist(AbstractModel, AbstractTransit):
 
         transit_id = np.arange(0, transit_index, dtype=int)
 
+        if self.limb_darkening_model == 'power2':
+            self.limb_darkening_model == 'power-2'
+
         if self.use_roadrunner:
             self.pytransit_models[dataset.name_ref] = RoadRunnerModel(self.limb_darkening_model)
             self.pytransit_plot[dataset.name_ref] = RoadRunnerModel(self.limb_darkening_model)
         elif self.limb_darkening_model == 'quadratic':
             self.pytransit_models[dataset.name_ref] = QuadraticModel()
             self.pytransit_plot[dataset.name_ref] = QuadraticModel()
+        elif self.limb_darkening_model == 'power-2':
+            self.pytransit_models[dataset.name_ref] = QPower2Model()
+            self.pytransit_plot[dataset.name_ref] = QPower2Model()
 
         if self.code_options[dataset.name_ref]['sample_factor'] == 1:
             self.code_options[dataset.name_ref]['exp_time'] = 0.
 
         exptimes= np.ones(transit_index) * self.code_options[dataset.name_ref]['exp_time']
         nsamples= np.ones(transit_index) * self.code_options[dataset.name_ref]['sample_factor']
-        
+
         self.subset_selection[dataset.name_ref] = (self.subset_flag[dataset.name_ref] >= 0)
 
         self.pytransit_models[dataset.name_ref].set_data(dataset.x0[self.subset_selection[dataset.name_ref]],
@@ -152,12 +158,12 @@ class PyTransit_Transit_TTV_TClist(AbstractModel, AbstractTransit):
 
         for par, i_par in self.ldvars.items():
             self.ld_vars[i_par] = parameter_values[par]
-        
+
         if x0_input is None:
             y_output = np.zeros(dataset.n)
         else:
             y_output = x0_input * 0.
-        
+
         Tc_array = []
         for n_tc in self.Tc_names[dataset.name_ref]:
             Tc_array.append(parameter_values[n_tc] - dataset.Tref)
@@ -172,7 +178,7 @@ class PyTransit_Transit_TTV_TClist(AbstractModel, AbstractTransit):
                 parameter_values['i'] * constants.deg2rad,
                 parameter_values['e'],
                 parameter_values['omega'] * constants.deg2rad) - 1.
-            
+
         else:
             subset_flag = np.zeros_like(x0_input, dtype=int) - 1
             transit_id = np.arange(0, len(Tc_array), dtype=int)
@@ -200,5 +206,5 @@ class PyTransit_Transit_TTV_TClist(AbstractModel, AbstractTransit):
                 parameter_values['i'] * constants.deg2rad,
                 parameter_values['e'],
                 parameter_values['omega'] * constants.deg2rad) - 1.
-        
+
         return y_output
