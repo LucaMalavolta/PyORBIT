@@ -32,6 +32,7 @@ class PyTransit_Dynamical(AbstractModel, AbstractTransit, AbstractDynamical):
         self.pytransit_plot = {}
 
         self.dynamical_model = True
+        #self.random_number = 0
 
     def initialize_model(self, mc, **kwargs):
 
@@ -63,6 +64,9 @@ class PyTransit_Dynamical(AbstractModel, AbstractTransit, AbstractDynamical):
             self.pytransit_plot[dataset.name_ref] = QPower2Model()
 
     def compute_dynamical(self, parameter_values, dataset, dynamical_output, x0_input=None):
+
+        #self.random_number = np.random.randint(0, 1000000) # set a random number to avoid problems with the model evaluation
+
 
         rp_rs = dynamical_output[self.planet_ref]['Rp_Rs']
         per = dynamical_output[self.planet_ref]['P']
@@ -146,9 +150,14 @@ class PyTransit_Dynamical(AbstractModel, AbstractTransit, AbstractDynamical):
                     w=w_sel[itra],
                 ) # compute the model and associate it only for the selected portion close to the transit
                 flux_.append(ff) # append it
+
             f2d = np.atleast_2d(flux_)
             flux = np.sum(f2d - 1.0, axis=0) # in one step it removes 1, sum flux for each time point
+
         else: # set to 0.0 the model flux if there are not transits (full or partials) in this photometry
+            flux = f0
+
+        if len(flux)==0:
             flux = f0
 
         return flux
@@ -161,5 +170,5 @@ class PyTransit_Dynamical(AbstractModel, AbstractTransit, AbstractDynamical):
         :param x0_input:
         :return:
         """
-
+        #print(self.random_number, np.shape(dataset.buffer_model))
         return dataset.buffer_model

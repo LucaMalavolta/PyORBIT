@@ -367,13 +367,16 @@ class ModelContainer(object):
                 if getattr(dataset, 'dynamical', False) and getattr(self.models[model_name], 'dynamical_model', False):
                     if dataset.kind == 'photometry' :
                         dataset.buffer_model = self.models[model_name].compute_dynamical(parameter_values, dataset, dynamical_output[dataset_name])
+                        #print('CHOICE A ', model_name, self.models[model_name].random_number, np.shape(dataset.buffer_model), np.shape(dataset.unitary_model))
                     else:
                         dataset.external_model = dynamical_output[dataset_name]
+                        #print('CHOICE B ', model_name, 00000000000, np.shape(dataset.buffer_model), np.shape(dataset.unitary_model),  np.shape(dataset.external_model))
 
                 if dataset.normalization_model is None and (self.models[model_name].unitary_model or self.models[model_name].normalization_model):
                     dataset.normalization_model = np.ones(dataset.n, dtype=np.double)
 
                 if self.models[model_name].unitary_model:
+                    #print('CHOICE D ', model_name, self.models[model_name].random_number, np.shape(dataset.buffer_model), np.shape(dataset.unitary_model))
                     dataset.unitary_model += self.models[model_name].compute(
                     parameter_values, dataset)
                 elif self.models[model_name].normalization_model:
