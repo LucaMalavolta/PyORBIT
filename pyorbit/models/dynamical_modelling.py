@@ -272,19 +272,19 @@ class DynamicalIntegrator:
 
             if star_counter == 0:
                 star_model = mc.common_models[planet_name].stellar_ref
-                star_parameter = mc.common_models[star_model].convert(theta)
-                self.dynamical_pams['M'][0] = star_parameter['mass']
-                self.dynamical_pams['R'][0] = star_parameter['radius']
-                star_parameter['density'] = parameter_values['mass']/parameter_values['radius']**3
+                star_parameters = mc.common_models[star_model].convert(theta)
+                self.dynamical_pams['M'][0] = star_parameters['mass']
+                self.dynamical_pams['R'][0] = star_parameters['radius']
+                star_parameters['density'] = star_parameters['mass']/star_parameters['radius']**3
                 star_counter += 1
 
             parameter_values = mc.common_models[planet_name].convert(theta)
-            parameter_values.update(star_parameter)
+            parameter_values.update(star_parameters)
             mc.common_models[planet_name].update_parameter_values_for_dynamical(parameter_values, self.ti_ref)
 
             if 'R_Rs' in parameter_values:
                 """ Converting the radius from Stellar units to Solar units"""
-                self.dynamical_pams['R'][n_plan-1] = parameter_values['R_Rs'] * star_parameter['radius']
+                self.dynamical_pams['R'][n_plan-1] = parameter_values['R_Rs'] * star_parameters['radius']
             else:
                 """ Default value: slightly more than 1 Earth radii in Solar units"""
                 self.dynamical_pams['R'][n_plan-1] = 0.02
