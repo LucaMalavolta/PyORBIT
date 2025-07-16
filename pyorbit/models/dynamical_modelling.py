@@ -127,7 +127,7 @@ class DynamicalIntegrator:
         print('compute_mass, compute_radius, compute_density')
         print()
 
-    def compute(self, mc, theta, *args, **kwargs):
+    def compute(self, mc, theta, x_input=None, *args, **kwargs):
         """
         Run the appropriate subroutine according to chosen dynamical integrator
         :param mc:
@@ -135,7 +135,7 @@ class DynamicalIntegrator:
         """
 
         if self.dynamical_integrator == 'TRADES':
-            output = self.compute_trades(mc, theta, *args, **kwargs)
+            output = self.compute_trades(mc, theta, x_input, *args, **kwargs)
         #if self.dynamical_integrator == 'ttvfast':
         #    output = self.compute_ttvfast(mc, *args, **kwargs)
         return output
@@ -244,7 +244,7 @@ class DynamicalIntegrator:
         return
 
 
-    def compute_trades(self, mc, theta, x_input=None):
+    def compute_trades(self, mc, theta, x_input):
         """ This function compute the expected TTV and RVs for dynamically interacting planets.
             The user can specify which planets are subject to interactions, e.g. long-period planets can be approximated
             with a Keplerian function"""
