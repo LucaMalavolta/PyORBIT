@@ -65,9 +65,7 @@ class PyTransit_Dynamical(AbstractModel, AbstractTransit, AbstractDynamical):
 
     def compute_dynamical(self, parameter_values, dataset, dynamical_output, x0_input=None):
 
-        #self.random_number = np.random.randint(0, 1000000) # set a random number to avoid problems with the model evaluation
-
-
+        #
         rp_rs = dynamical_output[self.planet_ref]['Rp_Rs']
         per = dynamical_output[self.planet_ref]['P']
         aRs = dynamical_output[self.planet_ref]['a_Rs']
@@ -114,6 +112,7 @@ class PyTransit_Dynamical(AbstractModel, AbstractTransit, AbstractDynamical):
             n = n_dur
             sel_tra = tra_dur_in_t
 
+
         # compute transit model only if full or partial transits have been found
         if n > 0:
             # select transits and parameters
@@ -136,6 +135,7 @@ class PyTransit_Dynamical(AbstractModel, AbstractTransit, AbstractDynamical):
                 if np.sum(sel_t) == 0:
                     continue
 
+
                 self.pytransit_models[dataset.name_ref].set_data(t[sel_t],
                                                             exptimes=self.code_options[dataset.name_ref]['exp_time'],
                                                             nsamples=self.code_options[dataset.name_ref]['sample_factor']) # set the pytransit time data with oversampling if needed
@@ -148,11 +148,11 @@ class PyTransit_Dynamical(AbstractModel, AbstractTransit, AbstractDynamical):
                     i=inc_sel[itra],
                     e=ecc_sel[itra],
                     w=w_sel[itra],
-                ) # compute the model and associate it only for the selected portion close to the transit
+                ) - 1. # compute the model and associate it only for the selected portion close to the transit
                 flux_.append(ff) # append it
 
             f2d = np.atleast_2d(flux_)
-            flux = np.sum(f2d - 1.0, axis=0) # in one step it removes 1, sum flux for each time point
+            flux = np.sum(f2d, axis=0) # in one step it removes 1, sum flux for each time point
 
         else: # set to 0.0 the model flux if there are not transits (full or partials) in this photometry
             flux = f0

@@ -543,6 +543,7 @@ def get_model(mc, theta, bjd_dict, **kwargs):
         additive_model = np.zeros(np.size(x0_plot))
         unitary_model = np.zeros(np.size(x0_plot))
         external_model = np.zeros(np.size(x0_plot))
+        buffer_model = np.zeros(np.size(x0_plot))
         normalization_model = None
 
         parameter_values = dataset.convert(theta)
@@ -613,23 +614,41 @@ def get_model(mc, theta, bjd_dict, **kwargs):
                 logchi2_gp_model = model_name
                 continue
 
-            if getattr(dataset, 'dynamical', False):
-                dataset.external_model = dynamical_output[dataset_name]
-                external_model = dynamical_output_x0[dataset_name].copy()
-                model_out[dataset_name]['dynamical'] = dynamical_output[dataset_name].copy()
-                model_x0[dataset_name]['dynamical'] = dynamical_output_x0[dataset_name].copy()
+            #if getattr(dataset, 'dynamical', False):
+            #    dataset.external_model = dynamical_output[dataset_name]
+            #    external_model = dynamical_output_x0[dataset_name].copy()
+            #    model_out[dataset_name]['dynamical'] = dynamical_output[dataset_name].copy()
+            #    model_x0[dataset_name]['dynamical'] = dynamical_output_x0[dataset_name].copy()
 
-            model_out[dataset_name][model_name] = mc.models[model_name].compute(
-                parameter_values, dataset)
+            if getattr(dataset, 'dynamical', False) and getattr(mc.models[model_name], 'dynamical_model', False):
+                if dataset.kind == 'photometry' :
 
-            if getattr(mc.models[model_name], 'time_independent_model', False):
-                model_x0[dataset_name][model_name] = np.zeros(
-                    np.size(x0_plot), dtype=np.double)
-                model_out[dataset_name]['time_independent'] += mc.models[model_name].compute(
-                    parameter_values, dataset)
+                    #buffer_model = mc.models[model_name].compute_dynamical(parameter_values, dataset, dynamical_output[dataset_name], x0_input=x0_plot)
+                    #dataset.buffer_model = mc.models[model_name].compute_dynamical(parameter_values, dataset, dynamical_output[dataset_name])
+
+                    model_out[dataset_name][model_name] = mc.models[model_name].compute_dynamical(parameter_values, dataset, dynamical_output[dataset_name])
+                    model_x0[dataset_name][model_name] = mc.models[model_name].compute_dynamical(parameter_values, dataset, dynamical_output_x0[dataset_name], x0_input=x0_plot)
+
+                else:
+                    dataset.external_model = dynamical_output[dataset_name]
+                    external_model = dynamical_output_x0[dataset_name].copy()
+
+                    model_out[dataset_name][model_name] = dynamical_output[dataset_name].copy()
+                    model_x0[dataset_name][model_name] = dynamical_output_x0[dataset_name].copy()
+
+
             else:
-                model_x0[dataset_name][model_name] = mc.models[model_name].compute(
-                    parameter_values, dataset, x0_plot)
+                model_out[dataset_name][model_name] = mc.models[model_name].compute(
+                    parameter_values, dataset)
+
+                if getattr(mc.models[model_name], 'time_independent_model', False):
+                    model_x0[dataset_name][model_name] = np.zeros(
+                        np.size(x0_plot), dtype=np.double)
+                    model_out[dataset_name]['time_independent'] += mc.models[model_name].compute(
+                        parameter_values, dataset)
+                else:
+                    model_x0[dataset_name][model_name] = mc.models[model_name].compute(
+                        parameter_values, dataset, x0_plot)
 
             if getattr(mc.models[model_name], 'systematic_model', False):
                 continue

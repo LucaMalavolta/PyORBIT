@@ -22,7 +22,7 @@ class AbstractDynamical(object):
             'e',     # eccentricity, uniform prior - to be fixed
             'R_Rs',  # planet radius (in units of stellar radii)
             'omega', # argument of pericenter
-            'i',     # inclination in degrees
+            #'i',     # inclination in degrees
         ])
 
         self.list_pams_dataset = OrderedSet()
@@ -78,6 +78,17 @@ class AbstractDynamical(object):
         elif mc.common_models[self.stellar_ref].compute_radius:
             self.list_pams_common.update(['density'])
             self.list_pams_common.update(['mass'])
+
+
+        if mc.common_models[self.planet_ref].use_inclination:
+            """ i is the orbital inclination (in degrees) """
+            self.list_pams_common.update(['i'])
+            self.compute_inclination = False
+        else:
+            """ b is the impact parameter """
+            self.list_pams_common.update(['b'])
+            self.compute_inclination = True
+
 
         if mc.common_models[self.planet_ref].use_time_inferior_conjunction:
             self.list_pams_common.update(['Tc'])
@@ -264,6 +275,7 @@ class DynamicalIntegrator:
                 star_parameter = mc.common_models[star_model].convert(theta)
                 self.dynamical_pams['M'][0] = star_parameter['mass']
                 self.dynamical_pams['R'][0] = star_parameter['radius']
+                star_parameter['density'] = parameter_values['mass']/parameter_values['radius']**3
                 star_counter += 1
 
             parameter_values = mc.common_models[planet_name].convert(theta)
@@ -339,7 +351,7 @@ class DynamicalIntegrator:
                 self.dynamical_pams['mA'],
                 self.dynamical_pams['i'],
                 self.dynamical_pams['Omega'],
-                self.x_input # this can be an empty list [] and it will ignore it, otherwise provide a list time at which compute RV
+                x_input # this can be an empty list [] and it will ignore it, otherwise provide a list time at which compute RV
             )
             rv_sorted = rv_sim['rv']
 
@@ -407,5 +419,6 @@ class DynamicalIntegrator:
                 if np.sum(find_epoch) != dataset.n:
                     output[dataset_name] = np.zeros(dataset.n)
                     output['pass'] = False
+
 
         return output

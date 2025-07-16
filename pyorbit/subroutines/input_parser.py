@@ -334,8 +334,8 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, reload_ze
                     mc.dynamical_dict[planet_name] = True
 
                     print(' Dynamical model for planet {0:s} is enabled'.format(planet_name))
-                    print(' Forcing the use of inclination for photodynamical modelling')
-                    mc.common_models[planet_name].model_conf['use_inclination'] = True
+                    #print(' Forcing the use of inclination for photodynamical modelling')
+                    #mc.common_models[planet_name].model_conf['use_inclination'] = True
 
 
 

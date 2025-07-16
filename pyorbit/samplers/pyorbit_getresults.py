@@ -24,13 +24,15 @@ import sys
 
 from tqdm import tqdm
 
-mpl.use('Agg')
 
 
 __all__ = ["pyorbit_getresults"]
 
 
 def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
+    default_mpl_backend = mpl.get_backend()
+
+    mpl.use('Agg')
 
     print('LaTeX disabled by default')
     print()
@@ -771,6 +773,7 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
             rv_ln_likelihood_success = True
         except:
             print('Analysis ran using PyORBIT version < 10.10, RV-only log_likelihood not available')
+
 
     if mc.include_priors:
 
@@ -2277,3 +2280,6 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
 
         plt.savefig(rad_filename + '.png', bbox_inches='tight', dpi=300)
         plt.close(fig)
+
+
+    mpl.use(default_mpl_backend)
