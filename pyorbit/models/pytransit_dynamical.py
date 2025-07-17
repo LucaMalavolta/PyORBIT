@@ -139,17 +139,24 @@ class PyTransit_Dynamical(AbstractModel, AbstractTransit, AbstractDynamical):
                 self.pytransit_models[dataset.name_ref].set_data(t[sel_t],
                                                             exptimes=self.code_options[dataset.name_ref]['exp_time'],
                                                             nsamples=self.code_options[dataset.name_ref]['sample_factor']) # set the pytransit time data with oversampling if needed
-                ff[sel_t] = self.pytransit_models[dataset.name_ref].evaluate(
-                    k=rp_rs_sel[itra],
-                    ldc=self.ld_vars,
-                    t0=tra,
-                    p=per_sel[itra],
-                    a=aRs_sel[itra],
-                    i=inc_sel[itra],
-                    e=ecc_sel[itra],
-                    w=w_sel[itra],
-                ) - 1. # compute the model and associate it only for the selected portion close to the transit
-                flux_.append(ff) # append it
+                try:
+                    ff[sel_t] = self.pytransit_models[dataset.name_ref].evaluate(
+                        k=rp_rs_sel[itra],
+                        ldc=self.ld_vars,
+                        t0=tra,
+                        p=per_sel[itra],
+                        a=aRs_sel[itra],
+                        i=inc_sel[itra],
+                        e=ecc_sel[itra],
+                        w=w_sel[itra],
+                    ) - 1. # compute the model and associate it only for the selected portion close to the transit
+                    flux_.append(ff) # append it
+                except ZeroDivisionError:
+                    print(f"ZeroDivisionError in PyTransit for {dataset.name_ref} at transit {itra} with parameters: "
+                          f"Rp/Rs={rp_rs_sel[itra]}, P={per_sel[itra]}, a/Rs={aRs_sel[itra]}, i={inc_sel[itra]}, "
+                          f"e={ecc_sel[itra]}, w={w_sel[itra]}")
+                    print(self.ld_vars, tra) 
+                    quit()
 
             f2d = np.atleast_2d(flux_)
             flux = np.sum(f2d, axis=0) # in one step it removes 1, sum flux for each time point
