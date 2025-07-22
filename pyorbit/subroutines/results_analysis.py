@@ -86,8 +86,8 @@ def results_summary(mc, theta,
 
         print('----- dataset: ', dataset_name)
         dict_sampler_summary[dataset_name] = {}
-        dict_sampler_summary[dataset_name]['dataset_variables'] = print_theta_bounds(dataset.sampler_parameters, 
-                                                                                    theta, 
+        dict_sampler_summary[dataset_name]['dataset_variables'] = print_theta_bounds(dataset.sampler_parameters,
+                                                                                    theta,
                                                                                     mc.bounds)
         for model_name in dataset.models:
             if len(mc.models[model_name].sampler_parameters[dataset_name])==0: continue
@@ -939,7 +939,7 @@ def print_analysis_info(i_dict, bounds, spaces, priors, additional_kind, additon
     format_string_v1 = '{0:12s}  id:{1:4d}  s:{2:11s} b:[{3:12.4f}, {4:12.4f}]   p:{5:s}  '
     format_string_v2 = '{0:12s}  derived (no id, space, bound) {1:25s} p:{2:s}  '
     dict_output = {}
-    
+
     for par, i in i_dict.items():
         print(format_string_v1.format(
                 par, i, spaces[i], bounds[i, 0], bounds[i, 1],priors[i][0]), priors[i][1])
@@ -1114,7 +1114,7 @@ def print_integrated_ACF(sampler_chain, theta_dict, nthin):
             swapped_chains, tol=tolerance, quiet=False)
         print()
         print('The chains are more than 50 times longer than the ACF, the estimate can be trusted')
-    
+
     except (AutocorrError):
         tolerance = 20
         print()
@@ -1258,7 +1258,7 @@ def print_integrated_ACF(sampler_chain, theta_dict, nthin):
 PyORBIT should keep running for about {0:.0f} more steps to reach 100*ACF""".format(np.average(still_required_100[still_required_100_flag])))
                 dict_output['result'] = """All the chains are longer than 50*ACF, but some are shorter than 100*ACF
 PyORBIT should keep running for about {0:.0f} more steps to reach 100*ACF""".format(np.average(still_required_100[still_required_100_flag]))
-            
+
             else:
                 print("""All the chains have converged, but PyORBIT should keep running for about:
 {0:.0f} more steps to reach 50*ACF,
@@ -1288,7 +1288,7 @@ PyORBIT should keep running for about {0:.0f} more steps to reach 100*ACF""".for
             "They should be at least {0:d}*nthin = {1:d}".format(50*acf_len, 50*acf_len*nthin))
         print()
 
-        dict_output['result'] = """Chains too short to apply convergence criteria, 
+        dict_output['result'] = """Chains too short to apply convergence criteria,
             they should be at least {0:d}*nthin = {1:d}""".format(50*acf_len, 50*acf_len*nthin)
 
         return None, None, None, None, dict_output

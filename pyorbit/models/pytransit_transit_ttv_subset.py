@@ -42,6 +42,7 @@ class PyTransit_Transit_TTV_Subset(AbstractModel, AbstractTransit):
         self.Tc_names = {}
         self.Tc_arrays = {}
         self.subset_selection = {}
+        self.number_of_transits = {}
 
 
     def initialize_model(self, mc, **kwargs):
@@ -68,8 +69,8 @@ class PyTransit_Transit_TTV_Subset(AbstractModel, AbstractTransit):
 
         self.Tc_number[dataset.name_ref] = []
         self.Tc_names[dataset.name_ref] = []
+        self.number_of_transits[dataset.name_ref] = 0
 
-        transit_index = 0
         for i_sub in range(self.start_flag, self.end_flag):
 
             par_original = 'Tc'
@@ -80,7 +81,7 @@ class PyTransit_Transit_TTV_Subset(AbstractModel, AbstractTransit):
             self.Tc_names[dataset.name_ref].append(par_subset)
             self.Tc_number[dataset.name_ref].append(i_sub)
 
-            subset_flag[(dataset.submodel_id == i_sub)] = transit_index
+            subset_flag[(dataset.submodel_id == i_sub)] = self.number_of_transits[dataset.name_ref]
 
             sub_dataset = dataset.x[(dataset.submodel_id == i_sub)]
 
@@ -100,9 +101,13 @@ class PyTransit_Transit_TTV_Subset(AbstractModel, AbstractTransit):
                 self.transfer_parameter_properties(mc, dataset, par_original, par_subset, keywords=kwargs, dataset_pam=True)
                 self.bounds[dataset.name_ref].update({par_subset: par_update})
 
-            transit_index += 1
+            self.number_of_transits[dataset.name_ref] += 1
 
-        transit_id = np.arange(0, transit_index, dtype=int)
+        if self.number_of_transits[dataset.name_ref] == 0:
+            print('No transits of planet ',self.planet_ref,' found in the time series for dataset', dataset.name_ref)
+            return
+
+        transit_id = np.arange(0, self.number_of_transits[dataset.name_ref], dtype=int)
 
         if self.limb_darkening_model == 'power2':
             self.limb_darkening_model == 'power-2'
@@ -139,6 +144,12 @@ class PyTransit_Transit_TTV_Subset(AbstractModel, AbstractTransit):
         :param x0_input:
         :return:
         """
+
+        if self.number_of_transits[dataset.name_ref] == 0:
+            if x0_input is None:
+                return np.zeros(dataset.n)
+            else:
+                return x0_input * 0.
 
         self.update_parameter_values(parameter_values, dataset.Tref)
 

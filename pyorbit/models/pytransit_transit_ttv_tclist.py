@@ -43,7 +43,7 @@ class PyTransit_Transit_TTV_TClist(AbstractModel, AbstractTransit):
         self.Tc_arrays = {}
         self.subset_selection = {}
         self.subset_flag = {}
-
+        self.number_of_transits = {}
 
     def initialize_model(self, mc, **kwargs):
         """ Force the use of the time of inferior conjunction"""
@@ -70,8 +70,8 @@ class PyTransit_Transit_TTV_TClist(AbstractModel, AbstractTransit):
         self.Tc_names[dataset.name_ref] = []
 
         self.subset_flag[dataset.name_ref] = np.zeros_like(dataset.x, dtype=int) - 1
+        self.number_of_transits[dataset.name_ref] = 0
 
-        transit_index = 0
         for transit_id, transit_time, transit_duration in zip(
             self.tc_data['transit_id'],
             self.tc_data['transit_time'],
@@ -83,12 +83,13 @@ class PyTransit_Transit_TTV_TClist(AbstractModel, AbstractTransit):
             par_subset = 'Tc_'+repr(i_tc)
 
             tc_sel = (np.abs(dataset.x-transit_time) < transit_duration/2.)
+
             if np.sum(tc_sel) < self.code_options['minimum_number_of_observations'] : continue
 
             self.Tc_number[dataset.name_ref].append(i_tc)
             self.Tc_names[dataset.name_ref].append(par_subset)
 
-            self.subset_flag[dataset.name_ref][tc_sel] = transit_index
+            self.subset_flag[dataset.name_ref][tc_sel] = self.number_of_transits[dataset.name_ref] * 1
             sub_dataset = dataset.x[tc_sel]
 
             if kwargs[dataset.name_ref].get('boundaries', False):
@@ -107,9 +108,13 @@ class PyTransit_Transit_TTV_TClist(AbstractModel, AbstractTransit):
                 self.transfer_parameter_properties(mc, dataset, par_original, par_subset, keywords=kwargs, dataset_pam=True)
                 self.bounds[dataset.name_ref].update({par_subset: par_update})
 
-            transit_index += 1
+            self.number_of_transits[dataset.name_ref] += 1
 
-        transit_id = np.arange(0, transit_index, dtype=int)
+        if self.number_of_transits[dataset.name_ref] == 0:
+            print('No transits of planet ',self.planet_ref,' found in the time series for dataset', dataset.name_ref)
+            return
+
+        transit_id = np.arange(0, self.number_of_transits[dataset.name_ref], dtype=int)
 
         if self.limb_darkening_model == 'power2':
             self.limb_darkening_model == 'power-2'
@@ -127,8 +132,8 @@ class PyTransit_Transit_TTV_TClist(AbstractModel, AbstractTransit):
         if self.code_options[dataset.name_ref]['sample_factor'] == 1:
             self.code_options[dataset.name_ref]['exp_time'] = 0.
 
-        exptimes= np.ones(transit_index) * self.code_options[dataset.name_ref]['exp_time']
-        nsamples= np.ones(transit_index) * self.code_options[dataset.name_ref]['sample_factor']
+        exptimes= np.ones(self.number_of_transits[dataset.name_ref]) * self.code_options[dataset.name_ref]['exp_time']
+        nsamples= np.ones(self.number_of_transits[dataset.name_ref]) * self.code_options[dataset.name_ref]['sample_factor']
 
         self.subset_selection[dataset.name_ref] = (self.subset_flag[dataset.name_ref] >= 0)
 
@@ -146,6 +151,13 @@ class PyTransit_Transit_TTV_TClist(AbstractModel, AbstractTransit):
         :param x0_input:
         :return:
         """
+
+        if self.number_of_transits[dataset.name_ref] == 0:
+            if x0_input is None:
+                return np.zeros(dataset.n)
+            else:
+                return x0_input * 0.
+
 
         self.update_parameter_values(parameter_values, dataset.Tref)
 

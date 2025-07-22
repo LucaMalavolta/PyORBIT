@@ -152,11 +152,12 @@ class PyTransit_Dynamical(AbstractModel, AbstractTransit, AbstractDynamical):
                     ) - 1. # compute the model and associate it only for the selected portion close to the transit
                     flux_.append(ff) # append it
                 except ZeroDivisionError:
-                    print(f"ZeroDivisionError in PyTransit for {dataset.name_ref} at transit {itra} with parameters: "
-                          f"Rp/Rs={rp_rs_sel[itra]}, P={per_sel[itra]}, a/Rs={aRs_sel[itra]}, i={inc_sel[itra]}, "
-                          f"e={ecc_sel[itra]}, w={w_sel[itra]}")
-                    print(self.ld_vars, tra) 
-                    quit()
+                    continue
+                    #print(f"ZeroDivisionError in PyTransit for {dataset.name_ref} at transit {itra} with parameters: "
+                    #      f"Rp/Rs={rp_rs_sel[itra]}, P={per_sel[itra]}, a/Rs={aRs_sel[itra]}, i={inc_sel[itra]}, "
+                    #      f"e={ecc_sel[itra]}, w={w_sel[itra]}")
+                    #print(self.ld_vars, tra)
+                    #quit()
 
             f2d = np.atleast_2d(flux_)
             flux = np.sum(f2d, axis=0) # in one step it removes 1, sum flux for each time point

@@ -324,7 +324,7 @@ class DynamicalIntegrator:
                 self.rv_epochs # this can be an empty list [] and it will ignore it, otherwise provide a list time at which compute RV
             )
 
-            rv_sorted = np.zeros_like(rv_sim['rv'], dtype=bool)
+            rv_sorted = np.zeros_like(rv_sim['rv'])
             rv_sorted[self.rv_epochs_argsort] = rv_sim['rv']
 
         else:
@@ -356,9 +356,6 @@ class DynamicalIntegrator:
             rv_sorted = rv_sim['rv']
 
         output = {'stable': stable, 'pass': True}
-
-        #print('PASSED', self.dynamical_pams)
-
 
         for dataset_name, dataset in mc.dataset_dict.items():
 
@@ -419,6 +416,5 @@ class DynamicalIntegrator:
                 if np.sum(find_epoch) != dataset.n:
                     output[dataset_name] = np.zeros(dataset.n)
                     output['pass'] = False
-
 
         return output
