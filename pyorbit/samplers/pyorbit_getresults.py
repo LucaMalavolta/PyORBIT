@@ -1231,6 +1231,7 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
                                     truths=corner_plot['truths'],
                                     plotName=dir_output + "all_internal_parameters_corner_pygtc.pdf")
                 GTC = None
+                plt.close()
             print()
             print('****************************************************************************************************')
             print()
@@ -1367,6 +1368,7 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
                                         #figureSize='MNRAS_page',
                                         plotName=dir_output + common_name + "_corners.pdf")
                     GTC = None
+                    plt.close()
 
             except (AssertionError, IndexError):
                 print('     Something went wrong, plot skipped ')
@@ -1436,6 +1438,7 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
                                             #figureSize='MNRAS_page',
                                             plotName=dir_output + dataset_name + '_' + model_name + "_corners.pdf")
                         GTC = None
+                        plt.close()
                 except AssertionError:
                     print('     Something went wrong, plot skipped ')
                     print()

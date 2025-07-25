@@ -149,10 +149,10 @@ def pyorbit_nautilus(config_in, input_datasets=None, return_output=None, run_nes
         #print('                                        initial stopping criterion = {0:5.4f}'.format(dlogz))
         #print('                                        bound = ', mc.nested_sampling_parameters['bound'])
         #print('                                        sample = ', mc.nested_sampling_parameters['sample'])
-        print()
 
     print('                     number of networks = {0:6.0f}'.format(n_networks))
     print('                     equal weights boost = {0:6.0f}'.format(equal_weight_boost))
+    print()
 
     if not use_threading_pool:
         num_threads = None
