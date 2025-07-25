@@ -164,7 +164,7 @@ def pyorbit_nautilus(config_in, input_datasets=None, return_output=None, run_nes
         n_live=nlive,
         pool=num_threads,
         filepath = save_checkpoint,
-        n_netwroks = n_networks
+        n_networks = n_networks
     )
     success = sampler.run(verbose=True)
     sampler.write(save_sampler, overwrite=True)
