@@ -522,9 +522,6 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, reload_ze
                         mc.models[model_name_exp] = \
                             define_type_to_class[model_type]['keplerian'](
                                 model_name_exp, planet_name)
-                        mc.common_models[planet_name].use_mass = True
-                        print('Using planetary mass instead of RV semiamplitude: ',
-                              planet_conf['use_mass'])
 
                 except:
                     mc.models[model_name_exp] = \

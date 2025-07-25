@@ -193,6 +193,9 @@ define_common_type_to_class = {
 }
 
 define_type_to_class = {
+    'planetary_velocities': {'circular': RVkeplerian,
+                          'keplerian': RVkeplerian,
+                          'dynamical': RVdynamical},
     'radial_velocities': {'circular': RVkeplerian,
                           'keplerian': RVkeplerian,
                           'dynamical': RVdynamical},

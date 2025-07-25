@@ -5,9 +5,9 @@
 ## Using PyORBIT on Windows
 
 Short version: don't do it.
-Long version: I never tested `PyORBIT` on Windows, so I cannot guarantee that the outcome of the analysis is what it is supposed to be, or if it will work at all.  
+Long version: I never tested `PyORBIT` on Windows, so I cannot guarantee that the outcome of the analysis is what it is supposed to be, or if it will work at all.
 
-Rather than trying to fix `PyORBIT` or Python on Windows, I usually suggest [setting up an Ubuntu machine with Windows Subsystem for Linux 2](https://canonical-ubuntu-wsl.readthedocs-hosted.com/en/latest/). With respect to installing a virtual machine, WSL2 will use fewer computer resources while giving direct access from Windows to Linux files and vice versa. 
+Rather than trying to fix `PyORBIT` or Python on Windows, I usually suggest [setting up an Ubuntu machine with Windows Subsystem for Linux 2](https://canonical-ubuntu-wsl.readthedocs-hosted.com/en/latest/). With respect to installing a virtual machine, WSL2 will use fewer computer resources while giving direct access from Windows to Linux files and vice versa.
 
 
 ## Setting up an environment
@@ -72,14 +72,14 @@ You may get this problem, caused by the fact that Matplotlib is trying to use Mi
 ```{code} bash
 findfont: Font family 'Arial' not found.
 ```
-I found several solutions around, the only ones that worked for me are 
+I found several solutions around, the only ones that worked for me are
 [Alexander Lab @ WHOI](https://alexanderlabwhoi.github.io/post/2021-03-missingfont/) and on [StackOverflow](https://stackoverflow.com/questions/42097053/matplotlib-cannot-find-basic-fonts)
 
 In the first solution, you install the fonts through `conda`:
 ```{code} bash
 conda activate pyorbit
 conda install -c conda-forge mscorefonts
-rm ~/.cache/matplotlib -rf 
+rm ~/.cache/matplotlib -rf
 ```
 In my WSL2 Ubuntu 22.04, this solution did not work, so I tried the one suggested in StackOverflow:
 
@@ -91,41 +91,43 @@ One of the comments suggested reinstalling `findfont`, but it wasn't needed in m
 
 Note that this one will only work on Ubuntu or systems using Ubuntu's *Advanced Packaging Tool* (APT)
 
+<!---
+
 ## `starry` support **updated**
 
-The [`starry`](https://starry.readthedocs.io/en/latest/) code package is a suite of tools for mapping stars and exoplanets based on time series data, and it has been implemented in several models within `PyORBIT`. Due to the use of discontinued libraries as [`Theano`](https://github.com/Theano), its installation requires some different steps. 
+The [`starry`](https://starry.readthedocs.io/en/latest/) code package is a suite of tools for mapping stars and exoplanets based on time series data, and it has been implemented in several models within `PyORBIT`. Due to the use of discontinued libraries as [`Theano`](https://github.com/Theano), its installation requires some different steps.
 
 ### `g++` installation
 In order to work, starry requires `g++` (available through `gcc`), while `blas` libraries are optional.
-It may be possible that you already have `g++` installed, in this cause you should get a  `fatal error` when trying to run iot without an input file 
+It may be possible that you already have `g++` installed, in this cause you should get a  `fatal error` when trying to run iot without an input file
 ```{code} bash
 g++
    g++: fatal error: no input files
    compilation terminated.
 ```
 
-On my Ubuntu computer, I managed to install `g++` and `blas` libraries only after installing `aptitude`. 
+On my Ubuntu computer, I managed to install `g++` and `blas` libraries only after installing `aptitude`.
 ```{code} bash
 sudo apt install build-essential manpages-dev software-properties-common
 sudo apt install aptitude
 sudo aptitude install g++
 sudo aptitude install libopenblas-dev
 ```
-In the case of `g++`, I had to take a step further by checking the proposed solutions to solve conflicts.  
+In the case of `g++`, I had to take a step further by checking the proposed solutions to solve conflicts.
 
-Installation on Fedora was much more straightforward. 
+Installation on Fedora was much more straightforward.
 
 ```{code} bash
 sudo yum install gcc-c++
 sudo yum install blas blas-devel
 ```
 
-I'm just reporting these issues for your convenience, if you are running into any trouble, please check with your IT crowd / best friend.  
+I'm just reporting these issues for your convenience, if you are running into any trouble, please check with your IT crowd / best friend.
 
-### installing `starry` 
+### installing `starry`
 
-```{note} 
-Thefollowing instructions will work only with PyORBIT version 10.3.0 or above
+```{note}
+The following instructions will work only with PyORBIT version 10.3.0 or above
 ```
 
 
@@ -154,7 +156,7 @@ We finally install `PyORBIT` using `pip`, but without checking for dependencies
 pip install --no-dependencies pyorbit-package
 ```
 
-```{warning} 
+```{warning}
 `tinygp` and all the packages relying on `jax` will not work with this installation.
 ```
 
@@ -172,6 +174,7 @@ Type "help", "copyright", "credits" or "license" for more information.
 
 If you get an error relative to `g++`, it means that something went wrong during its installation and you will not be able to use `starry` until you fix it. If you get an error about the `blas` library, you may still use `starry` but with possibly slower performances.
 
+-->
 
 
 ## Install from the repository
@@ -189,7 +192,7 @@ If you are downloading the code from GitHub, most likely it's because you want t
  git checkout development
 ```
 
-```{note} 
+```{note}
 The development version may not be available at all times.
 ```
 

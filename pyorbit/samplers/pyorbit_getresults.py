@@ -1172,70 +1172,76 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
 
     if plot_dictionary['full_correlation']:
 
-        corner_plot = {
-            'samples': np.zeros([np.size(flat_chain, axis=0), np.size(flat_chain, axis=1) + 1]),
-            'labels': [],
-            'truths': []
-        }
+        try:
+            corner_plot = {
+                'samples': np.zeros([np.size(flat_chain, axis=0), np.size(flat_chain, axis=1) + 1]),
+                'labels': [],
+                'truths': []
+            }
 
-        i_corner = 0
-        for par, par_dict in theta_dictionary.items():
-            corner_plot['samples'][:, i_corner] = flat_chain[:, par_dict]
-            if len(theta_dictionary) > 10:
-                corner_plot['labels'].append(repr(par_dict))
-            else:
-                corner_plot['labels'].append(re.sub('_', '-', par))
-            corner_plot['truths'].append(chain_med[par_dict, 0])
-            i_corner += 1
+            i_corner = 0
+            for par, par_dict in theta_dictionary.items():
+                corner_plot['samples'][:, i_corner] = flat_chain[:, par_dict]
+                if len(theta_dictionary) > 10:
+                    corner_plot['labels'].append(repr(par_dict))
+                else:
+                    corner_plot['labels'].append(re.sub('_', '-', par))
+                corner_plot['truths'].append(chain_med[par_dict, 0])
+                i_corner += 1
 
-        corner_plot['samples'][:, -1] = flat_lnprob[:]
-        corner_plot['labels'].append('ln-prob')
-        corner_plot['truths'].append(lnprob_med[0])
+            corner_plot['samples'][:, -1] = flat_lnprob[:]
+            corner_plot['labels'].append('ln-prob')
+            corner_plot['truths'].append(lnprob_med[0])
 
-        if plot_dictionary['use_getdist']:
-            try:
-                print(' Plotting full_correlation plot with GetDist')
+            if plot_dictionary['use_getdist']:
+                try:
+                    print(' Plotting full_correlation plot with GetDist')
+                    print()
+                    print(' Ignore the no burn in error warning from getdist')
+                    print(' since burn in has been already removed from the chains')
+
+                    samples = MCSamples(samples=corner_plot['samples'], names=corner_plot['labels'],
+                                        labels=corner_plot['labels'])
+
+                    g = plots.getSubplotPlotter()
+                    g.settings.num_plot_contours = 6
+                    g.triangle_plot(samples, filled=True)
+                    g.export(dir_output + "all_internal_parameters_corner_getdist.pdf")
+
+                except AttributeError:
+                    print(' Something went wrong when plotting the coner plot with GetDist')
+                    print(' Please Run PyORBIT_GetResults.py with without corner plot flag to get an alternative corner plot')
+
                 print()
-                print(' Ignore the no burn in error warning from getdist')
-                print(' since burn in has been already removed from the chains')
 
-                samples = MCSamples(samples=corner_plot['samples'], names=corner_plot['labels'],
-                                    labels=corner_plot['labels'])
+            elif plot_dictionary['use_corner']:
+                # plotting mega-corner plot
+                print('Plotting full_correlation plot with Corner')
+                fig = corner.corner(
+                    corner_plot['samples'], labels=corner_plot['labels'], truths=corner_plot['truths'])
+                fig.savefig(dir_output + "all_internal_parameters_corner_dfm.pdf",
+                            bbox_inches='tight', dpi=300)
+                plt.close(fig)
 
-                g = plots.getSubplotPlotter()
-                g.settings.num_plot_contours = 6
-                g.triangle_plot(samples, filled=True)
-                g.export(dir_output + "all_internal_parameters_corner_getdist.pdf")
+            else:
+                print('Plotting full_correlation plot with pygtc')
 
-            except AttributeError:
-                print(' Something went wrong when plotting the coner plot with GetDist')
-                print(' Please Run PyORBIT_GetResults.py with without corner plot flat to get an alternative corner plot')
-
+                GTC = pygtc.plotGTC(chains=corner_plot['samples'],
+                                    paramNames=corner_plot['labels'],
+                                    truths=corner_plot['truths'],
+                                    plotName=dir_output + "all_internal_parameters_corner_pygtc.pdf")
+                GTC = None
             print()
-
-        elif plot_dictionary['use_corner']:
-            # plotting mega-corner plot
-            print('Plotting full_correlation plot with Corner')
-            fig = corner.corner(
-                corner_plot['samples'], labels=corner_plot['labels'], truths=corner_plot['truths'])
-            fig.savefig(dir_output + "all_internal_parameters_corner_dfm.pdf",
-                        bbox_inches='tight', dpi=300)
-            plt.close(fig)
-
-        else:
-            print('Plotting full_correlation plot with pygtc')
-
-            GTC = pygtc.plotGTC(chains=corner_plot['samples'],
-                                paramNames=corner_plot['labels'],
-                                truths=corner_plot['truths'],
-                                plotName=dir_output + "all_internal_parameters_corner_pygtc.pdf")
-            GTC = None
-        print()
-        print('****************************************************************************************************')
-        print()
-        sys.stdout.flush()
-        corner_plot = None
-
+            print('****************************************************************************************************')
+            print()
+            sys.stdout.flush()
+            corner_plot = None
+        except (AssertionError, IndexError):
+            print(' Something went wrong when plotting the corner plot')
+            print()
+            print('****************************************************************************************************')
+            print()
+            sys.stdout.flush()
 
     if plot_dictionary['chains']:
 
@@ -1593,7 +1599,7 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
             bjd_plot[dataset_name]['end'] += bjd_plot[dataset_name]['range'] * 0.10
 
             #TODO remove the 'Phot' options in version 11
-            if dataset.kind == 'photometry' or dataset.kind == 'Phot': 
+            if dataset.kind == 'photometry' or dataset.kind == 'Phot':
 
                 if bjd_plot[dataset_name]['range'] > P_minimum:
                     # more than one transit:
