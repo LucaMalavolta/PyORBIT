@@ -18,7 +18,7 @@ class ModelContainerNautilus(ModelContainer):
                                            'n_networks': 8,
                                            'equal_weight_boost': 10,
                                            'discard_exploration': True,
-                                           'nautilus_nlive_multiplier': 5.0,}
+                                           'nautilus_nlive_multiplier': 5,}
 
         self.output_directory = None
 
