@@ -90,13 +90,13 @@ def pyorbit_nautilus(config_in, input_datasets=None, return_output=None, run_nes
 
     results_analysis.print_bayesian_info(mc)
 
-    discard_exploration = mc.nested_sampling_parameters.get('discard_exploration', True)
-    nautilus_nlive_multiplier = mc.nested_sampling_parameters.get('nautilus_nlive_multiplier', 5.0)
+    discard_exploration = mc.nested_sampling_parameters['discard_exploration']
+    nautilus_nlive_multiplier = mc.nested_sampling_parameters['nautilus_nlive_multiplier']
 
     if 'nlive_mult' in mc.nested_sampling_parameters:
-        nlive = mc.ndim * mc.nested_sampling_parameters['nlive_mult'] * nautilus_nlive_multiplier
+        nlive = int(mc.ndim * mc.nested_sampling_parameters['nlive_mult'] * nautilus_nlive_multiplier)
     else:
-        nlive = mc.nested_sampling_parameters['nlive'] * nautilus_nlive_multiplier
+        nlive = int(mc.nested_sampling_parameters['nlive'] * nautilus_nlive_multiplier)
 
     n_networks = mc.nested_sampling_parameters['n_networks']
     equal_weight_boost = mc.nested_sampling_parameters['equal_weight_boost']
