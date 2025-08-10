@@ -56,6 +56,8 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
     # plt.rcParams["font.family"] = "Times New Roman"
 
     oversampled_models = plot_dictionary['oversampled_models']
+    transit_oversampled_models = plot_dictionary['transit_oversampled_models']
+    eclipse_oversampled_models = plot_dictionary['eclipse_oversampled_models']
     skip_rv_like = not plot_dictionary['compute_rv_like']
 
 
@@ -1955,12 +1957,24 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
                             fileout = open(
                                 dir_models + dataset_name + '_' + model_name + '_oversampled.dat', 'w')
 
-                            x_range = np.arange(
-                                -parameter_values['P']/2., parameter_values['P']/2., 0.001)
+                            if getattr(mc.models[model_name], 'model_class', False) in transit_oversampled_models:
+                                mc.models[model_name].update_parameter_values(parameter_values, dataset.Tref)
+                                x_range = np.linspace(
+                                    -parameter_values['P']/parameter_values['a_Rs'],
+                                    parameter_values['P']/parameter_values['a_Rs'], 5000, endpoint=True)
+                            elif getattr(mc.models[model_name], 'model_class', False) in eclipse_oversampled_models:
+                                mc.models[model_name].update_parameter_values(parameter_values, dataset.Tref)
+                                x_range = np.linspace(
+                                    -parameter_values['P']/parameter_values['a_Rs'],
+                                    parameter_values['P']/parameter_values['a_Rs'], 5000, endpoint=True) + 0.5
+                            else:
+                                x_range = np.arange(-parameter_values['P']/2., parameter_values['P']/2., 0.001)
 
-                            for i_sub in range(0,20):
+                            p_range = x_range/parameter_values['P']
+
+                            for i_sub in range(0,1000):
                                 if 'Tc_'+repr(i_sub) in parameter_values and 'Tc' not in parameter_values:
-                                    parameter_values['Tc'] = parameter_values['Tc_'+repr(i_sub)]
+                                    parameter_values['Tc'] = dataset.Tref
                                     break
 
                             try:
@@ -1977,10 +1991,10 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
                             if plot_dictionary.get('veuz_compatibility', False):
                                 fileout.write('descriptor Tc_folded  mod \n')
                             else:
-                                fileout.write('# time model \n')
+                                fileout.write('# time model phase\n')
 
-                            for x, mod in zip(x_range, y_plot):
-                                fileout.write('{0:f} {1:f} \n'.format(x, mod))
+                            for x, mod, phase in zip(x_range, y_plot, p_range):
+                                fileout.write('{0:f} {1:f} {2:f}\n'.format(x, mod, phase))
                             fileout.close()
 
                     fileout = open(dir_models + dataset_name +  '_full.dat', 'w')

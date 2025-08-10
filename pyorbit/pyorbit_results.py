@@ -56,6 +56,8 @@ def pyorbit_results():
                                'eclipse_phasecurve',
                                'transit_eclipse_phasecurve',
                                'rv_keplerian'],
+        'transit_oversampled_models': ['transit'],
+        'eclipse_oversampled_models': ['eclipse'],
         'compute_rv_like': False,
     }
 

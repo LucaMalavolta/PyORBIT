@@ -195,28 +195,44 @@ class PyTransit_Transit_TTV_TClist(AbstractModel, AbstractTransit):
             subset_flag = np.zeros_like(x0_input, dtype=int) - 1
             transit_id = np.arange(0, len(Tc_array), dtype=int)
 
-            for i_tc, n_tc in enumerate(self.Tc_number[dataset.name_ref]):
-                sel_data = (self.subset_flag[dataset.name_ref]==i_tc)
-                original_dataset = dataset.x0[sel_data]
-                sel_data = (x0_input >= np.amin(original_dataset)) &  (x0_input <= np.amax(original_dataset))
-                subset_flag[sel_data] = i_tc
+            if 'Tc' in parameter_values:
+                self.pytransit_plot[dataset.name_ref].set_data(x0_input,
+                                                                exptimes=self.code_options[dataset.name_ref]['exp_time'],
+                                                                nsamples=self.code_options[dataset.name_ref]['sample_factor'])
 
-            subset_selection = (subset_flag >= 0)
+                y_output = self.pytransit_plot[dataset.name_ref].evaluate(
+                    parameter_values['R_Rs'],
+                    self.ld_vars,
+                    parameter_values['Tc'],
+                    parameter_values['P'],
+                    parameter_values['a_Rs'],
+                    parameter_values['i'] * constants.deg2rad,
+                    parameter_values['e'],
+                    parameter_values['omega'] * constants.deg2rad) - 1.
+            else:
 
-            self.pytransit_plot[dataset.name_ref].set_data(x0_input[subset_selection],
-                                                            lcids=subset_flag[subset_selection],
-                                                            epids=transit_id,
-                                                            exptimes=[self.code_options[dataset.name_ref]['exp_time']]*len(Tc_array),
-                                                            nsamples=[self.code_options[dataset.name_ref]['sample_factor']]*len(Tc_array))
+                for i_tc, n_tc in enumerate(self.Tc_number[dataset.name_ref]):
+                    sel_data = (self.subset_flag[dataset.name_ref]==i_tc)
+                    original_dataset = dataset.x0[sel_data]
+                    sel_data = (x0_input >= np.amin(original_dataset)) &  (x0_input <= np.amax(original_dataset))
+                    subset_flag[sel_data] = i_tc
 
-            y_output[subset_selection] = self.pytransit_plot[dataset.name_ref].evaluate(
-                parameter_values['R_Rs'],
-                self.ld_vars,
-                Tc_array,
-                parameter_values['P'],
-                parameter_values['a_Rs'],
-                parameter_values['i'] * constants.deg2rad,
-                parameter_values['e'],
-                parameter_values['omega'] * constants.deg2rad) - 1.
+                subset_selection = (subset_flag >= 0)
+
+                self.pytransit_plot[dataset.name_ref].set_data(x0_input[subset_selection],
+                                                                lcids=subset_flag[subset_selection],
+                                                                epids=transit_id,
+                                                                exptimes=[self.code_options[dataset.name_ref]['exp_time']]*len(Tc_array),
+                                                                nsamples=[self.code_options[dataset.name_ref]['sample_factor']]*len(Tc_array))
+
+                y_output[subset_selection] = self.pytransit_plot[dataset.name_ref].evaluate(
+                    parameter_values['R_Rs'],
+                    self.ld_vars,
+                    Tc_array,
+                    parameter_values['P'],
+                    parameter_values['a_Rs'],
+                    parameter_values['i'] * constants.deg2rad,
+                    parameter_values['e'],
+                    parameter_values['omega'] * constants.deg2rad) - 1.
 
         return y_output
