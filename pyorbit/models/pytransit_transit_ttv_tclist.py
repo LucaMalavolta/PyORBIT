@@ -197,7 +197,7 @@ class PyTransit_Transit_TTV_TClist(AbstractModel, AbstractTransit):
 
             for i_tc, n_tc in enumerate(self.Tc_number[dataset.name_ref]):
                 sel_data = (self.subset_flag[dataset.name_ref]==i_tc)
-                original_dataset = dataset.x0[(dataset.submodel_id==n_tc)]
+                original_dataset = dataset.x0[sel_data]
                 sel_data = (x0_input >= np.amin(original_dataset)) &  (x0_input <= np.amax(original_dataset))
                 subset_flag[sel_data] = i_tc
 
