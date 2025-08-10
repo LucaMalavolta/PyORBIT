@@ -106,10 +106,10 @@ class GaussianProcess_QuasiPeriodicActivity_Derivative(AbstractModel, AbstractGa
     def lnlk_compute(self, parameter_values, dataset):
 
         self.update_parameter_values(parameter_values)
-        
+
         pass_conditions = self.check_hyperparameter_values(parameter_values)
         if not pass_conditions:
-            return pass_conditions
+            return -np.inf
 
         env = dataset.e ** 2.0 + dataset.jitter ** 2.0
         cov_matrix = self._compute_cov_matrix(parameter_values,

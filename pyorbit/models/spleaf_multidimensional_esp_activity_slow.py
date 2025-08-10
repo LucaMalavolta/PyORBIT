@@ -119,14 +119,14 @@ class SPLEAF_Multidimensional_ESP_slow(AbstractModel, AbstractGaussianProcesses)
         self.spleaf_time, self.spleaf_res, self.spleaf_err, self.spleaf_series_index = \
             spleaf_cov.merge_series(self._dataset_x0, self._dataset_e2, self._dataset_e2)
 
-        self._set_derivative_option(mc, dataset, **kwargs) 
+        self._set_derivative_option(mc, dataset, **kwargs)
 
         return
 
     def add_internal_dataset(self, parameter_values, dataset):
 
         self.update_parameter_values(parameter_values)
-        
+
         self.internal_parameter_values = parameter_values
 
         d_ind = self._dataset_nindex[dataset.name_ref]
@@ -142,7 +142,7 @@ class SPLEAF_Multidimensional_ESP_slow(AbstractModel, AbstractGaussianProcesses)
 
         pass_conditions = self.check_hyperparameter_values(self.internal_parameter_values)
         if not pass_conditions:
-            return pass_conditions
+            return -np.inf
 
         """ I'm creating the kernel here has """
         D = spleaf_cov.Cov(self.spleaf_time,
@@ -190,7 +190,7 @@ class SPLEAF_Multidimensional_ESP_slow(AbstractModel, AbstractGaussianProcesses)
         for dataset_name, d_ind in self._dataset_nindex.items():
             if not self._dataset_rvflag_dict[dataset_name]:
                 continue
-            
+
             dataset_selection = self.spleaf_series_index[d_ind]
             n = len(dataset_selection)
 

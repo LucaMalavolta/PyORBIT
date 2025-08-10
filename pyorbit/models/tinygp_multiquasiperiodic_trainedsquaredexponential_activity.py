@@ -229,7 +229,7 @@ class TinyGP_MultiQuasiPeriodic_TrainedSquaredExponential_Activity(AbstractModel
         self.internal_coeff_SE_prime = np.empty(self._added_datasets)
         self._X = (self._dataset_x0, self._dataset_label.astype(int))
 
-        use_derivative = self._set_derivative_option(mc, dataset, return_flag=True, **kwargs) 
+        use_derivative = self._set_derivative_option(mc, dataset, return_flag=True, **kwargs)
 
         if 'derivative_quasiperiodic'in kwargs:
             use_derivative_QP = kwargs['derivative_quasiperiodic'].get(dataset.name_ref, True)
@@ -271,11 +271,11 @@ class TinyGP_MultiQuasiPeriodic_TrainedSquaredExponential_Activity(AbstractModel
         #self.internal_coeff_SE_deriv[d_ind] = parameter_values['cyc_der']
 
     def lnlk_compute(self):
-        
+
         pass_conditions = self.check_hyperparameter_values(self.internal_parameter_values)
         if not pass_conditions:
-            return pass_conditions
-        
+            return -np.inf
+
         theta_dict =  dict(
             gamma=1. / (2.*self.internal_parameter_values['Oamp'] ** 2),
             Pdec=self.internal_parameter_values['Pdec'],

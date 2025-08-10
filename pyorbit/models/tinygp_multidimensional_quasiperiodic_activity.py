@@ -209,7 +209,7 @@ class TinyGP_Multidimensional_QuasiPeriodicActivity(AbstractModel, AbstractGauss
         self.internal_coeff_deriv = np.empty(self._added_datasets)
         self._X = (self._dataset_x0, self._dataset_label.astype(int))
 
-        self._set_derivative_option(mc, dataset, **kwargs) 
+        self._set_derivative_option(mc, dataset, **kwargs)
 
         return
 
@@ -232,8 +232,8 @@ class TinyGP_Multidimensional_QuasiPeriodicActivity(AbstractModel, AbstractGauss
 
         pass_conditions = self.check_hyperparameter_values(self.internal_parameter_values)
         if not pass_conditions:
-            return pass_conditions
-        
+            return -np.inf
+
         theta_dict =  dict(
             gamma=1. / (2.*self.internal_parameter_values['Oamp'] ** 2),
             Pdec=self.internal_parameter_values['Pdec'],

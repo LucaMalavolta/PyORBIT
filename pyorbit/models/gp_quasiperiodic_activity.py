@@ -148,11 +148,11 @@ class GaussianProcess_QuasiPeriodicActivity(AbstractModel, AbstractGaussianProce
         """
 
         self.update_parameter_values(parameter_values)
-        
+
         pass_conditions = self.check_hyperparameter_values(parameter_values)
         if not pass_conditions:
-            return pass_conditions
-        
+            return -np.inf
+
         gp_pams = self.convert_val2gp(parameter_values)
         env = np.sqrt(dataset.e ** 2.0 + dataset.jitter ** 2.0)
         self.gp[dataset.name_ref].set_parameter_vector(gp_pams)
@@ -163,7 +163,7 @@ class GaussianProcess_QuasiPeriodicActivity(AbstractModel, AbstractGaussianProce
     def sample_predict(self, parameter_values, dataset, x0_input=None, return_covariance=False, return_variance=False):
 
         self.update_parameter_values(parameter_values)
-        
+
         gp_pams = self.convert_val2gp(parameter_values)
 
         env = np.sqrt(dataset.e ** 2.0 + dataset.jitter ** 2.0)

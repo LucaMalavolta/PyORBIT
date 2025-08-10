@@ -158,7 +158,7 @@ class SPLEAF_Multidimensional_ESP(AbstractModel, AbstractGaussianProcesses):
 
         self._reset_kernel()
 
-        self._set_derivative_option(mc, dataset, **kwargs) 
+        self._set_derivative_option(mc, dataset, **kwargs)
 
         return
 
@@ -183,7 +183,7 @@ class SPLEAF_Multidimensional_ESP(AbstractModel, AbstractGaussianProcesses):
 
         pass_conditions = self.check_hyperparameter_values(self.internal_parameter_values)
         if not np.isfinite(pass_conditions):
-            return pass_conditions
+            return -np.inf
 
         """
         Randomly reset the kernel with a probability of 0.1%

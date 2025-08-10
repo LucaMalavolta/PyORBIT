@@ -93,7 +93,7 @@ class Celerite2_SHO(AbstractModel, AbstractGaussianProcesses):
                                         pam_decay='sho_decay')
 
         if not pass_conditions:
-            return pass_conditions
+            return -np.inf
 
         self.gp[dataset.name_ref].mean = 0.
         self.gp[dataset.name_ref].kernel = celerite2.terms.SHOTerm(rho=parameter_values['sho_scale'],

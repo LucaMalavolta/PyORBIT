@@ -100,7 +100,7 @@ class GP_Multidimensional_QuasiPeriodicActivity(AbstractModel, AbstractGaussianP
         self._dataset_res = self._dataset_e2 * 0.
         self._nugget = self._dataset_e2 * 0. + 1e-7
 
-        self._set_derivative_option(mc, dataset, **kwargs) 
+        self._set_derivative_option(mc, dataset, **kwargs)
 
         self.inds_cache = np.tri(self._n_cov_matrix, k=-1, dtype=bool)
 
@@ -295,8 +295,8 @@ class GP_Multidimensional_QuasiPeriodicActivity(AbstractModel, AbstractGaussianP
 
         pass_conditions = self.check_hyperparameter_values(self.internal_parameter_values)
         if not pass_conditions:
-            return pass_conditions
-        
+            return -np.inf
+
         cov_matrix = self._compute_cov_matrix()
 
         inv_M, det_A, failed = self.fast_positive_definite_inverse(cov_matrix)

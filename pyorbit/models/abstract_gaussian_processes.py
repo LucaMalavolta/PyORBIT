@@ -210,13 +210,13 @@ class AbstractGaussianProcesses(object):
             parameter_values['Pdec'] = parameter_values[pam_decay]
 
         if not self.hyper_condition(parameter_values):
-            return -np.inf
+            return False
         if not self.rotdec_condition(parameter_values):
-            return -np.inf
+            return False
         if not self.halfrotdec_condition(parameter_values):
-            return -np.inf
+            return False
         if not self.rotdec_factor_condition(parameter_values):
-            return -np.inf
+            return False
 
         return True
 
