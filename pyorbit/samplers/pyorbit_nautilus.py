@@ -90,11 +90,13 @@ def pyorbit_nautilus(config_in, input_datasets=None, return_output=None, run_nes
 
     results_analysis.print_bayesian_info(mc)
 
+    discard_exploration = mc.nested_sampling_parameters.get('discard_exploration', True)
+    nautilus_nlive_multiplier = mc.nested_sampling_parameters.get('nautilus_nlive_multiplier', 5.0)
 
     if 'nlive_mult' in mc.nested_sampling_parameters:
-        nlive = mc.ndim * mc.nested_sampling_parameters['nlive_mult']
+        nlive = mc.ndim * mc.nested_sampling_parameters['nlive_mult'] * nautilus_nlive_multiplier
     else:
-        nlive = mc.nested_sampling_parameters['nlive']
+        nlive = mc.nested_sampling_parameters['nlive'] * nautilus_nlive_multiplier
 
     n_networks = mc.nested_sampling_parameters['n_networks']
     equal_weight_boost = mc.nested_sampling_parameters['equal_weight_boost']
@@ -166,7 +168,7 @@ def pyorbit_nautilus(config_in, input_datasets=None, return_output=None, run_nes
         filepath = save_checkpoint,
         n_networks = n_networks
     )
-    success = sampler.run(verbose=True)
+    success = sampler.run(discard_exploration=discard_exploration, verbose=True)
     sampler.write(save_sampler, overwrite=True)
 
 
@@ -174,14 +176,18 @@ def pyorbit_nautilus(config_in, input_datasets=None, return_output=None, run_nes
 
 
     unweighted_points, unweighted_log_w, unweighted_log_l = sampler.posterior()
-    points, log_w, log_l = sampler.posterior(return_as_dict=True, equal_weight=True, equal_weight_boost=10)
-    log_z = sampler.log_z
+    unweighted_log_z = sampler.log_z
+    points, log_w, log_l = sampler.posterior(return_as_dict=True,
+                                                equal_weight=True,
+                                                equal_weight_boost=equal_weight_boost)
     effective_sample_size = sampler.effective_sample_size()
+    log_z = sampler.log_z
 
     results = {
         'unweighted_points': unweighted_points,
         'unweighted_log_w': unweighted_log_w,
         'unweighted_log_l': unweighted_log_l,
+        'unweighted_log_z': unweighted_log_z,
         'points': points,
         'log_w': log_w,
         'log_l': log_l,
