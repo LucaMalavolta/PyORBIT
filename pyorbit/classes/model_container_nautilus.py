@@ -16,7 +16,7 @@ class ModelContainerNautilus(ModelContainer):
                                            'use_default': False,
                                            'use_threading_pool':True,
                                            'n_networks': 8,
-                                           'equal_weight_boost': 10,
+                                           'equal_weight_boost': 2,
                                            'discard_exploration': True,
                                            'nautilus_nlive_multiplier': 5,}
 
