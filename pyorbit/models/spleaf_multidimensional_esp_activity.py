@@ -105,7 +105,8 @@ class SPLEAF_Multidimensional_ESP(AbstractModel, AbstractGaussianProcesses):
             return
 
         ## NEW Addded in PyORBIT v10.10
-        if dataset.kind == 'RV':
+        if (dataset.kind == 'RV' or dataset.kind == 'radial_velocity'):
+            #TODO remove option 'RV' in version PyORBIT version 12
             self._dataset_rvflag_dict[dataset.name_ref] = True
         else:
             self._dataset_rvflag_dict[dataset.name_ref] = False
@@ -232,6 +233,7 @@ class SPLEAF_Multidimensional_ESP(AbstractModel, AbstractGaussianProcesses):
         rv_loglike = 0.0
 
         for dataset_name, d_ind in self._dataset_nindex.items():
+
             if not self._dataset_rvflag_dict[dataset_name]:
                 continue
 
@@ -249,7 +251,7 @@ class SPLEAF_Multidimensional_ESP(AbstractModel, AbstractGaussianProcesses):
             rv_loglike += -0.5 * (n * np.log(2 * np.pi) + np.sum(residuals** 2 * env[dataset_selection] - np.log(env[dataset_selection])))
 
             #rv_loglike += -0.5 * (n * np.log(2 * np.pi) + np.sum(residuals[dataset_selection] ** 2 * env[dataset_selection] - np.log(env[dataset_selection])))
-
+            print(rv_loglike)
         return rv_loglike
 
 

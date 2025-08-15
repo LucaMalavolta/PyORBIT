@@ -28,7 +28,7 @@ def pyorbit_results():
     parser.add_argument('-noacf', type=str, nargs='?', default=False, help='Skip ACF, even when all the flags are active')
     parser.add_argument('-dfm_corner', type=str, nargs='?', default=False, help='Use DFM corner script for corner plots')
     parser.add_argument('-getdist_corner', type=str, nargs='?', default=False, help='Use getdist script for corner plots')
-    parser.add_argument('-compute_rv_like', type=str, nargs='?', default=False, help='Skip RV likelihood calculation')
+    parser.add_argument('-compute_rv_like', type=str, nargs='?', default=False, help='Compute RV likelihood calculation')
 
 
     plot_dictionary = {

@@ -747,7 +747,7 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
 
     data_are_rvs = False
     for dataset_name, dataset in mc.dataset_dict.items():
-        #TODO remove option 'RV' in version 11
+        #TODO remove option 'RV' in PyORBIT version 12
         data_are_rvs = (dataset.kind == 'RV' or dataset.kind == 'radial_velocity')
         if data_are_rvs:
             break
@@ -757,7 +757,7 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
     print()
     if not skip_rv_like:
         try:
-            print('Number of samplings for RV log-likelihood calculations [rv_like_samplings keyword]:', )
+            print('Number of samplings for RV log-likelihood calculations [rv_like_samplings keyword]:', rv_like_samplings)
             print('Recomputing RV ln-likelihood, it may take a while...')
 
             if n_samplings == rv_like_samplings:
@@ -776,6 +776,8 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
         except:
             print('Analysis ran using PyORBIT version < 10.10, RV-only log_likelihood not available')
 
+    #print(' OUTCOME: ', rv_ln_likelihood_success)
+    #print(' some values:', flat_rv_lnlike)
 
     if mc.include_priors:
 
@@ -1603,7 +1605,7 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
             bjd_plot[dataset_name]['start'] -= bjd_plot[dataset_name]['range'] * 0.10
             bjd_plot[dataset_name]['end'] += bjd_plot[dataset_name]['range'] * 0.10
 
-            #TODO remove the 'Phot' options in version 11
+            #TODO remove the 'Phot' options in PyORBIT version 12
             if dataset.kind == 'photometry' or dataset.kind == 'Phot':
 
                 if bjd_plot[dataset_name]['range'] > P_minimum:
@@ -1643,7 +1645,7 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
 
         # Special cases
         for dataset_name, dataset in mc.dataset_dict.items():
-            #TODO remove option 'RV' in version 11
+            #TODO remove option 'RV' in PyORBIT version 12
             if dataset.kind == 'RV' or dataset.kind == 'radial_velocity':
                 bjd_plot[dataset_name] = bjd_plot['full']
             if dataset.kind == 'transit_time':

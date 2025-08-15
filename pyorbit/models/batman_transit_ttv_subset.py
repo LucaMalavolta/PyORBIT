@@ -80,7 +80,7 @@ class Batman_Transit_TTV_Subset(AbstractModel, AbstractTransit):
         """ Reading some code-specific keywords from the configuration file"""
         self._prepare_dataset_options(mc, dataset, **kwargs)
 
-        #TODO remove in version 11
+        #TODO remove in version PyORBIT version 12
         try:
             self.start_flag = dataset.submodel_minflag
             self.end_flag = dataset.submodel_maxflag

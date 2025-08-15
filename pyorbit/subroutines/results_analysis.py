@@ -556,7 +556,7 @@ def get_model(mc, theta, bjd_dict, **kwargs):
                 parameter_values.update(
                     mc.common_models[common_ref].convert(theta))
 
-            #TODO: remove try-except starting from version 11 !!
+            #TODO: remove try-except starting from PyORBIT version 12 !!
             try:
                 for planet_name in mc.models[model_name].multiple_planets:
                     parameter_values.update(
@@ -599,7 +599,7 @@ def get_model(mc, theta, bjd_dict, **kwargs):
                 parameter_values.update(
                     mc.common_models[common_ref].convert(theta))
 
-            #TODO: remove try-except starting from version 11 !!
+            #TODO: remove try-except starting from PyORBIT version 12 !!
             try:
                 for planet_name in mc.models[model_name].multiple_planets:
                     parameter_values.update(

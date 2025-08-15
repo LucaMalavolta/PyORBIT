@@ -217,7 +217,8 @@ class TinyGP_Multidimensional_QuasiPeriodicCosineActivity(AbstractModel, Abstrac
             return
 
         ## NEW Addded in PyORBIT v10.10
-        if dataset.kind == 'RV':
+        if (dataset.kind == 'RV' or dataset.kind == 'radial_velocity'):
+            #TODO remove option 'RV' in version PyORBIT version 12
             rv_flag = np.ones_like(dataset.x0, dtype=bool)
         else:
             rv_flag = np.zeros_like(dataset.x0, dtype=bool)

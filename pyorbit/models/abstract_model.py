@@ -271,10 +271,6 @@ class AbstractModel(object):
         prior_out = 0.00
         parameter_values = self.convert(theta, dataset_name)
 
-        """ Preserving back-compatibility with version 8
-        #TODO: to be simplified in the next version
-        """
-
         if getattr(self, 'multivariate_priors', False):
             if len(OrderedSet(self.multivariate_pams[dataset_name]) & OrderedSet(self.list_pams_dataset[dataset_name])) > 0:
                 multi_pams = [parameter_values[ii]
