@@ -15,10 +15,10 @@ class ModelContainerNautilus(ModelContainer):
                                            'default': False,
                                            'use_default': False,
                                            'use_threading_pool':True,
-                                           'n_networks': 8,
+                                           'n_networks': 4,
                                            'equal_weight_boost': 2,
                                            'discard_exploration': True,
-                                           'nautilus_nlive_multiplier': 5,}
+                                           'nautilus_nlive_multiplier': 1,}
 
         self.output_directory = None
 
