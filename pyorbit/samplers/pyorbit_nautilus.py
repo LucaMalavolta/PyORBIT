@@ -152,6 +152,7 @@ def pyorbit_nautilus(config_in, input_datasets=None, return_output=None, run_nes
         #print('                                        bound = ', mc.nested_sampling_parameters['bound'])
         #print('                                        sample = ', mc.nested_sampling_parameters['sample'])
 
+    print('                     live points multiplier = {0:3.0f}'.format(nautilus_nlive_multiplier))
     print('                     number of networks = {0:6.0f}'.format(n_networks))
     print('                     equal weights boost = {0:6.0f}'.format(equal_weight_boost))
     print()
