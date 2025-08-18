@@ -345,10 +345,12 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, reload_ze
             """ Double check if there is planet using a dynamical model
                 Dynamical models requires mass and radius of the star, the density cannot be treated as a free parameter
             """
-            for planet_name, planet_conf in conf_common['planets'].items():
-                if planet_conf['orbit'] == 'dynamical':
-                    star_dynamical_model = True
-
+            try:
+                for planet_name, planet_conf in conf_common['planets'].items():
+                    if planet_conf['orbit'] == 'dynamical':
+                        star_dynamical_model = True
+            except KeyError:
+                pass
             """ stellar models can be gathered under a specific label"""
 
             for conf_name, star_conf in model_conf.items():
