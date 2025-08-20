@@ -251,7 +251,7 @@ class SPLEAF_Multidimensional_ESP(AbstractModel, AbstractGaussianProcesses):
             rv_loglike += -0.5 * (n * np.log(2 * np.pi) + np.sum(residuals** 2 * env[dataset_selection] - np.log(env[dataset_selection])))
 
             #rv_loglike += -0.5 * (n * np.log(2 * np.pi) + np.sum(residuals[dataset_selection] ** 2 * env[dataset_selection] - np.log(env[dataset_selection])))
-            print(rv_loglike)
+
         return rv_loglike
 
 

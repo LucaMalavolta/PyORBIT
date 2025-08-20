@@ -206,7 +206,6 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, reload_ze
             or everything will fall apart """
         print('Opening: ', dataset_name)
 
-
         for key in extended_dataset_keylist:
             add_extended_dataset = dataset_conf.get(key, False)
             if add_extended_dataset:
@@ -297,6 +296,7 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, reload_ze
                 mc.dataset_dict[dataset_name].append_ancillary(dataset_conf[ancillary])
 
     ordering_dict = {}
+    print()
 
     for model_name, model_conf in conf_common.items():
 
@@ -670,7 +670,8 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, reload_ze
                     mc.models[model_name].common_ref.append(planet)
                 mc.models[model_name].multiple_planets = planet_list
 
-            """ A model can be exclusively unitary, additive, or normalization.
+            """ A model can be exclusively unitary, additive, multiplicative, or acting as a normalization factor.
+                The differenze between
                 How the individual model are combined to provided the final model is embedded in the Dataset class
             """
             try:
@@ -725,11 +726,20 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, reload_ze
             """ Using default key_list if one dataset is missing"""
             try:
                 for dataset_name, dataset in mc.dataset_dict.items():
-
                     if model_name in dataset.models:
 
                         if dataset_name not in model_conf:
                             model_conf[dataset_name] = {}
+
+                        for key_list in ['boundaries', 'spaces', 'priors', 'starts', 'fixed']:
+                            if key_list in model_conf:
+
+                                if dataset_name in model_conf[key_list]:
+
+                                    try:
+                                        model_conf[dataset_name][key_list].update(model_conf[key_list][dataset_name])
+                                    except:
+                                        model_conf[dataset_name][key_list] = model_conf[key_list][dataset_name].copy()
 
                         bounds_space_priors_starts_fixed(mc,
                                                             mc.models[model_name],
@@ -739,7 +749,7 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, reload_ze
 
             except:
                 pass
-
+            
             try:
                 mc.models[model_name].model_conf.update(model_conf)
             except:
@@ -1061,20 +1071,20 @@ def bounds_space_priors_starts_fixed(mc,
         if 'boundaries' in conf:
             bound_conf = conf['boundaries']
             for par in bound_conf:
+                if type(bound_conf[par]) == dict: continue
                 model_obj.bounds[dataset][add_par_name + par] = \
                     np.asarray(bound_conf[par], dtype=np.double)
 
         if 'spaces' in conf:
             space_conf = conf['spaces']
             for par in space_conf:
+                if type(space_conf[par]) == dict: continue
                 model_obj.spaces[dataset][add_par_name + par] = \
                     space_conf[par]
 
         if 'priors' in conf:
             prior_conf = conf['priors']
             for par in prior_conf:
-
-
 
                 if par == 'multivariate':
                     model_obj.multivariate_priors[dataset] = True
@@ -1089,13 +1099,12 @@ def bounds_space_priors_starts_fixed(mc,
                     model_obj.multivariate_cov[dataset] = np.cov(cov_data)
                     model_obj.multivariate_med[dataset] = np.median(data_file, axis=0)
                     model_obj.multivariate_func[dataset] = multivariate_normal(model_obj.multivariate_med[dataset],
-                                                                      model_obj.multivariate_cov[dataset])
+                                                                    model_obj.multivariate_cov[dataset])
                     ll = None
                     cov_data = None
                     data_file = None
 
-
-
+                if type(par) == dict: continue
 
                 prior_pams = np.atleast_1d(prior_conf[par])
                 model_obj.prior_kind[dataset][add_par_name + par] = \
@@ -1118,12 +1127,14 @@ def bounds_space_priors_starts_fixed(mc,
             mc.starting_point_flag = True
             starts_conf = conf['starts']
             for par in starts_conf:
+                if type(starts_conf[par]) == dict: continue
                 model_obj.starts[dataset][add_par_name + par] = \
                     np.asarray(starts_conf[par], dtype=np.double)
 
         if 'fixed' in conf:
             fixed_conf = conf['fixed']
             for par in fixed_conf:
+                if type(fixed_conf[par]) == dict: continue
                 model_obj.fix_list[dataset][add_par_name + par] = \
                     get_2darray_from_val(fixed_conf[par])
 
