@@ -42,6 +42,8 @@ class PolynomialTrend(AbstractModel):
         if kwargs.get('exclude_zero_point', False):
             self.starting_order = 1
 
+        self.starting_order = kwargs.get('starting_order', self.starting_order)
+
         """ The user may decide to compute the polynomial parameters over a different time interval
             useful for long-term with very slow variations over a single day
         """
@@ -128,6 +130,8 @@ class SharedPolynomialTrend(AbstractModel):
         if kwargs.get('exclude_zero_point', self.exclude_zero_point):
             self.starting_order = 1
 
+        self.starting_order = kwargs.get('starting_order', self.starting_order)
+
         """ The user may decide to compute the polynomial parameters over a different time interval
             useful for long-term with very slow variations over a single day
         """
@@ -136,7 +140,9 @@ class SharedPolynomialTrend(AbstractModel):
         """ A polynomial with amplitude variable according to the dataset under analysis"""
         self.variable_amplitude = kwargs.get('variable_amplitude', True)
         if self.variable_amplitude:
-            self.starting_order = 1
+            if self.starting_order == 0:
+                print('Warning: variable_amplitude=True forces starting_order=>1')
+                self.starting_order = 1
             self.list_pams_dataset.update(['poly_factor'])
 
         self.time_offset = kwargs.get('time_offset', False)
@@ -240,6 +246,8 @@ class LocalPolynomialTrend(AbstractModel):
         if kwargs.get('exclude_zero_point', False):
             self.starting_order = 1
 
+        self.starting_order = kwargs.get('starting_order', self.starting_order)
+
         """ The user may decide to compute the polynomial parameters over a different time interval
             useful for long-term with very slow variations over a single day
         """
@@ -336,6 +344,9 @@ class SubsetPolynomialTrend(AbstractModel):
         """ If the polynomial is used as normalization factor, the first order must be included"""
         if self.normalization_model:
             self.starting_order = 0
+
+        self.starting_order = kwargs.get('starting_order', self.starting_order)
+
 
     def initialize_model_dataset(self, mc, dataset, **kwargs):
 

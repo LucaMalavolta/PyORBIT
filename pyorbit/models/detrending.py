@@ -78,6 +78,8 @@ class Detrending(AbstractModel):
         if kwargs.get('exclude_zero_point', self.exclude_zero_point):
             self.starting_order = 1
 
+        self.starting_order = kwargs.get('starting_order', self.starting_order)
+
         self.natural_base = kwargs.get('natural_base', self.natural_base )
 
         print()
@@ -321,6 +323,8 @@ class FullDetrending(AbstractModel):
 
         if kwargs.get('exclude_zero_point', self.exclude_zero_point):
             self.starting_order = 1
+
+        self.starting_order = kwargs.get('starting_order', self.starting_order)
 
         self.natural_base = kwargs.get('natural_base', self.natural_base )
 
