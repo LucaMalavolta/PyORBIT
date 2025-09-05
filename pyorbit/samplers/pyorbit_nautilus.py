@@ -90,11 +90,16 @@ def pyorbit_nautilus(config_in, input_datasets=None, return_output=None, run_nes
 
     results_analysis.print_bayesian_info(mc)
 
+    discard_exploration = mc.nested_sampling_parameters['discard_exploration']
+    nautilus_nlive_multiplier = mc.nested_sampling_parameters['nautilus_nlive_multiplier']
 
     if 'nlive_mult' in mc.nested_sampling_parameters:
-        nlive = mc.ndim * mc.nested_sampling_parameters['nlive_mult']
+        nlive = int(mc.ndim * mc.nested_sampling_parameters['nlive_mult'] * nautilus_nlive_multiplier)
     else:
-        nlive = mc.nested_sampling_parameters['nlive']
+        nlive = int(mc.nested_sampling_parameters['nlive'] * nautilus_nlive_multiplier)
+
+    n_networks = mc.nested_sampling_parameters['n_networks']
+    equal_weight_boost = mc.nested_sampling_parameters['equal_weight_boost']
 
 
     global nautilus_priors
@@ -146,7 +151,11 @@ def pyorbit_nautilus(config_in, input_datasets=None, return_output=None, run_nes
         #print('                                        initial stopping criterion = {0:5.4f}'.format(dlogz))
         #print('                                        bound = ', mc.nested_sampling_parameters['bound'])
         #print('                                        sample = ', mc.nested_sampling_parameters['sample'])
-        print()
+
+    print('                     live points multiplier = {0:3.0f}'.format(nautilus_nlive_multiplier))
+    print('                     number of networks = {0:6.0f}'.format(n_networks))
+    print('                     equal weights boost = {0:6.0f}'.format(equal_weight_boost))
+    print()
 
     if not use_threading_pool:
         num_threads = None
@@ -157,9 +166,10 @@ def pyorbit_nautilus(config_in, input_datasets=None, return_output=None, run_nes
         n_dim=mc.ndim,
         n_live=nlive,
         pool=num_threads,
-        filepath = save_checkpoint
+        filepath = save_checkpoint,
+        n_networks = n_networks
     )
-    success = sampler.run(verbose=True)
+    success = sampler.run(discard_exploration=discard_exploration, verbose=True)
     sampler.write(save_sampler, overwrite=True)
 
 
@@ -167,14 +177,18 @@ def pyorbit_nautilus(config_in, input_datasets=None, return_output=None, run_nes
 
 
     unweighted_points, unweighted_log_w, unweighted_log_l = sampler.posterior()
-    points, log_w, log_l = sampler.posterior(return_as_dict=True, equal_weight=True, equal_weight_boost=2)
-    log_z = sampler.log_z
+    unweighted_log_z = sampler.log_z
+    points, log_w, log_l = sampler.posterior(return_as_dict=True,
+                                                equal_weight=True,
+                                                equal_weight_boost=equal_weight_boost)
     effective_sample_size = sampler.effective_sample_size()
+    log_z = sampler.log_z
 
     results = {
         'unweighted_points': unweighted_points,
         'unweighted_log_w': unweighted_log_w,
         'unweighted_log_l': unweighted_log_l,
+        'unweighted_log_z': unweighted_log_z,
         'points': points,
         'log_w': log_w,
         'log_l': log_l,
@@ -207,7 +221,7 @@ def pyorbit_nautilus(config_in, input_datasets=None, return_output=None, run_nes
     #    os.remove(save_checkpoint)
     #except:
     #    pass
-    
+
     if return_output:
         return mc
     else:

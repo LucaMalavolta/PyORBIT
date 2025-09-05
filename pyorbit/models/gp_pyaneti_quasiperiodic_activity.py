@@ -91,7 +91,8 @@ class GP_Pyaneti_QuasiPeriodicActivity(AbstractModel, AbstractGaussianProcesses)
             return
 
         ## NEW Addded in PyORBIT v10.10
-        if dataset.kind == 'RV':
+        if (dataset.kind == 'RV' or dataset.kind == 'radial_velocity'):
+            #TODO remove option 'RV' in version PyORBIT version 12
             self._dataset_rvflag_dict[dataset.name_ref] = True
         else:
             self._dataset_rvflag_dict[dataset.name_ref] = False
@@ -113,7 +114,7 @@ class GP_Pyaneti_QuasiPeriodicActivity(AbstractModel, AbstractGaussianProcesses)
         self._dataset_res = self._dataset_e2 * 0.
         self._fake_jitter = np.zeros(self._added_datasets)
 
-        self._set_derivative_option(mc, dataset, **kwargs) 
+        self._set_derivative_option(mc, dataset, **kwargs)
 
         return
 
@@ -136,8 +137,8 @@ class GP_Pyaneti_QuasiPeriodicActivity(AbstractModel, AbstractGaussianProcesses)
 
         pass_conditions = self.check_hyperparameter_values(self.internal_parameter_values)
         if not pass_conditions:
-            return pass_conditions
-        
+            return -np.inf
+
         self._gp_pams = np.empty(2*self._added_datasets + 3)
 
         for l_dataset in range(0, self._added_datasets):

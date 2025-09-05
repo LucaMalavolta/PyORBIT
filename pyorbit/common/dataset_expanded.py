@@ -40,7 +40,18 @@ class DatasetExpanded(Dataset):
             'jitter': 'Linear',
             'offset': 'Linear'}
 
-        if self.kind == 'Tcent':
+        if self.kind == 'transit_duration':
+            self.start_id_flag = 4
+            self.standard_n_columns = 7
+        else:
+            self.start_id_flag = 3
+            self.standard_n_columns = 6
+
+        self.jitter_column = self.start_id_flag
+        self.offset_column = self.start_id_flag + 1
+        self.subset_column = self.start_id_flag + 2
+
+        if self.kind == 'transit_time' or self.kind == 'transit_duration':
             self.generic_default_spaces['jitter'] = 'Logarithmic'
             self.generic_default_priors['jitter'] = ['Uniform', []]
 
@@ -61,6 +72,7 @@ class DatasetExpanded(Dataset):
         self.model = None
         # this model is compute externally and passed to the compute subroutine of the model
         self.external_model = None
+        self.buffer_model = None
         self.additive_model = None
         self.unitary_model = None
         self.normalization_model = None

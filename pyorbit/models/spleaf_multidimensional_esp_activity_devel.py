@@ -109,7 +109,8 @@ class SPLEAF_Multidimensional_ESP_devel(AbstractModel, AbstractGaussianProcesses
             return
 
         ## NEW Addded in PyORBIT v10.10
-        if dataset.kind == 'RV':
+        if (dataset.kind == 'RV' or dataset.kind == 'radial_velocity'):
+            #TODO remove option 'RV' in version PyORBIT version 12
             self._dataset_rvflag_dict[dataset.name_ref] = True
         else:
             self._dataset_rvflag_dict[dataset.name_ref] = False
@@ -133,7 +134,7 @@ class SPLEAF_Multidimensional_ESP_devel(AbstractModel, AbstractGaussianProcesses
             self._added_jitters += 1
 
         self.spleaf_time, self.spleaf_res, self.spleaf_err, self.spleaf_series_index = \
-            spleaf_cov.merge_series(self._dataset_x0, 
+            spleaf_cov.merge_series(self._dataset_x0,
                                     self._dataset_err/self.matrix_regularization[dataset.name_ref],
                                     self._dataset_err/self.matrix_regularization[dataset.name_ref])
         self.spleaf_res = np.zeros_like(self.spleaf_err)
@@ -153,7 +154,7 @@ class SPLEAF_Multidimensional_ESP_devel(AbstractModel, AbstractGaussianProcesses
 
         d_ind = self._dataset_nindex[dataset.name_ref]
 
-        self.spleaf_res[self.spleaf_series_index[d_ind]] = dataset.residuals 
+        self.spleaf_res[self.spleaf_series_index[d_ind]] = dataset.residuals
 
         self.internal_parameter_values = {
             'Prot': 30.0,
@@ -167,7 +168,7 @@ class SPLEAF_Multidimensional_ESP_devel(AbstractModel, AbstractGaussianProcesses
 
         self._reset_kernel()
 
-        self._set_derivative_option(mc, dataset, **kwargs) 
+        self._set_derivative_option(mc, dataset, **kwargs)
 
         return
 
@@ -192,7 +193,7 @@ class SPLEAF_Multidimensional_ESP_devel(AbstractModel, AbstractGaussianProcesses
 
         pass_conditions = self.check_hyperparameter_values(self.internal_parameter_values)
         if not pass_conditions:
-            return pass_conditions
+            return -np.inf
 
         """
         Randomly reset the kernel with a probability of 0.1%
@@ -256,7 +257,7 @@ class SPLEAF_Multidimensional_ESP_devel(AbstractModel, AbstractGaussianProcesses
 
             residuals = (self.spleaf_res[dataset_selection] - gp_model)
             residuals *= self.matrix_regularization[dataset_name]
-            
+
             rv_loglike += -0.5 * (n * np.log(2 * np.pi) + np.sum(residuals** 2 * env[dataset_selection] - np.log(env[dataset_selection])))
 
             #rv_loglike += -0.5 * (n * np.log(2 * np.pi) + np.sum(residuals[dataset_selection] ** 2 * env[dataset_selection] - np.log(env[dataset_selection])))

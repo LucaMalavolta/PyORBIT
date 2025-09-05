@@ -19,7 +19,7 @@ def pyorbit_results():
     parser.add_argument('-t', type=str, nargs='?', default=False, help='Compute and save Gelman-Rubin traces')
     parser.add_argument('-fc', type=str, nargs='?', default=False, help='Save full correlation plot - it may be slow!')
     parser.add_argument('-cc', type=str, nargs='?', default=False, help='Save corner plots of common parameters')
-    parser.add_argument('-dc', type=str, nargs='?', default=False, help='Save individual corner plots of reach dataset')
+    parser.add_argument('-dc', type=str, nargs='?', default=False, help='Save individual corner plots of each dataset')
     parser.add_argument('-v', type=str, nargs='?', default=False, help='Write Veusz files for corner plot')
     parser.add_argument('-vv', type=str, nargs='?', default=False, help='Write Veusz-compatible files')
     parser.add_argument('-ddp', type=str, nargs='?', default=False, help='Save dynesty default plots')
@@ -28,7 +28,7 @@ def pyorbit_results():
     parser.add_argument('-noacf', type=str, nargs='?', default=False, help='Skip ACF, even when all the flags are active')
     parser.add_argument('-dfm_corner', type=str, nargs='?', default=False, help='Use DFM corner script for corner plots')
     parser.add_argument('-getdist_corner', type=str, nargs='?', default=False, help='Use getdist script for corner plots')
-    parser.add_argument('-compute_rv_like', type=str, nargs='?', default=False, help='Skip RV likelihood calculation')
+    parser.add_argument('-compute_rv_like', type=str, nargs='?', default=False, help='Compute RV likelihood calculation')
 
 
     plot_dictionary = {
@@ -56,6 +56,8 @@ def pyorbit_results():
                                'eclipse_phasecurve',
                                'transit_eclipse_phasecurve',
                                'rv_keplerian'],
+        'transit_oversampled_models': ['transit'],
+        'eclipse_oversampled_models': ['eclipse'],
         'compute_rv_like': False,
     }
 

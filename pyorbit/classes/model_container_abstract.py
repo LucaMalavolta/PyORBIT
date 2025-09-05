@@ -201,7 +201,7 @@ class ModelContainer(object):
                     R = model.transformation['R_Rs'](theta,
                                                   model.fixed,
                                                   model.parameter_index['R_Rs'])
-                    if not b <= 1 + R:
+                    if not np.abs(b) <= 1 + R:
                         return False
 
                 """ Step 6 eclipse depth must be greater than the amplitude of
@@ -315,7 +315,7 @@ class ModelContainer(object):
                     parameter_values.update(
                         self.common_models[common_ref].convert(theta))
 
-                #TODO: remove try-except starting from version 11 !!
+                #TODO: remove try-except starting from PyORBIT version 12 !!
                 try:
                     for planet_name in self.models[model_name].multiple_planets:
                         parameter_values.update(
@@ -364,13 +364,17 @@ class ModelContainer(object):
                         parameter_values, dataset)
                     continue
 
-                if getattr(dataset, 'dynamical', False):
-                    dataset.external_model = dynamical_output[dataset_name]
+                if getattr(dataset, 'dynamical', False) and getattr(self.models[model_name], 'dynamical_model', False):
+                    if dataset.kind == 'photometry' :
+                        dataset.buffer_model = self.models[model_name].compute_dynamical(parameter_values, dataset, dynamical_output[dataset_name])
+                    else:
+                        dataset.external_model = dynamical_output[dataset_name]
 
                 if dataset.normalization_model is None and (self.models[model_name].unitary_model or self.models[model_name].normalization_model):
                     dataset.normalization_model = np.ones(dataset.n, dtype=np.double)
 
                 if self.models[model_name].unitary_model:
+                    #print('CHOICE D ', model_name, self.models[model_name].random_number, np.shape(dataset.buffer_model), np.shape(dataset.unitary_model))
                     dataset.unitary_model += self.models[model_name].compute(
                     parameter_values, dataset)
                 elif self.models[model_name].normalization_model:
@@ -454,6 +458,11 @@ class ModelContainer(object):
             log_likelihood = -np.inf
             log_priors = -np.inf
 
+        #if self.dynamical_model is not None:
+        #    if not (dynamical_output['stable'] and dynamical_output['pass']):
+        #        log_likelihood = -np.inf
+        #        log_priors = -np.inf
+
         if return_priors is False:
             return log_likelihood
         else:
@@ -470,7 +479,8 @@ class ModelContainer(object):
 
             logchi2_gp_model = None
 
-            if not (dataset.kind == 'RV'):
+            if not (dataset.kind == 'RV' or dataset.kind == 'radial_velocity'):
+                #TODO remove option 'RV' in PyORBIT version 12
                 continue
 
             if 'none' in dataset.models or 'None' in dataset.models:
@@ -486,7 +496,7 @@ class ModelContainer(object):
                 for common_ref in self.models[model_name].common_ref:
                     theta_flag = self.common_models[common_ref].check_theta_flag(theta_flag)
 
-                #TODO: remove try-except starting from version 11 !!
+                #TODO: remove try-except starting from PyORBIT version 12 !!
                 try:
                     for planet_name in self.models[model_name].multiple_planets:
                         theta_flag = self.common_models[planet_name].check_theta_flag(theta_flag)
@@ -528,7 +538,8 @@ class ModelContainer(object):
 
         for dataset_name, dataset in self.dataset_dict.items():
 
-            data_are_rvs = (dataset.kind == 'RV')
+            data_are_rvs = (dataset.kind == 'RV' or dataset.kind =='radial_velocity')
+            #TODO remove option 'RV' in PyORBIT version 12
             logchi2_gp_model = None
             compute_gp_residuals = False
 
@@ -550,7 +561,7 @@ class ModelContainer(object):
                     parameter_values.update(
                         self.common_models[common_ref].convert(theta))
 
-                #TODO: remove try-except starting from version 11 !!
+                #TODO: remove try-except starting from PyORBIT version 12 !!
                 try:
                     for planet_name in self.models[model_name].multiple_planets:
                         parameter_values.update(
@@ -595,8 +606,13 @@ class ModelContainer(object):
                         parameter_values, dataset)
                     continue
 
-                if getattr(dataset, 'dynamical', False):
-                    dataset.external_model = dynamical_output[dataset_name]
+                if getattr(dataset, 'dynamical', False) and getattr(self.models[model_name], 'dynamical_model', False):
+                    if dataset.kind == 'photometry' :
+                        dataset.buffer_model = self.models[model_name].compute_dynamical(parameter_values, dataset, dynamical_output[dataset_name])
+                    else:
+                        dataset.external_model = dynamical_output[dataset_name]
+
+
 
                 if dataset.normalization_model is None and (self.models[model_name].unitary_model or self.models[model_name].normalization_model):
                     dataset.normalization_model = np.ones(dataset.n, dtype=np.double)
@@ -633,14 +649,18 @@ class ModelContainer(object):
                 if hasattr(self.models[logchi2_gp_model], 'delayed_lnlk_computation'):
 
                     self.models[logchi2_gp_model].add_internal_dataset(parameter_values, dataset)
+                    print('aaaaaaa', dataset.name_ref)
                     if logchi2_gp_model not in delayed_lnlk_computation:
                         delayed_lnlk_computation.append(logchi2_gp_model)
+                        print('bbbbbbb',logchi2_gp_model, dataset.name_ref)
+
                 elif skip_loglikelihood:
                     residuals_analysis[model_name][residuals_dataset_label+'_gp_model'] = logchi2_gp_model
                     residuals_analysis[model_name][residuals_dataset_label+'_gp_parameters'] = parameter_values
                 elif data_are_rvs:
                     log_likelihood += self.models[logchi2_gp_model].lnlk_compute(
                         parameter_values, dataset)
+                    print('data_are_rvs', data_are_rvs, log_likelihood)
 
                 if compute_gp_residuals:
                     dataset.residuals_for_regression -= self.models[logchi2_gp_model].sample_predict(parameter_values, dataset)
@@ -667,7 +687,8 @@ class ModelContainer(object):
             else:
                 data_log_likelihood += x_dataset.model_logchi2()
 
-            if x_dataset.kind =='RV':
+            if (x_dataset.kind == 'RV' or x_dataset.kind =='radial_velocity'):
+                #TODO remove option 'RV' in PyORBIT version 12
                 log_likelihood += data_log_likelihood
 
             y_dataset.residuals -= modelout_yy
@@ -678,12 +699,14 @@ class ModelContainer(object):
             else:
                 data_log_likelihood = y_dataset.model_logchi2()
 
-            if x_dataset.kind =='RV':
+            if (x_dataset.kind == 'RV' or x_dataset.kind =='radial_velocity'):
+                #TODO remove option 'RV' in PyORBIT version 12
                 log_likelihood += data_log_likelihood
 
         """ In case there is more than one GP model """
         for logchi2_gp_model in delayed_lnlk_computation:
             log_likelihood += self.models[logchi2_gp_model].lnlk_rvonly_compute()
+            print(logchi2_gp_model, log_likelihood)
 
         return log_likelihood
 

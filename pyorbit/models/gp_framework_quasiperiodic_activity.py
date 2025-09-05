@@ -52,7 +52,7 @@ class GP_Framework_QuasiPeriodicActivity(AbstractModel, AbstractGaussianProcesse
         self.inds_cache = None
 
     def initialize_model(self, mc,  **kwargs):
-        
+
         self._prepare_hyperparameter_conditions(mc, **kwargs)
         self._prepare_rotation_replacement(mc, **kwargs)
         self._prepare_decay_replacement(mc, **kwargs)
@@ -73,7 +73,8 @@ class GP_Framework_QuasiPeriodicActivity(AbstractModel, AbstractGaussianProcesse
             self._3ej = np.zeros(3*dataset.n, dtype=np.double)
             self._3res = np.zeros(3*dataset.n, dtype=np.double)
 
-        if dataset.kind == 'RV':
+        if (dataset.kind == 'RV' or dataset.kind == 'radial_velocity'):
+            #TODO remove option 'RV' in version PyORBIT version 12
             self._3x0[:self._nx0] = dataset.x0
             self._3e[:self._nx0] = dataset.e
             self._added_datasets += 1
@@ -150,7 +151,8 @@ class GP_Framework_QuasiPeriodicActivity(AbstractModel, AbstractGaussianProcesse
 
         self.internal_parameter_values = parameter_values
 
-        if dataset.kind == 'RV':
+        if (dataset.kind == 'RV' or dataset.kind == 'radial_velocity'):
+            #TODO remove option 'RV' in version PyORBIT version 12
             self._3ej[:self._nx0] = np.sqrt(
                 self._3e[:self._nx0]**2 + dataset.jitter**2.0)
             self._3res[:self._nx0] = dataset.residuals
@@ -295,7 +297,7 @@ class GP_Framework_QuasiPeriodicActivity(AbstractModel, AbstractGaussianProcesse
 
         pass_conditions = self.check_hyperparameter_values(self.internal_parameter_values)
         if not pass_conditions:
-            return pass_conditions
+            return -np.inf
 
         cov_matrix = self._compute_cov_matrix(add_diagonal_errors=True)
         inv_M, det_A, failed = self.fast_positive_definite_inverse(cov_matrix)
@@ -355,7 +357,8 @@ class GP_Framework_QuasiPeriodicActivity(AbstractModel, AbstractGaussianProcesse
             print('Covariance matrix output not implemented - ERROR')
             quit()
 
-        if dataset.kind == 'RV':
+        if (dataset.kind == 'RV' or dataset.kind == 'radial_velocity'):
+            #TODO remove option 'RV' in version PyORBIT version 12
             if return_variance:
                 return mu[:n_output], std[:n_output]
             else:

@@ -36,7 +36,22 @@ class Dataset(AbstractCommon):
             'jitter': [0.00, 0.00],
             'offset': [0.00, 0.00]}
 
-        if self.kind == 'Tcent':
+        """ transit_duration files have four data columns before flags and ancillary data
+            For now, all the other datasets foresee three data columns before flags and ancillary data
+        """
+
+        if self.kind == 'transit_duration':
+            self.start_id_flag = 4
+            self.standard_n_columns = 7
+        else:
+            self.start_id_flag = 3
+            self.standard_n_columns = 6
+
+        self.jitter_column = self.start_id_flag
+        self.offset_column = self.start_id_flag + 1
+        self.subset_column = self.start_id_flag + 2
+
+        if self.kind == 'transit_time' or self.kind == 'transit_duration':
             self.generic_default_spaces['jitter'] = 'Logarithmic'
             self.generic_default_priors['jitter'] = ['Uniform', []]
 
@@ -57,6 +72,8 @@ class Dataset(AbstractCommon):
         self.model = None
         # this model is compute externally and passed to the compute subroutine of the model
         self.external_model = None
+        self.buffer_model = None
+        # this model is used to compute the additive part of the model
         self.additive_model = None
         self.unitary_model = None
         self.normalization_model = None
@@ -129,18 +146,19 @@ class Dataset(AbstractCommon):
 
         data0 = np.atleast_2d(np.loadtxt(input_file))
         data1 = np.genfromtxt(input_file, names=True)
-        data_input = np.zeros([np.size(data0, axis=0), 6], dtype=np.double) - 1.
+
+        data_input = np.zeros([np.size(data0, axis=0), self.standard_n_columns], dtype=np.double) - 1.
 
         if np.shape(data0)[0] == np.shape(data1)[0]:
             for i_name, v_name in enumerate(data1.dtype.names):
-                if i_name<3:
+                if i_name<self.start_id_flag:
                     data_input[:, i_name] = data1[v_name]
                 elif v_name == 'jit' or v_name=='jitter' or v_name=='jitter_flag':
-                    data_input[:, 3] = data1[v_name]
+                    data_input[:, self.jitter_column] = data1[v_name]
                 elif v_name == 'off' or v_name=='offset' or v_name=='offset_flag':
-                    data_input[:, 4] = data1[v_name]
+                    data_input[:, self.offset_column] = data1[v_name]
                 elif v_name == 'sub' or v_name=='subset' or v_name=='subset_flag':
-                    data_input[:, 5] = data1[v_name]
+                    data_input[:, self.subset_column] = data1[v_name]
                 else:
                     self.ancillary = data1.copy()
                     self.ancillary_str = data1.copy()
@@ -154,24 +172,46 @@ class Dataset(AbstractCommon):
                             flag_shutdown_jitter=False):
         # Add a flag to save internally the input dataset
 
-        if flag_shutdown_jitter:
-            data_input[:, 4] = -1
-
-        if not self.models:
-            data_input[:, 3:] = -1
-
         if self.kind == 'transit_time':
             """ Special input reading from T0 files """
             self.n_transit = np.asarray(data_input[:, 0], dtype=np.int16)
             self.x = np.asarray(data_input[:, 1], dtype=np.double)
             self.e = np.asarray(data_input[:, 2], dtype=np.double)
+
+            """ check if the transit numbers are in increasing order"""
+            for i_n in range(1, np.size(self.n_transit)):
+                if self.n_transit[i_n] <= self.n_transit[i_n-1]:
+                    print('Transit numbers in the input file are not in increasing order')
+                    print('Please check the input file')
+                    quit()
+
             """ copy of self.y added for consistency with the rest of the code
             """
             self.y = self.x
+        elif self.kind == 'transit_duration':
+            """ Special input reading from transit_duration files """
+            self.n_transit = np.asarray(data_input[:, 0], dtype=np.int16)
+            self.x = np.asarray(data_input[:, 1], dtype=np.double)
+            self.y = np.asarray(data_input[:, 2], dtype=np.double)
+            self.e = np.asarray(data_input[:, 3], dtype=np.double)
+
+            """ check if the transit numbers are in increasing order"""
+            for i_n in range(1, np.size(self.n_transit)):
+                if self.n_transit[i_n] <= self.n_transit[i_n-1]:
+                    print('Transit numbers in the input file are not in increasing order')
+                    print('Please check the input file')
+                    quit()
+
         else:
             self.x = np.asarray(data_input[:, 0], dtype=np.double)
             self.y = np.asarray(data_input[:, 1], dtype=np.double)
             self.e = np.asarray(data_input[:, 2], dtype=np.double)
+
+        if flag_shutdown_jitter:
+            data_input[:, self.jitter_column] = -1
+
+        if not self.models:
+            data_input[:, self.start_id_flag:] = -1
 
         self.n = np.size(self.x)
         self.n_shape = np.shape(self.y)
@@ -195,36 +235,37 @@ class Dataset(AbstractCommon):
                 self.generic_default_bounds['offset'][0] = - \
                     1000.0 * np.max(self.e)
 
-            self._setup_systematic_dictionaries('jitter', data_input[:, 3])
-            self._setup_systematic_dictionaries('offset', data_input[:, 4])
+            self._setup_systematic_dictionaries('jitter', data_input[:, self.jitter_column])
+            self._setup_systematic_dictionaries('offset', data_input[:, self.offset_column])
 
         self.x0 = self.x - self.Tref
-        self._setup_systematic_mask('jitter', data_input[:, 3])
-        self._setup_systematic_mask('offset', data_input[:, 4])
+        self._setup_systematic_mask('jitter', data_input[:, self.jitter_column])
+        self._setup_systematic_mask('offset', data_input[:, self.offset_column])
 
-        if np.amax(data_input[:, 5]) > 0:
-            sel = data_input[:, 5] >= -0.5
-            self.submodel_minflag = np.int64(np.amin(data_input[sel, 5]))
-            self.submodel_maxflag = np.int64(np.amax(data_input[:, 5])) + 1
-            self.submodel_flag = np.int64(np.amax(data_input[:, 5])) + 1
-            self.submodel_id = data_input[:, 5]
+
+        if np.amax(data_input[:, self.subset_column]) > 0:
+            sel = data_input[:, self.subset_column] >= -0.5
+            self.submodel_minflag = np.int64(np.amin(data_input[sel, self.subset_column]))
+            self.submodel_maxflag = np.int64(np.amax(data_input[:, self.subset_column])) + 1
+            self.submodel_flag = np.int64(np.amax(data_input[:, self.subset_column])) + 1
+            self.submodel_id = data_input[:, self.subset_column]
         else:
             self.submodel_minflag = None
             self.submodel_maxflag = None
             self.submodel_flag = None
 
-        if np.amax(data_input[:, 3]) > 0:
-            self.input_jitter = np.asarray(data_input[:, 3], dtype=np.double)
+        if np.amax(data_input[:, self.jitter_column]) > 0:
+            self.input_jitter = np.asarray(data_input[:, self.jitter_column], dtype=np.double)
         else:
             self.input_jitter = None
 
-        if np.amax(data_input[:, 4]) > 0:
-            self.input_offset = np.asarray(data_input[:, 4], dtype=np.double)
+        if np.amax(data_input[:, self.offset_column]) > 0:
+            self.input_offset = np.asarray(data_input[:, self.offset_column], dtype=np.double)
         else:
             self.input_offset = None
 
-        if np.amax(data_input[:, 5]) > 0:
-            self.input_subset = np.asarray(data_input[:, 5], dtype=np.double)
+        if np.amax(data_input[:, self.subset_column]) > 0:
+            self.input_subset = np.asarray(data_input[:, self.subset_column], dtype=np.double)
         else:
             self.input_subset = None
         self.model_reset()
@@ -285,6 +326,7 @@ class Dataset(AbstractCommon):
         self.unitary_model = np.zeros(self.n_shape, dtype=np.double)
         self.normalization_model = None
         self.external_model = np.zeros(self.n_shape, dtype=np.double)
+        self.buffer_model = np.zeros(self.n_shape, dtype=np.double)
         self.jitter = np.zeros(self.n_shape, dtype=np.double)
         return
 

@@ -68,10 +68,10 @@ class SPLEAF_ESP_slow(AbstractModel, AbstractGaussianProcesses):
     def lnlk_compute(self, parameter_values, dataset):
 
         self.update_parameter_values(parameter_values)
-        
+
         pass_conditions = self.check_hyperparameter_values(parameter_values)
         if not pass_conditions:
-            return pass_conditions
+            return -np.inf
 
         """ I'm creating the kernel here has """
         D = spleaf_cov.Cov(dataset.x0,

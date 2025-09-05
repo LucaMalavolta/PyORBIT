@@ -24,25 +24,35 @@ import sys
 
 from tqdm import tqdm
 
-mpl.use('Agg')
 
 
 __all__ = ["pyorbit_getresults"]
 
 
 def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
+    default_mpl_backend = mpl.get_backend()
+
+    mpl.use('Agg')
 
     print('LaTeX disabled by default')
     print()
     use_tex = False
     plt.rc('text', usetex=use_tex)
 
-    font_label = config_in['parameters'].get('font_label', 18)
+    if config_in['parameters'].get('save_pdf', False ):
+        file_ext = '.pdf'
+    else:
+        file_ext = '.png'
 
-    plt.rcParams['font.family'] = 'DeJavu Serif'
-    plt.rcParams['font.serif'] = ['Times New Roman']
+    font_label = config_in['parameters'].get('font_label', 9)
+
+    plt.rcParams['font.family'] = 'Arial'
+    #plt.rcParams['font.family'] = 'DeJavu Serif'
+    #plt.rcParams['font.serif'] = ['Times New Roman']
     mpl.rcParams.update({'font.size': font_label})
-
+    mpl.rcParams.update({'figure.figsize':(10, 10)})
+    mpl.rcParams.update({'xtick.minor.visible': True})
+    mpl.rcParams.update({'ytick.minor.visible': True})
 
     if plot_dictionary['use_corner']:
         import corner
@@ -54,6 +64,8 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
     # plt.rcParams["font.family"] = "Times New Roman"
 
     oversampled_models = plot_dictionary['oversampled_models']
+    transit_oversampled_models = plot_dictionary['transit_oversampled_models']
+    eclipse_oversampled_models = plot_dictionary['eclipse_oversampled_models']
     skip_rv_like = not plot_dictionary['compute_rv_like']
 
 
@@ -364,7 +376,7 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
                 try:
                     print('Plot a summary of the run.')
                     rfig, raxes = dyplot.runplot(results)
-                    rfig.savefig(dir_output + 'dynesty_results_maxevidence_summary.pdf', bbox_inches='tight', dpi=300)
+                    rfig.savefig(dir_output + 'dynesty_results_maxevidence_summary'+file_ext, bbox_inches='tight', dpi=300)
                     plt.close(rfig)
                 except:
                     print('Unable to plot a summary of the run using the internal dynesty routine - skipped')
@@ -373,7 +385,7 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
                 try:
                     print('Plot traces and 1-D marginalized posteriors.')
                     tfig, taxes = dyplot.traceplot(results, labels=labels_array)
-                    tfig.savefig(dir_output + 'dynesty_results_maxevidence_traceplot.pdf', bbox_inches='tight', dpi=300)
+                    tfig.savefig(dir_output + 'dynesty_results_maxevidence_traceplot'+file_ext, bbox_inches='tight', dpi=300)
                     plt.close(tfig)
                 except:
                     print('Unable to plot traces and 1-D marginalized posteriors using the internal dynesty routine - skipped')
@@ -382,7 +394,7 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
                 try:
                     print('Plot the 2-D marginalized posteriors.')
                     cfig, caxes = dyplot.cornerplot(results, labels=labels_array)
-                    cfig.savefig(dir_output + 'dynesty_results_maxevidence_cornerplot.pdf', bbox_inches='tight', dpi=300)
+                    cfig.savefig(dir_output + 'dynesty_results_maxevidence_cornerplot'+file_ext, bbox_inches='tight', dpi=300)
                     plt.close(cfig)
                 except:
                     print('Unable to plot the 2-D marginalized posteriors using the internal dynesty routine - skipped')
@@ -437,7 +449,7 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
                 #span= [(0.0, 2100.0), (0.0, 1.05), (0.0, 0.10444691225380567), (0.0, 1000)]
                 #rfig, raxes = dyplot.runplot(results, span=span)
                 rfig, raxes = dyplot.runplot(results)
-                rfig.savefig(dir_output + 'dynesty_results_summary.pdf', bbox_inches='tight', dpi=300)
+                rfig.savefig(dir_output + 'dynesty_results_summary'+file_ext, bbox_inches='tight', dpi=300)
                 plt.close(rfig)
             except:
                 print('Unable to plot a summary of the run using the internal dynesty routine - skipped')
@@ -446,7 +458,7 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
             try:
                 print('Plot traces and 1-D marginalized posteriors.')
                 tfig, taxes = dyplot.traceplot(results, labels=labels_array)
-                tfig.savefig(dir_output + 'dynesty_results_traceplot.pdf', bbox_inches='tight', dpi=300)
+                tfig.savefig(dir_output + 'dynesty_results_traceplot'+file_ext, bbox_inches='tight', dpi=300)
                 plt.close(tfig)
             except:
                 print('Unable to plot traces and 1-D marginalized posteriors using the internal dynesty routine - skipped')
@@ -455,7 +467,7 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
             try:
                 print('Plot the 2-D marginalized posteriors.')
                 cfig, caxes = dyplot.cornerplot(results, labels=labels_array)
-                cfig.savefig(dir_output + 'dynesty_results_cornerplot.pdf', bbox_inches='tight', dpi=300)
+                cfig.savefig(dir_output + 'dynesty_results_cornerplot'+file_ext, bbox_inches='tight', dpi=300)
                 plt.close(cfig)
             except:
                 print('Unable to plot the 2-D marginalized posteriors using the internal dynesty routine - skipped')
@@ -630,9 +642,9 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
 
         """ Copy the plots from default output directory of ultranest in
         ultranest_plots"""
-        os.system(' cp '+ dir_input + 'plots/corner.pdf ' + dir_output + 'ultranest_corner.pdf')
-        os.system(' cp '+ dir_input + 'plots/run.pdf ' + dir_output + 'ultranest_run.pdf')
-        os.system(' cp '+ dir_input + 'plots/trace.pdf ' + dir_output + 'ultranest_trace.pdf')
+        os.system(' cp '+ dir_input + 'plots/corner.pdf ' + dir_output + 'ultranest_corner' +file_ext)
+        os.system(' cp '+ dir_input + 'plots/run.pdf ' + dir_output + 'ultranest_run' +file_ext)
+        os.system(' cp '+ dir_input + 'plots/trace.pdf ' + dir_output + 'ultranest_trace' +file_ext)
 
         #labels_array = [None] * len(theta_dictionary)
         #for key_name, key_value in theta_dictionary.items():
@@ -743,17 +755,17 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
 
     data_are_rvs = False
     for dataset_name, dataset in mc.dataset_dict.items():
-        #TODO remove option 'RV' in version 11
+        #TODO remove option 'RV' in PyORBIT version 12
         data_are_rvs = (dataset.kind == 'RV' or dataset.kind == 'radial_velocity')
         if data_are_rvs:
             break
     if not data_are_rvs:
         skip_rv_like = True
 
-    print()
     if not skip_rv_like:
         try:
-            print('Number of samplings for RV log-likelihood calculations [rv_like_samplings keyword]:', )
+            print()
+            print('Number of samplings for RV log-likelihood calculations [rv_like_samplings keyword]:', rv_like_samplings)
             print('Recomputing RV ln-likelihood, it may take a while...')
 
             if n_samplings == rv_like_samplings:
@@ -770,7 +782,11 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
             MAP_rv_ln_likelihood = mc.rv_log_likelihood(chain_MAP)
             rv_ln_likelihood_success = True
         except:
+            print()
             print('Analysis ran using PyORBIT version < 10.10, RV-only log_likelihood not available')
+
+    #print(' OUTCOME: ', rv_ln_likelihood_success)
+    #print(' some values:', flat_rv_lnlike)
 
     if mc.include_priors:
 
@@ -816,6 +832,30 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
     generic_save_to_cpickle(dir_dictionaries, 'theta_tree', theta_tree)
 
     del dict_sampler_posteriors
+
+    check_isifinite = np.isfinite(flat_lnprob)
+    if np.sum(~check_isifinite) > 0:
+        print()
+        print('WARNING: Some ln-probability values are not finite, replacing with lowest-value')
+        flat_lnprob[~check_isifinite] = np.amin(flat_lnprob[check_isifinite])
+
+    check_isifinite = np.isfinite(flat_lnprior)
+    if np.sum(~check_isifinite) > 0:
+        print()
+        print('WARNING: Some ln-prior values are not finite, replacing with lowest-value')
+        flat_lnprior[~check_isifinite] = np.amin(flat_lnprior[check_isifinite])
+
+    check_isifinite = np.isfinite(flat_lnlike)
+    if np.sum(~check_isifinite) > 0:
+        print()
+        print('WARNING: Some ln-likelihood values are not finite, replacing with lowest-value')
+        flat_lnlike[~check_isifinite] = np.amin(flat_lnlike[check_isifinite])
+
+    check_isifinite = np.isfinite(flat_rv_lnlike)
+    if np.sum(~check_isifinite) > 0:
+        print()
+        print('WARNING: Some rv ln-likelihood values are not finite, replacing with lowest-value')
+        flat_rv_lnlike[~check_isifinite] = np.amin(flat_rv_lnlike[check_isifinite])
 
 
     print()
@@ -1063,7 +1103,7 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
             os.system('mkdir -p ' + dir_output + 'acf')
             for theta_name, ii in theta_dictionary.items():
                 file_name = dir_output + 'acf/' + \
-                    repr(ii) + '_' + theta_name + '_values.png'
+                    repr(ii) + '_' + theta_name + '_values' +file_ext
                 fig = plt.figure(figsize=(12, 12))
                 plt.scatter(i_sampler, acf_trace[:,ii] , s=5, c='C0')
                 plt.axvline(nburnin / nthin, c='C1', label='burn-in')
@@ -1073,7 +1113,7 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
                 plt.close(fig)
 
                 file_name = dir_output + 'acf/' + \
-                    repr(ii) + '_' + theta_name + '_variation.png'
+                    repr(ii) + '_' + theta_name + '_variation' +file_ext
                 fig = plt.figure(figsize=(12, 12))
                 plt.scatter(i_sampler, acf_diff[:,ii], s=5, c='C0')
                 plt.axhline(0.01, c='C3', label='var. threshold')
@@ -1158,7 +1198,7 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
         plt.plot(sampler_lnprob, '-', alpha=0.5)
         plt.axhline(lnprob_med[0])
         plt.axvline(nburnin / nthin, c='r')
-        plt.savefig(dir_output + 'LNprob_chain.png',
+        plt.savefig(dir_output + 'LNprob_chain' +file_ext,
                     bbox_inches='tight', dpi=300)
         plt.close(fig)
 
@@ -1167,72 +1207,89 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
         print()
         sys.stdout.flush()
 
-    if plot_dictionary['full_correlation']:
+    if mc.ndim > 30 and not config_in['parameters'].get('force_full_correlation_plot', False):
+        plot_dictionary['full_correlation']=False
 
-        corner_plot = {
-            'samples': np.zeros([np.size(flat_chain, axis=0), np.size(flat_chain, axis=1) + 1]),
-            'labels': [],
-            'truths': []
-        }
-
-        i_corner = 0
-        for par, par_dict in theta_dictionary.items():
-            corner_plot['samples'][:, i_corner] = flat_chain[:, par_dict]
-            if len(theta_dictionary) > 10:
-                corner_plot['labels'].append(repr(par_dict))
-            else:
-                corner_plot['labels'].append(re.sub('_', '-', par))
-            corner_plot['truths'].append(chain_med[par_dict, 0])
-            i_corner += 1
-
-        corner_plot['samples'][:, -1] = flat_lnprob[:]
-        corner_plot['labels'].append('ln-prob')
-        corner_plot['truths'].append(lnprob_med[0])
-
-        if plot_dictionary['use_getdist']:
-            try:
-                print(' Plotting full_correlation plot with GetDist')
-                print()
-                print(' Ignore the no burn in error warning from getdist')
-                print(' since burn in has been already removed from the chains')
-
-                samples = MCSamples(samples=corner_plot['samples'], names=corner_plot['labels'],
-                                    labels=corner_plot['labels'])
-
-                g = plots.getSubplotPlotter()
-                g.settings.num_plot_contours = 6
-                g.triangle_plot(samples, filled=True)
-                g.export(dir_output + "all_internal_parameters_corner_getdist.pdf")
-
-            except AttributeError:
-                print(' Something went wrong when plotting the coner plot with GetDist')
-                print(' Please Run PyORBIT_GetResults.py with without corner plot flat to get an alternative corner plot')
-
-            print()
-
-        elif plot_dictionary['use_corner']:
-            # plotting mega-corner plot
-            print('Plotting full_correlation plot with Corner')
-            fig = corner.corner(
-                corner_plot['samples'], labels=corner_plot['labels'], truths=corner_plot['truths'])
-            fig.savefig(dir_output + "all_internal_parameters_corner_dfm.pdf",
-                        bbox_inches='tight', dpi=300)
-            plt.close(fig)
-
-        else:
-            print('Plotting full_correlation plot with pygtc')
-
-            GTC = pygtc.plotGTC(chains=corner_plot['samples'],
-                                paramNames=corner_plot['labels'],
-                                truths=corner_plot['truths'],
-                                plotName=dir_output + "all_internal_parameters_corner_pygtc.pdf")
-            GTC = None
+        print(' Skipping full correlation plot due to the high number of parameters')
+        print(' To avoid this behaviour, set the keyword parameters:force_full_correlation_plot to True')
         print()
         print('****************************************************************************************************')
         print()
-        sys.stdout.flush()
-        corner_plot = None
 
+    if plot_dictionary['full_correlation']:
+
+        try:
+            corner_plot = {
+                'samples': np.zeros([np.size(flat_chain, axis=0), np.size(flat_chain, axis=1) + 1]),
+                'labels': [],
+                'truths': []
+            }
+
+            i_corner = 0
+            for par, par_dict in theta_dictionary.items():
+                corner_plot['samples'][:, i_corner] = flat_chain[:, par_dict]
+                if len(theta_dictionary) > 10:
+                    corner_plot['labels'].append(repr(par_dict))
+                else:
+                    corner_plot['labels'].append(re.sub('_', '-', par))
+                corner_plot['truths'].append(chain_med[par_dict, 0])
+                i_corner += 1
+
+            corner_plot['samples'][:, -1] = flat_lnprob[:]
+            corner_plot['labels'].append('ln-prob')
+            corner_plot['truths'].append(lnprob_med[0])
+
+            if plot_dictionary['use_getdist']:
+                try:
+                    print(' Plotting full_correlation plot with GetDist')
+                    print()
+                    print(' Ignore the no burn in error warning from getdist')
+                    print(' since burn in has been already removed from the chains')
+
+                    samples = MCSamples(samples=corner_plot['samples'], names=corner_plot['labels'],
+                                        labels=corner_plot['labels'])
+
+                    g = plots.getSubplotPlotter()
+                    g.settings.num_plot_contours = 6
+                    g.triangle_plot(samples, filled=True)
+                    g.export(dir_output + "all_internal_parameters_corner_getdist" +file_ext)
+
+                except AttributeError:
+                    print(' Something went wrong when plotting the coner plot with GetDist')
+                    print(' Please Run PyORBIT_GetResults.py with without corner plot flag to get an alternative corner plot')
+
+                print()
+
+            elif plot_dictionary['use_corner']:
+                # plotting mega-corner plot
+                print('Plotting full_correlation plot with Corner')
+                fig = corner.corner(
+                    corner_plot['samples'], labels=corner_plot['labels'], truths=corner_plot['truths'])
+                fig.savefig(dir_output + "all_internal_parameters_corner_dfm" +file_ext,
+                            bbox_inches='tight', dpi=300)
+                plt.close(fig)
+
+            else:
+                print('Plotting full_correlation plot with pygtc')
+
+                GTC = pygtc.plotGTC(chains=corner_plot['samples'],
+                                    paramNames=corner_plot['labels'],
+                                    truths=corner_plot['truths'],
+                                    figureSize=20.,
+                                    plotName=dir_output + "all_internal_parameters_corner_pygtc" +file_ext)
+                GTC = None
+                plt.close()
+            print()
+            print('****************************************************************************************************')
+            print()
+            sys.stdout.flush()
+            corner_plot = None
+        except (AssertionError, IndexError):
+            print(' Something went wrong when plotting the corner plot')
+            print()
+            print('****************************************************************************************************')
+            print()
+            sys.stdout.flush()
 
     if plot_dictionary['chains']:
 
@@ -1242,7 +1299,7 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
         os.system('mkdir -p ' + dir_output + 'chains_points')
         for theta_name, ii in theta_dictionary.items():
             file_name = dir_output + 'chains/' + \
-                repr(ii) + '_' + theta_name + '.png'
+                repr(ii) + '_' + theta_name +file_ext
             fig = plt.figure(figsize=(12, 12))
             plt.plot(sampler_chain[:, :, ii].T, '-', alpha=0.5)
             plt.axvline(nburnin / nthin, c='r')
@@ -1254,7 +1311,7 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
             plot_x_nwalkers = len(sampler_chain[:, 0, ii])
             x_range = np.arange(0, plot_x_length, 1.)
             file_name = dir_output + 'chains_points/' + \
-                repr(ii) + '_' + theta_name + '.png'
+                repr(ii) + '_' + theta_name + file_ext
 
             fig = plt.figure(figsize=(12, 12))
             for xw in range(0, plot_x_nwalkers):
@@ -1348,16 +1405,18 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
                     fig = corner.corner(np.asarray(corner_plot['samples']).T,
                                         labels=corner_plot['labels'],
                                         truths=corner_plot['truths'])
-                    fig.savefig(dir_output + common_name + "_corners.pdf",
+                    fig.savefig(dir_output + 'corner_' + common_name + file_ext,
                                 bbox_inches='tight', dpi=300)
                     plt.close(fig)
                 else:
                     GTC = pygtc.plotGTC(chains=np.asarray(corner_plot['samples']).T,
                                         paramNames=corner_plot['labels'],
                                         truths=corner_plot['truths'],
-                                        #figureSize='MNRAS_page',
-                                        plotName=dir_output + common_name + "_corners.pdf")
+                                        figureSize=10.,
+                                        plotName=dir_output + 'corner_' + common_name +file_ext)
+
                     GTC = None
+                    plt.close()
 
             except (AssertionError, IndexError):
                 print('     Something went wrong, plot skipped ')
@@ -1416,17 +1475,17 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
                     if plot_dictionary['use_corner']:
                         fig = corner.corner(np.asarray(corner_plot['samples']).T,
                                             labels=corner_plot['labels'], truths=corner_plot['truths'])
-                        fig.savefig(dir_output + dataset_name + '_' + model_name +
-                                    "_corners.pdf", bbox_inches='tight', dpi=300)
+                        fig.savefig(dir_output + 'corner_dataset_' + dataset_name + '_' + model_name + file_ext, bbox_inches='tight', dpi=300)
                         plt.close(fig)
                         fig = None
                     else:
                         GTC = pygtc.plotGTC(chains=np.asarray(corner_plot['samples']).T,
                                             paramNames=corner_plot['labels'],
                                             truths=corner_plot['truths'],
-                                            #figureSize='MNRAS_page',
-                                            plotName=dir_output + dataset_name + '_' + model_name + "_corners.pdf")
+                                            figureSize=10.,
+                                            plotName=dir_output + 'corner_dataset_' + dataset_name + '_' + model_name +file_ext)
                         GTC = None
+                        plt.close()
                 except AssertionError:
                     print('     Something went wrong, plot skipped ')
                     print()
@@ -1481,7 +1540,7 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
                         re.sub('_', '-', parameter_name + '_' + common_ref))
                     plt.legend()
                     plt.ticklabel_format(useOffset=False)
-                    plt.savefig(rad_filename + '.png',
+                    plt.savefig(rad_filename + file_ext,
                                 bbox_inches='tight', dpi=300)
                     plt.close(fig)
                 except:
@@ -1537,7 +1596,7 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
                                   repr(th) + ' parameter: ' + theta_name))
                 plt.legend()
                 plt.ticklabel_format(useOffset=False)
-                plt.savefig(rad_filename + '.png',
+                plt.savefig(rad_filename +file_ext,
                             bbox_inches='tight', dpi=300)
                 plt.close(fig)
             except:
@@ -1589,8 +1648,8 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
             bjd_plot[dataset_name]['start'] -= bjd_plot[dataset_name]['range'] * 0.10
             bjd_plot[dataset_name]['end'] += bjd_plot[dataset_name]['range'] * 0.10
 
-            #TODO remove the 'Phot' options in version 11
-            if dataset.kind == 'photometry' or dataset.kind == 'Phot': 
+            #TODO remove the 'Phot' options in PyORBIT version 12
+            if dataset.kind == 'photometry' or dataset.kind == 'Phot':
 
                 if bjd_plot[dataset_name]['range'] > P_minimum:
                     # more than one transit:
@@ -1629,7 +1688,7 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
 
         # Special cases
         for dataset_name, dataset in mc.dataset_dict.items():
-            #TODO remove option 'RV' in version 11
+            #TODO remove option 'RV' in PyORBIT version 12
             if dataset.kind == 'RV' or dataset.kind == 'radial_velocity':
                 bjd_plot[dataset_name] = bjd_plot['full']
             if dataset.kind == 'transit_time':
@@ -1748,7 +1807,7 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
                     ax_1.set_xlabel('Time [d] (offset as the input data)')
                     ax_1.set_ylabel('Residuals (wrt median model)')
 
-                    plt.savefig(dir_output + 'model_' + kind_name + '_' + dataset_name + '.png', bbox_inches='tight',
+                    plt.savefig(dir_output + 'model_' + kind_name + '_' + dataset_name + file_ext, bbox_inches='tight',
                                 dpi=300)
                     plt.close(fig)
 
@@ -1943,12 +2002,24 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
                             fileout = open(
                                 dir_models + dataset_name + '_' + model_name + '_oversampled.dat', 'w')
 
-                            x_range = np.arange(
-                                -parameter_values['P']/2., parameter_values['P']/2., 0.001)
+                            if getattr(mc.models[model_name], 'model_class', False) in transit_oversampled_models:
+                                mc.models[model_name].update_parameter_values(parameter_values, dataset.Tref)
+                                x_range = np.linspace(
+                                    -parameter_values['P']/parameter_values['a_Rs'],
+                                    parameter_values['P']/parameter_values['a_Rs'], 5000, endpoint=True)
+                            elif getattr(mc.models[model_name], 'model_class', False) in eclipse_oversampled_models:
+                                mc.models[model_name].update_parameter_values(parameter_values, dataset.Tref)
+                                x_range = np.linspace(
+                                    -parameter_values['P']/parameter_values['a_Rs'],
+                                    parameter_values['P']/parameter_values['a_Rs'], 5000, endpoint=True) + 0.5
+                            else:
+                                x_range = np.arange(-parameter_values['P']/2., parameter_values['P']/2., 0.001)
 
-                            for i_sub in range(0,20):
+                            p_range = x_range/parameter_values['P']
+
+                            for i_sub in range(0,1000):
                                 if 'Tc_'+repr(i_sub) in parameter_values and 'Tc' not in parameter_values:
-                                    parameter_values['Tc'] = parameter_values['Tc_'+repr(i_sub)]
+                                    parameter_values['Tc'] = dataset.Tref
                                     break
 
                             try:
@@ -1965,10 +2036,10 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
                             if plot_dictionary.get('veuz_compatibility', False):
                                 fileout.write('descriptor Tc_folded  mod \n')
                             else:
-                                fileout.write('# time model \n')
+                                fileout.write('# time model phase\n')
 
-                            for x, mod in zip(x_range, y_plot):
-                                fileout.write('{0:f} {1:f} \n'.format(x, mod))
+                            for x, mod, phase in zip(x_range, y_plot, p_range):
+                                fileout.write('{0:f} {1:f} {2:f}\n'.format(x, mod, phase))
                             fileout.close()
 
                     fileout = open(dir_models + dataset_name +  '_full.dat', 'w')
@@ -2275,5 +2346,8 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
 
         rad_filename = dir_output + 'P_versus_lnprob'
 
-        plt.savefig(rad_filename + '.png', bbox_inches='tight', dpi=300)
+        plt.savefig(rad_filename + file_ext, bbox_inches='tight', dpi=300)
         plt.close(fig)
+
+
+    mpl.use(default_mpl_backend)

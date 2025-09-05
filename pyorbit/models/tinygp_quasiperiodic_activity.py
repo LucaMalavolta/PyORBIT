@@ -80,13 +80,13 @@ class TinyGaussianProcess_QuasiPeriodicActivity(AbstractModel, AbstractGaussianP
         self._prepare_decay_replacement(mc, **kwargs)
 
     def lnlk_compute(self, parameter_values, dataset):
-        
+
         self.update_parameter_values(parameter_values)
-        
+
         pass_conditions = self.check_hyperparameter_values(parameter_values)
         if not pass_conditions:
-            return pass_conditions
-        
+            return -np.inf
+
         theta_dict =  dict(
             gamma=1. / (2.*parameter_values['Oamp'] ** 2),
             Hamp=parameter_values['Hamp'],
@@ -102,7 +102,7 @@ class TinyGaussianProcess_QuasiPeriodicActivity(AbstractModel, AbstractGaussianP
     def sample_predict(self, parameter_values, dataset, x0_input=None, return_covariance=False, return_variance=False):
 
         self.update_parameter_values(parameter_values)
-        
+
         if x0_input is None:
             x0 = dataset.x0
         else:

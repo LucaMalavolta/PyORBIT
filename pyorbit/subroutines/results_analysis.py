@@ -86,8 +86,8 @@ def results_summary(mc, theta,
 
         print('----- dataset: ', dataset_name)
         dict_sampler_summary[dataset_name] = {}
-        dict_sampler_summary[dataset_name]['dataset_variables'] = print_theta_bounds(dataset.sampler_parameters, 
-                                                                                    theta, 
+        dict_sampler_summary[dataset_name]['dataset_variables'] = print_theta_bounds(dataset.sampler_parameters,
+                                                                                    theta,
                                                                                     mc.bounds)
         for model_name in dataset.models:
             if len(mc.models[model_name].sampler_parameters[dataset_name])==0: continue
@@ -543,6 +543,7 @@ def get_model(mc, theta, bjd_dict, **kwargs):
         additive_model = np.zeros(np.size(x0_plot))
         unitary_model = np.zeros(np.size(x0_plot))
         external_model = np.zeros(np.size(x0_plot))
+        buffer_model = np.zeros(np.size(x0_plot))
         normalization_model = None
 
         parameter_values = dataset.convert(theta)
@@ -555,7 +556,7 @@ def get_model(mc, theta, bjd_dict, **kwargs):
                 parameter_values.update(
                     mc.common_models[common_ref].convert(theta))
 
-            #TODO: remove try-except starting from version 11 !!
+            #TODO: remove try-except starting from PyORBIT version 12 !!
             try:
                 for planet_name in mc.models[model_name].multiple_planets:
                     parameter_values.update(
@@ -598,7 +599,7 @@ def get_model(mc, theta, bjd_dict, **kwargs):
                 parameter_values.update(
                     mc.common_models[common_ref].convert(theta))
 
-            #TODO: remove try-except starting from version 11 !!
+            #TODO: remove try-except starting from PyORBIT version 12 !!
             try:
                 for planet_name in mc.models[model_name].multiple_planets:
                     parameter_values.update(
@@ -613,23 +614,41 @@ def get_model(mc, theta, bjd_dict, **kwargs):
                 logchi2_gp_model = model_name
                 continue
 
-            if getattr(dataset, 'dynamical', False):
-                dataset.external_model = dynamical_output[dataset_name]
-                external_model = dynamical_output_x0[dataset_name].copy()
-                model_out[dataset_name]['dynamical'] = dynamical_output[dataset_name].copy()
-                model_x0[dataset_name]['dynamical'] = dynamical_output_x0[dataset_name].copy()
+            #if getattr(dataset, 'dynamical', False):
+            #    dataset.external_model = dynamical_output[dataset_name]
+            #    external_model = dynamical_output_x0[dataset_name].copy()
+            #    model_out[dataset_name]['dynamical'] = dynamical_output[dataset_name].copy()
+            #    model_x0[dataset_name]['dynamical'] = dynamical_output_x0[dataset_name].copy()
 
-            model_out[dataset_name][model_name] = mc.models[model_name].compute(
-                parameter_values, dataset)
+            if getattr(dataset, 'dynamical', False) and getattr(mc.models[model_name], 'dynamical_model', False):
+                if dataset.kind == 'photometry' :
 
-            if getattr(mc.models[model_name], 'time_independent_model', False):
-                model_x0[dataset_name][model_name] = np.zeros(
-                    np.size(x0_plot), dtype=np.double)
-                model_out[dataset_name]['time_independent'] += mc.models[model_name].compute(
-                    parameter_values, dataset)
+                    #buffer_model = mc.models[model_name].compute_dynamical(parameter_values, dataset, dynamical_output[dataset_name], x0_input=x0_plot)
+                    #dataset.buffer_model = mc.models[model_name].compute_dynamical(parameter_values, dataset, dynamical_output[dataset_name])
+
+                    model_out[dataset_name][model_name] = mc.models[model_name].compute_dynamical(parameter_values, dataset, dynamical_output[dataset_name])
+                    model_x0[dataset_name][model_name] = mc.models[model_name].compute_dynamical(parameter_values, dataset, dynamical_output_x0[dataset_name], x0_input=x0_plot)
+
+                else:
+                    dataset.external_model = dynamical_output[dataset_name]
+                    external_model = dynamical_output_x0[dataset_name].copy()
+
+                    model_out[dataset_name][model_name] = dynamical_output[dataset_name].copy()
+                    model_x0[dataset_name][model_name] = dynamical_output_x0[dataset_name].copy()
+
+
             else:
-                model_x0[dataset_name][model_name] = mc.models[model_name].compute(
-                    parameter_values, dataset, x0_plot)
+                model_out[dataset_name][model_name] = mc.models[model_name].compute(
+                    parameter_values, dataset)
+
+                if getattr(mc.models[model_name], 'time_independent_model', False):
+                    model_x0[dataset_name][model_name] = np.zeros(
+                        np.size(x0_plot), dtype=np.double)
+                    model_out[dataset_name]['time_independent'] += mc.models[model_name].compute(
+                        parameter_values, dataset)
+                else:
+                    model_x0[dataset_name][model_name] = mc.models[model_name].compute(
+                        parameter_values, dataset, x0_plot)
 
             if getattr(mc.models[model_name], 'systematic_model', False):
                 continue
@@ -920,7 +939,7 @@ def print_analysis_info(i_dict, bounds, spaces, priors, additional_kind, additon
     format_string_v1 = '{0:12s}  id:{1:4d}  s:{2:11s} b:[{3:12.4f}, {4:12.4f}]   p:{5:s}  '
     format_string_v2 = '{0:12s}  derived (no id, space, bound) {1:25s} p:{2:s}  '
     dict_output = {}
-    
+
     for par, i in i_dict.items():
         print(format_string_v1.format(
                 par, i, spaces[i], bounds[i, 0], bounds[i, 1],priors[i][0]), priors[i][1])
@@ -1095,7 +1114,7 @@ def print_integrated_ACF(sampler_chain, theta_dict, nthin):
             swapped_chains, tol=tolerance, quiet=False)
         print()
         print('The chains are more than 50 times longer than the ACF, the estimate can be trusted')
-    
+
     except (AutocorrError):
         tolerance = 20
         print()
@@ -1239,7 +1258,7 @@ def print_integrated_ACF(sampler_chain, theta_dict, nthin):
 PyORBIT should keep running for about {0:.0f} more steps to reach 100*ACF""".format(np.average(still_required_100[still_required_100_flag])))
                 dict_output['result'] = """All the chains are longer than 50*ACF, but some are shorter than 100*ACF
 PyORBIT should keep running for about {0:.0f} more steps to reach 100*ACF""".format(np.average(still_required_100[still_required_100_flag]))
-            
+
             else:
                 print("""All the chains have converged, but PyORBIT should keep running for about:
 {0:.0f} more steps to reach 50*ACF,
@@ -1269,7 +1288,7 @@ PyORBIT should keep running for about {0:.0f} more steps to reach 100*ACF""".for
             "They should be at least {0:d}*nthin = {1:d}".format(50*acf_len, 50*acf_len*nthin))
         print()
 
-        dict_output['result'] = """Chains too short to apply convergence criteria, 
+        dict_output['result'] = """Chains too short to apply convergence criteria,
             they should be at least {0:d}*nthin = {1:d}""".format(50*acf_len, 50*acf_len*nthin)
 
         return None, None, None, None, dict_output

@@ -218,7 +218,8 @@ class TinyGP_Multidimensional_QuasiPeriodicSquaredExponentialActivity(AbstractMo
             return
 
         ## NEW Addded in PyORBIT v10.10
-        if dataset.kind == 'RV':
+        if (dataset.kind == 'RV' or dataset.kind == 'radial_velocity'):
+            #TODO remove option 'RV' in version PyORBIT version 12
             rv_flag = np.ones_like(dataset.x0, dtype=bool)
         else:
             rv_flag = np.zeros_like(dataset.x0, dtype=bool)
@@ -244,7 +245,7 @@ class TinyGP_Multidimensional_QuasiPeriodicSquaredExponentialActivity(AbstractMo
         self.internal_coeff_SE_deriv = np.empty(self._added_datasets)
         self._X = (self._dataset_x0, self._dataset_label.astype(int))
 
-        use_derivative = self._set_derivative_option(mc, dataset, return_flag=True, **kwargs) 
+        use_derivative = self._set_derivative_option(mc, dataset, return_flag=True, **kwargs)
 
         if 'derivative_quasiperiodic'in kwargs:
             use_derivative_QP = kwargs['derivative_quasiperiodic'].get(dataset.name_ref, False)
@@ -289,7 +290,7 @@ class TinyGP_Multidimensional_QuasiPeriodicSquaredExponentialActivity(AbstractMo
 
         pass_conditions = self.check_hyperparameter_values(self.internal_parameter_values)
         if not pass_conditions:
-            return pass_conditions
+            return -np.inf
 
         theta_dict =  dict(
             gamma=1. / (2.*self.internal_parameter_values['Oamp'] ** 2),

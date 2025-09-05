@@ -101,7 +101,7 @@ class TinyGaussianProcess_SHO(AbstractModel, AbstractGaussianProcesses):
                                         pam_scale='sho_scale',
                                         pam_decay='sho_decay')
         if not pass_conditions:
-            return pass_conditions
+            return -np.inf
 
         omega = 2 * np.pi / parameter_values['sho_scale']
         quality_factor =  omega * parameter_values['sho_decay'] / 2.

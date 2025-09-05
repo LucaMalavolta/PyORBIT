@@ -75,7 +75,7 @@ class SubsetNormalizationFactor(AbstractModel):
         for i_sub in range(0,dataset.submodel_flag):
             par_original = 'n_factor'
             par_subset = 'n_factor_sub'+repr(i_sub)
-            self.transfer_parameter_properties(mc, dataset, par_original, par_addition, dataset_pam=True)
+            self.transfer_parameter_properties(mc, dataset, par_original, par_subset, dataset_pam=True)
 
     def compute(self, parameter_values, dataset, x0_input=None):
 

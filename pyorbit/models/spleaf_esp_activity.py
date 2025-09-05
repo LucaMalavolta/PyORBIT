@@ -104,10 +104,10 @@ class SPLEAF_ESP(AbstractModel, AbstractGaussianProcesses):
     def lnlk_compute(self, parameter_values, dataset):
 
         self.update_parameter_values(parameter_values)
-        
+
         pass_conditions = self.check_hyperparameter_values(parameter_values)
         if not pass_conditions:
-            return pass_conditions
+            return -np.inf
 
         try:
             temp_sorting = self._sorting_mask[dataset.name_ref]
@@ -142,9 +142,9 @@ class SPLEAF_ESP(AbstractModel, AbstractGaussianProcesses):
 
 
     def sample_predict(self, parameter_values, dataset, x0_input=None, return_covariance=False, return_variance=False):
-        
+
         self.update_parameter_values(parameter_values)
-        
+
         if x0_input is None:
             t_predict = dataset.x0
             sorting_predict = np.argsort(dataset.x0)

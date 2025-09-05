@@ -15,6 +15,12 @@ rad2deg = 180./pi
 TOLERANCE = np.finfo(np.float64(1.0)).eps
 d2s = 86400. # seconds in a day  =  24h  =  86400 s
 d2m = 1440.  # min in a day  =  1440. min
+day2sec = 86400.0  # seconds in a day  =  24h  =  86400 s
+day2min = 1440.0  # min in a day  =  1440. min
+day2hour = 24.0
+sec2day = 1.0 / 86400.0
+min2day = 1.0 / 1440.0
+hour2day = 1.0 / 24.0
 
 # masses conversions
 Msmer = 6.0236e6 # Msun to Mmer
@@ -64,6 +70,8 @@ Rsjup = Rsun/Rjup # Rsun to Rjup
 Rjups = Rjup/Rsun # Rjup to Rsun
 Rsear = Rsun/Rear # Rsun to Rear
 Rears = Rear/Rsun # Rear to Rsun
+Rsmar = Rsun / Rmar  # Rsun to Rmar
+Rmars = Rmar / Rsun  # Rmar to Rsun
 Rsnep = Rsun/Rnep # Rsun to Rnep
 Rneps = Rnep/Rsun # Rnep to Rsun
 #
@@ -86,7 +94,11 @@ pc2AU = 206264.806
 RsunAU = (Rsun*1.e3)/AU #Sun radius in AU
 RjupAU = (Rjup*1.e3)/AU #Jupiter radius in AU
 
+sphere_earth = 4.0*np.pi*((Rear*100000.0)**3)/3.0 # Rear in km to cm
+rho_earth = (Mear*1000.0)/sphere_earth # gr/cm^3
+
 MJD = 2400000.5 # MJD ref time to convert to JD
+btjd = 2457000.0  # TESS BJD ref time
 
 rho_Sun = Msun / (4./3.*np.pi* (Rsun*1000.)**3 )
 
@@ -95,3 +107,6 @@ Sun_constant = 1367.
 Sun_temperature = 5777.
 
 sigma2FWHM = 2. * np.sqrt(2.* np.log(2,))
+
+onethird = 1.0 / 3.0
+huge = np.finfo(0.0).max

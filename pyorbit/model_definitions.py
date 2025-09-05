@@ -33,6 +33,7 @@ from pyorbit.models.dynamical_modelling import  TransitTimeDynamical, RVdynamica
 
 from pyorbit.models.harmonics import Harmonics
 from pyorbit.models.pytransit_transit import PyTransit_Transit
+from pyorbit.models.pytransit_dynamical import PyTransit_Dynamical
 from pyorbit.models.pytransit_transit_ttv import PyTransit_Transit_TTV
 from pyorbit.models.pytransit_transit_ttv_subset import PyTransit_Transit_TTV_Subset
 from pyorbit.models.pytransit_transit_ttv_tclist import PyTransit_Transit_TTV_TClist
@@ -192,6 +193,9 @@ define_common_type_to_class = {
 }
 
 define_type_to_class = {
+    'planetary_velocities': {'circular': RVkeplerian,
+                          'keplerian': RVkeplerian,
+                          'dynamical': RVdynamical},
     'radial_velocities': {'circular': RVkeplerian,
                           'keplerian': RVkeplerian,
                           'dynamical': RVdynamical},
@@ -205,6 +209,7 @@ define_type_to_class = {
                       'keplerian': TransitTimeKeplerian,
                       'dynamical': TransitTimeDynamical},
     'pytransit_transit': PyTransit_Transit,
+    'pytransit_dynamical': PyTransit_Dynamical,
     'pytransit_transit_ttv': PyTransit_Transit_TTV,
     'pytransit_transit_ttv_subset': PyTransit_Transit_TTV_Subset,
     'subset_pytransit_transit_ttv': PyTransit_Transit_TTV_Subset,
@@ -319,6 +324,7 @@ extended_dataset_keylist = ['expanded_dataset', 'extended_dataset', 'dataset_2d'
 datatype_definition = {
     'radial_velocity': ['RV', 'RVs', 'rv', 'rvs'],
     'transit_time': ['transit_time', 'transit_times', 'Tcent', 'TCent', 'Tc', 'TC', 'T0', 'TT'],
+    'transit_duration': ['transit_duration', 'transit_durations', 'Tdur', 'TDur', 'Td', 'TD', 'T_dur', 'T_Dur'],
     'astrometry': ['astrometry', 'Astrometry', 'AstroMetry', 'Astro', 'astro', 'AM', 'Gaia', 'gaia'],
     'H-alpha': ['H', 'HA', 'h', 'ha', 'Halpha', 'H-alpha', 'halpha', 'h-alpha'],
     'photometry': ['P', 'Ph', 'p', 'ph', 'PHOT', 'Phot', 'phot', 'Photometry', 'photometry'],

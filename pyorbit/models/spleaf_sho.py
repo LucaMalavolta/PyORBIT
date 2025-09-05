@@ -107,7 +107,7 @@ class SPLEAF_SHO(AbstractModel, AbstractGaussianProcesses):
                                         pam_scale='sho_scale',
                                         pam_decay='sho_decay')
         if not pass_conditions:
-            return pass_conditions
+            return -np.inf
 
         try:
             temp_sorting = self._sorting_mask[dataset.name_ref]

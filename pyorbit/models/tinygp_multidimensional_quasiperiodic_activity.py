@@ -184,7 +184,8 @@ class TinyGP_Multidimensional_QuasiPeriodicActivity(AbstractModel, AbstractGauss
             return
 
         ## NEW Addded in PyORBIT v10.10
-        if dataset.kind == 'RV':
+        if (dataset.kind == 'RV' or dataset.kind == 'radial_velocity'):
+            #TODO remove option 'RV' in version PyORBIT version 12
             rv_flag = np.ones_like(dataset.x0, dtype=bool)
         else:
             rv_flag = np.zeros_like(dataset.x0, dtype=bool)
@@ -209,7 +210,7 @@ class TinyGP_Multidimensional_QuasiPeriodicActivity(AbstractModel, AbstractGauss
         self.internal_coeff_deriv = np.empty(self._added_datasets)
         self._X = (self._dataset_x0, self._dataset_label.astype(int))
 
-        self._set_derivative_option(mc, dataset, **kwargs) 
+        self._set_derivative_option(mc, dataset, **kwargs)
 
         return
 
@@ -232,8 +233,8 @@ class TinyGP_Multidimensional_QuasiPeriodicActivity(AbstractModel, AbstractGauss
 
         pass_conditions = self.check_hyperparameter_values(self.internal_parameter_values)
         if not pass_conditions:
-            return pass_conditions
-        
+            return -np.inf
+
         theta_dict =  dict(
             gamma=1. / (2.*self.internal_parameter_values['Oamp'] ** 2),
             Pdec=self.internal_parameter_values['Pdec'],
