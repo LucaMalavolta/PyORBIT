@@ -649,10 +649,8 @@ class ModelContainer(object):
                 if hasattr(self.models[logchi2_gp_model], 'delayed_lnlk_computation'):
 
                     self.models[logchi2_gp_model].add_internal_dataset(parameter_values, dataset)
-                    print('aaaaaaa', dataset.name_ref)
                     if logchi2_gp_model not in delayed_lnlk_computation:
                         delayed_lnlk_computation.append(logchi2_gp_model)
-                        print('bbbbbbb',logchi2_gp_model, dataset.name_ref)
 
                 elif skip_loglikelihood:
                     residuals_analysis[model_name][residuals_dataset_label+'_gp_model'] = logchi2_gp_model
