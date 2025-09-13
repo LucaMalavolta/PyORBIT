@@ -58,6 +58,13 @@ class CommonPlanets(AbstractCommon):
                 'spaces': 'Linear',
                 'fixed' : None,
             },
+        'Tc_Tref':
+            {
+                'bounds': [0.0, 1000.0],
+                'priors': ['Uniform', []],
+                'spaces': 'Linear',
+                'fixed' : None,
+            },
         'mean_long':
             {
                 'bounds': [0.0, 360.],
@@ -227,6 +234,8 @@ class CommonPlanets(AbstractCommon):
 
     def initialize_model(self, mc, **kwargs):
 
+        self.Tref = mc.Tref
+
         self.orbit = kwargs.get('orbit', self.orbit)
         if self.orbit in self.orbit_list:
             print('Using orbital model: ', self.orbit)
@@ -272,7 +281,7 @@ class CommonPlanets(AbstractCommon):
         else:
             self.compute_time_inferior_conjunction = True
             self.compute_mean_longitude = False
-        
+
 
         for use_shared_ttvs in keywords_shared_ttv:
             self.use_shared_ttvs = kwargs.get(use_shared_ttvs, self.use_shared_ttvs)
@@ -341,6 +350,16 @@ class CommonPlanets(AbstractCommon):
                 self.transformation['omega'] = get_2var_o
                 self.parameter_index['omega'] = [pam00_index, pam01_index]
                 derived_list.append('omega')
+
+            if 'mean_long' in self.sampler_parameters:
+                pam00_index = self.sampler_parameters['P']
+                pam01_index = self.sampler_parameters['mean_long']
+
+                # kepler_phase2Tc_Tref(Period, mean_long, e0, omega0)
+                if 'Tc_Tref' not in self.parameter_index:
+                    self.transformation['Tc_ref'] = kepler_exo.kepler_phase2Tc_Tref
+                    self.parameter_index['Tc_Tref'] = [pam00_index, pam01_index]
+                    derived_list.append('Tc_Tref')
 
 
         for pam in derived_list:

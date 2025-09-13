@@ -186,7 +186,7 @@ def kepler_RV_T0P(BJD0, mean_long, Period, K, e0, omega0):
     return rv
 
 
-def kepler_phase2Tc_Tref(Period, mean_long, e0, omega0):
+def kepler_phase2Tc_Tref(Period, mean_long, e0=0., omega0=90.):
     # The closest Tcent after Tref is given back
     omega = omega0/180.*np.pi
     TrAn = np.pi / 2 - omega
