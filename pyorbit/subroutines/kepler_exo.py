@@ -158,7 +158,7 @@ def kepler_RV(BJD, TPeri, Period, K, e0, omega0):
     return rv
 
 
-def kepler_RV_T0P(BJD0, mean_long, Period, K, e0, omega0):
+def kepler_RV_T0P(BJD0, mean_long, Period, K, e0, omega0, Omega0=0.0):
     # BJD0 is given as BJD-T0, where T0 is arbitrarily defined by the user
     # Tperi_ is substituted by _phase_, which is the phase of the orbit where
     #        BJD0+T0+phase*Period = Tperi
@@ -166,8 +166,11 @@ def kepler_RV_T0P(BJD0, mean_long, Period, K, e0, omega0):
     #
 
     omega = np.asarray(omega0, dtype=np.double)/180.*np.pi
+    Omega = np.asarray(Omega0, dtype=np.double)/180.*np.pi
     e = np.asarray(e0, dtype=np.double)
-    MeAn = 2. * np.pi * (1. + ((BJD0 / Period) + (mean_long/180.*np.pi - omega) / (2 * np.pi)) % 1.)
+    MeAn = 2. * np.pi * (1. + ((BJD0 / Period) + (mean_long/180.*np.pi - omega - Omega) / (2 * np.pi)) % 1.)
+    #TODO check if the computation of mean anomaly is correct, i.e., include  Omega 
+    #TODO semplify MeAn = [2*np.pi *(BJD0 / Period) + (mean_long/180.*np.pi - omega - Omega)] % (2 * np.pi)
 
     if abs(e0) < 1e-3:
         TrAn = np.asarray(MeAn, dtype=np.double)

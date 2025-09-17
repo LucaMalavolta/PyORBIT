@@ -295,7 +295,7 @@ class DynamicalIntegrator:
             self.dynamical_pams['i'][n_plan-1] = parameter_values['i']
             self.dynamical_pams['omega'][n_plan-1] = parameter_values['omega']
             self.dynamical_pams['Omega'][n_plan-1] = parameter_values['Omega']
-            self.dynamical_pams['mA'][n_plan-1] = (parameter_values['mean_long'] - parameter_values['omega'])
+            self.dynamical_pams['mA'][n_plan-1] = (parameter_values['mean_long'] - parameter_values['omega'] - parameter_values['Omega']) % 360.0
 
         if x_input is None:
 
