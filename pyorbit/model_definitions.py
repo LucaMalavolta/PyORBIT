@@ -28,7 +28,7 @@ from pyorbit.common.correlation import CommonCorrelation, CommonComplexCorrelati
 from pyorbit.common.detrending import CommonDetrending
 
 
-from pyorbit.models.keplerian_modelling import  RVkeplerian, TransitTimeKeplerian
+from pyorbit.models.keplerian_modelling import  ApodizedRVkeplerian, RVkeplerian, TransitTimeKeplerian
 from pyorbit.models.dynamical_modelling import  TransitTimeDynamical, RVdynamical, DynamicalIntegrator
 
 from pyorbit.models.harmonics import Harmonics
@@ -195,12 +195,15 @@ define_common_type_to_class = {
 define_type_to_class = {
     'planetary_velocities': {'circular': RVkeplerian,
                           'keplerian': RVkeplerian,
+                          'apodized': ApodizedRVkeplerian,
                           'dynamical': RVdynamical},
     'radial_velocities': {'circular': RVkeplerian,
                           'keplerian': RVkeplerian,
+                          'apodized': ApodizedRVkeplerian,
                           'dynamical': RVdynamical},
     'rv_planets': {'circular': RVkeplerian,
                    'keplerian': RVkeplerian,
+                   'apodized': ApodizedRVkeplerian,
                    'dynamical': RVdynamical},
     'Tc_planets': {'circular': TransitTimeKeplerian,
                    'keplerian': TransitTimeKeplerian,

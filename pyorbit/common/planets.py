@@ -32,7 +32,7 @@ class CommonPlanets(AbstractCommon):
     parametrization_list = ['Ford2006', 'Eastman2013', 'Standard',
                             'Ford2006_Tcent', 'Eastman2013_Tcent', 'Standard_Tcent',
                             'Ford2006_Tc', 'Eastman2013_Tc', 'Standard_Tc']
-    orbit_list = ['circular', 'keplerian', 'dynamical']
+    orbit_list = ['circular', 'keplerian', 'dynamical', 'apodized']
 
 
     parameters_dictionary = {
@@ -205,6 +205,20 @@ class CommonPlanets(AbstractCommon):
                 'spaces': 'Log_Base2',
                 'fixed' : 1.00000,
             },
+        'apo_center':
+            {
+                'bounds': {},
+                'priors': ['Uniform', []],
+                'spaces': 'Linear',
+                'fixed' : None,
+            },
+        'apo_timescale':
+            {
+                'bounds': [10., 100000.0],
+                'priors': ['Uniform', []],
+                'spaces': 'Log_Base10',
+                'fixed' : None,
+            },
     }
 
     recenter_pams = {'mean_long', 'omega', 'Omega'}
@@ -236,17 +250,24 @@ class CommonPlanets(AbstractCommon):
 
         self.Tref = mc.Tref
 
-        self.orbit = kwargs.get('orbit', self.orbit)
-        if self.orbit in self.orbit_list:
-            print('Using orbital model: ', self.orbit)
 
-            if self.orbit == 'circular':
+        self.use_circular_orbit = kwargs.get('use_circular_orbit', False)
+        self.orbit = kwargs.get('orbit', self.orbit)
+
+        if self.orbit in self.orbit_list:
+
+            if self.orbit == 'circular' or self.use_circular_orbit:
+                print('Using orbital model: circular')
                 self.fix_list['e'] = np.asarray([0.000, 0.0000], dtype=np.double)
                 self.fix_list['omega'] = np.asarray([90.0, 0.0000], dtype=np.double)
+            else:
+                print('Using orbital model: ', self.orbit)
 
         else:
             print('ERROR in configuration file - orbital model: not supported')
             quit()
+
+
 
 
         self.parametrization = kwargs.get('parametrization', self.parametrization)
