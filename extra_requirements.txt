@@ -7,7 +7,7 @@ emcee >=3.1.2
 astropy >=5.1
 astroquery >=0.4
 pyerfa >=2.0
-jaxlib >=0.4.31
+jaxlib ==0.4.31
 jax ==0.4.31
 tinygp >=0.3.0
 ###### Requirements without Version Specifiers ######
@@ -37,7 +37,7 @@ pytransit >= 2.6.8
 celerite2 == 0.2.1
 george >= 0.4.0
 ###### nested sampling
-dynesty >= 1.2.3
+dynesty == 2.1.5
 ultranest >= 3.4.4
 ###### RML
 pyastronomy
