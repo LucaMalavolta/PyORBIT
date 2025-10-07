@@ -14,7 +14,7 @@ import pyorbit.subroutines.constants as constants
 #    Solve Kepler's Equation. Method by S. Mikkola (1987) Celestial
 #       Mechanics, 40 , 329-334.
 #    result from Mikkola then used as starting value for
-#       Newton-Raphson iteration to extend the applicability of this
+#       _Newton-Raphson iteration to extend the applicability of this
 #       function to higher eccentricities
 
 __all__ = ["kepler_K1", "kepler_RV", "kepler_RV_T0P", "kepler_Tc2phase_Tref", "kepler_phase2Tc_Tref", "get_planet_mass", "kepler_true_anomaly_orbital_distance"]
@@ -127,7 +127,7 @@ def kepler_K1(m_star1, m_star2, period, i, e0):
     # 86400. / constants.d2s: seconds in a day
 
     return (2. * np.pi * constants.Gsi * constants.Msun / 86400.) ** (1. / 3.) \
-           * (np.sin(i * np.pi / 180.0) / np.sqrt(1. - e0 ** 2.)) * period ** (-1. / 3.) \
+           * (np.sin(i * constants.deg2rad) / np.sqrt(1. - e0 ** 2.)) * period ** (-1. / 3.) \
            * (m_star2 * (m_star1 + m_star2) ** (-2. / 3.))
 
 
@@ -144,10 +144,10 @@ def kepler_RV(BJD, TPeri, Period, K, e0, omega0):
     else:
         if e0 < 0.:
             e = np.asarray(-e0, dtype=np.double)
-            omega = np.asarray(omega0, dtype=np.double)/180.*np.pi + np.pi
+            omega = np.asarray(omega0, dtype=np.double)*constants.deg2rad + np.pi
         else:
             e = np.asarray(e0, dtype=np.double)
-            omega = np.asarray(omega0, dtype=np.double)/180.*np.pi
+            omega = np.asarray(omega0, dtype=np.double)*constants.deg2rad
 
         # Eccentric Anomaly
         EccAn = kepler_E(MeAn, e)
@@ -165,11 +165,11 @@ def kepler_RV_T0P(BJD0, mean_long, Period, K, e0, omega0, Omega0=0.0):
     # omega = argument of pericenter
     #
 
-    omega = np.asarray(omega0, dtype=np.double)/180.*np.pi
-    Omega = np.asarray(Omega0, dtype=np.double)/180.*np.pi
+    omega = np.asarray(omega0, dtype=np.double)* constants.deg2rad
+    Omega = np.asarray(Omega0, dtype=np.double)* constants.deg2rad
     e = np.asarray(e0, dtype=np.double)
-    MeAn = 2. * np.pi * (1. + ((BJD0 / Period) + (mean_long/180.*np.pi - omega - Omega) / (2 * np.pi)) % 1.)
-    #TODO check if the computation of mean anomaly is correct, i.e., include  Omega 
+    MeAn = 2. * np.pi * (1. + ((BJD0 / Period) + (mean_long * constants.deg2rad - omega - Omega) / (2 * np.pi)) % 1.)
+    #TODO check if the computation of mean anomaly is correct, i.e., include  Omega
     #TODO semplify MeAn = [2*np.pi *(BJD0 / Period) + (mean_long/180.*np.pi - omega - Omega)] % (2 * np.pi)
 
     if abs(e0) < 1e-3:
@@ -189,37 +189,38 @@ def kepler_RV_T0P(BJD0, mean_long, Period, K, e0, omega0, Omega0=0.0):
     return rv
 
 
-def kepler_phase2Tc_Tref(Period, mean_long, e0=0., omega0=90.):
+def kepler_phase2Tc_Tref(Period, mean_long, e0=0., omega0=90., Omega0=0.0):
     # The closest Tcent after Tref is given back
-    omega = omega0/180.*np.pi
+    omega = omega0 * constants.deg2rad
+    Omega = Omega0 * constants.deg2rad
     TrAn = np.pi / 2 - omega
     EccAn = 2. * np.arctan(np.sqrt((1.0 - e0) / (1.0 + e0)) * np.tan(TrAn / 2.0))
     MeAn = EccAn - e0 * np.sin(EccAn)
-    return (MeAn - mean_long/180.*np.pi + omega) / (2 * np.pi) * Period % Period
+    return (MeAn - mean_long*constants.deg2rad + omega + Omega) / (2 * np.pi) * Period % Period
 
 
 def kepler_Tc2phase_Tref(Period, Tcent , e0, omega0):
-    omega = omega0/180.*np.pi
+    omega = omega0*constants.deg2rad
     TrAn = np.pi / 2 - omega
     EccAn = 2. * np.arctan(np.sqrt((1.0 - e0) / (1.0 + e0)) * np.tan(TrAn / 2.0))
     MeAn = EccAn - e0 * np.sin(EccAn)
-    return ((omega + MeAn - Tcent / Period * 2 * np.pi) * (180. / np.pi)) % 360.
+    return ((omega + MeAn - Tcent / Period * 2 * np.pi) * constants.rad2deg) % 360.
 
 
 def kepler_Tc2Tperi_Tref(Period, Tcent , e0, omega0):
     # The closest Tcent after Tref is given back
-    TrAn = np.pi / 2 - omega0/180.*np.pi
+    TrAn = np.pi / 2 - omega0 * constants.deg2rad
     EccAn = 2. * np.arctan(np.sqrt((1.0 - e0) / (1.0 + e0)) * np.tan(TrAn / 2.0))
     MeAn = EccAn - e0 * np.sin(EccAn)
     return Tcent - MeAn/(2*np.pi)*Period
 
 def kepler_phase2Tperi_Tref(Period, mean_long, e0, omega0):
     # The closest Tcent after Tref is given back
-    omega = omega0/180.*np.pi
+    omega = omega0 * constants.deg2rad
     TrAn = np.pi / 2 - omega
     EccAn = 2. * np.arctan(np.sqrt((1.0 - e0) / (1.0 + e0)) * np.tan(TrAn / 2.0))
     MeAn = EccAn - e0 * np.sin(EccAn)
-    Tcent = (MeAn - mean_long/180.*np.pi + omega) / (2 * np.pi) * Period % Period
+    Tcent = (MeAn - mean_long * constants.deg2rad + omega) / (2 * np.pi) * Period % Period
     return Tcent - MeAn/(2*np.pi)*Period
 
 
@@ -292,9 +293,9 @@ def kepler_true_anomaly_orbital_distance(BJD0, Tcent0, Period, e0, omega0, a_sm)
     #        BJD0+T0+phase*Period = Tperi
     # omega = argument of pericenter
 
-    phase = kepler_Tc2phase_Tref(Period, Tcent0, e0, omega0)/180.*np.pi
+    phase = kepler_Tc2phase_Tref(Period, Tcent0, e0, omega0) * constants.deg2rad
 
-    omega = np.asarray(omega0, dtype=np.double)/180.*np.pi
+    omega = np.asarray(omega0, dtype=np.double) * constants.deg2rad
     e = np.asarray(e0, dtype=np.double)
     MeAn = 2. * np.pi * (1. + ((BJD0 / Period) + (phase - omega) / (2 * np.pi)) % 1.)
 
