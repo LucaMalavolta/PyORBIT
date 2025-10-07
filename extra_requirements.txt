@@ -41,7 +41,7 @@ dynesty >= 1.2.3
 ultranest >= 3.4.4
 ###### RML
 pyastronomy
-starry >= 1.2.0
+#starry >= 1.2.0
 ####### other packages
 opencv-python
 zeus-mcmc
