@@ -106,15 +106,17 @@ class RossiterMcLaughlin_Ohta(AbstractModel, AbstractTransit):
         else:
 
             if self.use_time_inferior_conjunction:
-                Tperi  = kepler_exo.kepler_Tc2Tperi_Tref(parameter_values['P'],
+                Tperi  = kepler_exo.kepler_compute_deltaTperi_from_deltaTc(parameter_values['P'],
                                                          parameter_values['Tc'] - dataset.Tref,
                                                          parameter_values['e'],
-                                                         parameter_values['omega'])
+                                                         parameter_values['omega'],
+                                                         parameter_values['Omega'])
             else:
-                Tperi  = kepler_exo.kepler_phase2Tperi_Tref(parameter_values['P'],
+                Tperi  = kepler_exo.kepler_compute_deltaTperi_from_meanlong(parameter_values['P'],
                                                          parameter_values['mean_long'],
                                                          parameter_values['e'],
-                                                         parameter_values['omega'])
+                                                         parameter_values['omega'],
+                                                         parameter_values['Omega'])
 
             self.rm_ohta.assignValue({"a": parameter_values['a_Rs'],
                 "lambda": parameter_values['lambda']*constants.deg2rad,

@@ -6,9 +6,6 @@ import time
 __all__ = ["ModelContainer"]
 
 class ModelContainer(object):
-    """
-
-    """
 
     def __init__(self):
 

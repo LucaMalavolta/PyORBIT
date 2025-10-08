@@ -11,7 +11,7 @@ long_description = (this_directory / "README.md").read_text()
 
 setup(
     name="pyorbit-package",
-    version='11.0.1',
+    version='11.1.0',
     author="Luca Malavolta",
 	author_email = 'luca.malavolta@unipd.it',
 	url = 'https://github.com/LucaMalavolta/PyORBIT',
@@ -55,7 +55,8 @@ setup(
         'jax ==0.4.31',
         'tinygp>=0.3.0',
         'ordered-set',
-        'nautilus-sampler'
+        'packaging'
+        #'nautilus-sampler'
         #'schwimmbad'
     ],
     setup_requires=['setuptools']

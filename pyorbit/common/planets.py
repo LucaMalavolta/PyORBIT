@@ -5,9 +5,11 @@ from pyorbit.subroutines.common import np, convert_rho_to_ars, convert_b_to_i
 import pyorbit.subroutines.constants as constants
 import pyorbit.subroutines.kepler_exo as kepler_exo
 from pyorbit.keywords_definitions import *
+from packaging.version import Version
 
 
 class CommonPlanets(AbstractCommon):
+
     """
     Inherited class from AbstractCommon
 
@@ -130,10 +132,10 @@ class CommonPlanets(AbstractCommon):
             },
         'Omega':
             {
-                'bounds':  [0.0, 180],
+                'bounds':  [0.0, 360.0],
                 'priors': ['Uniform', []],
                 'spaces': 'Linear',
-                'fixed' : 90.,
+                'fixed' : 180.,
             },
         'R_Rs':
             {
@@ -234,6 +236,7 @@ class CommonPlanets(AbstractCommon):
         self.use_time_inferior_conjunction = False
         self.use_mass = False
         self.use_shared_ttvs = False
+        self.use_longitude_of_nodes = False
 
         self.omega_star = True
 
@@ -245,6 +248,7 @@ class CommonPlanets(AbstractCommon):
         self.compute_mass = False
         self.compute_mean_longitude = False
         self.compute_semimajor_axis = True
+
 
     def initialize_model(self, mc, **kwargs):
 
@@ -266,8 +270,6 @@ class CommonPlanets(AbstractCommon):
         else:
             print('ERROR in configuration file - orbital model: not supported')
             quit()
-
-
 
 
         self.parametrization = kwargs.get('parametrization', self.parametrization)
@@ -303,7 +305,11 @@ class CommonPlanets(AbstractCommon):
             self.compute_time_inferior_conjunction = True
             self.compute_mean_longitude = False
 
-
+        try:
+            self.use_longitude_of_nodes = kwargs.get('use_longitude_of_nodes', self.use_longitude_of_nodes)
+        except: 
+            #TODO: try-except to ensure back-compatibility, to be removed in PyORBIT version 12
+            self.use_longitude_of_nodes = kwargs.get('use_longitude_of_nodes', False)
         for use_shared_ttvs in keywords_shared_ttv:
             self.use_shared_ttvs = kwargs.get(use_shared_ttvs, self.use_shared_ttvs)
             if self.use_shared_ttvs:
@@ -320,6 +326,11 @@ class CommonPlanets(AbstractCommon):
             if self.tc_flag:
                 print('Dataset flag of times of inferior conjuctions: ', self.tc_flag)
                 break
+
+        if Version(mc.pyorbit_version) < Version("11.1.0"):
+            self.default_Omega = 0.00
+        else:
+            self.default_Omega = 180.00
 
         print()
 
@@ -372,16 +383,14 @@ class CommonPlanets(AbstractCommon):
                 self.parameter_index['omega'] = [pam00_index, pam01_index]
                 derived_list.append('omega')
 
-            if 'mean_long' in self.sampler_parameters:
-                pam00_index = self.sampler_parameters['P']
-                pam01_index = self.sampler_parameters['mean_long']
+            #if 'mean_long' in self.sampler_parameters:
+            #    pam00_index = self.sampler_parameters['P']
+            #    pam01_index = self.sampler_parameters['mean_long']
 
-                # kepler_phase2Tc_Tref(Period, mean_long, e0, omega0)
-                if 'Tc_Tref' not in self.parameter_index:
-                    self.transformation['Tc_ref'] = kepler_exo.kepler_phase2Tc_Tref
-                    self.parameter_index['Tc_Tref'] = [pam00_index, pam01_index]
-                    derived_list.append('Tc_Tref')
-
+            #    if 'Tc_Tref' not in self.parameter_index:
+            #        self.transformation['Tc_Tref'] = kepler_exo.kepler_compute_deltaTc_from_meanlong
+            #        self.parameter_index['Tc_Tref'] = [pam00_index, pam01_index]
+            #        derived_list.append('Tc_Tref')
 
         for pam in derived_list:
             if pam not in self.bounds:
@@ -454,15 +463,17 @@ class CommonPlanets(AbstractCommon):
                 parameter_values[prepend+'b'], parameter_values[prepend+'e'], parameter_values[prepend+'omega'], parameter_values[prepend+'a_Rs'])
 
         if self.compute_time_inferior_conjunction:
-            parameter_values[prepend+'Tc']= kepler_exo.kepler_phase2Tc_Tref(
+            parameter_values[prepend+'Tc']= kepler_exo.kepler_compute_deltaTc_from_meanlong(
                 parameter_values[prepend+'P'],
                 parameter_values[prepend+'mean_long'],
                 parameter_values[prepend+'e'],
-                parameter_values[prepend+'omega']) + Tref
+                parameter_values[prepend+'omega'],
+                parameter_values[prepend+'Omega']) + Tref
 
         if self.compute_mean_longitude:
-            parameter_values[prepend+'mean_long'] = kepler_exo.kepler_Tc2phase_Tref(
+            parameter_values[prepend+'mean_long'] = kepler_exo.kepler_compute_meanlong_from_deltaTc(
                 parameter_values[prepend+'P'],
                 parameter_values[prepend+'Tc'] - Tref,
                 parameter_values[prepend+'e'],
-                parameter_values[prepend+'omega'])
+                parameter_values[prepend+'omega'],
+                parameter_values[prepend+'Omega'])

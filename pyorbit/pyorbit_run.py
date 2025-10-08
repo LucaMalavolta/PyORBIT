@@ -12,12 +12,12 @@ def pyorbit_run():
     print()
     print('Python version in use:')
     print(sys.version)
-    #if sys.version_info[0] == 3 and sys.version_info[1] > 7:
-    #    print('WARNING MESSAGES SUPPRESSED!')
-    #print()
 
-    #from packaging.version import Version
-    #Version("2.3.1") < Version(tinygp.__version__)
+    print((' *** Important behaviour change in v11.1.0 *** '
+    ' The mean longitude now striclty follows its definition as the sum of the argument of pericenter(omega),'
+    ' the longitude of the nodes (Omega), and the mean anomaly at Tref.'
+    ' The default value for the longitude of the nodes (Omega) has been changed to 180 degrees.'
+    ' check the documentation for more details: https://pyorbit.readthedocs.io/ '))
 
     parser = argparse.ArgumentParser(prog='PyORBIT_run.py', description='PyORBIT runner')
     parser.add_argument('sampler', type=str, nargs=1, help='sampler (emcee or polychord)')

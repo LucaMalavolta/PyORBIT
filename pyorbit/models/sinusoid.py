@@ -71,22 +71,8 @@ class SinusoidCommonPeriod(AbstractModel):
         if x0_input is None:
             return parameter_values['sine_amp'] * np.sin(dataset.x0/parameter_values['sine_period'] - parameter_values['sine_phase']*deg2rad )
 
-            #return kepler_exo.kepler_RV_T0P(dataset.x0,
-            #                                parameter_values['f'],
-            #                                parameter_values['P'],
-            #                                parameter_values['K'],
-            #                                0.00,
-            #                                np.pi/2.)
         else:
             return parameter_values['sine_amp'] * np.sin(x0_input/parameter_values['sine_period'] - parameter_values['sine_phase']*deg2rad )
-
-            #return kepler_exo.kepler_RV_T0P(x0_input,
-            #                                parameter_values['f'],
-            #                                parameter_values['P'],
-            #                                parameter_values['K'],
-            #                                0.00,
-            #                                np.pi / 2.)
-
 
 
 class SinusoidPolynomialModulation(AbstractModel):

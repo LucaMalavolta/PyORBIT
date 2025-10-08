@@ -203,13 +203,14 @@ class RossiterMcLaughlin_Revolutions_Faster(AbstractModel, AbstractTransit):
 
             bjd_oversampling = np.linspace(bjd_value - half_time, bjd_value + half_time, n_oversampling, dtype=np.double)
 
-            true_anomaly, orbital_distance_ratio = kepler_exo.kepler_true_anomaly_orbital_distance(
+            true_anomaly, orbital_distance_ratio = kepler_exo.kepler_compute_trueanomaly_orbitaldistance(
                 bjd_oversampling,
+                parameter_values['a_Rs'],
                 parameter_values['Tc']-dataset.Tref,
                 parameter_values['P'],
                 parameter_values['e'],
                 parameter_values['omega'],
-                parameter_values['a_Rs'])
+                parameter_values['Omega'])
 
             """ planet position during its orbital motion, in unit of stellar radius"""
             # Following Murray+Correia 2011 , with the argument of the ascending node set to zero.

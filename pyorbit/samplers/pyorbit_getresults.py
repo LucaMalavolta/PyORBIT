@@ -2025,10 +2025,11 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
                             try:
                                 delta_T = parameter_values['Tc']-dataset.Tref
                             except KeyError:
-                                delta_T = kepler_exo.kepler_phase2Tc_Tref(parameter_values['P'],
+                                delta_T = kepler_exo.kepler_compute_deltaTc_from_meanlong(parameter_values['P'],
                                                                           parameter_values['mean_long'],
                                                                           parameter_values['e'],
-                                                                          parameter_values['omega'])
+                                                                          parameter_values['omega'],
+                                                                          parameter_values['Omega'])
 
                             y_plot = mc.models[model_name].compute(
                                 parameter_values, dataset, x_range+delta_T)
@@ -2057,12 +2058,13 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
                 for model in planet_pams:
                     try:
 
-                        RV_out = kepler_exo.kepler_RV_T0P(bjd_plot['full']['x_plot']-mc.Tref,
-                                                            planet_pams[model]['mean_long'],
-                                                            planet_pams[model]['P'],
+                        RV_out = kepler_exo.kepler_compute_rv_deltabjd(bjd_plot['full']['x_plot']-mc.Tref,
                                                             planet_pams[model]['K'],
+                                                            planet_pams[model]['P'],
+                                                            planet_pams[model]['mean_long'],
                                                             planet_pams[model]['e'],
-                                                            planet_pams[model]['omega'])
+                                                            planet_pams[model]['omega'],
+                                                            planet_pams[model]['Omega'])
                         fileout = open(
                             dir_models + 'RV_planet_' + model + '_kep.dat', 'w')
 
@@ -2077,12 +2079,13 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
                         fileout.close()
 
                         x_range = np.arange(-1.50, 1.50, 0.001)
-                        RV_out = kepler_exo.kepler_RV_T0P(x_range * planet_pams[model]['P'],
-                                                          planet_pams[model]['mean_long'],
-                                                          planet_pams[model]['P'],
+                        RV_out = kepler_exo.kepler_compute_rv_deltabjd(x_range * planet_pams[model]['P'],
                                                           planet_pams[model]['K'],
+                                                          planet_pams[model]['P'],
+                                                          planet_pams[model]['mean_long'],
                                                           planet_pams[model]['e'],
-                                                          planet_pams[model]['omega'])
+                                                          planet_pams[model]['omega'],
+                                                          planet_pams[model]['Omega'])
                         fileout = open(
                             dir_models + 'RV_planet_' + model + '_pha.dat', 'w')
 
@@ -2100,12 +2103,13 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
                             Tc_range = x_range * \
                                 planet_pams[model]['P'] + \
                                 planet_pams[model]['Tc'] - mc.Tref
-                            RV_out = kepler_exo.kepler_RV_T0P(Tc_range,
-                                                              planet_pams[model]['mean_long'],
-                                                              planet_pams[model]['P'],
+                            RV_out = kepler_exo.kepler_compute_rv_deltabjd(Tc_range,
                                                               planet_pams[model]['K'],
+                                                              planet_pams[model]['P'],
+                                                              planet_pams[model]['mean_long'],
                                                               planet_pams[model]['e'],
-                                                              planet_pams[model]['omega'])
+                                                              planet_pams[model]['omega'],
+                                                              planet_pams[model]['Omega'])
                             fileout = open(
                                 dir_models + 'RV_planet_' + model + '_Tcf.dat', 'w')
 

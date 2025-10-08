@@ -5,32 +5,86 @@ from pyorbit.subroutines.common import np
 from scipy.optimize import fsolve, newton
 import pyorbit.subroutines.constants as constants
 
-# +
-# NAME:
-#    exofast_keplereq
-# PURPOSE:
-#    Solve Kepler's Equation
-# DESCRIPTION:
-#    Solve Kepler's Equation. Method by S. Mikkola (1987) Celestial
-#       Mechanics, 40 , 329-334.
-#    result from Mikkola then used as starting value for
-#       _Newton-Raphson iteration to extend the applicability of this
-#       function to higher eccentricities
 
-__all__ = ["kepler_K1", "kepler_RV", "kepler_RV_T0P", "kepler_Tc2phase_Tref", "kepler_phase2Tc_Tref", "get_planet_mass", "kepler_true_anomaly_orbital_distance"]
+__all__ = ["kepler_K1", "kepler_RV", "kepler_RV_T0P", "kepler_Tc2phase_Tref", "kepler_phase2Tc_Tref", "get_planet_mass", "kepler_true_anomaly_orbital_distance", 
+            "kepler_compute_rv_semiamplitude", "kepler_compute_rv", "kepler_compute_rv_deltabjd", "kepler_compute_deltaTc_from_meanlong",
+            "kepler_compute_meanlong_from_deltaTc", "kepler_compute_deltaTperi_from_deltaTc", "kepler_compute_deltaTperi_from_meanlong",
+            "kepler_get_planet_mass", "kepler_compute_trueanomaly_orbitaldistance"]
+
+#TODO: user commented definition below in PyORBIT version 12
+
+#__all__ = ["kepler_compute_rv_semiamplitude", "kepler_compute_rv", "kepler_compute_rv_deltabjd", "kepler_compute_deltaTc_from_meanlong",
+#           "kepler_compute_meanlong_from_deltaTc", "kepler_compute_deltaTperi_from_deltaTc", "kepler_compute_deltaTperi_from_meanlong",
+#           "kepler_get_planet_mass", "kepler_compute_trueanomaly_orbitaldistance"]
+
+def kepler_K1(mass_primary, mass_secondary, period, inclination, eccentricity):
+    """Alias for kepler_compute_rv_semiamplitude, to ensure back-compatibility
+    #TODO: remove in PyORBIT version 12
+    """
+    return kepler_compute_rv_semiamplitude(mass_primary, mass_secondary, period, inclination, eccentricity)
+
+def kepler_RV(bjd, Tperi, period, rv_semiamplitude, ecc, omega_deg):
+    """Alias for kepler_compute_rv, to ensure back-compatibility
+    #TODO:  remove in PyORBIT version 12
+    """
+    return kepler_compute_rv(bjd, Tperi, period, rv_semiamplitude, ecc, omega_deg)
+
+def kepler_RV_T0P(bjd_tref, mean_long, period, rv_semiamplitude, ecc=0., omega_deg=90., Omega_deg=0.0):
+    """Alias for kepler_compute_rv_deltabjd, to ensure back-compatibility
+    #TODO: remove in PyORBIT version 12 
+    """
+    return kepler_compute_rv_deltabjd(bjd_tref, rv_semiamplitude, period, mean_long, ecc, omega_deg, Omega_deg)
+
+def kepler_phase2Tc_Tref(period, mean_long, ecc=0., omega_deg=90., Omega_deg=0.0):
+    """Alias for kepler_compute_deltaTc_from_meanlong, to ensure back-compatibility
+    #TODO: remove in PyORBIT version 12 
+    """
+    return kepler_compute_deltaTc_from_meanlong(period, mean_long, ecc, omega_deg, Omega_deg)
+
+def kepler_Tc2phase_Tref(period, delta_Tc, ecc, omega_deg, Omega_deg=0.0):
+    """Alias for kepler_compute_meanlong_from_deltaTc, to ensure back-compatibility
+    #TODO: remove in PyORBIT version 12 
+    """
+    return kepler_compute_meanlong_from_deltaTc(period, delta_Tc, ecc, omega_deg, Omega_deg)
+
+def kepler_Tc2Tperi_Tref(period, delta_Tc, ecc, omega_deg):
+    """Alias for kepler_compute_meanlong_from_deltaTc, to ensure back-compatibility
+    #TODO: remove in PyORBIT version 12 
+    """
+    return kepler_compute_deltaTperi_from_deltaTc(period, delta_Tc , ecc, omega_deg)
+
+def kepler_phase2Tperi_Tref(period, mean_long, ecc, omega_deg, Omega_deg):
+    """Alias for kepler_compute_meanlong_from_deltaTc, to ensure back-compatibility
+    #TODO: remove in PyORBIT version 12 
+    """
+    return kepler_compute_deltaTperi_from_meanlong(period, mean_long, ecc, omega_deg, Omega_deg)
+
+def get_planet_mass(period, rv_semiamplitude, ecc, mass_star, approximation_limit=30.):
+    """Alias for kepler_get_planet_mass, to ensure back-compatibility
+    #TODO: remove in PyORBIT version 12 
+    """
+    return kepler_get_planet_mass(period, rv_semiamplitude, ecc, mass_star, approximation_limit)
+
+def kepler_true_anomaly_orbital_distance(bjd_tref, delta_Tc, period, ecc, omega_deg, semimajor_axis, Omega_deg=0.0):
+    """Alias for kepler_compute_trueanomaly_orbitaldistance, to ensure back-compatibility
+    #TODO: remove in PyORBIT version 12 
+    """
+    return kepler_compute_trueanomaly_orbitaldistance(bjd_tref, semimajor_axis, delta_Tc, period, ecc, omega_deg, Omega_deg)
 
 
 def f0_keplerE(ecan_tmp, ecc, mx):
-        return (ecan_tmp - ecc * np.sin(ecan_tmp) - mx) % (2 * np.pi)
+    """ Support function for kepler_E """
+    return (ecan_tmp - ecc * np.sin(ecan_tmp) - mx) % (2 * np.pi)
 
 def f1_keplerE(ecan_tmp, ecc, mx):
-        ## f' = 1-e*cosE
-        return (1. - ecc * np.cos(ecan_tmp)) % (2 * np.pi)
+    """ Support function for kepler_E """
+    ## f' = 1-e*cosE
+    return (1. - ecc * np.cos(ecan_tmp)) % (2 * np.pi)
 
 def kepler_E(M_in, ecc):
-
+    """ Solves Kepler's equation to find the eccentric anomaly, E, given the mean anomaly, M, and eccentricity, e.
+    """
     mx = np.atleast_1d(M_in) % (2. * np.pi)
-    eccanom = np.zeros(np.size(mx), dtype=np.double)
 
     """
     #if ecc < 1e-10:
@@ -111,205 +165,292 @@ def kepler_E(M_in, ecc):
     return ecan_tmp
 
 
-def kepler_K1(m_star1, m_star2, period, i, e0):
+def kepler_compute_rv_semiamplitude(mass_primary, mass_secondary, period, inclination, eccentricity):
     """ Computes the radial velocity semi-amplitude of the primary star
+    Period must be given in days, conversion factor to seconds are included in the routine
+    constants.Gsi: Gravitational constant in SI system [m^3 kg^-1 s^-2]
+    constants.Msun: Sun mass in SI system [kg]
 
-    :param m_star1: mass of the primary, in Solar mass units
-    :param m_star2: mass of the secondary/planet, in Solar mass units
-    :param period: orbital period of star2, in [d]
-    :param i: orbital inclination of star2 wrt the observer (0=face on), in [deg]
-    :param e0: orbital eccentricity of star2
-    :return: k1, the observed radial velocity semi-amplitude of the primary, in [m s^-1]
+    :param mass_primary: mass of the primary (in Solar mass units)
+    :param mass_secondary: mass of the secondary/planet (in Solar mass units)
+    :param period: orbital period of star2, (in days)
+    :param inclination: orbital inclination of star2 wrt the observer (0=face on) (in degrees)
+    :param eccentricity: orbital eccentricity of star2
+    :return: k1, the observed radial velocity semi-amplitude of the primary (in m/s)
     """
-    # period must be given in days, conversion factor to seconds are included in the routine
-    # constants.Gsi: Gravitational constant in SI system [m^3 kg^-1 s^-2]
-    # constants.Msun: Sun mass in SI system [kg]
+
     # 86400. / constants.d2s: seconds in a day
 
     return (2. * np.pi * constants.Gsi * constants.Msun / 86400.) ** (1. / 3.) \
-           * (np.sin(i * constants.deg2rad) / np.sqrt(1. - e0 ** 2.)) * period ** (-1. / 3.) \
-           * (m_star2 * (m_star1 + m_star2) ** (-2. / 3.))
+           * (np.sin(inclination * constants.deg2rad) / np.sqrt(1. - eccentricity ** 2.)) * period ** (-1. / 3.) \
+           * (mass_secondary * (mass_primary + mass_secondary) ** (-2. / 3.))
 
 
-def kepler_RV(BJD, TPeri, Period, K, e0, omega0):
-    # omega = argument of pericenter
-    # Mean Anomaly
-    #
-    MeAn = 2. * np.pi * (1. + (BJD - TPeri) / Period % 1.)
+def kepler_compute_rv(bjd, Tperi, period, rv_semiamplitude, ecc, omega_deg):
+    """ Compute the radial velocity at a given time (bjd) if the time of periastron passage (Tperi)
+    is known, assuming a Keplerian orbit with given period,
+    eccentricity (ecc), and argument of pericenter (omega_deg).
+    :param bjd: Barycentric Julian Date at which to compute the radial velocity (in days)
+    :param Tperi: Time of periastron passage (in days)
+    :param period: Orbital period of the planet (in days)
+    :param rv_semiamplitude: Radial velocity semi-amplitude (in m/s)
+    :param ecc: Orbital eccentricity (default is 0)
+    :param omega_deg: Argument of pericenter (in degrees, default is 90)
+    :return: Radial velocity at time bjd (in m/s)
+    """
 
-    if abs(e0) < 1e-3:
+    MeAn = 2. * np.pi * (1. + (bjd - Tperi) / period % 1.)
+
+    if abs(ecc) < 1e-3:
         TrAn = np.asarray(MeAn, dtype=np.double)
-        e = np.asarray(0., dtype=np.double)
+        ecc_eq = np.asarray(0., dtype=np.double)
         omega = np.asarray(0., dtype=np.double)
     else:
-        if e0 < 0.:
-            e = np.asarray(-e0, dtype=np.double)
-            omega = np.asarray(omega0, dtype=np.double)*constants.deg2rad + np.pi
+        if ecc < 0.:
+            ecc_eq = np.asarray(-ecc, dtype=np.double)
+            omega = np.asarray(omega_deg, dtype=np.double)*constants.deg2rad + np.pi
         else:
-            e = np.asarray(e0, dtype=np.double)
-            omega = np.asarray(omega0, dtype=np.double)*constants.deg2rad
+            ecc_eq = np.asarray(ecc, dtype=np.double)
+            omega = np.asarray(omega_deg, dtype=np.double)*constants.deg2rad
 
         # Eccentric Anomaly
-        EccAn = kepler_E(MeAn, e)
-        TrAn = 2. * np.arctan(np.sqrt((1.0 + e) / (1.0 - e)) * np.tan(EccAn / 2.0))
+        EccAn = kepler_E(MeAn, ecc_eq)
+        TrAn = 2. * np.arctan(np.sqrt((1.0 + ecc_eq) / (1.0 - ecc_eq)) * np.tan(EccAn / 2.0))
 
-    rv = K * (np.cos(TrAn + omega) + e * np.cos(omega))
+    rv = rv_semiamplitude * (np.cos(TrAn + omega) + ecc_eq * np.cos(omega))
 
     return rv
 
 
-def kepler_RV_T0P(BJD0, mean_long, Period, K, e0, omega0, Omega0=0.0):
-    # BJD0 is given as BJD-T0, where T0 is arbitrarily defined by the user
-    # Tperi_ is substituted by _phase_, which is the phase of the orbit where
-    #        BJD0+T0+phase*Period = Tperi
-    # omega = argument of pericenter
-    #
+def kepler_compute_rv_deltabjd(bjd_tref, rv_semiamplitude, period, mean_long, ecc, omega_deg, Omega_deg=0.0):
+    """
+    Compute the radial velocity at a given time difference from a reference epoch (bjd_tref=BJD-Tref)
+    from the mean longitude at reference epoch (mean_long) assuming a Keplerian orbit with given period, 
+    eccentricity (ecc), argument of pericenter (omega_deg), and longitude of the ascending node (Omega_deg).
+    :param bjd_tref: Time difference from reference epoch (in days)
+    :param rv_semiamplitude: Radial velocity semi-amplitude (in m/s)
+    :param period: Orbital period of the planet (in days)
+    :param mean_long: Mean longitude at reference epoch (in degrees)
+    :param ecc: Orbital eccentricity (default is 0)
+    :param omega: Argument of pericenter (in degrees, default is 90)
+    :param Omega: Longitude of the ascending node (in degrees, default is 0)
+    :return: Radial velocity at time bjd_tref (in m/s)
+    """
 
-    omega = np.asarray(omega0, dtype=np.double)* constants.deg2rad
-    Omega = np.asarray(Omega0, dtype=np.double)* constants.deg2rad
-    e = np.asarray(e0, dtype=np.double)
-    MeAn = 2. * np.pi * (1. + ((BJD0 / Period) + (mean_long * constants.deg2rad - omega - Omega) / (2 * np.pi)) % 1.)
-    #TODO check if the computation of mean anomaly is correct, i.e., include  Omega
-    #TODO semplify MeAn = [2*np.pi *(BJD0 / Period) + (mean_long/180.*np.pi - omega - Omega)] % (2 * np.pi)
+    omega = np.asarray(omega_deg, dtype=np.double)* constants.deg2rad
+    Omega = np.asarray(Omega_deg, dtype=np.double)* constants.deg2rad
+    ecc_eq = np.asarray(ecc, dtype=np.double)
+    MeAn = (2*np.pi *(bjd_tref / period) + (mean_long*constants.deg2rad - omega - Omega)) % (2 * np.pi)
 
-    if abs(e0) < 1e-3:
+    if abs(ecc) < 1e-3:
         TrAn = np.asarray(MeAn, dtype=np.double)
-        e = np.asarray(0., dtype=np.double)
+        ecc_eq = np.asarray(0., dtype=np.double)
     else:
-        if e0 < 0.:
-            e = -1 * e
+        if ecc < 0.:
+            ecc_eq = -1 * ecc_eq
             omega += np.pi
 
         # Eccentric Anomaly
-        EccAn = kepler_E(MeAn, e)
-        TrAn = 2. * np.arctan(np.sqrt((1.0 + e) / (1.0 - e)) * np.tan(EccAn / 2.0))
+        EccAn = kepler_E(MeAn, ecc_eq)
+        TrAn = 2. * np.arctan(np.sqrt((1.0 + ecc_eq) / (1.0 - ecc_eq)) * np.tan(EccAn / 2.0))
 
-    rv = K * (np.cos(TrAn + omega) + e * np.cos(omega))
+    rv = rv_semiamplitude * (np.cos(TrAn + omega) + ecc_eq * np.cos(omega))
 
     return rv
 
 
-def kepler_phase2Tc_Tref(Period, mean_long, e0=0., omega0=90., Omega0=0.0):
-    # The closest Tcent after Tref is given back
-    omega = omega0 * constants.deg2rad
-    Omega = Omega0 * constants.deg2rad
+def kepler_compute_deltaTc_from_meanlong(period, mean_long, ecc=0., omega_deg=90., Omega_deg=0.0):
+    """
+    Compute the difference between the first *time of inferior conjunction* (Tc) and the reference time Tref
+    from the mean longitude at reference epoch (mean_long) assuming a Keplerian orbit with given period, 
+    eccentricity (ecc), argument of pericenter (omega_deg), and longitude of the ascending node (Omega_deg).
+    The *time of inferior conjunction* is defined as the time when the planet is closest to the line of sight
+    between the observer and the star, i.e. when the true anomaly (TrAn) is equal to pi/2 - omega.
+    For circular orbits, the time of inferior conjunction corresponds to the central time of transit.
+
+    :param period: Orbital period of the planet (in days)
+    :param mean_long: Mean longitude at reference epoch (in degrees)
+    :param ecc: Orbital eccentricity (default is 0)
+    :param omega: Argument of pericenter (in degrees, default is 90)
+    :param Omega: Longitude of the ascending node (in degrees, default is 0)
+    :return: minimum positive difference between the time of inferior conjunction (Tv) and reference time (Tref)
+    """
+    omega = omega_deg * constants.deg2rad
+    Omega = Omega_deg * constants.deg2rad
     TrAn = np.pi / 2 - omega
-    EccAn = 2. * np.arctan(np.sqrt((1.0 - e0) / (1.0 + e0)) * np.tan(TrAn / 2.0))
-    MeAn = EccAn - e0 * np.sin(EccAn)
-    return (MeAn - mean_long*constants.deg2rad + omega + Omega) / (2 * np.pi) * Period % Period
+    EccAn = 2. * np.arctan(np.sqrt((1.0 - ecc) / (1.0 + ecc)) * np.tan(TrAn / 2.0))
+    MeAn = EccAn - ecc * np.sin(EccAn)
+    MeAn_Tref = mean_long*constants.deg2rad - omega - Omega
+    return (MeAn - MeAn_Tref) / (2 * np.pi) * period % period
 
+def kepler_compute_meanlong_from_deltaTc(period, delta_Tc, ecc, omega_deg, Omega_deg=0.0):
+    """
+    Compute the mean longitude at reference epoch (mean_long) from delta_Tc, i.e., the difference between the first
+    *time of inferior conjunction* (Tc) and the reference time Tref, assuming a Keplerian orbit with given period, 
+    eccentricity (ecc), argument of pericenter (omega_deg), and longitude of the ascending node (Omega_deg).
+    The *time of inferior conjunction* is defined as the time when the planet is closest to the line of sight
+    between the observer and the star, i.e. when the true anomaly (TrAn) is equal to pi/2 - omega.  
 
-def kepler_Tc2phase_Tref(Period, Tcent , e0, omega0):
-    omega = omega0*constants.deg2rad
+    :param period: Orbital period of the planet (in days)
+    :param delta_Tc: Difference between the time of inferior conjunction and reference time (in days)
+    :param ecc: Orbital eccentricity
+    :param omega: Argument of pericenter (in degrees)
+    :param Omega: Longitude of the ascending node (in degrees, default is 0)
+    :return: Mean longitude at reference epoch (in degrees, in the range 0-360)
+    """
+    omega = omega_deg * constants.deg2rad
+    Omega = Omega_deg * constants.deg2rad
     TrAn = np.pi / 2 - omega
-    EccAn = 2. * np.arctan(np.sqrt((1.0 - e0) / (1.0 + e0)) * np.tan(TrAn / 2.0))
-    MeAn = EccAn - e0 * np.sin(EccAn)
-    return ((omega + MeAn - Tcent / Period * 2 * np.pi) * constants.rad2deg) % 360.
+    EccAn = 2. * np.arctan(np.sqrt((1.0 - ecc) / (1.0 + ecc)) * np.tan(TrAn / 2.0))
+    MeAn = EccAn - ecc * np.sin(EccAn)
+    return ((omega + Omega + MeAn - delta_Tc / period * 2 * np.pi) * constants.rad2deg) % 360.
 
+def kepler_compute_deltaTperi_from_deltaTc(period, delta_Tc , ecc, omega_deg):
+    """
+    Compute difference between the *time of periastron passage* (Tperi) and the reference time (Tref)
+    starting from delta_Tc, i.e., the difference between the first *time of inferior conjunction* (Tc) 
+    and the reference time (Tref), assuming a Keplerian orbit with given period, 
+    eccentricity (ecc), and argument of pericenter (omega_deg).
+    :param period: Orbital period of the planet (in days)
+    :param delta_Tc: Difference between the time of inferior conjunction and reference time (in days)
+    :param ecc: Orbital eccentricity
+    :param omega: Argument of pericenter (in degrees)
+    :return: minimum positive difference between the time of periastron passage (Tperi) and reference time (Tref)
+    """
+    TrAn = np.pi / 2 - omega_deg * constants.deg2rad
+    EccAn = 2. * np.arctan(np.sqrt((1.0 - ecc) / (1.0 + ecc)) * np.tan(TrAn / 2.0))
+    MeAn = EccAn - ecc * np.sin(EccAn)
+    return delta_Tc - MeAn/(2*np.pi)*period
 
-def kepler_Tc2Tperi_Tref(Period, Tcent , e0, omega0):
-    # The closest Tcent after Tref is given back
-    TrAn = np.pi / 2 - omega0 * constants.deg2rad
-    EccAn = 2. * np.arctan(np.sqrt((1.0 - e0) / (1.0 + e0)) * np.tan(TrAn / 2.0))
-    MeAn = EccAn - e0 * np.sin(EccAn)
-    return Tcent - MeAn/(2*np.pi)*Period
-
-def kepler_phase2Tperi_Tref(Period, mean_long, e0, omega0):
-    # The closest Tcent after Tref is given back
-    omega = omega0 * constants.deg2rad
+def kepler_compute_deltaTperi_from_meanlong(period, mean_long, ecc, omega_deg, Omega_deg=0.0):
+    """
+    Compute difference between the *time of periastron passage* (Tperi) and the reference time (Tref)
+    starting from the mean longitude at reference epoch (mean_long) assuming a Keplerian orbit with given period, 
+    eccentricity (ecc), argument of pericenter (omega_deg), and longitude of the ascending node (Omega_deg).
+    :param period: Orbital period of the planet (in days)
+    :param mean_long: Mean longitude at reference epoch (in degrees)
+    :param ecc: Orbital eccentricity
+    :param omega: Argument of pericenter (in degrees)
+    :param Omega: Longitude of the ascending node (in degrees, default is 0)
+    :return: minimum positive difference between the time of periastron passage (Tperi) and reference time (Tref)
+    """
+    omega = omega_deg * constants.deg2rad
+    Omega = Omega_deg * constants.deg2rad
     TrAn = np.pi / 2 - omega
-    EccAn = 2. * np.arctan(np.sqrt((1.0 - e0) / (1.0 + e0)) * np.tan(TrAn / 2.0))
-    MeAn = EccAn - e0 * np.sin(EccAn)
-    Tcent = (MeAn - mean_long * constants.deg2rad + omega) / (2 * np.pi) * Period % Period
-    return Tcent - MeAn/(2*np.pi)*Period
+    EccAn = 2. * np.arctan(np.sqrt((1.0 - ecc) / (1.0 + ecc)) * np.tan(TrAn / 2.0))
+    MeAn = EccAn - ecc * np.sin(EccAn)
+    MeAn_Tref = mean_long*constants.deg2rad - omega - Omega
+    Tcent = (MeAn - MeAn_Tref) / (2 * np.pi) * period % period
+    return Tcent - MeAn/(2*np.pi)*period
 
-
-def f_get_mass(m_star2, m_star1, period, e0, k1):
-    """ Computes the difference between the input radial velocity semi-amplitude
+def f_get_mass(mass_secondary, mass_primary, period, ecc, rv_semiamplitude):
+    """ Compute the difference between the input radial velocity semi-amplitude
     of the primary star and the value corresponding to the provided orbital parameters.
-    Supporting function to get_planet_mass subroutine
+    Supporting function to *kepler_get_planet_mass* subroutine.
 
-    :param m_star2: mass of the secondary/planet, in Solar mass units
-    :param m_star1: mass of the primary, in Solar mass units
-    :param period: orbital period of star2, in [d]
-    :param e0: orbital eccentricity of star2
-    :param k1: observed RV semi-amplitude of the primary
-    :return: the difference between the observed and theoretical RV semi-amplitude of the primary, in [m s^-1]
+    constants.Gsi: Gravitational constant in SI system [m^3 kg^-1 s^-2]
+    constants.Msun: Sun mass in SI system [kg]
+
+    :param mass_secondary: mass of the secondary/planet (in Solar mass units)
+    :param mass_primary: mass of the primary star (in Solar mass units)
+    :param period: orbital period of the secondary (in days)
+    :param ecc: orbital eccentricity of the planet
+    :param rv_semiamplitude: observed RV semi-amplitude of the primary (in m/s)
+    :return: the difference between the observed and theoretical RV semi-amplitude of the primary (in m/s)
     """
-    # period must be given in days, conversion factor to seconds are included in the routine
-    # constants.Gsi: Gravitational constant in SI system [m^3 kg^-1 s^-2]
-    # constants.Msun: Sun mass in SI system [kg]
-    # 86400. / constants.d2s: seconds in a day
 
-    # M_star1, M_star2 in solar masses
-    # P in days -> Period is converted in seconds in the routine
-    # inclination assumed to be 90 degrees
-    # Gravitational constant in SI system [in m^3 kg^-1 s^-2]
-    # output in m/s
+    return rv_semiamplitude - ((2. * np.pi * constants.Gsi * constants.Msun / 86400.0) ** (1. / 3.)
+            * (1. / np.sqrt(1. - ecc ** 2.))
+            * period ** (-1. / 3.)
+            * (mass_secondary * (mass_primary + mass_secondary) ** (-2. / 3.)))
 
-    return k1 \
-           - ((2. * np.pi * constants.Gsi * constants.Msun / 86400.0) ** (1. / 3.)
-              * (1. / np.sqrt(1. - e0 ** 2.))
-              * period ** (-1. / 3.)
-              * (m_star2 * (m_star1 + m_star2) ** (-2. / 3.)))
+def get_approximate_mass(period, rv_semiamplitude, ecc, mass_primary):
+    """ Return the approximate mass of the planet in Solar mass units, under the assumption that
+    the mass of the planet is negligible compared to the mass of the star.
+    Supporting function to *kepler_get_planet_mass* subroutine.
+    For a more precise calculation, decrease the *approximation_limit* value of the function
+    *kepler_get_planet_mass* to enable the Newton-Raphson method. 
 
-def get_approximate_mass(period, k1, e0, m_star1):
-    """ Return the approximate mass of the planet in Solar mass units, in the assumption that M_planet << M_star
-
-    :param period: orbital period of star2, in [d]
-    :param k1: observed RV semi-amplitude of the primary
-    :param e0: orbital eccentricity of star2
-    :param m_star1: mass of the primary, in Solar mass units
-    :return: mass of the planet, in Solar mass units
+    :param period: orbital period of the planet (in days)
+    :param rv_semiamplitude: observed RV semi-amplitude of the primary (in m/s)
+    :param ecc: orbital eccentricity of star2
+    :param mass_primary: mass of the primary star (in Solar mass units)
+    :return: mass of the planet (in Solar mass units)
     """
-    return k1 / ((2. * np.pi * constants.Gsi * constants.Msun / 86400.0) ** (1. / 3.)
-         * (1. / np.sqrt(1. - e0 ** 2.))
+    return rv_semiamplitude / ((2. * np.pi * constants.Gsi * constants.Msun / 86400.0) ** (1. / 3.)
+         * (1. / np.sqrt(1. - ecc ** 2.))
          * period ** (-1. / 3.)
-         * (m_star1 ** (-2. / 3.)))
+         * (mass_primary ** (-2. / 3.)))
 
 
-def get_planet_mass(P, K, e, Mstar, approximation_limit=30.):
+def kepler_get_planet_mass(period, rv_semiamplitude, ecc, mass_star, approximation_limit=30.):
+    """ Compute the mass of the planet in Solar mass units, given the orbital period (in days),
+    the observed RV semi-amplitude (in m/s), the orbital eccentricity, and the mass of the primary star (in Solar mass units).
+    If the approximate mass of the planet (computed under the assumption that the mass of the planet is negligible compared to the mass of the star)
+    is larger than the specified approximation limit, the function will use the more accurate method to compute the planet's mass. 
+    The default value for the approximation limit is 30 Earth masses, which is a good compromise between speed and accuracy.
+    To force the more accurate method, decrease the *approximation_limit* value.
+    To convert the planetary mass,
+    ```python
+    import pyorbit.subroutines.constants as constants
+    mass_planet_earth = mass_planet_solar * constants.Msear
+    mass_planet_jupiter = mass_planet_solar * constants.Msjup
+    ```
+    :param period: orbital period of the planet (in days)
+    :param rv_semiamplitude: observed RV semi-amplitude of the primary (in m/s)
+    :param ecc: orbital eccentricity of the planet
+    :param mass_star: mass of the primary star (in Solar mass units)
+    :param approximation_limit: threshold in Earth mass units to switch between the approximate and the more accurate method (default is 30 Earth masses)
+    :return: mass of the planet (in Solar mass units)
+    """
 
-    n = np.size(K)
+    n = np.size(rv_semiamplitude)
     if n == 1:
-        M_approx = min(get_approximate_mass(P, K, e, Mstar), 2*constants.Msear)
-        return fsolve(f_get_mass, M_approx, args=(Mstar, P, e, K))
+        M_approx = min(get_approximate_mass(period, rv_semiamplitude, ecc, mass_star), 2*constants.Msear)
+        return fsolve(f_get_mass, M_approx, args=(mass_star, period, ecc, rv_semiamplitude))
 
-    M_approx = get_approximate_mass(P, K, e, Mstar)
+    M_approx = get_approximate_mass(period, rv_semiamplitude, ecc, mass_star)
 
     if np.average(M_approx) > approximation_limit/constants.Msear:
-        print('Computing exact mass of the planet (average approximate mass larger than {0:3.1f} Me)'.format(approximation_limit))
+        print('Computing exact mass of the planet (mean of approximate mass distribution larger than {0:3.1f} Me)'.format(approximation_limit))
         M_init = np.average(M_approx)
         for i in range(0, n):
-            M_approx[i] = fsolve(f_get_mass, np.average(M_init), args=(Mstar[i], P[i], e[i], K[i]))
+            M_approx[i] = fsolve(f_get_mass, np.average(M_init), args=(mass_star[i], period[i], ecc[i], rv_semiamplitude[i]))
     else:
         print('Computing planetary mass under the approximation M_planet << M_star (threshold at {0:3.1f} Me)'.format(approximation_limit))
 
     return M_approx
 
-def kepler_true_anomaly_orbital_distance(BJD0, Tcent0, Period, e0, omega0, a_sm):
-    # BJD0 is given as BJD-T0, where T0 is arbitrarily defined by the user
-    # Tperi_ is substituted by _phase_, which is the phase of the orbit where
-    #        BJD0+T0+phase*Period = Tperi
-    # omega = argument of pericenter
+def kepler_compute_trueanomaly_orbitaldistance(bjd_tref, semimajor_axis, delta_Tc, period, ecc, omega_deg, Omega_deg=0.0):
+    """Compute the true anomaly and orbital distance of at the time bjd_tref (BJD-Tref) given its orbital parameters.
+    :param bjd_tref: Time difference from reference epoch (in days)
+    :param semimajor_axis: Semi-major axis of the planet (either stellar units or AU)
+    :param delta_Tc: Difference between the time of inferior conjunction and reference time (in days)
+    :param period: Orbital period of the planet (in days)
+    :param ecc: Orbital eccentricity
+    :param omega_deg: Argument of pericenter (in degrees)
+    :param Omega_deg: Longitude of the ascending node (in degrees, default is 0)
+    :return: True anomaly (in radians) and orbital distance (same input as semi-major axis) at time bjd_tref
+    """
 
-    phase = kepler_Tc2phase_Tref(Period, Tcent0, e0, omega0) * constants.deg2rad
+    mean_long = kepler_compute_meanlong_from_deltaTc(period, delta_Tc, ecc, omega_deg, Omega_deg) * constants.deg2rad
 
-    omega = np.asarray(omega0, dtype=np.double) * constants.deg2rad
-    e = np.asarray(e0, dtype=np.double)
-    MeAn = 2. * np.pi * (1. + ((BJD0 / Period) + (phase - omega) / (2 * np.pi)) % 1.)
+    omega = np.asarray(omega_deg, dtype=np.double) * constants.deg2rad
+    Omega = np.asarray(Omega_deg, dtype=np.double) * constants.deg2rad
+    ecc_array = np.asarray(ecc, dtype=np.double)
+    MeAn = (2*np.pi *(bjd_tref / period) + (mean_long - omega - Omega)) % (2 * np.pi)
 
-    if abs(e0) < 1e-3:
+    if abs(ecc) < 1e-3:
         TrAn = np.asarray(MeAn, dtype=np.double)
-        e = np.asarray(0., dtype=np.double)
-        r_orb = a_sm
+        ecc_array = np.asarray(0., dtype=np.double)
+        r_orb = semimajor_axis
     else:
-        if e0 < 0.:
-            e = -1 * e
+        if ecc < 0.:
+            ecc_array = -1 * ecc_array
             omega += np.pi
 
         # Eccentric Anomaly
-        EccAn = kepler_E(MeAn, e)
-        TrAn = 2. * np.arctan(np.sqrt((1.0 + e) / (1.0 - e)) * np.tan(EccAn / 2.0))
-        r_orb = a_sm * (1. - e ** 2) / (1. + e * np.cos(TrAn))
+        EccAn = kepler_E(MeAn, ecc_array)
+        TrAn = 2. * np.arctan(np.sqrt((1.0 + ecc_array) / (1.0 - ecc_array)) * np.tan(EccAn / 2.0))
+        r_orb = semimajor_axis * (1. - ecc_array ** 2) / (1. + ecc_array * np.cos(TrAn))
     return TrAn, r_orb

@@ -33,6 +33,8 @@ class AbstractTransit(object):
         self.multivariate_mass_radius = False
         self.code_options = {}
 
+
+
     def _prepare_planetary_parameters(self, mc, **kwargs):
 
         if mc.common_models[self.planet_ref].parametrization[:8] == 'Ford2006' \
@@ -100,6 +102,11 @@ class AbstractTransit(object):
             if self.use_shared_ttvs:
                 print('Shared transit-specific time of transits (i.e., TTVs): ', True)
                 break
+
+        try:
+            self.default_Omega = mc.common_models[self.planet_ref].default_omega
+        except AttributeError:
+            self.default_Omega = 0.00
 
     def _prepare_star_parameters(self, mc, **kwargs):
         """ Additional stellar parameters
@@ -307,6 +314,8 @@ class AbstractTransit(object):
 
     def update_parameter_values(self, parameter_values, Tref, prepend=''):
 
+        parameter_values[prepend+'Omega'] = parameter_values.get(prepend+'Omega', self.default_Omega)
+
         #t1_start = process_time()
         if self.multivariate_mass_radius:
             parameter_values['density'] = parameter_values['mass']/parameter_values['radius']**3
@@ -319,10 +328,11 @@ class AbstractTransit(object):
             parameter_values[prepend+'b'], parameter_values[prepend+'e'], parameter_values[prepend+'omega'], parameter_values[prepend+'a_Rs'])
 
         if self.compute_time_inferior_conjunction:
-            parameter_values[prepend+'Tc']= kepler_exo.kepler_phase2Tc_Tref(parameter_values[prepend+'P'],
+            parameter_values[prepend+'Tc']= kepler_exo.kepler_compute_deltaTc_from_meanlong(parameter_values[prepend+'P'],
                                                parameter_values[prepend+'mean_long'],
                                                parameter_values[prepend+'e'],
-                                               parameter_values[prepend+'omega']) + Tref
+                                               parameter_values[prepend+'omega'],
+                                               parameter_values[prepend+'Omega']) + Tref
 
 
     def _limb_darkening_coefficients(self, parameter_values):

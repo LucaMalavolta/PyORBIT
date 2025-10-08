@@ -253,13 +253,14 @@ class RossiterMcLaughlin_MultiPlanets_Precise(AbstractModel, AbstractTransit):
             inclination_rad = parameter_values[prepend+'i'] * constants.deg2rad
             omega_rad = parameter_values[prepend+'omega'] * constants.deg2rad
 
-            true_anomaly, orbital_distance_ratio = kepler_exo.kepler_true_anomaly_orbital_distance(
+            true_anomaly, orbital_distance_ratio = kepler_exo.kepler_compute_trueanomaly_orbitaldistance(
                 bjd_meshgrid,
+                parameter_values[prepend+'a_Rs'],
                 parameter_values[prepend+'Tc']-dataset.Tref,
                 parameter_values[prepend+'P'],
                 parameter_values[prepend+'e'],
                 parameter_values[prepend+'omega'],
-                parameter_values[prepend+'a_Rs'])
+                parameter_values[prepend+'Omega'])
 
             """ planet position during its orbital motion, in unit of stellar radius"""
             # Following Murray+Correia 2011 , with the argument of the ascending node set to zero.

@@ -2,6 +2,7 @@ from __future__ import print_function
 from pyorbit.subroutines.common import *
 import pyorbit.subroutines.constants as constants
 import pyorbit.subroutines.kepler_exo as kepler_exo
+from packaging.version import Version
 
 from tqdm import tqdm
 
@@ -340,6 +341,13 @@ def get_planet_parameters(mc, theta, verbose=False):
             checking the size of their distribution
             """
 
+            if Version(mc.pyorbit_version) < Version("11.1.0"):
+                default_Omega = 0.00
+            else:
+                default_Omega = 180.00
+            if 'Omega' not in parameter_values.keys():
+                parameter_values['Omega'] = default_Omega
+
             for par in parameter_values.keys():
                 if np.size(parameter_values[par]) == 1:
                     parameter_values[par] = parameter_values[par] * \
@@ -366,12 +374,12 @@ def get_planet_parameters(mc, theta, verbose=False):
                                                           parameter_values['omega'],
                                                           parameter_values['a_Rs'])
                 else:
-                    print('Inclination fixed to 90 deg!')
+                    print('All mass values are _minimum masses_ M*sin(i)')
                     parameter_values['i'] = 90.00 * np.ones(n_samplings)
                     remove_i = True
 
             if 'K' in parameter_values.keys() and 'mass' in stellar_parameters.keys():
-                M_Msun = kepler_exo.get_planet_mass(parameter_values['P'],
+                M_Msun = kepler_exo.kepler_get_planet_mass(parameter_values['P'],
                                                                   parameter_values['K'],
                                                                   parameter_values['e'],
                                                                   stellar_parameters['mass']) \
@@ -385,7 +393,7 @@ def get_planet_parameters(mc, theta, verbose=False):
 
             elif 'M_Me' in parameter_values.keys() and 'mass' in stellar_parameters.keys():
                 derived_parameters['K'] = True
-                derived_parameters['K'] = kepler_exo.kepler_K1(stellar_parameters['mass'],
+                derived_parameters['K'] = kepler_exo.kepler_compute_rv_semiamplitude(stellar_parameters['mass'],
                                                               parameter_values['M_Me'] /
                                                               constants.Msear,
                                                               parameter_values['P'],
@@ -400,18 +408,19 @@ def get_planet_parameters(mc, theta, verbose=False):
             if 'Tc' in parameter_values.keys():
                 if 'e' in parameter_values:
                     derived_parameters['mean_long'] = True
-                    parameter_values['mean_long'] = kepler_exo.kepler_Tc2phase_Tref(parameter_values['P'],
-                                                                           parameter_values['Tc'] -
-                                                                           mc.Tref,
+                    parameter_values['mean_long'] = kepler_exo.kepler_compute_meanlong_from_deltaTc(parameter_values['P'],
+                                                                           parameter_values['Tc'] -mc.Tref,
                                                                            parameter_values['e'],
-                                                                           parameter_values['omega'])
+                                                                           parameter_values['omega'],
+                                                                           parameter_values['Omega'])
 
             elif 'mean_long' in parameter_values.keys():
                 derived_parameters['Tc'] = True
-                parameter_values['Tc'] = mc.Tref + kepler_exo.kepler_phase2Tc_Tref(parameter_values['P'],
+                parameter_values['Tc'] = mc.Tref + kepler_exo.kepler_compute_deltaTc_from_meanlong(parameter_values['P'],
                                                                                   parameter_values['mean_long'],
                                                                                   parameter_values['e'],
-                                                                                  parameter_values['omega'])
+                                                                                  parameter_values['omega'],
+                                                                                  parameter_values['Omega'])
 
             if 'R_Rs' in parameter_values.keys() and 'radius' in stellar_parameters.keys():
                 parameter_values['R_Rj'] = parameter_values['R_Rs'] * \

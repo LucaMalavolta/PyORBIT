@@ -24,4 +24,4 @@ from .samplers.pyorbit_getresults import *
 from .subroutines.input_parser import yaml_parser
 
 
-__version__ = "11.0.1"
+__version__ = "11.1.0"

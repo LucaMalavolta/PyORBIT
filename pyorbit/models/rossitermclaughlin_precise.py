@@ -161,7 +161,6 @@ class RossiterMcLaughlin_Precise(AbstractModel, AbstractTransit):
             if np.isnan(key_val):
                 return 0.
 
-
         ld_par = self._limb_darkening_coefficients(parameter_values)
 
         lambda_rad = parameter_values['lambda'] * constants.deg2rad
@@ -222,7 +221,7 @@ class RossiterMcLaughlin_Precise(AbstractModel, AbstractTransit):
                             star_grid_v_star, star_grid_I, out_temp)
 
         if x0_input is None:
-            bjd = dataset.x - dataset.Tref
+            bjd = dataset.x0
             exptime = dataset.ancillary['exptime']
 
         else:
@@ -261,13 +260,14 @@ class RossiterMcLaughlin_Precise(AbstractModel, AbstractTransit):
 
             bjd_oversampling = np.linspace(bjd_value - half_time, bjd_value + half_time, n_oversampling, dtype=np.single)
 
-            true_anomaly, orbital_distance_ratio = kepler_exo.kepler_true_anomaly_orbital_distance(
+            true_anomaly, orbital_distance_ratio = kepler_exo.kepler_compute_trueanomaly_orbitaldistance(
                 bjd_oversampling,
+                parameter_values['a_Rs'],
                 parameter_values['Tc']-dataset.Tref,
                 parameter_values['P'],
                 parameter_values['e'],
                 parameter_values['omega'],
-                parameter_values['a_Rs'])
+                parameter_values['Omega'])
 
             """ planet position during its orbital motion, in unit of stellar radius"""
             # Following Murray+Correia 2011 , with the argument of the ascending node set to zero.

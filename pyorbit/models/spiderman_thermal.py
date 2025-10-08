@@ -1,6 +1,5 @@
 from pyorbit.subroutines.common import np, OrderedSet, convert_ars_to_a, convert_RTaAU_to_insol
 import pyorbit.subroutines.constants as constants
-import pyorbit.subroutines.kepler_exo as kepler_exo
 from pyorbit.models.abstract_model import AbstractModel
 from pyorbit.models.abstract_transit import AbstractTransit
 

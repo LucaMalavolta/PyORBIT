@@ -105,7 +105,7 @@ class RossiterMcLaughlin_Reloaded(AbstractModel, AbstractTransit):
 
 
         if x0_input is None:
-            bjd = dataset.x - dataset.Tref
+            bjd = dataset.x0
             exptime = dataset.ancillary['exptime']
             n_vals = dataset.n
 
@@ -138,13 +138,14 @@ class RossiterMcLaughlin_Reloaded(AbstractModel, AbstractTransit):
             I_sum = 0.
             mu_sum = 0.
 
-            true_anomaly, orbital_distance_ratio = kepler_exo.kepler_true_anomaly_orbital_distance(
+            true_anomaly, orbital_distance_ratio = kepler_exo.kepler_compute_trueanomaly_orbitaldistance(
                 bjd_oversampling,
+                parameter_values['a_Rs'],
                 parameter_values['Tc']-dataset.Tref,
                 parameter_values['P'],
                 parameter_values['e'],
                 parameter_values['omega'],
-                parameter_values['a_Rs'])
+                parameter_values['Omega'])
 
             """ planet position during its orbital motion, in unit of stellar radius
             Following Murray & Correia 2011 https://arxiv.org/abs/1009.1738, with the argument of the ascending node set to zero.
