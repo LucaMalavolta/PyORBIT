@@ -252,6 +252,22 @@ class DynamicalIntegrator:
             'mA': np.zeros(self.n_body, dtype=np.float64)
         }
 
+
+        """ #NEW Introduced in PyORBIT version 11.1.0
+            Check if the transit times corresponding to the linear ephemeris are broadly consistent with the
+            the list of transit times provided by the user
+            The provided transit times may be the observed one or a list of expected transit times knowing
+            approximate values for the period and time of inferior conjunction
+        """
+
+        #TODO check a keyword to activate this option 
+        self.tc_comparison_set = {}
+        for planet_name in mc.dynamical_dict:
+            try:
+                self.tc_comparison_set[planet_name] = np.genfromtxt(mc.common_models[self.planet_ref].tc_list, names=True)
+            except Exception as e:
+                print(f"No approximate transit times constraint for {planet_name}: {e}")
+
         return
 
 
@@ -259,6 +275,10 @@ class DynamicalIntegrator:
         """ This function compute the expected TTV and RVs for dynamically interacting planets.
             The user can specify which planets are subject to interactions, e.g. long-period planets can be approximated
             with a Keplerian function"""
+
+        """ Output initizialization """
+        output = {'stable': stable, 'pass': True, 'tc_check': True}
+
 
         if self.to_be_initialized:
             self.prepare_trades(mc)
@@ -296,6 +316,9 @@ class DynamicalIntegrator:
             self.dynamical_pams['omega'][n_plan-1] = parameter_values['omega']
             self.dynamical_pams['Omega'][n_plan-1] = parameter_values['Omega']
             self.dynamical_pams['mA'][n_plan-1] = (parameter_values['mean_long'] - parameter_values['omega'] - parameter_values['Omega']) % 360.0
+
+            #TODO add the check here and return output['tc_check'] = False if failed
+
 
         if x_input is None:
 
@@ -354,8 +377,6 @@ class DynamicalIntegrator:
                 x_input # this can be an empty list [] and it will ignore it, otherwise provide a list time at which compute RV
             )
             rv_sorted = rv_sim['rv']
-
-        output = {'stable': stable, 'pass': True}
 
         for dataset_name, dataset in mc.dataset_dict.items():
 

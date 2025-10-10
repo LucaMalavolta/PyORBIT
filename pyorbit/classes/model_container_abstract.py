@@ -278,6 +278,14 @@ class ModelContainer(object):
             we must do it here because all the planet are involved"""
             dynamical_output = self.dynamical_model.compute(self, theta)
 
+            if not dynamical_output['tc_check']:
+                if return_priors is False:
+                    return -np.inf
+                else:
+                    return -np.inf, -np.inf
+
+
+
         for model_name, model in self.common_models.items():
             log_priors += model.return_priors(theta)
 
