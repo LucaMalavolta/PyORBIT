@@ -120,8 +120,7 @@ The configuration files used in this documentation can be found at [this reposit
 
 ## References
 
-If you find `PyORBIT` useful for your work, please cite [Malavolta et al. (2016)](https://ui.adsabs.harvard.edu//#abs/2016A&A...588A.118M/abstract) and [Malavolta et al. (2018)](https://ui.adsabs.harvard.edu//#abs/2018AJ....155..107M/abstract).
-
+If you find `PyORBIT` useful for your work, please cite [Malavolta et al. (2016)](https://ui.adsabs.harvard.edu/abs/2016A%26A...588A.118M/abstract) and [Malavolta et al. (2018)](https://ui.adsabs.harvard.edu/abs/2018AJ....155..107M/abstract).
 <!---
 PyORBIT has been used in the following works
 --->
