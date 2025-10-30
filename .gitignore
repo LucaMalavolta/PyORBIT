@@ -28,6 +28,8 @@
 *.sqlite
 */.ipynb_checkpoints/*
 .ipynb_checkpoints
+*.virtual_documents/
+*Zone.Identifier
 
 # OS generated files #
 ######################
