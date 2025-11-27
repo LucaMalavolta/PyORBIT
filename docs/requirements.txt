@@ -4,10 +4,11 @@ sphinx-copybutton
 sphinx-tippy
 sphinx-hoverxref
 sphinx-subfigure
+numpy <= 1.26.4
 myst-parser
 myst-nb
 matplotlib
-scipy>=1.8.1,<1.12.0
+scipy>=1.9,<1.12.0
 astropy>=5.1
 astroquery>=0.4
 numba
@@ -16,7 +17,6 @@ emcee
 pyyaml
 h5py
 h5py
-numpy
 tqdm
 jaxlib
 jax
