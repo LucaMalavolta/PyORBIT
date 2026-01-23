@@ -1212,13 +1212,13 @@ def print_integrated_ACF(sampler_chain, theta_dict, nthin):
         dict_output['step_sampler'] = i_sampler
 
         acf_converged_flag = (acf_converged_at>0)
-        how_many_ACT = (n_sam - acf_converged_at/nthin)/integrated_ACF
-        how_many_ACT[(acf_converged_at < 0)] = -1
+        how_many_ACF = (n_sam - acf_converged_at/nthin)/integrated_ACF
+        how_many_ACF[(acf_converged_at < 0)] = -1
 
-        still_required_050 = (50-how_many_ACT)*(nthin*integrated_ACF)
+        still_required_050 = (50-how_many_ACF)*(nthin*integrated_ACF)
         still_required_050_flag = (still_required_050 > 0)
         still_required_050[~still_required_050_flag] = 0
-        still_required_100 = (100-how_many_ACT)*(nthin*integrated_ACF)
+        still_required_100 = (100-how_many_ACF)*(nthin*integrated_ACF)
         still_required_100_flag = (still_required_100 > 0)
         still_required_100[~still_required_100_flag] = 0
 
@@ -1243,7 +1243,7 @@ def print_integrated_ACF(sampler_chain, theta_dict, nthin):
             dict_output[key_name]['integrated_ACF']= integrated_ACF[key_val]
             dict_output[key_name]['integrated_ACF*nthin']= integrated_ACF[key_val]*nthin
             dict_output[key_name]['converged_at']= acf_converged_at[key_val]*nthin
-            dict_output[key_name]['nsteps/ACF']= how_many_ACT[key_val]
+            dict_output[key_name]['nsteps/ACF']= how_many_ACF[key_val]
             dict_output[key_name]['nsteps_to_50*ACF']= still_required_050[key_val]
             dict_output[key_name]['nsteps_to_100*ACF']= still_required_100[key_val]
 
@@ -1253,16 +1253,16 @@ def print_integrated_ACF(sampler_chain, theta_dict, nthin):
                                                                                                     integrated_ACF[key_val] *
                                                                                                     nthin,
                                                                                                     acf_converged_at[key_val],
-                                                                                                    how_many_ACT[key_val],
+                                                                                                    how_many_ACF[key_val],
                                                                                                     still_required_100[key_val]))
 
         print()
 
         if np.sum((acf_converged_at > 0), dtype=np.int64) == n_dim:
-            if np.sum(how_many_ACT > 100, dtype=np.int64) == n_dim:
+            if np.sum(how_many_ACF > 100, dtype=np.int64) == n_dim:
                 print('All the chains are longer than 100*ACF ')
                 dict_output['result'] = 'All the chains are longer than 100*ACF '
-            elif (np.sum(how_many_ACT > 50, dtype=np.int64) == n_dim):
+            elif (np.sum(how_many_ACF > 50, dtype=np.int64) == n_dim):
                 print("""All the chains are longer than 50*ACF, but some are shorter than 100*ACF
 PyORBIT should keep running for about {0:.0f} more steps to reach 100*ACF""".format(np.average(still_required_100[still_required_100_flag])))
                 dict_output['result'] = """All the chains are longer than 50*ACF, but some are shorter than 100*ACF

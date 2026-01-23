@@ -131,7 +131,7 @@ class AbstractGaussianProcesses(object):
         if check_common:
             for common_ref in self.common_ref:
                 if mc.common_models[common_ref].model_class == 'activity':
-                    for keyword in keywords_stellar_rotation:
+                    for keyword in keywords_stellar_activity_decay:
                         self.use_stellar_activity_decay = getattr(mc.common_models[common_ref], keyword, self.use_stellar_activity_decay)
                     break
 
