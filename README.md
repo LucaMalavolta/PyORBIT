@@ -3,20 +3,29 @@
 
 ### A code for exoplanet orbital parameters and stellar activity.
 ***
-## `PyORBIT` version 10 by Luca Malavolta - October 2024
+## `PyORBIT` version 11 by Luca Malavolta - January 2026
 
 
 ## Documentation update
 
-I have extensively updated the documentation and  several examples are now available in a new dedicated repository, check them out:
-- [`PyORBIT` 10 Documentation](https://pyorbit.readthedocs.io/)
+I have extensively updated the documentation, and several examples are now available in a new dedicated repository. Check them out:
+- [`PyORBIT` 11 Documentation](https://pyorbit.readthedocs.io/)
 - [`PyORBIT` examples repository](https://github.com/LucaMalavolta/PyORBIT_examples)
 
-For nostalgic people, `PyORBIT` 8 and 9 are available as branches of the main repository: [legacy_version8](https://github.com/LucaMalavolta/PyORBIT/tree/legacy_version8) and [legacy_version9](https://github.com/LucaMalavolta/PyORBIT/tree/legacy_version8) respectively.
+For nostalgic people, `PyORBIT` 10 is available as a downloadable package from the [`PyORBIT` Releases page](https://github.com/LucaMalavolta/PyORBIT/releases). 
 
-## Updates on version 10
+## Updates on version 11
 
-- **Version 10.8:** Additional BIC/AIC/AICc information in output and in dictionaries when running `pyorbit_results`. Information criteria computed through the ln-posterior (in addition to the ln-likelihood) have been dropped, as definitely wrong. This version is fully compatible with version **10.7**, as the only changes are in the analysis of the results.
+- The mean longitude now strictly follows its definition as the sum of the argument of pericenter $\omega$, the longitude of the nodes $\Omega$, and the mean anomaly $\mathcal{M}_0$ at the reference time $T_{\rm ref}$. The default value for the longitude of the nodes $\Omega$ has been changed to 180 degrees. All the orbital parameters refer to the *planet*. The code should be able to recognise analysis performed with an older version of PyORBIT and use the corresponding default value of $\Omega$
+
+- Possibility to perform  simultaneous photometric and spectroscopic multivariate Gaussian Process regression, while selecting the hyperparameters to be shared
+
+- New kernels for stellar/photometric variability in photometric data
+
+
+## Relevant updates in previous versions 
+
+- Additional BIC/AIC/AICc information in output and in dictionaries when running `pyorbit_results`. Information criteria computed through the ln-posterior (in addition to the ln-likelihood) have been dropped, as definitely wrong. This version is fully compatible with version **10.7**, as the only changes are in the analysis of the results.
 
 - The **exponential-sine periodic (ESP)** kernel is a fast approximation of the quasi-periodic (QP) kernel, implemented in the **`S+LEAF`** software by [Delisle et al. 2020](https://ui.adsabs.harvard.edu/abs/2020A%26A...638A..95D/abstract) and [Delisle et al. 2022](https://ui.adsabs.harvard.edu/abs/2022A%26A...659A.182D/abstract). The kernel has been implemented and tested in `PyORBIT`, and it can be used as a faster replacement of `tinyGP`.
 
@@ -48,8 +57,8 @@ If you are using `PyORBIT` \=> 10.3, follow the installation instructions to cre
 
 ```{text}
 **No back-compatibility**
-Version 10 is not compatible with the results obtained with version 9.
-If you have been using the development version of V10, you may run into incompatibility issues as well.
+Version 11 may not not be compatible with the results obtained with version 10.
+Version 10 and11 are not compatible with the results obtained with previous versions .
 ```
 
 ## Updates on version 9

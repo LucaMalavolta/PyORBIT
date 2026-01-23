@@ -14,7 +14,7 @@ def pyorbit_run():
     print(sys.version)
 
     print((' *** Important behaviour change in v11.1.0 *** '
-    ' The mean longitude now striclty follows its definition as the sum of the argument of pericenter(omega),'
+    ' The mean longitude now strictly follows its definition as the sum of the argument of pericenter(omega),'
     ' the longitude of the nodes (Omega), and the mean anomaly at Tref.'
     ' The default value for the longitude of the nodes (Omega) has been changed to 180 degrees.'
     ' check the documentation for more details: https://pyorbit.readthedocs.io/ '))
