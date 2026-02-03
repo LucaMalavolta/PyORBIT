@@ -41,10 +41,10 @@ For nostalgic people, `PyORBIT` 10 is available as a downloadable package from t
 
 - New kernels for stellar/photometric variability in photometric data
 
-:::{admonition} Keep `PyORBIT` updated!
+```{admonition} Keep `PyORBIT` updated!
 
 Current version of `PyORBIT` is [![PyPI version fury.io](https://badge.fury.io/py/pyorbit-package.svg)](https://pypi.python.org/pypi/pyprbot-package/), keep the software updated for improved performances and new models by running `pip install --upgrade pyorbit-package` on your terminal
-:::
+```
 
 ## Relevant updates in previous versions 
 
@@ -56,7 +56,7 @@ Current version of `PyORBIT` is [![PyPI version fury.io](https://badge.fury.io/p
 
 **BIC/AIC/AICc information**: additional BIC/AIC/AICc information in output and in dictionaries when running `pyorbit_results`. Information criteria computed through the ln-posterior (in addition to the ln-likelihood) have been dropped, as definitely wrong. This version is fully compatible with version **10.7**, as the only changes are in the analysis of the results.
 
-**updated TTV measurement and harmonic models** TTV measurement models have all been revised and improved to support a variety of cases. 
+**Updated TTV measurement and harmonic models** TTV measurement models have all been revised and improved to support a variety of cases. 
 
 **Improved speed**: after several failed attempts, I finally managed to apply the advice from the [emcee parallelization page](https://emcee.readthedocs.io/en/stable/tutorials/parallel/) to the rather complex structure of PyORBIT. The speed-up is noticeable for large datasets (e.g., photometry).
 
