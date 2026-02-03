@@ -67,11 +67,12 @@ This model has been successfully employed in [Mantovan et al. 2024b](https://ui.
 **Multidimensional Gaussian Process** The model was introduced a few years back, but now it can finally take advantage of improved parallelization. Recent examples of multidimensional Gaussian Processes through `PyORBIT` can be found in [Nardiello et al. 2022](https://ui.adsabs.harvard.edu/abs/2022A%26A...664A.163N/abstract) and [Mantovan et al. 2024a](https://ui.adsabs.harvard.edu/abs/2024A%26A...682A.129M/abstract).
 
 
-```{warning}
-**No back-compatibility**
+:::{admonition} No back-compatibility
+:class: caution
+
 Version 11 may not not be compatible with the results obtained with version 10.
 Version 10 and11 are not compatible with the results obtained with previous versions .
-```
+:::
 
 
 
