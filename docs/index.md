@@ -24,73 +24,54 @@ Alternatively, for easy automatization, PyORBIT can be called as a Python functi
 
 [**Check the poster**](https://k-poster.kuoni-congress.info/eas-2024/poster/bcefa082-f961-4539-a5f8-3b13783b520c) presented at the European Astronomical Society Annual Meeting in Padova
 
-## Updates on version 10
 
+## Documentation update
+
+I have extensively updated the documentation, and several examples are now available in a new dedicated repository. Check them out:
+- [`PyORBIT` 11 Documentation](https://pyorbit.readthedocs.io/)
+- [`PyORBIT` examples repository](https://github.com/LucaMalavolta/PyORBIT_examples)
+
+For nostalgic people, `PyORBIT` 10 is available as a downloadable package from the [`PyORBIT` Releases page](https://github.com/LucaMalavolta/PyORBIT/releases). 
+
+## Updates on version 11
+
+- The mean longitude now strictly follows its definition as the sum of the argument of pericenter $\omega$, the longitude of the nodes $\Omega$, and the mean anomaly $\mathcal{M}_0$ at the reference time $T_{\rm ref}$. The default value for the longitude of the nodes $\Omega$ has been changed to 180 degrees. All the orbital parameters refer to the *planet*. The code should be able to recognise analysis performed with an older version of PyORBIT and use the corresponding default value of $\Omega$
+
+- Possibility to perform  simultaneous photometric and spectroscopic multivariate Gaussian Process regression, while selecting the hyperparameters to be shared
+
+- New kernels for stellar/photometric variability in photometric data
 
 :::{admonition} Keep `PyORBIT` updated!
 
 Current version of `PyORBIT` is [![PyPI version fury.io](https://badge.fury.io/py/pyorbit-package.svg)](https://pypi.python.org/pypi/pyprbot-package/), keep the software updated for improved performances and new models by running `pip install --upgrade pyorbit-package` on your terminal
 :::
 
-
-:::{versionadded} 10.8
+## Relevant updates in previous versions 
 
 **Additional BIC/AIC/AICc information** in output and in dictionaries when running `pyorbit_results`. Information criteria computed through the ln-posterior (in addition to the ln-likelihood) have been dropped, as definitely wrong. This version is fully compatible with version **10.7**, as the only changes are in the analysis of the results. There is also a small bugfix regarding datasets not in chronological order which was preventing analysis with `spleaf_esp` model from starting altogether.
-:::
 
-:::{versionadded} 10.7
+**S+LEAF exponential-sine periodic kernel now supported**: The exponential-sine periodic (ESP) kernel is a fast approximation of the quasi-periodic (QP) kernel, implemented in the `S+LEAF` software by [Delisle et al. 2020](https://ui.adsabs.harvard.edu/abs/2020A%26A...638A..95D/abstract) and [Delisle et al. 2022](https://ui.adsabs.harvard.edu/abs/2022A%26A...659A.182D/abstract). The kernel has been implemented and tested in `PyORBIT`, and it can be used as a faster replacement of `tinyGP`
 
-**S+LEAF exponential-sine periodic kernel now supported**
+**Outputs available as python dictionaries**: textual output is now also saved as dictionaries in the corresponding *dictionaries* folder.
 
-- The exponential-sine periodic (ESP) kernel is a fast approximation of the quasi-periodic (QP) kernel, implemented in the `S+LEAF` software by [Delisle et al. 2020](https://ui.adsabs.harvard.edu/abs/2020A%26A...638A..95D/abstract) and [Delisle et al. 2022](https://ui.adsabs.harvard.edu/abs/2022A%26A...659A.182D/abstract). The kernel has been implemented and tested in `PyORBIT`, and it can be used as a faster replacement of `tinyGP`
+**BIC/AIC/AICc information**: additional BIC/AIC/AICc information in output and in dictionaries when running `pyorbit_results`. Information criteria computed through the ln-posterior (in addition to the ln-likelihood) have been dropped, as definitely wrong. This version is fully compatible with version **10.7**, as the only changes are in the analysis of the results.
 
-- Textual output is now also saved as dictionaries in the corresponding *dictionaries* folder.
+**updated TTV measurement and harmonic models** TTV measurement models have all been revised and improved to support a variety of cases. 
 
-- I fixed some inconsistencies with package requirements.
+**Improved speed**: after several failed attempts, I finally managed to apply the advice from the [emcee parallelization page](https://emcee.readthedocs.io/en/stable/tutorials/parallel/) to the rather complex structure of PyORBIT. The speed-up is noticeable for large datasets (e.g., photometry).
 
-- A small bug (one letter!) in `10.6.4` was causing pyorbit_results to quit abruptly after computing the autocorrelation function. The bug has been fixed.
-
-:::
-
-:::{tip} **Back-compatibility with version 10.6**
-`pyorbit_results` from version `10.7` is compatible with analysis run with `pyorbit_run` version `10.6`, as most of the differences regard the introduction of new models not affecting the pre-existing ones and the visualization of the results
-
-:::
-
-:::{versionadded} 10.6
-
-**Updated TTV measurement and harmonic models**
-
-- TTV measurement models have been all revised and improved to support a variety of cases.
-
-- In RML modelling, `curve_fit` has been replaced with the [`lmfit` package](https://lmfit.github.io/lmfit-py/) from improved numerical stability
-:::
-
-
-
-- *Improved speed*
-After several failed attempts, I finally managed to apply the advice from the [emcee parallelization page](https://emcee.readthedocs.io/en/stable/tutorials/parallel/) to the rather complex structure of PyORBIT. The speed-up is noticeable for large datasets (e.g., photometry).
-
-- *Rossiter McLaughlin*
-Rossiter McLaughlin effect can now be precisely modelled using the CCF simulation approach employed in [Covino et al. 2013](https://ui.adsabs.harvard.edu/abs/2013A%26A...554A..28C/abstract).
+**Rossiter McLaughlin effect** can now be precisely modelled using the CCF simulation approach employed in [Covino et al. 2013](https://ui.adsabs.harvard.edu/abs/2013A%26A...554A..28C/abstract).
 When the rotation period is known - together with the stellar radius - the stellar inclination can be derived avoiding the bias reported by [Masuda & Winn 2020](https://ui.adsabs.harvard.edu/abs/2020AJ....159...81M/abstract).
 This model has been successfully employed in [Mantovan et al. 2024b](https://ui.adsabs.harvard.edu/abs/2024A%26A...684L..17M/abstract) for the characterization of TOI-5398b.
 
-- *Multidimensional Gaussian Process*
-The model was introduced a few years back, but now it can finally take advantage of improved parallelization.
-Recent examples of multidimensional Gaussian Processes through `PyORBIT` can be found in [Nardiello et al. 2023](https://ui.adsabs.harvard.edu/abs/2022A%26A...664A.163N/abstract) and [Mantovan et al. 2024a](https://ui.adsabs.harvard.edu/abs/2024A%26A...682A.129M/abstract).
+**Multidimensional Gaussian Process** The model was introduced a few years back, but now it can finally take advantage of improved parallelization. Recent examples of multidimensional Gaussian Processes through `PyORBIT` can be found in [Nardiello et al. 2022](https://ui.adsabs.harvard.edu/abs/2022A%26A...664A.163N/abstract) and [Mantovan et al. 2024a](https://ui.adsabs.harvard.edu/abs/2024A%26A...682A.129M/abstract).
 
-- *tinyGP for better performances*
-Working on both *classic* and _multidimensional_ Gaussian Processes, although the former is showing some JAX problems when producing the output results.
 
-:::{admonition} Compatiblity issues with older versions
-- Version 10 is not compatible with the results obtained with version 9.
-If you have been using the development version of V10, you may run into incompatibility issues as well.
-
-- Starting from version 10.3, `PyORBIT` has been upgraded to support `tinygp` (version 0.3.0), which in turns requires Python **3.10** to work properly.
-If you are using `PyORBIT` \=> 10.3, follow the installation instructions to create an environment with Python 3.10
-:::
-
+```{warning}
+**No back-compatibility**
+Version 11 may not not be compatible with the results obtained with version 10.
+Version 10 and11 are not compatible with the results obtained with previous versions .
+```
 
 ```{warning}
 In the previous version of the documentation and in several papers, it was reported that `PyORBIT` was relying on the quasi-periodic kernel definiton by [Grunblatt et al. 2015](https://ui.adsabs.harvard.edu/abs/2015ApJ...808..127G/abstract). I came to realize only recently that the factor $2$ accompanying the decay time-scale of the activity regions $P_\mathrm{dec}$ was implicitely included in the exponenitial-squared kernel as defined in `george` and `tinygp`, making the kernel definiton identical to the one reported in [Rajpaul et al. 2015](https://ui.adsabs.harvard.edu/abs/2015MNRAS.452.2269R/abstract). Please keep this problem in mind when comparing your results with other analysis.
