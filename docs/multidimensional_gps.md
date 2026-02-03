@@ -18,6 +18,12 @@ For more details on the `PyORBIT` implementation of multidimensional GP, please 
 
 ```
 
+
+```{warning}
+In the previous version of the documentation and in several papers, it was reported that `PyORBIT` was relying on the quasi-periodic kernel definiton by [Grunblatt et al. 2015](https://ui.adsabs.harvard.edu/abs/2015ApJ...808..127G/abstract). I came to realize only recently that the factor $2$ accompanying the decay time-scale of the activity regions $P_\mathrm{dec}$ was implicitely included in the exponenitial-squared kernel as defined in `george` and `tinygp`, making the kernel definiton identical to the one reported in [Rajpaul et al. 2015](https://ui.adsabs.harvard.edu/abs/2015MNRAS.452.2269R/abstract). Please keep this problem in mind when comparing your results with other analysis.
+```
+
+
 ```{toctree}
 :maxdepth: 1
 multidimensional_gps/md_quasiperiodic.md

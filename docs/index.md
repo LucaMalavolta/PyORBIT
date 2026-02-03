@@ -41,20 +41,20 @@ For nostalgic people, `PyORBIT` 10 is available as a downloadable package from t
 
 - New kernels for stellar/photometric variability in photometric data
 
-```{admonition} Keep `PyORBIT` updated!
 
-Current version of `PyORBIT` is [![PyPI version fury.io](https://badge.fury.io/py/pyorbit-package.svg)](https://pypi.python.org/pypi/pyprbot-package/), keep the software updated for improved performances and new models by running `pip install --upgrade pyorbit-package` on your terminal
-```
+:::{admonition} Keep `PyORBIT` updated!
+:class: tip
+
+Current version of `PyORBIT` is [![PyPI version fury.io](https://badge.fury.io/py/pyorbit-package.svg)](https://pypi.python.org/pypi/#pyprbot-package/), keep the software updated for improved performances and new models by running `pip install --upgrade pyorbit-package` on your terminal
+:::
 
 ## Relevant updates in previous versions 
 
-**Additional BIC/AIC/AICc information** in output and in dictionaries when running `pyorbit_results`. Information criteria computed through the ln-posterior (in addition to the ln-likelihood) have been dropped, as definitely wrong. This version is fully compatible with version **10.7**, as the only changes are in the analysis of the results. There is also a small bugfix regarding datasets not in chronological order which was preventing analysis with `spleaf_esp` model from starting altogether.
+**Additional BIC/AIC/AICc information** in output and in dictionaries when running `pyorbit_results`. Information criteria computed through the ln-posterior (in addition to the ln-likelihood) have been dropped, as definitely wrong. There is also a small bugfix regarding datasets not in chronological order which was preventing analysis with `spleaf_esp` model from starting altogether.
 
 **S+LEAF exponential-sine periodic kernel now supported**: The exponential-sine periodic (ESP) kernel is a fast approximation of the quasi-periodic (QP) kernel, implemented in the `S+LEAF` software by [Delisle et al. 2020](https://ui.adsabs.harvard.edu/abs/2020A%26A...638A..95D/abstract) and [Delisle et al. 2022](https://ui.adsabs.harvard.edu/abs/2022A%26A...659A.182D/abstract). The kernel has been implemented and tested in `PyORBIT`, and it can be used as a faster replacement of `tinyGP`
 
 **Outputs available as python dictionaries**: textual output is now also saved as dictionaries in the corresponding *dictionaries* folder.
-
-**BIC/AIC/AICc information**: additional BIC/AIC/AICc information in output and in dictionaries when running `pyorbit_results`. Information criteria computed through the ln-posterior (in addition to the ln-likelihood) have been dropped, as definitely wrong. This version is fully compatible with version **10.7**, as the only changes are in the analysis of the results.
 
 **Updated TTV measurement and harmonic models** TTV measurement models have all been revised and improved to support a variety of cases. 
 
@@ -73,9 +73,7 @@ Version 11 may not not be compatible with the results obtained with version 10.
 Version 10 and11 are not compatible with the results obtained with previous versions .
 ```
 
-```{warning}
-In the previous version of the documentation and in several papers, it was reported that `PyORBIT` was relying on the quasi-periodic kernel definiton by [Grunblatt et al. 2015](https://ui.adsabs.harvard.edu/abs/2015ApJ...808..127G/abstract). I came to realize only recently that the factor $2$ accompanying the decay time-scale of the activity regions $P_\mathrm{dec}$ was implicitely included in the exponenitial-squared kernel as defined in `george` and `tinygp`, making the kernel definiton identical to the one reported in [Rajpaul et al. 2015](https://ui.adsabs.harvard.edu/abs/2015MNRAS.452.2269R/abstract). Please keep this problem in mind when comparing your results with other analysis.
-```
+
 
 # Documentation updates
 
