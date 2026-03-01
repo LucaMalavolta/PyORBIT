@@ -221,7 +221,7 @@ class Dataset(AbstractCommon):
                 self.Tref = np.mean(self.x, dtype=np.double)
 
             """ Default boundaries are defined according to the characteristic
-                of the dataset. They must be large enough to allow formost of
+                of the dataset. They must be large enough to allow for most of
                 the anomalous situations
             """
             x_range = np.max(self.x) - np.min(self.x)
