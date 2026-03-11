@@ -111,7 +111,6 @@ class RossiterMcLaughlin_Revolutions(AbstractModel, AbstractTransit):
             if np.isnan(key_val):
                 return 0.
 
-
         ld_par = self._limb_darkening_coefficients(parameter_values)
 
         lambda_rad = parameter_values['lambda'] * constants.deg2rad

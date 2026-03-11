@@ -40,6 +40,10 @@ class DatasetExpanded(Dataset):
             'jitter': 'Linear',
             'offset': 'Linear'}
 
+        self.generic_default_fixed = {
+            'jitter': [0.00, 0.00],
+            'offset': [0.00, 0.00]}
+
         if self.kind == 'transit_duration':
             self.start_id_flag = 4
             self.standard_n_columns = 7

@@ -3,7 +3,6 @@ import pyorbit.subroutines.constants as constants
 import pyorbit.subroutines.kepler_exo as kepler_exo
 from pyorbit.models.abstract_model import AbstractModel
 from pyorbit.models.abstract_transit import *
-from scipy.optimize import curve_fit
 from scipy.ndimage import gaussian_filter1d
 
 try:
@@ -231,14 +230,14 @@ class RossiterMcLaughlin_Precise(AbstractModel, AbstractTransit):
         rv_rml = np.zeros_like(bjd, dtype=np.single)
         ccf_total = np.sum(star_grid_ccf, axis=(0,1), dtype=np.single)
 
-        p0 = (self.ccf_variables['natural_contrast'], 0.00, self.ccf_variables['instrumental_broadening']/self.star_grid['rv_step'])
+        # p0 = (self.ccf_variables['natural_contrast'], 0.00, self.ccf_variables['instrumental_broadening']/self.star_grid['rv_step'])
 
         # RV unperturbed CCF
         ccf_broad = gaussian_filter1d(ccf_total/np.amax(ccf_total), self.ccf_variables['instrumental_broadening']/self.star_grid['rv_step'])
         
         gaussian = GaussianModel()
         
-        params = gaussian.make_params()
+        # params = gaussian.make_params()
         guess = gaussian.guess(1.-ccf_broad, x=self.star_grid['zz'])
         results = gaussian.fit(1.-ccf_broad, x=self.star_grid['zz'],  params=guess)
         rv_unperturbed = results.params['center'].value * 1000.
