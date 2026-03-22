@@ -104,7 +104,7 @@ class AbstractTransit(object):
                 break
 
         try:
-            self.default_Omega = mc.common_models[self.planet_ref].default_omega
+            self.default_Omega = mc.common_models[self.planet_ref].default_Omega
         except AttributeError:
             self.default_Omega = 0.00
 

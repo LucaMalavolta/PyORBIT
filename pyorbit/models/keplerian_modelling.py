@@ -61,14 +61,14 @@ class RVkeplerian(AbstractModel):
             self.list_pams_common.update(['Omega'])
 
         try:
-            self.default_Omega = mc.common_models[self.planet_ref].default_omega
+            self.default_Omega = mc.common_models[self.planet_ref].default_Omega
         except AttributeError:
             self.default_Omega = 0.00
 
     def compute(self, parameter_values, dataset, x0_input=None):
 
         Omega = parameter_values.get('Omega', self.default_Omega)
-
+        print('OMEGA:', Omega)
         if self.use_time_inferior_conjunction:
             mean_long = kepler_exo.kepler_compute_meanlong_from_deltaTc(parameter_values['P'],
                                                 parameter_values['Tc'] - dataset.Tref,
@@ -212,7 +212,7 @@ class TransitTimeKeplerian(AbstractModel):
             # mean longitude = argument of pericenter + mean anomaly at Tref
 
         try:
-            self.default_Omega = mc.common_models[self.planet_ref].default_omega
+            self.default_Omega = mc.common_models[self.planet_ref].default_Omega
         except AttributeError:
             self.default_Omega = 0.00
 

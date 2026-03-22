@@ -62,7 +62,6 @@ class RossiterMcLaughlin_Revolutions(AbstractModel, AbstractTransit):
         self.planet_grid['half_grid'] = int((self.planet_grid['n_grid'] - 1) / 2)
         self.planet_grid['time_step'] = kwargs.get('time_step', 149 ) # in seconds
 
-
         """ Coordinates of the centers of each grid cell (add offset) """
         self.planet_grid['xx'] = np.linspace(-1.000000, 1.000000, self.planet_grid['n_grid'], dtype=np.double)
         self.planet_grid['xc'], self.planet_grid['yc'] = np.meshgrid(self.planet_grid['xx'], self.planet_grid['xx'], indexing='xy')
