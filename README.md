@@ -16,7 +16,7 @@ For nostalgic people, `PyORBIT` 10 is available as a downloadable package from t
 
 ## Updates on version 11
 
-- The mean longitude now strictly follows its definition as the sum of the argument of pericenter $\omega$, the longitude of the nodes $\Omega$, and the mean anomaly $\mathcal{M}_0$ at the reference time $T_{\rm ref}$. The default value for the longitude of the nodes $\Omega$ has been changed to 180 degrees. All the orbital parameters refer to the *planet*. The code should be able to recognise analysis performed with an older version of PyORBIT and use the corresponding default value of $\Omega$
+- The mean longitude now strictly follows its definition as the sum of the argument of pericenter $\omega$, the longitude of the nodes $\Omega$, and the mean anomaly $\mathcal{M}_0$ at the reference time $T_{\rm ref}$. The default value for the longitude of the nodes $\Omega$ has been changed to 180 degrees. All the orbital parameters refer to the *planet*. The code should be able to recognise analysis performed with an older version of PyORBIT and use the corresponding default value of $\Omega$ **Note** this change applies starting from `version 11.2`. Model files for non-transiting planets will show an half-period shift, other than that, the results will be identical except for the 180 degrees shift in mean longitude.   
 
 - Possibility to perform  simultaneous photometric and spectroscopic multivariate Gaussian Process regression, while selecting the hyperparameters to be shared
 
