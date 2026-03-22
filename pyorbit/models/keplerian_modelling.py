@@ -68,7 +68,7 @@ class RVkeplerian(AbstractModel):
     def compute(self, parameter_values, dataset, x0_input=None):
 
         Omega = parameter_values.get('Omega', self.default_Omega)
-        print('OMEGA:', Omega)
+
         if self.use_time_inferior_conjunction:
             mean_long = kepler_exo.kepler_compute_meanlong_from_deltaTc(parameter_values['P'],
                                                 parameter_values['Tc'] - dataset.Tref,
