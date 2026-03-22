@@ -278,7 +278,7 @@ class RossiterMcLaughlin_Revolutions_Faster(AbstractModel, AbstractTransit):
             batman_model = batman.TransitModel(self.batman_params,
                                     bjd,
                                     supersample_factor=max_oversampling,
-                                    exp_time=np.average(exptime))
+                                    exp_time=np.average(exptime)/ 86400.)
             batman_lightcurve = batman_model.light_curve(self.batman_params)
 
             return (dataset.ancillary['ccf_master'] - matrix* (1. - batman_lightcurve[:,np.newaxis]))/batman_lightcurve[:,np.newaxis]
