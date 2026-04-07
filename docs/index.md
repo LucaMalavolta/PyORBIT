@@ -3,22 +3,22 @@
 # PyORBIT
 ## a code for exoplanet orbital parameters and stellar activity.
 <!---
-## the ultimate tool for exoplanet characterization
+## the ultimate tool for exoplanet characterisation
 --->
 
 [![GitHub][github-badge]][github-link]
 [![PyPI version fury.io](https://badge.fury.io/py/pyorbit-package.svg)](https://pypi.python.org/pypi/pyprbot-package/)
 
 
-``PyORBIT`` is a robust, versatile framework for the characterization of planetary systems.
-With ``PyORBIT`` you can model light curves, radial velocities, activity indexes, and transit time variations.
+``PyORBIT`` is a robust, versatile framework for characterising planetary systems.
+With ``PyORBIT``, you can model light curves, radial velocities, activity indices, and transit-time variations.
 In addition to the exoplanet signature, you can add to your model instrumental systematics and stellar activity,
 including Gaussian processes regression with a variety of kernels. Both Markov Chain Monte-Carlo samplers and Nested Sampling algorithms are supported.
-Different parametrization can be used for orbital parameters, and orbits can be computed using dynamical integration or just non-interacting Keplerians.
+Different parametrisations can be used for orbital parameters, and orbits can be computed using dynamical integration or just non-interacting Keplerians.
 For every parameter in the model, it is possible to set a prior, explore it in linear or logarithmic space,
 or keep it fixed if necessary. Thanks to abstraction, it is virtually possible to implement any physical model you can think of.
 
-Every information you need to analyze your data is contained in an easy-to-use and portable configuration file in the ``yaml`` format.
+All the information you need to analyse your data is contained in an easy-to-use and portable configuration file in the ``yaml`` format.
 Alternatively, for easy automatization, PyORBIT can be called as a Python function by passing a dictionary instead of a configuration file.
 
 
@@ -50,48 +50,45 @@ Current version of `PyORBIT` is [![PyPI version fury.io](https://badge.fury.io/p
 
 ## Relevant updates in previous versions 
 
-**Additional BIC/AIC/AICc information** in output and in dictionaries when running `pyorbit_results`. Information criteria computed through the ln-posterior (in addition to the ln-likelihood) have been dropped, as definitely wrong. There is also a small bugfix regarding datasets not in chronological order which was preventing analysis with `spleaf_esp` model from starting altogether.
+**Additional BIC/AIC/AICc information** in output and in dictionaries when running `pyorbit_results`. Information criteria computed through the ln-posterior (in addition to the ln-likelihood) have been dropped as definitely wrong. There is also a small bugfix for datasets not in chronological order, which was preventing the `spleaf_esp` model from starting altogether.
 
-**S+LEAF exponential-sine periodic kernel now supported**: The exponential-sine periodic (ESP) kernel is a fast approximation of the quasi-periodic (QP) kernel, implemented in the `S+LEAF` software by [Delisle et al. 2020](https://ui.adsabs.harvard.edu/abs/2020A%26A...638A..95D/abstract) and [Delisle et al. 2022](https://ui.adsabs.harvard.edu/abs/2022A%26A...659A.182D/abstract). The kernel has been implemented and tested in `PyORBIT`, and it can be used as a faster replacement of `tinyGP`
+**S+LEAF exponential-sine periodic kernel now supported**: The exponential-sine periodic (ESP) kernel is a fast approximation of the quasi-periodic (QP) kernel, implemented in the `S+LEAF` software by [Delisle et al. 2020](https://ui.adsabs.harvard.edu/abs/2020A%26A...638A..95D/abstract) and [Delisle et al. 2022](https://ui.adsabs.harvard.edu/abs/2022A%26A...659A.182D/abstract). The kernel has been implemented and tested in `PyORBIT`, and it can be used as a faster replacement for `tinyGP`
 
-**Outputs available as python dictionaries**: textual output is now also saved as dictionaries in the corresponding *dictionaries* folder.
+**Outputs available as Python dictionaries**: textual output is now also saved as dictionaries in the corresponding *dictionaries* folder.
 
 **Updated TTV measurement and harmonic models** TTV measurement models have all been revised and improved to support a variety of cases. 
 
-**Improved speed**: after several failed attempts, I finally managed to apply the advice from the [emcee parallelization page](https://emcee.readthedocs.io/en/stable/tutorials/parallel/) to the rather complex structure of PyORBIT. The speed-up is noticeable for large datasets (e.g., photometry).
+**Improved speed**: after several failed attempts, I finally managed to apply the advice from the [emcee parallelisation page](https://emcee.readthedocs.io/en/stable/tutorials/parallel/) to the rather complex structure of PyORBIT. The speed-up is noticeable for large datasets (e.g., photometry).
 
 **Rossiter McLaughlin effect** can now be precisely modelled using the CCF simulation approach employed in [Covino et al. 2013](https://ui.adsabs.harvard.edu/abs/2013A%26A...554A..28C/abstract).
-When the rotation period is known - together with the stellar radius - the stellar inclination can be derived avoiding the bias reported by [Masuda & Winn 2020](https://ui.adsabs.harvard.edu/abs/2020AJ....159...81M/abstract).
+When the rotation period is known - together with the stellar radius - the stellar inclination can be derived, avoiding the bias reported by [Masuda & Winn 2020](https://ui.adsabs.harvard.edu/abs/2020AJ....159...81M/abstract).
 This model has been successfully employed in [Mantovan et al. 2024b](https://ui.adsabs.harvard.edu/abs/2024A%26A...684L..17M/abstract) for the characterization of TOI-5398b.
 
-**Multidimensional Gaussian Process** The model was introduced a few years back, but now it can finally take advantage of improved parallelization. Recent examples of multidimensional Gaussian Processes through `PyORBIT` can be found in [Nardiello et al. 2022](https://ui.adsabs.harvard.edu/abs/2022A%26A...664A.163N/abstract) and [Mantovan et al. 2024a](https://ui.adsabs.harvard.edu/abs/2024A%26A...682A.129M/abstract).
+**Multidimensional Gaussian Process** The model was introduced a few years ago, but it can now finally take advantage of improved parallelisation. Recent examples of multidimensional Gaussian Processes through `PyORBIT` can be found in [Nardiello et al. 2022](https://ui.adsabs.harvard.edu/abs/2022A%26A...664A.163N/abstract) and [Mantovan et al. 2024a](https://ui.adsabs.harvard.edu/abs/2024A%26A...682A.129M/abstract).
 
 
 :::{admonition} No back-compatibility
 :class: caution
 
-Version 11 may not not be compatible with the results obtained with version 10.
-Version 10 and11 are not compatible with the results obtained with previous versions .
+Version 11 may not be compatible with the results obtained with version 10.
+Versions 10 and 11 are not compatible with the results obtained with previous versions.
 :::
 
 
 
 # Documentation updates
 
-Documentation is being updated slowly but steadily, with new pages appearing every week. Below you can check which pages have been updated recently (last update: August 2024).
+Documentation is being updated slowly but steadily, with new pages appearing every week. Below, you can see which pages have been updated recently (last updated: March 2026).
 
-- *Quickstart*
-  + Radial velocities
-  + Lightcurve analysis
-  + Combined fit
+- *Integration with TRADES*
 - *Data modeling*
   + Planetary RV signal
   + Correlated datasets
   + Gaussian processes regression **updated**
   + Multidimensional GPs **updated**
   + TinyGP caveats
-  + CHEOPS detrending **coming soon**
-  + Polynomial **coming soon**
+- *Advanced use*
+
 
 ```{tip}
 The configuration files used in this documentation can be found at [this repository](https://github.com/LucaMalavolta/PyORBIT_examples)
@@ -127,6 +124,7 @@ Feel free to submit your retrofitting acronym!
 ```{toctree}
 :maxdepth: 2
 installation
+pyorbit_trades_integration
 quickstart
 prepare_datasets
 prepare_yaml
