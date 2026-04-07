@@ -2,7 +2,7 @@
 
 # Integration with TRADES
 
-`TRADES` (TRAnsits and Dynamics of Exoplanetary Systems) is a FORTRAN90 code developed by [Borsato et al. 2014](https://ui.adsabs.harvard.edu/abs/2014A%2526A...571A..38B/abstract) to perform dynamical modelling of exoplanetary signals. The code has been expanded with a Python interface ([Borsato et al.2019](https://ui.adsabs.harvard.edu/abs/2019MNRAS.484.3233B/abstract)) and to perform photodynamical modelling ([Borsato et al. 2024](https://ui.adsabs.harvard.edu/abs/2024A%2526A...689A..52B/abstract)).
+`TRADES` (TRAnsits and Dynamics of Exoplanetary Systems) is a FORTRAN90 code developed by [Borsato et al. 2014](https://ui.adsabs.harvard.edu/abs/2014A%2526A...571A..38B/abstract) to perform dynamical modelling of exoplanetary signals. The code has been expanded with a Python interface ([Borsato et al. 2019](https://ui.adsabs.harvard.edu/abs/2019MNRAS.484.3233B/abstract)) and to perform photodynamical modelling ([Borsato et al. 2024](https://ui.adsabs.harvard.edu/abs/2024A%2526A...689A..52B/abstract)).
 
 ## Installing PyORBIT on a dedicated environment
 
@@ -10,7 +10,7 @@
 
 I strongly suggest preparing a new Python environment specifically dedicated to running PyORBIT with the TRADES integration.
 
-First, install PyORBIT using the instructions in [Installing PyORBIT](#installing-PyORBIT), minding to use a different name for the environment, such as **pyorbit_trades**
+First, install PyORBIT using the instructions in <project:./installation.md> minding to use a different name for the environment, such as **pyorbit_trades**
 
 ```{code} bash
 conda create --name pyorbit_trades python=3.10 
