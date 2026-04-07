@@ -239,7 +239,6 @@ class DynamicalIntegrator:
             rv_res_gls=self.rv_res_gls, # at will, as input option
         )
 
-        self.to_be_initialized = False
 
         self.dynamical_pams = {
             'M': np.zeros(self.n_body, dtype=np.float64),
@@ -264,9 +263,13 @@ class DynamicalIntegrator:
         self.tc_comparison_set = {}
         for planet_name in mc.dynamical_dict:
             try:
-                self.tc_comparison_set[planet_name] = np.genfromtxt(mc.common_models[self.planet_ref].tc_list, names=True)
+                self.tc_comparison_set[planet_name] = np.genfromtxt(mc.common_models[planet_name].tc_list, names=True)
             except Exception as e:
-                print(f"No approximate transit times constraint for {planet_name}: {e}")
+                if self.to_be_initialized:
+                    print(f"No approximate transit times constraint for {planet_name}: {e}")
+
+        self.to_be_initialized = False
+
 
         return
 
@@ -277,7 +280,7 @@ class DynamicalIntegrator:
             with a Keplerian function"""
 
         """ Output initizialization """
-        output = {'stable': stable, 'pass': True, 'tc_check': True}
+        output = {'stable': None, 'pass': True, 'tc_check': True}
 
 
         if self.to_be_initialized:
@@ -378,6 +381,8 @@ class DynamicalIntegrator:
             )
             rv_sorted = rv_sim['rv']
 
+        output['stable'] = stable
+        
         for dataset_name, dataset in mc.dataset_dict.items():
 
             if dataset.dynamical is False: continue

@@ -2,7 +2,7 @@
 
 # Integration with TRADES
 
-`TRADES` (TRAnsits and Dynamics of Exoplanetary Systems) is a FORTRAN90 code developed by [Borsato et al. 2014](https://ui.adsabs.harvard.edu/abs/2014A%2526A...571A..38B/abstract) to perform dynamical modelling of exoplanetary signals. The code has been expanded with a Python interface ([Borsato et al. 2019](https://ui.adsabs.harvard.edu/abs/2019MNRAS.484.3233B/abstract)) and to perform photodynamical modelling ([Borsato et al. 2024](https://ui.adsabs.harvard.edu/abs/2024A%2526A...689A..52B/abstract)).
+`TRADES` (TRAnsits and Dynamics of Exoplanetary Systems) is a Fortran 90 code developed by [Borsato et al. 2014](https://ui.adsabs.harvard.edu/abs/2014A%2526A...571A..38B/abstract) to perform dynamical modelling of exoplanetary signals. The code has been expanded with a Python interface ([Borsato et al. 2019](https://ui.adsabs.harvard.edu/abs/2019MNRAS.484.3233B/abstract)) and to perform photodynamical modelling ([Borsato et al. 2024](https://ui.adsabs.harvard.edu/abs/2024A%2526A...689A..52B/abstract)).
 
 ## Installing PyORBIT on a dedicated environment
 
