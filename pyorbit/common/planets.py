@@ -328,7 +328,7 @@ class CommonPlanets(AbstractCommon):
                 print('Dataset flag of times of inferior conjuctions: ', self.tc_flag)
                 break
 
-        if Version(mc.pyorbit_version) < Version("11.1.0"):
+        if Version(mc.pyorbit_version) <= Version("11.1.0"):
             self.default_Omega = 0.00
         else:
             self.default_Omega = 180.00
