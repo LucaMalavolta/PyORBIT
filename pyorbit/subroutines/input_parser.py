@@ -785,9 +785,19 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, reload_ze
         except:
             pass
 
+        try:
+            mc.dynamical_model.check_Tc_approximation = conf_parameters['check_Tc_approximation']
+        except:
+            pass
+
     if 'dynamical_integrator' in conf_solver:
         try:
             mc.dynamical_model.dynamical_integrator = conf_solver['dynamical_integrator']
+        except:
+            pass
+
+        try:
+            mc.dynamical_model.check_Tc_approximation = conf_parameters['check_Tc_approximation']
         except:
             pass
 

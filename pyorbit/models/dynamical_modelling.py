@@ -263,9 +263,10 @@ class DynamicalIntegrator:
         for planet_name in mc.dynamical_dict:
             try:
                 self.tc_comparison_set[planet_name] = np.genfromtxt(mc.common_models[planet_name].tc_list, names=True)
-            except Exception as e:
-                if self.to_be_initialized:
-                    print(f"No approximate transit times constraint for {planet_name}: {e}")
+                err_sel = (self.tc_comparison_set[planet_name]['err'] < 0.2)
+                self.tc_comparison_set[planet_name][err_sel,1] = 0.2
+            except:
+                self.tc_comparison_set[planet_name] = None
 
         self.to_be_initialized = False
 
@@ -284,7 +285,6 @@ class DynamicalIntegrator:
         if self.to_be_initialized:
             self.prepare_trades(mc)
 
-
         """ Adding star and planetary parameters"""
         star_counter = 0
         for planet_name in mc.dynamical_dict:
@@ -301,6 +301,15 @@ class DynamicalIntegrator:
             parameter_values = mc.common_models[planet_name].convert(theta)
             parameter_values.update(star_parameters)
             mc.common_models[planet_name].update_parameter_values_for_dynamical(parameter_values, self.ti_ref)
+
+            if self.tc_comparison_set[planet_name] is not None:
+                new_idx =  np.round((self.tc_comparison_set[planet_name][:,1] - parameter_values['Tc'])/parameter_values['P'])
+                new_t0 = parameter_values['Tc'] + new_idx * parameter_values['P']   
+                delta_time = np.abs(self.tc_comparison_set[planet_name][:,1] - new_t0)
+                within_transit_window = (delta_time < self.tc_comparison_set[planet_name]['err']).all()   
+                if not within_transit_window: 
+                    print('Tc check failed for planet', planet_name)
+                    return {'stable': None, 'pass': False, 'tc_check': False}
 
             if 'R_Rs' in parameter_values:
                 """ Converting the radius from Stellar units to Solar units"""
