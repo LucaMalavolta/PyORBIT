@@ -1,4 +1,6 @@
 from __future__ import print_function
+
+from more_itertools import prepend
 from pyorbit.subroutines.common import *
 from pyorbit.models.abstract_model import AbstractModel
 
@@ -22,7 +24,7 @@ class RVkeplerian(AbstractModel):
 
         self.use_time_inferior_conjunction = False
         self.use_mass = False
-
+        self.compute_inclination = False
 
     def initialize_model(self, mc, **kwargs):
 
@@ -54,8 +56,22 @@ class RVkeplerian(AbstractModel):
             self.list_pams_common.update(['M_Me'])
             self.list_pams_common.update(['mass'])
             self.use_mass = True
+
+            if mc.common_models[self.planet_ref].use_inclination:
+                """ i is the orbital inclination (in degrees) """
+                self.list_pams_common.update(['i'])
+            else:
+                """ b is the impact parameter """
+                self.list_pams_common.update(['b'])
+                self.list_pams_common.update(['density'])
+                self.compute_inclination = True
+
         else:
             self.list_pams_common.update(['K'])
+
+
+
+
 
         if mc.common_models[self.planet_ref].use_longitude_of_nodes:
             self.list_pams_common.update(['Omega'])
@@ -80,6 +96,16 @@ class RVkeplerian(AbstractModel):
 
         if self.use_mass:
 
+            if self.compute_inclination:
+                parameter_values['a_Rs'] = convert_rho_to_ars(parameter_values['P'], 
+                                                                parameter_values['density'])
+
+                parameter_values['i'] = convert_b_to_i(
+                    parameter_values['b'],
+                    parameter_values['e'],
+                    parameter_values['omega'],
+                    parameter_values['a_Rs'])
+            
             rv_semiamplitude = kepler_exo.kepler_compute_rv_semiamplitude(parameter_values['mass'],
                                                                             parameter_values['M_Me'] / constants.Msear,
                                                                             parameter_values['P'], 

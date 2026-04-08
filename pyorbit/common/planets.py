@@ -295,6 +295,7 @@ class CommonPlanets(AbstractCommon):
         self.use_mass = kwargs.get('use_mass', self.use_mass)
         if self.use_mass :
             print('Planetary mass replacing RV semi-amplitude as a free parameter: ', True)
+            print('You will need to use either inclination or impact paramater as free/fixed parameter')
 
         self.use_time_inferior_conjunction = kwargs.get('use_time_inferior_conjunction', self.use_time_inferior_conjunction)
         if self.use_time_inferior_conjunction:
