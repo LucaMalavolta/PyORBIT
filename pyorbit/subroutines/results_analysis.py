@@ -378,7 +378,6 @@ def get_planet_parameters(mc, theta, verbose=False):
                     parameter_values['i'] = 90.00 * np.ones(n_samplings)
                     remove_i = True
 
-            print(parameter_values)
             if 'K' in parameter_values.keys() and 'mass' in stellar_parameters.keys():
                 M_Msun = kepler_exo.kepler_get_planet_mass(parameter_values['P'],
                                                                   parameter_values['K'],

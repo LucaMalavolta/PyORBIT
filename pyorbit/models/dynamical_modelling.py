@@ -3,7 +3,6 @@ from pyorbit.subroutines.common import *
 from pyorbit.models.abstract_model import AbstractModel
 import pyorbit.subroutines.kepler_exo as kepler_exo
 
-
 try:
     from pytrades import pytrades
 except (ModuleNotFoundError,ImportError):
@@ -282,13 +281,11 @@ class DynamicalIntegrator:
         """ Output initizialization """
         output = {'stable': None, 'pass': True, 'tc_check': True}
 
-
         if self.to_be_initialized:
             self.prepare_trades(mc)
 
 
-        """ Adding star parameters"""
-
+        """ Adding star and planetary parameters"""
         star_counter = 0
         for planet_name in mc.dynamical_dict:
             n_plan = self.planet_idflag[planet_name]
@@ -321,7 +318,6 @@ class DynamicalIntegrator:
             self.dynamical_pams['mA'][n_plan-1] = (parameter_values['mean_long'] - parameter_values['omega'] - parameter_values['Omega']) % 360.0
 
             #TODO add the check here and return output['tc_check'] = False if failed
-
 
         if x_input is None:
 
@@ -442,5 +438,5 @@ class DynamicalIntegrator:
                 if np.sum(find_epoch) != dataset.n:
                     output[dataset_name] = np.zeros(dataset.n)
                     output['pass'] = False
-
+        
         return output

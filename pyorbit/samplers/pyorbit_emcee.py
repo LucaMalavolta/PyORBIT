@@ -181,7 +181,12 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
     global log_priors_likelihood
     def log_priors_likelihood(theta):
 
+        #start = time.time()
+
         log_priors, log_likelihood = mc.log_priors_likelihood(theta)
+        #end = time.time()
+        #print("--------Computation took {0:.16f} seconds".format(end - start))
+
         return log_priors + log_likelihood
 
     if reloaded_emcee:
