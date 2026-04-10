@@ -401,6 +401,7 @@ class DynamicalIntegrator:
             signal.alarm(0)  # cancel if finished
 
         except TimeoutError:
+            print("Stopped due to timeout")
             return {'stable': None, 'pass': False, 'tc_check': False}
 
 
