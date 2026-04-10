@@ -130,7 +130,7 @@ class RossiterMcLaughlin_Precise(AbstractModel, AbstractTransit):
         # is computed to about R = 124’000.
         # fwhm = 2.355 sigma
         # fwhm = 0.01415 * 3.1 * 299792.458 / 5300 = 2.48 km/s
-        # sigma =
+        # instrumental_broadening =  fwhm / 2.355 = 1.108 km/s
 
         for dict_name in self.ccf_variables:
             if kwargs[dataset.name_ref].get(dict_name, False):

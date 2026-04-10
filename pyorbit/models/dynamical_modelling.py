@@ -9,13 +9,6 @@ except (ModuleNotFoundError,ImportError):
     pass
 
 
-import signal
-
-def handler(signum, frame):
-    raise TimeoutError("Timeout during dynamical integration")
-
-
-
 class AbstractDynamical(object):
 
     def __init__(self, *args, **kwargs):
@@ -335,74 +328,67 @@ class DynamicalIntegrator:
 
             #TODO add the check here and return output['tc_check'] = False if failed
 
-        signal.signal(signal.SIGALRM, handler)
-        signal.alarm(10)  # seconds
+        print('STARTING Dynamical parameters', self.dynamical_pams)
 
-        try:
+        if x_input is None:
 
-            if x_input is None:
+            (
+                time_steps,
+                orbits,
+                transits,
+                durations,
+                lambda_rm,
+                kep_elem,
+                body_flag,
+                rv_sim, # {"time": array, "rv": array} the index will match the input t_rv_obs array
+                stable,
+            ) = pytrades.orbital_parameters_to_transits(
+                self.ti_ref,
+                self.ti_beg,
+                self.ti_int,
+                self.dynamical_pams['M'],
+                self.dynamical_pams['R'],
+                self.dynamical_pams['P'],
+                self.dynamical_pams['e'],
+                self.dynamical_pams['omega'],
+                self.dynamical_pams['mA'],
+                self.dynamical_pams['i'],
+                self.dynamical_pams['Omega'],
+                self.rv_epochs # this can be an empty list [] and it will ignore it, otherwise provide a list time at which compute RV
+            )
 
-                (
-                    time_steps,
-                    orbits,
-                    transits,
-                    durations,
-                    lambda_rm,
-                    kep_elem,
-                    body_flag,
-                    rv_sim, # {"time": array, "rv": array} the index will match the input t_rv_obs array
-                    stable,
-                ) = pytrades.orbital_parameters_to_transits(
-                    self.ti_ref,
-                    self.ti_beg,
-                    self.ti_int,
-                    self.dynamical_pams['M'],
-                    self.dynamical_pams['R'],
-                    self.dynamical_pams['P'],
-                    self.dynamical_pams['e'],
-                    self.dynamical_pams['omega'],
-                    self.dynamical_pams['mA'],
-                    self.dynamical_pams['i'],
-                    self.dynamical_pams['Omega'],
-                    self.rv_epochs # this can be an empty list [] and it will ignore it, otherwise provide a list time at which compute RV
-                )
+            rv_sorted = np.zeros_like(rv_sim['rv'])
+            rv_sorted[self.rv_epochs_argsort] = rv_sim['rv']
 
-                rv_sorted = np.zeros_like(rv_sim['rv'])
-                rv_sorted[self.rv_epochs_argsort] = rv_sim['rv']
+        else:
 
-            else:
-
-                (
-                    time_steps,
-                    orbits,
-                    transits,
-                    durations,
-                    lambda_rm,
-                    kep_elem,
-                    body_flag,
-                    rv_sim, # {"time": array, "rv": array} the index will match the input t_rv_obs array
-                    stable,
-                ) = pytrades.orbital_parameters_to_transits(
-                    self.ti_ref,
-                    self.ti_beg,
-                    self.ti_int,
-                    self.dynamical_pams['M'],
-                    self.dynamical_pams['R'],
-                    self.dynamical_pams['P'],
-                    self.dynamical_pams['e'],
-                    self.dynamical_pams['omega'],
-                    self.dynamical_pams['mA'],
-                    self.dynamical_pams['i'],
-                    self.dynamical_pams['Omega'],
-                    x_input # this can be an empty list [] and it will ignore it, otherwise provide a list time at which compute RV
-                )
-                rv_sorted = rv_sim['rv']
-            
-            signal.alarm(0)  # cancel if finished
-
-        except TimeoutError:
-            print("Stopped due to timeout")
-            return {'stable': None, 'pass': False, 'tc_check': False}
+            (
+                time_steps,
+                orbits,
+                transits,
+                durations,
+                lambda_rm,
+                kep_elem,
+                body_flag,
+                rv_sim, # {"time": array, "rv": array} the index will match the input t_rv_obs array
+                stable,
+            ) = pytrades.orbital_parameters_to_transits(
+                self.ti_ref,
+                self.ti_beg,
+                self.ti_int,
+                self.dynamical_pams['M'],
+                self.dynamical_pams['R'],
+                self.dynamical_pams['P'],
+                self.dynamical_pams['e'],
+                self.dynamical_pams['omega'],
+                self.dynamical_pams['mA'],
+                self.dynamical_pams['i'],
+                self.dynamical_pams['Omega'],
+                x_input # this can be an empty list [] and it will ignore it, otherwise provide a list time at which compute RV
+            )
+            rv_sorted = rv_sim['rv']
+    
+        print('COMPLETED Dynamical parameters', self.dynamical_pams)
 
 
         output['stable'] = stable
