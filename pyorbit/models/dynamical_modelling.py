@@ -328,7 +328,7 @@ class DynamicalIntegrator:
 
             #TODO add the check here and return output['tc_check'] = False if failed
 
-        print('STARTING Dynamical parameters', self.dynamical_pams)
+        #print('STARTING Dynamical parameters', self.dynamical_pams)
 
         if x_input is None:
 
@@ -388,7 +388,7 @@ class DynamicalIntegrator:
             )
             rv_sorted = rv_sim['rv']
     
-        print('COMPLETED Dynamical parameters', self.dynamical_pams)
+        #print('COMPLETED Dynamical parameters', self.dynamical_pams)
 
 
         output['stable'] = stable
