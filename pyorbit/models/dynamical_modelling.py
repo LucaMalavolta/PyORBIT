@@ -387,7 +387,7 @@ class DynamicalIntegrator:
                 rv_sorted = pytrades.orbits_to_rvs(self.dynamical_pams['M'], orbits[sel_t_rv, :])
 
         #print('COMPLETED Dynamical parameters', self.dynamical_pams)
-
+        print(stable)
         output['stable'] = bool(stable)
 
         transiting_body = 1
