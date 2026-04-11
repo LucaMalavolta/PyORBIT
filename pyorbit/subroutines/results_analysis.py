@@ -233,30 +233,32 @@ def get_stellar_parameters(mc, theta, warnings=True, stellar_ref=None):
             stellar_values['density'] = stellar_values['mass'] / \
                 stellar_values['radius'] ** 3
             if warnings:
-                print('Note: stellar density derived from stellar mass and radius')
+                print('Note: stellar density derived from stellar mass and radius posteriors')
                 print()
 
     else:
         if 'mass' in stellar_values and 'radius' in stellar_values:
             if warnings:
-                print('Note: stellar mass, radius and density provided independently, no check for consistency is performed')
+                print('Note: stellar mass, radius and density provided independently, ')
+                print('    no check for consistency among posteriors is performed')
                 print()
         elif 'mass' in stellar_values:
             stellar_values['radius'] = (
                 stellar_values['mass'] / stellar_values['density']) ** (1. / 3.)
             if warnings:
-                print('Note: stellar radius derived from stellar mass and density')
+                print('Note: stellar radius derived from stellar mass and density posteriors')
                 print()
         elif 'radius' in stellar_values:
             stellar_values['mass'] = stellar_values['radius'] ** 3. * stellar_values['density']
             if warnings:
-                print('Note: stellar mass derived from stellar radius and density')
+                print('Note: stellar mass derived from stellar radius and density posteriors')
                 print()
 
         else:
             if 'mass' in stellar_model.prior_pams and 'radius' in stellar_model.prior_pams:
                 if warnings:
-                    print('Note: priors on stellar mass and radius provided independently from the measured density, no check for consistency is performed')
+                    print('Note: priors on both stellar mass and radius provided independently from the measured density')
+                    print('    no check for consistency with density posterior is performed')
                     print()
                 if stellar_model.prior_kind['mass'] == 'Gaussian':
                         stellar_values['mass'] = np.random.normal(stellar_model.prior_pams['mass'][0],
@@ -274,7 +276,7 @@ def get_stellar_parameters(mc, theta, warnings=True, stellar_ref=None):
                     stellar_values['radius'] = (
                         stellar_values['mass'] / stellar_values['density']) ** (1. / 3.)
                 if warnings:
-                    print('Note: stellar radius derived from its measured density and its prior on mass')
+                    print('Note: stellar radius derived from the density posterior and the mass prior')
                     print()
 
             elif 'radius' in stellar_model.prior_pams:
@@ -334,7 +336,7 @@ def get_planet_parameters(mc, theta, verbose=False):
 
             remove_i = False
             if verbose:
-                print('----- common model: ', common_name)
+                print('----- common model: planet ', common_name)
 
             """
             Check if the eccentricity and argument of pericenter were set as free parameters or fixed by simply
@@ -363,18 +365,23 @@ def get_planet_parameters(mc, theta, verbose=False):
                 if 'i' in common_model.fix_list:
 
                     if verbose:
-                        print('Inclination randomized to {0:3.2f} +- {1:3.2f} deg'.format(
+                        print('Planet name {0:s}: true masses with inclination randomized to {1:3.2f} +- {2:3.2f} deg'.format(
+                                common_name,
                               common_model.fix_list['i'][0], common_model.fix_list['i'][1]))
                     parameter_values['i'] = np.random.normal(common_model.fix_list['i'][0],
                                                             common_model.fix_list['i'][1],
                                                             size=n_samplings)
                 elif 'b' in parameter_values.keys() and 'a_Rs' in parameter_values.keys():
+                    if verbose:
+                        print('Planet name {0:s}: true masses with inclination from posterior distribution'.format(common_name))
+
                     parameter_values['i'] = convert_b_to_i(parameter_values['b'],
                                                           parameter_values['e'],
                                                           parameter_values['omega'],
                                                           parameter_values['a_Rs'])
                 else:
-                    print('All mass values are _minimum masses_ M*sin(i)')
+                    if verbose:
+                        print('Planet name {0:s}: all mass values are _minimum masses_ M*sin(i)'.format(common_name))
                     parameter_values['i'] = 90.00 * np.ones(n_samplings)
                     remove_i = True
 
@@ -533,10 +540,13 @@ def get_model(mc, theta, bjd_dict, **kwargs):
     if mc.dynamical_model is not None:
         """ check if any keyword ahas get the output model from the dynamical tool
         we must do it here because all the planet are involved"""
-        dynamical_output_x0 = mc.dynamical_model.compute(
-            mc, theta, bjd_dict['full']['x_plot'])
-        dynamical_output = mc.dynamical_model.compute(mc, theta)
 
+        print('Computation of the dynamical model, it may take a while...')
+        dynamical_output_x0 = mc.dynamical_model.compute(
+            mc, theta, bjd_dict['combined']['x_plot'])
+        dynamical_output = mc.dynamical_model.compute(mc, theta)
+        print()
+    
     for dataset_name, dataset in mc.dataset_dict.items():
 
         if not getattr(dataset, 'compute_plot', True):
@@ -728,6 +738,7 @@ def get_model(mc, theta, bjd_dict, **kwargs):
 
                 plot_split_threshold = kwargs.get('plot_split_threshold', 10000)
                 low_ram_plot = kwargs.get('low_ram_plot', False)
+                compute_gp_variance = kwargs.get('compute_gp_variance', False)
 
                 #if (x0_len * dataset.n) > ram_occupancy:
                 if (x0_len > plot_split_threshold) or low_ram_plot:
@@ -754,11 +765,17 @@ def get_model(mc, theta, bjd_dict, **kwargs):
 
                     max_iterations = x0_len//array_length + 1
 
-                    print('     Splitting the plot array to allow GP prediction of extended datasets, it may take a while...')
-                    print('     Dataset under analysis: {0:25s} - GP model: {1:30s}'.format(dataset_name, logchi2_gp_model))
-                    print('     # {0:d} chunks of {1:d} times each'.format(max_iterations, array_length))
-                    print('     # {0:d} data points in each chunk'.format(array_length))
-                    print('     Check the documentation if the code is taking too long or if it crashes...')
+                    print('Dataset under analysis: {0:25s} - GP model: {1:30s}'.format(dataset_name, logchi2_gp_model))
+                    print('    Splitting the plot array to allow GP prediction of extended datasets, it may take a while...')
+                    print('    # {0:d} chunks with {1:d} data points in each chunk'.format(max_iterations, array_length))
+                    print('    Check the documentation if the code is taking too long or if it crashes...')
+
+                    try:
+                        mc.models[logchi2_gp_model].sample_predict_prepare_kernel(parameter_values, dataset)
+                        internal_kernel = True
+                    except Exception as e:
+                        internal_kernel = False
+                        #print(f"Error occurred while preparing GP kernel for {dataset_name}: {e}")
 
                     if progress_bar:
 
@@ -769,9 +786,14 @@ def get_model(mc, theta, bjd_dict, **kwargs):
 
                             x0_temp = x0_plot[id_start:id_end]
 
-                            x0_out[id_start:id_end], x0_var[id_start:id_end] = \
-                                mc.models[logchi2_gp_model].sample_predict(
-                                parameter_values, dataset, x0_temp, return_variance=True)
+                            if internal_kernel:
+                                x0_out[id_start:id_end], x0_var[id_start:id_end] = \
+                                    mc.models[logchi2_gp_model].sample_predict_internal(
+                                    dataset, x0_temp, return_variance=compute_gp_variance)
+                            else:
+                                x0_out[id_start:id_end], x0_var[id_start:id_end] = \
+                                    mc.models[logchi2_gp_model].sample_predict(
+                                    parameter_values, dataset, x0_temp, return_variance=compute_gp_variance)
 
                             if id_end < 0: break
 
@@ -787,7 +809,7 @@ def get_model(mc, theta, bjd_dict, **kwargs):
 
                             x0_out[id_start:id_end], x0_var[id_start:id_end] = \
                                 mc.models[logchi2_gp_model].sample_predict(
-                                parameter_values, dataset, x0_temp, return_variance=True)
+                                parameter_values, dataset, x0_temp, return_variance=compute_gp_variance)
 
                             if id_end < 0: break
 
@@ -795,11 +817,12 @@ def get_model(mc, theta, bjd_dict, **kwargs):
                             id_end += array_length
 
                 else:
+                    print('Dataset under analysis: {0:20s} - GP model: {1:30s}'.format(dataset_name, logchi2_gp_model))
                     print('     computing GP prediction for the whole temporal range, it may take a while...')
 
                     x0_out, x0_var = \
                     mc.models[logchi2_gp_model].sample_predict(
-                        parameter_values, dataset, x0_plot, return_variance=True)
+                        parameter_values, dataset, x0_plot, return_variance=compute_gp_variance)
 
                 model_x0[dataset_name][logchi2_gp_model] = x0_out
 
@@ -825,6 +848,8 @@ def get_model(mc, theta, bjd_dict, **kwargs):
 
         plot_split_threshold = kwargs.get('plot_split_threshold', 10000)
         low_ram_plot = kwargs.get('low_ram_plot', False)
+        compute_gp_variance = kwargs.get('compute_gp_variance', False)
+
 
         #if (6* x0_len * dataset.n * len(delayed_lnlk_computation)**2) > ram_occupancy:
         if (x0_len > plot_split_threshold) or low_ram_plot:
@@ -851,9 +876,10 @@ def get_model(mc, theta, bjd_dict, **kwargs):
             id_end = array_length
 
             max_iterations = x0_len//array_length + 1
-
+            
+            print('Dataset under analysis: {0:25s} - GP model: {1:30s}'.format(dataset_name, logchi2_gp_model))
             print('     Splitting the plot array to allow GP prediction of extended datasets, it may take a while...')
-            print('     # {0:d} chunks of {1:d} times each'.format(max_iterations, array_length))
+            print('     # {0:d} chunks of {1:d} data points in each chunk'.format(max_iterations, array_length))
             print('     Check the documentation if the code is taking too long or if it crashes...')
 
             if progress_bar:
@@ -869,7 +895,7 @@ def get_model(mc, theta, bjd_dict, **kwargs):
 
                     x0_out[id_start:id_end], x0_var[id_start:id_end] = \
                         mc.models[logchi2_gp_model].sample_predict(
-                        mc.dataset_dict[dataset_name], x0_temp, return_variance=True)
+                        mc.dataset_dict[dataset_name], x0_temp, return_variance=compute_gp_variance)
 
                     if id_end < 0: break
 
@@ -888,7 +914,7 @@ def get_model(mc, theta, bjd_dict, **kwargs):
 
                     x0_out[id_start:id_end], x0_var[id_start:id_end] = \
                         mc.models[logchi2_gp_model].sample_predict(
-                        mc.dataset_dict[dataset_name], x0_temp, return_variance=True)
+                        mc.dataset_dict[dataset_name], x0_temp, return_variance=compute_gp_variance)
 
                     if id_end < 0: break
 
@@ -901,7 +927,7 @@ def get_model(mc, theta, bjd_dict, **kwargs):
 
             x0_out, x0_var = \
             mc.models[logchi2_gp_model].sample_predict(
-                mc.dataset_dict[dataset_name], x0_plot, return_variance=True)
+                mc.dataset_dict[dataset_name], x0_plot, return_variance=compute_gp_variance)
 
 
 

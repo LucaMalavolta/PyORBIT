@@ -17,6 +17,10 @@ from pyorbit.classes.model_container_zeus import ModelContainerZeus
 
 from pyorbit.subroutines.input_parser import pars_input
 from pyorbit.subroutines.io_subroutines import *
+
+from pyorbit.model_definitions import activity_datatype
+
+
 import numpy as np
 import os
 import matplotlib as mpl
@@ -39,12 +43,18 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
     use_tex = False
     plt.rc('text', usetex=use_tex)
 
-    if config_in['parameters'].get('save_pdf', False ):
+    try:
+        plot_config_parameters = config_in['plot_parameters']
+    except:
+        plot_config_parameters = config_in['parameters']
+
+
+    if plot_config_parameters.get('save_pdf', False ):
         file_ext = '.pdf'
     else:
         file_ext = '.png'
 
-    font_label = config_in['parameters'].get('font_label', 9)
+    font_label = plot_config_parameters.get('font_label', 9)
 
     plt.rcParams['font.family'] = 'Arial'
     #plt.rcParams['font.family'] = 'DeJavu Serif'
@@ -53,6 +63,13 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
     mpl.rcParams.update({'figure.figsize':(10, 10)})
     mpl.rcParams.update({'xtick.minor.visible': True})
     mpl.rcParams.update({'ytick.minor.visible': True})
+
+    if plot_config_parameters.get('correlation_plot', None) == 'getdist':
+        plot_dictionary['use_getdist'] = True
+        plot_dictionary['use_corner'] = False
+    if plot_config_parameters.get('correlation_plot', None) == 'corner':
+        plot_dictionary['use_getdist'] = True
+        plot_dictionary['use_corner'] = False
 
     if plot_dictionary['use_corner']:
         import corner
@@ -745,6 +762,10 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
     rv_like_samplings = config_in['parameters'].get('rv_lnlike_samplings', rv_like_samplings)
     rv_like_samplings = config_in['parameters'].get('rv_like_samplings', rv_like_samplings)
 
+    rv_like_samplings = plot_config_parameters.get('rv_loglike_samplings', rv_like_samplings)
+    rv_like_samplings = plot_config_parameters.get('rv_lnlike_samplings', rv_like_samplings)
+    rv_like_samplings = plot_config_parameters.get('rv_like_samplings', rv_like_samplings)
+
     flat_rv_lnlike = np.zeros(rv_like_samplings)
     med_rv_ln_likelihood = med_ln_likelihood * 0.0
     MAP_rv_ln_likelihood = 0.0
@@ -1207,7 +1228,7 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
         print()
         sys.stdout.flush()
 
-    if mc.ndim > 30 and not config_in['parameters'].get('force_full_correlation_plot', False):
+    if mc.ndim > 30 and not plot_config_parameters.get('force_full_correlation_plot', False):
         plot_dictionary['full_correlation']=False
 
         print(' Skipping full correlation plot due to the high number of parameters')
@@ -1610,19 +1631,22 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
 
     if plot_dictionary['plot_models'] or plot_dictionary['write_models']:
 
-        print(' Computing the models for plot/data writing ')
+        print('Computing the models for plot/data writing')
+        print()
 
+        """ BJD array for combined datasets, e.g., radial velocities datasets"""
         bjd_plot = {
-            'full': {
-                'start': None, 'end': None, 'range': None
-            }
+            'combined': {}
         }
 
         kinds = {}
 
+        #TODO Check if we want to keep this"""
         P_minimum = 2.0  # this temporal range will be divided in 20 subsets
         for key_name, key_val in planet_parameters_med.items():
             P_minimum = max(key_val.get('P', 2.0), P_minimum)
+
+
 
         for dataset_name, dataset in mc.dataset_dict.items():
 
@@ -1642,65 +1666,106 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
                 'range': np.amax(dataset.x) - np.amin(dataset.x),
             }
 
+            """Allow for a minimum range of 0.1 days to avoid too few points for the model plot 
+            in case of very short datasets"""
+            #TODO do we need to keep this? 
             if bjd_plot[dataset_name]['range'] < 0.1:
                 bjd_plot[dataset_name]['range'] = 0.1
 
+            """Extend the dataset by a 10% range to avoid cutting the model plot at the edges of the data"""
             bjd_plot[dataset_name]['start'] -= bjd_plot[dataset_name]['range'] * 0.10
             bjd_plot[dataset_name]['end'] += bjd_plot[dataset_name]['range'] * 0.10
 
             #TODO remove the 'Phot' options in PyORBIT version 12
-            if dataset.kind == 'photometry' or dataset.kind == 'Phot':
+            if dataset.kind == 'photometry':
 
-                if bjd_plot[dataset_name]['range'] > P_minimum:
+                """ If the range of the dataset is longer than three times the shortest orbital period,
+                likely we are analysing a long-term photometric dataset. In this case, we can afford to
+                increase the step size for the model plot to avoid too many points and long computation time.
+                Otherwise, we keep a small step size to properly sample the transits in the model plot"""
+
+                if bjd_plot[dataset_name]['range'] > 3*P_minimum:
                     # more than one transit:
                     step_size = 5.  / (24 * 60) #five minute stepsize
                 else:
-                    step_size = np.min(
-                        bjd_plot[dataset_name]['range'] / dataset.n / 10.)
+                    step_size = np.min(np.diff(dataset.x)) / 2.
             else:
-                step_size =  min(P_minimum / 20., bjd_plot[dataset_name]['range'] / dataset.n / 10.)
+
+                """ For generic datasets, we set the step size to use the smallest value among
+                    -  1/20 of the shortest orbital period
+                    -  half of the smallest time difference in the dataset
+                    -1/10 of the dataset range divided by the number of data points.
+                    This allows to properly sample the model without producing too many points for long-term datasets
+                """
+                step_size =  min(P_minimum / 20.,
+                                    np.min(np.diff(dataset.x)) / 2.,
+                                    bjd_plot[dataset_name]['range'] / dataset.n / 10.)
+
+            try:
+                step_size = plot_config_parameters['model_step_size'][dataset_name]
+            except KeyError:
+                pass
+
+            bjd_plot[dataset_name]['step_size'] = step_size
+
+            print('    Dataset: {0:20s} step size for model plot: {1:.5f} days ({2:.2f} minutes)'.format(dataset_name, step_size, step_size * 24 * 60))
 
             bjd_plot[dataset_name]['x_plot'] = \
                 np.arange(bjd_plot[dataset_name]['start'],
-                          bjd_plot[dataset_name]['end'], step_size)
+                            bjd_plot[dataset_name]['end'], 
+                            bjd_plot[dataset_name]['step_size'])
             bjd_plot[dataset_name]['x0_plot'] = bjd_plot[dataset_name]['x_plot'] - mc.Tref
 
-            if bjd_plot['full']['range']:
-                bjd_plot['full']['start'] = min(
-                    bjd_plot['full']['start'], np.amin(dataset.x))
-                bjd_plot['full']['end'] = max(
-                    bjd_plot['full']['end'], np.amax(dataset.x))
-                bjd_plot['full']['range'] = bjd_plot['full']['end'] - \
-                    bjd_plot['full']['start']
-            else:
-                bjd_plot['full']['start'] = np.amin(dataset.x)
-                bjd_plot['full']['end'] = np.amax(dataset.x)
-                bjd_plot['full']['range'] = bjd_plot['full']['end'] - \
-                    bjd_plot['full']['start']
+            """ Photometric datasets are excluded from the construction of the combined BJD array"""
+            if dataset.kind == 'photometry':
+                continue
 
-        step_size =  min(P_minimum / 20., bjd_plot['full']['range'] / dataset.n / 10.)
+            """ Combined range where the same physical effect is observed through different instruments
+              over different temporal ranges, e.g., radial velocity datasets. This allows to plot the same model 
+              for all the datasets of similar kind, even if they do not cover the same temporal range"""
+            try:
+                bjd_plot['combined']['start'] = min(
+                    bjd_plot['combined']['start'], bjd_plot[dataset_name]['start'])
+                bjd_plot['combined']['end'] = max(
+                    bjd_plot['combined']['end'], bjd_plot[dataset_name]['end'])
+                bjd_plot['combined']['step_size'] = min(
+                    bjd_plot['combined']['step_size'], step_size)
+            except KeyError:
+                bjd_plot['combined']['start'] = bjd_plot[dataset_name]['start'].copy()
+                bjd_plot['combined']['end'] = bjd_plot[dataset_name]['end'].copy()
+                bjd_plot['combined']['step_size'] = 1*step_size
 
-        bjd_plot['full']['start'] -= bjd_plot['full']['range'] * 0.50
-        bjd_plot['full']['end'] += bjd_plot['full']['range'] * 0.50
-        bjd_plot['full']['x_plot'] = np.arange(
-            bjd_plot['full']['start'], bjd_plot['full']['end'], step_size)
-        bjd_plot['full']['x0_plot'] = bjd_plot['full']['x_plot'] - mc.Tref
+        print()
 
-        # Special cases
+        """Building the combined array"""
+        bjd_plot['combined']['range'] = bjd_plot['combined']['end'] - bjd_plot['combined']['start']
+        bjd_plot['combined']['x_plot'] = np.arange(
+            bjd_plot['combined']['start'], bjd_plot['combined']['end'], bjd_plot['combined']['step_size'])
+        bjd_plot['combined']['x0_plot'] = bjd_plot['combined']['x_plot'] - mc.Tref
+
+
+        """ By default we want to use the same BJD array for all the datasets of the same kind, e.g., radial velocity datasets.
+        For transit time datasets, there is no point in plotting intermediate values """
         for dataset_name, dataset in mc.dataset_dict.items():
-            #TODO remove option 'RV' in PyORBIT version 12
-            if dataset.kind == 'RV' or dataset.kind == 'radial_velocity':
-                bjd_plot[dataset_name] = bjd_plot['full']
+            if dataset.kind == 'radial_velocity' and plot_config_parameters.get('use_shared_axis_for_rv', True):
+                bjd_plot[dataset_name] = bjd_plot['combined']
+                print('    Dataset {0:20s} combined BJD array built with {1:d} data points'.format(dataset_name, len(bjd_plot['combined']['x0_plot'])))
+
+            if dataset.kind in activity_datatype and plot_config_parameters.get('use_shared_axis_for_activity', True):
+                bjd_plot[dataset_name] = bjd_plot['combined']
+                print('    Dataset {0:20s} combined BJD array built with {1:d} data points'.format(dataset_name, len(bjd_plot['combined']['x0_plot'])))
+
             if dataset.kind == 'transit_time':
                 bjd_plot[dataset_name]['x_plot'] = dataset.x
                 bjd_plot[dataset_name]['x0_plot'] = dataset.x
 
+
         bjd_plot['model_out'], bjd_plot['model_x'] = results_analysis.get_model(
-            mc, chain_med[:, 0], bjd_plot, **config_in['parameters'])
+            mc, chain_med[:, 0], bjd_plot, **plot_config_parameters)
         bjd_plot['MAP_model_out'], bjd_plot['MAP_model_x'] = results_analysis.get_model(
-            mc, chain_MAP, bjd_plot, **config_in['parameters'])
+            mc, chain_MAP, bjd_plot, **plot_config_parameters)
         bjd_plot['sampleMED_model_out'], bjd_plot['sampleMED_model_x'] = results_analysis.get_model(
-            mc, chain_sampleMED, bjd_plot, **config_in['parameters'])
+            mc, chain_sampleMED, bjd_plot, **plot_config_parameters)
 
         #print(bjd_plot['model_out'])
         #print(type(bjd_plot['model_out']))
@@ -2058,7 +2123,7 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
                 for model in planet_pams:
                     try:
 
-                        RV_out = kepler_exo.kepler_compute_rv_deltabjd(bjd_plot['full']['x_plot']-mc.Tref,
+                        RV_out = kepler_exo.kepler_compute_rv_deltabjd(bjd_plot['combined']['x_plot']-mc.Tref,
                                                             planet_pams[model]['K'],
                                                             planet_pams[model]['P'],
                                                             planet_pams[model]['mean_long'],
@@ -2074,7 +2139,7 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
                         else:
                             fileout.write('# time model \n')
 
-                        for x, y in zip(bjd_plot['full']['x_plot'], RV_out):
+                        for x, y in zip(bjd_plot['combined']['x_plot'], RV_out):
                             fileout.write('{0:f} {1:f} \n'.format(x, y))
                         fileout.close()
 

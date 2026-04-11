@@ -140,7 +140,6 @@ class SPLEAF_ESP(AbstractModel, AbstractGaussianProcesses):
         self.D_spleaf[dataset.name_ref].set_param(input_param, self.D_spleaf[dataset.name_ref].param)
         return  self.D_spleaf[dataset.name_ref].loglike(dataset.residuals[temp_sorting])
 
-
     def sample_predict(self, parameter_values, dataset, x0_input=None, return_covariance=False, return_variance=False):
 
         self.update_parameter_values(parameter_values)
@@ -165,12 +164,13 @@ class SPLEAF_ESP(AbstractModel, AbstractGaussianProcesses):
 
 
         mu = np.empty_like(t_predict)
-        var = np.empty_like(t_predict)
-        mu[sorting_predict], var[sorting_predict] = D.conditional(dataset.residuals[temp_sorting], t_predict[sorting_predict], calc_cov='diag')
 
         if return_variance:
+            var = np.empty_like(t_predict)
+            mu[sorting_predict], var[sorting_predict] = D.conditional(dataset.residuals[temp_sorting], t_predict[sorting_predict], calc_cov='diag')
             return mu, np.sqrt(var)
         else:
+            mu[sorting_predict] = D.conditional(dataset.residuals[temp_sorting], t_predict[sorting_predict])
             return mu
 
     def _reset_kernel(self, parameter_values, dataset, argsorting=None):

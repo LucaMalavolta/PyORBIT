@@ -334,10 +334,12 @@ datatype_definition = {
     'FWHM': ['FWHM', 'fwhm'],
     'BIS': ['BIS', 'bis'],
     'EWs': ['EWs', 'EW', 'ew', 'ews'],
-    'Activity': ['Activity', 'activity', 'act_index', 'Act_index', 'activity_index', 'Activity_index'],
+    'activity': ['Activity', 'activity', 'act_index', 'Act_index', 'activity_index', 'Activity_index'],
     'Ca_HK': ['Ca', 'Cahk', 'CaHK', 'Ca_hk', 'Ca_HK',
               'logR', 'logRhk', 'logRHK', 'logR_hk', 'logR_HK',
               'log(R)', 'log(Rhk)', 'log(RHK)', 'log(R_hk)', 'log(R_HK)'],
     'S_index': ['S', 'S_index', 'Shk', 'SHK', 'S_HK', 'S_hk'],
     'CCF': ['CCF', 'CCFs', 'ccf', 'ccfs']
 }
+
+activity_datatype = ['H-alpha', 'photometry', 'FWHM', 'BIS', 'EWs', 'activity', 'Ca_HK', 'S_index']
