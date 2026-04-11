@@ -280,7 +280,7 @@ class DynamicalIntegrator:
             with a Keplerian function"""
 
         """ Output initizialization """
-        output = {'stable': None, 'pass': True, 'tc_check': True}
+        output = {'stable': False, 'pass': True, 'tc_check': True}
 
         if self.to_be_initialized:
             self.prepare_trades(mc)
@@ -309,7 +309,7 @@ class DynamicalIntegrator:
                 within_transit_window = (delta_time < self.tc_comparison_set[planet_name]['err']).all()   
                 if not within_transit_window: 
                     print('Tc check failed for planet', planet_name)
-                    return {'stable': None, 'pass': False, 'tc_check': False}
+                    return {'stable': False, 'pass': False, 'tc_check': False}
 
             if 'R_Rs' in parameter_values:
                 """ Converting the radius from Stellar units to Solar units"""
@@ -332,17 +332,7 @@ class DynamicalIntegrator:
 
         if x_input is None:
 
-            (
-                time_steps,
-                orbits,
-                transits,
-                durations,
-                lambda_rm,
-                kep_elem,
-                body_flag,
-                rv_sim, # {"time": array, "rv": array} the index will match the input t_rv_obs array
-                stable,
-            ) = pytrades.orbital_parameters_to_transits(
+            time_steps, orbits, stable = pytrades.kelements_to_orbits_full(
                 self.ti_ref,
                 self.ti_beg,
                 self.ti_int,
@@ -354,25 +344,24 @@ class DynamicalIntegrator:
                 self.dynamical_pams['mA'],
                 self.dynamical_pams['i'],
                 self.dynamical_pams['Omega'],
-                self.rv_epochs # this can be an empty list [] and it will ignore it, otherwise provide a list time at which compute RV
+                specific_times=self.rv_epochs # add additional times to compute orbits, e.g. time of RV observations
+                #step_size=1.0, # define the output stepsize
+                #n_steps_smaller_orbits=None # number of output steps of the inner planet
             )
 
-            rv_sorted = np.zeros_like(rv_sim['rv'])
-            rv_sorted[self.rv_epochs_argsort] = rv_sim['rv']
+            if stable == 0:
+                return {'stable': False, 'pass': False, 'tc_check': False}
+            if len(self.rv_epochs) > 0:
+                """ The RVs computed by TRADES are ordered according to the input time array, so we need to sort them according to the original order of the RV epochs provided by the user """
+                sel_t_rv = np.isin(time_steps, self.rv_epochs)
+                rvs = pytrades.orbits_to_rvs(self.dynamical_pams['M'], orbits[sel_t_rv, :])
+
+                rv_sorted = np.zeros_like(rvs)
+                rv_sorted[self.rv_epochs_argsort] = rvs
 
         else:
 
-            (
-                time_steps,
-                orbits,
-                transits,
-                durations,
-                lambda_rm,
-                kep_elem,
-                body_flag,
-                rv_sim, # {"time": array, "rv": array} the index will match the input t_rv_obs array
-                stable,
-            ) = pytrades.orbital_parameters_to_transits(
+            time_steps, orbits, stable = pytrades.kelements_to_orbits_full(
                 self.ti_ref,
                 self.ti_beg,
                 self.ti_int,
@@ -384,15 +373,32 @@ class DynamicalIntegrator:
                 self.dynamical_pams['mA'],
                 self.dynamical_pams['i'],
                 self.dynamical_pams['Omega'],
-                x_input # this can be an empty list [] and it will ignore it, otherwise provide a list time at which compute RV
+                specific_times=x_input # add additional times to compute orbits, e.g. time of RV observations
+                #step_size=1.0, # define the output stepsize
+                #n_steps_smaller_orbits=None # number of output steps of the inner planet
             )
-            rv_sorted = rv_sim['rv']
-    
+
+            if stable == 0:
+                return {'stable': False, 'pass': False, 'tc_check': False}
+
+            if len(x_input) > 0:
+                """ The RVs computed by TRADES are ordered according to the input time array, so we need to sort them according to the original order of the RV epochs provided by the user """
+                sel_t_rv = np.isin(time_steps, x_input)
+                rv_sorted = pytrades.orbits_to_rvs(self.dynamical_pams['M'], orbits[sel_t_rv, :])
+
         #print('COMPLETED Dynamical parameters', self.dynamical_pams)
 
+        output['stable'] = bool(stable)
 
-        output['stable'] = stable
-        
+        transiting_body = 1
+        n_all_transits = len(time_steps)*(self.n_body-1)
+
+        transits, durations, lambda_rm, kep_elem, body_flag = pytrades.orbits_to_transits(
+            n_all_transits,
+            time_steps, self.dynamical_pams['M'], self.dynamical_pams['R'], orbits,
+            transiting_body
+        )
+
         for dataset_name, dataset in mc.dataset_dict.items():
 
             if dataset.dynamical is False: continue
