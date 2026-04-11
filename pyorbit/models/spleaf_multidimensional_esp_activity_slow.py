@@ -231,9 +231,10 @@ class SPLEAF_Multidimensional_ESP_slow(AbstractModel, AbstractGaussianProcesses)
         else:
             t_predict = x0_input
 
-        mu, var = D.conditional(self.spleaf_res, t_predict, calc_cov='diag')
 
         if return_variance:
+            mu, var = D.conditional(self.spleaf_res, t_predict, calc_cov='diag')
             return mu, np.sqrt(var)
         else:
+            mu = D.conditional(self.spleaf_res, t_predict)
             return mu

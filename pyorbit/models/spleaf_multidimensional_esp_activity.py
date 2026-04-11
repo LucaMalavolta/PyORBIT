@@ -281,12 +281,13 @@ class SPLEAF_Multidimensional_ESP(AbstractModel, AbstractGaussianProcesses):
             sorting_predict = np.argsort(x0_input)
 
         mu = np.empty_like(t_predict)
-        var = np.empty_like(t_predict)
-        mu[sorting_predict], var[sorting_predict]  = self.D_spleaf.conditional(self.spleaf_res, t_predict[sorting_predict], calc_cov='diag')
 
         if return_variance:
+            var = np.empty_like(t_predict)
+            mu[sorting_predict], var[sorting_predict]  = self.D_spleaf.conditional(self.spleaf_res, t_predict[sorting_predict], calc_cov='diag')
             return mu, np.sqrt(var)
         else:
+            mu[sorting_predict] = self.D_spleaf.conditional(self.spleaf_res, t_predict[sorting_predict])
             return mu
 
     def _reset_kernel(self):

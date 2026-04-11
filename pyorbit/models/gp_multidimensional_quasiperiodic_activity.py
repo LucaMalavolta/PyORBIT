@@ -369,33 +369,36 @@ class GP_Multidimensional_QuasiPeriodicActivity(AbstractModel, AbstractGaussianP
 
         alpha = cho_solve(cho_factor(cov_matrix), self._dataset_res)
         mu = np.dot(Ks, alpha).flatten()
-        (s, d) = np.linalg.slogdet(cov_matrix)
 
-        B = cho_solve(cho_factor(cov_matrix), Ks.T)
-        KsB_dot_diag = np.diag(np.dot(Ks, B))
-
-        B = None
-        Ks = None
-
-        if faster_computation:
-            Kss = self._compute_cov_diag(t_predict)
-        else:
-            Kss = np.diag(cov_matrix)
-        cov_matrix = None
-
-        std = np.sqrt(np.array(Kss - KsB_dot_diag).flatten())
-
-        Kss = None
 
         if return_covariance:
             print('Covariance matrix output not implemented - ERROR')
             quit()
 
         if return_variance:
+
+            (s, d) = np.linalg.slogdet(cov_matrix)
+
+            B = cho_solve(cho_factor(cov_matrix), Ks.T)
+            KsB_dot_diag = np.diag(np.dot(Ks, B))
+
+            B = None
+            Ks = None
+
+            if faster_computation:
+                Kss = self._compute_cov_diag(t_predict)
+            else:
+                Kss = np.diag(cov_matrix)
+            cov_matrix = None
+
+            std = np.sqrt(np.array(Kss - KsB_dot_diag).flatten())
+
+            Kss = None
+
             return mu[l_nstart:l_nend], std[l_nstart:l_nend]
         else:
             return mu[l_nstart:l_nend]
 
     def sample_conditional(self, dataset, x0_input=None):
-        val, std = self.sample_predict(dataset, x0_input)
+        val = self.sample_predict(dataset, x0_input, return_variance=False)
         return val

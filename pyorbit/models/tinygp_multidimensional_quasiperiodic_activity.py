@@ -314,9 +314,9 @@ class TinyGP_Multidimensional_QuasiPeriodicActivity(AbstractModel, AbstractGauss
         #std = np.sqrt(cond_gp.variance)
         mu_full = cond_gp.loc # or cond_gp.mean?
         mu = mu_full[l_nstart:l_nend]
-        std = np.sqrt(cond_gp.variance)[l_nstart:l_nend]
 
         if return_variance:
+            std = np.sqrt(cond_gp.variance)[l_nstart:l_nend]
             return mu, std
         else:
             return mu

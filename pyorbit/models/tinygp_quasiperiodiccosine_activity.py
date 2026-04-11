@@ -126,9 +126,9 @@ class TinyGaussianProcess_QuasiPeriodicCosineActivity(AbstractModel, AbstractGau
         gp = _build_tinygp_quasiperiodic_cosine(theta_dict)
         _, cond_gp = gp.condition(theta_dict['y'], theta_dict['x0_predict'])
         mu = cond_gp.loc # or cond_gp.mean?
-        std = np.sqrt(cond_gp.variance)
 
         if return_variance:
+            std = np.sqrt(cond_gp.variance)
             return mu, std
         else:
             return mu

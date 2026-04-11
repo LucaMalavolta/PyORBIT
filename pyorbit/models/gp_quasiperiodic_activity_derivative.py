@@ -159,18 +159,20 @@ class GaussianProcess_QuasiPeriodicActivity_Derivative(AbstractModel, AbstractGa
 
         alpha = cho_solve(cho_factor(cov_matrix), dataset.residuals)
         mu = np.dot(Ks, alpha).flatten()
-        (s, d) = np.linalg.slogdet(cov_matrix)
 
-        Kss = self._compute_cov_matrix(parameter_values, predict_t1, predict_t2)
-
-        B = cho_solve(cho_factor(cov_matrix), Ks.T)
-        std = np.sqrt(np.array(np.diag(Kss - np.dot(Ks, B))).flatten())
 
         if return_covariance:
             print('Covariance matrix output not implemented - ERROR')
             quit()
 
         if return_variance:
+
+            (s, d) = np.linalg.slogdet(cov_matrix)
+
+            Kss = self._compute_cov_matrix(parameter_values, predict_t1, predict_t2)
+
+            B = cho_solve(cho_factor(cov_matrix), Ks.T)
+            std = np.sqrt(np.array(np.diag(Kss - np.dot(Ks, B))).flatten())
             return mu, std
         else:
             return mu
@@ -179,6 +181,6 @@ class GaussianProcess_QuasiPeriodicActivity_Derivative(AbstractModel, AbstractGa
 
         self.update_parameter_values(parameter_values)
 
-        val, std = self.sample_predict(parameter_values, dataset, x0_input)
+        val = self.sample_predict(parameter_values, dataset, x0_input, return_variance=False)
         return val
 

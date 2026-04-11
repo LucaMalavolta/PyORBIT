@@ -169,12 +169,13 @@ class SPLEAF_SHO(AbstractModel, AbstractGaussianProcesses):
 
 
         mu = np.empty_like(t_predict)
-        var = np.empty_like(t_predict)
-        mu[sorting_predict], var[sorting_predict] = D.conditional(dataset.residuals[temp_sorting], t_predict[sorting_predict], calc_cov='diag')
 
         if return_variance:
+            var = np.empty_like(t_predict)
+            mu[sorting_predict], var[sorting_predict] = D.conditional(dataset.residuals[temp_sorting], t_predict[sorting_predict], calc_cov='diag')
             return mu, np.sqrt(var)
         else:
+            mu[sorting_predict] = D.conditional(dataset.residuals[temp_sorting], t_predict[sorting_predict])
             return mu
 
     def _reset_kernel(self, parameter_values, dataset, argsorting=None):

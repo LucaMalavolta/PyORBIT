@@ -105,9 +105,10 @@ class SPLEAF_ESP_slow(AbstractModel, AbstractGaussianProcesses):
         else:
             t_predict = x0_input
 
-        mu, var = D.conditional(dataset.residuals, t_predict, calc_cov='diag')
 
         if return_variance:
+            mu, var = D.conditional(dataset.residuals, t_predict, calc_cov='diag')
             return mu, np.sqrt(var)
         else:
+            mu = D.conditional(dataset.residuals, t_predict)
             return mu

@@ -153,9 +153,9 @@ class TinyGaussianProcess_SHO(AbstractModel, AbstractGaussianProcesses):
         gp = _build_tinygp_sho(theta_dict)
         _, cond_gp = gp.condition(theta_dict['y'], theta_dict['x0_predict'])
         mu[sorting_predict] = cond_gp.loc # or cond_gp.mean?
-        std[sorting_predict] = np.sqrt(cond_gp.variance)
 
         if return_variance:
+            std[sorting_predict] = np.sqrt(cond_gp.variance)
             return mu, std
         else:
             return mu
