@@ -744,7 +744,7 @@ def get_model(mc, theta, bjd_dict, **kwargs):
                 if (x0_len > plot_split_threshold) or low_ram_plot:
 
                     x0_out = np.empty(x0_len)
-                    x0_var = np.empty(x0_len)
+                    x0_var = np.zeros(x0_len)
 
                     if dataset.n < plot_split_threshold/10.:
 
@@ -783,17 +783,27 @@ def get_model(mc, theta, bjd_dict, **kwargs):
 
                             if (id_end+array_length >= x0_len):
                                 id_end = -1
-
                             x0_temp = x0_plot[id_start:id_end]
 
-                            if internal_kernel:
-                                x0_out[id_start:id_end], x0_var[id_start:id_end] = \
-                                    mc.models[logchi2_gp_model].sample_predict_internal(
-                                    dataset, x0_temp, return_variance=compute_gp_variance)
+                            if compute_gp_variance:
+                                if internal_kernel:
+                                    x0_out[id_start:id_end], x0_var[id_start:id_end] = \
+                                        mc.models[logchi2_gp_model].sample_predict_internal(
+                                        dataset, x0_temp, return_variance=compute_gp_variance)
+                                else:
+                                    x0_out[id_start:id_end], x0_var[id_start:id_end] = \
+                                        mc.models[logchi2_gp_model].sample_predict(
+                                        parameter_values, dataset, x0_temp, return_variance=compute_gp_variance)
                             else:
-                                x0_out[id_start:id_end], x0_var[id_start:id_end] = \
-                                    mc.models[logchi2_gp_model].sample_predict(
-                                    parameter_values, dataset, x0_temp, return_variance=compute_gp_variance)
+
+                                if internal_kernel:
+                                    x0_out[id_start:id_end] = \
+                                        mc.models[logchi2_gp_model].sample_predict_internal(
+                                        dataset, x0_temp, return_variance=compute_gp_variance)
+                                else:
+                                    x0_out[id_start:id_end] = \
+                                        mc.models[logchi2_gp_model].sample_predict(
+                                        parameter_values, dataset, x0_temp, return_variance=compute_gp_variance)
 
                             if id_end < 0: break
 
@@ -820,9 +830,16 @@ def get_model(mc, theta, bjd_dict, **kwargs):
                     print('Dataset under analysis: {0:20s} - GP model: {1:30s}'.format(dataset_name, logchi2_gp_model))
                     print('     computing GP prediction for the whole temporal range, it may take a while...')
 
-                    x0_out, x0_var = \
-                    mc.models[logchi2_gp_model].sample_predict(
-                        parameter_values, dataset, x0_plot, return_variance=compute_gp_variance)
+
+                    if compute_gp_variance:
+                        x0_out, x0_var = \
+                        mc.models[logchi2_gp_model].sample_predict(
+                            parameter_values, dataset, x0_plot, return_variance=compute_gp_variance)
+                    else:
+                        x0_out = \
+                        mc.models[logchi2_gp_model].sample_predict(
+                            parameter_values, dataset, x0_plot, return_variance=compute_gp_variance)
+                        x0_var = np.zeros_like(x0_out)
 
                 model_x0[dataset_name][logchi2_gp_model] = x0_out
 

@@ -68,8 +68,8 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
         plot_dictionary['use_getdist'] = True
         plot_dictionary['use_corner'] = False
     if plot_config_parameters.get('correlation_plot', None) == 'corner':
-        plot_dictionary['use_getdist'] = True
-        plot_dictionary['use_corner'] = False
+        plot_dictionary['use_getdist'] = False
+        plot_dictionary['use_corner'] = True
 
     if plot_dictionary['use_corner']:
         import corner
