@@ -260,7 +260,7 @@ class AbstractTransit(object):
             'sample_factor': sample_factor,
             'exp_time': exposure_time / constants.d2s,
         }
-
+        print('    BATMAN options for dataset {}:'.format(dataset.name_ref), self.code_options[dataset.name_ref])
 
         """ Lower and upper wavelength boundaries for the filter, in (nm), used by SPIDERMAN """
         for dict_name in kwywords_wavebounds:
