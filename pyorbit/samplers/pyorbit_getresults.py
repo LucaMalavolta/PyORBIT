@@ -1697,18 +1697,21 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
                     -1/10 of the dataset range divided by the number of data points.
                     This allows to properly sample the model without producing too many points for long-term datasets
                 """
-                step_size =  min(P_minimum / 20.,
-                                    np.min(np.diff(dataset.x)) / 2.,
-                                    bjd_plot[dataset_name]['range'] / dataset.n / 10.)
-
+                try:
+                    step_size =  np.asarray(min(P_minimum / 20.,
+                                        np.min(np.diff(dataset.x)) / 2.,
+                                        bjd_plot[dataset_name]['range'] / dataset.n / 10.))[0]
+                except:
+                    step_size =  np.asarray(min(P_minimum / 20.,
+                                        np.min(np.diff(dataset.x)) / 2.,
+                                        bjd_plot[dataset_name]['range'] / dataset.n / 10.))
             try:
                 step_size = plot_config_parameters['model_step_size'][dataset_name]
             except KeyError:
                 pass
 
             bjd_plot[dataset_name]['step_size'] = step_size
-
-            print('    Dataset: {0:20s} step size for model plot: {1:.5f} days ({2:.2f} minutes)'.format(dataset_name, step_size, step_size * 24 * 60))
+            print('    Dataset: {0:20s} step size for model plot: {1:.5f} days ({2:.2f} minutes)'.format(dataset_name, step_size, step_size))
 
             bjd_plot[dataset_name]['x_plot'] = \
                 np.arange(bjd_plot[dataset_name]['start'],
