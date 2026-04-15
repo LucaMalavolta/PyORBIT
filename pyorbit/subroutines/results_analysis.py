@@ -42,7 +42,7 @@ def print_bayesian_info(mc):
                                 mc.spaces,
                                 mc.priors,
                                 mc.models[model_name].prior_kind[dataset_name],
-                                mc.models[model_name].prior_pams[dataset_name].
+                                mc.models[model_name].prior_pams[dataset_name],
                                 mc.models[model_name].fix_list[dataset_name])
 
     for model_name, model in mc.common_models.items():
