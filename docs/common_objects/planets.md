@@ -6,33 +6,37 @@
 
 Each *planet* is defined by the following parameters
 
-| Name        | Parameter | Unit     |
-| :---        | :----     | :---     |
-| P      | Orbital period of the planet                      | days     |
-| K      | Radial velocity semiamplitude        | m/s      |
-| Tc     | Central time of transit              | days      |
-| mean_long | Mean longitude of the orbit, assuming $\Omega=0$ | degrees |
-| e      | eccentricity of the orbit | adimensional |
-| omega  | argument of periastron of the *planet* $\omega_p$  | degrees |
-| e_coso | $ e \cos{\omega_p}$ in [Ford 2006](https://ui.adsabs.harvard.edu/abs/2006ApJ...642..505F/abstract) parametrization | adimensional |
-| e_sino | $ e \sin{\omega_p}$ in [Ford 2006](https://ui.adsabs.harvard.edu/abs/2006ApJ...642..505F/abstract) parametrization | adimensional |
-| sre_coso | $ \sqrt{e} \cos{\omega_p}$ in [Eastman et al. 2013](https://ui.adsabs.harvard.edu/abs/2013PASP..125...83E/abstract) parametrization | adimensional |
-| sre_sino | $ \sqrt{e} \sin{\omega_p}$ in [Eastman et al. 2013](https://ui.adsabs.harvard.edu/abs/2013PASP..125...83E/abstract) parametrization | adimensional |
-| M_Me | planet mass in Earth masses | $M_\oplus$ |
-| R_Rs | planet radius in stellar radii | $R_\star$ |
-| a_Rs | semi-major axis of th eorbit in stellar radii | $R_\star$ |
-| b | impact parameter | $R_\star$ |
-| i | orbital inclination with respect to the plane of the sky | degrees |
-| Omega  | longitude of the ascending note $\Omega$| degrees |
-| lambda | Spin-orbit alignment angle $\lambda$  | degrees |
-| delta_occ | Depth of the occulation | Normalized flux |
-| phase_amp | Amplitude of the phase curve, *if no occultation was present* | Normalized flux |
-| phase_off | Offset of the peak of the phase curve (light  travel time effect not included) | degrees |
-
+| Name        | Symbol | Parameter | Unit     |
+| :---        | :-- | :----     | :---     |
+| P      | $P$ | Orbital period of the planet                      | days     |
+| K      | $K$ | Radial velocity semiamplitude        | m/s      |
+| Tc     | $T_c$ | Central time of transit              | days      |
+| mean_long | $L_0$ | Mean longitude of the orbit at $T_{\rm ref}$ | degrees |
+| e      | $e$ | eccentricity of the orbit | adimensional |
+| omega  | $\omega_p$ | argument of periastron of the *planet*  | degrees |
+| e_coso |  | $ e \cos{\omega_p}$ in [Ford 2006](https://ui.adsabs.harvard.edu/abs/2006ApJ...642..505F/abstract) parametrization | adimensional |
+| e_sino |  | $ e \sin{\omega_p}$ in [Ford 2006](https://ui.adsabs.harvard.edu/abs/2006ApJ...642..505F/abstract) parametrization | adimensional |
+| sre_coso |  | $ \sqrt{e} \cos{\omega_p}$ in [Eastman et al. 2013](https://ui.adsabs.harvard.edu/abs/2013PASP..125...83E/abstract) parametrization | adimensional |
+| sre_sino |  | $ \sqrt{e} \sin{\omega_p}$ in [Eastman et al. 2013](https://ui.adsabs.harvard.edu/abs/2013PASP..125...83E/abstract) parametrization | adimensional |
+| M_Me | $M_{\rm p}$ | planet mass in Earth masses | $M_\oplus$ |
+| R_Rs | $k$ | planet radius in stellar radii | $R_\star$ |
+| a_Rs | $a$ | semi-major axis of th eorbit in stellar radii | $R_\star$ |
+| b | $b$ | impact parameter | $R_\star$ |
+| i | $i$ | orbital inclination with respect to the plane of the sky | degrees |
+| Omega  | $\Omega$ | longitude of the ascending note | degrees |
+| lambda | $\lambda$ | Spin-orbit alignment angle   | degrees |
+| delta_occ |  | Depth of the occulation | Normalized flux |
+| phase_amp |  | Amplitude of the phase curve, *if no occultation was present* | Normalized flux |
+| phase_off |  | Offset of the peak of the phase curve (light  travel time effect not included) | degrees |
 
 ```{warning}
 `PyORBIT` uses the argument of pericenter of the **planet** $\omega_p$, while other packages may use the argument of pericenter of the **star** $\omega _\star$. Some papers report the latter without specifying the $\star$ pedix.
 ```
+
+The reference time $T_{\rm ref}$ is an arbitrary epoch, defined in the configuration file. All the osculating orbital elements refer to such epoch.
+
+The mean longitude at the reference time $L_0$ is equal to the sum of the argument of periastron $\omega$, the longitude of the ascending node $\Omega$, and the mean anomaly at the reference time $M_0$ ($L_0 = \omega + \Omega + M_0$). When the longitude of the ascending node cannot be determined, as in the case of radial velocities, its value is fixed at $180^{\circ}$
+
 
 ## Keywords
 

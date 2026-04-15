@@ -6,8 +6,7 @@ The physical *objects* of your system must be included in the ``common`` section
 
 Let's look at this example where we have included a transiting planet in a circular orbit (*b*), a non-transiting planet (*c*), some properties for the stellar activity, and of course the stellar parameters.
 
-```{eval-rst}
-.. code-block:: yaml
+```{code-block} yaml
    :linenos:
 
    common:
@@ -48,13 +47,12 @@ Let's look at this example where we have included a transiting planet in a circu
            radius: ['Gaussian', 0.681, 0.018]
            mass: ['Gaussian', 0.708, 0.028]
            density: ['Gaussian', 2.244, 0.161]
-
 ```
 
 
 Quite a lot to process, right? Let's start with the main sections. ``planets`` and ``star`` are kind of special because the section names are also the reference name of the objects, i.e., these names are hard-coded and if you try to put planet or star parameters in sections with different names you will break everything. The reason is that ``planets``  and ``star`` are actually containers for the true objects, which are ``b``, ``c`` (see the relative documentation for more details). ``stellar_activity`` instead is a label for the object with reference names ``activity``, e.g., if you want to know more you have to look for the object named ``activity`` in the documentation and for the file ``activity.py`` in the source code. Note that if you are including just a single object of a kind, you can use its reference name as a label and omit the ``type`` keyword, as in the actual example file in the repository.
 
-.. code-block:: yaml
+```{code-block} yaml
    :linenos:
 
    common:
@@ -68,6 +66,7 @@ Quite a lot to process, right? Let's start with the main sections. ``planets`` a
          Prot: ['Gaussian',13.941613, 0.66]
          Pdec: ['Gaussian',12.203273, 3.21]
          Oamp: ['Gaussian',0.342221, 0.054]
+```
 
 Note that also ``b`` and ``c`` are labels, i.e., you can give the planets any random name, but in their case it's not necessary to specify what kind of object they are because it's implicitly assumed for being inside the ``planet`` section (**Note:** this is true only for the planets! ). The use of labels will be clear when dealing with multi-band photometry.
 

@@ -2,15 +2,14 @@
 
 # Integration with TRADES
 
-`TRADES` (TRAnsits and Dynamics of Exoplanetary Systems) is a Fortran 90 code developed by [Borsato et al. 2014](https://ui.adsabs.harvard.edu/abs/2014A%2526A...571A..38B/abstract) to perform dynamical modelling of exoplanetary signals. The code has been expanded with a Python interface ([Borsato et al. 2019](https://ui.adsabs.harvard.edu/abs/2019MNRAS.484.3233B/abstract)) and to perform photodynamical modelling ([Borsato et al. 2024](https://ui.adsabs.harvard.edu/abs/2024A%2526A...689A..52B/abstract)).
+`PyORBIT` and `TRADES` rely on different versions of `numpy` due to some requirements set by the Fortran compiler, therefore is not possible to use `TRADES` on  a standard installation of `PyORBIT`.
+
+The best way to proceed is  preparing a new Python environment specifically dedicated to running PyORBIT with the TRADES integration.
+
 
 ## Installing PyORBIT on a dedicated environment
 
-`PyORBIT` and `TRADES` rely on different versions of `numpy` due to some requirements set by the Fortran compiler.
-
-I strongly suggest preparing a new Python environment specifically dedicated to running PyORBIT with the TRADES integration.
-
-First, install PyORBIT using the instructions in <project:./installation.md> minding to use a different name for the environment, such as **pyorbit_trades**
+First, install PyORBIT using the instructions in <project:../installation.md> minding to use a different name for the environment, such as **pyorbit_trades**
 
 ```{code} bash
 conda create --name pyorbit_trades python=3.10 
@@ -58,9 +57,9 @@ pyorbit-package 11.2.0 requires numpy==1.24.3, but you have numpy 1.23.5 which i
 
 However, `PyORBIT` will work fine even with these older versions of the codes.
 
-```{tip}
-Remember to run the command above every time you update `PyORBIT` in the `pyorbit_trades` environment.
-```
+%```{tip}
+%Remember to run the command above every time you update `PyORBIT` in the `pyorbit_trades` environment.
+%```
 
 Download the `TRADES` repository in a folder of your choice:
 
@@ -88,6 +87,25 @@ Finally, you need to install the Python wrapper of the code:
 cd ..
 pip install .
 ```
+
+## Updating TRADES or PyORBIT
+
+To update `TRADES`, just follow the previous steps until the last one, where you have to specify the `--upgrade` flag:
+
+```{code} bash
+cd ..
+pip install --upgrade .
+```
+
+To update `PyORBIT`, you have to disable the check on dependencies:
+
+```{code} bash
+cd ..
+pip install --upgrade --no-dependencies pyorbit-package
+```
+
+A major release is usually characterised by the introduction of several new models, in that case the best way to proceed is to start over by following the instructions on this page.
+The existing `pyorbit_trades` environment wil be overwritten by the `conda create` command. 
 
 That's all!
 

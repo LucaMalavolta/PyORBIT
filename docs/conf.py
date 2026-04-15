@@ -173,3 +173,5 @@ html_css_files = ["tippy.css"]
 htmlhelp_basename = 'PyORBITdoc'
 
 numfig = True  # optional
+
+myst_heading_anchors = 3

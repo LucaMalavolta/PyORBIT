@@ -112,12 +112,11 @@ If you are dealing with observations of the same type from different sources (fo
 
 Many codes expect you to follow the first road. `PyORBIT` can work with both, although in some cases you *have* to use different files when different models must be employed (for example, photometric transit observed with different instruments thus requiring different limb darkening parameters). In general, my advice is to use a file for each dataset because it will make the configuration file more self-explicative and in the long term it will make your life much easier - especially when you are looking back at the analysis after some time!
 
-## Exceptions to standard formatting
+## Special cases
 
-### Central transit times
+### Times of inferior conjunction (transit time)
 
-For central time of transit (`Tcent`) file data, required by TTV analysis, the structure is slightly
-different. The first column identifies the number of the transit (to keep into account missing T0s). This number will help in identifying missing transits (but honestly I don't remember right now what happens if you start from a random number...)
+The data file containing the *times of inferior conjunction* (or *transit time* for short) has a slightly different structure. The first column identifies the number of the transit (to keep into account missing transit time). This number will help in identifying missing transits and aboid period aliasing. The choice of the reference transit (the one with id 0) is not important, but the numbering must be consistent internally and across different files referring to the same planet.
 
 ```
   0   2454959.70736   0.00145   0   -1   -1
@@ -135,13 +134,18 @@ them at all) to avoid unphysical solution (drift and jumps in time are not allow
 
 Working on it!
 
+### CCF data
+
+Working on it!
+
+
 ### Ancillary data
 
 Some models require one or more additional datasets to work. These datasets are used as independent variables, as such they don't need to be compared to a model and they do not enter into the calculation of the likelihood. For example, when correlating variations of the flux with the position of the star on the CCD, the latter is the independent variable. These datasets do not require jitter or offset terms, so the structure is more relaxed, but the inclusion of a header with the appropriate dataset names - detailed in the documentation of each model - is a **fundamental requirement**.
 
 
 ```
-# time flux flux_err xoff yoff bg contam smear deltaT roll_angle
+# time value error xoff yoff bg contam smear deltaT roll_angle
 9052.138151     1.000289     0.000259     0.230865     -1.670593     0.015518     0.023160     0.000013     0.669403     194.377112
 9052.138846     1.000069     0.000258     0.447083     -1.553406     0.015485     0.023059     0.000012     0.648865     192.682123
 9052.139541     1.000413     0.000259     0.459320     -1.494080     0.015407     0.023058     0.000012     0.628357     191.009003

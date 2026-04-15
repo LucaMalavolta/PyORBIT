@@ -4,8 +4,7 @@
 
 Datasets are grouped under the input section:
 
-```{eval-rst}
-.. code-block:: yaml
+```{code-block} yaml
    :linenos:
 
    inputs:

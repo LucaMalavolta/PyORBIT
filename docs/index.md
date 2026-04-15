@@ -124,16 +124,16 @@ Feel free to submit your retrofitting acronym!
 ```{toctree}
 :maxdepth: 2
 installation
-pyorbit_trades_integration
 quickstart
 prepare_datasets
 prepare_yaml
+running_pyorbit
 common_objects
 models
 gaussian_process_regression
 multidimensional_gps
-running_pyorbit
-advanced_use
+dynamical_analysis
+advanced_uses
 GitHub Repository <https://github.com/LucaMalavolta/PyORBIT>
 ```
 
