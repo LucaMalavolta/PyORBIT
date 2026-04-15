@@ -56,7 +56,7 @@ class PyTransit_Transit_TTV_TClist(AbstractModel, AbstractTransit):
         self._prepare_planetary_parameters(mc, **kwargs)
         self._prepare_limb_darkening_coefficients(mc, **kwargs)
 
-        self.tc_data = np.genfromtxt(mc.common_models[self.planet_ref].tc_list, names=True)
+        self.tc_data = np.genfromtxt(mc.common_models[self.planet_ref].tc_list)
         self.code_options['minimum_number_of_observations'] = kwargs.get('minimum_number_of_observations', 20)
 
         self.list_pams_common.discard('Tc')
@@ -73,9 +73,9 @@ class PyTransit_Transit_TTV_TClist(AbstractModel, AbstractTransit):
         self.number_of_transits[dataset.name_ref] = 0
 
         for transit_id, transit_time, transit_duration in zip(
-            self.tc_data['transit_id'],
-            self.tc_data['transit_time'],
-            self.tc_data['transit_window']):
+            self.tc_data[:,0],
+            self.tc_data[:,1],
+            self.tc_data[:,2]):
 
             i_tc = int(transit_id)
 

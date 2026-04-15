@@ -262,9 +262,14 @@ class DynamicalIntegrator:
         self.tc_comparison_set = {}
         for planet_name in mc.dynamical_dict:
             try:
-                self.tc_comparison_set[planet_name] = np.genfromtxt(mc.common_models[planet_name].tc_list, names=True)
-                err_sel = (self.tc_comparison_set[planet_name]['err'] < 0.2)
-                self.tc_comparison_set[planet_name][err_sel,1] = 0.2
+                self.tc_comparison_set[planet_name] = np.genfromtxt(mc.common_models[planet_name].tc_list)
+                err_sel = (self.tc_comparison_set[planet_name][:,2] < 0.1)
+                #if np.sum(err_sel) > 0:
+                #    print('   Planet %s: Using Tc predictions with error inflated to 0.1 days (2.4 hours)' % planet_name)
+                #else:
+                #    print('   Planet %s: Using Tc predictions' % planet_name)
+                
+                self.tc_comparison_set[planet_name][err_sel,2] = 0.1
             except:
                 self.tc_comparison_set[planet_name] = None
 
@@ -306,9 +311,9 @@ class DynamicalIntegrator:
                 new_idx =  np.round((self.tc_comparison_set[planet_name][:,1] - parameter_values['Tc'])/parameter_values['P'])
                 new_t0 = parameter_values['Tc'] + new_idx * parameter_values['P']   
                 delta_time = np.abs(self.tc_comparison_set[planet_name][:,1] - new_t0)
-                within_transit_window = (delta_time < self.tc_comparison_set[planet_name]['err']).all()   
+                within_transit_window = (delta_time < self.tc_comparison_set[planet_name][:,2]).all()   
                 if not within_transit_window: 
-                    print('Tc check failed for planet', planet_name)
+                    #print('Tc check failed for planet', planet_name)
                     return {'stable': False, 'pass': False, 'tc_check': False}
 
             if 'R_Rs' in parameter_values:

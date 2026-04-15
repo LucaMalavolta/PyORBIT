@@ -29,7 +29,8 @@ def print_bayesian_info(mc):
                             mc.spaces,
                             mc.priors,
                             dataset.prior_kind,
-                            dataset.prior_pams)
+                            dataset.prior_pams,
+                            dataset.fix_list)
 
         for model_name in dataset.models:
             if len(mc.models[model_name].sampler_parameters[dataset_name])==0: continue
@@ -41,7 +42,8 @@ def print_bayesian_info(mc):
                                 mc.spaces,
                                 mc.priors,
                                 mc.models[model_name].prior_kind[dataset_name],
-                                mc.models[model_name].prior_pams[dataset_name])
+                                mc.models[model_name].prior_pams[dataset_name].
+                                mc.models[model_name].fix_list[dataset_name])
 
     for model_name, model in mc.common_models.items():
         print('----- common model: ', model_name)
@@ -51,7 +53,9 @@ def print_bayesian_info(mc):
                             mc.spaces,
                             mc.priors,
                             model.prior_kind,
-                            model.prior_pams)
+                            model.prior_pams,
+                            model.fix_list)   
+
 
     return dict_bayesian_info
 
@@ -1003,9 +1007,10 @@ def print_theta_bounds(i_dict, theta, bounds):
     return dict_out
 
 
-def print_analysis_info(i_dict, bounds, spaces, priors, additional_kind, additonal_pams):
+def print_analysis_info(i_dict, bounds, spaces, priors, additional_kind, additonal_pams, fixed_pams):
     format_string_v1 = '{0:12s}  id:{1:4d}  s:{2:11s} b:[{3:12.4f}, {4:12.4f}]   p:{5:s}  '
     format_string_v2 = '{0:12s}  derived (no id, space, bound) {1:25s} p:{2:s}  '
+    format_string_v3 = '{0:12s}  fixed (no id, space, bound) {1:27s} p:{2:s}  '
     dict_output = {}
 
     for par, i in i_dict.items():
@@ -1020,7 +1025,14 @@ def print_analysis_info(i_dict, bounds, spaces, priors, additional_kind, additon
         }
 
     for par in additional_kind:
-        if par not in i_dict:
+
+        if par in fixed_pams:
+            print(format_string_v3.format(par, '', 'Fixed'), fixed_pams[par])
+            dict_output[par] = {
+                'additional_kind': 'Fixed',
+                'additonal_pams': fixed_pams[par],
+            }
+        elif par not in i_dict:
             print(format_string_v2.format(par, '', additional_kind[par]), additonal_pams[par])
             dict_output[par] = {
                 'additional_kind': additional_kind[par],
