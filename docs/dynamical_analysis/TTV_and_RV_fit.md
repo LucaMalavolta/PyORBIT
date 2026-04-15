@@ -75,9 +75,9 @@ In dynamical modelling, mutual inclinations play a role: two planets $i_b=87^{\c
 
 After fixing the quadrant of the reference planet by forcing its inclination below $90^{\circ}$, we must allow for the other planets to expler both quadrants. If we are using the impact parameter $b$, we have to allow for negative values for all the planets except the first one.
 
-For similar reasons, we fix the longitude of the ascending node the first planet $\Omega$ to $180^{\circ}$, and leave it free for the other planets.
+For similar reasons, we fix the longitude of the ascending node the first planet $\Omega$ to $180^{\circ}$, and leave it free for the other planets. 
 
-In the example below, planet $b$ acts as the reference planet:
+In the example below, planet $b$ acts as the reference planet. For planet $c$, we constrained $\Omega$ to avoid retrograde orbits.
 
 ```{code-block} yaml
   :lineno-start: 20
@@ -96,12 +96,12 @@ In the example below, planet $b$ acts as the reference planet:
           e: [0.00, 0.20]
         priors:
           i: ['Gaussian', 87.5, 0.1]
-          P: ['Gaussian', 4.074554, 0.001]
+          P: ['Gaussian', 4.074554, 0.01]
         spaces:
           P: Linear
           M_Me: Linear
         fixed:
-          Omega: [180.000, 0.001]
+          Omega: 180.000
       c:
         orbit: dynamical
         parametrization: Eastman2013
@@ -112,12 +112,11 @@ In the example below, planet $b$ acts as the reference planet:
           M_Me: [300.0, 350.0]
           i: [85., 95.]
           e: [0.00, 0.20]
+          Omega: [90.0, 270.]
         priors:
-          i: ['Gaussian', 87.6, 0.1]
-          P: ['Gaussian', 8.3501898, 0.0001]
+          #i: ['Gaussian', 87.6, 0.1]
+          P: ['Gaussian', 8.3501898, 0.01]
         spaces:
           P: Linear
           M_Me: Linear
-        fixed:
-          Omega: [180.000, 0.001]
 ```
