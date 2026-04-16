@@ -367,6 +367,24 @@ def giveback_priors(kind, bounds, pams, val):
     if kind == 'BetaDistribution' or kind == 'Beta':
         return np.log(stats.beta.pdf((val-bounds[0])/(bounds[1]-bounds[0]), pams[0], pams[1]))
 
+    if kind == 'ComplementaryGaussian':
+        """ This is a special case of a bimodal distribution, where the two modes are symmetric with respect to 90 degrees 
+        and the sigma is the same for both modes. It can be used to assigna a prior to the inclination of a transiting planet
+        when the inclination has been measured from the transit and we don't know in which quadrant the planet is orbiting. 
+          The distribution is defined as the sum of two Gaussian distributions centered at 90 - delta_inc and 90 + delta_inc, 
+          where delta_inc = |90 - pams[0]| and sigma = pams[1]. The distribution is normalized to 1 over the range [0, 180] degrees."""
+        delta_inc = np.abs(90. - pams[0])
+        xval = np.asarray(val, dtype=float)
+        z = (xval[..., None] - [90. - delta_inc, 90.+ delta_inc]) / [pams[1], pams[1]]
+        return np.log(np.sum([0.5, 0.5] * stats.norm.pdf(z) / [pams[1], pams[1]], axis=-1))
+
+    if kind == 'SymmetricGaussian':
+        """ Same as above but around zero"""
+        abs_val = np.abs(pams[0])
+        xval = np.asarray(val, dtype=float)
+        z = (xval[..., None] - [- abs_val, abs_val]) / [pams[1], pams[1]]
+        return np.log(np.sum([0.5, 0.5] * stats.norm.pdf(z) / [pams[1], pams[1]], axis=-1))
+
 
 """
 DEPRECATED
