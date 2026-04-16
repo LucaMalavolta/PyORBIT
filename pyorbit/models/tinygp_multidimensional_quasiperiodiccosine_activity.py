@@ -248,24 +248,31 @@ class TinyGP_Multidimensional_QuasiPeriodicCosineActivity(AbstractModel, Abstrac
         use_derivative = self._set_derivative_option(mc, dataset, return_flag=True, **kwargs)
 
         if 'derivative_quasiperiodic'in kwargs:
-            use_derivative_QP = kwargs['derivative_quasiperiodic'].get(dataset.name_ref, False)
+            use_derivative_QP = kwargs['derivative_quasiperiodic'].get(dataset.name_ref, use_derivative)
         elif dataset.name_ref in kwargs:
-            use_derivative_QP = kwargs[dataset.name_ref].get('derivative_quasiperiodic', False)
+            use_derivative_QP = kwargs[dataset.name_ref].get('derivative_quasiperiodic', use_derivative)
         else:
-            use_derivative_QP = True
+            use_derivative_QP = use_derivative
 
-        if 'derivative_squaredexponential'in kwargs:
-            use_derivative_SE = kwargs['derivative_squaredexponential'].get(dataset.name_ref, False)
+        if 'derivative_cosine'in kwargs:
+            use_derivative_COS = kwargs['derivative_cosine'].get(dataset.name_ref, use_derivative)
         elif dataset.name_ref in kwargs:
-            use_derivative_SE= kwargs[dataset.name_ref].get('derivative_squaredexponential', False)
+            use_derivative_COS= kwargs[dataset.name_ref].get('derivative_cosine', use_derivative)
         else:
-            use_derivative_SE = True
+            use_derivative_COS = use_derivative
 
-        if not use_derivative or not use_derivative_QP:
-            self.fix_list[dataset.name_ref] = {'rot_amp': [0., 0.]}
-        if not use_derivative or not use_derivative_SE:
-            self.fix_list[dataset.name_ref] = {'cos_der': [0., 0.]}
 
+        if not use_derivative_QP:
+            try:
+                self.fix_list[dataset.name_ref]['rot_amp']=[0., 0.]
+            except:
+                self.fix_list[dataset.name_ref] = {'rot_amp': [0., 0.]}
+
+        if not use_derivative_COS:
+            try:
+                self.fix_list[dataset.name_ref]['cos_der']=[0., 0.]
+            except:
+                self.fix_list[dataset.name_ref] = {'cos_der': [0., 0.]}
 
         return
 

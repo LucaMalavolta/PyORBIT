@@ -182,7 +182,10 @@ class AbstractGaussianProcesses(object):
             return use_derivative
 
         if not use_derivative:
-            self.fix_list[dataset.name_ref] = {'rot_amp': [0., 0.]}
+            try:
+                self.fix_list[dataset.name_ref]['rot_amp']=[0., 0.]
+            except:
+                self.fix_list[dataset.name_ref] = {'rot_amp': [0., 0.]}
 
     def update_parameter_values(self,
                                 parameter_values,

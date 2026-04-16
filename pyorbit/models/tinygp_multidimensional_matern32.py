@@ -215,16 +215,20 @@ class TinyGP_Multidimensional_Matern32(AbstractModel, AbstractGaussianProcesses)
         self.internal_coeff_deriv = np.empty(self._added_datasets)
         self._X = (self._dataset_x0, self._dataset_label.astype(int))
 
+        use_derivative = self._set_derivative_option(mc, dataset, return_flag=True, **kwargs)
+
         if 'derivative'in kwargs:
-            use_derivative = kwargs['derivative'].get(dataset.name_ref, False)
+            use_derivative = kwargs['derivative'].get(dataset.name_ref, use_derivative)
         elif dataset.name_ref in kwargs:
-            use_derivative = kwargs[dataset.name_ref].get('derivative', False)
+            use_derivative = kwargs[dataset.name_ref].get('derivative', use_derivative)
         else:
-            use_derivative = True
+            use_derivative = use_derivative
 
         if not use_derivative:
-            self.fix_list[dataset.name_ref] = {'matern32_multigp_sigma_deriv': [0., 0.]}
-
+            try:
+                self.fix_list[dataset.name_ref]['matern32_multigp_sigma_deriv']=[0., 0.]
+            except:
+                self.fix_list[dataset.name_ref] = {'matern32_multigp_sigma_deriv': [0., 0.]}
 
         return
 
