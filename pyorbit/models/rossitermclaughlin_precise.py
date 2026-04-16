@@ -146,6 +146,12 @@ class RossiterMcLaughlin_Precise(AbstractModel, AbstractTransit):
         self.star_grid['len_zz'] = len(self.star_grid['zz'])
         self.star_grid['rv_step'] = self.ccf_variables['rv_step']
 
+        print("    {0:s} dataset {1:s} parameters:".format(self.model_name, dataset.name_ref))
+        for key, value in self.ccf_variables.items():
+            print(f"        {key}: {value}")
+        print(f"        {'n_grid'}: {self.star_grid['n_grid']}")
+        print(f"        {'time_step'}: {self.star_grid['time_step']}")
+
     def compute(self, parameter_values, dataset, x0_input=None):
 
         """

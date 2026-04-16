@@ -124,6 +124,7 @@ from pyorbit.models.spleaf_esp_activity_slow import SPLEAF_ESP_slow
 from pyorbit.models.spleaf_sho import SPLEAF_SHO
 
 from pyorbit.models.rossitermclaughlin_ohta import RossiterMcLaughlin_Ohta
+from pyorbit.models.rossitermclaughlin_pyarome import RossiterMcLaughlin_Pyarome
 from pyorbit.models.rossitermclaughlin_precise import RossiterMcLaughlin_Precise
 from pyorbit.models.rossitermclaughlin_reloaded import RossiterMcLaughlin_Reloaded
 from pyorbit.models.rossitermclaughlin_reloaded_faster import RossiterMcLaughlin_Reloaded_Faster
@@ -303,6 +304,7 @@ define_type_to_class = {
     'spleaf_multidimensional_esp': SPLEAF_Multidimensional_ESP,
     'spleaf_multidimensional_exponentialsineperiodic': SPLEAF_Multidimensional_ESP,
     'rossitermclaughlin_ohta': RossiterMcLaughlin_Ohta,
+    'rossitermclaughlin_pyarome': RossiterMcLaughlin_Pyarome,
     'rossitermclaughlin_precise': RossiterMcLaughlin_Precise,
     'rossitermclaughlin_reloaded': RossiterMcLaughlin_Reloaded,
     'rossitermclaughlin_reloaded_faster': RossiterMcLaughlin_Reloaded_Faster,

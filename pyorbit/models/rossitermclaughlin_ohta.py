@@ -34,8 +34,9 @@ class RossiterMcLaughlin_Ohta(AbstractModel, AbstractTransit):
         ])
 
         self.Omega_rotation_conversion = None
-
         self.rm_ohta = None
+
+        self.model_class = 'rossiter_mclaughlin'
 
     def initialize_model(self, mc, **kwargs):
 
@@ -60,19 +61,19 @@ class RossiterMcLaughlin_Ohta(AbstractModel, AbstractTransit):
             self.rm_ohta = PyAstroModelSuite.RmcLell()
 
         if len(self.ld_vars) > 1:
-            print('WARNING on rossiter_mclaughlin ohta model:  ')
+            print('    WARNING on rossiter_mclaughlin ohta model:  ')
             print('    this model accepts only linear limb-darkening coefficients')
             print()
 
         if mc.common_models[self.stellar_ref].use_equatorial_velocity \
             and mc.common_models[self.stellar_ref].use_stellar_radius:
-                print("Angular rotation velocity from equatorial velocity and radius")
+                print("    RML PyAstronomy model: Angular rotation velocity from equatorial velocity and radius")
                 self.Omega_rotation_conversion = self._omega_conversion_mod00
         elif self.compute_Omega_rotation and mc.common_models[self.stellar_ref].use_stellar_rotation:
-                print("Angular rotation velocity from rotation period")
+                print("    RML PyAstronomy model: Angular rotation velocity from rotation period")
                 self.Omega_rotation_conversion = self._omega_conversion_mod01
         else:
-                print("Angular rotation velocity from vsini")
+                print("    RML PyAstronomy model: Angular rotation velocity from vsini")
                 self.Omega_rotation_conversion = self._omega_conversion_mod02
 
 
