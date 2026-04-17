@@ -244,8 +244,10 @@ class RossiterMcLaughlin_Precise(AbstractModel, AbstractTransit):
         gaussian = GaussianModel()
         
         # params = gaussian.make_params()
-        guess = gaussian.guess(1.-ccf_broad, x=self.star_grid['zz'])
-        results = gaussian.fit(1.-ccf_broad, x=self.star_grid['zz'],  params=guess)
+        #guess = gaussian.guess(1.-ccf_broad, x=self.star_grid['zz'])
+        #results = gaussian.fit(1.-ccf_broad, x=self.star_grid['zz'],  params=guess)
+        """ guess removed tdue to strange behaviour of LMFIT"""
+        results = gaussian.fit(1.-ccf_broad, x=self.star_grid['zz'])
         rv_unperturbed = results.params['center'].value * 1000.
 
         #parameters, _ = curve_fit(CCF_gauss, self.star_grid['zz'], ccf_broad, p0=p0, check_finite =False)
@@ -313,8 +315,11 @@ class RossiterMcLaughlin_Precise(AbstractModel, AbstractTransit):
                     gaussian = GaussianModel()
         
                     params = gaussian.make_params()
-                    guess = gaussian.guess(1.-ccf_broad, x=self.star_grid['zz'])
-                    results = gaussian.fit(1.-ccf_broad, x=self.star_grid['zz'],  params=guess)
+
+                    """ guess removed tdue to strange behaviour of LMFIT"""
+                    #guess = gaussian.guess(1.-ccf_broad, x=self.star_grid['zz'])
+                    #results = gaussian.fit(1.-ccf_broad, x=self.star_grid['zz'],  params=guess)
+                    results = gaussian.fit(1.-ccf_broad, x=self.star_grid['zz'])
                     rv_rml[i_obs] = results.params['center'].value * 1000. - rv_unperturbed
                 
                 except:
