@@ -133,7 +133,7 @@ models
 gaussian_process_regression
 multidimensional_gps
 dynamical_analysis
-advanced_uses
+advanced_use
 GitHub Repository <https://github.com/LucaMalavolta/PyORBIT>
 ```
 

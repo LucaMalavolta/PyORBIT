@@ -10,8 +10,8 @@ pyerfa >=2.0
 jaxlib ==0.4.31
 jax ==0.4.31
 tinygp >=0.3.0
-uncertainties ==3.2.2
-lmfit ==1.3.2
+uncertainties
+lmfit
 ###### Requirements without Version Specifiers ######
 packaging
 nautilus-sampler
