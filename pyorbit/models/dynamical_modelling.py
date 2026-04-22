@@ -30,7 +30,7 @@ class AbstractDynamical(object):
     # brainless workaround
     def _prepare_dynamical_parameters(self, mc, **kwargs):
 
-        print("    {0:s} global parameters:".format(self.model_name))
+        print("*** {0:s} global parameters:".format(self.model_name))
 
 
         if mc.common_models[self.planet_ref].parametrization[:8] == 'Ford2006' \
@@ -55,7 +55,7 @@ class AbstractDynamical(object):
         except AttributeError:
             multivariate_pams = []
 
-        if not mc.common_models[self.planet_ref].use_mass or not mc.common_models[self.planet_ref].use_scaled_mass:
+        if not mc.common_models[self.planet_ref].use_mass and not mc.common_models[self.planet_ref].use_scaled_mass:
 
             print("UNRECOVERABLE ERROR model {0:s} :".format(self.model_name))
             print('    Dynamical modelling requires the mass or the scaled mass of the planet as free parameters')
@@ -63,10 +63,11 @@ class AbstractDynamical(object):
             quit()
 
         if mc.common_models[self.planet_ref].use_mass:
-            print('        Planet mass as free parameter: ', True, self.planet_ref)
+            print('    Planetary mass as free parameter: ', True, self.planet_ref)
             self.list_pams_common.update(['M_Me'])
 
         if mc.common_models[self.planet_ref].use_scaled_mass:
+            print('    Scaled planetary mass as free parameter: ', True, self.planet_ref)
             self.list_pams_common.update(['M_Ms'])
 
         try:
