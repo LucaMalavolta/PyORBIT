@@ -1,5 +1,4 @@
 
-from build.lib.pyorbit.common import dataset
 from pyorbit.subroutines.common import *
 from pyorbit.models.abstract_model import AbstractModel
 import pyorbit.subroutines.kepler_exo as kepler_exo
