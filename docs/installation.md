@@ -66,6 +66,33 @@ pip install -r extra_requirements.txt
 The requirement file has weaker constraints on package versioning (see below), so remember to install `PyORBIT` first  to avoid version incompatibilities
 ```
 
+## ARoME and PyARoME installation 
+
+Starting from vwersion 11.2 of `PyORBIT`, it is possible to fit the Rossiter-McLaughlin effect using the analytical expressions by [Boué et al. 2013](https://ui.adsabs.harvard.edu/abs/2013A%26A...550A..53B/abstract). The code, called `ARoME`, and the instructions to install it, can be downloaded form the (official web page)[https://www.astro.up.pt/resources/arome/]. 
+
+On most of the systems, the follwoing instructions should work:
+
+```{code} bash
+wget https://www.astro.up.pt/resources/arome/files/arome-1.0.0.tar.gz
+tar -xvf arome-1.0.0.tar.gz
+cd arome-1.0.0
+./configure
+make 
+sudo make install
+```
+
+You will need to have *root* permissions to execute the last line.
+
+The original code is written in `C`. The Python interface used in `PyORBIT` is `PyARoME` ((GitHub)[https://github.com/andres-jordan/PyARoME/]) by Andres Jordan. To install the package, you will need to downgrade the version of `distutils` to version 64 (version 65 will not work). 
+For this reason, I suggest to install `PyARoME` as the last package of the environment 
+
+```{code} bash
+pip install setuptools==64
+git clone https://github.com/andres-jordan/PyARoME.git
+cd PyARoME
+python setup.py install
+```
+
 ## Annoying `findfont` problem **updated**
 
 You may get this problem, caused by the fact that Matplotlib is trying to use MicroSoft fonts not installed on your computer.
