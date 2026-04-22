@@ -116,6 +116,8 @@ Finally, you have to apply the changes by either closing and reopening the termi
 source ~/.bashrc
 ```
 
+Note that the last command may activate your default `conda` environment.
+
 ### Install the PyARoME package
 
 

@@ -1,4 +1,4 @@
-from pyorbit.subroutines.common import np, OrderedSet
+from pyorbit.subroutines.common import np, OrderedSet, sys, os
 import pyorbit.subroutines.constants as constants
 import pyorbit.subroutines.kepler_exo as kepler_exo
 from pyorbit.models.abstract_model import AbstractModel
@@ -84,22 +84,25 @@ class RossiterMcLaughlin_Pyarome(AbstractModel, AbstractTransit):
         else:
             x0 = dataset.x0
 
-        rv_model = pyarome.RM(parameter_values['lambda'],
-                        x0,
-                        parameter_values['P'],
-                        parameter_values['i'],
-                        parameter_values['e'],
-                        parameter_values['omega'],
-                        parameter_values['Tc'],
-                        parameter_values['a_Rs'],
-                        ld_par[0],
-                        ld_par[1],
-                        self.arome_parameters['instrumental_broadening'],
-                        parameter_values['v_sini'],
-                        self.arome_parameters['measured_ccf_width'],
-                        self.arome_parameters['macroturbulence'],
-                        6,
-                        parameter_values['R_Rs'])
+        try:
+            rv_model = pyarome.RM(parameter_values['lambda'],
+                            x0,
+                            parameter_values['P'],
+                            parameter_values['i'],
+                            parameter_values['e'],
+                            parameter_values['omega'],
+                            parameter_values['Tc'],
+                            parameter_values['a_Rs'],
+                            ld_par[0],
+                            ld_par[1],
+                            self.arome_parameters['instrumental_broadening'],
+                            parameter_values['v_sini'],
+                            self.arome_parameters['measured_ccf_width'],
+                            self.arome_parameters['macroturbulence'],
+                            4,
+                            parameter_values['R_Rs'])
+        except RuntimeError:
+            return x0*0.
 
         if rv_model[2]!=0:
             return x0*0.
