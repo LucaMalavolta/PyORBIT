@@ -68,7 +68,7 @@ The requirement file has weaker constraints on package versioning (see below), s
 
 ## ARoME and PyARoME installation 
 
-Starting from vwersion 11.2 of `PyORBIT`, it is possible to fit the Rossiter-McLaughlin effect using the analytical expressions by [Boué et al. 2013](https://ui.adsabs.harvard.edu/abs/2013A%26A...550A..53B/abstract). The code, called `ARoME`, and the instructions to install it, can be downloaded form the (official web page)[https://www.astro.up.pt/resources/arome/]. 
+Starting from vwersion 11.3 of `PyORBIT`, it is possible to fit the Rossiter-McLaughlin effect using the analytical expressions by [Boué et al. 2013](https://ui.adsabs.harvard.edu/abs/2013A%26A...550A..53B/abstract). The code, called `ARoME`, and the instructions to install it, can be downloaded form the [official web page](https://www.astro.up.pt/resources/arome/). 
 
 On most of the systems, the follwoing instructions should work:
 
@@ -83,8 +83,8 @@ sudo make install
 
 You will need to have *root* permissions to execute the last line.
 
-The original code is written in `C`. The Python interface used in `PyORBIT` is `PyARoME` ((GitHub)[https://github.com/andres-jordan/PyARoME/]) by Andres Jordan. To install the package, you will need to downgrade the version of `distutils` to version 64 (version 65 will not work). 
-For this reason, I suggest to install `PyARoME` as the last package of the environment 
+The original code is written in `C`. The Python interface used in `PyORBIT` is `PyARoME` ([GitHub](https://github.com/andres-jordan/PyARoME/)) by Andres Jordan. To install the package, you will need to downgrade the version of `distutils` to version 64 (version 65 will not work). 
+For this reason, I suggest to install `PyARoME` as the last package of the `PyORBIT` environment. 
 
 ```{code} bash
 pip install setuptools==64
