@@ -70,7 +70,11 @@ The requirement file has weaker constraints on package versioning (see below), s
 
 Starting from vwersion 11.3 of `PyORBIT`, it is possible to fit the Rossiter-McLaughlin effect using the analytical expressions by [Boué et al. 2013](https://ui.adsabs.harvard.edu/abs/2013A%26A...550A..53B/abstract). The code, called `ARoME`, and the instructions to install it, can be downloaded form the [official web page](https://www.astro.up.pt/resources/arome/). 
 
-On most of the systems, the follwoing instructions should work:
+The following instruction have been tested on Ubuntu 22.04 and 24.04 using `bash` as default terminal, for different versions aand architecture may not work. Contact your local expert if something is not working.
+
+### Install the ARoME library
+
+First of all, download and compile the `arome` library. 
 
 ```{code} bash
 wget https://www.astro.up.pt/resources/arome/files/arome-1.0.0.tar.gz
@@ -81,7 +85,39 @@ make
 sudo make install
 ```
 
-You will need to have *root* permissions to execute the last line.
+If you have *root* privileges on your machine, you can install the library with the following commandf.
+
+```{code} bash
+sudo make install
+```
+
+You will get a message stating where the libraries have been installed (the actual path may be different in your system):
+
+```{code} bash
+Libraries have been installed in:
+   /usr/local/lib
+```
+
+In order for `PyARoME` to work, the path to the `arome` library must be included in your `LD_LIBRARY_PATH` system variable. First check if the path is present:
+
+```{code} bash
+ echo $LD_LIBRARY_PATH
+>> /usr/local/lib/:
+```
+
+If the installation path of the library is not present, edit the `.bashrc` file in your home directory and add the following line:
+
+```{code} bash
+export LD_LIBRARY_PATH=/usr/local/lib/:$LD_LIBRARY_PATH
+```
+
+Finally, you have to apply the changes by either closing and reopening the terminal, or by running
+```{code} bash
+source ~/.bashrc
+```
+
+### Install the PyARoME package
+
 
 The original code is written in `C`. The Python interface used in `PyORBIT` is `PyARoME` ([GitHub](https://github.com/andres-jordan/PyARoME/)) by Andres Jordan. To install the package, you will need to downgrade the version of `distutils` to version 64 (version 65 will not work). 
 For this reason, I suggest to install `PyARoME` as the last package of the `PyORBIT` environment. 
@@ -92,6 +128,23 @@ git clone https://github.com/andres-jordan/PyARoME.git
 cd PyARoME
 python setup.py install
 ```
+
+
+If the path is not listed, you have to open the `.bashrc` file inyour home 
+
+
+
+If you ever happen to want to link against installed libraries
+in a given directory, LIBDIR, you must either use libtool, and
+specify the full pathname of the library, or use the `-LLIBDIR'
+flag during linking and do at least one of the following:
+   - add LIBDIR to the `LD_LIBRARY_PATH' environment variable
+     during execution
+   - add LIBDIR to the `LD_RUN_PATH' environment variable
+     during linking
+   - use the `-Wl,-rpath -Wl,LIBDIR' linker flag
+   - have your system administrator add LIBDIR to `/etc/ld.so.conf'
+
 
 ## Annoying `findfont` problem **updated**
 
