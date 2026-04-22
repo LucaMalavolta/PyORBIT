@@ -305,6 +305,7 @@ define_type_to_class = {
     'spleaf_multidimensional_exponentialsineperiodic': SPLEAF_Multidimensional_ESP,
     'rossitermclaughlin_ohta': RossiterMcLaughlin_Ohta,
     'rossitermclaughlin_pyarome': RossiterMcLaughlin_Pyarome,
+    'rossitermclaughlin_arome': RossiterMcLaughlin_Pyarome,
     'rossitermclaughlin_precise': RossiterMcLaughlin_Precise,
     'rossitermclaughlin_reloaded': RossiterMcLaughlin_Reloaded,
     'rossitermclaughlin_reloaded_faster': RossiterMcLaughlin_Reloaded_Faster,
