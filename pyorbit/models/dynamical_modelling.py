@@ -1,4 +1,5 @@
 
+from build.lib.pyorbit.common import dataset
 from pyorbit.subroutines.common import *
 from pyorbit.models.abstract_model import AbstractModel
 import pyorbit.subroutines.kepler_exo as kepler_exo
@@ -16,7 +17,6 @@ class AbstractDynamical(object):
         ''' Orbital parameters to be used in the dynamical fit '''
         self.list_pams_common = OrderedSet([
             'P',     # Period in days
-            'M_Me',  # Mass in Earth masses
             'Omega', # longitude of ascending node
             'e',     # eccentricity, uniform prior - to be fixed
             'R_Rs',  # planet radius (in units of stellar radii)
@@ -30,6 +30,9 @@ class AbstractDynamical(object):
 
     # brainless workaround
     def _prepare_dynamical_parameters(self, mc, **kwargs):
+
+        print("    {0:s} global parameters:".format(self.model_name))
+
 
         if mc.common_models[self.planet_ref].parametrization[:8] == 'Ford2006' \
             and mc.common_models[self.planet_ref].orbit != 'circular':
@@ -53,12 +56,19 @@ class AbstractDynamical(object):
         except AttributeError:
             multivariate_pams = []
 
-        if not mc.common_models[self.planet_ref].use_mass:
-            print('*** Dynamical modelling requires the mass of the planet as free parameters ***')
-            print('*** for efficient exploration of parameter space')
-            print('I QUIT')
+        if not mc.common_models[self.planet_ref].use_mass or not mc.common_models[self.planet_ref].use_scaled_mass:
+
+            print("UNRECOVERABLE ERROR model {0:s} :".format(self.model_name))
+            print('    Dynamical modelling requires the mass or the scaled mass of the planet as free parameters')
+            print('    for efficient exploration of parameter space')
             quit()
 
+        if mc.common_models[self.planet_ref].use_mass:
+            print('        Planet mass as free parameter: ', True, self.planet_ref)
+            self.list_pams_common.update(['M_Me'])
+
+        if mc.common_models[self.planet_ref].use_scaled_mass:
+            self.list_pams_common.update(['M_Ms'])
 
         try:
             multivariate_pams = mc.common_models[self.stellar_ref].multivariate_pams
@@ -130,11 +140,12 @@ class DynamicalIntegrator:
 
         self.to_be_initialized = True
 
-        print('*** Dynamical modelling reuires the use of the stellar mass ***')
-        print('This may cause a clash with models requiring stellar density and radius')
-        print('As in the case of the RM effect. The use of a multivariate approach is strongly suggested')
-        print('You can control the behaviour of mass/radius/density with the specific keywords')
-        print('compute_mass, compute_radius, compute_density')
+        print("    {0:s} WARNING:".format(self.model_name))
+        print('        Dynamical modelling reuires the use of the stellar mass')
+        print('        This may cause a clash with models requiring stellar density and radius, e.g., RM modelling')
+        print('        The use of a multivariate approach is strongly suggested')
+        print('        You can control the behaviour of mass/radius/density with the specific keywords')
+        print('        compute_mass, compute_radius, compute_density')
         print()
 
     def compute(self, mc, theta, x_input=None, *args, **kwargs):
