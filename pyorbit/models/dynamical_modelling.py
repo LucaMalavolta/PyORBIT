@@ -57,7 +57,9 @@ class AbstractDynamical(object):
         except AttributeError:
             multivariate_pams = []
 
-        if not mc.common_models[self.planet_ref].use_mass and not mc.common_models[self.planet_ref].use_scaled_mass:
+        if not mc.common_models[self.planet_ref].use_mass \
+            and not mc.common_models[self.planet_ref].use_scaled_mass \
+            and not mc.common_models[self.planet_ref].use_stellar_scaled_mass:
 
             print("UNRECOVERABLE ERROR model {0:s} :".format(self.model_name))
             print('    Dynamical modelling requires the mass or the scaled mass of the planet as free parameters')
@@ -68,6 +70,9 @@ class AbstractDynamical(object):
             self.list_pams_common.update(['M_Me'])
 
         if mc.common_models[self.planet_ref].use_scaled_mass:
+            self.list_pams_common.update(['Me_Ms'])
+
+        if mc.common_models[self.planet_ref].use_stellar_scaled_mass:
             self.list_pams_common.update(['M_Ms'])
 
         try:
