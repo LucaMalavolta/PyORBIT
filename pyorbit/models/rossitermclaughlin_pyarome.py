@@ -99,7 +99,7 @@ class RossiterMcLaughlin_Pyarome(AbstractModel, AbstractTransit):
                             parameter_values['v_sini'],
                             self.arome_parameters['measured_ccf_width'],
                             self.arome_parameters['macroturbulence'],
-                            4,
+                            6,
                             parameter_values['R_Rs'])
         except RuntimeError:
             return x0*0.
@@ -111,8 +111,3 @@ class RossiterMcLaughlin_Pyarome(AbstractModel, AbstractTransit):
             return rv_model[0]*1000.
         elif self.arome_parameters['measurement_technique'] == 'iodine':
             return rv_model[1]*1000.
-
-        if x0_input is None:
-            return self.rm_ohta.evaluate(dataset.x0) * parameter_values['radius'] * constants.Rsun * 1000.
-        else:
-            return self.rm_ohta.evaluate(x0_input) * parameter_values['radius'] * constants.Rsun * 1000.
