@@ -9,6 +9,8 @@ except (ModuleNotFoundError,ImportError):
     pass
 
 
+#import time
+
 class AbstractDynamical(object):
 
     def __init__(self, *args, **kwargs):
@@ -63,11 +65,9 @@ class AbstractDynamical(object):
             quit()
 
         if mc.common_models[self.planet_ref].use_mass:
-            print('    Planetary mass as free parameter: ', True, self.planet_ref)
             self.list_pams_common.update(['M_Me'])
 
         if mc.common_models[self.planet_ref].use_scaled_mass:
-            print('    Scaled planetary mass as free parameter: ', True, self.planet_ref)
             self.list_pams_common.update(['M_Ms'])
 
         try:
@@ -141,7 +141,7 @@ class DynamicalIntegrator:
         self.to_be_initialized = True
 
         print("    {0:s} WARNING:".format(self.model_name))
-        print('        Dynamical modelling reuires the use of the stellar mass')
+        print('        Dynamical modelling requires the use of the stellar mass')
         print('        This may cause a clash with models requiring stellar density and radius, e.g., RM modelling')
         print('        The use of a multivariate approach is strongly suggested')
         print('        You can control the behaviour of mass/radius/density with the specific keywords')
@@ -262,7 +262,7 @@ class DynamicalIntegrator:
         }
 
 
-        """ #NEW Introduced in PyORBIT version 11.1.0
+        """ #NEW Introduced in PyORBIT version 11.2.0
             Check if the transit times corresponding to the linear ephemeris are broadly consistent with the
             the list of transit times provided by the user
             The provided transit times may be the observed one or a list of expected transit times knowing
@@ -291,9 +291,24 @@ class DynamicalIntegrator:
 
 
     def compute_trades(self, mc, theta, x_input):
-        """ This function compute the expected TTV and RVs for dynamically interacting planets.
+        """
+            This function compute the expected Tc, durations, RVs, and orbital parameters for dynamically interacting planets.
             The user can specify which planets are subject to interactions, e.g. long-period planets can be approximated
-            with a Keplerian function"""
+            with a Keplerian function
+
+        Note: starting form version 11.3 of PyORBIT, dynamical modelling is performed assuming a stellar mass equal to one 
+        and scaled masses for all the other objects in the system. Correction factor to the predicted RV and transit durations
+        are applied to account for the actual stellar mass, which is a free parameter of the fit. 
+
+        :param mc: the class containing all the information about the model and the datasets
+        :param theta: set of parameters optimized by the sampler, in the order specified by the list of parameters of the model
+        :param x_input: array of times at which the user wants to compute the model, for plotting purposes
+        :return: a dictionary containing the computed values for the datasets, e.g. RVs, transit times, transit durations, 
+            the orbital parameters for photodynamical modelling, and a flag for the stability of the system
+         
+         """
+
+        #time_0 = time.time()
 
         """ Output initizialization """
         output = {'stable': False, 'pass': True, 'tc_check': True}
@@ -309,9 +324,10 @@ class DynamicalIntegrator:
             if star_counter == 0:
                 star_model = mc.common_models[planet_name].stellar_ref
                 star_parameters = mc.common_models[star_model].convert(theta)
-                self.dynamical_pams['M'][0] = star_parameters['mass']
-                self.dynamical_pams['R'][0] = star_parameters['radius']
-                star_parameters['density'] = star_parameters['mass']/star_parameters['radius']**3
+
+                self.dynamical_pams['M'][0] = 1.  # star_parameters['mass']
+                self.dynamical_pams['R'][0] = np.power(1. / star_parameters['density'], 1./3.) # star_parameters['radius']
+                #star_parameters['density'] = star_parameters['mass']/star_parameters['radius']**3
                 star_counter += 1
 
             parameter_values = mc.common_models[planet_name].convert(theta)
@@ -329,12 +345,20 @@ class DynamicalIntegrator:
 
             if 'R_Rs' in parameter_values:
                 """ Converting the radius from Stellar units to Solar units"""
-                self.dynamical_pams['R'][n_plan-1] = parameter_values['R_Rs'] * star_parameters['radius']
+                self.dynamical_pams['R'][n_plan-1] = parameter_values['R_Rs'] * self.dynamical_pams['R'][0]
             else:
                 """ Default value: slightly more than 1 Earth radii in Solar units"""
-                self.dynamical_pams['R'][n_plan-1] = 0.02
+                self.dynamical_pams['R'][n_plan-1] = 0.01
 
-            self.dynamical_pams['M'][n_plan-1] = parameter_values['M_Me'] / constants.Msear
+            if mc.common_models[planet_name].use_scaled_mass:
+                """ Converting the mass from Stellar units to Solar units"""
+                self.dynamical_pams['M'][n_plan-1] = parameter_values['Me_Ms'] / constants.Msear
+            elif mc.common_models[planet_name].use_stellar_scaled_mass:
+                """ Converting the mass from Stellar units to Solar units"""
+                self.dynamical_pams['M'][n_plan-1] = parameter_values['M_Ms']
+            else:
+                self.dynamical_pams['M'][n_plan-1] = parameter_values['M_Me'] / constants.Msear / star_parameters['mass']
+
             self.dynamical_pams['P'][n_plan-1] = parameter_values['P']
             self.dynamical_pams['e'][n_plan-1] = parameter_values['e']
             self.dynamical_pams['i'][n_plan-1] = parameter_values['i']
@@ -344,7 +368,10 @@ class DynamicalIntegrator:
 
             #TODO add the check here and return output['tc_check'] = False if failed
 
+        #time_1 = time.time()
+        #print('Dynamical parameters prepared in %.8f seconds' % (time_1 - time_0))
         #print('STARTING Dynamical parameters', self.dynamical_pams)
+
 
         if x_input is None:
 
@@ -370,7 +397,7 @@ class DynamicalIntegrator:
             if len(self.rv_epochs) > 0:
                 """ The RVs computed by TRADES are ordered according to the input time array, so we need to sort them according to the original order of the RV epochs provided by the user """
                 sel_t_rv = np.isin(time_steps, self.rv_epochs)
-                rvs = pytrades.orbits_to_rvs(self.dynamical_pams['M'], orbits[sel_t_rv, :])
+                rvs = pytrades.orbits_to_rvs(self.dynamical_pams['M'], orbits[sel_t_rv, :])* parameter_values['mass']**(1./3.)
 
                 rv_sorted = np.zeros_like(rvs)
                 rv_sorted[self.rv_epochs_argsort] = rvs
@@ -400,7 +427,8 @@ class DynamicalIntegrator:
             if len(x_input) > 0:
                 """ The RVs computed by TRADES are ordered according to the input time array, so we need to sort them according to the original order of the RV epochs provided by the user """
                 sel_t_rv = np.isin(time_steps, x_input)
-                rv_sorted = pytrades.orbits_to_rvs(self.dynamical_pams['M'], orbits[sel_t_rv, :])
+                rv_sorted = pytrades.orbits_to_rvs(self.dynamical_pams['M'], orbits[sel_t_rv, :]) * parameter_values['mass']**(1./3.) 
+                # apply correction factor to account for the actual stellar mass
 
         #print('COMPLETED Dynamical parameters', self.dynamical_pams)
         output['stable'] = bool(stable)

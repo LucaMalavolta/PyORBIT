@@ -25,6 +25,7 @@ class RVkeplerian(AbstractModel):
         self.use_time_inferior_conjunction = False
         self.use_mass = False
         self.use_scaled_mass = False
+        self.use_stellar_scaled_mass = False
 
         """ Default is to use the inclination value as provided.
         Otherwise, compute it using the semimajor axis derived from orbital period and stellar density"""
@@ -40,6 +41,7 @@ class RVkeplerian(AbstractModel):
                                                         'use_time_inferior_conjunction', self.use_time_inferior_conjunction)
             self.use_mass = getattr(mc.common_models[self.planet_ref], 'use_mass', self.use_mass)
             self.use_scaled_mass = getattr(mc.common_models[self.planet_ref], 'use_scaled_mass', self.use_scaled_mass)
+            self.use_stellar_scaled_mass = getattr(mc.common_models[self.planet_ref], 'use_stellar_scaled_mass', self.use_stellar_scaled_mass)
             self.compute_inclination = getattr(mc.common_models[self.planet_ref], 'compute_inclination', self.compute_inclination)
             self.compute_semimajor_axis = getattr(mc.common_models[self.planet_ref], 'compute_semimajor_axis', self.compute_semimajor_axis)
         except AttributeError:
@@ -48,6 +50,7 @@ class RVkeplerian(AbstractModel):
                                                         'use_time_inferior_conjunction', False)
             self.use_mass = getattr(mc.common_models[self.planet_ref], 'use_mass', False)
             self.use_scaled_mass = getattr(mc.common_models[self.planet_ref], 'use_scaled_mass', False)
+            self.use_stellar_scaled_mass = getattr(mc.common_models[self.planet_ref], 'use_stellar_scaled_mass', False)
             self.compute_inclination = getattr(mc.common_models[self.planet_ref], 'compute_inclination', False)
             self.compute_semimajor_axis = getattr(mc.common_models[self.planet_ref], 'compute_semimajor_axis', True)
        
@@ -76,12 +79,14 @@ class RVkeplerian(AbstractModel):
         else:
             self.list_pams_common.update(['mean_long'])
 
-        if self.use_mass or self.use_scaled_mass:
+        if self.use_mass or self.use_scaled_mass or self.use_stellar_scaled_mass:
             self.list_pams_common.discard('K')
 
             if self.use_mass:
                 self.list_pams_common.update(['M_Me'])
-            else:
+            elif self.use_scaled_mass:
+                self.list_pams_common.update(['Me_Ms'])
+            elif self.use_stellar_scaled_mass:
                 self.list_pams_common.update(['M_Ms'])
             self.list_pams_common.update(['mass'])
 
@@ -120,7 +125,7 @@ class RVkeplerian(AbstractModel):
         else:
             mean_long = parameter_values['mean_long']
 
-        if self.use_mass or self.use_scaled_mass:
+        if self.use_mass or self.use_scaled_mass or self.use_stellar_scaled_mass:
 
             if self.compute_inclination:
                 if self.compute_semimajor_axis:
@@ -135,7 +140,9 @@ class RVkeplerian(AbstractModel):
 
             if self.use_mass:
                 planet_mass = parameter_values['M_Me'] / constants.Msear
-            else:
+            elif self.use_scaled_mass:
+                planet_mass = parameter_values['Me_Ms'] * parameter_values['mass'] / constants.Msear
+            elif self.use_stellar_scaled_mass:
                 planet_mass = parameter_values['M_Ms'] * parameter_values['mass']
 
             rv_semiamplitude = kepler_exo.kepler_compute_rv_semiamplitude(parameter_values['mass'],
@@ -200,12 +207,14 @@ class ApodizedRVkeplerian(RVkeplerian):
         else:
             mean_long = parameter_values['mean_long']
 
-        if self.use_mass or self.use_scaled_mass:
+        if self.use_mass or self.use_scaled_mass or self.use_stellar_scaled_mass:
 
             if self.use_mass:
                 planet_mass = parameter_values['M_Me'] / constants.Msear
-            else:
-                planet_mass = parameter_values['M_Ms'] * parameter_values['mass']
+            elif self.use_scaled_mass:
+                planet_mass = parameter_values['Me_Ms'] * parameter_values['mass'] / constants.Msear
+            elif self.use_stellar_scaled_mass:
+                planet_mass = parameter_values['M_Ms'] * parameter_values['mass'] 
 
             rv_semiamplitude = kepler_exo.kepler_compute_rv_semiamplitude(parameter_values['mass'],
                                                                             planet_mass,

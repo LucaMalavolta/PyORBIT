@@ -324,7 +324,7 @@ class CommonStarParameters(AbstractCommon):
             pam00_index = self.sampler_parameters['veq_star']
             pam01_index = self.sampler_parameters['cosi_star']
 
-            self.transformation['v_sini'] = get_2var_veq_cosi_vsini
+            self.transformation['v_sini'] = get_2var_veq_cosistar_vsini
             self.parameter_index['v_sini'] = [pam00_index, pam01_index]
 
             derived_list.append('v_sini')
@@ -374,7 +374,6 @@ class CommonStarParameters(AbstractCommon):
 
             self.transformation['radius'] = get_2var_radius
             self.parameter_index['radius'] = [pam00_index, pam01_index]
-
             derived_list.append('radius')
 
 

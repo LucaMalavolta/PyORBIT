@@ -130,6 +130,13 @@ class CommonPlanets(AbstractCommon):
                 'spaces': 'Log_Base2',
                 'fixed' : None,
             },
+        'Me_Ms':
+            {
+                'bounds': [0.1, 2000.],
+                'priors': ['Uniform', []],
+                'spaces': 'Log_Base2',
+                'fixed' : None,
+            },
         'i':
             {
                 'bounds':  [0.0, 180],
@@ -243,6 +250,7 @@ class CommonPlanets(AbstractCommon):
         self.use_time_inferior_conjunction = False
         self.use_mass = False
         self.use_scaled_mass = False
+        self.use_stellar_scaled_mass = False
         self.use_shared_ttvs = False
         self.use_longitude_of_nodes = False
 
@@ -271,14 +279,15 @@ class CommonPlanets(AbstractCommon):
         if self.orbit in self.orbit_list:
 
             if self.orbit == 'circular' or self.use_circular_orbit:
-                print('        Using orbital model: circular')
+                print('    Using orbital model: circular')
                 self.fix_list['e'] = np.asarray([0.000, 0.0000], dtype=np.double)
                 self.fix_list['omega'] = np.asarray([90.0, 0.0000], dtype=np.double)
             else:
-                print('        Using orbital model: ', self.orbit)
+                print('    Using orbital model: ', self.orbit)
 
         else:
-            print('    ERROR in configuration file - orbital model: not supported')
+            print("UNRECOVERABLE ERROR model {0:s} :".format(self.common_ref))
+            print('    {0:s} Orbital model not supported, check configuration file'.format(self.orbit))
             quit()
 
 
@@ -289,7 +298,8 @@ class CommonPlanets(AbstractCommon):
             if self.parametrization[-5:] == 'Tcent' or self.parametrization[-5:] == 'Tc':
                 self.use_time_inferior_conjunction = True
         else:
-            print('    ERROR in configuration file - orbital model: not supported')
+            print("UNRECOVERABLE ERROR model {0:s} :".format(self.common_ref))
+            print('    {0:s} parametrization not supported, check configuration file'.format(self.parametrization))
             quit()
 
         self.use_semimajor_axis = kwargs.get('use_semimajor_axis', self.use_semimajor_axis)
@@ -315,6 +325,16 @@ class CommonPlanets(AbstractCommon):
         if self.use_scaled_mass :
             print('    Scaled planetary mass replacing RV semi-amplitude as a free parameter: ', True)
             print('        WARNING: You will need to use either inclination or impact parameter as free/fixed parameter')
+
+        try:
+            self.use_stellar_scaled_mass = kwargs.get('use_stellar_scaled_mass', self.use_stellar_scaled_mass)
+        except: 
+            #TODO: try-except to ensure back-compatibility, to be removed in PyORBIT version 12
+            self.use_stellar_scaled_mass = kwargs.get('use_stellar_scaled_mass', False)
+        if self.use_stellar_scaled_mass :
+            print('    Scaled planetary mass in stellar unit replacing RV semi-amplitude as a free parameter: ', True)
+            print('        WARNING: You will need to use either inclination or impact parameter as free/fixed parameter')
+
 
 
         self.use_time_inferior_conjunction = kwargs.get('use_time_inferior_conjunction', self.use_time_inferior_conjunction)
