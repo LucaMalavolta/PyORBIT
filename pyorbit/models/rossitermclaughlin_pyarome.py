@@ -99,7 +99,7 @@ class RossiterMcLaughlin_Pyarome(AbstractModel, AbstractTransit):
                             parameter_values['v_sini'],
                             self.arome_parameters['measured_ccf_width'],
                             self.arome_parameters['macroturbulence'],
-                            6,
+                            2,
                             parameter_values['R_Rs'])
         except RuntimeError:
             return -np.inf
