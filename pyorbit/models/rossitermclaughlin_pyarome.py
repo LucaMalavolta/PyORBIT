@@ -102,12 +102,12 @@ class RossiterMcLaughlin_Pyarome(AbstractModel, AbstractTransit):
                             6,
                             parameter_values['R_Rs'])
         except RuntimeError:
-            return x0*0.
+            return -np.inf
 
         #print('RV model', rv_model[2], rv_model[0]*1000.)
 
         if rv_model[2]!=0:
-            return x0*0.
+            return -np.inf
 
         if self.arome_parameters['measurement_technique'] == 'ccf':
             return rv_model[0]*1000.
