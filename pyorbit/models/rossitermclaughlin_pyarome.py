@@ -91,7 +91,7 @@ class RossiterMcLaughlin_Pyarome(AbstractModel, AbstractTransit):
                             parameter_values['i'],
                             parameter_values['e'],
                             parameter_values['omega'],
-                            parameter_values['Tc'],
+                            parameter_values['Tc']-dataset.Tref,
                             parameter_values['a_Rs'],
                             ld_par[0],
                             ld_par[1],
@@ -103,6 +103,8 @@ class RossiterMcLaughlin_Pyarome(AbstractModel, AbstractTransit):
                             parameter_values['R_Rs'])
         except RuntimeError:
             return x0*0.
+
+        #print('RV model', rv_model[2], rv_model[0]*1000.)
 
         if rv_model[2]!=0:
             return x0*0.
