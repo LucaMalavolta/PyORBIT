@@ -85,22 +85,22 @@ class RossiterMcLaughlin_Pyarome(AbstractModel, AbstractTransit):
             x0 = dataset.x0
 
         try:
-            rv_model = pyarome.RM(parameter_values['lambda'],
-                            x0,
-                            parameter_values['P'],
-                            parameter_values['i'],
-                            parameter_values['e'],
-                            parameter_values['omega'],
-                            parameter_values['Tc']-dataset.Tref,
-                            parameter_values['a_Rs'],
-                            ld_par[0],
-                            ld_par[1],
-                            self.arome_parameters['instrumental_broadening'],
-                            parameter_values['v_sini'],
-                            self.arome_parameters['measured_ccf_width'],
-                            self.arome_parameters['macroturbulence'],
+            rv_model = pyarome.RM(1. * parameter_values['lambda'],
+                            1. * x0,   # workaround to avoid modification of the dataset
+                            1. * parameter_values['P'],
+                            1. * parameter_values['i'],
+                            1. * parameter_values['e'],
+                            1. * parameter_values['omega'],
+                            1. * parameter_values['Tc']-dataset.Tref,
+                            1. * parameter_values['a_Rs'],
+                            1. * ld_par[0],
+                            1. * ld_par[1],
+                            1. * self.arome_parameters['instrumental_broadening'],
+                            1. * parameter_values['v_sini'],
+                            1. * self.arome_parameters['measured_ccf_width'],
+                            1. * self.arome_parameters['macroturbulence'],
                             2,
-                            parameter_values['R_Rs'])
+                            1. * parameter_values['R_Rs'])
         except RuntimeError:
             return -np.inf
 

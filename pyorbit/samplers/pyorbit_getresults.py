@@ -1163,6 +1163,8 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
     planet_parameters, dict_sampler_summary, dict_parameters_summary, dict_derived_summary = results_analysis.results_summary(
         mc, flat_chain, chain_med=chain_MAP, return_samples=True)
 
+    generic_save_to_cpickle(dir_dictionaries, 'planet_parameters', planet_parameters)
+
     generic_save_to_cpickle(dir_dictionaries, 'summary_percentiles_sampler', dict_sampler_summary)
     generic_save_to_cpickle(dir_dictionaries, 'summary_percentiles_parameters', dict_parameters_summary)
     generic_save_to_cpickle(dir_dictionaries, 'summary_percentiles_derived', dict_derived_summary)
