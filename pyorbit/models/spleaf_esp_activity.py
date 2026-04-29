@@ -61,13 +61,18 @@ class SPLEAF_ESP(AbstractModel, AbstractGaussianProcesses):
 
     def initialize_model(self, mc,  **kwargs):
 
+        print("*** {0:s} global parameters:".format(self.model_name))
+        print('    kernel:  S+LEAF ESP')
+
         self.n_harmonics = kwargs.get('n_harmonics', self.n_harmonics)
-        print(self.model_name,  ' S+LEAF model, number of harmonics:', self.n_harmonics)
-        print()
+        print('    number of harmonics: ', self.n_harmonics)
 
         self._prepare_hyperparameter_conditions(mc, **kwargs)
         self._prepare_rotation_replacement(mc, **kwargs)
         self._prepare_decay_replacement(mc, **kwargs)
+
+        print()
+
 
     def initialize_model_dataset(self, mc, dataset, **kwargs):
 

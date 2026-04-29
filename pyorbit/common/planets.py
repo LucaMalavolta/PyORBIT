@@ -279,21 +279,21 @@ class CommonPlanets(AbstractCommon):
         if self.orbit in self.orbit_list:
 
             if self.orbit == 'circular' or self.use_circular_orbit:
-                print('    Using orbital model: circular')
+                print('    orbital model: circular')
                 self.fix_list['e'] = np.asarray([0.000, 0.0000], dtype=np.double)
                 self.fix_list['omega'] = np.asarray([90.0, 0.0000], dtype=np.double)
             else:
-                print('    Using orbital model: ', self.orbit)
+                print('    orbital model: ', self.orbit)
 
         else:
             print("UNRECOVERABLE ERROR model {0:s} :".format(self.common_ref))
-            print('    {0:s} Orbital model not supported, check configuration file'.format(self.orbit))
+            print('    {0:s} orbital model not supported, check configuration file'.format(self.orbit))
             quit()
 
 
         self.parametrization = kwargs.get('parametrization', self.parametrization)
         if self.parametrization in self.parametrization_list:
-            print('    Using orbital parametrization: ', self.parametrization)
+            print('    orbital parametrization: ', self.parametrization)
 
             if self.parametrization[-5:] == 'Tcent' or self.parametrization[-5:] == 'Tc':
                 self.use_time_inferior_conjunction = True
@@ -305,16 +305,16 @@ class CommonPlanets(AbstractCommon):
         self.use_semimajor_axis = kwargs.get('use_semimajor_axis', self.use_semimajor_axis)
         if self.use_semimajor_axis:
             self.compute_semimajor_axis = False
-            print('    Semi-major axis replacing stellar density as a free parameter: ', True)
+            print('    semi-major axis replacing stellar density as a free parameter: ', True)
 
         self.use_inclination = kwargs.get('use_inclination', self.use_inclination)
         if self.use_inclination:
             self.compute_inclination = False
-            print('    Inclination replacing impact parameter as a free parameter: ', True)
+            print('    inclination replacing impact parameter as a free parameter: ', True)
 
         self.use_mass = kwargs.get('use_mass', self.use_mass)
         if self.use_mass :
-            print('    Planetary mass replacing RV semi-amplitude as a free parameter: ', True)
+            print('    planetary mass replacing RV semi-amplitude as a free parameter: ', True)
             print('        WARNING: You will need to use either inclination or impact parameter as free/fixed parameter')
 
         try:
@@ -323,7 +323,7 @@ class CommonPlanets(AbstractCommon):
             #TODO: try-except to ensure back-compatibility, to be removed in PyORBIT version 12
             self.use_scaled_mass = kwargs.get('use_scaled_mass', False)
         if self.use_scaled_mass :
-            print('    Scaled planetary mass replacing RV semi-amplitude as a free parameter: ', True)
+            print('    scaled planetary mass replacing RV semi-amplitude as a free parameter: ', True)
             print('        WARNING: You will need to use either inclination or impact parameter as free/fixed parameter')
 
         try:
@@ -332,7 +332,7 @@ class CommonPlanets(AbstractCommon):
             #TODO: try-except to ensure back-compatibility, to be removed in PyORBIT version 12
             self.use_stellar_scaled_mass = kwargs.get('use_stellar_scaled_mass', False)
         if self.use_stellar_scaled_mass :
-            print('    Scaled planetary mass in stellar unit replacing RV semi-amplitude as a free parameter: ', True)
+            print('    scaled planetary mass in stellar unit replacing RV semi-amplitude as a free parameter: ', True)
             print('        WARNING: You will need to use either inclination or impact parameter as free/fixed parameter')
 
 
@@ -341,36 +341,36 @@ class CommonPlanets(AbstractCommon):
         if self.use_time_inferior_conjunction:
             self.compute_time_inferior_conjunction = False
             self.compute_mean_longitude = True
-            print('    Time of inferior conjunction replacing mean longitude as a free parameter: ', True)
+            print('    time of inferior conjunction replacing mean longitude as a free parameter: ', True)
         else:
             self.compute_time_inferior_conjunction = True
             self.compute_mean_longitude = False
-            print('    Mean longitude as free parameter (non-transiting planets or dynamical model): ', True)
+            print('    mean longitude as free parameter (non-transiting planets or dynamical model): ', True)
 
         try:
             self.use_longitude_of_nodes = kwargs.get('use_longitude_of_nodes', self.use_longitude_of_nodes)
         except:
             #TODO: try-except to ensure back-compatibility, to be removed in PyORBIT version 12
             self.use_longitude_of_nodes = kwargs.get('use_longitude_of_nodes', False)
-        print('    Using longitude of ascending node as a free parameter: ', self.use_longitude_of_nodes)
+        print('    longitude of ascending node as a free parameter: ', self.use_longitude_of_nodes)
 
         for use_shared_ttvs in keywords_shared_ttv:
             self.use_shared_ttvs = kwargs.get(use_shared_ttvs, self.use_shared_ttvs)
             if self.use_shared_ttvs:
-                print('    Using shared TTVs: ', self.use_shared_ttvs)
+                print('    shared TTVs: ', self.use_shared_ttvs)
                 break
 
 
         for tc_list in keywords_tc_list:
             self.tc_list = kwargs.get(tc_list, None)
             if self.tc_list:
-                print('    List of times of inferior conjuctions: ', self.tc_list)
+                print('    list of times of inferior conjuctions: ', self.tc_list)
                 break
 
         for tc_flag in keywords_tc_flag:
             self.tc_flag = kwargs.get(tc_flag, None)
             if self.tc_flag:
-                print('    Dataset flag of times of inferior conjuctions: ', self.tc_flag)
+                print('    dataset flag of times of inferior conjuctions: ', self.tc_flag)
                 break
 
         if Version(mc.pyorbit_version) <= Version("11.1.0"):

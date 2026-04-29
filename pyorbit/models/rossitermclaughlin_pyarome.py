@@ -43,7 +43,6 @@ class RossiterMcLaughlin_Pyarome(AbstractModel, AbstractTransit):
         self._prepare_star_parameters(mc, **kwargs)
         self._prepare_limb_darkening_coefficients(mc, **kwargs)
 
-        print('    Note: assumption of quadratic limb darkening for RML computation')
 
         self.arome_parameters['macroturbulence'] =  kwargs.get('macroturbulence', 1.0)
         self.arome_parameters['instrumental_broadening'] =  kwargs.get('instrumental_broadening', 1.0)
@@ -56,7 +55,8 @@ class RossiterMcLaughlin_Pyarome(AbstractModel, AbstractTransit):
         except (KeyError, TypeError):
             raise ValueError('{0:s} error: must provide measured_ccf_width (FWHM) in km/s'.format(self.model_name))
 
-        print("    {0:s} global parameters:".format(self.model_name))
+        print("*** {0:s} global parameters:".format(self.model_name))
+        print('    Note: assumption of quadratic limb darkening for RML computation')
         for key, value in self.arome_parameters.items():
             print(f"        {key}: {value}")
 

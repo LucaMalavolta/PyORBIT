@@ -23,33 +23,35 @@ class AbstractGaussianProcesses(object):
 
 
         if kwargs.get('hyperparameters_condition', False):
-            print('GP model: {0:20s} hyperparameters_condition:    True'.format(self.model_name))
+            print('    hyperparameters_condition:  True')
             self.hyper_condition = self._hypercond_01
         else:
+            print('    hyperparameters_condition:  False')
             self.hyper_condition = self._hypercond_00
 
         if kwargs.get('rotation_decay_condition', False):
-            print('GP model: {0:20s} rotation_decay_condition:     True'.format(self.model_name))
+            print('    rotation_decay_condition:  True')
             self.rotdec_condition = self._hypercond_02
         else:
+            print('    rotation_decay_condition:  False')
             self.rotdec_condition = self._hypercond_00
 
         if kwargs.get('halfrotation_decay_condition', False):
-            print('GP model: {0:20s} halfrotation_decay_condition: True'.format(self.model_name))
+            print('    halfrotation_decay_condition:  True')
             self.halfrotdec_condition = self._hypercond_03
         else:
             self.halfrotdec_condition = self._hypercond_00
 
         self.rotdec_factor_condition = self._hypercond_00
         if kwargs.get('decay_rotation_factor', False):
-            print('GP model: {0:20s} decay_rotation_factor:        True'.format(self.model_name))
             self.decay_rotation_factor = kwargs.get('decay_rotation_factor', 0)
             self.rotdec_factor_condition = self._hypercond_04
+            print('    decay_rotation_factor: {0:.3f}'.format(self.decay_rotation_factor))
 
         if kwargs.get('rotation_decay_factor', False):
-            print('GP model: {0:20s} rotation_decay_factor:        True'.format(self.model_name))
             self.decay_rotation_factor = kwargs.get('rotation_decay_factor', 0)
             self.rotdec_factor_condition = self._hypercond_04
+            print('    decay_rotation_factor: {0:.3f}'.format(self.decay_rotation_factor))
 
     def _prepare_shared_hyperparameters(self, pam_scale=None, pam_decay=None, **kwargs):
 
@@ -62,24 +64,29 @@ class AbstractGaussianProcesses(object):
             for pam in pams_copy:
                 self.list_pams_common.update([pam])
                 self.list_pams_dataset.discard(pam)
+            print('    shared hyperparameters:  True')
+
 
         for keyword in keywords_shared_timescale:
             self.use_shared_scale =  kwargs.get(keyword, self.use_shared_scale)
         if self.use_shared_scale and pam_scale is not None:
             self.list_pams_common.update([pam_scale])
             self.list_pams_dataset.discard(pam_scale)
+            print('    shared time scale:  True')
 
         for keyword in keywords_shared_decay:
             self.use_shared_decay =  kwargs.get(keyword, self.use_shared_decay)
         if self.use_shared_decay and pam_decay is not None:
             self.list_pams_common.update([pam_decay])
             self.list_pams_dataset.discard(pam_decay)
+            print('    shared time decay:  True')
 
     def _check_extra_conditions(self, **kwargs):
 
         flag_check = [self.use_activity_Prot, self.use_activity_Pdec, self.use_stellar_rotation_period, self.use_stellar_activity_decay]
         print(flag_check )
         if sum(flag_check) > 1:
+            print("UNRECOVERABLE ERROR model {0:s} :".format(self.common_ref))
             raise ValueError('The rotation and decay flags are mutually exclusive. Please choose one of the following options: '
                                 'use_activity_Prot, use_activity_Pdec, use_stellar_rotation_period, use_stellar_activity_decay')
 
@@ -119,6 +126,7 @@ class AbstractGaussianProcesses(object):
 
         flag_check = [self.use_activity_Prot, self.use_stellar_rotation_period]
         if sum(flag_check) > 1:
+            print("UNRECOVERABLE ERROR model {0:s} :".format(self.common_ref))
             raise ValueError('The rotation and Prot flags are mutually exclusive. Please choose one of the following options: '
                                 'use_activity_Prot, use_stellar_rotation_period')
 
@@ -158,6 +166,7 @@ class AbstractGaussianProcesses(object):
 
         flag_check = [self.use_activity_Pdec, self.use_stellar_activity_decay]
         if sum(flag_check) > 1:
+            print("UNRECOVERABLE ERROR model {0:s} :".format(self.common_ref))
             raise ValueError('The rotation and Prot flags are mutually exclusive. Please choose one of the following options: '
                                 'use_activity_Pdec, use_stellar_activity_decay')
 

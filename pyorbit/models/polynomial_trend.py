@@ -117,6 +117,8 @@ class SharedPolynomialTrend(AbstractModel):
 
     def initialize_model(self, mc, **kwargs):
 
+        print("*** {0:s} global parameters:".format(self.model_name))
+
         self.order = kwargs.get('order', 1)
 
         """ If the polynomial is used as normalization factor, the first order must be included"""
@@ -141,9 +143,10 @@ class SharedPolynomialTrend(AbstractModel):
         self.variable_amplitude = kwargs.get('variable_amplitude', True)
         if self.variable_amplitude:
             if self.starting_order == 0:
-                print('Warning: variable_amplitude=True forces starting_order=>1')
+                print('    WARNING: variable_amplitude=True forces starting_order=>1')
                 self.starting_order = 1
             self.list_pams_dataset.update(['poly_factor'])
+            print('    poly_factor added to medolling')
 
         self.time_offset = kwargs.get('time_offset', False)
         if self.time_offset:
@@ -162,6 +165,13 @@ class SharedPolynomialTrend(AbstractModel):
             if mc.common_models[common_ref].model_class == 'polynomial_trend':
                 self.common_poly_ref = common_ref
                 break
+
+        print('    order: {0:3.0f}'.format(self.order))
+        print('    starting order: {0:3.0f}'.format(self.starting_order))
+        print('    time_interval:  {0:.6f}'.format(self.time_interval))
+        print('    time_offset:  ', self.time_offset)
+        print('    normalization_model:  ', self.normalization_model)
+        print()
 
     def initialize_model_dataset(self, mc, dataset, **kwargs):
 
@@ -183,6 +193,14 @@ class SharedPolynomialTrend(AbstractModel):
         else:
             mc.common_models[self.common_poly_ref].fix_list['poly_c1'] = np.asarray([1.000000, 0.0000])
 
+
+        print("+++ {0:s} dataset {1:s} parameters:".format(self.model_name, dataset.name_ref))
+        print('    x_zero: {0:.6f}'.format(mc.common_models[self.common_poly_ref].fix_list['x_zero'][0]))
+        try:
+            print('    x_offset: {0:.6f}'.format(self.fix_list[dataset.name_ref]['x_offset'][0]))
+        except KeyError:
+            pass
+        print()
 
     def compute(self, parameter_values, dataset, x0_input=None):
 
