@@ -146,7 +146,7 @@ class SharedPolynomialTrend(AbstractModel):
                 print('    WARNING: variable_amplitude=True forces starting_order=>1')
                 self.starting_order = 1
             self.list_pams_dataset.update(['poly_factor'])
-            print('    poly_factor added to medolling')
+            print('    poly_factor added to modelling')
 
         self.time_offset = kwargs.get('time_offset', False)
         if self.time_offset:

@@ -183,7 +183,8 @@ class SPLEAF_Multidimensional_ESP(AbstractModel, AbstractGaussianProcesses):
     def lnlk_compute(self):
 
         pass_conditions = self.check_hyperparameter_values(self.internal_parameter_values)
-        if not np.isfinite(pass_conditions):
+
+        if not pass_conditions:
             return -np.inf
 
         """
