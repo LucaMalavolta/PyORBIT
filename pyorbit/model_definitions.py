@@ -345,4 +345,4 @@ datatype_definition = {
     'CCF': ['CCF', 'CCFs', 'ccf', 'ccfs']
 }
 
-activity_datatype = ['H-alpha', 'photometry', 'FWHM', 'BIS', 'EWs', 'activity', 'Ca_HK', 'S_index']
+activity_datatype = ['H-alpha', 'FWHM', 'BIS', 'EWs', 'activity', 'Ca_HK', 'S_index']

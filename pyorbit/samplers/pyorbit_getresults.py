@@ -217,8 +217,8 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
 
         if modified:
             print()
-            print('WARNING: burn-in value is larger than the length of the chains, resized to 1/4 of the chain length')
-            print('new burn-in will be used for statistical analysis, but kept in the plots as a reminder of your mistake')
+            print(' WARNING: burn-in value is larger than the length of the chains, resized to 1/4 of the chain length')
+            print(' new burn-in will be used for statistical analysis, but kept in the plots as a reminder of your mistake')
 
         flat_chain = emcee_flatchain(sampler_chain, nburnin, nthin)
         flat_lnprob, sampler_lnprob = emcee_flatlnprob(
@@ -1113,13 +1113,13 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
         generic_save_to_cpickle(dir_dictionaries, 'sampler_acf', dict_acf)
 
         if i_sampler is None:
-            print(' ACF computation failed, no plot will be generated ')
+            print('WARNING: ACF computation failed, no plot will be generated ')
             print()
 
 
         if i_sampler is not None and plot_dictionary['plot_acf']:
 
-            print(' Plotting the ACF... ')
+            print('Plotting the ACF... ')
 
             os.system('mkdir -p ' + dir_output + 'acf')
             for theta_name, ii in theta_dictionary.items():
@@ -1157,7 +1157,7 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
     print('****************************************************************************************************')
     print('****************************************************************************************************')
     print()
-    print(' Confidence intervals (median value, 34.135th percentile from the median on the left and right side)')
+    print('Confidence intervals (median value, 34.135th percentile from the median on the left and right side)')
     print()
 
     planet_parameters, dict_sampler_summary, dict_parameters_summary, dict_derived_summary = results_analysis.results_summary(
@@ -1172,7 +1172,7 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
     print()
     print('****************************************************************************************************')
     print()
-    print(' Parameters corresponding to the Maximum a Posteriori probability ( {} )'.format(lnprob_MAP))
+    print('Parameters corresponding to the Maximum a Posteriori probability ( {} )'.format(lnprob_MAP))
     print()
 
 
@@ -1184,7 +1184,7 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
     print()
     print('****************************************************************************************************')
     print()
-    print(' Parameters corresponding to the sample closest to the median values ( {} )'.format(lnprob_sampleMED))
+    print('Parameters corresponding to the sample closest to the median values ( {} )'.format(lnprob_sampleMED))
     print()
 
     _, dict_sampler_summary, dict_parameters_summary, dict_derived_summary = results_analysis.results_summary(mc, chain_sampleMED,return_samples=True, is_MAP=True)
@@ -1214,7 +1214,7 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
 
     if plot_dictionary['lnprob_chain'] or plot_dictionary['chains']:
 
-        print(' Plot FLAT chain ')
+        print('Plot FLAT chain ')
 
         fig = plt.figure(figsize=(12, 12))
         plt.xlabel('$\ln \mathcal{L}$')
@@ -1233,8 +1233,8 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
     if mc.ndim > 30 and not plot_config_parameters.get('force_full_correlation_plot', False):
         plot_dictionary['full_correlation']=False
 
-        print(' Skipping full correlation plot due to the high number of parameters')
-        print(' To avoid this behaviour, set the keyword parameters:force_full_correlation_plot to True')
+        print('WARNING: Skipping full correlation plot due to the high number of parameters')
+        print('To avoid this behaviour, set the keyword parameters:force_full_correlation_plot to True')
         print()
         print('****************************************************************************************************')
         print()
@@ -1264,10 +1264,10 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
 
             if plot_dictionary['use_getdist']:
                 try:
-                    print(' Plotting full_correlation plot with GetDist')
+                    print('Plotting full_correlation plot with GetDist')
                     print()
-                    print(' Ignore the no burn in error warning from getdist')
-                    print(' since burn in has been already removed from the chains')
+                    print('    Ignore the no burn in error warning from getdist')
+                    print('    since burn in has been already removed from the chains')
 
                     samples = MCSamples(samples=corner_plot['samples'], names=corner_plot['labels'],
                                         labels=corner_plot['labels'])
@@ -1278,8 +1278,8 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
                     g.export(dir_output + "all_internal_parameters_corner_getdist" +file_ext)
 
                 except AttributeError:
-                    print(' Something went wrong when plotting the coner plot with GetDist')
-                    print(' Please Run PyORBIT_GetResults.py with without corner plot flag to get an alternative corner plot')
+                    print('WARNING: Something went wrong when plotting the coner plot with GetDist')
+                    print('Please Run PyORBIT_GetResults.py with without corner plot flag to get an alternative corner plot')
 
                 print()
 
@@ -1308,7 +1308,7 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
             sys.stdout.flush()
             corner_plot = None
         except (AssertionError, IndexError):
-            print(' Something went wrong when plotting the corner plot')
+            print('WARNING: Something went wrong when plotting the corner plot')
             print()
             print('****************************************************************************************************')
             print()
@@ -1316,7 +1316,7 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
 
     if plot_dictionary['chains']:
 
-        print(' Plotting the chains... ')
+        print('Plotting the chains... ')
 
         os.system('mkdir -p ' + dir_output + 'chains')
         os.system('mkdir -p ' + dir_output + 'chains_points')
@@ -1352,7 +1352,7 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
 
     if plot_dictionary['traces']:
 
-        print(' Plotting the Gelman-Rubin traces... ')
+        print('Plotting the Gelman-Rubin traces... ')
         print()
         """
         Gelman-Rubin traces are stored in the dedicated folder iniside the _plot folder
@@ -1366,7 +1366,7 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
             rhat = np.array([GelmanRubin_v2(sampler_chain[:, :steps, th])
                              for steps in step_sampling])
             print(
-                '     Gelman-Rubin: {0:5d} {1:12f} {2:s} '.format(th, rhat[-1], theta_name))
+                '    Gelman-Rubin: {0:5d} {1:12f} {2:s} '.format(th, rhat[-1], theta_name))
             file_name = dir_output + 'gr_traces/v2_' + \
                 repr(th) + '_' + theta_name + '.png'
             fig = plt.figure(figsize=(12, 12))
@@ -1386,7 +1386,7 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
 
         for common_name, common_model in mc.common_models.items():
 
-            print('     Common model: ', common_name)
+            print('    Common model: ', common_name)
 
             corner_plot = {
                 'par_list': [],
@@ -1442,7 +1442,7 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
                     plt.close()
 
             except (AssertionError, IndexError):
-                print('     Something went wrong, plot skipped ')
+                print('WARNING: Something went wrong, plot skipped ')
                 print()
 
             corner_plot = None
@@ -1469,7 +1469,7 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
                 }
 
 
-                print('     Dataset: ', dataset_name, '    model: ',
+                print('    Dataset: ', dataset_name, '    model: ',
                       model_name, ' corner plot  starting ')
 
                 parameter_values = dataset.convert(flat_chain)
@@ -1510,10 +1510,10 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
                         GTC = None
                         plt.close()
                 except AssertionError:
-                    print('     Something went wrong, plot skipped ')
+                    print('WARNING: Something went wrong, plot skipped ')
                     print()
 
-                print('     Dataset: ', dataset_name, '    model: ',
+                print('    Dataset: ', dataset_name, '    model: ',
                       model_name, ' corner plot  done ')
                 corner_plot = None
                 sys.stdout.flush()
@@ -1525,7 +1525,7 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
 
     if plot_dictionary['write_planet_samples']:
 
-        print(' Saving the planet parameter samplings to files (with plots)')
+        print('Saving the planet parameter samplings to files (with plots)')
 
         samples_dir = dir_output + '/planet_samples/'
         os.system('mkdir -p ' + samples_dir)
@@ -1577,7 +1577,7 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
 
     if plot_dictionary['write_all_samples']:
 
-        print(' Saving all the parameter samplings to files (with plots)')
+        print('Saving all the parameter samplings to files (with plots)')
 
         samples_dir = dir_output + '/all_samples/'
         os.system('mkdir -p ' + samples_dir)
@@ -1704,6 +1704,7 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
                                         np.min(np.diff(dataset.x)) / 2.,
                                         bjd_plot[dataset_name]['range'] / dataset.n / 10.))[0]
                 except:
+
                     step_size =  np.asarray(min(P_minimum / 20.,
                                         np.min(np.diff(dataset.x)) / 2.,
                                         bjd_plot[dataset_name]['range'] / dataset.n / 10.))
@@ -1713,13 +1714,15 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
                 pass
 
             bjd_plot[dataset_name]['step_size'] = step_size
-            print('    Dataset: {0:20s} step size for model plot: {1:.5f} days ({2:.2f} minutes)'.format(dataset_name, step_size, step_size))
 
             bjd_plot[dataset_name]['x_plot'] = \
                 np.arange(bjd_plot[dataset_name]['start'],
                             bjd_plot[dataset_name]['end'], 
                             bjd_plot[dataset_name]['step_size'])
             bjd_plot[dataset_name]['x0_plot'] = bjd_plot[dataset_name]['x_plot'] - mc.Tref
+
+            print('    Dataset: {0:20s} step size for model plot: {1:.5f} days ({2:.2f} minutes), # points: {3:d}'.format(
+                dataset_name, step_size, step_size*60*24, len(bjd_plot[dataset_name]['x0_plot'])))
 
             """ Photometric datasets are excluded from the construction of the combined BJD array"""
             if dataset.kind == 'photometry':
@@ -1742,11 +1745,15 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
 
         print()
 
-        """Building the combined array"""
-        bjd_plot['combined']['range'] = bjd_plot['combined']['end'] - bjd_plot['combined']['start']
-        bjd_plot['combined']['x_plot'] = np.arange(
-            bjd_plot['combined']['start'], bjd_plot['combined']['end'], bjd_plot['combined']['step_size'])
-        bjd_plot['combined']['x0_plot'] = bjd_plot['combined']['x_plot'] - mc.Tref
+        try:
+            """Building the combined array"""
+            bjd_plot['combined']['range'] = bjd_plot['combined']['end'] - bjd_plot['combined']['start']
+            bjd_plot['combined']['x_plot'] = np.arange(
+                bjd_plot['combined']['start'], bjd_plot['combined']['end'], bjd_plot['combined']['step_size'])
+            bjd_plot['combined']['x0_plot'] = bjd_plot['combined']['x_plot'] - mc.Tref
+        except KeyError:
+            """ No combined array built, likely because there are no datasets that can be combined, e.g., only photometric datasets"""
+            pass
 
 
         """ By default we want to use the same BJD array for all the datasets of the same kind, e.g., radial velocity datasets.
@@ -1764,6 +1771,7 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
                 bjd_plot[dataset_name]['x_plot'] = dataset.x
                 bjd_plot[dataset_name]['x0_plot'] = dataset.x
 
+        print()
 
         bjd_plot['model_out'], bjd_plot['model_x'] = results_analysis.get_model(
             mc, chain_med[:, 0], bjd_plot, **plot_config_parameters)
@@ -1771,6 +1779,7 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
             mc, chain_MAP, bjd_plot, **plot_config_parameters)
         bjd_plot['sampleMED_model_out'], bjd_plot['sampleMED_model_x'] = results_analysis.get_model(
             mc, chain_sampleMED, bjd_plot, **plot_config_parameters)
+
 
         #print(bjd_plot['model_out'])
         #print(type(bjd_plot['model_out']))
@@ -1783,7 +1792,7 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
 
 
         if plot_dictionary['plot_models']:
-            print(' Writing the plots ')
+            print('Writing the plots ')
 
             for kind_name, kind in kinds.items():
                 for dataset_name in kind:
@@ -1885,7 +1894,7 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
 
             for prepend_keyword in ['', 'MAP_', 'sampleMED_']:
 
-                print(' Writing the ', prepend_keyword, 'data files ')
+                print('Writing the ', prepend_keyword, 'data files ')
 
                 plot_out_keyword = prepend_keyword + 'model_out'
                 plot_x_keyword = prepend_keyword + 'model_x'
