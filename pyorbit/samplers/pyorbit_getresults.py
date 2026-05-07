@@ -1708,10 +1708,19 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
                     step_size =  np.asarray(min(P_minimum / 20.,
                                         np.min(np.diff(dataset.x)) / 2.,
                                         bjd_plot[dataset_name]['range'] / dataset.n / 10.))
-            try:
-                step_size = plot_config_parameters['model_step_size'][dataset_name]
-            except KeyError:
-                pass
+            
+            input_step_size = plot_config_parameters.get('model_step_size', None)
+            if input_step_size is not None:
+                if dataset.kind in activity_datatype or dataset.kind == 'radial_velocity':
+                    input_step_size = plot_config_parameters['model_step_size'].get('activity', input_step_size)                
+                if dataset.kind == 'radial_velocity':
+                    input_step_size = plot_config_parameters['model_step_size'].get('radial_velocity', input_step_size)                
+                if dataset.kind == 'photometry':
+                    input_step_size = plot_config_parameters['model_step_size'].get('photometry', input_step_size)     
+                input_step_size = plot_config_parameters['model_step_size'].get(dataset_name, input_step_size)
+
+            if type(input_step_size) == int or type(input_step_size) == float:
+                step_size = input_step_size / (24 * 60) # convert minutes to days
 
             bjd_plot[dataset_name]['step_size'] = step_size
 
