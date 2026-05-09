@@ -880,6 +880,8 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, reload_ze
             if 'use_threading_pool' in conf:
                 mc.emcee_parameters['use_threading_pool'] = np.asarray(conf['use_threading_pool'], dtype=bool)
 
+            if 'moves' in conf:
+                mc.emcee_parameters['moves'] = conf['moves']
 
     if hasattr(mc, 'zeus_parameters'):
         conf = None

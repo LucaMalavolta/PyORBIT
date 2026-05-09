@@ -22,6 +22,17 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
         print("ERROR: emcee not installed, this will not work")
         quit()
 
+
+    moves_definition = {
+        'stretch': emcee.moves.StretchMove(),
+        'differential_evolution': emcee.moves.DEMove(),
+        'de_snooker': emcee.moves.DESnookerMove(),
+        'de': emcee.moves.DEMove(),
+        'redblue': emcee.moves.RedBlueMove(),
+        'walk': emcee.moves.WalkMove()
+    }
+
+
     os.environ["OMP_NUM_THREADS"] = "1"
     try:
         num_threads = int(config_in['parameters'].get('cpu_threads',  multiprocessing.cpu_count()))
@@ -111,6 +122,7 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
             print()
             print('Dimensions = ', mc.ndim)
             print('Nwalkers = ', mc.emcee_parameters['nwalkers'])
+            print('Dimensions = ', mc.ndim)
             print('Steps = ', mc.emcee_parameters['nsteps'])
             print()
             print('Original starting point of emcee:')
@@ -177,6 +189,24 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
         sampled = 0
         nsteps_todo = mc.emcee_parameters['nsteps']
 
+    #TODO back-compatibility check, remove in 
+    emcee_input_moves= mc.emcee_parameters.get('moves', 'stretch')
+
+    if type(emcee_input_moves) == dict: 
+        emcee_moves = []
+        for key, val in emcee_input_moves.items():
+            if key not in moves_definition:
+                print('ERROR: move ', key, ' not recognized, available moves are: ', list(moves_definition.keys()))
+                quit()
+            else:
+                emcee_moves.append((moves_definition[key], val))
+    else:
+        try:
+            emcee_moves.append((moves_definition[emcee_input_moves], 1.0))
+        except KeyError:
+            print('ERROR: move ', emcee_input_moves, ' not recognized, available moves are: ', list(moves_definition.keys()))
+            quit()
+
 
     global log_priors_likelihood
     def log_priors_likelihood(theta):
@@ -193,12 +223,25 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
         state, sampler = emcee_simpler_load_from_cpickle(emcee_dir_output)
 
 
+    """
+      emcee:
+    npop_mult: 4
+    nsteps: 20000
+    nburn: 7000
+    nsave: 5000
+    thin: 100
+    moves: 
+      de: 0.5
+      de_snooker: 0.5
+    """
+
     print('Include priors: ', mc.include_priors)
     print()
     print('Reference Time Tref: ', mc.Tref)
     print()
     print('Dimensions = ', mc.ndim)
     print('Nwalkers = ', mc.emcee_parameters['nwalkers'])
+    print('Moves = ', emcee_input_moves)
     print()
 
     if mc.emcee_parameters['version'] == '2':
@@ -371,7 +414,7 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
         print()
     else:
         sampler = emcee.EnsembleSampler(
-            mc.emcee_parameters['nwalkers'], mc.ndim, log_priors_likelihood)
+            mc.emcee_parameters['nwalkers'], mc.ndim, log_priors_likelihood, moves=emcee_moves)
 
     if mc.emcee_parameters['nsave'] > 0:
         print('Saving temporary steps')

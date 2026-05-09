@@ -533,6 +533,60 @@ def get_theta_dictionary(mc):
     return theta_dictionary
 
 
+def get_theta_dictionary_for_nautilus(mc):
+    # * give back a parameter name associated to each value in the result array
+
+    theta_info_dictionary = {}
+    additional_dictionary = {}
+    for dataset_name, dataset in mc.dataset_dict.items():
+        for par, i in dataset.sampler_parameters.items():
+            try:
+                theta_info_dictionary[dataset_name + '_' + par] = (i, mc.priors[i], mc.bounds[i], mc.spaces[i])
+            except:
+                theta_info_dictionary[repr(dataset_name) + '_' + par] = (i, mc.priors[i], mc.bounds[i], mc.spaces[i])
+
+
+        for par in dataset.prior_kind:
+            if par not in dataset.sampler_parameters:
+                try:
+                    additional_dictionary[dataset_name + '_' + par] = (dataset.prior_kind[par], dataset.prior_pams[par])
+                except:
+                    additional_dictionary[repr(dataset_name) + '_' + par] = (dataset.prior_kind[par], dataset.prior_pams[par])
+
+        for model_name in dataset.models:
+            for par, i in mc.models[model_name].sampler_parameters[dataset_name].items():
+                try:
+                    theta_info_dictionary[dataset_name +
+                                            '_' + model_name + '_' + par] = (i, mc.priors[i], mc.bounds[i], mc.spaces[i])
+                except:
+                    theta_info_dictionary[repr(dataset_name) +
+                                            '_' + model_name + '_' + par] = (i, mc.priors[i], mc.bounds[i], mc.spaces[i])
+
+
+            if dataset_name not in mc.models[model_name].prior_kind:
+                continue
+            for par in mc.models[model_name].prior_kind[dataset_name]:
+                if par not in mc.models[model_name].sampler_parameters[dataset_name]:
+                    try:
+                        additional_dictionary[dataset_name +
+                                            '_' + model_name + '_' + par] = (mc.models[model_name].prior_kind[dataset_name][par],
+                                                                            mc.models[model_name].prior_pams[dataset_name][par])
+                    except:
+                        additional_dictionary[repr(dataset_name) +
+                                            '_' + model_name + '_' + par] = (mc.models[model_name].prior_kind[dataset_name][par],
+                                                                            mc.models[model_name].prior_pams[dataset_name][par])
+
+    for model_name, model in mc.common_models.items():
+        for par, i in model.sampler_parameters.items():
+            theta_info_dictionary[model.common_ref + '_' + par] = (i, mc.priors[i], mc.bounds[i], mc.spaces[i])
+
+        for par in model.prior_kind:
+            if par not in model.sampler_parameters:
+                additional_dictionary[model.common_ref + '_' + par] = (model.prior_kind[par], model.prior_pams[par])
+
+    return theta_info_dictionary, additional_dictionary
+
+
 def get_model(mc, theta, bjd_dict, **kwargs):
     model_out = {}
     model_x0 = {}

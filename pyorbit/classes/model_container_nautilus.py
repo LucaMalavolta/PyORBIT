@@ -22,6 +22,7 @@ class ModelContainerNautilus(ModelContainer):
 
         self.output_directory = None
 
+    """
     def nautilus_priors(self, cube):
         theta = np.zeros(len(cube), dtype=np.double)
 
@@ -29,6 +30,7 @@ class ModelContainerNautilus(ModelContainer):
             theta[i] = nested_sampling_prior_compute(
                 cube[i], self.priors[i][0], self.priors[i][2], self.spaces[i])
         return theta
+    """
 
     def nautilus_call(self, theta):
 

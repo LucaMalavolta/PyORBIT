@@ -89,6 +89,20 @@ def pyorbit_nautilus(config_in, input_datasets=None, return_output=None, run_nes
     mc.starting_points_setup()
 
     results_analysis.print_bayesian_info(mc)
+    print('*****************************************************')
+
+    global theta_info_dictionary
+    theta_info_dictionary, additional_dictionary = results_analysis.get_theta_dictionary_for_nautilus(mc)
+    #TODO additional_dictionary is not used, but it could be useful to have it in the future, for example 
+    # to setup the priors for nautilus for derived parameters
+    #
+    #print('Theta dictionary:')
+    #for key, value in theta_info_dictionary.items():
+    #    print(f'  {key}: {value[0]} {value[1]} {value[2]} {value[3]} ')
+    #    print(f'                    {value[1][0]} ')
+    #    print(f'                    {value[1][1]} ')
+    #    print(f'                    {value[1][2]} ')
+
 
     discard_exploration = mc.nested_sampling_parameters['discard_exploration']
     nautilus_nlive_multiplier = mc.nested_sampling_parameters['nautilus_nlive_multiplier']
@@ -102,12 +116,38 @@ def pyorbit_nautilus(config_in, input_datasets=None, return_output=None, run_nes
     equal_weight_boost = mc.nested_sampling_parameters['equal_weight_boost']
 
 
+    from scipy.stats import norm, gamma
+    from nautilus import Prior
+
     global nautilus_priors
-    def nautilus_priors(cube):
-        return mc.nautilus_priors(cube)
+    nautilus_priors = Prior()
+    for key, value in theta_info_dictionary.items():
+
+        if value[1][0] != 'Uniform' and value[3] != 'Linear':
+            print(f"ERROR for parameter {key}: non-Linear exploration of parameter with non-Uniform priors not implemented yet")
+            print(f"Please change to spaces: pam: Linear  for all parameters with non-Uniform priors, or change the priors to Uniform" )
+            quit()
+
+
+        if value[1][0] == 'Uniform':
+            nautilus_priors.add_parameter(key, dist=(value[1][2][0], value[1][2][1]))
+        elif value[1][0] == 'Gaussian':
+            nautilus_priors.add_parameter(key, dist=norm(loc=value[1][1][0], scale=value[1][1][1]))
+        elif value[1][0] == 'Gamma':
+            nautilus_priors.add_parameter(key, dist=gamma(a=value[1][1][0], scale=value[1][1][1]))
+        elif value[1][0] == 'Delta':
+            nautilus_priors.add_parameter(key, dist=value[1][1][0])
+        else:
+            raise ValueError(f"Unknown prior type {value[0]} for parameter {key}")
+
 
     global nautilus_loglikelihood
-    def nautilus_loglikelihood(theta):
+    def nautilus_loglikelihood(dictionary):
+
+        theta = np.zeros(mc.ndim)
+        for key, value in theta_info_dictionary.items():
+            theta[value[0]] = dictionary[key]
+
         return mc.nautilus_call(theta)
 
 

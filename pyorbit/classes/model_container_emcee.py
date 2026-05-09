@@ -19,6 +19,7 @@ class ModelContainerEmcee(ModelContainer):
                                  'shutdown_jitter': False,
                                  'use_threading_pool': True,
                                  'starts_relative_dispersion': True,
+                                 'moves': {'stretch': 1.0}
                                  #'progress_bar': True
                                 }
 

@@ -567,9 +567,6 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
 
         results = nautilus_results_load_from_cpickle(mc.output_directory)
 
-
-        theta_dictionary = results_analysis.get_theta_dictionary(mc)
-
         res = ("success: {:}\n"
            "effective_sample_size: {:f}\n"
             "logz: {:6.3f}"
@@ -720,6 +717,14 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
         print(' Data points:{}'.format(mc.ndata))
         print(' Dimensions: {}'.format(mc.ndim))
         print(' Samples:    {}'.format(n_samplings))
+
+    theta_dictionary = results_analysis.get_theta_dictionary(mc)
+    print('Theta dictionary:')
+    for key in theta_dictionary:
+        print( key, theta_dictionary[key])
+    quit()
+
+
 
     dir_dictionaries = dir_output + 'dictionaries/'
     os.system('mkdir -p ' + dir_dictionaries)
