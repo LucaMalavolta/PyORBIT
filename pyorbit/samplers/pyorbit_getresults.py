@@ -718,13 +718,6 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
         print(' Dimensions: {}'.format(mc.ndim))
         print(' Samples:    {}'.format(n_samplings))
 
-    theta_dictionary = results_analysis.get_theta_dictionary(mc)
-    print('Theta dictionary:')
-    for key in theta_dictionary:
-        print( key, theta_dictionary[key])
-    quit()
-
-
 
     dir_dictionaries = dir_output + 'dictionaries/'
     os.system('mkdir -p ' + dir_dictionaries)
