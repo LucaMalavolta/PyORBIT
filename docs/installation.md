@@ -26,7 +26,6 @@ If you are using a Mac with ARM architecture, the following command should force
 CONDA_SUBDIR=osx-64 conda create -n pyorbit python=3.10
 ```
 
-
 To list the available environments do:
 
 ```{code} bash
