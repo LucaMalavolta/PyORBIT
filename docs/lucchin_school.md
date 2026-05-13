@@ -8,7 +8,13 @@ https://docs.conda.io/projects/conda/en/stable/index.html
 
 Instead Google Colab
 
- ## Setting up an environment in `conda`
+## Windows installation of conda
+
+https://visualstudio.microsoft.com/it/visual-cpp-build-tools/
+
+The program will ask you to install additional packages,you will need the C++ development tools for Windows (it shopuld be the first box in the upper left area). The download will require more than 6 GB
+
+## Setting up an environment in `conda`
 
 Before proceeding with the installation, I suggest creating an environment dedicated to `PyORBIT` using **Python 3.10**. This is the version I'm currently use to test the code.
 
