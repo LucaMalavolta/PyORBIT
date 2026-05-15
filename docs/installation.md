@@ -37,8 +37,7 @@ The active environment will be marked with a \*
 To activate the `pyorbit` environment:
 
 ```{code} bash
-WINDOWS: activate pyorbit
-LINUX, macOS: conda activate pyorbit
+conda activate pyorbit
 ```
 
 ## Install using pip
