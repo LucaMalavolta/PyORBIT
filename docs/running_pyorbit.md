@@ -71,6 +71,7 @@ The samplers listed above are those that I use more frequently, and I have verif
 :maxdepth: 1
 running_pyorbit/terminal_output
 running_pyorbit/results_flags
+running_pyorbit/plot_parameters
 running_pyorbit/mcmc_nested_caveats
 running_pyorbit/tinygp_caveats
 ```

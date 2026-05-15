@@ -784,8 +784,8 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
     if not skip_rv_like:
         try:
             print()
-            print('Number of samplings for RV log-likelihood calculations [rv_like_samplings keyword]:', rv_like_samplings)
-            print('Recomputing RV ln-likelihood, it may take a while...')
+            print('Number of samplings for RV-loglikelihood calculation [rv_lnlike_samplings keyword]:', rv_like_samplings)
+            print('Recomputing RV-loglikelihood, it may take a while...')
 
             if n_samplings == rv_like_samplings:
                 selection = np.arange(0,n_samplings, dtype=int)
@@ -810,13 +810,13 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
     if mc.include_priors:
 
         print()
-        print('Recomputing ln-prior, it may take a while...')
+        print('Recomputing log-prior, it may take a while...')
         flat_lnprior = np.zeros_like(flat_lnprob)
         try:
             for ii in tqdm(range(n_samplings)):
                 flat_lnprior[ii] = mc.log_priors(flat_chain[ii,:])
         except:
-            print('ln-prior recomputation failed, using the average value')
+            print('log-prior recomputation failed, using the average value')
             flat_lnprior = np.ones_like(flat_lnprob) * med_ln_priors
         lnprior_med = common.compute_value_sigma(flat_lnprior)
     else:
@@ -1666,6 +1666,12 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
                 'range': np.amax(dataset.x) - np.amin(dataset.x),
             }
 
+            try:
+                diff_sorted = np.diff(np.sort(dataset.x))
+                minimum_positive_diff = np.min(diff_sorted[diff_sorted>0.00]) / 2
+            except:
+                minimum_positive_diff = 5.  / (24 * 60)
+
             """Allow for a minimum range of 0.1 days to avoid too few points for the model plot 
             in case of very short datasets"""
             #TODO do we need to keep this? 
@@ -1688,7 +1694,7 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
                     # more than one transit:
                     step_size = 5.  / (24 * 60) #five minute stepsize
                 else:
-                    step_size = np.min(np.diff(dataset.x)) / 2.
+                    step_size = 1*minimum_positive_diff
             else:
 
                 """ For generic datasets, we set the step size to use the smallest value among
@@ -1699,12 +1705,12 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
                 """
                 try:
                     step_size =  np.asarray(min(P_minimum / 20.,
-                                        np.min(np.diff(dataset.x)) / 2.,
+                                        minimum_positive_diff,
                                         bjd_plot[dataset_name]['range'] / dataset.n / 10.))[0]
                 except:
 
                     step_size =  np.asarray(min(P_minimum / 20.,
-                                        np.min(np.diff(dataset.x)) / 2.,
+                                        minimum_positive_diff,
                                         bjd_plot[dataset_name]['range'] / dataset.n / 10.))
             
             input_step_size = plot_config_parameters.get('model_step_size', None)
