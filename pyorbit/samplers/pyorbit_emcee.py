@@ -189,7 +189,7 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
         sampled = 0
         nsteps_todo = mc.emcee_parameters['nsteps']
 
-    #TODO back-compatibility check, remove in 
+    #TODO back-compatibility check, remove in version 12
     emcee_input_moves= mc.emcee_parameters.get('moves', 'stretch')
 
     if type(emcee_input_moves) == dict: 

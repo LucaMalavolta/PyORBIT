@@ -87,6 +87,7 @@ class PyTransit_Transit_TTV(AbstractModel, AbstractTransit):
             self.ld_vars[i_par] = parameter_values[par]
 
         if x0_input is None:
+
             return self.pytransit_models[dataset.name_ref].evaluate(
                 parameter_values['R_Rs'],
                 self.ld_vars,
@@ -96,6 +97,7 @@ class PyTransit_Transit_TTV(AbstractModel, AbstractTransit):
                 parameter_values['i'] * constants.deg2rad,
                 parameter_values['e'],
                 parameter_values['omega'] * constants.deg2rad) - 1.
+
 
         else:
             self.pytransit_plot[dataset.name_ref].set_data(x0_input,
@@ -108,6 +110,6 @@ class PyTransit_Transit_TTV(AbstractModel, AbstractTransit):
                 parameter_values['Tc'] - dataset.Tref,
                 parameter_values['P'],
                 parameter_values['a_Rs'],
-                parameter_values['i'],
+                parameter_values['i'] * constants.deg2rad,
                 parameter_values['e'],
                 parameter_values['omega'] * constants.deg2rad) - 1.

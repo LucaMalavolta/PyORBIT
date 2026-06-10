@@ -133,9 +133,10 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, reload_ze
                     mc.emcee_parameters['nburn'] = np.asarray(
                         conf['nburn'], dtype=np.int64)
 
-                if 'thin' in conf:
-                    mc.emcee_parameters['thin'] = np.asarray(
-                        conf['thin'], dtype=np.int64)
+                """ Chanign the thining factor screws up with the computation of the chain length"""
+                #if 'thin' in conf:
+                #    mc.emcee_parameters['thin'] = np.asarray(
+                #        conf['thin'], dtype=np.int64)
 
 
         if hasattr(mc, 'zeus_parameters'):

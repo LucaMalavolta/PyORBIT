@@ -271,7 +271,7 @@ def affine_burnin_check(chain, nburnin, nthin, nwalkers=False):
         else:
             d = v1
 
-    if nburn >= d * 0.9:
+    if nburn >= d * 0.99:
         nburn = int(d / 4)
         modified = True
 

@@ -32,6 +32,9 @@ from tqdm import tqdm
 
 __all__ = ["pyorbit_getresults"]
 
+#from packaging.version import Version
+# if Version(mc.pyorbit_version) <= Version("11.1.0"):
+
 
 def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
     default_mpl_backend = mpl.get_backend()
@@ -130,8 +133,10 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
 
         if modified:
             print()
-            print('WARNING: burn-in value is larger than the length of the chains, resized to 1/4 of the chain length')
+            print('WARNING: burn-in value is >= 0.99*length of the chains, resized to 1/4 of the chain length')
             print('new burn-in will be used for statistical analysis, but kept in the plots as a reminder of your mistake')
+            print('original burn-in value: {}'.format(mc.emcee_parameters['nburn']))
+            print('modified burn-in value: {}'.format(nburn*nthin))
 
         flat_chain = emcee_flatchain(sampler_chain, nburnin, nthin)
         flat_lnprob, sampler_lnprob = emcee_flatlnprob(
@@ -171,6 +176,8 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
         print(' Dimensions: {}'.format(mc.ndim))
         print(' Nwalkers:   {}'.format(mc.emcee_parameters['nwalkers']))
         print(' Steps:      {}'.format(nsteps))
+        print(' Burn-in:    {}'.format(nburnin))
+        print(' Thin:       {}'.format(nthin))
         print()
 
     if sampler_name == 'zeus' or sampler_name == 'zeus_legacy':
@@ -1666,6 +1673,9 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
                 'range': np.amax(dataset.x) - np.amin(dataset.x),
             }
 
+            """ compute the minimum step size in the dataset to properly sample the model plot, 
+            e.g., to properly sample the transits in photometric datasets
+            excluding points with the same time stamp """
             try:
                 diff_sorted = np.diff(np.sort(dataset.x))
                 minimum_positive_diff = np.min(diff_sorted[diff_sorted>0.00]) / 2
@@ -1765,10 +1775,12 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
                 bjd_plot['combined']['start'], bjd_plot['combined']['end'], bjd_plot['combined']['step_size'])
             bjd_plot['combined']['x0_plot'] = bjd_plot['combined']['x_plot'] - mc.Tref
         except KeyError:
+            print('WARNING: No combined BJD array built, likely because there are no datasets that can be combined, e.g., only photometric datasets')
             """ No combined array built, likely because there are no datasets that can be combined, e.g., only photometric datasets"""
             pass
 
-
+        print('Combined BJD array built with {0:d} data points'.format(len(bjd_plot['combined'])))
+        
         """ By default we want to use the same BJD array for all the datasets of the same kind, e.g., radial velocity datasets.
         For transit time datasets, there is no point in plotting intermediate values """
         for dataset_name, dataset in mc.dataset_dict.items():
