@@ -12,6 +12,10 @@ All the parameters are inherited from the *common models*, where the boundaries 
 ```{toctree}
 :maxdepth: 1
 models/radial_velocities
+models/transit_lightcurves
+models/transit_ttv
 models/correlated_datasets
+models/common_offset
+models/common_jitter
 models/dilution_factor
 ```
