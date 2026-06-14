@@ -28,5 +28,8 @@ In the previous version of the documentation and in several papers, it was repor
 :maxdepth: 1
 multidimensional_gps/md_quasiperiodic.md
 multidimensional_gps/md_spleaf.md
+multidimensional_gps/md_extended_kernels.md
+multidimensional_gps/md_matern32.md
+multidimensional_gps/md_legacy_framework.md
 
 ```

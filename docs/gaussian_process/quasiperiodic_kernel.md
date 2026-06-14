@@ -15,7 +15,7 @@ where $P_\mathrm{rot}$ is equivalent to the rotation period of the star, $O_\mat
 ```{important}
 It is common to have a factor 2 in the denominator of the aperiodic variation or in the numerator of the sinusoidal term. In such a case, it is sufficient to multiply/divide the value value of `PyORBIT` by a factor $\sqrt(2)$ - keep it in mind when assigning priors!
 
-A comparison between different formulations of the quasi-periodic kernel is provided in the section [Differences among various parametrization](differences-among-various-parametrizations) of this page.
+A comparison between different formulations of the quasi-periodic kernel is provided in the section [Differences among various parametrizations](#differences-among-various-parametrizations) of this page.
 
 ```
 
@@ -34,9 +34,9 @@ The original implementation based on `george` is still available. An independent
 - required common object: `activity`
 - implemented using  `george` (version 0.4.0, [Ambikasaram et al. 2015](https://ui.adsabs.harvard.edu/abs/2015ITPAM..38..252A), [link to documentation](https://george.readthedocs.io/))
 
-'''warning
+```{warning}
 Starting with `PyORBIT 10.3`, only version >=0.3 of `tinygp` is supported. 
-'''
+```
 
 **model name**: `gp_quasiperiodic_alternative`
 - required common object: `activity`
@@ -70,6 +70,10 @@ Model-wide keywords, with the default value in boldface.
 **use_stellar_rotation_period**
 * accepted values: `True` | **`False`**
 * if activated, the parameter `Prot` from the `activity` *common model* will be replaced by the parameter `rotation_period` from the `star_parameters` *common model*. In this way, a unique parameter can be used by different models, e.g., stellar activity and Rossiter-McLaughlin modeling. It can also be useful if you want to use independent GP hyperparameters over several observational seasons while using a single parameter for the rotational period of the star.
+
+**use_stellar_activity_decay**
+* accepted values: `True` | **`False`**
+* if activated, the parameter `Pdec` from the `activity` *common model* will be replaced by the parameter `activity_decay` from the `star_parameters` *common model*.
 
 ## Examples
 

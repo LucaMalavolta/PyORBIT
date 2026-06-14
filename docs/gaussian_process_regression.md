@@ -18,4 +18,9 @@ In the previous version of the documentation and in several papers, it was repor
 :maxdepth: 1
 gaussian_process/quasiperiodic_kernel.md
 gaussian_process/quasiperiodic_cosine_kernel.md
+gaussian_process/spleaf_esp_kernel.md
+gaussian_process/quasiperiodic_derivative_kernel.md
+gaussian_process/quasiperiodic_squaredexponential_kernel.md
+gaussian_process/celerite2_activity_kernels.md
+gaussian_process/sho_matern32_kernels.md
 ```

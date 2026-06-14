@@ -20,4 +20,5 @@ Not all the physical parameters defined in a *common object* will be employed in
 :maxdepth: 1
 common_objects/planets
 common_objects/star
+common_objects/activity
 ```

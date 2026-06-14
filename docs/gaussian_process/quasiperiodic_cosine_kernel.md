@@ -28,6 +28,7 @@ As for the quasi-periodic kernel, mind the possible presence of a factor 2 in th
 **model name**: `tinygp_quasiperiodic_cosine`
 - required common object: `activity`
 - this model relies on `tinygp`
+- alias: `tinygp_quasiperiodiccosine`
 
 **model name**: `gp_quasiperiodic_cosine`
 - required common object: `activity`
@@ -62,3 +63,7 @@ Model-wide keywords, with the default value in boldface.
 **use_stellar_rotation_period**
 * accepted values: `True` | **`False`**
 * if activated, the parameter `Prot` from the `activity` *common model* will be replaced by the parameter `rotation_period` from the `star_parameters` *common model*. In this way, a unique parameter can be used by different models, e.g., stellar activity and Rossiter-McLaughlin modeling. It can also be useful if you want to use independent GP hyperparameters over several observational seasons while using a single parameter for the rotational period of the star.
+
+**use_stellar_activity_decay**
+* accepted values: `True` | **`False`**
+* if activated, the parameter `Pdec` from the `activity` *common model* will be replaced by the parameter `activity_decay` from the `star_parameters` *common model*.

@@ -32,6 +32,12 @@ The coefficients $\alpha$ and $\beta$ introduced in the [`S+LEAF` multiGP exampl
 **model name**: ``spleaf_multidimensional_esp``
 - required common objects: ``activity``
 
+**model aliases**
+- ``spleaf_multidimensional_exponentialsineperiodic``
+- ``spleaf_multidimensional_esp_slow``
+- ``spleaf_multidimensional_exponentialsineperiodic_slow``
+- ``spleaf_multidimensional_esp_devel``
+
 ## Keywords
 
 Model-wide keywords, with the default value in bold face.
@@ -57,7 +63,7 @@ Model-wide keywords, with the default value in bold face.
 
 In the following example, one RV dataset comes together with two activity indicators, the `BIS` and the `FWHM` of the CCF, the latter as a replacement of  $\log{R^{\prime}_\mathrm{HK}}$.
 
-This example is nearly identical to the one presented for the [multidimensional QP kernel](md_quasiperiodic). The three main differences are:
+This example is nearly identical to the one presented for the [multidimensional QP kernel](md_quasiperiodic.md). The three main differences are:
 - The model `spleaf_multidimensional_esp` is replacing `tinygp_multidimensional_quasiperiodic`
 - the additional keyword `n_harmonics` is included in the example
 - the `safe_reload` keyword in the `parameters` section is not longer required
