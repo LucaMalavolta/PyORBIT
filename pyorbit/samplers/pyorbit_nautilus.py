@@ -29,7 +29,9 @@ def show(filepath):
 
 def pyorbit_nautilus(config_in, input_datasets=None, return_output=None, run_nested=True):
 
-    multiprocessing.set_start_method('fork')
+    mp_method = config_in['parameters'].get('mp_method', 'fork')
+    multiprocessing.set_start_method(mp_method)
+    
     os.environ["OMP_NUM_THREADS"] = "1"
 
     reloaded_nautilus = False

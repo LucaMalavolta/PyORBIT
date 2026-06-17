@@ -29,7 +29,8 @@ def show(filepath):
 
 def pyorbit_dynesty(config_in, input_datasets=None, return_output=None, run_nested=True):
 
-    multiprocessing.set_start_method('fork')
+    mp_method = config_in['parameters'].get('mp_method', 'fork')
+    multiprocessing.set_start_method(mp_method)
 
     reloaded_dynesty = False
     output_directory = './' + config_in['output'] + '/dynesty/'
