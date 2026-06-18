@@ -130,9 +130,11 @@ prepare_yaml
 running_pyorbit
 common_objects
 models
+transit_models
 gaussian_process_regression
 multidimensional_gps
 dynamical_analysis
+subroutines
 advanced_use
 GitHub Repository <https://github.com/LucaMalavolta/PyORBIT>
 ```
