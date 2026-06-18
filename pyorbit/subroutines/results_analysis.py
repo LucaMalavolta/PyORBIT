@@ -899,11 +899,13 @@ def get_model(mc, theta, bjd_dict, **kwargs):
                             parameter_values, dataset, x0_plot, return_variance=compute_gp_variance)
                         x0_var = np.zeros_like(x0_out)
 
+                print('     Storing results.')
                 model_x0[dataset_name][logchi2_gp_model] = x0_out
 
                 model_x0[dataset_name][logchi2_gp_model +
                                        '_std'] = np.sqrt(x0_var)
                 model_x0[dataset_name]['complete'] += model_x0[dataset_name][logchi2_gp_model]
+                print('     Model results stored.')
 
     for dataset_name, logchi2_gp_model in delayed_lnlk_computation.items():
 
@@ -1024,10 +1026,11 @@ def get_model(mc, theta, bjd_dict, **kwargs):
         #    mc.models[logchi2_gp_model].sample_predict(
         #        mc.dataset_dict[dataset_name], x0_plot, return_variance=True)
 
+        print('     Storing results.')
         model_x0[dataset_name][logchi2_gp_model] = x0_out
         model_x0[dataset_name][logchi2_gp_model + '_std'] = np.sqrt(x0_var)
         model_x0[dataset_name]['complete'] += model_x0[dataset_name][logchi2_gp_model]
-
+        print('     Model results stored.')
     # workaround to avoid memory leaks from GP module
     # gc.collect()
 
