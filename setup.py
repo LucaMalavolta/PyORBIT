@@ -33,7 +33,8 @@ setup(
     entry_points={
         'console_scripts': [
             'pyorbit_run=pyorbit.pyorbit_run:pyorbit_run',
-            'pyorbit_results=pyorbit.pyorbit_results:pyorbit_results'
+            'pyorbit_results=pyorbit.pyorbit_results:pyorbit_results',
+            'pyorbit_log_probability=pyorbit.pyorbit_log_probability:pyorbit_log_probability_cli'
         ]
     },
     zip_safe=False,
