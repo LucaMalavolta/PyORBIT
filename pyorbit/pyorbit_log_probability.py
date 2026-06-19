@@ -172,7 +172,7 @@ def pyorbit_log_probability_cli():
             stderr_stream = sys.stderr
 
         with contextlib.redirect_stdout(stdout_stream), contextlib.redirect_stderr(stderr_stream):
-            mc, source = prepare_log_probability_model(
+            mc = prepare_log_probability_model(
                 config_in,
                 reload_from=args.reload_from,
             )
@@ -182,7 +182,6 @@ def pyorbit_log_probability_cli():
             return
 
         print()
-        print("Model source: ", source)
         print("Dimensions = ", mc.ndim)
         _print_parameter_order(theta_dictionary)
         return
