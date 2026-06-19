@@ -3,9 +3,7 @@
 
 from .pyorbit_run import *
 from .pyorbit_results import *
-from .pyorbit_log_probability import *
 from .model_definitions import *
-from .samplers.pyorbit_log_probability import *
 from .samplers.pyorbit_emcee import *
 from .samplers.pyorbit_emcee_legacy import *
 from .samplers.pyorbit_emcee_mpi import *
