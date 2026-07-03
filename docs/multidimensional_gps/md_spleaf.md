@@ -50,6 +50,8 @@ Model-wide keywords, with the default value in bold face.
 * accepted values: `True` | **`False`**
 * activate the conditions $ P_\mathrm{dec}  ^ 2 > \frac{3}{2 \pi} P_\mathrm{rot} ^2 O_\mathrm{amp} ^ 2 $ from [Rajpaiul 2017](https://ui.adsabs.harvard.edu/abs/2017PhDT.......229R/abstract) and [Rajpaul et al. 2021](https://ui.adsabs.harvard.edu/abs/2021MNRAS.507.1847R/abstract), to ensure that the QP function has at least one non-trivial turning point.
 
+% The ESP kernel is designed to match the shape of the QP kernel (see Figure B.6 from Deslisle+2022, where the QP kernel is dubbed SEP), with the ESP hyperparameters matching the same physical meaning as the QP hyperparameters. As such, we expect that the condition by Rajpaul+2021 for the QP kernel can be directly applied to the ESP kernel. 
+
 **rotation_decay_condition**
 * accepted values: `True` | **`False`**
 * if activated, it ensures that the decay time scale of the activity regions $\lambda$ is at least twice the rotational period of the star $\theta$

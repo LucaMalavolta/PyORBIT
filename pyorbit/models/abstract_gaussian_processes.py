@@ -1,5 +1,6 @@
 from pyorbit.subroutines.common import np
 from pyorbit.keywords_definitions import *
+from pyorbit.model_definitions import activity_noderivative
 
 class AbstractGaussianProcesses(object):
 
@@ -173,18 +174,17 @@ class AbstractGaussianProcesses(object):
 
     def _set_derivative_option(self, mc, dataset, return_flag=False, **kwargs):
 
-        if 'derivative'in kwargs:
-            use_derivative = kwargs['derivative'].get(dataset.name_ref, False)
-        elif dataset.name_ref in kwargs:
-            use_derivative = kwargs[dataset.name_ref].get('derivative', False)
+        if dataset.kind in activity_noderivative:
+            use_derivative = False
         else:
-            if dataset.kind == 'H-alpha' or \
-                dataset.kind == 'S_index' or \
-                dataset.kind == 'Ca_HK' or \
-                dataset.kind == 'FWHM':
-                    use_derivative = False
-            else:
-                use_derivative = True
+            use_derivative = True
+
+        if 'derivative'in kwargs:
+            use_derivative = kwargs['derivative'].get(dataset.name_ref, use_derivative)
+        elif dataset.name_ref in kwargs:
+            use_derivative = kwargs[dataset.name_ref].get('derivative', use_derivative)
+        else:
+            print('    WARNING: derivative option not set for dataset {0:s}. Using default value: {1:s}'.format(dataset.name_ref, str(use_derivative)))
 
         """ instead of taking an action on the parameter, the flag is returned"""
         if return_flag:
