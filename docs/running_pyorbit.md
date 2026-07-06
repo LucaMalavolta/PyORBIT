@@ -69,6 +69,7 @@ The samplers listed above are those that I use more frequently, and I have verif
 
 ```{toctree}
 :maxdepth: 1
+running_pyorbit/parameter_defaults
 running_pyorbit/terminal_output
 running_pyorbit/results_flags
 running_pyorbit/plot_parameters

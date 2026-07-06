@@ -6,7 +6,7 @@ These models will use a mixture of *common parameters* and *dataset-specific
 parameters* to model a dataset
 
 ```{note}
-All the parameters are inherited from the *common models*, where the boundaries and other properties are defined. The distinction between *common parameter* and *dataset parameter* happen at this stage and can be changed for each model
+All the parameters are inherited from the *common models*, where the boundaries and other properties are defined. The distinction between *common parameter* and *dataset parameter* happen at this stage and can be changed for each model. A compact list of default boundaries, spaces, and priors is available in [Default boundaries, spaces, and priors](parameter_defaults.md).
 ```
 
 ```{toctree}
