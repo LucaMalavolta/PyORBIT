@@ -1,14 +1,132 @@
 (parameter_defaults)=
 
-# Default boundaries, spaces, and priors
+# Boundaries, spaces, and priors
 
-This page collects the default parameter properties used by `PyORBIT` when the
-configuration file does not override them with `boundaries`, `spaces`, `priors`,
-or `fixed`.
+Parameter boundaries are a prerequisite of MCMC/NS samplers, and together with priors and spaces, they must be specified for each parameter. The code automatically selects the values that work well in most cases, so you may need to do only minor tuning.  This page explains how to change the default behaviour of `PyORBIT`, and then it collects the default parameter properties used by `PyORBIT` when the configuration file does not override them with `boundaries`, `spaces`, `priors`, or `fixed`. Keep in mind that `PyORBIT` will activate only the parameters  relevant to the model you selected for your data 
 
-The model pages explain when a parameter is activated. This page is meant as a
-compact lookup table for the defaults attached to the common objects and to the
-few model-local parameters that define their own default properties.
+
+## General description and examples
+
+For *every parameter* involved in a fit, it is possible to specify 
+- the `boundaries` of the parameter spaces;
+- the `spaces` over which to explore the parameter space;
+- the `priors` for a given parameter;
+- if a parameter has a `fixed` value.
+
+Sometimes it is possible to specify a prior for a derived parameter as well.
+
+
+
+
+### Spaces
+
+A parameter can be explored in *Linear* (or *Natural*) space when it spans a small range, or in *Logarithmic* space when it spans multiple orders of magnitude. A smaller base for the logarithm provides smaller jumps between orders of magnitude, and may be useful to better map the posterior.
+Given $\theta$ the sampling parameter (the one explored by the sampler) and $\gamma$ the physical parameters (the one entering the model), the following options are available:
+
+| Keyword | Description |  Transformation | Inverse | Notes |
+| :--- | :--- | :--- | :--- | :-- |
+| `Linear` | Linear or Natural space | $\theta = \gamma$ | $\gamma = \theta$  | Natural space, 1:1 match |
+| `Log_Natural`  | Natural logarithm |  $\theta = \ln{\gamma}$  |  $\gamma = {\rm e}^\theta $ |  |
+| `Log_Base2`   | Logarithm in base 2 |  $\theta = \log_{2}{\gamma}$ | $\gamma = 2^{\theta}$ | | 
+| `Log_Base10`  | Logarithm in base 10 | $\theta = \log_{10}{\gamma}$ | $\gamma = 10^{\theta}$ | | 
+| `Sine_Angle`  | The sine of the angle parameter   | $\theta = \sin {\gamma} $ | $\gamma = \arcsin {\gamma} $  |  Uniform prior in $\sin (\gamma)$ |
+| `Cosine_Angle`| The cosine of the angle parameter | $\theta = \cos {\gamma} $ | $\gamma = \arccos {\theta} $ |   Uniform prior in $\cos (\gamma)$ |
+
+
+```{code-block} yaml
+:lineno-start: 33
+:emphasize-lines: 6-8
+common:
+  planets:
+    b:
+      orbit: circular
+      use_time_inferior_conjunction: True
+      spaces:
+        P: Linear
+        K: Linear
+      boundaries:
+        P: [0.2750, 0.2850]
+        K: [0.001, 20.0]
+        Tc: [57744.00, 57744.10]
+      priors:
+        P: ['Gaussian', 0.280324956, 0.000000067]
+        Tc: ['Gaussian', 57744.071508, 0.000103]
+
+```
+
+
+### Boundaries
+
+By specifying the `boundaries` of a parameter, the sampler will not be allowed to explore values outside this range. 
+Boundaries can be specified using the keyword `boundaries` within the corresponding model.
+
+
+```{code-block} yaml
+:lineno-start: 33
+:emphasize-lines: 9-12
+common:
+  planets:
+    b:
+      orbit: circular
+      use_time_inferior_conjunction: True
+      spaces:
+        P: Linear
+        K: Linear
+      boundaries:
+        P: [0.2750, 0.2850]
+        K: [0.001, 20.0]
+        Tc: [57744.00, 57744.10]
+      priors:
+        P: ['Gaussian', 0.280324956, 0.000000067]
+        Tc: ['Gaussian', 57744.071508, 0.000103]
+```
+
+
+
+### Priors
+
+The prior expresses our knowledge of the parameter before analysing the data. The code will automatically retrieve the boundaries for a given parameter if they are needed for the prior calculation (e.g., as in the Uniform prior). Due to the different treatment of priors in Nested Sampling algorithms, some priors are available only in `Linear` space when used in NS analysis. Those cases are reported in the *Spaces (NS)* column
+
+| Keyword | Description |  Parameters | Spaces (NS) |
+| :--- | :--- | :--- | :--- | 
+| `Uniform` | Uniform prior (default choice) | | All |
+| `Gaussian` | Gaussian prior | 1) center 2) scale | | All |
+| `PositiveHalfGaussian` | Right side of a Half-Normal distribution  | 1) center \ 2) scale | | All |
+| `NegativeHalfGaussian` | Left side of a Half-Normal distribution | 1) center 2) scale | | All |
+| `HalfGaussian` | Alias for `PositiveHalfGaussian`| 1) center 2) scale | | All |
+| `TruncatedJeffreys` | Jeffreys prior, normalized between the boundaries | |  | 
+| `Jeffreys` | Alias for `TruncatedJeffreys` prior | | |
+| `TruncatedModifiedJeffreys` | Modified Jeffreys prior, normalized between the boundaries | 1) $a$ (linear for $\theta < a$ |  | 
+| `ModifiedJeffreys` | Alias for `TruncatedModifiedJeffreys` | 1) $a$ | |
+| `WhiteNoisePrior` | Alias for `TruncatedModifiedJeffreys` | 1) $a$ | |
+| `TruncatedRayleigh` | Rayleigh prior, normalized between the boundaries | 1) scale $\sigma$ | | 
+| `BetaDistribution` | Beta distribution | 1) shape parameter $\alpha$ 2) shape parameter $\beta$ | |
+| `ComplementaryGaussian` | Bigaussian distribution symmetric around 90° |  1) center 2) scale | |  |
+| `SymmetricGaussian` | Bigaussian distribution symmetric around 0 |  1) center 2) scale | |  |
+
+Example:
+
+
+```{code-block} yaml
+:lineno-start: 33
+:emphasize-lines: 13-15
+common:
+  planets:
+    b:
+      orbit: circular
+      use_time_inferior_conjunction: True
+      spaces:
+        P: Linear
+        K: Linear
+      boundaries:
+        P: [0.2750, 0.2850]
+        K: [0.001, 20.0]
+        Tc: [57744.00, 57744.10]
+      priors:
+        P: ['Gaussian', 0.280324956, 0.000000067]
+        Tc: ['Gaussian', 57744.071508, 0.000103]
+```
+
 
 ```{important}
 Boundaries and priors in the YAML file must be written in the physical (or
@@ -16,17 +134,26 @@ natural) parameter space. This is also true when the parameter is sampled in a
 logarithmic space. In that case, boundaries must be strictly positive.
 ```
 
+
+### Where to specify parameter's properties 
+
+TO  BE DONE
+
+
+
+
+## Dataset systematics
+
+
 In the tables below:
 
 - `Uniform []` means a uniform prior over the listed boundaries, with no extra
   prior hyperparameters.
-- `None` in the `Fixed` column means that the parameter has no predefined value when fixed by the user. 
+- `None` in the `Fixed` column means that the parameter has no predefined value when fixed by the user or the algorithm. 
 - `dynamic` means that the numerical boundary is computed from the dataset or
   from another model at initialisation time.
 - Pattern rows such as `poly_c{0..9}` represent all parameters in the indicated
   range.
-
-## Dataset systematics
 
 Each dataset will include one offset and one jitter parameter for each active flag in
 the input file. The actual parameter names are `offset_0`, `offset_1`, ... and
@@ -70,7 +197,7 @@ The lower boundary is intentionally set to a value other than zero to avoid prob
 
 Offset and jitter boundaries are determined using the whole dataset, without distinction by the flag specified in the 4<sup>th</sup> and 5<sup>th</sup>  columns (see [Prepare a dataset file](prepare_dataset) ) 
 
-LEt's take the case when a dataset is using two flags for jitter and two flags for offset, e.g., when putting together data collected with HARPS and HARPS-N but you want to use a single covariance matrix for the stellar activity. You can specify different boundaries for each distinct jitter and offset parameters:
+Let's take the case when a dataset is using two flags for jitter and two flags for offset, e.g., when putting together data collected with HARPS and HARPS-N, but you want to use a single covariance matrix for the stellar activity. You can specify different boundaries for each distinct jitter and offset parameters:
 
 ```{code-block} yaml
 :lineno-start: 1
@@ -96,7 +223,7 @@ offset_0      id:  13  s:Linear      b:[  -3500.0000,   -3300.0000]   p:Uniform 
 offset_1      id:  14  s:Linear      b:[  -4000.0000,   -3000.0000]   p:Uniform   []
 ```
 
-If you don't specify the boundaries for one of the parameters, the automa
+The code will automatically assign the If you don't specify the boundaries for one of the parameters, the automa
 
 ```{code-block} yaml
 :lineno-start: 8
@@ -116,7 +243,7 @@ offset_0      id:  13  s:Linear      b:[ -13430.6237,    6632.5000]   p:Uniform 
 offset_1      id:  14  s:Linear      b:[  -4000.0000,   -3000.0000]   p:Uniform   []
 ```
 
-To apply the same boundaries:
+You can apply the same boundaries to all the jitter/offset parameters of a dataset by removing the numerical subscript: 
 
 ```{code-block} yaml
 :lineno-start: 8
@@ -126,6 +253,7 @@ To apply the same boundaries:
       offset: [ -3500.0, -3300.0]
 ```
 
+
 ```text
 ----- dataset:  RVdata
 jitter_0      id:  11  s:Linear      b:[      0.0000,      10.0000]   p:Uniform   []
@@ -134,8 +262,10 @@ offset_0      id:  13  s:Linear      b:[  -3500.0000,   -3300.0000]   p:Uniform 
 offset_1      id:  14  s:Linear      b:[  -3500.0000,   -3300.0000]   p:Uniform   []
 
 ```
+### Changing priors and spaces
 
-The same considerations above applies also to `spaces` and `priors`, for example:
+The same tricks above with `boundaries`  also apply to `spaces` and `priors`, 
+for example, specifying generic priors as below:
 
 ```{code-block} yaml
 :lineno-start: 8
@@ -148,6 +278,7 @@ The same considerations above applies also to `spaces` and `priors`, for example
       offset: ['Gaussian', -3450.0, 10.0]
 ```
 
+will affect all the flag-specific parameters of your dataset:
 
 
 ```text
@@ -159,6 +290,19 @@ offset_1      id:  14  s:Linear      b:[  -3500.0000,   -3300.0000]   p:Gaussian
 ```
 
 
+:::{caution}
+:name: a-tip-reference
+You cannot mix generic and flag-specific names! For example, this configuration:
+
+```{code-block} yaml
+    boundaries:
+      jitter: [ 0.00,   10.0]
+      offset: [ -3500.0, -3300.0]
+      offset_1: [ -4000.0, -3000.0]
+      jitter_1: [0.00,   20.0]
+```
+will produce unexpected results, including ignored priors and wrong boundary assignments.
+:::
 
 ## Planets
 

@@ -321,7 +321,7 @@ def giveback_priors(kind, bounds, pams, val):
     if kind == 'None':
         return 0.00
 
-    if kind == 'Gaussian':
+    if kind == 'Gaussian' or kind == 'Normal':
         # return np.log(stats.norm.pdf(val, loc=pams[0], scale=pams[1]))
         return -(val - pams[0]) ** 2 / (2 * pams[1] ** 2) - 0.5 * np.log(2*np.pi) - np.log(pams[1])
 
@@ -423,7 +423,7 @@ def nested_sampling_prior_prepare(kind, bounds, pams, space):
     if kind == 'Uniform':
         return bounds
 
-    if kind in ['Gaussian', 'HalfGaussian',  'PositiveHalfGaussian', 'NegativeHalfGaussian','BetaDistribution', 'Beta']:
+    if kind in ['Gaussian', 'Normal', 'HalfGaussian',  'PositiveHalfGaussian', 'NegativeHalfGaussian','BetaDistribution', 'Beta']:
         return pams
 
     """ All the following priors are defined only if the variable is sampled in the Natural space"""
@@ -463,7 +463,7 @@ def nested_sampling_prior_compute(val, kind, coeff, space):
     if kind == 'Uniform':
         return val * (coeff[1] - coeff[0]) + coeff[0]
 
-    if kind == 'Gaussian':
+    if kind == 'Gaussian' or kind == 'Normal':
         x_new = stats.norm.ppf(val, coeff[0], coeff[1])
 
         if space == 'Linear':
