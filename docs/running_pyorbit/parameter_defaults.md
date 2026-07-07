@@ -91,18 +91,20 @@ The prior expresses our knowledge of the parameter before analysing the data. Th
 | :--- | :--- | :--- | :--- | 
 | `Uniform` | Uniform prior (default choice) | | All |
 | `Gaussian` | Gaussian prior | 1) center 2) scale | | All |
-| `PositiveHalfGaussian` | Right side of a Half-Normal distribution  | 1) center \ 2) scale | | All |
+| `BetaDistribution` | Beta distribution | 1) shape parameter $\alpha$ 2) shape parameter $\beta$ | All |
+| `Beta`  | Alias for `BetaDistribution` | 1) shape parameter $\alpha$ 2) shape parameter $\beta$ | All |
+| `PositiveHalfGaussian` | Right side of a Half-Normal distribution  | 1) center 2) scale | | All |
 | `NegativeHalfGaussian` | Left side of a Half-Normal distribution | 1) center 2) scale | | All |
 | `HalfGaussian` | Alias for `PositiveHalfGaussian`| 1) center 2) scale | | All |
-| `TruncatedJeffreys` | Jeffreys prior, normalized between the boundaries | |  | 
-| `Jeffreys` | Alias for `TruncatedJeffreys` prior | | |
-| `TruncatedModifiedJeffreys` | Modified Jeffreys prior, normalized between the boundaries | 1) $a$ (linear for $\theta < a$ |  | 
-| `ModifiedJeffreys` | Alias for `TruncatedModifiedJeffreys` | 1) $a$ | |
-| `WhiteNoisePrior` | Alias for `TruncatedModifiedJeffreys` | 1) $a$ | |
-| `TruncatedRayleigh` | Rayleigh prior, normalized between the boundaries | 1) scale $\sigma$ | | 
-| `BetaDistribution` | Beta distribution | 1) shape parameter $\alpha$ 2) shape parameter $\beta$ | |
-| `ComplementaryGaussian` | Bigaussian distribution symmetric around 90° |  1) center 2) scale | |  |
-| `SymmetricGaussian` | Bigaussian distribution symmetric around 0 |  1) center 2) scale | |  |
+| `ComplementaryGaussian` | Bigaussian distribution symmetric around 90° |  1) center 2) scale | | `Linear` |
+| `SymmetricGaussian` | Bigaussian distribution symmetric around 0 |  1) center 2) scale | | `Linear` |
+| `TruncatedJeffreys` | Jeffreys prior, normalized between the boundaries | | `Linear` | 
+| `Jeffreys` | Alias for `TruncatedJeffreys` prior | | `Linear` |
+| `TruncatedModifiedJeffreys` | Modified Jeffreys prior, normalized between the boundaries | 1) $a$ (linear for $\theta < a$ | `Linear` | 
+| `ModifiedJeffreys` | Alias for `TruncatedModifiedJeffreys` | 1) $a$ | `Linear` |
+| `WhiteNoisePrior` | Alias for `TruncatedModifiedJeffreys` | 1) $a$ | `Linear` |
+| `TruncatedRayleigh` | Rayleigh prior, normalized between the boundaries | 1) scale $\sigma$ | `Linear` | 
+
 
 Example:
 
@@ -135,7 +137,7 @@ logarithmic space. In that case, boundaries must be strictly positive.
 ```
 
 
-### Where to specify parameter's properties 
+### Where to specify a parameter's properties 
 
 TO  BE DONE
 
