@@ -7,6 +7,10 @@
 
 The [`tinyGP`](https://tinygp.readthedocs.io/en/stable/) package is a lightweight alternative to the `george` package or the internally implemented Gaussian Process regression.
 
+```{warning}
+Starting with `PyORBIT 10.3`, only version >=0.3 of `tinygp` is supported. 
+```
+
 Models implemented using tinyGP are:
 
 * `tinygp_quasiperiodic`, as an alternative to `gp_quasiperiodic`

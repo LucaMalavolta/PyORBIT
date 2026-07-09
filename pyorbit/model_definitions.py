@@ -105,6 +105,7 @@ from pyorbit.models.detrending_matern32 import Detrending_Matern32
 
 from pyorbit.models.celerite2_granulation_oscillation_rotation import Celerite2_Granulation_Oscillation_Rotation
 from pyorbit.models.tinygp_quasiperiodic_activity import TinyGaussianProcess_QuasiPeriodicActivity
+from pyorbit.models.tinygp_quasiperiodic_derivative_activity import TinyGaussianProcess_QuasiPeriodicDerivativeActivity
 from pyorbit.models.tinygp_quasiperiodicsquaredexponential_activity import TinyGaussianProcess_QuasiPeriodicSquaredExponentialActivity
 from pyorbit.models.tinygp_quasiperiodiccosine_activity import TinyGaussianProcess_QuasiPeriodicCosineActivity
 
@@ -283,6 +284,7 @@ define_type_to_class = {
     'tinygp_quasiperiodic_squaredexponential': TinyGaussianProcess_QuasiPeriodicSquaredExponentialActivity,
     'tinygp_quasiperiodiccosine': TinyGaussianProcess_QuasiPeriodicCosineActivity,
     'tinygp_quasiperiodic_cosine': TinyGaussianProcess_QuasiPeriodicCosineActivity,
+    'tinygp_quasiperiodic_derivative': TinyGaussianProcess_QuasiPeriodicDerivativeActivity,
     'tinygp_matern32': TinyGaussianProcess_Matern32,
     'spleaf_esp': SPLEAF_ESP,
     'spleaf_sho': SPLEAF_SHO,

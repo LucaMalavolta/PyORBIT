@@ -34,9 +34,7 @@ The original implementation based on `george` is still available. An independent
 - required common object: `activity`
 - implemented using  `george` (version 0.4.0, [Ambikasaram et al. 2015](https://ui.adsabs.harvard.edu/abs/2015ITPAM..38..252A), [link to documentation](https://george.readthedocs.io/))
 
-```{warning}
-Starting with `PyORBIT 10.3`, only version >=0.3 of `tinygp` is supported. 
-```
+
 
 **model name**: `gp_quasiperiodic_alternative`
 - required common object: `activity`

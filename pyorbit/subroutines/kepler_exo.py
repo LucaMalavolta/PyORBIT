@@ -8,7 +8,7 @@ import pyorbit.subroutines.constants as constants
 
 __all__ = ["kepler_K1", "kepler_RV", "kepler_RV_T0P", "kepler_Tc2phase_Tref", "kepler_phase2Tc_Tref", "get_planet_mass", "kepler_true_anomaly_orbital_distance", 
             "kepler_compute_rv_semiamplitude", "kepler_compute_rv", "kepler_compute_rv_deltabjd", "kepler_compute_deltaTc_from_meanlong",
-            "kepler_compute_meanlong_from_deltaTc", "kepler_compute_deltaTperi_from_deltaTc", "kepler_compute_deltaTperi_from_meanlong",
+            "kepler_compute_meanlong_from_deltaTc", "kepler_compute_deltaTperi_from_deltaTc", "kepler_compute_deltaTc_from_deltaTperi", "kepler_compute_deltaTperi_from_meanlong",
             "kepler_get_planet_mass", "kepler_compute_trueanomaly_orbitaldistance"]
 
 #TODO: user commented definition below in PyORBIT version 12
@@ -311,6 +311,7 @@ def kepler_compute_deltaTperi_from_deltaTc(period, delta_Tc , ecc, omega_deg):
     starting from delta_Tc, i.e., the difference between the first *time of inferior conjunction* (Tc) 
     and the reference time (Tref), assuming a Keplerian orbit with given period, 
     eccentricity (ecc), and argument of pericenter (omega_deg).
+
     :param period: Orbital period of the planet (in days)
     :param delta_Tc: Difference between the time of inferior conjunction and reference time (in days)
     :param ecc: Orbital eccentricity
@@ -322,11 +323,32 @@ def kepler_compute_deltaTperi_from_deltaTc(period, delta_Tc , ecc, omega_deg):
     MeAn = EccAn - ecc * np.sin(EccAn)
     return delta_Tc - MeAn/(2*np.pi)*period
 
+
+def kepler_compute_deltaTc_from_deltaTperi(period, delta_Tperi, ecc, omega_deg):
+    """
+    Compute difference between the *time of inferior conjunction* (Tc) and the reference time (Tref)
+    starting from delta_Tperi, i.e., the difference between the *time of periastron passage* (Tperi) 
+    and the reference time (Tref), assuming a Keplerian orbit with given period, 
+    eccentricity (ecc), and argument of pericenter (omega_deg).
+
+    :param period: Orbital period of the planet (in days)
+    :param delta_Tperi: Difference between the time of periastron passage and reference time (in days)
+    :param ecc: Orbital eccentricity
+    :param omega: Argument of pericenter (in degrees)
+    :return:difference between the first time of inferior conjunction (Tc) after the given periastro passage and reference time (Tref)
+    """
+    TrAn = np.pi / 2 - omega_deg * constants.deg2rad
+    EccAn = 2. * np.arctan(np.sqrt((1.0 - ecc) / (1.0 + ecc)) * np.tan(TrAn / 2.0))
+    MeAn = EccAn - ecc * np.sin(EccAn)
+    return delta_Tperi + MeAn/(2*np.pi)*period
+
+
 def kepler_compute_deltaTperi_from_meanlong(period, mean_long, ecc, omega_deg, Omega_deg=0.0):
     """
     Compute difference between the *time of periastron passage* (Tperi) and the reference time (Tref)
     starting from the mean longitude at reference epoch (mean_long) assuming a Keplerian orbit with given period, 
     eccentricity (ecc), argument of pericenter (omega_deg), and longitude of the ascending node (Omega_deg).
+
     :param period: Orbital period of the planet (in days)
     :param mean_long: Mean longitude at reference epoch (in degrees)
     :param ecc: Orbital eccentricity

@@ -40,7 +40,7 @@ class GaussianProcess_QuasiPeriodicActivity_Derivative(AbstractModel, AbstractGa
 
         self.list_pams_dataset = OrderedSet([
             'Hamp',  # Amplitude of the signal in the covariance matrix
-            'Camp'  # Amplitude of the convective term of the covariance matrix
+            'Camp'  # Amplitude of the derivative term of the covariance matrix
         ])
 
         self._dist_t1 = {}
