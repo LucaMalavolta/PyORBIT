@@ -22,18 +22,23 @@ A comparison between different formulations of the quasi-periodic kernel is prov
 ## Model definition and requirements
 
 The fastest implementation relies on `tinyGP`, but it requires a few extra tricks in the configuration file and execution (see [Caveats on the use of `tinyGP`](../running_pyorbit/tinygp_caveats) )
-The original implementation based on `george` is still available. An independent implementation relying only on basic packages is available, however it is much slower.
+If you use `tinygp`, cite the [Zenodo repository](https://zenodo.org/records/19035246).
+
+The original implementation based on `george` is available. It returns the same results as `tinyGP` but it is slightly slower. If you use `george`, please cite  [Ambikasaram et al. 2015].(https://ui.adsabs.harvard.edu/abs/2015ITPAM..38..252A)  
+
+An independent implementation that relies only on basic packages is maintained for legacy reasons; however, it is much slower, and I don't recommend using it.  
+
 
 **model name**: `tinygp_quasiperiodic`
 - required common object: `activity`
-- implemented using  `tinygp` (version 0.3.0, [link to documentation](https://tinygp.readthedocs.io/en/stable/))
+- implemented using  [`tinygp`](https://tinygp.readthedocs.io/en/stable/), version >=0.3.0
+
 - GPU acceleration supported (instruction incoming)
 - Read [Caveats on the use of `tinyGP`](../running_pyorbit/tinygp_caveats) carefully
 
 **model name**: `gp_quasiperiodic`
 - required common object: `activity`
-- implemented using  `george` (version 0.4.0, [Ambikasaram et al. 2015](https://ui.adsabs.harvard.edu/abs/2015ITPAM..38..252A), [link to documentation](https://george.readthedocs.io/))
-
+- implemented using  [`george`](https://george.readthedocs.io/), version >=0.4.0
 
 
 **model name**: `gp_quasiperiodic_alternative`

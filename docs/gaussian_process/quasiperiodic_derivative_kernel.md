@@ -3,25 +3,35 @@
 # Quasi-periodic plus derivative kernel
 
 
-The kernel employed in the `gp_quasiperiodic_derivative` model is a combination of the quasi-periodic kernel and its first derivative. 
+The kernel employed in the `gp_quasiperiodic_derivative` model is a combination of the quasi-periodic kernel and its first derivative, not different from using the [multivariate approach](../multidimensional_gps.md)on a single dataset. If we consider the correlated noise of a given dataset $\mathrm{D}$ as the combination of a Gaussian process and its first derivative:
+
+```{math}
+:label: gp_framework_original_onedataset
+
+\Delta \mathrm{D} & = H_\mathrm{amp} G(t) + C_\mathrm{amp} G^\prime (t) \\
+
+```
+
+Then the final covariance between observations of G and its derivative at times $t_i$ and $t_j$ is given by:
 
 ```{math}
 :label: quasiperiodic_derivative_pyorbit
 
-\gamma (t_i, t_j)_{\rm full} & = H_\mathrm{amp}^2 \gamma (t_i, t_j)  + C_\mathrm{amp}^2 \gamma (t_i, t_j)^\prime (t)
+\gamma (t_i, t_j)_{\rm full}  = H_\mathrm{amp}^2 \gamma_{\rm GP}^{(G,G)} (t_i, t_j)  + C_\mathrm{amp}^2 \gamma_{\rm GP}^{(dG,dG)} (t_i, t_j) (t)
 ```
 
-Where $\gamma (t_i, t_j)$ is the [quasi-periodic kernel](quasiperiodic_kernel).
+Where $\gamma_{\rm GP}^{(G,G)} (t_i, t_j)$ 
+is the [quasi-periodic kernel](quasiperiodic_kernel) and  $ \gamma^{(dG,dG)}(t_i, t_j) = \left.\left.\frac{\partial}{\partial t'} \frac{\partial}{\partial t} \gamma^{(G,G)}(t, t') \right|_{t=t_i} \right|_{t'=t_j} $. 
+Whit a single dataset, the terms  $ \gamma^{(G,dG)}(t_i, t_j)$ and  $ \gamma^{(dG,G)}(t_i, t_j)$ cancel each other. See Section 3.3 of [Rajpaul et al. 2015](https://ui.adsabs.harvard.edu/abs/2015MNRAS.452.2269R/abstract) for more details.
 
-It can be useful when a single dataset needs a more flexible stellar-activity covariance than the standard quasi-periodic kernel, without switching to a multidimensional GP where the first derivative is usually employed.
-
-
+This model can be useful when a single dataset needs a more flexible stellar-activity covariance than the standard quasi-periodic kernel, without switching to a multidimensional GP where the first derivative is usually employed.
 
 
 ## Model definition and requirements
 
-The fastest implementation relies on `tinyGP`, but it requires a few extra tricks in the configuration file and execution (see [Caveats on the use of `tinyGP`](../running_pyorbit/tinygp_caveats) )
-The original implementation relies only on basic packages (there is no `george` implementation), however it is much slower.
+The fastest implementation relies on `tinyGP`, but it requires a few extra tricks in the configuration file and execution (see [Caveats on the use of `tinyGP`](../running_pyorbit/tinygp_caveats)). If you use this model, cite the [Zenodo repository](https://zenodo.org/records/19035246).
+
+An independent implementation that relies only on basic packages is maintained for legacy reasons; however, it is much slower, and I don't recommend using it.  
 
 **model name**: `tinygp_quasiperiodic_derivative` 
 - **available since version 11.2.6**

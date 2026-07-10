@@ -2,7 +2,7 @@
 
 # Exponential-sine periodic kernel (S+LEAF)
 
-The `S+LEAF` exponential-sine periodic (ESP) kernel is a fast approximation of the quasi-periodic kernel. It is useful when one wants an independent covariance matrix for each dataset while sharing the stellar-activity hyperparameters.
+The [`S+LEAF`](https://gitlab.unige.ch/delisle/spleaf) exponential-sine periodic (ESP) kernel is a fast approximation of the quasi-periodic kernel. It is useful when one wants an independent covariance matrix for each dataset while sharing the stellar-activity hyperparameters.
 
 The hyperparameters use the same names as the quasi-periodic models:
 
@@ -11,9 +11,7 @@ The hyperparameters use the same names as the quasi-periodic models:
 - `Oamp`: coherence scale of the periodic component
 - `Hamp`: dataset-specific covariance amplitude
 
-```{note}
-If you use this model, please cite `S+LEAF`: [Delisle et al. 2020](https://ui.adsabs.harvard.edu/abs/2020A%26A...638A..95D/abstract) and [Delisle et al. 2022](https://ui.adsabs.harvard.edu/abs/2022A%26A...659A.182D/abstract).
-```
+If you use this model, please cite [Delisle et al. 2020](https://ui.adsabs.harvard.edu/abs/2020A%26A...638A..95D/abstract) and [Delisle et al. 2022](https://ui.adsabs.harvard.edu/abs/2022A%26A...659A.182D/abstract).
 
 ## Model definition and requirements
 
@@ -28,6 +26,20 @@ If you use this model, please cite `S+LEAF`: [Delisle et al. 2020](https://ui.ad
 - `spleaf_exponentialsineperiodic_slow`
 
 The `slow` implementation builds the `S+LEAF` covariance directly at each likelihood call. The default `spleaf_esp` implementation keeps a reusable covariance object and is normally preferred.
+
+
+## Model parameters
+
+The following parameters will be inherited from the common model (column *Common?: common*) or a different value will be assigned for each dataset (column *Common?: dataset*).
+
+| Name | Parameter | Common? | Definition | Notes |
+| :--- | :-------- | :------ | :--------- | :---- |
+| `Prot` | Rotational period of the star | common | `activity` | Replaced by `rotation_period` when `use_stellar_rotation_period: True` |
+| `Pdec` | Decay timescale of active regions | common | `activity` | Replaced by `activity_decay` when `use_stellar_activity_decay: True` |
+| `Oamp` | Coherence scale | common | `activity` | |
+| `Hamp` | Amplitude of the kernel | dataset | `activity` | |
+
+
 
 ## Keywords
 
@@ -78,14 +90,3 @@ models:
     boundaries:
       Hamp: [0.0, 1.0]
 ```
-
-## Model parameters
-
-The following parameters will be inherited from the common model (column *Common?: common*) or a different value will be assigned for each dataset (column *Common?: dataset*).
-
-| Name | Parameter | Common? | Definition | Notes |
-| :--- | :-------- | :------ | :--------- | :---- |
-| `Prot` | Rotational period of the star | common | `activity` | Replaced by `rotation_period` when `use_stellar_rotation_period: True` |
-| `Pdec` | Decay timescale of active regions | common | `activity` | Replaced by `activity_decay` when `use_stellar_activity_decay: True` |
-| `Oamp` | Coherence scale | common | `activity` | |
-| `Hamp` | Amplitude of the kernel | dataset | `activity` | |

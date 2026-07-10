@@ -20,12 +20,15 @@ where the  squared-exponential kernel is equal to:
 ```{math}
 :label: squaredexponential_noamp_pyorbit
 
-\gamma_\mathrm{SE} (t_i, t_j) = \exp{ - \frac{(t_i-t_j)^2}{2 P_\mathrm{cyc}^2} \right \}
+\gamma_\mathrm{SE} (t_i, t_j) = \exp{ - \frac{(t_i-t_j)^2}{2 P_\mathrm{cyc}^2} }
 ```
 
 with $ P_\mathrm{cyc}$  being the correlation decay timescale of the activity cycle.
 
+If you use this model, cite the [Zenodo repository](https://zenodo.org/records/19035246) of `tinygp` and  [Basilicata et al. 2024](https://ui.adsabs.harvard.edu/abs/2024A%26A...686A.127B/abstract).
+
 ## Model definition and requirements
+
 
 **model name**: `tinygp_quasiperiodicsquaredexponential`
 - required common object: `activity`
@@ -36,6 +39,17 @@ with $ P_\mathrm{cyc}$  being the correlation decay timescale of the activity cy
 - `tinygp_quasiperiodic_squaredexponential`
 
 There is no direct implementation of this kernel available.
+
+## Model parameters
+
+| Name | Parameter | Common? | Definition | Notes |
+| :--- | :-------- | :------ | :--------- | :---- |
+| `Prot` | Rotational period of the star | common | `activity` | Replaced by `rotation_period` when `use_stellar_rotation_period: True` |
+| `Pdec` | Decay timescale of active regions | common | `activity` | Replaced by `activity_decay` when `use_stellar_activity_decay: True` |
+| `Pcyc` | Timescale of the squared-exponential component | common | `activity` | |
+| `Oamp` | Coherence scale | common | `activity` | |
+| `Hamp` | Amplitude of the quasi-periodic component | dataset | `activity` | |
+| `Camp` | Amplitude of the squared-exponential component | dataset | `activity` | |
 
 ## Keywords
 
@@ -92,13 +106,4 @@ models:
       Camp: [0.0, 1.0]
 ```
 
-## Model parameters
 
-| Name | Parameter | Common? | Definition | Notes |
-| :--- | :-------- | :------ | :--------- | :---- |
-| `Prot` | Rotational period of the star | common | `activity` | Replaced by `rotation_period` when `use_stellar_rotation_period: True` |
-| `Pdec` | Decay timescale of active regions | common | `activity` | Replaced by `activity_decay` when `use_stellar_activity_decay: True` |
-| `Pcyc` | Timescale of the squared-exponential component | common | `activity` | |
-| `Oamp` | Coherence scale | common | `activity` | |
-| `Hamp` | Amplitude of the quasi-periodic component | dataset | `activity` | |
-| `Camp` | Amplitude of the squared-exponential component | dataset | `activity` | |
