@@ -344,7 +344,8 @@ datatype_definition = {
               'logR', 'logRhk', 'logRHK', 'logR_hk', 'logR_HK',
               'log(R)', 'log(Rhk)', 'log(RHK)', 'log(R_hk)', 'log(R_HK)'],
     'S_index': ['S', 'S_index', 'Shk', 'SHK', 'S_HK', 'S_hk'],
-    'CCF': ['CCF', 'CCFs', 'ccf', 'ccfs']
+    'CCF': ['CCF', 'CCFs', 'ccf', 'ccfs'],
+    'external': ['orbitize', 'Orbitize', 'ORBITIZE'],
 }
 
 activity_datatype = ['H-alpha', 'FWHM', 'BIS', 'EWs', 'activity', 'Ca_HK', 'S_index']
