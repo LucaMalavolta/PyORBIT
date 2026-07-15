@@ -46,7 +46,7 @@ class RossiterMcLaughlin_Ohta(AbstractModel, AbstractTransit):
             mc.common_models[self.stellar_ref].use_equatorial_velocity = True
             mc.common_models[self.stellar_ref].use_stellar_radius = True
 
-        self._prepare_planetary_parameters(mc, **kwargs)
+        self._prepare_planet_parameters(mc, **kwargs)
         self._prepare_star_parameters(mc, **kwargs)
         self._prepare_limb_darkening_coefficients(mc, **kwargs)
 

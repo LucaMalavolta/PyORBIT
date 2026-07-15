@@ -61,7 +61,7 @@ class AbstractDynamical(object):
             self.list_pams_common.update(['b'])
             self.list_pams_common.update(['density'])
 
-        if mc.common_models[self.planet_ref].use_semimajor_axis:
+        if mc.common_models[self.planet_ref].use_scaled_semimajor_axis:
             self.list_pams_common.update(['a_Rs'])
 
         try:

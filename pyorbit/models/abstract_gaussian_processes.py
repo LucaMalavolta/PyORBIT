@@ -1,5 +1,6 @@
 from pyorbit.subroutines.common import np
 from pyorbit.keywords_definitions import *
+from pyorbit.datatype_definitions import activity_noderivative
 
 class AbstractGaussianProcesses(object):
 
@@ -173,7 +174,8 @@ class AbstractGaussianProcesses(object):
 
     def _set_derivative_option(self, mc, dataset, return_flag=False, **kwargs):
 
-        if dataset.kind in ['H-alpha', 'FWHM', 'EWs', 'Ca_HK', 'S_index']:
+        #if dataset.kind in ['H-alpha', 'FWHM', 'EWs', 'Ca_HK', 'S_index']:
+        if dataset.kind in activity_noderivative:
             use_derivative = False
         else:
             use_derivative = True

@@ -2,6 +2,7 @@ from pyorbit.subroutines.common import np, convert_rho_to_ars, convert_b_to_i
 import pyorbit.subroutines.constants as constants
 import pyorbit.subroutines.kepler_exo as kepler_exo
 from pyorbit.keywords_definitions import *
+from pyorbit.subroutines.transformations import *
 
 class AbstractTransit(object):
 
@@ -15,7 +16,7 @@ class AbstractTransit(object):
         self.parametrization = 'Standard'
 
         """ Keywords inherited from Planet common model (with switched logical sign)"""
-        self.compute_semimajor_axis = True
+        self.compute_scaled_semimajor_axis = True
         self.compute_inclination = True
         self.compute_time_inferior_conjunction = False
 
@@ -35,66 +36,16 @@ class AbstractTransit(object):
 
 
 
-    def _prepare_planetary_parameters(self, mc, **kwargs):
+    def _prepare_planet_parameters(self, mc, **kwargs):
 
-        if mc.common_models[self.planet_ref].parametrization[:8] == 'Ford2006' \
-            and mc.common_models[self.planet_ref].orbit != 'circular':
-            self.list_pams_common.discard('e')
-            self.list_pams_common.discard('omega')
+        """ Inherit planet properties to check which parameters 
+        are needed for the transit fit """
 
-            self.list_pams_common.update(['e_coso'])
-            self.list_pams_common.update(['e_sino'])
+        _prepare_planet_parametrization(self, mc, **kwargs)
+        _prepare_planet_scaled_semimajor_axis(self, mc, **kwargs)
+        _prepare_planet_inclination(self, mc, **kwargs)
+        _prepare_planet_time_inferior_conjunction(self, mc, **kwargs)
 
-        elif mc.common_models[self.planet_ref].parametrization[:8] != 'Standard' \
-            and mc.common_models[self.planet_ref].orbit != 'circular':
-                # 'Eastman2013' is the standard choice
-            self.list_pams_common.discard('e')
-            self.list_pams_common.discard('omega')
-
-            self.list_pams_common.update(['sre_coso'])
-            self.list_pams_common.update(['sre_sino'])
-
-        try:
-            multivariate_pams = mc.common_models[self.stellar_ref].multivariate_pams
-        except AttributeError:
-            multivariate_pams = []
-
-        """ Default parametrization uses the stellar density and the impact
-            parameter, it is possible to switch back to scaled semi-major axis and
-            inclination respectively by activating the proper flag """
-
-        if mc.common_models[self.planet_ref].use_semimajor_axis:
-            """ a is the semi-major axis (in units of stellar radii) """
-            self.list_pams_common.update(['a_Rs'])
-            self.compute_semimajor_axis = False
-        else:
-            if 'mass' in multivariate_pams and 'radius' in multivariate_pams:
-                self.list_pams_common.update(['mass'])
-                self.list_pams_common.update(['radius'])
-                self.multivariate_mass_radius = True
-            elif mc.common_models[self.stellar_ref].compute_density:
-                self.list_pams_common.update(['mass'])
-                self.list_pams_common.update(['radius'])
-                self.multivariate_mass_radius = True
-            else:
-                """ this is the density of the star (in solar units) """
-                self.list_pams_common.update(['density'])
-                self.multivariate_mass_radius = False
-
-        if mc.common_models[self.planet_ref].use_inclination:
-            """ i is the orbital inclination (in degrees) """
-            self.list_pams_common.update(['i'])
-            self.compute_inclination = False
-        else:
-            """ b is the impact parameter """
-            self.list_pams_common.update(['b'])
-
-        if mc.common_models[self.planet_ref].use_time_inferior_conjunction:
-            self.list_pams_common.update(['Tc'])
-        else:
-            self.list_pams_common.update(['mean_long'])
-            self.compute_time_inferior_conjunction = True
-            # mean longitude = argument of pericenter + mean anomaly at Tref
 
         self.use_shared_ttvs =  mc.common_models[self.planet_ref].use_shared_ttvs
         for use_shared_ttvs in keywords_shared_ttv:
@@ -116,11 +67,9 @@ class AbstractTransit(object):
         for keyword in keywords_differential_rotation:
             self.use_differential_rotation = kwargs.get(keyword, self.use_differential_rotation)
 
-
         self.use_stellar_rotation_period = kwargs.get(mc.common_models[self.stellar_ref].use_stellar_rotation_period, False)
         for keyword in keywords_stellar_rotation:
             self.use_stellar_rotation_period = kwargs.get(keyword, self.use_stellar_rotation_period)
-
 
         """ check if the differential rotation should be included in the model"""
         if self.use_differential_rotation:
@@ -242,7 +191,7 @@ class AbstractTransit(object):
         sample_factor = 1
         exposure_time = 0.01
 
-        """ Check if supersampling options is provided in th econfiguration file"""
+        """ Check if supersampling options is provided in the configuration file"""
         for dict_name in keywords_supersample:
             if kwargs[dataset.name_ref].get(dict_name, False):
                 sample_factor = kwargs[dataset.name_ref][dict_name]
@@ -319,7 +268,7 @@ class AbstractTransit(object):
         if self.multivariate_mass_radius:
             parameter_values['density'] = parameter_values['mass']/parameter_values['radius']**3
 
-        if self.compute_semimajor_axis:
+        if self.compute_scaled_semimajor_axis:
             parameter_values[prepend+'a_Rs'] = convert_rho_to_ars(parameter_values[prepend+'P'], parameter_values['density'])
 
         if self.compute_inclination:

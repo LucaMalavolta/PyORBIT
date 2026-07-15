@@ -1,7 +1,7 @@
 from pyorbit.subroutines.common import np, OrderedSet
 from pyorbit.common.abstract_common import AbstractCommon
 from pyorbit.common.dataset import Dataset
-from pyorbit.model_definitions import datatype_definition
+from pyorbit.datatype_definitions import datatype_definition
 
 from numpy.lib.recfunctions import append_fields, drop_fields
 

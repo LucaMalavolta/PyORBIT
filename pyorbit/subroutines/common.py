@@ -593,7 +593,6 @@ def pick_sampleMED_parameters(samples, lnprob):
 
 
 def convert_rho_to_ars(P, rho):
-
     return np.power(constants.Gsi * (constants.d2s * constants.d2s) * (P**2)
                     * rho * constants.rho_Sun / (3. * np.pi), 1./3.)
 

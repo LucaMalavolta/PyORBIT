@@ -118,7 +118,7 @@ class RVdynamical(AbstractModel):
             """ b is the impact parameter """
             self.list_pams_common.update(['b'])
 
-            if mc.common_models[self.planet_ref].use_semimajor_axis:
+            if mc.common_models[self.planet_ref].use_scaled_semimajor_axis:
                 """ a is the semi-major axis (in units of stellar radii) """
                 self.list_pams_common.update(['a_Rs'])
             else:
@@ -192,7 +192,7 @@ class TransitTimeDynamical(AbstractModel):
 
         self.list_pams_dataset = set()
 
-        self.use_semimajor_axis = False
+        self.use_scaled_semimajor_axis = False
         self.use_inclination = False
         self.use_time_inferior_conjunction = False
 
@@ -552,7 +552,7 @@ class DynamicalIntegrator:
             if mc.common_models[planet_name].use_inclination:
                 i_temp = dict_pams['i']
             else:
-                if mc.common_models[planet_name].use_semimajor_axis:
+                if mc.common_models[planet_name].use_scaled_semimajor_axis:
                     i_temp = \
                         convert_b_to_i(dict_pams['b'],
                                        dict_pams['e'],

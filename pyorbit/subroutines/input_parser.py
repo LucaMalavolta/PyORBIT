@@ -1,10 +1,12 @@
 from __future__ import print_function
 
 from pyorbit.model_definitions import *
+from pyorbit.datatype_definitions import *
 # Special import for Dataset, it had to be escluded from
 # model_definitons to avoid circular import
 from pyorbit.common.dataset import Dataset
 from pyorbit.common.dataset_expanded import DatasetExpanded
+from pyorbit.common.dataset_external import DatasetExternal
 
 from pyorbit.subroutines.common import np, get_2darray_from_val
 
@@ -212,8 +214,17 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, reload_ze
             if add_extended_dataset:
                 break
 
+        for key in external_dataset_keylist:
+            add_external_dataset = dataset_conf.get(key, False)
+            if add_external_dataset:
+                break
+
         if add_extended_dataset:
             mc.dataset_dict[dataset_name] = DatasetExpanded(dataset_name,
+                                                    dataset_conf['kind'],
+                                                    np.atleast_1d(dataset_conf['models']).tolist())
+        elif add_external_dataset:
+            mc.dataset_dict[dataset_name] = DatasetExternal(dataset_name,
                                                     dataset_conf['kind'],
                                                     np.atleast_1d(dataset_conf['models']).tolist())
         else:

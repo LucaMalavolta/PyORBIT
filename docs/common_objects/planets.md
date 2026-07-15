@@ -62,7 +62,7 @@ The default keyword is highlighted in boldface.
 * accepted values:  `True` | **`False`**
 * if `True`, the inclination of the planet `i` replaces the impact parameter `b`.
 
-**use_semimajor_axis**
+**use_scaled_semimajor_axis**
 * accepted values: `True` |  **`False`**
 * if `True`, the scaled semimajor axis of the planet `a_Rs` replaces the stellar
   density (defined in the `star` section).
@@ -148,7 +148,7 @@ common:
       parametrization: Eastman2013
       use_time_inferior_conjunction: True
       use_inclination: False    # can be omitted when default value is used
-      use_semimajor_axis: False # can be omitted when default value is used
+      use_scaled_semimajor_axis: False # can be omitted when default value is used
       boundaries:
         P: [2.20, 2.25]
         Tc: [2456194.00, 2456194.1.0]
@@ -167,7 +167,7 @@ In this case, we also required to use a keplerian orbit with the [Eastman et al.
 <!---
 PyORBIT has been used in the following works
       use_inclination: False    # can be omitted when default value is used
-      use_semimajor_axis: False # can be omitted when default value is used
+      use_scaled_semimajor_axis: False # can be omitted when default value is used
         P: [1.210, 1.240]
         Tc: [59144.60, 59144.63]
         b: [0.0, 1.0]

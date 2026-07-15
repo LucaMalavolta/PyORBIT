@@ -18,7 +18,7 @@ from pyorbit.classes.model_container_zeus import ModelContainerZeus
 from pyorbit.subroutines.input_parser import pars_input
 from pyorbit.subroutines.io_subroutines import *
 
-from pyorbit.model_definitions import activity_datatype
+from pyorbit.datatype_definitions import activity_datatype
 
 
 import numpy as np

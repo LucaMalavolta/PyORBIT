@@ -2,14 +2,12 @@
 from pyorbit.subroutines.common import *
 from pyorbit.models.abstract_model import AbstractModel
 import pyorbit.subroutines.kepler_exo as kepler_exo
+from pyorbit.subroutines.transformations import *
 
 try:
     from pytrades import pytrades
 except (ModuleNotFoundError,ImportError):
     pass
-
-
-#import time
 
 class AbstractDynamical(object):
 
@@ -34,80 +32,12 @@ class AbstractDynamical(object):
 
         print("*** {0:s} global parameters:".format(self.model_name))
 
-
-        if mc.common_models[self.planet_ref].parametrization[:8] == 'Ford2006' \
-            and mc.common_models[self.planet_ref].orbit != 'circular':
-            self.list_pams_common.discard('e')
-            self.list_pams_common.discard('omega')
-
-            self.list_pams_common.update(['e_coso'])
-            self.list_pams_common.update(['e_sino'])
-
-        elif mc.common_models[self.planet_ref].parametrization[:8] != 'Standard' \
-            and mc.common_models[self.planet_ref].orbit != 'circular':
-                # 'Eastman2013' is the standard choice
-            self.list_pams_common.discard('e')
-            self.list_pams_common.discard('omega')
-
-            self.list_pams_common.update(['sre_coso'])
-            self.list_pams_common.update(['sre_sino'])
-
-        try:
-            multivariate_pams = mc.common_models[self.stellar_ref].multivariate_pams
-        except AttributeError:
-            multivariate_pams = []
-
-        if not mc.common_models[self.planet_ref].use_mass \
-            and not mc.common_models[self.planet_ref].use_scaled_mass \
-            and not mc.common_models[self.planet_ref].use_stellar_scaled_mass:
-
-            print("UNRECOVERABLE ERROR model {0:s} :".format(self.model_name))
-            print('    Dynamical modelling requires the mass or the scaled mass of the planet as free parameters')
-            print('    for efficient exploration of parameter space')
-            quit()
-
-        if mc.common_models[self.planet_ref].use_mass:
-            self.list_pams_common.update(['M_Me'])
-
-        if mc.common_models[self.planet_ref].use_scaled_mass:
-            self.list_pams_common.update(['Me_Ms'])
-
-        if mc.common_models[self.planet_ref].use_stellar_scaled_mass:
-            self.list_pams_common.update(['M_Ms'])
-
-        try:
-            multivariate_pams = mc.common_models[self.stellar_ref].multivariate_pams
-        except AttributeError:
-            multivariate_pams = []
-
-        if 'mass' in multivariate_pams and 'radius' in multivariate_pams:
-            self.list_pams_common.update(['mass'])
-            self.list_pams_common.update(['radius'])
-        elif mc.common_models[self.stellar_ref].compute_density:
-            self.list_pams_common.update(['mass'])
-            self.list_pams_common.update(['radius'])
-        elif mc.common_models[self.stellar_ref].compute_mass:
-            self.list_pams_common.update(['density'])
-            self.list_pams_common.update(['radius'])
-        elif mc.common_models[self.stellar_ref].compute_radius:
-            self.list_pams_common.update(['density'])
-            self.list_pams_common.update(['mass'])
-
-
-        if mc.common_models[self.planet_ref].use_inclination:
-            """ i is the orbital inclination (in degrees) """
-            self.list_pams_common.update(['i'])
-            self.compute_inclination = False
-        else:
-            """ b is the impact parameter """
-            self.list_pams_common.update(['b'])
-            self.compute_inclination = True
-
-
-        if mc.common_models[self.planet_ref].use_time_inferior_conjunction:
-            self.list_pams_common.update(['Tc'])
-        else:
-            self.list_pams_common.update(['mean_long'])
+        _prepare_planet_parametrization(self, mc, **kwargs)
+        _prepare_planet_scaled_semimajor_axis(self, mc, **kwargs)
+        _prepare_planet_mass(self, mc, **kwargs)
+        _prepare_stellar_mass(self, mc, **kwargs)
+        _prepare_planet_inclination(self, mc, **kwargs)
+        _prepare_planet_time_inferior_conjunction(self, mc, **kwargs)
 
 
 class RVdynamical(AbstractModel, AbstractDynamical):

@@ -246,6 +246,7 @@ class CommonPlanets(AbstractCommon):
         self.parametrization = 'Eastman2013'
 
         self.use_inclination = False
+        self.use_scaled_semimajor_axis = False
         self.use_semimajor_axis = False
         self.use_time_inferior_conjunction = False
         self.use_mass = False
@@ -263,8 +264,8 @@ class CommonPlanets(AbstractCommon):
         self.compute_time_inferior_conjunction = True
         self.compute_mass = False
         self.compute_mean_longitude = False
+        self.compute_scaled_semimajor_axis = True
         self.compute_semimajor_axis = True
-
 
     def initialize_model(self, mc, **kwargs):
 
@@ -302,10 +303,15 @@ class CommonPlanets(AbstractCommon):
             print('    {0:s} parametrization not supported, check configuration file'.format(self.parametrization))
             quit()
 
+        self.use_scaled_semimajor_axis = kwargs.get('use_scaled_semimajor_axis', self.use_scaled_semimajor_axis)
+        if self.use_scaled_semimajor_axis:
+            self.compute_scaled_semimajor_axis = False
+            print('    scaled semi-major axis replacing stellar density as a free parameter: ', True)
+
         self.use_semimajor_axis = kwargs.get('use_semimajor_axis', self.use_semimajor_axis)
         if self.use_semimajor_axis:
             self.compute_semimajor_axis = False
-            print('    semi-major axis replacing stellar density as a free parameter: ', True)
+            print('    semi-major axis in AU replacing period as a free parameter: ', True)
 
         self.use_inclination = kwargs.get('use_inclination', self.use_inclination)
         if self.use_inclination:
@@ -503,7 +509,7 @@ class CommonPlanets(AbstractCommon):
     def update_parameter_values_for_dynamical(self, parameter_values, Tref, prepend=''):
 
         if self.compute_inclination:
-            if self.compute_semimajor_axis:
+            if self.compute_scaled_semimajor_axis:
                 parameter_values[prepend+'a_Rs'] = convert_rho_to_ars(parameter_values[prepend+'P'], parameter_values['density'])
             parameter_values[prepend+'i'] = convert_b_to_i(
                 parameter_values[prepend+'b'], parameter_values[prepend+'e'], parameter_values[prepend+'omega'], parameter_values[prepend+'a_Rs'])
@@ -523,3 +529,5 @@ class CommonPlanets(AbstractCommon):
                 parameter_values[prepend+'e'],
                 parameter_values[prepend+'omega'],
                 parameter_values[prepend+'Omega'])
+
+

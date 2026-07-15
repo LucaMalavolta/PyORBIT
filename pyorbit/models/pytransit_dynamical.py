@@ -43,7 +43,7 @@ class PyTransit_Dynamical(AbstractModel, AbstractTransit, AbstractDynamical):
 
         """ Planetary parameters initialization is taken care of by the Dynamical integration model"""
         self._prepare_dynamical_parameters(mc, **kwargs)
-        self._prepare_planetary_parameters(mc, **kwargs)
+        self._prepare_planet_parameters(mc, **kwargs)
 
         self._prepare_limb_darkening_coefficients(mc, **kwargs)
 

@@ -30,30 +30,19 @@ class RVkeplerian(AbstractModel):
         """ Default is to use the inclination value as provided.
         Otherwise, compute it using the semimajor axis derived from orbital period and stellar density"""
         self.compute_inclination = False
+        self.compute_scaled_semimajor_axis = True
         self.compute_semimajor_axis = True
 
     def initialize_model(self, mc, **kwargs):
 
-        #TODO Remove in PyORBIT version 12, this is for backward compatibility with old versions
-        try: 
-            # Copying the property to the class for faster access
-            self.use_time_inferior_conjunction = getattr(mc.common_models[self.planet_ref], 
-                                                        'use_time_inferior_conjunction', self.use_time_inferior_conjunction)
-            self.use_mass = getattr(mc.common_models[self.planet_ref], 'use_mass', self.use_mass)
-            self.use_scaled_mass = getattr(mc.common_models[self.planet_ref], 'use_scaled_mass', self.use_scaled_mass)
-            self.use_stellar_scaled_mass = getattr(mc.common_models[self.planet_ref], 'use_stellar_scaled_mass', self.use_stellar_scaled_mass)
-            self.compute_inclination = getattr(mc.common_models[self.planet_ref], 'compute_inclination', self.compute_inclination)
-            self.compute_semimajor_axis = getattr(mc.common_models[self.planet_ref], 'compute_semimajor_axis', self.compute_semimajor_axis)
-        except AttributeError:
-                # Copying the property to the class for faster access
-            self.use_time_inferior_conjunction = getattr(mc.common_models[self.planet_ref], 
-                                                        'use_time_inferior_conjunction', False)
-            self.use_mass = getattr(mc.common_models[self.planet_ref], 'use_mass', False)
-            self.use_scaled_mass = getattr(mc.common_models[self.planet_ref], 'use_scaled_mass', False)
-            self.use_stellar_scaled_mass = getattr(mc.common_models[self.planet_ref], 'use_stellar_scaled_mass', False)
-            self.compute_inclination = getattr(mc.common_models[self.planet_ref], 'compute_inclination', False)
-            self.compute_semimajor_axis = getattr(mc.common_models[self.planet_ref], 'compute_semimajor_axis', True)
-       
+        # Copying the property to the class for faster access
+        self.use_time_inferior_conjunction = getattr(mc.common_models[self.planet_ref], 
+                                                    'use_time_inferior_conjunction', self.use_time_inferior_conjunction)
+        self.use_mass = getattr(mc.common_models[self.planet_ref], 'use_mass', self.use_mass)
+        self.use_scaled_mass = getattr(mc.common_models[self.planet_ref], 'use_scaled_mass', self.use_scaled_mass)
+        self.use_stellar_scaled_mass = getattr(mc.common_models[self.planet_ref], 'use_stellar_scaled_mass', self.use_stellar_scaled_mass)
+        self.compute_inclination = getattr(mc.common_models[self.planet_ref], 'compute_inclination', self.compute_inclination)
+        self.compute_scaled_semimajor_axis = getattr(mc.common_models[self.planet_ref], 'compute_scaled_semimajor_axis', self.compute_scaled_semimajor_axis)
 
         if mc.common_models[self.planet_ref].parametrization[:8] == 'Ford2006' \
             and mc.common_models[self.planet_ref].orbit != 'circular':
@@ -93,7 +82,7 @@ class RVkeplerian(AbstractModel):
             if self.compute_inclination:
                 """ b is the impact parameter """
                 self.list_pams_common.update(['b'])
-                if self.compute_semimajor_axis:
+                if self.compute_scaled_semimajor_axis:
                     self.list_pams_common.update(['density'])
                 else:
                     self.list_pams_common.update(['a_Rs'])
@@ -128,7 +117,7 @@ class RVkeplerian(AbstractModel):
         if self.use_mass or self.use_scaled_mass or self.use_stellar_scaled_mass:
 
             if self.compute_inclination:
-                if self.compute_semimajor_axis:
+                if self.compute_scaled_semimajor_axis:
                     parameter_values['a_Rs'] = convert_rho_to_ars(parameter_values['P'], 
                                                                     parameter_values['density'])
 

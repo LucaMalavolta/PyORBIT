@@ -134,39 +134,8 @@ from pyorbit.models.rossitermclaughlin_revolutions_faster import RossiterMcLaugh
 
 from pyorbit.models.rossitermclaughlin_multiplanets_precise import RossiterMcLaughlin_MultiPlanets_Precise
 
-"""
- model_requires_planets: all those models that requires AT LEAST one of the planets in the system must be listed here
-    this is the case for dataset that contains the signature of multiple planets, e.g., RVs or transit light curve
- single_planet_model: the model is associated to a specific planet, e.g., time of transits
-"""
+from pyorbit.models.orbitize import Orbitize, OrbitizeRunner
 
-#model_requires_planets = ['radial_velocities', 'rv_planets',
-#                          'batman_transit', 'pytransit_transit',
-#                          'batman_transit_ttv', 'pytransit_transit_ttv',
-#                          'subset_batman_transit_ttv', 'batman_transit_ttv_subset',
-#                          'subset_batman_transit_faster_ttv', 'batman_transit_ttv_subset_faster',
-#                          'subset_pytransit_transit_ttv', 'pytransit_transit_ttv_subset',
-#                          'ancillary_pytransit_transit_ttv', 'pytransit_transit_ttv_ancillary',
-#                         'rossitermclaughlin_ohta','rossitermclaughlin_precise',
-#                         'rossitermclaughlin_reloaded','rossitermclaughlin_reloaded_faster',
-#                         'rossitermclaughlin_revolutions',
-#                         'spiderman_thermal', 'batman_transit_eclipse_phasecurve']
-
-model_requires_planets = ['radial_velocities', 'transit_times', 'transit',
-                                'transit_eclipse_phasecurve']
-
-single_planet_model = ['Tc_planets', 'transit_times']
-transit_time_model = ['Tc_planets', 'transit_times']
-
-model_requires_limb_darkening = ['transit',
-                                'transit_eclipse_phasecurve',
-                                'spectral_rotation',
-                                'subset_spectral_rotation',
-                                'subset_spectral_rotation_polynomial',
-                                'rossiter_mclaughlin']
-
-model_requires_star = ['rossiter_mclaughlin', 'transit_times', 'gaussian_process', 'multidimensional_gaussian_process']
-model_requires_multiple_planets = ['rossiter_mclaughlin']
 
 define_common_type_to_class = {
     'planets': CommonPlanets,
@@ -320,33 +289,34 @@ define_type_to_class = {
     'lightcurve_detrending': FullDetrending,
     'detrending_matern32': Detrending_Matern32,
     'matern32_detrending': Detrending_Matern32,
+    'orbitize': Orbitize,
 }
 
-accepted_extensions = ['.yaml', '.yml', '.conf', '.config', '.input', ]
+
+"""
+ model_requires_planets: all those models that requires AT LEAST one of the planets in the system must be listed here
+    this is the case for dataset that contains the signature of multiple planets, e.g., RVs or transit light curve
+ single_planet_model: the model is associated to a specific planet, e.g., time of transits
+"""
+
+model_requires_planets = ['radial_velocities', 'transit_times', 'transit', 'orbitize',
+                                'transit_eclipse_phasecurve']
+
+single_planet_model = ['Tc_planets', 'transit_times']
+transit_time_model = ['Tc_planets', 'transit_times']
+
+model_requires_limb_darkening = ['transit',
+                                'transit_eclipse_phasecurve',
+                                'spectral_rotation',
+                                'subset_spectral_rotation',
+                                'subset_spectral_rotation_polynomial',
+                                'rossiter_mclaughlin']
+
+model_requires_star = ['rossiter_mclaughlin', 'transit_times', 'gaussian_process', 'multidimensional_gaussian_process', 'orbitize']
+model_requires_multiple_planets = ['rossiter_mclaughlin']
+
 
 star_properties_list = ['limb_darkening', 'dilution_factor']
 
-extended_dataset_keylist = ['expanded_dataset', 'extended_dataset', 'dataset_2d', 'dataset_expanded', 'dataset_extended', '2d_dataset']
 
-# Trying to guess all the possible mistakes....
-datatype_definition = {
-    'radial_velocity': ['RV', 'RVs', 'rv', 'rvs'],
-    'transit_time': ['transit_time', 'transit_times', 'Tcent', 'TCent', 'Tc', 'TC', 'T0', 'TT'],
-    'transit_duration': ['transit_duration', 'transit_durations', 'Tdur', 'TDur', 'Td', 'TD', 'T_dur', 'T_Dur'],
-    'astrometry': ['astrometry', 'Astrometry', 'AstroMetry', 'Astro', 'astro', 'AM', 'Gaia', 'gaia'],
-    'H-alpha': ['H', 'HA', 'h', 'ha', 'Halpha', 'H-alpha', 'halpha', 'h-alpha'],
-    'photometry': ['P', 'Ph', 'p', 'ph', 'PHOT', 'Phot', 'phot', 'Photometry', 'photometry'],
-    'FWHM': ['FWHM', 'fwhm'],
-    'BIS': ['BIS', 'bis'],
-    'EWs': ['EWs', 'EW', 'ew', 'ews'],
-    'activity': ['Activity', 'activity', 'act_index', 'Act_index', 'activity_index', 'Activity_index'],
-    'Ca_HK': ['Ca', 'Cahk', 'CaHK', 'Ca_hk', 'Ca_HK',
-              'logR', 'logRhk', 'logRHK', 'logR_hk', 'logR_HK',
-              'log(R)', 'log(Rhk)', 'log(RHK)', 'log(R_hk)', 'log(R_HK)'],
-    'S_index': ['S', 'S_index', 'Shk', 'SHK', 'S_HK', 'S_hk'],
-    'CCF': ['CCF', 'CCFs', 'ccf', 'ccfs'],
-    'external': ['orbitize', 'Orbitize', 'ORBITIZE'],
-}
 
-activity_datatype = ['H-alpha', 'FWHM', 'BIS', 'EWs', 'activity', 'Ca_HK', 'S_index']
-activity_noderivative = ['H-alpha', 'FWHM', 'EWs', 'Ca_HK', 'S_index']

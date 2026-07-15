@@ -41,7 +41,7 @@ class Batman_Transit_TTV_TClist(AbstractModel, AbstractTransit):
         """ Force the use of the time of inferior conjunction"""
         mc.common_models[self.planet_ref].use_time_inferior_conjunction = True
 
-        self._prepare_planetary_parameters(mc, **kwargs)
+        self._prepare_planet_parameters(mc, **kwargs)
         self._prepare_limb_darkening_coefficients(mc, **kwargs)
 
         self.tc_data = np.genfromtxt(mc.common_models[self.planet_ref].tc_list)

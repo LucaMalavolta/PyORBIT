@@ -41,7 +41,7 @@ class RossiterMcLaughling_Starry(AbstractModel, AbstractTransit):
 
     def initialize_model(self, mc, **kwargs):
 
-        self._prepare_planetary_parameters(mc, **kwargs)
+        self._prepare_planet_parameters(mc, **kwargs)
         self._prepare_star_parameters(self, mc, **kwargs)
         self._prepare_limb_darkening_coefficients(mc, **kwargs)
 

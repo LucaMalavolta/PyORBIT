@@ -24,7 +24,7 @@ class Spiderman_Thermal(AbstractModel, AbstractTransit):
             #'insol'
         ])
 
-        self.use_semimajor_axis = False
+        self.use_scaled_semimajor_axis = False
         self.use_inclination = False
         self.use_time_inferior_conjunction = False
         self.use_stellar_radius = True
@@ -42,7 +42,7 @@ class Spiderman_Thermal(AbstractModel, AbstractTransit):
             print("ERROR: spiderman not installed, this will not work")
             quit()
 
-        self._prepare_planetary_parameters(self, mc, **kwargs)
+        self._prepare_planet_parameters(self, mc, **kwargs)
         self._prepare_star_parameters(self, mc, **kwargs)
 
         self.spiderman_params = spiderman.ModelParams(

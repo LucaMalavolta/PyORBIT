@@ -1,7 +1,7 @@
 from pyorbit.subroutines.common import np, OrderedSet
 from pyorbit.common.abstract_common import AbstractCommon
 from pyorbit.common.dataset import Dataset
-from pyorbit.model_definitions import datatype_definition
+from pyorbit.datatype_definitions import datatype_definition
 
 
 class DatasetExternal(Dataset):
@@ -13,14 +13,13 @@ class DatasetExternal(Dataset):
     """
 
     def __init__(self, model_name, kind, models):
-        super(self.__class__, self).__init__(None)
+        AbstractCommon.__init__(self, None)
 
+        self.kind = kind
         for kind_name, kind_list in datatype_definition.items():
             if kind in kind_list:
                 self.kind = kind_name
                 break
-        if self.kind != 'external':
-            raise ValueError(f"DatasetExternal can only be initialized with kind='external', got kind='{kind}' instead. See pyorbit.model_definitions.datatype_definition for valid kinds.")
 
         # model kind:  'RV', 'PHOT', 'ACT'...
         self.models = models
