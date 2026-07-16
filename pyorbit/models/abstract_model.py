@@ -96,7 +96,7 @@ class AbstractModel(object):
 
         #TODO: Added in PyORBIT version 12 beta
         self.parent_model = None
-        self.parameter_values = None
+        self.parameter_values = {}
         self.planet_parameters = {}
 
         #TODO: May become obsole in PyORBIT version 12

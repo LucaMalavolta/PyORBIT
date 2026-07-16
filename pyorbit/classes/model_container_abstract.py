@@ -302,6 +302,7 @@ class ModelContainer(object):
         delayed_lnlk_computation = []
         residuals_analysis = {}
 
+
         for dataset_name, dataset in self.dataset_dict.items():
 
             logchi2_gp_model = None
@@ -318,6 +319,8 @@ class ModelContainer(object):
             if not dataset.models:
                 continue
 
+            #TODO: Added in PyORBIT version 12 beta
+            multiple_planets_models = {}
             skip_loglikelihood = False
 
             for model_name in dataset.models:
@@ -330,16 +333,18 @@ class ModelContainer(object):
                     parameter_values.update(
                         self.common_models[common_ref].convert(theta))
 
+
                 #TODO: remove try-except starting from PyORBIT version 12 !!
                 #TODO: maybe remove multiple_planets at all becuase ot causes some discrepancies in the way 
                 #TODO: planetary parameters are dealt with 
-                try:
-                    for planet_name in self.models[model_name].multiple_planets:
-                        parameter_values.update(
-                            self.common_models[planet_name].convert_with_name(theta, planet_name))
-                except TypeError:
-                    pass
+                #try:
+                #    for planet_name in self.models[model_name].multiple_planets:
+                #        parameter_values.update(
+                #            self.common_models[planet_name].convert_with_name(theta, planet_name))
+                #except TypeError:
+                #    pass
 
+                print(model_name, parameter_values)
                     
                 parameter_values.update(
                     self.models[model_name].convert(theta, dataset_name))
@@ -351,14 +356,20 @@ class ModelContainer(object):
                     print('accept_multiple_planets', model_name, dataset_name)
 
                     parent_model = self.models[model_name].parent_model
-                    self.parent_models[parent_model].parameter_values = parameter_values.copy()
+                    planet_ref = self.models[model_name].planet_ref
+                    self.parent_models[parent_model].parameter_values[planet_ref] = parameter_values.copy()
+
+                    try:
+                        multiple_planets_models[parent_model].append(planet_ref)
+                    except KeyError:
+                        multiple_planets_models[parent_model] = [planet_ref]
 
                     continue
 
                 if getattr(self.models[model_name], 'external_dataset', False):
                     skip_loglikelihood = True
                     log_likelihood += self.models[model_name].compute_loglikelihood(parameter_values, dataset)
-
+                    continue
 
                 """ residuals will be computed following the definition in Dataset class
                     This section has never been tested
@@ -417,6 +428,14 @@ class ModelContainer(object):
                 else:
                     dataset.additive_model += self.models[model_name].compute(
                         parameter_values, dataset)
+
+            #TODO: Added in PyORBIT version 12 beta
+            for parent_model in multiple_planets_models:
+                model_list = multiple_planets_models[parent_model]
+                
+                self.parent_models[parent_model].compute(model_list, dataset)
+                pass
+
 
             dataset.compute_model()
             dataset.compute_residuals()
