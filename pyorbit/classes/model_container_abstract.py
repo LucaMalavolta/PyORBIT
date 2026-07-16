@@ -337,33 +337,31 @@ class ModelContainer(object):
                 #TODO: remove try-except starting from PyORBIT version 12 !!
                 #TODO: maybe remove multiple_planets at all becuase ot causes some discrepancies in the way 
                 #TODO: planetary parameters are dealt with 
-                #try:
-                #    for planet_name in self.models[model_name].multiple_planets:
-                #        parameter_values.update(
-                #            self.common_models[planet_name].convert_with_name(theta, planet_name))
-                #except TypeError:
-                #    pass
+                try:
+                    for planet_name in self.models[model_name].multiple_planets:
+                        parameter_values.update(
+                            self.common_models[planet_name].convert_with_name(theta, planet_name))
+                except TypeError:
+                    pass
 
-                print(model_name, parameter_values)
-                    
                 parameter_values.update(
                     self.models[model_name].convert(theta, dataset_name))
-                print(model_name, parameter_values)
 
 
                 #TODO: Added in PyORBIT version 12 beta
                 if getattr(self.models[model_name], 'accept_multiple_planets', False):
-                    print('accept_multiple_planets', model_name, dataset_name)
 
                     parent_model = self.models[model_name].parent_model
                     planet_ref = self.models[model_name].planet_ref
-                    self.parent_models[parent_model].parameter_values[planet_ref] = parameter_values.copy()
+                    parameter_values.update(
+                            self.common_models[planet_ref].convert_with_name(theta, planet_ref))
+
+                    self.parent_models[parent_model].parameter_values.update(parameter_values)
 
                     try:
                         multiple_planets_models[parent_model].append(planet_ref)
                     except KeyError:
                         multiple_planets_models[parent_model] = [planet_ref]
-
                     continue
 
                 if getattr(self.models[model_name], 'external_dataset', False):
@@ -429,12 +427,29 @@ class ModelContainer(object):
                     dataset.additive_model += self.models[model_name].compute(
                         parameter_values, dataset)
 
+
             #TODO: Added in PyORBIT version 12 beta
             for parent_model in multiple_planets_models:
-                model_list = multiple_planets_models[parent_model]
+                planet_list = multiple_planets_models[parent_model]
                 
-                self.parent_models[parent_model].compute(model_list, dataset)
-                pass
+
+                if getattr(self.parent_models[parent_model], 'external_dataset', False):
+                    skip_loglikelihood = True
+                    log_likelihood += self.parent_models[parent_model].compute_loglikelihood(planet_list, dataset)
+                    continue
+
+                model_out = self.parent_models[parent_model].compute(planet_list, dataset)
+                
+                if dataset.normalization_model is None and (self.parent_models[parent_model].unitary_model or self.parent_models[parent_model].normalization_model):
+                    dataset.normalization_model = np.ones(dataset.n, dtype=np.double)
+
+                if self.parent_models[parent_model].unitary_model:
+                    #print('CHOICE D ', model_name, self.models[model_name].random_number, np.shape(dataset.buffer_model), np.shape(dataset.unitary_model))
+                    dataset.unitary_model += model_out
+                elif self.parent_models[parent_model].normalization_model:
+                    dataset.normalization_model *= model_out
+                else:
+                    dataset.additive_model += model_out
 
 
             dataset.compute_model()
