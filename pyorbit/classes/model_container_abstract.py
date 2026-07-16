@@ -25,6 +25,8 @@ class ModelContainer(object):
         # Dictionaries including the common models and data-specific models
         self.common_models = {}
         self.models = {}
+        #TODO: Added in PyORBIT version 12 beta
+        self.parent_models = {}
 
         self.include_priors = True
 
@@ -45,6 +47,9 @@ class ModelContainer(object):
         self.Tref = None
 
         self.ordered_planets = {}
+
+
+
 
     def model_setup(self):
 
@@ -73,6 +78,10 @@ class ModelContainer(object):
                     model_conf = {}
             except:
                 model_conf = {}
+
+            #TODO: to be improved in PyORBIT version 12 beta
+            #TODO: for nested models, the initialize_model and  initialize_model_dataset must be run at the higher level
+            #TODO: while  initialize_model_parameters (to be implemented) must run at planet level
 
             model.initialize_model(self, **model_conf)
             model.change_parameter_status(self, **model_conf)
@@ -322,6 +331,8 @@ class ModelContainer(object):
                         self.common_models[common_ref].convert(theta))
 
                 #TODO: remove try-except starting from PyORBIT version 12 !!
+                #TODO: maybe remove multiple_planets at all becuase ot causes some discrepancies in the way 
+                #TODO: planetary parameters are dealt with 
                 try:
                     for planet_name in self.models[model_name].multiple_planets:
                         parameter_values.update(
@@ -329,8 +340,25 @@ class ModelContainer(object):
                 except TypeError:
                     pass
 
+                    
                 parameter_values.update(
                     self.models[model_name].convert(theta, dataset_name))
+                print(model_name, parameter_values)
+
+
+                #TODO: Added in PyORBIT version 12 beta
+                if getattr(self.models[model_name], 'accept_multiple_planets', False):
+                    print('accept_multiple_planets', model_name, dataset_name)
+
+                    parent_model = self.models[model_name].parent_model
+                    self.parent_models[parent_model].parameter_values = parameter_values.copy()
+
+                    continue
+
+                if getattr(self.models[model_name], 'external_dataset', False):
+                    skip_loglikelihood = True
+                    log_likelihood += self.models[model_name].compute_loglikelihood(parameter_values, dataset)
+
 
                 """ residuals will be computed following the definition in Dataset class
                     This section has never been tested

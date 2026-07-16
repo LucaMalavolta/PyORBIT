@@ -94,14 +94,31 @@ class AbstractModel(object):
         self.include_zero_point = False
         self.exclude_zero_point = False
 
-        ## New attribute
+        #TODO: Added in PyORBIT version 12 beta
+        self.parent_model = None
+        self.parameter_values = None
+        self.planet_parameters = {}
+
+        #TODO: May become obsole in PyORBIT version 12
         self.multiple_planets = []
+
+
 
     def initialize_model(self, mc, **kwargs):
         pass
 
-    def change_parameter_status(self, mc, **kwargs):
+    def initialize_model_parameters(self, mc, **kwargs):
+        pass
 
+    def initialize_model_dataset(self, mc, dataset, **kwargs):
+        pass
+
+    def change_parameter_status(self, mc, **kwargs):
+        """change_parameter_status _summary_
+
+        :param mc: _description_
+        :type mc: _type_
+        """
         dataset_pams = kwargs.get('dataset_parameters', [])
         for par in dataset_pams:
             self.list_pams_common.discard(par)
@@ -111,8 +128,6 @@ class AbstractModel(object):
             self.list_pams_dataset.discard(par)
             self.list_pams_common.update([par])
 
-    def initialize_model_dataset(self, mc, dataset, **kwargs):
-        pass
 
     def define_parameter_properties(self, ndim, output_lists, dataset_name):
         """[summary]

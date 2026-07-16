@@ -107,6 +107,10 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, reload_ze
         conf_models = {'dummy_model': True}
 
 
+    ordering_dict = {}
+    #TODO: Added in PyORBIT version 12 beta
+    nested_models_association = {}
+
     """ Beginning of snippet dedicated to the reloading of parameters that are not involved in the fit procedure"""
     if reload_emcee or reload_zeus or reload_affine:
         if hasattr(mc, 'emcee_parameters'):
@@ -307,7 +311,6 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, reload_ze
             if ancillary in dataset_conf:
                 mc.dataset_dict[dataset_name].append_ancillary(dataset_conf[ancillary])
 
-    ordering_dict = {}
     print()
 
     for model_name, model_conf in conf_common.items():
@@ -520,7 +523,11 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, reload_ze
                         if len(list(OrderedSet(planet_list) & OrderedSet(mc.dynamical_dict))) and not keplerian_approximation:
                             dataset.dynamical = True
 
-            for model_name_exp, planet_name in zip(model_name_expanded, planet_list):
+            #TODO: added in PyORBIT version 12 beta
+            #if temporary_model.model_class in model_requires_planets:
+
+            #TODO: changed in PyORBIT version 12 beta
+            for model_name_org, model_name_exp, planet_name in zip(model_name_original, model_name_expanded, planet_list):
 
                 try:
                     mc.models[model_name_exp] = \
@@ -543,6 +550,14 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, reload_ze
                             model_name_exp, planet_name)
 
                     mc.models[model_name_exp].model_conf = model_conf.copy()
+
+                    if getattr(mc.models[model_name_exp], 'accept_multiple_planets', False):
+
+                        mc.parent_models[model_name_org] = \
+                            define_type_to_class[model_type](model_name_org, planet_name)
+                        mc.parent_models[model_name_org].model_conf = model_conf.copy()
+                        mc.models[model_name_exp].parent_model = model_name_org
+
 
                 if model_type in transit_time_model:
 

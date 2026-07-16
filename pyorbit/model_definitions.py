@@ -134,7 +134,7 @@ from pyorbit.models.rossitermclaughlin_revolutions_faster import RossiterMcLaugh
 
 from pyorbit.models.rossitermclaughlin_multiplanets_precise import RossiterMcLaughlin_MultiPlanets_Precise
 
-from pyorbit.models.orbitize import Orbitize, OrbitizeRunner
+from pyorbit.models.orbitize import Orbitize
 
 
 define_common_type_to_class = {
@@ -300,7 +300,7 @@ define_type_to_class = {
 """
 
 model_requires_planets = ['radial_velocities', 'transit_times', 'transit', 'orbitize',
-                                'transit_eclipse_phasecurve']
+                                'transit_eclipse_phasecurve', 'rossiter_mclaughlin', 'orbitize']
 
 single_planet_model = ['Tc_planets', 'transit_times']
 transit_time_model = ['Tc_planets', 'transit_times']
@@ -313,7 +313,8 @@ model_requires_limb_darkening = ['transit',
                                 'rossiter_mclaughlin']
 
 model_requires_star = ['rossiter_mclaughlin', 'transit_times', 'gaussian_process', 'multidimensional_gaussian_process', 'orbitize']
-model_requires_multiple_planets = ['rossiter_mclaughlin']
+#model_requires_multiple_planets = ['rossiter_mclaughlin']
+model_requires_multiple_planets = []
 
 
 star_properties_list = ['limb_darkening', 'dilution_factor']

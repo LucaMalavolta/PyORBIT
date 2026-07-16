@@ -59,6 +59,7 @@ class DatasetExternal(Dataset):
         self.ancillary = None
 
         self.compute_plot = False
+        self.n = 0
 
 
     def append_ancillary(self, input_file, input_array=False, input_array_str=False):

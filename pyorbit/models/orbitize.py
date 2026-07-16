@@ -11,8 +11,10 @@ class AbstractAstrometry(object):
         ''' Orbital parameters to be used in the astrometric fit '''
         self.list_pams_common = OrderedSet([
             'P',     # Period in days
+            'M_Ms',
             'Omega', # longitude of ascending node
             'e',     # eccentricity, uniform prior - to be fixed
+            'i',
             'R_Rs',  # planet radius (in units of stellar radii)
             'omega', # argument of pericenter
             #'i',     # inclination in degrees
@@ -22,7 +24,8 @@ class AbstractAstrometry(object):
 
         self.list_pams_dataset = OrderedSet()
         self.warning_given = False
-
+        self.accept_multiple_planets = True
+        self.compute_semimajor_axis = True
 
     def _prepare_astrometry_parameters(self, mc, **kwargs):
 
@@ -67,28 +70,11 @@ class AbstractAstrometry(object):
 
 
 class Orbitize(AbstractModel, AbstractAstrometry):
-    model_class = 'orbitize_model'
+    model_class = 'orbitize'
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         super(AbstractModel, self).__init__(*args, **kwargs)
-
-    # brainless workaround
-    def initialize_model(self, mc, **kwargs):
-        self._prepare_astrometry_parameters(mc, **kwargs)
-
-        print(**kwargs)
-
-    def compute(self, mc, theta, x_input=None, *args, **kwargs):
-        print(self.multiple_planets)
-        for planet_name in self.multiple_planets:
-            self.update_parameter_values(parameter_values, dataset.Tref, planet_name+'_' )
-
-
-class OrbitizeRunner(object):
-    def __init__(self):
-        self.model_name = 'orbitize_runner'
-        self.to_be_initialized = True
 
         print("    {0:s} WARNING:".format(self.model_name))
         print('        Astrometry modelling requires the use of the stellar mass')
@@ -97,6 +83,23 @@ class OrbitizeRunner(object):
         print('        You can control the behaviour of mass/radius/density with the specific keywords')
         print('        compute_mass, compute_radius, compute_density')
         print()
+
+        self.external_dataset = True
+
+    # brainless workaround
+    def initialize_model(self, mc, **kwargs):
+        pass
+
+    def initialize_model_parameters(self, mc, **kwargs):
+
+        self._prepare_astrometry_parameters(mc, **kwargs)
+
+    def compute(self, parameter_values, dataset, x0_input=None):
+        print(self.multiple_planets)
+        for planet_name in self.multiple_planets:
+            self.update_parameter_values(parameter_values, dataset.Tref, planet_name+'_' )
+
+    
 
     #def compute(self, mc, theta, x_input=None, *args, **kwargs):
         
