@@ -72,6 +72,8 @@ class ModelContainer(object):
 
         for model_name, model in self.models.items():
 
+            print(' ****** Initializing model: ', model_name, ' ******')
+
             try:
                 model_conf = model.model_conf
                 if model_conf is None:
@@ -79,16 +81,31 @@ class ModelContainer(object):
             except:
                 model_conf = {}
 
-            #TODO: to be improved in PyORBIT version 12 beta
-            #TODO: for nested models, the initialize_model and  initialize_model_dataset must be run at the higher level
-            #TODO: while  initialize_model_parameters (to be implemented) must run at planet level
-
             model.initialize_model(self, **model_conf)
+
+            #TODO: added in PyORBIT version 12 beta
+            model.initialize_model_parameters(self, **model_conf)
+
             model.change_parameter_status(self, **model_conf)
 
             for dataset_name in list(OrderedSet(model_conf) & OrderedSet(self.dataset_dict)):
                 model.initialize_model_dataset(
                     self, self.dataset_dict[dataset_name], **model_conf)
+
+        #TODO: added in PyORBIT version 12 beta
+        for model_name, model in self.parent_models.items():
+            try:
+                model_conf = model.model_conf
+                if model_conf is None:
+                    model_conf = {}
+            except:
+                model_conf = {}
+            model.initialize_model(self, **model_conf)
+
+            for dataset_name in list(OrderedSet(model_conf) & OrderedSet(self.dataset_dict)):
+                model.initialize_model_dataset(
+                    self, self.dataset_dict[dataset_name], **model_conf)
+            
 
         if self.dynamical_model:
             self.dynamical_model.to_be_initialized = True

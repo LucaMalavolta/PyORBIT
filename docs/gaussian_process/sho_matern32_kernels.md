@@ -35,12 +35,11 @@ Where the hyperparameters represent:
 
 In `PyORBIT`, the alternative parametrisation implemented in `celerite2` has been extended to all the `SHO` models:
 
-- $\rho$: the undamped period of the oscillator, defined as $\rho = 2\,\pi / \omega_0$,
-- $\tau$; the damping timescale of the process, defined as $\tau = 2\,Q / \omega_0$
-- $sigma$_ the standard deviation of the process, defined as $\sigma = \sqrt{S_0\,\omega_0\,Q} $
+- $\rho$: the undamped period of the oscillator, defined as $\rho = 2\,\pi / \omega_0$, and called ```sho_scale```
+- $\tau$: the damping timescale of the process, defined as $\tau = 2\,Q / \omega_0$, and called ```sho_decay```
+- $sigma$: the standard deviation of the process, defined as $\sigma = \sqrt{S_0\,\omega_0\,Q} $, and called ```sho_sigma```
 
 If you use the SHO kernel, please cite [Foreman-Mackey et al. 2017](https://ui.adsabs.harvard.edu/abs/2017AJ....154..220F/abstract) 
-
 
 ## Model definition and requirements
 

@@ -5,6 +5,21 @@ from pyorbit.subroutines.common import *
 from pyorbit.models.abstract_model import AbstractModel
 import pyorbit.subroutines.kepler_exo as kepler_exo
 from pyorbit.subroutines.transformations import *
+import os   
+
+try:
+        from orbitize import DATADIR, hipparcos, gaia
+        import orbitize.kepler
+        import orbitize.lnlike
+        from orbitize import read_input, system, priors
+except ImportError:
+        pass
+
+
+try:
+    from astropy.time import Time
+except ImportError:
+    pass
 
 class AbstractAstrometry(object):
 
@@ -77,12 +92,23 @@ class Orbitize(AbstractModel, AbstractAstrometry):
         super().__init__(*args, **kwargs)
         super(AbstractModel, self).__init__(*args, **kwargs)
 
-        import os   
-        from orbitize import DATADIR, hipparcos, gaia
-        import orbitize.kepler
-        import orbitize.lnlike
-        from orbitize import read_input, system, priors
-        from astropy.time import Time
+        try:
+                from orbitize import DATADIR, hipparcos, gaia
+        except ImportError:
+                print("    {0:s} WARNING:".format(self.model_name))
+                print('        orbitize is not installed. Please install it to use this model.')
+                print('        You can install it with pip install orbitize')
+                print()
+
+
+        try:
+            from astropy.time import Time
+        except ImportError:
+            print("    {0:s} WARNING:".format(self.model_name))
+            print('        astropy is not installed. Please install it to use this model.')
+            print('        You can install it with pip install astropy')
+            print()
+
 
         print("    {0:s} WARNING:".format(self.model_name))
         print('        Astrometry modelling requires the use of the stellar mass')
@@ -123,6 +149,9 @@ class Orbitize(AbstractModel, AbstractAstrometry):
         print("    {0:s} WARNING:".format(self.model_name))
         print('        loglikelihood not implemented')
 
+        print(self.parameter_values)
+
+
         this_system = system.System(
             1,
             self.data_table,
@@ -136,8 +165,9 @@ class Orbitize(AbstractModel, AbstractAstrometry):
         n_param = len(this_system.labels)
         param_model = np.zeros(n_param) 
 
-        for i_planet, planet in enumerate(planet_list):
+        #self.update_parameter_values_for_astrometry(self.parameter_values, self.Tref)
 
+        for i_planet, planet in enumerate(planet_list):
 
             
             sau = 1.757
@@ -165,6 +195,7 @@ class Orbitize(AbstractModel, AbstractAstrometry):
             param_model[this_system.param_idx['plx']] = plx
             param_model[this_system.param_idx['m1']] = msec
             param_model[this_system.param_idx['m0']] = mpri
+
 
 
         chi2_type = 'standard'
