@@ -3,8 +3,8 @@ from os import system
 
 from pyorbit.subroutines.common import *
 from pyorbit.models.abstract_model import AbstractModel
-import pyorbit.subroutines.kepler_exo as kepler_exo
-import pyorbit.subroutines.transformations as transformations
+from pyorbit.models.abstract_astrometry import AbstractAstrometry
+
 import pyorbit.subroutines.constants as constants
 import os   
 
@@ -16,84 +16,10 @@ try:
 except ImportError:
         pass
 
-
 try:
     from astropy.time import Time
 except ImportError:
     pass
-
-class AbstractAstrometry(object):
-
-    def __init__(self, *args, **kwargs):
-
-        ''' Orbital parameters to be used in the astrometric fit '''
-        self.list_pams_common = OrderedSet([
-            'P',     # Period in days
-            'M_Ms',
-            'Omega', # longitude of ascending node
-            'e',     # eccentricity, uniform prior - to be fixed
-            'i',
-            'R_Rs',  # planet radius (in units of stellar radii)
-            'omega', # argument of pericenter
-            #'i',     # inclination in degrees
-            'mass', #stellar mass
-            'parallax', #stellar parallax
-        ])
-
-        self.list_pams_dataset = OrderedSet()
-        self.warning_given = False
-        self.compute_semimajor_axis = True
-        self.compute_scaled_semimajor_axis = True
-
-    def _prepare_astrometry_parameters(self, mc, **kwargs):
-
-
-        print("*** {0:s} global parameters:".format(self.model_name))
-
-        transformations._prepare_planet_parametrization(self, mc, **kwargs)
-        transformations._prepare_planet_scaled_semimajor_axis(self, mc, **kwargs)
-        transformations._prepare_planet_semimajor_axis(self, mc, **kwargs)
-        transformations._prepare_planet_mass(self, mc, **kwargs)
-        transformations._prepare_stellar_mass(self, mc, **kwargs)
-        transformations._prepare_planet_inclination(self, mc, **kwargs)
-        transformations._prepare_planet_time_inferior_conjunction(self, mc, **kwargs)
-
-    def update_parameter_values(self,
-                                parameter_values,
-                                input_prepend=''):
-
-        if input_prepend == '':
-            prepend = ''
-        else:
-            prepend = input_prepend + '__'
-
-        print(parameter_values)
-        if self.compute_inclination:
-            if self.compute_scaled_semimajor_axis:
-                parameter_values[prepend+'a_Rs'] = convert_rho_to_ars(parameter_values[prepend+'P'], parameter_values['density'])
-            parameter_values[prepend+'i'] = convert_b_to_i(
-                parameter_values[prepend+'b'], parameter_values[prepend+'e'], parameter_values[prepend+'omega'], parameter_values[prepend+'a_Rs'])
-
-        if self.compute_semimajor_axis:
-            if self.compute_scaled_semimajor_axis:
-                parameter_values[prepend+'a_Rs'] = convert_rho_to_ars(parameter_values[prepend+'P'], parameter_values['density'])
-            parameter_values[prepend+'a_AU'] = convert_ars_to_a(parameter_values[prepend+'a_Rs'], parameter_values['radius'])
-
-        if self.compute_time_inferior_conjunction:
-            parameter_values[prepend+'Tc']= kepler_exo.kepler_compute_deltaTc_from_meanlong(
-                parameter_values[prepend+'P'],
-                parameter_values[prepend+'mean_long'],
-                parameter_values[prepend+'e'],
-                parameter_values[prepend+'omega'],
-                parameter_values[prepend+'Omega']) + self.Tref
-
-        if self.compute_mean_longitude:
-            parameter_values[prepend+'mean_long'] = kepler_exo.kepler_compute_meanlong_from_deltaTc(
-                parameter_values[prepend+'P'],
-                parameter_values[prepend+'Tc'] - self.Tref,
-                parameter_values[prepend+'e'],
-                parameter_values[prepend+'omega'],
-                parameter_values[prepend+'Omega'])
 
 
 class Orbitize(AbstractModel, AbstractAstrometry):
@@ -162,57 +88,45 @@ class Orbitize(AbstractModel, AbstractAstrometry):
 
         print(self.parameter_values)
 
+        orbitize_tref = 58849.0 # MJD
+
         this_system = system.System(
             len(planet_list),
             self.data_table,
             self.parameter_values['mass'],
             self.parameter_values['parallax'],
-            tau_ref_epoch=self.Tref - 2400000.5,
+            tau_ref_epoch=orbitize_tref,
             fit_secondary_mass=True,
             gaia=self.hgca_lnprob,
         )
+
 
         n_param = len(this_system.labels)
         param_model = np.zeros(n_param) 
 
         #self.update_parameter_values_for_astrometry(self.parameter_values, self.Tref)
 
-        for i_planet, planet_name in enumerate(planet_list):
-
+        for i0_planet, planet_name in enumerate(planet_list):
+            i_planet = i0_planet + 1 
             prepend = planet_name + '__'
-            
-            sau = 1.757
-            esino = -0.2299
-            ecoso = 0.3395
-            inc = 38.7 / 180. * np.pi
-            asc = 266.6 / 180. * np.pi
-            omega = omega_deg / 180. * np.pi
-            msec = 20.0 * constants.Mjups 
 
+            Tperi_MJD =  self.parameter_values[prepend+'Tperi'] + self.Tref - 2400000.5
+            tau = orbitize.basis.tp_to_tau(Tperi_MJD, orbitize_tref, self.parameter_values[prepend+'P'])
 
-            delta_Tc =  kp.kepler_compute_deltaTc_from_deltaTperi(period, delta_Tperi, ecc, omega_deg)
-
-            lam = kp.kepler_compute_meanlong_from_deltaTc(period, delta_Tc, ecc, omega_deg, Omega_deg=180.0) / 180. * np.pi 
-
-
-
-
+            phase_Tperi = ((self.parameter_values[prepend+'Tperi'] + self.Tref - 2400000.5 ) % self.parameter_values[prepend+'P'] ) / self.parameter_values[prepend+'P']
             param_model[this_system.param_idx['sma'+repr(i_planet)]] = self.parameter_values[prepend+'a_AU']
             param_model[this_system.param_idx['ecc'+repr(i_planet)]] = self.parameter_values[prepend+'e']
             param_model[this_system.param_idx['inc'+repr(i_planet)]] = self.parameter_values[prepend+'i'] * constants.deg2rad
             param_model[this_system.param_idx['aop'+repr(i_planet)]] = self.parameter_values[prepend+'omega'] * constants.deg2rad
             param_model[this_system.param_idx['pan'+repr(i_planet)]] = self.parameter_values[prepend+'Omega'] * constants.deg2rad
-            param_model[this_system.param_idx['tau'+repr(i_planet)]] = self.parameter_values[prepend+'tau']
-            param_model[this_system.param_idx['ecc'+repr(i_planet)]] = ecc
-            param_model[this_system.param_idx['inc1']] = inc
-            param_model[this_system.param_idx['aop1']] = omega
-            param_model[this_system.param_idx['pan1']] = asc
-            param_model[this_system.param_idx['tau1']] = phase_Tperi
-            param_model[this_system.param_idx['plx']] = plx
-            param_model[this_system.param_idx['m1']] = msec
-        param_model[this_system.param_idx['m0']] = mpri
+            param_model[this_system.param_idx['tau'+repr(i_planet)]] = tau
+            param_model[this_system.param_idx['m'+repr(i_planet)]] = self.parameter_values[prepend+'M_Me'] * constants.Mears
 
+        param_model[this_system.param_idx['plx']] = self.parameter_values['parallax']
+        param_model[this_system.param_idx['m0']] =  self.parameter_values['mass']
 
+        print("param_model = ", param_model)
+        print("this_system.param_idx = ", this_system.param_idx)
 
         chi2_type = 'standard'
         custom_lnlike = None

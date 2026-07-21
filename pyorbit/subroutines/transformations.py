@@ -152,9 +152,11 @@ def _prepare_planet_time_inferior_conjunction(main_object, mc, **kwargs):
 
         if mc.common_models[main_object.planet_ref].use_time_inferior_conjunction:
             main_object.list_pams_common.update(['Tc'])
+            main_object.compute_time_inferior_conjunction = False
+            main_object.compute_mean_longitude = True
         else:
             main_object.list_pams_common.update(['mean_long'])
             main_object.compute_time_inferior_conjunction = True
-            # mean longitude = argument of pericenter + mean anomaly at Tref
+            main_object.compute_mean_longitude = False
 
 

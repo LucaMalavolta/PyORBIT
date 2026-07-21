@@ -88,8 +88,9 @@ class AbstractGaussianProcesses(object):
         print(flag_check )
         if sum(flag_check) > 1:
             print("UNRECOVERABLE ERROR model {0:s} :".format(self.common_ref))
-            raise ValueError('The rotation and decay flags are mutually exclusive. Please choose one of the following options: '
-                                'use_activity_Prot, use_activity_Pdec, use_stellar_rotation_period, use_stellar_activity_decay')
+            print('The rotation and decay flags are mutually exclusive. Please choose one of the following options:')
+            print('use_activity_Prot, use_activity_Pdec, use_stellar_rotation_period, use_stellar_activity_decay')
+            raise ValueError()
 
     def _prepare_rotation_replacement(self, mc, parameter_name ='Prot', common_pam=True, check_common=True, **kwargs):
 
