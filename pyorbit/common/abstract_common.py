@@ -189,7 +189,7 @@ class AbstractCommon(object):
     def convert_with_name(self, theta, name):
         parameter_values = {}
         for pam in self.parameter_index:
-            parameter_values[name + '_' + pam] = self.transformation[pam](
+            parameter_values[name + '__' + pam] = self.transformation[pam](
                 theta, self.fixed, self.parameter_index[pam])
         return parameter_values
 

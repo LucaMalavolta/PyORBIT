@@ -145,7 +145,46 @@ class CommonStarParameters(AbstractCommon):
                 'fixed' : 0.0,
                 'unit': 'unit',
             },
-
+        'offset_ra':
+            {
+                'bounds': [-100.00, 100.00],
+                'priors': ['Uniform', []],
+                'spaces': 'Linear',
+                'fixed' : 0.0,
+                'unit': 'mas',
+            },
+        'offset_dec':
+            {
+                'bounds': [-100.00, 100.00],
+                'priors': ['Uniform', []],
+                'spaces': 'Linear',
+                'fixed' : 0.0,
+                'unit': 'mas',
+            },
+        'pm_ra':
+            {
+                'bounds': [-5000.00, 5000.00],
+                'priors': ['Uniform', []],
+                'spaces': 'Linear',
+                'fixed' : 0.0,
+                'unit': 'mas/yr',
+            },
+        'pm_dec':
+            {
+                'bounds': [-5000.00, 5000.00],
+                'priors': ['Uniform', []],
+                'spaces': 'Linear',
+                'fixed' : 0.0,
+                'unit': 'mas/yr',
+            },
+        'parallax':
+            {
+                'bounds': [0.001, 2000.00],
+                'priors': ['Uniform', []],
+                'spaces': 'Linear',
+                'fixed' : 0.0,
+                'unit': 'mas',
+            },
     }
     recenter_pams = OrderedSet()
 

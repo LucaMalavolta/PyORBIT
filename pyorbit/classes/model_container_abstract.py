@@ -372,6 +372,7 @@ class ModelContainer(object):
                     planet_ref = self.models[model_name].planet_ref
                     parameter_values.update(
                             self.common_models[planet_ref].convert_with_name(theta, planet_ref))
+                    self.models[model_name].update_parameter_values(parameter_values, planet_ref)
 
                     self.parent_models[parent_model].parameter_values.update(parameter_values)
 

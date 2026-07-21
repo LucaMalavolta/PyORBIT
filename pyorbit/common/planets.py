@@ -506,7 +506,12 @@ class CommonPlanets(AbstractCommon):
         return False
 
 
-    def update_parameter_values_for_dynamical(self, parameter_values, Tref, prepend=''):
+    def update_parameter_values_for_dynamical(self, parameter_values, Tref, input_prepend=''):
+
+        if input_prepend == '':
+            prepend = ''
+        else:
+            prepend = input_prepend + '__'
 
         if self.compute_inclination:
             if self.compute_scaled_semimajor_axis:

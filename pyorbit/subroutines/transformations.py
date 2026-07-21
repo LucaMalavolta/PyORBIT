@@ -2,6 +2,7 @@ from pyorbit.keywords_definitions import *
 
 __all__ = ['_prepare_planet_parametrization',
            '_prepare_planet_scaled_semimajor_axis',
+           '_prepare_planet_semimajor_axis',
            '_prepare_planet_mass',
            '_prepare_stellar_mass',
            '_prepare_planet_inclination',
