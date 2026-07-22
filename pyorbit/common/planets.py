@@ -519,6 +519,18 @@ class CommonPlanets(AbstractCommon):
             parameter_values[prepend+'i'] = convert_b_to_i(
                 parameter_values[prepend+'b'], parameter_values[prepend+'e'], parameter_values[prepend+'omega'], parameter_values[prepend+'a_Rs'])
 
+        if self.compute_planet_mass:
+            sin_i = abs(np.sin(parameter_values[prepend+"i"]*constants.deg2rad))
+            parameter_values[prepend+'M_Me'] = kepler_exo.kepler_get_planet_mass(
+                parameter_values[prepend+'P'],
+                parameter_values[prepend+'K']/sin_i,
+                parameter_values[prepend+'e'],
+                parameter_values['mass'],
+                approximation_limit=10,
+                verbose=False)
+
+
+
         if self.compute_time_inferior_conjunction:
             parameter_values[prepend+'Tc']= kepler_exo.kepler_compute_deltaTc_from_meanlong(
                 parameter_values[prepend+'P'],

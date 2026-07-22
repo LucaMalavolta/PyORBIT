@@ -105,7 +105,7 @@ class ModelContainer(object):
             for dataset_name in list(OrderedSet(model_conf) & OrderedSet(self.dataset_dict)):
                 model.initialize_model_dataset(
                     self, self.dataset_dict[dataset_name], **model_conf)
-            
+
 
         if self.dynamical_model:
             self.dynamical_model.to_be_initialized = True
@@ -363,7 +363,6 @@ class ModelContainer(object):
 
                 parameter_values.update(
                     self.models[model_name].convert(theta, dataset_name))
-
 
                 #TODO: Added in PyORBIT version 12 beta
                 if getattr(self.models[model_name], 'accept_multiple_planets', False):
@@ -744,7 +743,7 @@ class ModelContainer(object):
                 elif data_are_rvs:
                     log_likelihood += self.models[logchi2_gp_model].lnlk_compute(
                         parameter_values, dataset)
-                    print('data_are_rvs', data_are_rvs, log_likelihood)
+                    #print('data_are_rvs', data_are_rvs, log_likelihood)
 
                 if compute_gp_residuals:
                     dataset.residuals_for_regression -= self.models[logchi2_gp_model].sample_predict(parameter_values, dataset)
@@ -790,7 +789,7 @@ class ModelContainer(object):
         """ In case there is more than one GP model """
         for logchi2_gp_model in delayed_lnlk_computation:
             log_likelihood += self.models[logchi2_gp_model].lnlk_rvonly_compute()
-            print(logchi2_gp_model, log_likelihood)
+            #print(logchi2_gp_model, log_likelihood)
 
         return log_likelihood
 

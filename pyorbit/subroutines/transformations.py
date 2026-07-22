@@ -91,6 +91,12 @@ def _prepare_planet_semimajor_axis(main_object, mc, **kwargs):
         main_object.list_pams_common.update(['a_AU'])
         main_object.compute_semimajor_axis = False
 
+    if 'M_Me' in main_object.list_pams_common and mc.common_models[main_object.stellar_ref].compute_density:
+        main_object.compute_semimajor_axis_from_mass = True
+    else:
+        main_object.compute_semimajor_axis_from_mass = False
+
+
 
 def _prepare_planet_mass(main_object, mc, **kwargs):
 
@@ -98,10 +104,13 @@ def _prepare_planet_mass(main_object, mc, **kwargs):
         and not mc.common_models[main_object.planet_ref].use_scaled_mass \
         and not mc.common_models[main_object.planet_ref].use_stellar_scaled_mass:
 
-        print("UNRECOVERABLE ERROR model {0:s} :".format(main_object.model_name))
-        print('    Dynamical modelling requires the mass or the scaled mass of the planet as free parameters')
-        print('    for efficient exploration of parameter space')
-        quit()
+        main_object.compute_planet_mass = True
+        main_object.list_pams_common.update(['K'])
+
+    #print("UNRECOVERABLE ERROR model {0:s} :".format(main_object.model_name))
+    #    print('    Dynamical modelling requires the mass or the scaled mass of the planet as free parameters')
+    #    print('    for efficient exploration of parameter space')
+    #    quit()
 
     if mc.common_models[main_object.planet_ref].use_mass:
         main_object.list_pams_common.update(['M_Me'])
@@ -121,9 +130,6 @@ def _prepare_stellar_mass(main_object, mc, **kwargs):
             multivariate_pams = []
 
         if 'mass' in multivariate_pams and 'radius' in multivariate_pams:
-            main_object.list_pams_common.update(['mass'])
-            main_object.list_pams_common.update(['radius'])
-        elif mc.common_models[main_object.stellar_ref].compute_density:
             main_object.list_pams_common.update(['mass'])
             main_object.list_pams_common.update(['radius'])
         elif mc.common_models[main_object.stellar_ref].compute_density:

@@ -109,7 +109,7 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, reload_ze
 
     ordering_dict = {}
     #TODO: Added in PyORBIT version 12 beta
-    nested_models_association = {}
+    planets_in_model = {}
 
     """ Beginning of snippet dedicated to the reloading of parameters that are not involved in the fit procedure"""
     if reload_emcee or reload_zeus or reload_affine:
@@ -444,6 +444,8 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, reload_ze
         #    mc.common_models['star_parameters'] = define_common_type_to_class['star_parameters'](
         #        'star_parameters')
 
+    for model_name in mc.common_models:
+        mc.common_models[model_name].print_warning()
 
     """ Check if there is any planet that requires dynamical computations"""
     if mc.dynamical_dict:
@@ -506,8 +508,10 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, reload_ze
                     planet_list = np.atleast_1d(model_conf['planets']).tolist()
                 except:
                     planet_list = np.atleast_1d(model_conf['common']).tolist()
+                #TODO changed in PyORBIT version 12 beta
                 model_name_original = [model_name for pl_name in planet_list]
                 model_name_expanded = [model_name + '_' + pl_name for pl_name in planet_list]
+                planets_in_model[model_name] = planet_list
 
             """ Let's avoid some dumb user using the planet names to name the models"""
 
@@ -523,8 +527,6 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, reload_ze
                         if len(list(OrderedSet(planet_list) & OrderedSet(mc.dynamical_dict))) and not keplerian_approximation:
                             dataset.dynamical = True
 
-            #TODO: added in PyORBIT version 12 beta
-            #if temporary_model.model_class in model_requires_planets:
 
             #TODO: changed in PyORBIT version 12 beta
             for model_name_org, model_name_exp, planet_name in zip(model_name_original, model_name_expanded, planet_list):
@@ -543,6 +545,8 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, reload_ze
                         mc.models[model_name_exp] = \
                             define_type_to_class[model_type]['keplerian'](
                                 model_name_exp, planet_name)
+                        
+                    mc.models[model_name_exp].print_warning()
 
                 except:
                     mc.models[model_name_exp] = \
@@ -552,12 +556,17 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, reload_ze
                     mc.models[model_name_exp].model_conf = model_conf.copy()
 
                     if getattr(mc.models[model_name_exp], 'accept_multiple_planets', False):
+                        if model_name_org not in mc.parent_models:
+                            mc.parent_models[model_name_org] = \
+                                define_type_to_class[model_type](model_name_org, None)
+                            mc.parent_models[model_name_org].model_conf = model_conf.copy()
+                            mc.parent_models[model_name_org].planet_list = planets_in_model[model_name_org]
 
-                        mc.parent_models[model_name_org] = \
-                            define_type_to_class[model_type](model_name_org, planet_name)
-                        mc.parent_models[model_name_org].model_conf = model_conf.copy()
+                            mc.parent_models[model_name_org].print_warning()
+
                         mc.models[model_name_exp].parent_model = model_name_org
-
+                    else:
+                        mc.models[model_name_exp].print_warning()
 
                 if model_type in transit_time_model:
 
@@ -638,6 +647,13 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, reload_ze
                         except TypeError:
                             continue
 
+                    #TODO: added in PyORBIT version 12 beta
+                    for parent_model_name in mc.parent_models:
+                        if model_name_exp in dataset.models and mc.parent_models[parent_model_name].force_model_dataset_initialization:
+                            mc.parent_models[parent_model_name].model_conf[dataset_name] = {}
+
+
+
         else:
 
             if model_conf.get('common', False):
@@ -659,6 +675,7 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, reload_ze
                 common_ref = None
 
             mc.models[model_name] = define_type_to_class[model_type](model_name, common_ref)
+            mc.models[model_name].print_warning()
 
             """ Check if we need to add the limb darkening parameters to the model"""
             if mc.models[model_name].model_class in model_requires_limb_darkening:
@@ -688,6 +705,7 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, reload_ze
                 mc.models[model_name].common_ref.append(common_name)
                 mc.models[model_name].stellar_ref = common_name
 
+            #TODO can be removed in PyORBIT version 12 beta
             """ Adding the list of multiple planets"""
             if mc.models[model_name].model_class in model_requires_multiple_planets:
 
@@ -781,6 +799,7 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, reload_ze
                 mc.models[model_name].model_conf.update(model_conf)
             except:
                 mc.models[model_name].model_conf = model_conf.copy()
+
 
     if 'ordered_planets' in conf_parameters:
         mc.ordered_planets = conf_parameters['ordered_planets']

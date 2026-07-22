@@ -5,7 +5,7 @@ from pyorbit.subroutines.common import np
 from scipy.optimize import fsolve, newton
 import pyorbit.subroutines.constants as constants
 
-__all__ = ["kepler_compute_rv_semiamplitude", "kepler_compute_rv", "kepler_compute_rv_deltabjd", "kepler_compute_deltaTc_from_meanlong",
+__all__ = ["kepler_E", "kepler_compute_rv_semiamplitude", "kepler_compute_rv", "kepler_compute_rv_deltabjd", "kepler_compute_deltaTc_from_meanlong",
            "kepler_compute_meanlong_from_deltaTc", "kepler_compute_deltaTperi_from_deltaTc", "kepler_compute_deltaTperi_from_meanlong",
            "kepler_get_planet_mass", "kepler_compute_trueanomaly_orbitaldistance", "kepler_compute_deltaTc_from_deltaTperi"]
 
@@ -343,7 +343,7 @@ def get_approximate_mass(period, rv_semiamplitude, ecc, mass_primary):
          * (mass_primary ** (-2. / 3.)))
 
 
-def kepler_get_planet_mass(period, rv_semiamplitude, ecc, mass_star, approximation_limit=30.):
+def kepler_get_planet_mass(period, rv_semiamplitude, ecc, mass_star, approximation_limit=30., verbose=True):
     """ Compute the mass of the planet in Solar mass units, given the orbital period (in days),
     the observed RV semi-amplitude (in m/s), the orbital eccentricity, and the mass of the primary star (in Solar mass units).
     If the approximate mass of the planet (computed under the assumption that the mass of the planet is negligible compared to the mass of the star)
@@ -372,12 +372,14 @@ def kepler_get_planet_mass(period, rv_semiamplitude, ecc, mass_star, approximati
     M_approx = get_approximate_mass(period, rv_semiamplitude, ecc, mass_star)
 
     if np.average(M_approx) > approximation_limit/constants.Msear:
-        print('Computing exact mass of the planet (mean of approximate mass distribution larger than {0:3.1f} Me)'.format(approximation_limit))
+        if verbose:
+            print('Computing exact mass of the planet (mean of approximate mass distribution larger than {0:3.1f} Me)'.format(approximation_limit))
         M_init = np.average(M_approx)
         for i in range(0, n):
             M_approx[i] = fsolve(f_get_mass, np.average(M_init), args=(mass_star[i], period[i], ecc[i], rv_semiamplitude[i]))
     else:
-        print('Computing planetary mass under the approximation M_planet << M_star (threshold at {0:3.1f} Me)'.format(approximation_limit))
+        if verbose:
+            print('Computing planetary mass under the approximation M_planet << M_star (threshold at {0:3.1f} Me)'.format(approximation_limit))
 
     return M_approx
 

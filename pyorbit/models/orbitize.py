@@ -29,6 +29,22 @@ class Orbitize(AbstractModel, AbstractAstrometry):
         super().__init__(*args, **kwargs)
         super(AbstractModel, self).__init__(*args, **kwargs)
 
+        ''' Orbital parameters to be used in the astrometric fit '''
+        self.list_pams_common = OrderedSet([
+            'P',     # Period in days
+            #'M_Me', # planet mass in Earth masses
+            'Omega', # longitude of ascending node
+            'e',     # eccentricity, uniform prior - to be fixed
+            'i',
+            'omega', # argument of pericenter
+            #'i',     # inclination in degrees
+            'mass', #stellar mass
+            'parallax', #stellar parallax
+        ])
+
+        self.list_pams_dataset = OrderedSet()
+
+
         try:
                 from orbitize import DATADIR, hipparcos, gaia
         except ImportError:
@@ -36,7 +52,7 @@ class Orbitize(AbstractModel, AbstractAstrometry):
                 print('        orbitize is not installed. Please install it to use this model.')
                 print('        You can install it with pip install orbitize')
                 print()
-
+                quit()
 
         try:
             from astropy.time import Time
@@ -45,27 +61,47 @@ class Orbitize(AbstractModel, AbstractAstrometry):
             print('        astropy is not installed. Please install it to use this model.')
             print('        You can install it with pip install astropy')
             print()
-
-
-        print("    {0:s} WARNING:".format(self.model_name))
-        print('        Astrometry modelling requires the use of the stellar mass')
-        print('        This may cause a clash with models requiring stellar density and radius, e.g., RM modelling')
-        print('        The use of a multivariate approach is strongly suggested')
-        print('        You can control the behaviour of mass/radius/density with the specific keywords')
-        print('        compute_mass, compute_radius, compute_density')
-        print()
+            quit()
 
         self.external_dataset = True
         self.accept_multiple_planets = True
+        self.force_model_dataset_initialization = True
 
-    # brainless workaround
+    def print_warning(self):
+        print("{0:s} WARNING:".format(self.model_name))
+        print('    Astrometric orbit modelling requires the use of the stellar mass')
+        print('    This may cause a clash with models requiring stellar density and radius, e.g., RM modelling')
+        print('    The use of a multivariate approach is strongly suggested')
+        print('    You can control the behaviour of mass/radius/density with the specific keywords')
+        print('    compute_mass, compute_radius, compute_density')
+        print()
+
     def initialize_model(self, mc, **kwargs):
 
-        self.iad_filepath = os.path.join('./orbitize_data', "HIP2_HIP004311.d")
-        self.gost_filepath = os.path.join('./orbitize_data', "GOST_HIP004311.csv")
 
-        self.hipparcos_lnprob = hipparcos.HipparcosLogProb(self.iad_filepath, 4311, 1)
-        self.hgca_lnprob = gaia.HGCALogProb(4311, self.hipparcos_lnprob, self.gost_filepath)
+        if kwargs.get('iad_filepath', False):
+            self.iad_filepath = kwargs.get('iad_filepath')
+            self.hipparcos_lnprob = hipparcos.HipparcosLogProb(self.iad_filepath, 4311, 1)
+        else:
+            self.hipparcos_lnprob = None
+
+        if kwargs.get('gost_filepath', False):
+            if not kwargs.get('iad_filepath', False):
+                print("UNRECOVERABLE ERROR model {0:s} :".format(self.model_name))
+                print('To use HGCA fit, Hipparcos IAD data is required. Please provide the iad_filepath keyword')
+                raise ValueError()
+
+            hipparcos_ID = kwargs.get('hipparcos_ID', False)
+            if not hipparcos_ID:
+                print("UNRECOVERABLE ERROR model {0:s} :".format(self.model_name))
+                print('To use HGCA fit, Hipparcos ID is required. Please provide the hipparcos_ID keyword')
+                raise ValueError()
+
+            self.gost_filepath = kwargs.get('gost_filepath')
+            self.hgca_lnprob = gaia.HGCALogProb(4311, self.hipparcos_lnprob, self.gost_filepath)
+            self.hipparcos_lnprob = None
+        else:
+            self.hgca_lnprob = None
 
         self.Tref = mc.Tref
 
@@ -74,19 +110,12 @@ class Orbitize(AbstractModel, AbstractAstrometry):
         self._prepare_astrometry_parameters(mc, **kwargs)
 
     def initialize_model_dataset(self, mc, dataset, **kwargs):
-
-        astrometry_filepath = os.path.join('./orbitize_data', "no_data.csv")
-        self.data_table = read_input.read_file(astrometry_filepath)
+        self.data_table = read_input.read_file(dataset.input_file)
 
     def compute(self, parameter_values, dataset, x0_input=None):
-        print("    {0:s} WARNING:".format(self.model_name), self.parameter_values)
-        print('        Astrometry modelling requires the use of the stellar mass')
+        pass
 
     def compute_loglikelihood(self, planet_list, dataset):
-        print("    {0:s} WARNING:".format(self.model_name))
-        print('        loglikelihood not implemented')
-
-        print(self.parameter_values)
 
         orbitize_tref = 58849.0 # MJD
 
@@ -97,9 +126,9 @@ class Orbitize(AbstractModel, AbstractAstrometry):
             self.parameter_values['parallax'],
             tau_ref_epoch=orbitize_tref,
             fit_secondary_mass=True,
+            hipparcos_IAD = self.hipparcos_lnprob,
             gaia=self.hgca_lnprob,
         )
-
 
         n_param = len(this_system.labels)
         param_model = np.zeros(n_param) 
@@ -113,7 +142,6 @@ class Orbitize(AbstractModel, AbstractAstrometry):
             Tperi_MJD =  self.parameter_values[prepend+'Tperi'] + self.Tref - 2400000.5
             tau = orbitize.basis.tp_to_tau(Tperi_MJD, orbitize_tref, self.parameter_values[prepend+'P'])
 
-            phase_Tperi = ((self.parameter_values[prepend+'Tperi'] + self.Tref - 2400000.5 ) % self.parameter_values[prepend+'P'] ) / self.parameter_values[prepend+'P']
             param_model[this_system.param_idx['sma'+repr(i_planet)]] = self.parameter_values[prepend+'a_AU']
             param_model[this_system.param_idx['ecc'+repr(i_planet)]] = self.parameter_values[prepend+'e']
             param_model[this_system.param_idx['inc'+repr(i_planet)]] = self.parameter_values[prepend+'i'] * constants.deg2rad
@@ -125,8 +153,8 @@ class Orbitize(AbstractModel, AbstractAstrometry):
         param_model[this_system.param_idx['plx']] = self.parameter_values['parallax']
         param_model[this_system.param_idx['m0']] =  self.parameter_values['mass']
 
-        print("param_model = ", param_model)
-        print("this_system.param_idx = ", this_system.param_idx)
+        #print("param_model = ", param_model)
+        #print("this_system.param_idx = ", this_system.param_idx)
 
         chi2_type = 'standard'
         custom_lnlike = None

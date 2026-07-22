@@ -102,7 +102,11 @@ class AbstractModel(object):
         #TODO: May become obsole in PyORBIT version 12
         self.multiple_planets = []
 
+        #TODO: Added in PyORBIT version 12 beta
+        self.force_model_dataset_initialization = True
 
+    def print_warning(self):
+        pass
 
     def initialize_model(self, mc, **kwargs):
         pass
@@ -202,12 +206,12 @@ class AbstractModel(object):
                         np.log2(self.bounds[dataset_name][par]))
                 elif self.spaces[dataset_name][par] == 'Sine_Angle':
                     self.transformation[dataset_name][par] = get_var_arcsine
-                    output_lists['bounds'].append(
-                        np.sin(self.bounds[dataset_name][par]*constants.deg2rad))
+                    output_lists['bounds'].append(np.sort(
+                        np.sin(self.bounds[dataset_name][par]*constants.deg2rad)))
                 elif self.spaces[dataset_name][par] == 'Cosine_Angle':
                     self.transformation[dataset_name][par] = get_var_arccosine
-                    output_lists['bounds'].append(
-                        np.cos(self.bounds[dataset_name][par]*constants.deg2rad))
+                    output_lists['bounds'].append(np.sort(
+                        np.cos(self.bounds[dataset_name][par]*constants.deg2rad)))
 
                 if par not in self.prior_pams[dataset_name]:
                     self.prior_kind[dataset_name][par] = \

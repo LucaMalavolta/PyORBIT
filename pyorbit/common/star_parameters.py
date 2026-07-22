@@ -249,6 +249,13 @@ class CommonStarParameters(AbstractCommon):
             mass from the star from radial velocities or photometry, so the mass should have lower priority
             as a free parameter.
         """
+
+
+        if 'density' not in kwargs['priors'] and 'mass' in kwargs['priors'] and 'radius' in kwargs['priors']:
+            self.compute_mass = False
+            self.compute_radius = False
+            self.compute_density = True
+
         self.compute_mass = kwargs.get('compute_mass', self.compute_mass)
         self.compute_radius = kwargs.get('compute_radius', self.compute_radius)
         self.compute_density = kwargs.get('compute_density', self.compute_density)

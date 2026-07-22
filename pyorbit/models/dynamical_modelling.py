@@ -24,7 +24,6 @@ class AbstractDynamical(object):
         ])
 
         self.list_pams_dataset = OrderedSet()
-        self.warning_given = False
         self.dynamical_model = True
 
     # brainless workaround
@@ -75,12 +74,12 @@ class DynamicalIntegrator:
 
         self.to_be_initialized = True
 
-        print("    {0:s} WARNING:".format(self.model_name))
-        print('        Dynamical modelling requires the use of the stellar mass')
-        print('        This may cause a clash with models requiring stellar density and radius, e.g., RM modelling')
-        print('        The use of a multivariate approach is strongly suggested')
-        print('        You can control the behaviour of mass/radius/density with the specific keywords')
-        print('        compute_mass, compute_radius, compute_density')
+        print("+++ {0:s} WARNING:".format(self.model_name))
+        print('    Dynamical modelling requires the use of the stellar mass')
+        print('    This may cause a clash with models requiring stellar density and radius, e.g., RM modelling')
+        print('    The use of a multivariate approach is strongly suggested')
+        print('    You can control the behaviour of mass/radius/density with the specific keywords')
+        print('    compute_mass, compute_radius, compute_density')
         print()
 
     def compute(self, mc, theta, x_input=None, *args, **kwargs):

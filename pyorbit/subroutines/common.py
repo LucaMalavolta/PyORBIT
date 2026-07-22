@@ -475,9 +475,9 @@ def nested_sampling_prior_compute(val, kind, coeff, space):
         elif space == 'Log_Natural':
             return np.log(x_new)
         elif space == 'Sine_Angle':
-            return np.sin(x_new*constants.rad2deg)
+            return np.sin(x_new*constants.deg2rad)
         elif space == 'Cosine_Angle':
-            return np.cos(x_new*constants.rad2deg)
+            return np.cos(x_new*constants.deg2rad)
 
     if kind in ['HalfGaussian', 'PositiveHalfGaussian']:
 
@@ -492,9 +492,9 @@ def nested_sampling_prior_compute(val, kind, coeff, space):
         elif space == 'Log_Natural':
             return np.log(x_new)
         elif space == 'Sine_Angle':
-            return np.sin(x_new*constants.rad2deg)
+            return np.sin(x_new*constants.deg2rad)
         elif space == 'Cosine_Angle':
-            return np.cos(x_new*constants.rad2deg)
+            return np.cos(x_new*constants.deg2rad)
 
     if kind in ['NegativeHalfGaussian']:
 
@@ -509,9 +509,9 @@ def nested_sampling_prior_compute(val, kind, coeff, space):
         elif space == 'Log_Natural':
             return np.log(x_new)
         elif space == 'Sine_Angle':
-            return np.sin(x_new*constants.rad2deg)
+            return np.sin(x_new*constants.deg2rad)
         elif space == 'Cosine_Angle':
-            return np.cos(x_new*constants.rad2deg)
+            return np.cos(x_new*constants.deg2rad)
 
     if kind in ['BetaDistribution', 'Beta']:
         x_new = stats.beta.ppf(val, coeff[0], coeff[1])
@@ -525,9 +525,9 @@ def nested_sampling_prior_compute(val, kind, coeff, space):
         elif space == 'Log_Natural':
             return np.log(x_new)
         elif space == 'Sine_Angle':
-            return np.sin(x_new*constants.rad2deg)
+            return np.sin(x_new*constants.deg2rad)
         elif space == 'Cosine_Angle':
-            return np.cos(x_new*constants.rad2deg)
+            return np.cos(x_new*constants.deg2rad)
 
     return splev(val, coeff)
 
@@ -597,12 +597,16 @@ def convert_rho_to_ars(P, rho):
                     * rho * constants.rho_Sun / (3. * np.pi), 1./3.)
 
 
-def convert_ars_to_a(a, Rs):
-    return a * Rs * constants.RsunAU
+def convert_ars_to_a(a_Rs, Rs):
+    return a_Rs * Rs * constants.RsunAU
+
+
+def convert_a_to_ars(a_AU, Rs):
+    return a_AU / (Rs * constants.RsunAU)
 
 
 def convert_PMsMp_to_a(P, Ms, Mp):
-    # planet mass in solar masses
+    # planet mass in earth masses
     # output in Astronomical Units
     return np.power(P**2 * constants.Giau * (Ms + Mp/constants.Msear) / (2 * np.pi)**2., 1./3.)
 

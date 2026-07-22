@@ -28,6 +28,7 @@ from pyorbit.common.correlation import CommonCorrelation, CommonComplexCorrelati
 from pyorbit.common.detrending import CommonDetrending
 
 
+from pyorbit.models.gaia_composite import GaiaAstrometryComposite
 from pyorbit.models.keplerian_modelling import  ApodizedRVkeplerian, RVkeplerian, TransitTimeKeplerian
 from pyorbit.models.dynamical_modelling import  TransitTimeDynamical, RVdynamical, DynamicalIntegrator
 
@@ -135,7 +136,9 @@ from pyorbit.models.rossitermclaughlin_revolutions_faster import RossiterMcLaugh
 from pyorbit.models.rossitermclaughlin_multiplanets_precise import RossiterMcLaughlin_MultiPlanets_Precise
 
 from pyorbit.models.orbitize import Orbitize
-
+from pyorbit.models.gaiadr4_full import GaiaDR4AstrometricFull
+from pyorbit.models.gaiadr4_baseline import GaiaDR4AstrometricBaseline
+from pyorbit.models.gaiadr4_orbit import GaiaDR4AstrometricOrbit
 
 define_common_type_to_class = {
     'planets': CommonPlanets,
@@ -290,6 +293,9 @@ define_type_to_class = {
     'detrending_matern32': Detrending_Matern32,
     'matern32_detrending': Detrending_Matern32,
     'orbitize': Orbitize,
+    'gaiadr4_full': GaiaDR4AstrometricFull,
+    'gaiadr4_baseline': GaiaDR4AstrometricBaseline,
+    'gaiadr4_orbit': GaiaDR4AstrometricOrbit,
 }
 
 
@@ -299,8 +305,8 @@ define_type_to_class = {
  single_planet_model: the model is associated to a specific planet, e.g., time of transits
 """
 
-model_requires_planets = ['radial_velocities', 'transit_times', 'transit', 'orbitize',
-                                'transit_eclipse_phasecurve', 'rossiter_mclaughlin', 'orbitize']
+model_requires_planets = ['radial_velocities', 'transit_times', 'transit', 'orbitize', 'gaia_astrometry_orbit',
+                                'transit_eclipse_phasecurve', 'rossiter_mclaughlin']
 
 single_planet_model = ['Tc_planets', 'transit_times']
 transit_time_model = ['Tc_planets', 'transit_times']
@@ -312,7 +318,7 @@ model_requires_limb_darkening = ['transit',
                                 'subset_spectral_rotation_polynomial',
                                 'rossiter_mclaughlin']
 
-model_requires_star = ['rossiter_mclaughlin', 'transit_times', 'gaussian_process', 'multidimensional_gaussian_process', 'orbitize']
+model_requires_star = ['rossiter_mclaughlin', 'transit_times', 'gaussian_process', 'multidimensional_gaussian_process', 'orbitize', 'gaia_astrometry_orbit', 'gaia_astrometry_baseline']
 #model_requires_multiple_planets = ['rossiter_mclaughlin']
 model_requires_multiple_planets = []
 

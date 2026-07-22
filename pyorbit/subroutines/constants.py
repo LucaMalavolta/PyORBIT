@@ -21,6 +21,8 @@ day2hour = 24.0
 sec2day = 1.0 / 86400.0
 min2day = 1.0 / 1440.0
 hour2day = 1.0 / 24.0
+year2day = 365.25
+day2year = 1.0 / 365.25
 
 # masses conversions
 Msmer = 6.0236e6 # Msun to Mmer

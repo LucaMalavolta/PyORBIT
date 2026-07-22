@@ -139,6 +139,7 @@ class RVkeplerian(AbstractModel):
                                                                             parameter_values['P'], 
                                                                             parameter_values['i'],
                                                                             parameter_values['e'])
+
         else:
             rv_semiamplitude = parameter_values['K']
 

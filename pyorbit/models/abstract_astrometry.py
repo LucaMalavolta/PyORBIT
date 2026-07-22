@@ -13,24 +13,9 @@ class AbstractAstrometry(object):
 
     def __init__(self, *args, **kwargs):
 
-        ''' Orbital parameters to be used in the astrometric fit '''
-        self.list_pams_common = OrderedSet([
-            'P',     # Period in days
-            'M_Me', # planet mass in Earth masses
-            'Omega', # longitude of ascending node
-            'e',     # eccentricity, uniform prior - to be fixed
-            'i',
-            'R_Rs',  # planet radius (in units of stellar radii)
-            'omega', # argument of pericenter
-            #'i',     # inclination in degrees
-            'mass', #stellar mass
-            'parallax', #stellar parallax
-        ])
-
-        self.list_pams_dataset = OrderedSet()
-        self.warning_given = False
         self.compute_semimajor_axis = True
         self.compute_scaled_semimajor_axis = True
+        self.compute_semimajor_axis_from_mass = False
 
     def _prepare_astrometry_parameters(self, mc, **kwargs):
 
@@ -44,6 +29,7 @@ class AbstractAstrometry(object):
         transformations._prepare_stellar_mass(self, mc, **kwargs)
         transformations._prepare_planet_inclination(self, mc, **kwargs)
         transformations._prepare_planet_time_inferior_conjunction(self, mc, **kwargs)
+        print()
 
     def update_parameter_values(self,
                                 parameter_values,
@@ -54,17 +40,45 @@ class AbstractAstrometry(object):
         else:
             prepend = input_prepend + '__'
 
-        print(parameter_values)
-        if self.compute_inclination:
-            if self.compute_scaled_semimajor_axis:
-                parameter_values[prepend+'a_Rs'] = convert_rho_to_ars(parameter_values[prepend+'P'], parameter_values['density'])
-            parameter_values[prepend+'i'] = convert_b_to_i(
-                parameter_values[prepend+'b'], parameter_values[prepend+'e'], parameter_values[prepend+'omega'], parameter_values[prepend+'a_Rs'])
+        if self.compute_planet_mass:
+            sin_i = abs(np.sin(parameter_values[prepend+"i"]*constants.deg2rad))
+            parameter_values[prepend+'M_Me'] = kepler_exo.kepler_get_planet_mass(
+                parameter_values[prepend+'P'],
+                parameter_values[prepend+'K']/sin_i,
+                parameter_values[prepend+'e'],
+                parameter_values['mass'],
+                approximation_limit=10,
+                verbose=False)
 
-        if self.compute_semimajor_axis:
-            if self.compute_scaled_semimajor_axis:
-                parameter_values[prepend+'a_Rs'] = convert_rho_to_ars(parameter_values[prepend+'P'], parameter_values['density'])
-            parameter_values[prepend+'a_AU'] = convert_ars_to_a(parameter_values[prepend+'a_Rs'], parameter_values['radius'])
+        if self.compute_semimajor_axis_from_mass and self.compute_scaled_semimajor_axis:
+            parameter_values[prepend+'a_AU']= convert_PMsMp_to_a(
+                    parameter_values[prepend+'P'],
+                    parameter_values['mass'],
+                    parameter_values[prepend+'M_Me'])
+            parameter_values[prepend+'a_Rs'] = convert_a_to_ars(parameter_values[prepend+'a_AU'], parameter_values['radius'])
+            if self.compute_inclination:
+                parameter_values[prepend+'i'] = convert_b_to_i(
+                    parameter_values[prepend+'b'], parameter_values[prepend+'e'], parameter_values[prepend+'omega'], parameter_values[prepend+'a_Rs'])
+        else:
+            if self.compute_inclination:
+                if self.compute_scaled_semimajor_axis:
+                    parameter_values[prepend+'a_Rs'] = convert_rho_to_ars(parameter_values[prepend+'P'], parameter_values['density'])
+                parameter_values[prepend+'i'] = convert_b_to_i(
+                    parameter_values[prepend+'b'], parameter_values[prepend+'e'], parameter_values[prepend+'omega'], parameter_values[prepend+'a_Rs'])
+
+            if self.compute_semimajor_axis:
+                if self.compute_scaled_semimajor_axis:
+                    parameter_values[prepend+'a_Rs'] = convert_rho_to_ars(parameter_values[prepend+'P'], parameter_values['density'])
+                parameter_values[prepend+'a_AU'] = convert_ars_to_a(parameter_values[prepend+'a_Rs'], parameter_values['radius'])
+
+            sin_i = abs(np.sin(parameter_values[prepend+"i"]*constants.deg2rad))
+            parameter_values[prepend+'M_Me'] = kepler_exo.kepler_get_planet_mass(
+                parameter_values[prepend+'P'],
+                parameter_values[prepend+'K']/sin_i,
+                parameter_values[prepend+'e'],
+                parameter_values['mass'],
+                approximation_limit=10,
+                verbose=False)
 
         if self.compute_time_inferior_conjunction:
             parameter_values[prepend+'Tc']= kepler_exo.kepler_compute_deltaTc_from_meanlong(
