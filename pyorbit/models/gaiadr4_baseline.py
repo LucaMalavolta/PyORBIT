@@ -105,27 +105,3 @@ class GaiaDR4AstrometricBaseline(AbstractModel):
                 + north * self.gaia_instrumental[dataset.name_ref]['cos_psi']\
                 + parameter_values["parallax"] * self.gaia_instrumental[dataset.name_ref]['parallax_factor_al']
 
-
-class GaiaDR4AstrometricFull(AbstractModel, AbstractAstrometry):
-    model_class = 'gaia_astrometry'
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        super(AbstractModel, self).__init__(*args, **kwargs)
-
-        ''' Orbital parameters to be used in the astrometric fit '''
-        self.list_pams_common = OrderedSet([
-            'P',     # Period in days
-            #'M_Me', # planet mass in Earth masses
-            'Omega', # longitude of ascending node
-            'e',     # eccentricity, uniform prior - to be fixed
-            'i',
-            'omega', # argument of pericenter
-            #'i',     # inclination in degrees
-            'mass', #stellar mass
-            'parallax', #stellar parallax
-            "offset_ra",
-            "offset_dec",
-            "pm_ra",
-            "pm_dec",
-        ])
