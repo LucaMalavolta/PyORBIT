@@ -28,7 +28,6 @@ from pyorbit.common.correlation import CommonCorrelation, CommonComplexCorrelati
 from pyorbit.common.detrending import CommonDetrending
 
 
-from pyorbit.models.gaia_composite import GaiaAstrometryComposite
 from pyorbit.models.keplerian_modelling import  ApodizedRVkeplerian, RVkeplerian, TransitTimeKeplerian
 from pyorbit.models.dynamical_modelling import  TransitTimeDynamical, RVdynamical, DynamicalIntegrator
 
