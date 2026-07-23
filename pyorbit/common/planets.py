@@ -269,9 +269,6 @@ class CommonPlanets(AbstractCommon):
 
     def initialize_model(self, mc, **kwargs):
 
-        print("*** planet {0:s} global parameters:".format(self.common_ref))
-
-
         self.Tref = mc.Tref
 
         self.use_circular_orbit = kwargs.get('use_circular_orbit', False)
@@ -280,11 +277,8 @@ class CommonPlanets(AbstractCommon):
         if self.orbit in self.orbit_list:
 
             if self.orbit == 'circular' or self.use_circular_orbit:
-                print('    orbital model: circular')
                 self.fix_list['e'] = np.asarray([0.000, 0.0000], dtype=np.double)
                 self.fix_list['omega'] = np.asarray([90.0, 0.0000], dtype=np.double)
-            else:
-                print('    orbital model: ', self.orbit)
 
         else:
             print("UNRECOVERABLE ERROR model {0:s} :".format(self.common_ref))
@@ -294,8 +288,6 @@ class CommonPlanets(AbstractCommon):
 
         self.parametrization = kwargs.get('parametrization', self.parametrization)
         if self.parametrization in self.parametrization_list:
-            print('    orbital parametrization: ', self.parametrization)
-
             if self.parametrization[-5:] == 'Tcent' or self.parametrization[-5:] == 'Tc':
                 self.use_time_inferior_conjunction = True
         else:
@@ -306,77 +298,46 @@ class CommonPlanets(AbstractCommon):
         self.use_scaled_semimajor_axis = kwargs.get('use_scaled_semimajor_axis', self.use_scaled_semimajor_axis)
         if self.use_scaled_semimajor_axis:
             self.compute_scaled_semimajor_axis = False
-            print('    scaled semi-major axis replacing stellar density as a free parameter: ', True)
 
         self.use_semimajor_axis = kwargs.get('use_semimajor_axis', self.use_semimajor_axis)
         if self.use_semimajor_axis:
             self.compute_semimajor_axis = False
-            print('    semi-major axis in AU replacing period as a free parameter: ', True)
 
         self.use_inclination = kwargs.get('use_inclination', self.use_inclination)
         if self.use_inclination:
             self.compute_inclination = False
-            print('    inclination replacing impact parameter as a free parameter: ', True)
 
         self.use_mass = kwargs.get('use_mass', self.use_mass)
-        if self.use_mass :
-            print('    planetary mass replacing RV semi-amplitude as a free parameter: ', True)
-            print('        WARNING: You will need to use either inclination or impact parameter as free/fixed parameter')
 
-        try:
-            self.use_scaled_mass = kwargs.get('use_scaled_mass', self.use_scaled_mass)
-        except: 
-            #TODO: try-except to ensure back-compatibility, to be removed in PyORBIT version 12
-            self.use_scaled_mass = kwargs.get('use_scaled_mass', False)
-        if self.use_scaled_mass :
-            print('    scaled planetary mass replacing RV semi-amplitude as a free parameter: ', True)
-            print('        WARNING: You will need to use either inclination or impact parameter as free/fixed parameter')
-
-        try:
-            self.use_stellar_scaled_mass = kwargs.get('use_stellar_scaled_mass', self.use_stellar_scaled_mass)
-        except: 
-            #TODO: try-except to ensure back-compatibility, to be removed in PyORBIT version 12
-            self.use_stellar_scaled_mass = kwargs.get('use_stellar_scaled_mass', False)
-        if self.use_stellar_scaled_mass :
-            print('    scaled planetary mass in stellar unit replacing RV semi-amplitude as a free parameter: ', True)
-            print('        WARNING: You will need to use either inclination or impact parameter as free/fixed parameter')
-
+        self.use_scaled_mass = kwargs.get('use_scaled_mass', self.use_scaled_mass)
+ 
+        self.use_stellar_scaled_mass = kwargs.get('use_stellar_scaled_mass', self.use_stellar_scaled_mass)
 
 
         self.use_time_inferior_conjunction = kwargs.get('use_time_inferior_conjunction', self.use_time_inferior_conjunction)
         if self.use_time_inferior_conjunction:
             self.compute_time_inferior_conjunction = False
             self.compute_mean_longitude = True
-            print('    time of inferior conjunction replacing mean longitude as a free parameter: ', True)
         else:
             self.compute_time_inferior_conjunction = True
             self.compute_mean_longitude = False
-            print('    mean longitude as free parameter (non-transiting planets or dynamical model): ', True)
 
-        try:
-            self.use_longitude_of_nodes = kwargs.get('use_longitude_of_nodes', self.use_longitude_of_nodes)
-        except:
-            #TODO: try-except to ensure back-compatibility, to be removed in PyORBIT version 12
-            self.use_longitude_of_nodes = kwargs.get('use_longitude_of_nodes', False)
-        print('    longitude of ascending node as a free parameter: ', self.use_longitude_of_nodes)
+        self.use_longitude_of_nodes = kwargs.get('use_longitude_of_nodes', self.use_longitude_of_nodes)
 
         for use_shared_ttvs in keywords_shared_ttv:
             self.use_shared_ttvs = kwargs.get(use_shared_ttvs, self.use_shared_ttvs)
             if self.use_shared_ttvs:
-                print('    shared TTVs: ', self.use_shared_ttvs)
                 break
 
 
         for tc_list in keywords_tc_list:
             self.tc_list = kwargs.get(tc_list, None)
             if self.tc_list:
-                print('    list of times of inferior conjuctions: ', self.tc_list)
                 break
 
         for tc_flag in keywords_tc_flag:
             self.tc_flag = kwargs.get(tc_flag, None)
             if self.tc_flag:
-                print('    dataset flag of times of inferior conjuctions: ', self.tc_flag)
                 break
 
         if Version(mc.pyorbit_version) <= Version("11.1.0"):
@@ -384,8 +345,53 @@ class CommonPlanets(AbstractCommon):
         else:
             self.default_Omega = 180.00
 
-        print()
 
+    def print_info(self):
+        print("*** planet {0:s} global parameters:".format(self.common_ref))
+
+        if self.orbit == 'circular' or self.use_circular_orbit:
+            print('    orbital model: circular')
+        else:
+            print("    orbital model: ", self.orbit)
+        print("    orbital parametrization: ", self.parametrization)
+        if self.use_time_inferior_conjunction:
+            print("    time of inferior conjunction replacing mean longitude as a free parameter: ", self.use_time_inferior_conjunction)
+        else:
+            print('    mean longitude as free parameter (non-transiting planets or dynamical model): ', True)
+
+        print("    default longitude of ascending node (when fixed): ", self.default_Omega)
+
+        if self.use_scaled_semimajor_axis:
+            print("    scaled semi-major axis replacing stellar density as a free parameter: ", self.use_scaled_semimajor_axis)
+        if self.use_semimajor_axis:
+            print("    semi-major axis in AU replacing period as a free parameter: ", self.use_semimajor_axis)
+        if self.use_inclination:
+            print("    inclination replacing impact parameter as a free parameter: ", self.use_inclination)
+        if self.use_mass :
+            print("    planetary mass replacing RV semi-amplitude as a free parameter: ", self.use_mass)
+            print('        WARNING: You will need to use either inclination or impact parameter as free/fixed parameter')
+
+        if self.use_scaled_mass :
+            print('    scaled planetary mass replacing RV semi-amplitude as a free parameter: ', self.use_scaled_mass)
+            print('        WARNING: You will need to use either inclination or impact parameter as free/fixed parameter')
+
+        if self.use_stellar_scaled_mass :
+            print('    scaled planetary mass in stellar unit replacing RV semi-amplitude as a free parameter: ', True)
+            print('        WARNING: You will need to use either inclination or impact parameter as free/fixed parameter')
+
+        if self.use_longitude_of_nodes:
+            print("    longitude of ascending node as a free parameter: ", self.use_longitude_of_nodes)
+
+        if self.use_shared_ttvs:
+            print("    use of a single Tc for observations covering the same transit (TTVs): ", self.use_shared_ttvs)
+
+        if self.tc_list:
+            print('    list of times of inferior conjuctions: ', self.tc_list)
+
+        if self.tc_flag:
+                print('    dataset flag of times of inferior conjuctions: ', self.tc_flag)
+
+        print()
 
     def define_derived_parameters(self):
 

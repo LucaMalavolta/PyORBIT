@@ -71,8 +71,7 @@ class ModelContainer(object):
             model.initialize_model(self, **model_conf)
 
         for model_name, model in self.models.items():
-
-            print(' ****** Initializing model: ', model_name, ' ******')
+            #print(' ****** Initializing model: ', model_name, ' ******')
 
             try:
                 model_conf = model.model_conf
@@ -110,7 +109,20 @@ class ModelContainer(object):
         if self.dynamical_model:
             self.dynamical_model.to_be_initialized = True
 
-            # self.dynamical_model.prepare(self)
+
+    def print_model_info(self):
+        for model_name, model in self.common_models.items():
+            if model.skip_print_info: continue
+            model.print_info()
+
+        for model_name, model in self.models.items():
+            if model.skip_print_info: continue
+            model.print_info()
+
+        for model_name, model in self.parent_models.items():
+            if model.skip_print_info: continue
+            model.print_info()
+
 
     def boundaries_setup(self):
         # This routine setup the boundary array and at the same time

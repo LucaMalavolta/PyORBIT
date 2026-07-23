@@ -21,6 +21,7 @@ datatype_definition = {
     'orbitize': ['orbitize', 'Orbitize', 'ORBITIZE'],
 }
 
+skip_plot = ['orbtize', 'astrometry']
 
 activity_datatype = ['H-alpha', 'FWHM', 'BIS', 'EWs', 'activity', 'Ca_HK', 'S_index']
 activity_noderivative = ['H-alpha', 'FWHM', 'EWs', 'Ca_HK', 'S_index']

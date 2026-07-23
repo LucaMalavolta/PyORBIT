@@ -67,7 +67,13 @@ class AbstractCommon(object):
                 self.default_spaces[par_name] = par_dict['spaces']
                 self.default_fixed[par_name] = par_dict['fixed']
 
+        self.skip_print_info = False
+
+
     def print_warning(self):
+        pass
+
+    def print_info(self):
         pass
 
     def initialize_model(self, mc, **kwargs):

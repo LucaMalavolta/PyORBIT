@@ -67,14 +67,6 @@ class Orbitize(AbstractModel, AbstractAstrometry):
         self.accept_multiple_planets = True
         self.force_model_dataset_initialization = True
 
-    def print_warning(self):
-        print("{0:s} WARNING:".format(self.model_name))
-        print('    Astrometric orbit modelling requires the use of the stellar mass')
-        print('    This may cause a clash with models requiring stellar density and radius, e.g., RM modelling')
-        print('    The use of a multivariate approach is strongly suggested')
-        print('    You can control the behaviour of mass/radius/density with the specific keywords')
-        print('    compute_mass, compute_radius, compute_density')
-        print()
 
     def initialize_model(self, mc, **kwargs):
 
@@ -111,6 +103,17 @@ class Orbitize(AbstractModel, AbstractAstrometry):
 
     def initialize_model_dataset(self, mc, dataset, **kwargs):
         self.data_table = read_input.read_file(dataset.input_file)
+
+    def print_info(self):
+        print("*** model {0:s}:".format(self.model_name))
+        print("WARNING:")
+        print('    Astrometric orbit modelling requires the use of the stellar mass')
+        print('    This may cause a clash with models requiring stellar density and radius, e.g., RM modelling')
+        print('    At least TWO out of mass, radius, density of the star must be provided as priors')
+        print('    The use of a multivariate approach is strongly suggested')
+        print('    You can control the behaviour of mass/radius/density with the specific keywords')
+        print('    compute_mass, compute_radius, compute_density')
+        print()
 
     def compute(self, parameter_values, dataset, x0_input=None):
         pass

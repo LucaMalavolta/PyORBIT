@@ -18,7 +18,7 @@ from pyorbit.classes.model_container_zeus import ModelContainerZeus
 from pyorbit.subroutines.input_parser import pars_input
 from pyorbit.subroutines.io_subroutines import *
 
-from pyorbit.datatype_definitions import activity_datatype
+from pyorbit.datatype_definitions import activity_datatype, skip_plot
 
 
 import numpy as np
@@ -1641,6 +1641,12 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
         print('Computing the models for plot/data writing')
         print()
 
+        for dataset_name, dataset in mc.dataset_dict.items():
+            if dataset.kind in skip_plot:
+                print('No model plot will be generated for dataset {0:s} (type: {1:s}) '.format(dataset_name, dataset.kind))
+                dataset.compute_plot = False
+                continue
+
         """ BJD array for combined datasets, e.g., radial velocities datasets"""
         bjd_plot = {
             'combined': {}
@@ -1654,8 +1660,11 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
             P_minimum = max(key_val.get('P', 2.0), P_minimum)
 
 
-
         for dataset_name, dataset in mc.dataset_dict.items():
+
+            if not getattr(dataset, 'compute_plot', True):
+                continue
+
 
             #TODO fix it back
             """ Check removed to allow bugfixing"""

@@ -103,9 +103,13 @@ class AbstractModel(object):
         self.multiple_planets = []
 
         #TODO: Added in PyORBIT version 12 beta
-        self.force_model_dataset_initialization = True
+        self.force_model_dataset_initialization = False
+        self.skip_print_info = False
 
     def print_warning(self):
+        pass
+
+    def print_info(self):
         pass
 
     def initialize_model(self, mc, **kwargs):

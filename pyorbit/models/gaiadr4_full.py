@@ -104,6 +104,16 @@ class GaiaDR4AstrometricFull(AbstractModel, AbstractAstrometry):
         self.gaia_instrumental[dataset.name_ref]['cos_psi'] = np.cos(psi)
         self.gaia_instrumental[dataset.name_ref]['parallax_factor_al'] = np.asarray(dataset.ancillary[self.parallax_factor_column]*self.parallax_factor_sign, dtype=float)
 
+    def print_info(self):
+        print("*** model {0:s}:".format(self.model_name))
+        print("WARNING:")
+        print('    Astrometric orbit modelling requires the use of the stellar mass')
+        print('    This may cause a clash with models requiring stellar density and radius, e.g., RM modelling')
+        print('    At least TWO out of mass, radius, density of the star must be provided as priors')
+        print('    The use of a multivariate approach is strongly suggested')
+        print('    You can control the behaviour of mass/radius/density with the specific keywords')
+        print('    compute_mass, compute_radius, compute_density')
+        print()
 
     @staticmethod
     def _orbit_offsets(x0, period, eccentricity, omega_deg, mean_long_deg,

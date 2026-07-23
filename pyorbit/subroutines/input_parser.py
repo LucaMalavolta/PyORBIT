@@ -546,7 +546,7 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, reload_ze
                             define_type_to_class[model_type]['keplerian'](
                                 model_name_exp, planet_name)
                         
-                    mc.models[model_name_exp].print_warning()
+                    #mc.models[model_name_exp].print_warning()
 
                 except:
                     mc.models[model_name_exp] = \
@@ -562,11 +562,11 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, reload_ze
                             mc.parent_models[model_name_org].model_conf = model_conf.copy()
                             mc.parent_models[model_name_org].planet_list = planets_in_model[model_name_org]
 
-                            mc.parent_models[model_name_org].print_warning()
+                            mc.parent_models[model_name_exp].skip_print_info = True
 
                         mc.models[model_name_exp].parent_model = model_name_org
-                    else:
-                        mc.models[model_name_exp].print_warning()
+                    #else:
+                    #    mc.models[model_name_exp].print_warning()
 
                 if model_type in transit_time_model:
 
