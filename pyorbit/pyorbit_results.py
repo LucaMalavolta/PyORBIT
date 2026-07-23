@@ -1,3 +1,5 @@
+from yaml import parser
+
 import pyorbit
 import argparse
 import sys
@@ -76,7 +78,7 @@ def pyorbit_results():
         #'optimize': ['optimize', 'scipy', 'Optimize', 'OPTIMIZE'],
     }
 
-unchained_samplers = ['polychord', 'multinest', 'dynesty','dynesty_static', 'nestle', 'ultranest', 'ultranest_stepsampler', 'nautilus']
+    unchained_samplers = ['polychord', 'multinest', 'dynesty','dynesty_static', 'nestle', 'ultranest', 'ultranest_stepsampler', 'nautilus']
 
     args = parser.parse_args()
     sampler = args.sampler[0]
