@@ -1,0 +1,49 @@
+###### Requirements with Version Specifiers ######
+numpy ==1.24.3
+numba >=0.55.2
+scipy >=1.7,<1.12.0
+matplotlib >=3.5.2,<3.8
+emcee >=3.1.2
+astropy >=5.1
+astroquery >=0.4
+pyerfa >=2.0
+jaxlib ==0.4.31
+jax ==0.4.31
+tinygp >=0.3.0
+uncertainties
+lmfit
+###### Requirements without Version Specifiers ######
+packaging
+nautilus-sampler
+spleaf
+argparse
+pyyaml
+h5py
+tqdm
+pygtc
+cython
+pandas
+semantic-version
+PyDE @ git+https://github.com/hpparvi/PyDE.git
+batman-package
+###### multiporcessing (not sure if required) - install through conda
+# gxx_linux-64
+# mpi4py
+schwimmbad
+###### pytransit
+arviz
+celerite >= 0.4.1
+corner
+pytransit >= 2.6.8
+###### GP regression
+celerite2 == 0.2.1
+george >= 0.4.0
+###### nested sampling
+dynesty == 2.1.5
+ultranest >= 3.4.4
+###### RML
+pyastronomy
+#starry >= 1.2.0
+####### other packages
+opencv-python
+zeus-mcmc
