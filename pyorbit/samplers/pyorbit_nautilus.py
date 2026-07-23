@@ -81,10 +81,12 @@ def pyorbit_nautilus(config_in, input_datasets=None, return_output=None, run_nes
 
     if reloaded_nautilus:
         mc.model_setup()
+        mc.print_model_info()
         #mc.boundaries_setup()
         mc.initialize_logchi2()
     else:
         mc.model_setup()
+        mc.print_model_info()
         mc.boundaries_setup()
         mc.initialize_logchi2()
 

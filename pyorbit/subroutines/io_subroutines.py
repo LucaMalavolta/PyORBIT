@@ -76,31 +76,6 @@ def emcee_save_to_cpickle(mc, starting_point, population, prob, state, sampler, 
                 open(mc.emcee_dir_output + add_prefix + "sampler_acceptance_fraction.p", "wb"))
 
 
-def zeus_write_dummy_file(mc, prefix=''):
-    add_prefix = (prefix + '_' if prefix else '')
-    file_dummy = open(mc.zeus_dir_output + add_prefix + "dummy_file", "wb")
-    file_dummy.close()
-
-
-def zeus_save_to_cpickle(mc, starting_point, population, prob, state, sampler, theta_dict, samples=None, prefix=None):
-    if samples:
-        mc.zeus_parameters['nsteps'] = samples
-    add_prefix = (prefix + '_' if prefix else '')
-
-    pickle.dump(theta_dict, open(mc.zeus_dir_output + add_prefix + "theta_dict.p", "wb"))
-    pickle.dump(mc, open(mc.zeus_dir_output + add_prefix + "model_container.p", "wb"))
-    pickle.dump(starting_point, open(mc.zeus_dir_output + add_prefix + "starting_point.p", "wb"))
-    #pickle.dump(population, open(mc.zeus_dir_output + add_prefix + "starting_population.p", "wb"))
-    pickle.dump(population, open(mc.zeus_dir_output + add_prefix + "population.p", "wb"))
-    pickle.dump(prob, open(mc.zeus_dir_output + add_prefix + "prob.p", "wb"))
-    pickle.dump(state, open(mc.zeus_dir_output + add_prefix + "state.p", "wb"))
-    pickle.dump(sampler, open(mc.zeus_dir_output + add_prefix + "sampler.p", "wb"))
-    pickle.dump(sampler.chain, open(mc.zeus_dir_output + add_prefix + "sampler_chain.p", "wb"))
-    pickle.dump(sampler.lnprobability, open(mc.zeus_dir_output + add_prefix + "sampler_lnprobability.p", "wb"))
-    pickle.dump(sampler.acceptance_fraction,
-                open(mc.zeus_dir_output + add_prefix + "sampler_acceptance_fraction.p", "wb"))
-
-
 
 def affine_load_from_cpickle(dir_output, prefix=''):
     add_prefix = (prefix + '_' if prefix else '')
@@ -141,12 +116,6 @@ def affine_simpler_load_from_cpickle(dir_output, prefix=''):
 
 def emcee_load_from_cpickle(emcee_dir_output, prefix=''):
     return affine_load_from_cpickle(emcee_dir_output, prefix)
-
-def zeus_simpler_load_from_cpickle(zeus_dir_output, prefix=''):
-    return affine_simpler_load_from_cpickle(zeus_dir_output, prefix)
-
-def zeus_load_from_cpickle(zeus_dir_output, prefix=''):
-    return affine_load_from_cpickle(zeus_dir_output, prefix)
 
 def emcee_simpler_load_from_cpickle(emcee_dir_output, prefix=''):
     return affine_simpler_load_from_cpickle(emcee_dir_output, prefix)
@@ -301,20 +270,12 @@ def affine_flatlnprob(lnprob, nburnin, nthin, population, nwalkers):
 def emcee_burnin_check(chain, nburnin, nthin, nwalkers=False):
     return affine_burnin_check(chain, nburnin, nthin, nwalkers)
 
-def zeus_burnin_check(chain, nburnin, nthin, nwalkers=False):
-    return affine_burnin_check(chain, nburnin, nthin, nwalkers)
-
 def emcee_flatchain(chain, nburnin, nthin):
     return affine_flatchain(chain, nburnin, nthin)
 
 def emcee_flatlnprob(lnprob, nburnin, nthin, population, nwalkers):
     return affine_flatlnprob(lnprob, nburnin, nthin, population, nwalkers)
 
-def zeus_flatchain(chain, nburnin, nthin):
-    return affine_flatchain(chain, nburnin, nthin)
-
-def zeus_flatlnprob(lnprob, nburnin, nthin, population, nwalkers):
-    return affine_flatlnprob(lnprob, nburnin, nthin, population, nwalkers)
 
 
 def GelmanRubin(chains_T):

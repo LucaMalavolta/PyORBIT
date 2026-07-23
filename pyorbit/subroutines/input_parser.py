@@ -93,7 +93,7 @@ def yaml_fix_nested(config_in):
     return config_in
 
 
-def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, reload_zeus=False, reload_affine=False, shutdown_jitter=False):
+def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, reload_affine=False, shutdown_jitter=False):
 
     mc.output_name = config_in['output']
 
@@ -112,10 +112,10 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, reload_ze
     planets_in_model = {}
 
     """ Beginning of snippet dedicated to the reloading of parameters that are not involved in the fit procedure"""
-    if reload_emcee or reload_zeus or reload_affine:
+    if reload_emcee or reload_affine:
         if hasattr(mc, 'emcee_parameters'):
             conf = None
-            for conf_name in ['zeus', 'mcmc', 'affine', 'emcee']:
+            for conf_name in ['mcmc', 'affine', 'emcee']:
                 if conf_name in conf_solver: conf = conf_solver[conf_name]
 
             if conf:
@@ -143,29 +143,6 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, reload_ze
                 #if 'thin' in conf:
                 #    mc.emcee_parameters['thin'] = np.asarray(
                 #        conf['thin'], dtype=np.int64)
-
-
-        if hasattr(mc, 'zeus_parameters'):
-            conf = None
-            for conf_name in ['emcee', 'mcmc', 'affine', 'zeus']:
-                if conf_name in conf_solver: conf = conf_solver[conf_name]
-
-            if conf:
-                if 'nsave' in conf:
-                    mc.zeus_parameters['nsave'] = np.asarray(
-                        conf['nsave'], dtype=np.double)
-
-                if 'nsteps' in conf:
-                    mc.zeus_parameters['nsteps'] = np.asarray(
-                        conf['nsteps'], dtype=np.int64)
-
-                if 'nburn' in conf:
-                    mc.zeus_parameters['nburn'] = np.asarray(
-                        conf['nburn'], dtype=np.int64)
-
-                if 'thin' in conf:
-                    mc.zeus_parameters['thin'] = np.asarray(
-                        conf['thin'], dtype=np.int64)
 
 
         # Check if inclination has been updated
@@ -562,8 +539,7 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, reload_ze
                             mc.parent_models[model_name_org].model_conf = model_conf.copy()
                             mc.parent_models[model_name_org].planet_list = planets_in_model[model_name_org]
 
-                            mc.parent_models[model_name_exp].skip_print_info = True
-
+                        mc.models[model_name_exp].skip_print_info = True
                         mc.models[model_name_exp].parent_model = model_name_org
                     #else:
                     #    mc.models[model_name_exp].print_warning()
@@ -880,7 +856,7 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, reload_ze
 
     if hasattr(mc, 'emcee_parameters'):
         conf = None
-        for conf_name in ['zeus', 'mcmc', 'affine', 'emcee']:
+        for conf_name in ['mcmc', 'affine', 'emcee']:
             if conf_name in conf_solver: conf = conf_solver[conf_name]
         if conf:
             if 'multirun' in conf:
@@ -928,39 +904,6 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, reload_ze
 
             if 'moves' in conf:
                 mc.emcee_parameters['moves'] = conf['moves']
-
-    if hasattr(mc, 'zeus_parameters'):
-        conf = None
-        for conf_name in ['emcee', 'mcmc', 'affine', 'zeus']:
-            if conf_name in conf_solver: conf = conf_solver[conf_name]
-        if conf:
-            if 'nsteps' in conf:
-                mc.zeus_parameters['nsteps'] = np.asarray(
-                    conf['nsteps'], dtype=np.int64)
-
-            if 'nburn' in conf:
-                mc.zeus_parameters['nburn'] = np.asarray(
-                    conf['nburn'], dtype=np.int64)
-
-            if 'npop_mult' in conf:
-                mc.zeus_parameters['npop_mult'] = np.asarray(
-                    conf['npop_mult'], dtype=np.int64)
-
-            if 'thin' in conf:
-                mc.zeus_parameters['thin'] = np.asarray(
-                    conf['thin'], dtype=np.int64)
-
-            if 'shutdown_jitter' in conf:
-                mc.zeus_parameters['shutdown_jitter'] = np.asarray(
-                    conf['shutdown_jitter'], dtype=bool)
-            elif shutdown_jitter:
-                mc.zeus_parameters['shutdown_jitter'] = shutdown_jitter
-
-            if 'include_priors' in conf:
-                mc.include_priors = np.asarray(conf['include_priors'], dtype=bool)
-
-            if 'use_threading_pool' in conf:
-                mc.zeus_parameters['use_threading_pool'] = np.asarray(conf['use_threading_pool'], dtype=bool)
 
 
     if 'nested_sampling' in conf_solver and hasattr(mc, 'nested_sampling_parameters'):

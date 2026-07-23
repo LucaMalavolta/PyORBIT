@@ -63,6 +63,7 @@ def pyorbit_pyde(config_in, input_datasets=None, return_output=None):
     # keep track of which version has been used to perform emcee computations
 
     mc.model_setup()
+    mc.print_model_info()
     mc.boundaries_setup()
     mc.initialize_logchi2()
 

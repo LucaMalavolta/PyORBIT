@@ -105,6 +105,7 @@ def pyorbit_emcee_mpi(config_in, input_datasets=None, return_output=None):
         flatchain = emcee_flatchain(
             sampler_chain, mc.emcee_parameters['nburn'], mc.emcee_parameters['thin'])
         mc.model_setup()
+        mc.print_model_info()
         mc.initialize_logchi2()
 
         results_analysis.print_bayesian_info(mc)
@@ -169,6 +170,7 @@ def pyorbit_emcee_mpi(config_in, input_datasets=None, return_output=None):
 
         mc.model_setup()
         mc.boundaries_setup()
+        mc.print_model_info()
         mc.initialize_logchi2()
 
         results_analysis.print_bayesian_info(mc)

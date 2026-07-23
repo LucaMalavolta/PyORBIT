@@ -59,6 +59,7 @@ def pyorbit_nestle(config_in, input_datasets=None, return_output=None):
         num_threads = multiprocessing.cpu_count()-1
 
     mc.model_setup()
+    mc.print_model_info()
     mc.boundaries_setup()
     mc.initialize_logchi2()
 

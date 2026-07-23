@@ -53,6 +53,7 @@ def pyorbit_ultranest_stepsampler(config_in, input_datasets=None, return_output=
             dataset.shutdown_jitter()
 
     mc.model_setup()
+    mc.print_model_info()
     mc.boundaries_setup()
     mc.initialize_logchi2()
 
@@ -92,15 +93,12 @@ def pyorbit_ultranest_stepsampler(config_in, input_datasets=None, return_output=
 
     global ultranest_transform
     def ultranest_transform(cube):
-        theta = np.zeros(len(cube), dtype=np.double)
-
-        for i in range(0, len(cube)):
-            theta[i] = nested_sampling_prior_compute(
-                cube[i], mc.priors[i][0], mc.priors[i][2], mc.spaces[i])
-        return theta
+        return mc.ultranest_transform(cube)
 
     global ultranest_call
     def ultranest_call(theta):
+        return mc.ultranest_call(theta)
+
 
         log_likelihood = 0.00
 

@@ -66,21 +66,17 @@ def pyorbit_results():
         'multinest':['multinest', 'MultiNest', 'multi'],
         'polychord':['polychord', 'PolyChord', 'polychrod', 'poly'],
         'emcee': ['emcee', 'MCMC', 'Emcee'],
-        'emcee_legacy': ['emcee_legacy', 'MCMC_legacy', 'Emcee_legacy'],
         'emcee_mpi': ['emcee_MPI', 'MCMC_MPI', 'Emcee_MPI','emcee_mpi', 'MCMC_mpi', 'Emcee_mpi'],
-        'zeus_legacy': ['zeus', 'ZEUS', 'Zeus', 'zeus-mcmc', 'zeus_legacy', 'ZEUS_legacy', 'Zeus_legacy', 'zeus-mcmc_legacy'],
         'dynesty': ['dynesty', 'DyNesty', 'Dynesty', 'DYNESTY'],
-        'dynesty_legacy': ['dynesty_legacy', 'DyNesty_legacy', 'Dynesty_legacy', 'DYNESTY_legacy'],
         'dynesty_static': ['dynesty_static', 'DyNesty_static', 'Dynesty_static', 'DYNESTY_static'],
-        #'nestle': ['nestle', 'Nestle', 'NESTLE', 'nelste'],
+        'nestle': ['nestle', 'Nestle', 'NESTLE', 'nelste'],
         'ultranest': ['ultranest', 'UltraNest', 'Ultranest', 'ULTRANEST', 'ultra','Unest'],
-        'emcee_warmstart': ['emcee_warmstart', 'emcee_warmup'],
-        'ultranest_warmstart': ['ultranest_warmstart', 'UltraNest_WarmStart', 'Ultranest_Warmstart', 'ULTRANEST_WARMSTART', 'ultra_warm','Unest_WarmS', 'UltraWarm', 'ultrawarm'],
+        'ultranest_stepsampler': ['ultranest_stepsampler', 'UltraNest_StepSampler', 'UltraNest_Stepsampler', 'ULTRANEST_STEPSAMPLER', 'ultra_step','Unest_StepS', 'UltraStep', 'ultrastep'],
         'nautilus': ['nautilus', 'Nautilus', 'NAUTILUS'],
         #'optimize': ['optimize', 'scipy', 'Optimize', 'OPTIMIZE'],
     }
 
-    unchained_samplers = ['ultranest_warmstart','polychord', 'multinest', 'dynesty', 'dynesty_legacy','dynesty_static', 'nestle', 'ultranest', 'nautilus']
+unchained_samplers = ['polychord', 'multinest', 'dynesty','dynesty_static', 'nestle', 'ultranest', 'ultranest_stepsampler', 'nautilus']
 
     args = parser.parse_args()
     sampler = args.sampler[0]
