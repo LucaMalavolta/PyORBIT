@@ -295,6 +295,8 @@ define_type_to_class = {
     'gaiadr4_full': GaiaDR4AstrometricFull,
     'gaiadr4_baseline': GaiaDR4AstrometricBaseline,
     'gaiadr4_orbit': GaiaDR4AstrometricOrbit,
+    'gaiadr4_astrometric_baseline': GaiaDR4AstrometricBaseline,
+    'gaiadr4_astrometric_orbit': GaiaDR4AstrometricOrbit,    
 }
 
 

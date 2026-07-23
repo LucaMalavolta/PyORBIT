@@ -282,12 +282,6 @@ You can then install `PyORBIT` by using `pip` inside the code repository:
  pip install .
 ```
 
-Alternatively, you can install `PyORBIT` using the `setup.py` file:
-
-```{code} bash
- python setup.py install
-```
-
 Keep in mind that you can still run PyORBIT by specifying the full path of the code. For example, if you cloned the repository in the folder ``~/CODE/PyORBIT``, you can run the analysis and explore the results with these scripts:
 
 ```{code} bash

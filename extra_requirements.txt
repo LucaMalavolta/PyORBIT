@@ -14,6 +14,7 @@ uncertainties
 lmfit
 ###### Requirements without Version Specifiers ######
 packaging
+orbitize
 nautilus-sampler
 spleaf
 argparse

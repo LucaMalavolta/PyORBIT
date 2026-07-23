@@ -30,7 +30,6 @@ class GaiaDR4AstrometricOrbit(AbstractModel, AbstractAstrometry):
         self.accept_multiple_planets = False
 
         self.scan_angle_column = "scan_angle_deg"
-        self.parallax_factor_column = "parallax_factor_al"
         self.scan_angle_sign = 1.0
         self.scan_angle_offset_deg = 0.0
         self.parallax_factor_sign = 1.0
@@ -52,9 +51,6 @@ class GaiaDR4AstrometricOrbit(AbstractModel, AbstractAstrometry):
         """Read fixed geometry conventions from the model configuration."""
         self.scan_angle_column = kwargs.get(
             "scan_angle_column", self.scan_angle_column
-        )
-        self.parallax_factor_column = kwargs.get(
-            "parallax_factor_column", self.parallax_factor_column
         )
         self.scan_angle_sign = float(
             kwargs.get("scan_angle_sign", self.scan_angle_sign)
@@ -81,30 +77,27 @@ class GaiaDR4AstrometricOrbit(AbstractModel, AbstractAstrometry):
                 "Gaia AL model requires ancillary columns scan_angle_deg and parallax_factor_al"
             )
 
+
         names = dataset.ancillary.dtype.names or ()
-        required = (self.scan_angle_column, self.parallax_factor_column)
-        missing = [name for name in required if name not in names]
-        if missing:
+        if self.scan_angle_column not in names:
             raise ValueError(
-                "Missing Gaia AL ancillary column(s): " + ", ".join(missing)
+                "Missing Gaia AL ancillary column(s): " + ", ".join(self.scan_angle_column)
             )
 
-        for name in required:
-            values = np.asarray(dataset.ancillary[name], dtype=float)
-            if values.shape[0] != dataset.n:
-                raise ValueError(
-                    f"Ancillary column {name!r} has {values.shape[0]} rows; "
-                    f"dataset has {dataset.n}."
-                )
-            if not np.all(np.isfinite(values)):
-                raise ValueError(f"Ancillary column {name!r} contains non-finite values.")
-
         psi_deg = np.asarray(dataset.ancillary[self.scan_angle_column], dtype=np.double)
+
+        if psi_deg.shape[0] != dataset.n:
+            raise ValueError(
+                f"Ancillary column {self.scan_angle_column!r} has {psi_deg.shape[0]} rows; "
+                f"dataset has {dataset.n}."
+            )
+        if not np.all(np.isfinite(psi_deg)):
+            raise ValueError(f"Ancillary column {self.scan_angle_column!r} contains non-finite values.")
+
         psi = (self.scan_angle_sign * psi_deg + self.scan_angle_offset_deg) * constants.deg2rad
 
         self.gaia_instrumental[dataset.name_ref]['sin_psi'] = np.sin(psi)
         self.gaia_instrumental[dataset.name_ref]['cos_psi'] = np.cos(psi)
-        self.gaia_instrumental[dataset.name_ref]['parallax_factor_al'] = np.asarray(dataset.ancillary[self.parallax_factor_column]*self.parallax_factor_sign, dtype=float)
 
     @staticmethod
     def _eccentric_orbit_coordinates(parameter_values, x0):
