@@ -159,8 +159,10 @@ class GaiaDR4AstrometricFull(AbstractModel, AbstractAstrometry):
         north_planet = -a_star_mas*(north_X * X + north_Y * Y)
         return east_planet, north_planet
 
-    def compute(self, parameter_values, dataset, x0_input=None):
+    def compute(self, not_used, dataset, x0_input=None):
 
+
+        parameter_values = self.parameter_values
         if x0_input is not None:
             return np.zeros_like(x0_input, dtype=float)
 
@@ -183,14 +185,14 @@ class GaiaDR4AstrometricFull(AbstractModel, AbstractAstrometry):
                 * planet_mass / (self.parameter_values['mass'] + planet_mass)) * self.parameter_values['parallax']
 
             east_orbit, north_orbit = self._orbit_offsets(
-                dt_day=dataset.x0,
-                P=self.parameter_values[prepend+"P"],
-                e=self.parameter_values[prepend+"e"],
+                x0=dataset.x0,
+                period=self.parameter_values[prepend+"P"],
+                eccentricity=self.parameter_values[prepend+"e"],
                 omega_deg=self.parameter_values[prepend+"omega"],
                 mean_long_deg=self.parameter_values[prepend+"mean_long"],
                 i_deg=self.parameter_values[prepend+"i"],
                 Omega_deg=self.parameter_values[prepend+"Omega"],
-                a_ast_mas=a_star_mas,
+                a_star_mas=a_star_mas,
             )
 
             east += east_orbit
@@ -198,4 +200,4 @@ class GaiaDR4AstrometricFull(AbstractModel, AbstractAstrometry):
 
         return (east * self.gaia_instrumental[dataset.name_ref]['sin_psi'] 
                 + north * self.gaia_instrumental[dataset.name_ref]['cos_psi'] 
-                + parameter_values["parallax"] * self.gaia_instrumental[dataset.name_ref]['parallax_factor_al'])
+                + parameter_values["parallax"] * self.gaia_instrumental[dataset.name_ref]['parallax_factor_al']*self.parallax_factor_sign)

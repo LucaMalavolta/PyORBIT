@@ -6,6 +6,7 @@ import pyorbit.subroutines.constants as constants
 
 class GaiaDR4AstrometricBaseline(AbstractModel):
     model_class = 'gaia_astrometry_baseline'
+    time_independent_model = True
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -103,5 +104,5 @@ class GaiaDR4AstrometricBaseline(AbstractModel):
 
         return east * self.gaia_instrumental[dataset.name_ref]['sin_psi'] \
                 + north * self.gaia_instrumental[dataset.name_ref]['cos_psi']\
-                + parameter_values["parallax"] * self.gaia_instrumental[dataset.name_ref]['parallax_factor_al']
+                + parameter_values["parallax"] * self.gaia_instrumental[dataset.name_ref]['parallax_factor_al']*self.parallax_factor_sign
 

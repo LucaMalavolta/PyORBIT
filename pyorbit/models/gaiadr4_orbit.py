@@ -8,6 +8,7 @@ import pyorbit.subroutines.constants as constants
 
 class GaiaDR4AstrometricOrbit(AbstractModel, AbstractAstrometry):
     model_class = 'gaia_astrometry_orbit'
+    time_independent_model = True
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -37,6 +38,9 @@ class GaiaDR4AstrometricOrbit(AbstractModel, AbstractAstrometry):
         self.gaia_instrumental = {}
 
     def print_warning(self):
+
+        print("*** model {0:s}:".format(self.model_name))
+        print('    compute_semimajor_axis_from_mass:', self.compute_semimajor_axis_from_mass)
         print("{0:s} WARNING:".format(self.model_name))
         print('    Astrometric orbit modelling requires the use of the stellar mass')
         print('    This may cause a clash with models requiring stellar density and radius, e.g., RM modelling')
@@ -172,8 +176,6 @@ class GaiaDR4AstrometricOrbit(AbstractModel, AbstractAstrometry):
             return np.zeros_like(x0_input, dtype=float)
 
         self.update_parameter_values(parameter_values)
-
-        delta_year = dataset.x0 * constants.day2year
 
         X, Y = self._eccentric_orbit_coordinates(parameter_values, dataset.x0)
         east_planet, north_planet = self._planet_sky_coordinates(parameter_values, X, Y)
