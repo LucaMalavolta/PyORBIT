@@ -86,7 +86,7 @@ class DatasetExpanded(Dataset):
         self.ancillary = None
 
         self.compute_plot = False
-
+        self.compute_model_plot = False
 
 
     def append_ancillary(self, input_file, input_array=False, input_array_str=False):

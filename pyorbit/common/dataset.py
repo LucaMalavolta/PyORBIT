@@ -83,6 +83,7 @@ class Dataset(AbstractCommon):
         self.ancillary = None
 
         self.compute_plot = True
+        self.compute_model_plot = True
 
 
     def append_ancillary(self, input_file, input_array=False, input_array_str=False):

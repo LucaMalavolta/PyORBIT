@@ -59,6 +59,7 @@ class DatasetExternal(Dataset):
         self.ancillary = None
 
         self.compute_plot = False
+        self.compute_model_plot = False
         self.n = 0
 
 

@@ -17,7 +17,7 @@ from pyorbit.classes.model_container_emcee import ModelContainerEmcee
 from pyorbit.subroutines.input_parser import pars_input
 from pyorbit.subroutines.io_subroutines import *
 
-from pyorbit.datatype_definitions import activity_datatype, skip_plot
+from pyorbit.datatype_definitions import activity_datatype, skip_plot, skip_model_plot
 
 
 import numpy as np
@@ -1572,9 +1572,14 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
         print()
 
         for dataset_name, dataset in mc.dataset_dict.items():
-            if dataset.kind in skip_plot:
+            if dataset.kind in skip_plot or not getattr(dataset, 'compute_plot', True):
                 print('No model plot will be generated for dataset {0:s} (type: {1:s}) '.format(dataset_name, dataset.kind))
                 dataset.compute_plot = False
+                continue
+
+            if dataset.kind in skip_model_plot or not getattr(dataset, 'compute_model_plot', True):
+                print('No model plot will be generated for dataset {0:s} (type: {1:s}) '.format(dataset_name, dataset.kind))
+                dataset.compute_model_plot = False
                 continue
 
         """ BJD array for combined datasets, e.g., radial velocities datasets"""
@@ -1595,16 +1600,21 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
             if not getattr(dataset, 'compute_plot', True):
                 continue
 
-
-            #TODO fix it back
-            """ Check removed to allow bugfixing"""
-            #if not getattr(dataset, 'compute_plot', True):
-            #    continue
-
             if dataset.kind in kinds.keys():
                 kinds[dataset.kind].extend([dataset_name])
             else:
                 kinds[dataset.kind] = [dataset_name]
+
+            if not getattr(dataset, 'compute_model_plot', True):
+                bjd_plot[dataset_name] = {
+                    'start': np.amin(dataset.x),
+                    'end': np.amax(dataset.x),
+                    'range': np.amax(dataset.x) - np.amin(dataset.x),
+                    'x0_plot': dataset.x - mc.Tref,
+                    'x_plot': dataset.x,
+                }
+                continue
+
 
             bjd_plot[dataset_name] = {
                 'start': np.amin(dataset.x),
@@ -1713,16 +1723,21 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
             bjd_plot['combined']['x_plot'] = np.arange(
                 bjd_plot['combined']['start'], bjd_plot['combined']['end'], bjd_plot['combined']['step_size'])
             bjd_plot['combined']['x0_plot'] = bjd_plot['combined']['x_plot'] - mc.Tref
+
+            print('Combined BJD array built with {0:d} data points'.format(len(bjd_plot['combined']['x0_plot'])))
+
         except KeyError:
             print('WARNING: No combined BJD array built, likely because there are no datasets that can be combined, e.g., only photometric datasets')
             """ No combined array built, likely because there are no datasets that can be combined, e.g., only photometric datasets"""
             pass
 
-        print('Combined BJD array built with {0:d} data points'.format(len(bjd_plot['combined'])))
         
         """ By default we want to use the same BJD array for all the datasets of the same kind, e.g., radial velocity datasets.
         For transit time datasets, there is no point in plotting intermediate values """
         for dataset_name, dataset in mc.dataset_dict.items():
+            if not getattr(dataset, 'compute_model_plot', True):
+                continue
+
             if dataset.kind == 'radial_velocity' and plot_config_parameters.get('use_shared_axis_for_rv', True):
                 bjd_plot[dataset_name] = bjd_plot['combined']
                 print('    Dataset {0:20s} combined BJD array built with {1:d} data points'.format(dataset_name, len(bjd_plot['combined']['x0_plot'])))
@@ -1744,17 +1759,6 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
         bjd_plot['sampleMED_model_out'], bjd_plot['sampleMED_model_x'] = results_analysis.get_model(
             mc, chain_sampleMED, bjd_plot, **plot_config_parameters)
 
-
-        #print(bjd_plot['model_out'])
-        #print(type(bjd_plot['model_out']))
-        #print(np.shape(bjd_plot['model_out']))
-        ##import matplotlib.pyplot as plt
-        #plt.imshow(bjd_plot['model_out'])
-        #plt.show()
-        #plt.imshow(dataset.y - bjd_plot['model_out'])
-        #plt.show()
-
-
         if plot_dictionary['plot_models']:
             print('Writing the plots ')
 
@@ -1763,6 +1767,9 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
 
                     if len(mc.dataset_dict[dataset_name].n_shape) > 1:
                         continue
+
+                    if mc.dataset_dict[dataset_name].compute_plot is False:
+                        continue 
 
                     try:
                         error_bars = np.sqrt(mc.dataset_dict[dataset_name].e**2
@@ -1803,15 +1810,16 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
                                   yerr=error_bars,
                                   color='C0', fmt='o', ms=0, zorder=19, alpha=0.5)
 
-                    ax_0.plot(bjd_plot[dataset_name]['x_plot'], bjd_plot['model_x'][dataset_name]['complete'],
-                              label='Median-corresponding model',
-                              color='C1', zorder=10)
-                    ax_0.plot(bjd_plot[dataset_name]['x_plot'], bjd_plot['MAP_model_x'][dataset_name]['complete'],
-                              label='MAP-corresponding model',
-                              color='C2', zorder=9)
-                    ax_0.plot(bjd_plot[dataset_name]['x_plot'], bjd_plot['sampleMED_model_x'][dataset_name]['complete'],
-                              label='sampleMED-corresponding model',
-                              color='C5', zorder=8)
+                    if getattr(dataset, 'compute_model_plot', True):
+                        ax_0.plot(bjd_plot[dataset_name]['x_plot'], bjd_plot['model_x'][dataset_name]['complete'],
+                                label='Median-corresponding model',
+                                color='C1', zorder=10)
+                        ax_0.plot(bjd_plot[dataset_name]['x_plot'], bjd_plot['MAP_model_x'][dataset_name]['complete'],
+                                label='MAP-corresponding model',
+                                color='C2', zorder=9)
+                        ax_0.plot(bjd_plot[dataset_name]['x_plot'], bjd_plot['sampleMED_model_x'][dataset_name]['complete'],
+                                label='sampleMED-corresponding model',
+                                color='C5', zorder=8)
 
                     ax_0.set_ylabel('Same as input data')
                     ax_0.legend()
