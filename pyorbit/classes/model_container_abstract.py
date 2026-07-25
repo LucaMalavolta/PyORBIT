@@ -331,7 +331,7 @@ class ModelContainer(object):
         delayed_lnlk_computation = []
         residuals_analysis = {}
 
-
+        previous_log_likelihood = 0.0
         for dataset_name, dataset in self.dataset_dict.items():
 
             logchi2_gp_model = None
