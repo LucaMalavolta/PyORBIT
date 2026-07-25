@@ -283,14 +283,49 @@ class CommonStarParameters(AbstractCommon):
         self.convective_order = kwargs.get('convective_order', self.convective_order)
 
         if self.use_equatorial_velocity and self.use_stellar_inclination and self.use_stellar_rotation_period and self.use_stellar_radius:
-            print('Possible source of unexpected behaviour, I will quit')
-            print('These parameters are correlated and should not be all free simultaneously:')
-            print('- stellar rotation period ')
-            print('- stellar radius ')
-            print('- stellar inclination ')
-            print('- equatorial velocity')
+            print("UNRECOVERABLE ERROR model {0:s} :".format(self.common_ref))
+            print('    These parameters are correlated and should not be all free simultaneously:')
+            print('    - stellar rotation period ')
+            print('    - stellar radius ')
+            print('    - stellar inclination ')
+            print('  - equatorial velocity')
             print()
             quit()
+
+
+    def print_info(self):
+        print("*** star {0:s} global parameters:".format(self.common_ref))
+
+        if self.use_equatorial_velocity:
+            print("    equatorial velocity is used as a free parameter")
+        if self.use_stellar_rotation_period:
+            print("    stellar rotation period is used as a free parameter")
+        if self.use_stellar_inclination and not self.use_cosine_stellar_inclination:
+            print("    stellar inclination is used as a free parameter")
+        if self.use_cosine_stellar_inclination:
+            print("    cosine of stellar inclination replaces the stellar inclination as a free parameter")
+        if self.use_differential_rotation:
+            print("    differential rotation is used as a free parameter")
+        if self.use_stellar_radius:
+            print("    stellar radius is used as a free parameter")
+        if self.use_projected_velocity:
+            print("    projected velocity vsin(i) is used as a free parameter when included in a model")
+        else:
+            print("    projected velocity vsin(i) is a derived parameter when required by a model")
+
+        if getattr(self, 'multivariate_pams', None) is not None and len(self.multivariate_pams) > 0:
+            print("    multivariate priors are used for the following parameters:")
+            for pam in self.multivariate_pams:
+                print("        {0:s}".format(pam))
+        if self.compute_mass:
+            print("    mass is computed from radius and density")
+        if self.compute_radius:
+            print("    radius is computed from mass and density")
+        if self.compute_density:
+            print("    density is computed from mass and radius")
+
+        if self.convective_order > 0:
+            print("    convective blueshift is modeled with order {0:d}".format(self.convective_order))
 
 
     def define_derived_parameters(self):

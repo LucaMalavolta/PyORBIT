@@ -30,6 +30,15 @@ class GaiaDR4AstrometricBaseline(AbstractModel):
 
         self.gaia_instrumental = {}
 
+    def print_info(self):
+        print("*** model {0:s} parameters:".format(self.model_name))
+        print('    scan_angle_column: {0:s}'.format(self.scan_angle_column))
+        print('    parallax_factor_column: {0:s}'.format(self.parallax_factor_column))
+        print('    scan_angle_sign: {0:g}'.format(self.scan_angle_sign))
+        print('    scan_angle_offset_deg: {0:g}'.format(self.scan_angle_offset_deg))
+        print('    parallax_factor_sign: {0:g}'.format(self.parallax_factor_sign))
+        print()
+
     def initialize_model(self, mc, **kwargs):
         self.Tref = mc.Tref
 

@@ -395,7 +395,11 @@ class ModelContainer(object):
 
                 if getattr(self.models[model_name], 'external_dataset', False):
                     skip_loglikelihood = True
-                    log_likelihood += self.models[model_name].compute_loglikelihood(parameter_values, dataset)
+                    #log_likelihood += self.models[model_name].compute_loglikelihood(parameter_values, dataset)
+                    orbitize_log_likelihood = self.models[model_name].compute_loglikelihood(parameter_values, dataset)
+                    previous_log_likelihood = log_likelihood * 1.0
+                    log_likelihood += orbitize_log_likelihood
+
                     continue
 
                 """ residuals will be computed following the definition in Dataset class
@@ -559,6 +563,7 @@ class ModelContainer(object):
         #    if not (dynamical_output['stable'] and dynamical_output['pass']):
         #        log_likelihood = -np.inf
         #        log_priors = -np.inf
+        print('*****   {0:12.6f}  {1:12.6f}  {2:12.6f} '.format(previous_log_likelihood, orbitize_log_likelihood, log_likelihood))
 
         if return_priors is False:
             return log_likelihood

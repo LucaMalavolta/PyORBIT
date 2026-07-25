@@ -17,28 +17,49 @@ class AbstractGaussianProcesses(object):
         self.use_shared_decay = False
         self.use_shared_hyperparameters = False
 
+        self.hyper_condition_flag = False
+        self.rotdec_condition_flag = False
+        self.halfrotdec_condition_flag = False
+        self.decay_rotation_factor = 0
         self.model_class = 'gaussian_process'
+
+
+    def _abstract_print_info(self):
+
+        if self.hyper_condition_flag:
+            print('    Hyperparameter condition: True')
+
+        if self.rotdec_condition_flag:
+            print('    Decay timescale force to be at least twice the rotation timescale: True')
+
+        if self.halfrotdec_condition_flag:
+            print('    Decay timescale timescale force to be at least half the rotation timescale: True')
+
+        if self.decay_rotation_factor > 0.0:
+            print('    Minimum ratio of decay / rotation timescales: {0:.3f}'.format(self.decay_rotation_factor))
+            if self.rotdec_condition_flag:
+                print('        WARNING: will override rotation_decay_condition')
+            if self.halfrotdec_condition_flag:
+                print('        WARNING: will override halfrotation_decay_condition')
 
 
     def _prepare_hyperparameter_conditions(self, mc, **kwargs):
 
 
         if kwargs.get('hyperparameters_condition', False):
-            print('    hyperparameters_condition:  True')
+            self.hyper_condition_flag = True
             self.hyper_condition = self._hypercond_01
         else:
-            print('    hyperparameters_condition:  False')
             self.hyper_condition = self._hypercond_00
 
         if kwargs.get('rotation_decay_condition', False):
-            print('    rotation_decay_condition:  True')
+            self.rotdec_condition_flag = True
             self.rotdec_condition = self._hypercond_02
         else:
-            print('    rotation_decay_condition:  False')
             self.rotdec_condition = self._hypercond_00
 
         if kwargs.get('halfrotation_decay_condition', False):
-            print('    halfrotation_decay_condition:  True')
+            self.halfrotdec_condition_flag = True
             self.halfrotdec_condition = self._hypercond_03
         else:
             self.halfrotdec_condition = self._hypercond_00
@@ -47,7 +68,6 @@ class AbstractGaussianProcesses(object):
         if kwargs.get('decay_rotation_factor', False):
             self.decay_rotation_factor = kwargs.get('decay_rotation_factor', 0)
             self.rotdec_factor_condition = self._hypercond_04
-            print('    decay_rotation_factor: {0:.3f}'.format(self.decay_rotation_factor))
 
         if kwargs.get('rotation_decay_factor', False):
             self.decay_rotation_factor = kwargs.get('rotation_decay_factor', 0)
@@ -85,7 +105,6 @@ class AbstractGaussianProcesses(object):
     def _check_extra_conditions(self, **kwargs):
 
         flag_check = [self.use_activity_Prot, self.use_activity_Pdec, self.use_stellar_rotation_period, self.use_stellar_activity_decay]
-        print(flag_check )
         if sum(flag_check) > 1:
             print("UNRECOVERABLE ERROR model {0:s} :".format(self.common_ref))
             print('The rotation and decay flags are mutually exclusive. Please choose one of the following options:')
@@ -93,9 +112,6 @@ class AbstractGaussianProcesses(object):
             raise ValueError()
 
     def _prepare_rotation_replacement(self, mc, parameter_name ='Prot', common_pam=True, check_common=True, **kwargs):
-
-        ### TODO: remove in version 11 of PyORBIT
-        self.use_activity_Prot = getattr(self, 'use_activity_Prot', False)
 
         if check_common:
             for common_ref in self.common_ref:
@@ -133,10 +149,6 @@ class AbstractGaussianProcesses(object):
                                 'use_activity_Prot, use_stellar_rotation_period')
 
     def _prepare_decay_replacement(self, mc, parameter_name ='Pdec', common_pam=True,  check_common=True, **kwargs):
-
-        ### TODO: remove in version 11 of PyORBIT
-        self.use_activity_Pdec = getattr(self, 'use_activity_Pdec', False)
-
 
         if check_common:
             for common_ref in self.common_ref:

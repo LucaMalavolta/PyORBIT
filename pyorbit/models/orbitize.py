@@ -103,16 +103,14 @@ class Orbitize(AbstractModel, AbstractAstrometry):
 
     def initialize_model_dataset(self, mc, dataset, **kwargs):
         self.data_table = read_input.read_file(dataset.input_file)
+        self.data_table_name = dataset.input_file
 
     def print_info(self):
-        print("*** model {0:s}:".format(self.model_name))
-        print("WARNING:")
-        print('    Astrometric orbit modelling requires the use of the stellar mass')
-        print('    This may cause a clash with models requiring stellar density and radius, e.g., RM modelling')
-        print('    At least TWO out of mass, radius, density of the star must be provided as priors')
-        print('    The use of a multivariate approach is strongly suggested')
-        print('    You can control the behaviour of mass/radius/density with the specific keywords')
-        print('    compute_mass, compute_radius, compute_density')
+        print("*** model {0:s} parameters:".format(self.model_name))
+        self._abstract_print_info()
+        print('    orbitize input file: {0:s}'.format(self.data_table_name))
+        print('    Hipparcos IAD file: {0:s}'.format(self.iad_filepath if hasattr(self, 'iad_filepath') else 'None'))
+        print('    HGCA GOST file: {0:s}'.format(self.gost_filepath if hasattr(self, 'gost_filepath') else 'None'))
         print()
 
     def compute(self, parameter_values, dataset, x0_input=None):
@@ -249,4 +247,5 @@ class Orbitize(AbstractModel, AbstractAstrometry):
                 param_model,
                 this_system.param_idx,
             )
+        print("lnlikes_sum = ", lnlikes_sum)
         return lnlikes_sum

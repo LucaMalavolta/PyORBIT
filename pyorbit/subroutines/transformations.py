@@ -92,10 +92,11 @@ def _prepare_planet_semimajor_axis(main_object, mc, **kwargs):
         main_object.compute_semimajor_axis = False
 
     if 'M_Me' in main_object.list_pams_common and mc.common_models[main_object.stellar_ref].compute_density:
+        mc.common_models[main_object.planet_ref].compute_semimajor_axis_from_mass = True
         main_object.compute_semimajor_axis_from_mass = True
     else:
+        mc.common_models[main_object.planet_ref].compute_semimajor_axis_from_mass = True
         main_object.compute_semimajor_axis_from_mass = False
-
 
 
 def _prepare_planet_mass(main_object, mc, **kwargs):

@@ -50,6 +50,15 @@ class GaiaDR4AstrometricOrbit(AbstractModel, AbstractAstrometry):
         print()
 
 
+    def print_info(self):
+        print("*** model {0:s} parameters:".format(self.model_name))
+        self._abstract_print_info()
+        print('    scan_angle_column: {0:s}'.format(self.scan_angle_column))
+        print('    scan_angle_sign: {0:g}'.format(self.scan_angle_sign))
+        print('    scan_angle_offset_deg: {0:g}'.format(self.scan_angle_offset_deg))
+        print()
+
+
     def initialize_model(self, mc, **kwargs):
         self.Tref = mc.Tref
         """Read fixed geometry conventions from the model configuration."""
@@ -103,16 +112,6 @@ class GaiaDR4AstrometricOrbit(AbstractModel, AbstractAstrometry):
         self.gaia_instrumental[dataset.name_ref]['sin_psi'] = np.sin(psi)
         self.gaia_instrumental[dataset.name_ref]['cos_psi'] = np.cos(psi)
 
-    def print_info(self):
-        print("*** model {0:s}:".format(self.model_name))
-        print("WARNING:")
-        print('    Astrometric orbit modelling requires the use of the stellar mass')
-        print('    This may cause a clash with models requiring stellar density and radius, e.g., RM modelling')
-        print('    At least TWO out of mass, radius, density of the star must be provided as priors')
-        print('    The use of a multivariate approach is strongly suggested')
-        print('    You can control the behaviour of mass/radius/density with the specific keywords')
-        print('    compute_mass, compute_radius, compute_density')
-        print()
 
     @staticmethod
     def _eccentric_orbit_coordinates(parameter_values, x0):

@@ -38,6 +38,14 @@ class AbstractAstrometry(object):
             print('    Set the flag use_mass=True or  use_inclination=True in planetary parameter section')
             quit()
 
+    def _abstract_print_info(self):
+        print('    WARNING: Astrometric orbit modelling requires the use of the stellar mass')
+        print('        This may cause a clash with models requiring stellar density and radius, e.g., RM modelling')
+        print('        At least TWO out of mass, radius, density of the star must be provided as priors')
+        print('        The use of a multivariate approach is strongly suggested')
+        print('        You can control the behaviour of mass/radius/density with the specific keywords')
+        print('        compute_mass, compute_radius, compute_density')
+
 
     def update_parameter_values(self,
                                 parameter_values,

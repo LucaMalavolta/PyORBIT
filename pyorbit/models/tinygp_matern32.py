@@ -77,6 +77,11 @@ class TinyGaussianProcess_Matern32(AbstractModel, AbstractGaussianProcesses):
 
         self._check_extra_conditions(**kwargs)
 
+    def print_info(self):
+        print("*** model {0:s} parameters:".format(self.model_name))
+        self._abstract_print_info()
+        print()
+
     def lnlk_compute(self, parameter_values, dataset):
 
         if 'matern32_rho' in parameter_values:

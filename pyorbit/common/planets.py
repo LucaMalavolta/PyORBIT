@@ -373,6 +373,11 @@ class CommonPlanets(AbstractCommon):
             print("    planetary mass replacing RV semi-amplitude as a free parameter: ", self.use_mass)
             print('        WARNING: You will need to use either inclination or impact parameter as free/fixed parameter')
 
+        if self.compute_semimajor_axis_from_mass:
+            print("    planetary semi-major axis computed from planet/star masses: ", self.compute_semimajor_axis_from_mass)
+            print("       WARNING: this flag should be true only if you are fitting for planetary masses")
+            print("                and stellar density is not a free/fixed parameter (e.g. as in transit fitting)")
+
         if self.use_scaled_mass :
             print('    scaled planetary mass replacing RV semi-amplitude as a free parameter: ', self.use_scaled_mass)
             print('        WARNING: You will need to use either inclination or impact parameter as free/fixed parameter')
@@ -392,6 +397,7 @@ class CommonPlanets(AbstractCommon):
 
         if self.tc_flag:
                 print('    dataset flag of times of inferior conjuctions: ', self.tc_flag)
+
 
         print()
 
@@ -570,7 +576,7 @@ class CommonPlanets(AbstractCommon):
                     parameter_values[prepend+'e'],
                     parameter_values['mass'],
                     approximation_limit=10,
-                    verbose=False)
+                    verbose=False) * constants.Msear
 
 
         if self.compute_time_inferior_conjunction:
@@ -589,4 +595,15 @@ class CommonPlanets(AbstractCommon):
                 parameter_values[prepend+'omega'],
                 parameter_values[prepend+'Omega'])
 
-
+            parameter_values[prepend+'Tperi'] = kepler_exo.kepler_compute_deltaTperi_from_deltaTc(
+                    parameter_values[prepend+'P'],
+                    parameter_values[prepend+'Tc'] - self.Tref,
+                    parameter_values[prepend+'e'],
+                    parameter_values[prepend+'omega'])
+        else:
+            parameter_values[prepend+'Tperi'] = kepler_exo.kepler_compute_deltaTperi_from_meanlong(
+                    parameter_values[prepend+'P'],
+                    parameter_values[prepend+'mean_long'],
+                    parameter_values[prepend+'e'],
+                    parameter_values[prepend+'omega'],
+                    parameter_values[prepend+'Omega'])
