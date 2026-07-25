@@ -247,5 +247,5 @@ class Orbitize(AbstractModel, AbstractAstrometry):
                 param_model,
                 this_system.param_idx,
             )
-        print("lnlikes_sum = ", lnlikes_sum)
+
         return lnlikes_sum

@@ -331,7 +331,6 @@ class ModelContainer(object):
         delayed_lnlk_computation = []
         residuals_analysis = {}
 
-        previous_log_likelihood = 0.0
         for dataset_name, dataset in self.dataset_dict.items():
 
             logchi2_gp_model = None
@@ -393,13 +392,11 @@ class ModelContainer(object):
                         multiple_planets_models[parent_model] = [planet_ref]
                     continue
 
+                """ compute the log-likelihood for those models using external datasets,
+                    but only when multpile planets are not involved, otherwise the log-likelihood is computed at the parent model level"""
                 if getattr(self.models[model_name], 'external_dataset', False):
                     skip_loglikelihood = True
-                    #log_likelihood += self.models[model_name].compute_loglikelihood(parameter_values, dataset)
-                    orbitize_log_likelihood = self.models[model_name].compute_loglikelihood(parameter_values, dataset)
-                    previous_log_likelihood = log_likelihood * 1.0
-                    log_likelihood += orbitize_log_likelihood
-
+                    log_likelihood += self.models[model_name].compute_loglikelihood(parameter_values, dataset)
                     continue
 
                 """ residuals will be computed following the definition in Dataset class
@@ -464,7 +461,6 @@ class ModelContainer(object):
             #TODO: Added in PyORBIT version 12 beta
             for parent_model in multiple_planets_models:
                 planet_list = multiple_planets_models[parent_model]
-                
 
                 if getattr(self.parent_models[parent_model], 'external_dataset', False):
                     skip_loglikelihood = True
@@ -472,7 +468,7 @@ class ModelContainer(object):
                     continue
 
                 model_out = self.parent_models[parent_model].compute(planet_list, dataset)
-                
+
                 if dataset.normalization_model is None and (self.parent_models[parent_model].unitary_model or self.parent_models[parent_model].normalization_model):
                     dataset.normalization_model = np.ones(dataset.n, dtype=np.double)
 
