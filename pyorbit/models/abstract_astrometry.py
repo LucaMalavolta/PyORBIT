@@ -59,7 +59,7 @@ class AbstractAstrometry(object):
                     parameter_values[prepend+'e'],
                     parameter_values['mass'],
                     approximation_limit=10,
-                    verbose=False)
+                    verbose=False) * constants.Msear
 
             parameter_values[prepend+'a_AU']= convert_PMsMp_to_a(
                     parameter_values[prepend+'P'],
@@ -96,7 +96,7 @@ class AbstractAstrometry(object):
                     parameter_values[prepend+'e'],
                     parameter_values['mass'],
                     approximation_limit=10,
-                    verbose=False)
+                    verbose=False) * constants.Msear
 
         if self.compute_time_inferior_conjunction:
             parameter_values[prepend+'Tc']= kepler_exo.kepler_compute_deltaTc_from_meanlong(

@@ -533,7 +533,7 @@ class CommonPlanets(AbstractCommon):
                     parameter_values[prepend+'e'],
                     parameter_values['mass'],
                     approximation_limit=10,
-                    verbose=False)
+                    verbose=False) * constants.Msear
 
             parameter_values[prepend+'a_AU']= convert_PMsMp_to_a(
                     parameter_values[prepend+'P'],
