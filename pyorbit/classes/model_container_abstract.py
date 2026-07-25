@@ -365,12 +365,12 @@ class ModelContainer(object):
                 #TODO: remove try-except starting from PyORBIT version 12 !!
                 #TODO: maybe remove multiple_planets at all becuase ot causes some discrepancies in the way 
                 #TODO: planetary parameters are dealt with 
-                try:
-                    for planet_name in self.models[model_name].multiple_planets:
-                        parameter_values.update(
-                            self.common_models[planet_name].convert_with_name(theta, planet_name))
-                except TypeError:
-                    pass
+                #try:
+                #    for planet_name in self.models[model_name].multiple_planets:
+                #        parameter_values.update(
+                #            self.common_models[planet_name].convert_with_name(theta, planet_name))
+                #except TypeError:
+                #    pass
 
                 parameter_values.update(
                     self.models[model_name].convert(theta, dataset_name))
@@ -559,7 +559,6 @@ class ModelContainer(object):
         #    if not (dynamical_output['stable'] and dynamical_output['pass']):
         #        log_likelihood = -np.inf
         #        log_priors = -np.inf
-        print('*****   {0:12.6f}  {1:12.6f}  {2:12.6f} '.format(previous_log_likelihood, orbitize_log_likelihood, log_likelihood))
 
         if return_priors is False:
             return log_likelihood
