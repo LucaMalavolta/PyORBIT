@@ -203,7 +203,9 @@ def pyorbit_dynesty(config_in, input_datasets=None, return_output=None, run_nest
                     print('Restoring Dynamic Nested Sampling')
                 except Exception as err:
                     if os.path.exists(save_checkpoint_maxevidence):
-                        print('WARNING: could not restore checkpoint {0} ({1}), starting a fresh run'.format(save_checkpoint_maxevidence, err))
+                        corrupt_checkpoint = save_checkpoint_maxevidence + '.corrupt'
+                        os.replace(save_checkpoint_maxevidence, corrupt_checkpoint)
+                        print('WARNING: could not restore checkpoint {0} ({1}); moved aside to {2} and starting a fresh run'.format(save_checkpoint_maxevidence, err, corrupt_checkpoint))
 
                     dsampler_maxevidence = dynesty.DynamicNestedSampler(dynesty_loglikelihood,
                                                             dynesty_priors,
@@ -233,7 +235,9 @@ def pyorbit_dynesty(config_in, input_datasets=None, return_output=None, run_nest
                 print('Restoring Dynamic Nested Sampling for MaxEvidence')
             except Exception as err:
                 if os.path.exists(save_checkpoint_maxevidence):
-                    print('WARNING: could not restore checkpoint {0} ({1}), starting a fresh run'.format(save_checkpoint_maxevidence, err))
+                    corrupt_checkpoint = save_checkpoint_maxevidence + '.corrupt'
+                    os.replace(save_checkpoint_maxevidence, corrupt_checkpoint)
+                    print('WARNING: could not restore checkpoint {0} ({1}); moved aside to {2} and starting a fresh run'.format(save_checkpoint_maxevidence, err, corrupt_checkpoint))
 
                 dsampler_maxevidence = dynesty.DynamicNestedSampler(dynesty_loglikelihood,
                                                         dynesty_priors,
@@ -295,7 +299,9 @@ def pyorbit_dynesty(config_in, input_datasets=None, return_output=None, run_nest
                 print('Restoring Dynamic Nested Sampling')
             except Exception as err:
                 if os.path.exists(save_checkpoint):
-                    print('WARNING: could not restore checkpoint {0} ({1}), starting a fresh run'.format(save_checkpoint, err))
+                    corrupt_checkpoint = save_checkpoint + '.corrupt'
+                    os.replace(save_checkpoint, corrupt_checkpoint)
+                    print('WARNING: could not restore checkpoint {0} ({1}); moved aside to {2} and starting a fresh run'.format(save_checkpoint, err, corrupt_checkpoint))
 
                 dsampler = dynesty.DynamicNestedSampler(dynesty_loglikelihood,
                                                         dynesty_priors,
@@ -325,7 +331,9 @@ def pyorbit_dynesty(config_in, input_datasets=None, return_output=None, run_nest
             print('Restoring Dynamic Nested Sampling')
         except Exception as err:
             if os.path.exists(save_checkpoint):
-                print('WARNING: could not restore checkpoint {0} ({1}), starting a fresh run'.format(save_checkpoint, err))
+                corrupt_checkpoint = save_checkpoint + '.corrupt'
+                os.replace(save_checkpoint, corrupt_checkpoint)
+                print('WARNING: could not restore checkpoint {0} ({1}); moved aside to {2} and starting a fresh run'.format(save_checkpoint, err, corrupt_checkpoint))
 
             dsampler = dynesty.DynamicNestedSampler(dynesty_loglikelihood,
                                                     dynesty_priors,
