@@ -134,6 +134,50 @@ def pyorbit_dynesty(config_in, input_datasets=None, return_output=None, run_nest
 
     print('Using threading pool for dynesty:', use_threading_pool)
 
+    if not run_nested:
+        print()
+        print('*************************************************************')
+        print()
+        print('Dry run requested: validating configuration without sampling')
+        print()
+        print('*************************************************************')
+        print()
+
+        if use_default:
+            print('Setting up the Dynamic Nested Sampling, number of live points = {0:6.0f}'.format(nlive))
+            print('Using default Dynesty hyperparameters')
+            print()
+        else:
+            print('Setting up the Dynamic Nested Sampling, number of live points = {0:6.0f}'.format(nlive))
+            print('                                        posterior/evidence split = {0:4.3f}'.format(pfrac_value))
+            print('                                        initial stopping criterion = {0:5.4f}'.format(dlogz))
+            print('                                        bound = ', mc.nested_sampling_parameters['bound'])
+            print('                                        sample = ', mc.nested_sampling_parameters['sample'])
+            print()
+
+        """ Constructing the sampler (without a pool, without a checkpoint file) validates
+        nlive/bound/sample eagerly and cheaply: dynesty raises immediately on an unsupported
+        bounding method or sampling method, and no likelihood evaluation happens until
+        run_nested() is actually called. """
+        dynesty.DynamicNestedSampler(dynesty_loglikelihood,
+                                      dynesty_priors,
+                                      mc.ndim,
+                                      nlive=nlive,
+                                      bound=mc.nested_sampling_parameters['bound'],
+                                      sample=mc.nested_sampling_parameters['sample'])
+
+        theta = dynesty_priors(0.5 * np.ones(mc.ndim))
+        results_analysis.results_summary(
+            mc, theta, compute_lnprob=True, is_starting_point=True)
+
+        print('Dry run completed: setup validated, sampling not performed')
+        print()
+
+        if return_output:
+            return mc
+        else:
+            return
+
     if not reloaded_dynesty:
         """ A dummy file is created to let the cpulimit script to proceed with the next step"""
         nested_sampling_write_dummy_file(mc)
@@ -144,7 +188,7 @@ def pyorbit_dynesty(config_in, input_datasets=None, return_output=None, run_nest
         print()
         pfrac_value = 0.000
 
-        print('Setting up the Dynamic Nested Sampling, posterior/evidence split = {0:4.3f}'.format(pfrac))
+        print('Setting up the Dynamic Nested Sampling, posterior/evidence split = {0:4.3f}'.format(pfrac_value))
         print()
 
         if use_threading_pool:
@@ -157,9 +201,9 @@ def pyorbit_dynesty(config_in, input_datasets=None, return_output=None, run_nest
                 try:
                     dsampler_maxevidence = dynesty.DynamicNestedSampler.restore(save_checkpoint_maxevidence, pool=pool)
                     print('Restoring Dynamic Nested Sampling')
-                    if run_nested:
-                        dsampler_maxevidence.run_nested(resume=True)
-                except:
+                except Exception as err:
+                    if os.path.exists(save_checkpoint_maxevidence):
+                        print('WARNING: could not restore checkpoint {0} ({1}), starting a fresh run'.format(save_checkpoint_maxevidence, err))
 
                     dsampler_maxevidence = dynesty.DynamicNestedSampler(dynesty_loglikelihood,
                                                             dynesty_priors,
@@ -173,8 +217,12 @@ def pyorbit_dynesty(config_in, input_datasets=None, return_output=None, run_nest
                                                                 'prior_transform': False},
                                                             )
                     print('Running Dynamic Nested Sampling')
-                    dsampler_maxevidence.run_nested(checkpoint_file=save_checkpoint_maxevidence, dlogz=dlogz, wt_kwargs={'pfrac': pfrac_value})
+                    dsampler_maxevidence.run_nested(checkpoint_file=save_checkpoint_maxevidence, dlogz_init=dlogz, wt_kwargs={'pfrac': pfrac_value})
                     print()
+                else:
+                    results_maxevidence = dsampler_maxevidence.results
+                    dynesty_results_maxevidence_save_to_cpickle(mc.output_directory, results_maxevidence)
+                    dsampler_maxevidence.run_nested(resume=True)
 
 
 
@@ -183,12 +231,9 @@ def pyorbit_dynesty(config_in, input_datasets=None, return_output=None, run_nest
             try:
                 dsampler_maxevidence = dynesty.DynamicNestedSampler.restore(save_checkpoint_maxevidence)
                 print('Restoring Dynamic Nested Sampling for MaxEvidence')
-                results_maxevidence = dsampler_maxevidence.results
-                dynesty_results_maxevidence_save_to_cpickle(mc.output_directory, results_maxevidence)
-                if run_nested:
-                    dsampler_maxevidence.run_nested(resume=True)
-            except:
-
+            except Exception as err:
+                if os.path.exists(save_checkpoint_maxevidence):
+                    print('WARNING: could not restore checkpoint {0} ({1}), starting a fresh run'.format(save_checkpoint_maxevidence, err))
 
                 dsampler_maxevidence = dynesty.DynamicNestedSampler(dynesty_loglikelihood,
                                                         dynesty_priors,
@@ -198,8 +243,12 @@ def pyorbit_dynesty(config_in, input_datasets=None, return_output=None, run_nest
                                                         sample= mc.nested_sampling_parameters['sample'],
                                                         )
                 print('Running Dynamic Nested Sampling')
-                dsampler_maxevidence.run_nested(checkpoint_file=save_checkpoint_maxevidence, dlogz=dlogz, wt_kwargs={'pfrac': pfrac_value})
+                dsampler_maxevidence.run_nested(checkpoint_file=save_checkpoint_maxevidence, dlogz_init=dlogz, wt_kwargs={'pfrac': pfrac_value})
                 print()
+            else:
+                results_maxevidence = dsampler_maxevidence.results
+                dynesty_results_maxevidence_save_to_cpickle(mc.output_directory, results_maxevidence)
+                dsampler_maxevidence.run_nested(resume=True)
 
         print()
 
@@ -244,11 +293,9 @@ def pyorbit_dynesty(config_in, input_datasets=None, return_output=None, run_nest
             try:
                 dsampler = dynesty.DynamicNestedSampler.restore(save_checkpoint, pool=pool)
                 print('Restoring Dynamic Nested Sampling')
-                results = dsampler.results
-                dynesty_results_save_to_cpickle(output_directory, results)
-                if run_nested:
-                    dsampler.run_nested(resume=True)
-            except:
+            except Exception as err:
+                if os.path.exists(save_checkpoint):
+                    print('WARNING: could not restore checkpoint {0} ({1}), starting a fresh run'.format(save_checkpoint, err))
 
                 dsampler = dynesty.DynamicNestedSampler(dynesty_loglikelihood,
                                                         dynesty_priors,
@@ -268,13 +315,18 @@ def pyorbit_dynesty(config_in, input_datasets=None, return_output=None, run_nest
                 else:
                     dsampler.run_nested(checkpoint_file=save_checkpoint, dlogz_init=dlogz, wt_kwargs={'pfrac': pfrac_value})
                 print()
+            else:
+                results = dsampler.results
+                dynesty_results_save_to_cpickle(mc.output_directory, results)
+                dsampler.run_nested(resume=True)
     else:
         try:
             dsampler = dynesty.DynamicNestedSampler.restore(save_checkpoint)
             print('Restoring Dynamic Nested Sampling')
-            if run_nested:
-                dsampler.run_nested(resume=True)
-        except:
+        except Exception as err:
+            if os.path.exists(save_checkpoint):
+                print('WARNING: could not restore checkpoint {0} ({1}), starting a fresh run'.format(save_checkpoint, err))
+
             dsampler = dynesty.DynamicNestedSampler(dynesty_loglikelihood,
                                                     dynesty_priors,
                                                     mc.ndim,
@@ -288,6 +340,10 @@ def pyorbit_dynesty(config_in, input_datasets=None, return_output=None, run_nest
             else:
                 dsampler.run_nested(checkpoint_file=save_checkpoint, dlogz_init=dlogz, wt_kwargs={'pfrac': pfrac_value})
             print()
+        else:
+            results = dsampler.results
+            dynesty_results_save_to_cpickle(mc.output_directory, results)
+            dsampler.run_nested(resume=True)
 
     print()
 
