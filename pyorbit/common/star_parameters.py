@@ -185,6 +185,14 @@ class CommonStarParameters(AbstractCommon):
                 'fixed' : 0.0,
                 'unit': 'mas',
             },
+        'macroturbulence':
+            {
+                'bounds': [0.0, 20.0],
+                'priors': ['Uniform', []],
+                'spaces': 'Linear',
+                'fixed' : 1.5,
+                'unit': 'km/s',
+            },
     }
     recenter_pams = OrderedSet()
 

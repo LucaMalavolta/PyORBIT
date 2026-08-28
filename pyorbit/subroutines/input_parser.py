@@ -556,6 +556,7 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, reload_af
                             mc.dynamical_t0_dict[planet_name] = dataset_name
 
                 """ This snippet will work only for transit class"""
+                #TODO check in PyORBIT version 12 beta if the comment is still true
                 if mc.models[model_name_exp].model_class in model_requires_limb_darkening:
 
                     try:
@@ -574,6 +575,10 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, reload_af
 
                     mc.models[model_name_exp].common_ref.append(common_name)
 
+
+                """ Adding the star by default, even if the model is not listes in model_requires_star, 
+                because some models may require the stellar parameters for internal computations"""
+
                 try:
                     common_name = mc.models[model_name_exp].model_conf['star_parameters']
                 except:
@@ -581,6 +586,18 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, reload_af
 
                 mc.models[model_name_exp].common_ref.append(common_name)
                 mc.models[model_name_exp].stellar_ref = common_name
+
+
+                """ Adding the associated spectrograph common model if required by the model class"""
+                if mc.models[model_name_exp].model_class in model_requires_spectrograph:
+                    try:
+                        common_name = model_conf['spectrograph']
+                    except:
+                        common_name = 'spectrograph'
+                    print('  model: {0:s} is using {1:s} spectrograph parameters'.format(
+                        model_name_exp, common_name))
+                    mc.models[model_name_exp].common_ref.append(common_name)
+                    mc.models[model_name_exp].spectrograph_ref = common_name
 
 
                 """ New addition in 9.2: complex models requiring star, planet, and limb darkening,
@@ -636,7 +653,7 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, reload_af
                 common_ref = model_conf['common']
             elif hasattr(define_type_to_class[model_type], 'default_common'):
 
-                """ New: some data-specific models may noy need a common model, e.g., local polynomial trends,
+                """ New: some data-specific models may not need a common model, e.g., local polynomial trends,
                     however the code requires that such common model is provided in order to have a fall-back for the
                     default priors, boundaries, spaces, and fixed parameters. Such common model is saved with the same
                     name of the data-specifc model.
@@ -680,6 +697,17 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, reload_af
                     common_name = 'star_parameters'
                 mc.models[model_name].common_ref.append(common_name)
                 mc.models[model_name].stellar_ref = common_name
+
+            """ Adding the associated spectrograph common model by default """
+            if mc.models[model_name].model_class in model_requires_spectrograph:
+                try:
+                    common_name = model_conf['spectrograph']
+                except:
+                    common_name = 'spectrograph'
+                print('  model: {0:s} is using {1:s} spectrograph parameters'.format(
+                    model_name, common_name))
+                mc.models[model_name].common_ref.append(common_name)
+                mc.models[model_name].spectrograph_ref = common_name
 
             #TODO can be removed in PyORBIT version 12 beta
             """ Adding the list of multiple planets"""

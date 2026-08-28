@@ -27,6 +27,7 @@ from pyorbit.common.correlation import CommonCorrelation, CommonComplexCorrelati
 #from pyorbit.common.lightcurve_detrending import CommonLightcurveDetrending
 from pyorbit.common.detrending import CommonDetrending
 
+from pyorbit.common.spectrograph import CommonSpectrograph
 
 from pyorbit.models.keplerian_modelling import  ApodizedRVkeplerian, RVkeplerian, TransitTimeKeplerian
 from pyorbit.models.dynamical_modelling import  TransitTimeDynamical, RVdynamical, DynamicalIntegrator
@@ -132,6 +133,9 @@ from pyorbit.models.rossitermclaughlin_reloaded_faster import RossiterMcLaughlin
 from pyorbit.models.rossitermclaughlin_revolutions import RossiterMcLaughlin_Revolutions
 from pyorbit.models.rossitermclaughlin_revolutions_faster import RossiterMcLaughlin_Revolutions_Faster
 
+from pyorbit.models.rossitermclaughlin_pyarome_test import RossiterMcLaughlin_Pyarome_TEST
+
+
 from pyorbit.models.rossitermclaughlin_multiplanets_precise import RossiterMcLaughlin_MultiPlanets_Precise
 
 from pyorbit.models.orbitize import Orbitize
@@ -145,6 +149,7 @@ define_common_type_to_class = {
     'polynomial_trend': CommonPolynomialTrend,
     'common_offset': CommonOffset,
     'common_jitter': CommonJitter,
+    'spectrograph': CommonSpectrograph,
     'ccf_parameters': CommonCCFParameters,
     'sinusoid': CommonSinusoid,
     'harmonics': CommonHarmonics,
@@ -278,6 +283,7 @@ define_type_to_class = {
     'spleaf_multidimensional_exponentialsineperiodic': SPLEAF_Multidimensional_ESP,
     'rossitermclaughlin_ohta': RossiterMcLaughlin_Ohta,
     'rossitermclaughlin_pyarome': RossiterMcLaughlin_Pyarome,
+    'rossitermclaughlin_pyarome_test': RossiterMcLaughlin_Pyarome_TEST,
     'rossitermclaughlin_arome': RossiterMcLaughlin_Pyarome,
     'rossitermclaughlin_precise': RossiterMcLaughlin_Precise,
     'rossitermclaughlin_reloaded': RossiterMcLaughlin_Reloaded,
@@ -307,7 +313,7 @@ define_type_to_class = {
 """
 
 model_requires_planets = ['radial_velocities', 'transit_times', 'transit', 'orbitize', 'gaia_astrometry_orbit',
-                                'transit_eclipse_phasecurve', 'rossiter_mclaughlin']
+                                'transit_eclipse_phasecurve', 'rossiter_mclaughlin', 'rossiter_mclaughlin_test']
 
 single_planet_model = ['Tc_planets', 'transit_times']
 transit_time_model = ['Tc_planets', 'transit_times']
@@ -317,12 +323,16 @@ model_requires_limb_darkening = ['transit',
                                 'spectral_rotation',
                                 'subset_spectral_rotation',
                                 'subset_spectral_rotation_polynomial',
-                                'rossiter_mclaughlin']
+                                'rossiter_mclaughlin',
+                                'rossiter_mclaughlin_test']
 
-model_requires_star = ['rossiter_mclaughlin', 'transit_times', 'gaussian_process', 'multidimensional_gaussian_process', 'orbitize', 'gaia_astrometry_orbit', 'gaia_astrometry_baseline']
+model_requires_star = ['rossiter_mclaughlin','rossiter_mclaughlin_test', 'transit_times', 'gaussian_process', 
+                       'multidimensional_gaussian_process', 'orbitize', 'gaia_astrometry_orbit', 'gaia_astrometry_baseline']
 #model_requires_multiple_planets = ['rossiter_mclaughlin']
 model_requires_multiple_planets = []
 
+#model_requires_spectrograph = ['rossiter_mclaughlin', 'rossitermclaughlin_pyarome', 'rossitermclaughlin_arome', 'rossitermclaughlin_pyarome_test']
+model_requires_spectrograph = ['rossiter_mclaughlin_test']
 
 star_properties_list = ['limb_darkening', 'dilution_factor']
 
