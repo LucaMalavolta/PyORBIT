@@ -360,7 +360,7 @@ class Dataset(AbstractCommon):
 
         #chi2 = -0.5 * (self.n * np.log(2 * np.pi) +
         #               np.sum(self.residuals ** 2 * env - np.log(env)))
-        #print('{0:25s} {1:12f} {2:12f} \n'.format(self.name_ref, chi2, np.std(self.residuals)))
+        #print('{0:25s} {1:12f} {2:12f}'.format(self.name_ref, chi2, np.std(self.residuals)), self.residuals)
 
         return -0.5 * (self.n * np.log(2 * np.pi) +
                        np.sum(self.residuals ** 2 * env - np.log(env)))

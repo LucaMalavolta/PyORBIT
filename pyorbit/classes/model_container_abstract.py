@@ -393,7 +393,7 @@ class ModelContainer(object):
                     continue
 
                 """ compute the log-likelihood for those models using external datasets,
-                    but only when multpile planets are not involved, otherwise the log-likelihood is computed at the parent model level"""
+                    but only when multiple planets are not involved, otherwise the log-likelihood is computed at the parent model level"""
                 if getattr(self.models[model_name], 'external_dataset', False):
                     skip_loglikelihood = True
                     log_likelihood += self.models[model_name].compute_loglikelihood(parameter_values, dataset)
@@ -456,7 +456,6 @@ class ModelContainer(object):
                 else:
                     dataset.additive_model += self.models[model_name].compute(
                         parameter_values, dataset)
-
 
             #TODO: Added in PyORBIT version 12 beta
             for parent_model in multiple_planets_models:

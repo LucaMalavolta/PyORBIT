@@ -710,8 +710,11 @@ def get_model(mc, theta, bjd_dict, **kwargs):
                     dataset.external_model = dynamical_output[dataset_name]
                     external_model = dynamical_output_x0[dataset_name].copy()
 
-                    model_out[dataset_name][model_name] = dynamical_output[dataset_name].copy()
-                    model_x0[dataset_name][model_name] = dynamical_output_x0[dataset_name].copy()
+                    model_out[dataset_name][model_name] = 0.
+                    model_x0[dataset_name][model_name] = 0.
+
+                    #model_out[dataset_name][model_name] = dynamical_output[dataset_name].copy()
+                    #model_x0[dataset_name][model_name] = dynamical_output_x0[dataset_name].copy()
 
 
             else:
@@ -756,8 +759,10 @@ def get_model(mc, theta, bjd_dict, **kwargs):
                 dataset.additive_model += model_out[dataset_name][model_name]
                 additive_model += model_x0[dataset_name][model_name]
 
+        
         dataset.compute_model()
         dataset.compute_residuals()
+
 
         model_x0[dataset_name]['complete'] += dataset.compute_model_from_arbitrary_datasets(additive_model,
                                                                                             unitary_model,
