@@ -18,7 +18,7 @@ class AbstractDynamical(object):
             'P',     # Period in days
             'Omega', # longitude of ascending node
             'e',     # eccentricity, uniform prior - to be fixed
-            'R_Rs',  # planet radius (in units of stellar radii)
+            #'R_Rs',  # planet radius (in units of stellar radii)
             'omega', # argument of pericenter
             #'i',     # inclination in degrees
         ])
@@ -282,7 +282,7 @@ class DynamicalIntegrator:
                 self.dynamical_pams['R'][n_plan-1] = parameter_values['R_Rs'] * self.dynamical_pams['R'][0]
             else:
                 """ Default value: slightly more than 1 Earth radii in Solar units"""
-                self.dynamical_pams['R'][n_plan-1] = 0.01
+                self.dynamical_pams['R'][n_plan-1] = 0.001
 
             if mc.common_models[planet_name].use_scaled_mass:
                 """ Converting the mass from Stellar units to Solar units"""

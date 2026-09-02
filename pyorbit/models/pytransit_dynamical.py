@@ -36,6 +36,7 @@ class PyTransit_Dynamical(AbstractModel, AbstractTransit, AbstractDynamical):
 
     def initialize_model(self, mc, **kwargs):
 
+        self.list_pams_common.update(['R_Rs']) # planet radius (in units of stellar radii)
 
         self.use_roadrunner = kwargs.get('use_roadrunner', True)
         if self.use_roadrunner:

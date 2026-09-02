@@ -415,6 +415,23 @@ def get_planet_parameters(mc, theta, verbose=False):
                     (constants.Msjup/constants.Msear)
                 derived_parameters['M_Mj'] = True
 
+            elif 'Me_Ms' in parameter_values.keys() and 'mass' in stellar_parameters.keys():
+
+                parameter_values['M_Me']  = parameter_values['Me_Ms'] * stellar_parameters['mass']
+                derived_parameters['M_Me'] = True
+
+                derived_parameters['K'] = True
+                derived_parameters['K'] = kepler_exo.kepler_compute_rv_semiamplitude(stellar_parameters['mass'],
+                                                              parameter_values['M_Me'] /
+                                                              constants.Msear,
+                                                              parameter_values['P'],
+                                                              parameter_values['i'],
+                                                              parameter_values['e'])
+
+                parameter_values['M_Mj'] = parameter_values['M_Me'] * \
+                    (constants.Msjup/constants.Msear)
+                derived_parameters['M_Mj'] = True
+
 
             if 'Tc' in parameter_values.keys():
                 if 'e' in parameter_values:
