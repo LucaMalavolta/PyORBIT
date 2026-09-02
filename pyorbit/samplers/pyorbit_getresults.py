@@ -24,8 +24,90 @@ import numpy as np
 import os
 import matplotlib as mpl
 import sys
+import multiprocessing
 
 from tqdm import tqdm
+
+
+_results_worker_mc = None
+_results_worker_operation = None
+_results_worker_payload = None
+
+
+def _results_worker_initialize(mc, operation, payload=None):
+    """Install read-mostly state once in each results worker."""
+    global _results_worker_mc, _results_worker_operation, _results_worker_payload
+    _results_worker_mc = mc
+    _results_worker_operation = operation
+    _results_worker_payload = payload
+
+
+def _results_worker_evaluate(item):
+    """Evaluate one independent item in an isolated worker process."""
+    if _results_worker_operation == 'nautilus':
+        return _results_worker_mc.nautilus_call(item)
+    if _results_worker_operation == 'ultranest':
+        return _results_worker_mc.ultranest_call(item)
+    if _results_worker_operation == 'rv_log_likelihood':
+        return _results_worker_mc.rv_log_likelihood(item)
+    if _results_worker_operation == 'log_priors':
+        return _results_worker_mc.log_priors(item)
+    if _results_worker_operation == 'get_model':
+        result_name, theta = item
+        return result_name, results_analysis.get_model(
+            _results_worker_mc, theta, _results_worker_payload['bjd_plot'],
+            **_results_worker_payload['plot_parameters'])
+    if _results_worker_operation == 'gelman_rubin':
+        theta_name, theta_id = item
+        sampler_chain = _results_worker_payload['sampler_chain']
+        step_sampling = _results_worker_payload['step_sampling']
+        rhat = np.asarray([
+            GelmanRubin_v2(sampler_chain[:, :steps, theta_id])
+            for steps in step_sampling
+        ])
+        return theta_name, theta_id, rhat
+    raise ValueError('Unknown results worker operation: {0}'.format(
+        _results_worker_operation))
+
+
+def _results_parallel_map(mc, operation, items, num_processes, mp_method,
+                          progress=False, payload=None):
+    """Map work with one model-container copy per process and a serial fallback."""
+    try:
+        item_count = len(items)
+    except TypeError:
+        items = list(items)
+        item_count = len(items)
+
+    if num_processes <= 1 or item_count <= 1:
+        _results_worker_initialize(mc, operation, payload)
+        iterator = map(_results_worker_evaluate, items)
+        if progress:
+            iterator = tqdm(iterator, total=item_count)
+        return list(iterator)
+
+    workers = min(num_processes, item_count)
+    chunksize = max(1, item_count // (workers * 4))
+    context = multiprocessing.get_context(mp_method)
+
+    try:
+        with context.Pool(
+                workers,
+                initializer=_results_worker_initialize,
+                initargs=(mc, operation, payload)) as pool:
+            iterator = pool.imap(
+                _results_worker_evaluate, items, chunksize=chunksize)
+            if progress:
+                iterator = tqdm(iterator, total=item_count)
+            return list(iterator)
+    except Exception as exc:
+        print('WARNING: parallel {0} failed ({1}); retrying serially'.format(
+            operation, exc))
+        _results_worker_initialize(mc, operation, payload)
+        iterator = map(_results_worker_evaluate, items)
+        if progress:
+            iterator = tqdm(iterator, total=item_count)
+        return list(iterator)
 
 
 
@@ -49,6 +131,31 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
         plot_config_parameters = config_in['plot_parameters']
     except:
         plot_config_parameters = config_in['parameters']
+
+    available_mp_methods = multiprocessing.get_all_start_methods()
+    default_mp_method = 'fork' if 'fork' in available_mp_methods else 'spawn'
+    results_mp_method = plot_config_parameters.get(
+        'results_mp_method',
+        config_in['parameters'].get('mp_method', default_mp_method))
+    if results_mp_method not in available_mp_methods:
+        print("WARNING: multiprocessing method '{0}' is unavailable; using '{1}'".format(
+            results_mp_method, default_mp_method))
+        results_mp_method = default_mp_method
+
+    try:
+        results_cpu_threads = int(plot_config_parameters.get(
+            'results_cpu_threads',
+            plot_config_parameters.get(
+                'cpu_threads', config_in['parameters'].get('cpu_threads', 1))))
+    except (TypeError, ValueError):
+        print('WARNING: invalid results_cpu_threads value; using one process')
+        results_cpu_threads = 1
+    results_cpu_threads = max(
+        1, min(results_cpu_threads, multiprocessing.cpu_count()))
+
+    print('Number of processes for results calculations:', results_cpu_threads)
+    print('Multiprocessing method for results calculations:', results_mp_method)
+    print()
 
 
     if plot_config_parameters.get('save_pdf', False ):
@@ -516,9 +623,9 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
         n_samplings, n_pams = np.shape(flat_chain)
 
         """ Filling the lnprob array the hard way """
-        flat_lnprob = np.empty(n_samplings)
-        for ii in range(0,n_samplings):
-            flat_lnprob[ii] = mc.nautilus_call(flat_chain[ii,:])
+        flat_lnprob = np.asarray(_results_parallel_map(
+            mc, 'nautilus', flat_chain, results_cpu_threads,
+            results_mp_method, progress=True))
 
         lnprob_med = common.compute_value_sigma(flat_lnprob)
         chain_med = common.compute_value_sigma(flat_chain)
@@ -606,9 +713,9 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
         n_samplings, n_pams = np.shape(flat_chain)
 
         """ Filling the lnprob array the hard way """
-        flat_lnprob = np.empty(n_samplings)
-        for ii in range(0,n_samplings):
-            flat_lnprob[ii] = mc.ultranest_call(flat_chain[ii,:])
+        flat_lnprob = np.asarray(_results_parallel_map(
+            mc, 'ultranest', flat_chain, results_cpu_threads,
+            results_mp_method, progress=True))
 
 
         lnprob_med = common.compute_value_sigma(flat_lnprob)
@@ -719,7 +826,7 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
         skip_rv_like = True
 
     if not skip_rv_like:
-        try:
+        if hasattr(mc, 'rv_log_likelihood'):
             print()
             print('Number of samplings for RV-loglikelihood calculation [rv_lnlike_samplings keyword]:', rv_like_samplings)
             print('Recomputing RV-loglikelihood, it may take a while...')
@@ -730,14 +837,14 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
                 select = np.random.default_rng()
                 selection = select.choice(n_samplings, size=rv_like_samplings, replace=False)
 
-            for ip in tqdm(range(rv_like_samplings)):
-                ii = selection[ip]
-                flat_rv_lnlike[ip] = mc.rv_log_likelihood(flat_chain[ii,:])
+            flat_rv_lnlike = np.asarray(_results_parallel_map(
+                mc, 'rv_log_likelihood', flat_chain[selection, :],
+                results_cpu_threads, results_mp_method, progress=True))
 
             med_rv_ln_likelihood = mc.rv_log_likelihood(chain_med[:, 0])
             MAP_rv_ln_likelihood = mc.rv_log_likelihood(chain_MAP)
             rv_ln_likelihood_success = True
-        except:
+        else:
             print()
             print('Analysis ran using PyORBIT version < 10.10, RV-only log_likelihood not available')
 
@@ -748,11 +855,11 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
 
         print()
         print('Recomputing log-prior, it may take a while...')
-        flat_lnprior = np.zeros_like(flat_lnprob)
-        try:
-            for ii in tqdm(range(n_samplings)):
-                flat_lnprior[ii] = mc.log_priors(flat_chain[ii,:])
-        except:
+        if hasattr(mc, 'log_priors'):
+            flat_lnprior = np.asarray(_results_parallel_map(
+                mc, 'log_priors', flat_chain, results_cpu_threads,
+                results_mp_method, progress=True))
+        else:
             print('log-prior recomputation failed, using the average value')
             flat_lnprior = np.ones_like(flat_lnprob) * med_ln_priors
         lnprior_med = common.compute_value_sigma(flat_lnprior)
@@ -1152,7 +1259,7 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
         print('Plot FLAT chain ')
 
         fig = plt.figure(figsize=(12, 12))
-        plt.xlabel('$\ln \mathcal{L}$')
+        plt.xlabel(r'$\ln \mathcal{L}$')
         plt.plot(sampler_lnprob, '-', alpha=0.5)
         plt.axhline(lnprob_med[0])
         plt.axvline(nburnin / nthin, c='r')
@@ -1297,9 +1404,15 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
 
         step_sampling = np.arange(nburn, nsteps / nthin, 1, dtype=int)
 
-        for theta_name, th in theta_dictionary.items():
-            rhat = np.array([GelmanRubin_v2(sampler_chain[:, :steps, th])
-                             for steps in step_sampling])
+        gr_payload = {
+            'sampler_chain': sampler_chain,
+            'step_sampling': step_sampling,
+        }
+        gr_results = _results_parallel_map(
+            mc, 'gelman_rubin', theta_dictionary.items(),
+            results_cpu_threads, results_mp_method, payload=gr_payload)
+
+        for theta_name, th, rhat in gr_results:
             print(
                 '    Gelman-Rubin: {0:5d} {1:12f} {2:s} '.format(th, rhat[-1], theta_name))
             file_name = dir_output + 'gr_traces/v2_' + \
@@ -1470,10 +1583,8 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
             for parameter_name, parameter in parameter_values.items():
 
                 rad_filename = samples_dir + common_ref + '_' + parameter_name
-                fileout = open(rad_filename + '.dat', 'w')
-                for val in parameter:
-                    fileout.write('{0:.12f} \n'.format(val))
-                fileout.close()
+                np.savetxt(rad_filename + '.dat', np.asarray(parameter),
+                           fmt='%.12f')
 
                 try:
                     fig = plt.figure(figsize=(10, 10))
@@ -1518,18 +1629,12 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
         os.system('mkdir -p ' + samples_dir)
 
         rad_filename = samples_dir + 'log_likelihood'
-        fileout = open(rad_filename + '.dat', 'w')
-        for val in flat_lnprob:
-            fileout.write('{0:.12f} \n'.format(val))
-        fileout.close()
+        np.savetxt(rad_filename + '.dat', flat_lnprob, fmt='%.12f')
 
         for theta_name, th in theta_dictionary.items():
 
             rad_filename = samples_dir + repr(th) + '_' + theta_name
-            fileout = open(rad_filename + '.dat', 'w')
-            for val in flat_chain[:, th]:
-                fileout.write('{0:.12f} \n'.format(val))
-            fileout.close()
+            np.savetxt(rad_filename + '.dat', flat_chain[:, th], fmt='%.12f')
 
             try:
                 fig = plt.figure(figsize=(10, 10))
@@ -1752,12 +1857,24 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
 
         print()
 
-        bjd_plot['model_out'], bjd_plot['model_x'] = results_analysis.get_model(
-            mc, chain_med[:, 0], bjd_plot, **plot_config_parameters)
-        bjd_plot['MAP_model_out'], bjd_plot['MAP_model_x'] = results_analysis.get_model(
-            mc, chain_MAP, bjd_plot, **plot_config_parameters)
-        bjd_plot['sampleMED_model_out'], bjd_plot['sampleMED_model_x'] = results_analysis.get_model(
-            mc, chain_sampleMED, bjd_plot, **plot_config_parameters)
+        model_jobs = [
+            ('', chain_med[:, 0]),
+            ('MAP_', chain_MAP),
+            ('sampleMED_', chain_sampleMED),
+        ]
+        model_plot_parameters = dict(plot_config_parameters)
+        if results_cpu_threads > 1:
+            model_plot_parameters['progress_bar'] = False
+        model_payload = {
+            'bjd_plot': bjd_plot,
+            'plot_parameters': model_plot_parameters,
+        }
+        model_results = _results_parallel_map(
+            mc, 'get_model', model_jobs, min(results_cpu_threads, 3),
+            results_mp_method, payload=model_payload)
+        for model_prefix, (model_out, model_x) in model_results:
+            bjd_plot[model_prefix + 'model_out'] = model_out
+            bjd_plot[model_prefix + 'model_x'] = model_x
 
         if plot_dictionary['plot_models']:
             print('Writing the plots ')
@@ -2327,7 +2444,7 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
             x_data = output_plan[:, ii]
             x_edges = data_edg[ii, :]
 
-            for jj in range(0, n_int):
+            for jj in range(ii + 1, n_int):
 
                 if data_skip[jj]:
                     continue
@@ -2335,28 +2452,26 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
                 y_data = output_plan[:, jj]
                 y_edges = data_edg[jj, :]
 
-                if ii != jj:
-                    hist2d = np.histogram2d(
-                        x_data, y_data, bins=[x_edges, y_edges])
-                    #hist1d_y = np.histogram(y_data, bins=y_edges)
+                hist2d = np.histogram2d(
+                    x_data, y_data, bins=[x_edges, y_edges])[0]
+                histogram_maximum = np.amax(hist2d)
 
-                    Hflat = hist2d[0].flatten()
-                    inds = np.argsort(Hflat)[::-1]
-                    Hflat = Hflat[inds]
-                    sm = np.cumsum(Hflat)
-                    sm /= sm[-1]
-
-                    x_edges_1d = (x_edges[1:] + x_edges[:-1]) / 2
-                    y_edges_1d = (y_edges[1:] + y_edges[:-1]) / 2
+                for x_id, y_id, histogram in (
+                        (ii, jj, hist2d.T),
+                        (jj, ii, hist2d)):
+                    x_edges_1d = (
+                        data_edg[x_id, 1:] + data_edg[x_id, :-1]) / 2
+                    y_edges_1d = (
+                        data_edg[y_id, 1:] + data_edg[y_id, :-1]) / 2
                     h2d_out = np.zeros([n_bins, n_bins])
                     h2d_out[0, 1:] = x_edges_1d
                     h2d_out[1:, 0] = y_edges_1d
-                    h2d_out[1:, 1:] = hist2d[0].T * 1. / np.amax(hist2d[0])
+                    h2d_out[1:, 1:] = histogram / histogram_maximum
 
                     h2d_list = h2d_out.tolist()
                     h2d_list[0][0] = ''
                     csvfile = veusz_dir + '_hist2d___' + \
-                        output_names[ii] + '___' + output_names[jj] + '.csv'
+                        output_names[x_id] + '___' + output_names[y_id] + '.csv'
                     with open(csvfile, "w") as output:
                         writer = csv.writer(output, lineterminator='\n')
                         writer.writerows(h2d_list)
@@ -2377,6 +2492,8 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
             veusz_workaround_descriptor += ' ' + output_names[ii] + ',+,-'
             veusz_workaround_values += ' ' + repr(median_vals[ii]) + ' ' + repr(sigma_plus[ii]) + ' ' + repr(
                 sigma_minus[ii])
+
+        h5f.close()
 
         text_file = open(veusz_dir + "veusz_median_sigmas.txt", "w")
         text_file.write('%s \n' % veusz_workaround_descriptor)
