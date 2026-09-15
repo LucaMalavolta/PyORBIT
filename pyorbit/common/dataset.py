@@ -243,8 +243,7 @@ class Dataset(AbstractCommon):
         self._setup_systematic_mask('jitter', data_input[:, self.jitter_column])
         self._setup_systematic_mask('offset', data_input[:, self.offset_column])
 
-
-        if np.amax(data_input[:, self.subset_column]) > 0:
+        if np.amax(data_input[:, self.subset_column]) >= 0:
             sel = data_input[:, self.subset_column] >= -0.5
             self.submodel_minflag = np.int64(np.amin(data_input[sel, self.subset_column]))
             self.submodel_maxflag = np.int64(np.amax(data_input[:, self.subset_column])) + 1
