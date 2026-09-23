@@ -107,7 +107,7 @@ class AbstractModel(object):
         self.skip_print_info = False
 
         #NEW:  Added in PyORBIT version 12
-        self.precomputed
+        self.precomputed = False
 
     def print_warning(self):
         pass
