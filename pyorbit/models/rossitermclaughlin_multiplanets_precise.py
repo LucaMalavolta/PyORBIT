@@ -41,7 +41,7 @@ try:
 except (ModuleNotFoundError, ImportError):
     pass
 
-class RossiterMcLaughlin_MultiPlanets_Precise(AbstractModel, AbstractTransit):
+class RossiterMcLaughlin_MultiPlanets_Legacy(AbstractModel, AbstractTransit):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)  # this calls all constructors up to AbstractModel

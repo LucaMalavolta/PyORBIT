@@ -127,7 +127,7 @@ from pyorbit.models.spleaf_sho import SPLEAF_SHO
 
 from pyorbit.models.rossitermclaughlin_ohta import RossiterMcLaughlin_Ohta
 from pyorbit.models.rossitermclaughlin_pyarome import RossiterMcLaughlin_Pyarome
-from pyorbit.models.rossitermclaughlin_precise import RossiterMcLaughlin_Precise
+from pyorbit.models.rossitermclaughlin_legacy import RossiterMcLaughlin_Legacy
 from pyorbit.models.rossitermclaughlin_reloaded import RossiterMcLaughlin_Reloaded
 from pyorbit.models.rossitermclaughlin_reloaded_faster import RossiterMcLaughlin_Reloaded_Faster
 from pyorbit.models.rossitermclaughlin_revolutions import RossiterMcLaughlin_Revolutions
@@ -282,11 +282,11 @@ define_type_to_class = {
     'rossitermclaughlin_ohta': RossiterMcLaughlin_Ohta,
     'rossitermclaughlin_pyarome': RossiterMcLaughlin_Pyarome,
     'rossitermclaughlin_arome': RossiterMcLaughlin_Pyarome,
-    'rossitermclaughlin_precise': RossiterMcLaughlin_Precise,
+    'rossitermclaughlin_legacy': RossiterMcLaughlin_Legacy,
     'rossitermclaughlin_reloaded': RossiterMcLaughlin_Reloaded,
     'rossitermclaughlin_reloaded_faster': RossiterMcLaughlin_Reloaded_Faster,
     'rossitermclaughlin_revolutions': RossiterMcLaughlin_Revolutions,
-    'rossitermclaughlin_multiplanets_precise': RossiterMcLaughlin_MultiPlanets_Precise,
+    'rossitermclaughlin_multiplanets_legacy': RossiterMcLaughlin_MultiPlanets_Legacy,
     'polynomial_detrending': PolynomialDetrending,
     'exponential_detrending': ExponentialDetrending,
     'detrending': FullDetrending,

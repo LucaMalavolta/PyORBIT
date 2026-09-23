@@ -41,7 +41,7 @@ try:
 except (ModuleNotFoundError, ImportError):
     pass
 
-class RossiterMcLaughlin_Precise(AbstractModel, AbstractTransit):
+class RossiterMcLaughlin_Legacy(AbstractModel, AbstractTransit):
     model_class = 'rossiter_mclaughlin'
 
     def __init__(self, *args, **kwargs):
