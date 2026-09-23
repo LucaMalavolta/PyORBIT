@@ -41,6 +41,7 @@ try:
 except (ModuleNotFoundError, ImportError):
     pass
 
+
 class RossiterMcLaughlin_Legacy(AbstractModel, AbstractTransit):
     model_class = 'rossiter_mclaughlin'
 
@@ -67,6 +68,9 @@ class RossiterMcLaughlin_Legacy(AbstractModel, AbstractTransit):
             'omega',  # argument of pericenter (in radians)
             'lambda', # Sky-projected angle between stellar rotation axis and normal of orbit plane [deg]
             'R_Rs',  # planet radius (in units of stellar radii)
+            'natural_contrast',  # relative depth of the CCF
+            'natural_broadening',  # natural broadening of the CCF (in km/s)
+            'instrumental_broadening',  # instrumental broadening of the CCF (
         ])
 
         self.star_grid = {}   # write an empty dictionary
@@ -75,10 +79,38 @@ class RossiterMcLaughlin_Legacy(AbstractModel, AbstractTransit):
 
     def initialize_model(self, mc, **kwargs):
 
-
         self._prepare_planet_parameters(mc, **kwargs)
         self._prepare_star_parameters(mc, **kwargs)
         self._prepare_limb_darkening_coefficients(mc, **kwargs)
+
+        for common_ref in self.common_ref:
+            if getattr(mc.common_models[common_ref], 'model_class', None) == 'spectrograph':
+                self.spectrograph_ref = common_ref
+                break
+
+        self.use_instrument_specific_line = not mc.common_models[self.spectrograph_ref].use_stellar_lines
+        if self.use_instrument_specific_line:
+            self.list_pams_common.discard('natural_contrast')
+            self.list_pams_common.discard('natural_broadening')
+            self.list_pams_common.update(['line_broadening'])
+            self.list_pams_common.update(['line_contrast'])
+
+        # HARPS-N instrumental braodening: FWHM of 3.1 pixels
+        # At 530 nm for example, in the center of the CCD,
+        # the scale is 0.001415 nm/pixel, and the spectral
+        # resolution taking into account the measured spotsize
+        # is computed to about R = 124’000.
+        # fwhm = 2.355 sigma
+        # fwhm = 0.01415 * 3.1 * 299792.458 / 5300 = 2.48 km/s
+        # instrumental_broadening =  fwhm / 2.355 = 1.108 km/s
+
+        """ Values from spectrograph common object"""
+        self.ccf_variables = {
+            'rv_min': mc.common_models[ self.spectrograph_ref].rv_min,
+            'rv_max': mc.common_models[ self.spectrograph_ref].rv_max,
+            'rv_step': mc.common_models[ self.spectrograph_ref].rv_step,
+        }
+
 
         #start filling the dictionary with relevant parameters
         self.star_grid['n_grid'] = kwargs.get('star_ngrid', 101 )
@@ -103,42 +135,7 @@ class RossiterMcLaughlin_Legacy(AbstractModel, AbstractTransit):
         self.star_grid['mu'] = np.zeros([self.star_grid['n_grid'], self.star_grid['n_grid']], dtype=np.single)  # initialization of the matrix with the mu values
         self.star_grid['mu'][self.star_grid['inside']] = np.sqrt(1. - self.star_grid['rc'][self.star_grid['inside']] ** 2)
 
-    def initialize_model_dataset(self, mc, dataset, **kwargs):
 
-        self._prepare_dataset_options(mc, dataset, **kwargs)
-        #self.batman_models[dataset.name_ref] = \
-        #    batman.TransitModel(self.batman_params,
-        #                        dataset.x0,
-        #                        supersample_factor=self.code_options[dataset.name_ref]['sample_factor'],
-        #                        exp_time=self.code_options[dataset.name_ref]['exp_time'],
-        #                        nthreads=self.code_options['nthreads'])
-
-        """ Values valid for HARPS-N data"""
-        self.ccf_variables = {
-            'natural_broadening': 1.5,  # in km/s
-            'natural_contrast': 0.5, # relative depth o
-            'instrumental_broadening': 1.108, # in km/s
-            'rv_min': -20.0,
-            'rv_max': 20.0,
-            'rv_step': 0.50,
-        }
-
-        # HARPS-N instrumental braodening: FWHM of 3.1 pixels
-        # At 530 nm for example, in the center of the CCD,
-        # the scale is 0.001415 nm/pixel, and the spectral
-        # resolution taking into account the measured spotsize
-        # is computed to about R = 124’000.
-        # fwhm = 2.355 sigma
-        # fwhm = 0.01415 * 3.1 * 299792.458 / 5300 = 2.48 km/s
-        # instrumental_broadening =  fwhm / 2.355 = 1.108 km/s
-
-        for dict_name in self.ccf_variables:
-            if kwargs[dataset.name_ref].get(dict_name, False):
-                self.ccf_variables[dict_name] = kwargs[dataset.name_ref][dict_name]
-            elif kwargs.get(dict_name, False):
-                self.ccf_variables[dict_name] = kwargs[dict_name]
-
-        self.star_grid[dataset.name_ref] = {}
         self.star_grid['zz'] = np.arange(self.ccf_variables['rv_min'],
                                         self.ccf_variables['rv_max']+self.ccf_variables['rv_step'],
                                         self.ccf_variables['rv_step'],
@@ -146,31 +143,38 @@ class RossiterMcLaughlin_Legacy(AbstractModel, AbstractTransit):
         self.star_grid['len_zz'] = len(self.star_grid['zz'])
         self.star_grid['rv_step'] = self.ccf_variables['rv_step']
 
-        print("    {0:s} dataset {1:s} parameters:".format(self.model_name, dataset.name_ref))
+
+    def initialize_model_dataset(self, mc, dataset, **kwargs):
+    
+        self._prepare_dataset_options(mc, dataset, **kwargs)
+        #self.batman_models[dataset.name_ref] = \
+        #    batman.TransitModel(self.batman_params,
+        #                        dataset.x0,
+        #                        supersample_factor=self.code_options[dataset.name_ref]['sample_factor'],
+        #                        exp_time=self.code_options[dataset.name_ref]['exp_time'],
+        #                        nthreads=self.code_options['nthreads'])
+    
+    def print_info(self):
+        print("*** model {0:s} parameters:".format(self.model_name))
         for key, value in self.ccf_variables.items():
             print(f"        {key}: {value}")
         print(f"        {'n_grid'}: {self.star_grid['n_grid']}")
         print(f"        {'time_step'}: {self.star_grid['time_step']}")
 
-    def compute(self, parameter_values, dataset, x0_input=None):
 
-        """
-        :param parameter_values:
-        :param dataset:
-        :param x0_input:
-        :return:
-        """
-        self.update_parameter_values(parameter_values, dataset.Tref)
+    def precompute(self, parameter_values, dataset):
 
         for key, key_val in parameter_values.items():
             if np.isnan(key_val):
-                return 0.
+                pass 
+
+        if self.precomputed == True:
+            pass
 
         ld_par = self._limb_darkening_coefficients(parameter_values)
 
         lambda_rad = parameter_values['lambda'] * constants.deg2rad
-        inclination_rad = parameter_values['i'] * constants.deg2rad
-        omega_rad = parameter_values['omega'] * constants.deg2rad
+
 
         """ Limb darkening law and coefficients """
         star_grid_I = self.compute_limb_darkening(ld_par, self.star_grid['mu'])
@@ -220,10 +224,46 @@ class RossiterMcLaughlin_Legacy(AbstractModel, AbstractTransit):
         star_grid_v_star[self.star_grid['outside']] = 0.0
 
         out_temp = np.empty([self.star_grid['n_grid'], self.star_grid['n_grid'], self.star_grid['len_zz']], dtype=np.single)
-        star_grid_ccf = iter2_CCF_gauss(self.star_grid['zz'],
-                            self.ccf_variables['natural_contrast'],
-                            self.ccf_variables['natural_broadening'],
-                            star_grid_v_star, star_grid_I, out_temp)
+
+        if self.use_instrument_specific_line:
+            self.star_grid_ccf = iter2_CCF_gauss(self.star_grid['zz'],
+                                parameter_values['line_contrast'],
+                                parameter_values['line_broadening'],
+                                star_grid_v_star, star_grid_I, out_temp)
+        else:
+            self.star_grid_ccf = iter2_CCF_gauss(self.star_grid['zz'],
+                                parameter_values['natural_contrast'],
+                                parameter_values['natural_broadening'],
+                                star_grid_v_star, star_grid_I, out_temp)
+
+        self.ccf_total = np.sum(self.star_grid_ccf, axis=(0,1), dtype=np.single)
+
+        # p0 = (self.ccf_variables['natural_contrast'], 0.00, self.ccf_variables['instrumental_broadening']/self.star_grid['rv_step'])
+
+        # RV unperturbed CCF
+        ccf_broad = gaussian_filter1d(self.ccf_total/np.amax(self.ccf_total), parameter_values['instrumental_broadening']/self.star_grid['rv_step'])
+        gaussian = GaussianModel()
+        
+        # params = gaussian.make_params()
+        #guess = gaussian.guess(1.-ccf_broad, x=self.star_grid['zz'])
+        #results = gaussian.fit(1.-ccf_broad, x=self.star_grid['zz'],  params=guess)
+        """ guess removed tdue to strange behaviour of LMFIT"""
+        results = gaussian.fit(1.-ccf_broad, x=self.star_grid['zz'])
+        self.rv_unperturbed = results.params['center'].value * 1000.
+
+    def compute(self, parameter_values, dataset, x0_input=None):
+
+        """
+        :param parameter_values:
+        :param dataset:
+        :param x0_input:
+        :return:
+        """
+        self.update_parameter_values(parameter_values, dataset.Tref)
+
+        for key, key_val in parameter_values.items():
+            if np.isnan(key_val):
+                return 0.
 
         if x0_input is None:
             bjd = dataset.x0
@@ -234,23 +274,11 @@ class RossiterMcLaughlin_Legacy(AbstractModel, AbstractTransit):
             exptime = np.ones_like(bjd) * np.mean(dataset.ancillary['exptime'])
 
         rv_rml = np.zeros_like(bjd, dtype=np.single)
-        ccf_total = np.sum(star_grid_ccf, axis=(0,1), dtype=np.single)
 
-        # p0 = (self.ccf_variables['natural_contrast'], 0.00, self.ccf_variables['instrumental_broadening']/self.star_grid['rv_step'])
+        inclination_rad = parameter_values['i'] * constants.deg2rad
+        omega_rad = parameter_values['omega'] * constants.deg2rad
 
-        # RV unperturbed CCF
-        ccf_broad = gaussian_filter1d(ccf_total/np.amax(ccf_total), self.ccf_variables['instrumental_broadening']/self.star_grid['rv_step'])
-        
-        gaussian = GaussianModel()
-        
-        # params = gaussian.make_params()
-        #guess = gaussian.guess(1.-ccf_broad, x=self.star_grid['zz'])
-        #results = gaussian.fit(1.-ccf_broad, x=self.star_grid['zz'],  params=guess)
-        """ guess removed tdue to strange behaviour of LMFIT"""
-        results = gaussian.fit(1.-ccf_broad, x=self.star_grid['zz'])
-        rv_unperturbed = results.params['center'].value * 1000.
-
-        #parameters, _ = curve_fit(CCF_gauss, self.star_grid['zz'], ccf_broad, p0=p0, check_finite =False)
+        #parameters, _ = curve_fit(CCF_gauss, self.star_grid['zz'], self.ccf_broad, p0=p0, check_finite =False)
         #rv_unperturbed = parameters[1] * 1000.
         #p0 = (parameters[0], 0.00, parameters[2])
 
@@ -287,7 +315,7 @@ class RossiterMcLaughlin_Legacy(AbstractModel, AbstractTransit):
 
             # projected distance of the planet's center to the stellar center
             planet_position_rp = np.sqrt(planet_position_xp**2  + planet_position_yp**2, dtype=np.single)
-            ccf_out = np.zeros_like(ccf_total, dtype=np.single)
+            ccf_out = np.zeros_like(self.ccf_total, dtype=np.single)
 
             for j, zeta in enumerate(planet_position_zp):
 
@@ -301,14 +329,14 @@ class RossiterMcLaughlin_Legacy(AbstractModel, AbstractTransit):
                     """ Selection of the portion of stars covered by the planet"""
                     sel_eclipsed = (rd <= parameter_values['R_Rs']) & self.star_grid['inside']
 
-                    ccf_out += ccf_total - np.sum(star_grid_ccf[sel_eclipsed,:], axis=0, dtype=np.single)
+                    ccf_out += self.ccf_total - np.sum(self.star_grid_ccf[sel_eclipsed,:], axis=0, dtype=np.single)
 
             cont_val = np.amax(ccf_out)
 
             if cont_val > 0:
                 ccf_out /= cont_val
 
-                ccf_broad = gaussian_filter1d(ccf_out, self.ccf_variables['instrumental_broadening']/self.star_grid['rv_step'])
+                ccf_broad = gaussian_filter1d(ccf_out, parameter_values['instrumental_broadening']/self.star_grid['rv_step'])
                 try:
                     #parameters, _ = curve_fit(CCF_gauss, self.star_grid['zz'], ccf_broad, p0=p0, check_finite =False)
                     #rv_rml[i_obs] = parameters[1] * 1000. - rv_unperturbed
@@ -316,11 +344,11 @@ class RossiterMcLaughlin_Legacy(AbstractModel, AbstractTransit):
         
                     params = gaussian.make_params()
 
-                    """ guess removed tdue to strange behaviour of LMFIT"""
+                    """ guess removed due to strange behaviour of LMFIT"""
                     #guess = gaussian.guess(1.-ccf_broad, x=self.star_grid['zz'])
                     #results = gaussian.fit(1.-ccf_broad, x=self.star_grid['zz'],  params=guess)
                     results = gaussian.fit(1.-ccf_broad, x=self.star_grid['zz'])
-                    rv_rml[i_obs] = results.params['center'].value * 1000. - rv_unperturbed
+                    rv_rml[i_obs] = results.params['center'].value * 1000. - self.rv_unperturbed
                 
                 except:
                     rv_rml[i_obs] = 0.00

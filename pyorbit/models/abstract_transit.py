@@ -186,8 +186,6 @@ class AbstractTransit(object):
 
     def _prepare_dataset_options(self, mc, dataset, **kwargs):
 
-
-
         sample_factor = 1
         exposure_time = 0.01
 

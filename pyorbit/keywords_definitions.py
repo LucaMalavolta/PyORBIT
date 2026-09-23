@@ -120,3 +120,12 @@ keywords_tc_priors = ['Tc_priors',
             'T_priors',
             'TC_priors',
         ]
+
+#NEW added in PyORBIT version 12
+keywords_rv_min = ['rv_min', 'rvmin', 'rv_start']
+keywords_rv_max = ['rv_max', 'rvmax', 'rv_end']
+keywords_rv_step = ['rv_step', 'rv_steps', 'rv_end']
+keywords_use_stellar_lines = ['use_stellar_line', 
+    'use_shared_line_parameters',
+    'use_stellar_lines',
+    'use_stellar_line_parameters']

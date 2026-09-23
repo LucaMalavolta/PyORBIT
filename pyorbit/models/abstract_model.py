@@ -106,6 +106,9 @@ class AbstractModel(object):
         self.force_model_dataset_initialization = False
         self.skip_print_info = False
 
+        #NEW:  Added in PyORBIT version 12
+        self.precomputed
+
     def print_warning(self):
         pass
 
@@ -119,6 +122,17 @@ class AbstractModel(object):
         pass
 
     def initialize_model_dataset(self, mc, dataset, **kwargs):
+        pass
+
+    #** added in PyORBIT version 12
+    # It allows precomputing common grids used by different datasets
+    def precompute(self, parameter_values, dataset):
+        pass
+
+    #** added in PyORBIT version 12
+    # It resets the grid
+    def reset_precompute(self):
+        self.precomputed = False
         pass
 
     def change_parameter_status(self, mc, **kwargs):

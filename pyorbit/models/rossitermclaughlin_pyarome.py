@@ -51,11 +51,12 @@ class RossiterMcLaughlin_Pyarome(AbstractModel, AbstractTransit):
         if self.arome_parameters['measurement_technique'] not in ['ccf', 'iodine']:
             raise ValueError('{0:s} error: measurement_technique must be either "ccf" or "iodine"'.format(self.model_name))
 
-        print("*** {0:s} global parameters:".format(self.model_name))
+
+    def print_info(self):
+        print("*** model {0:s} parameters:".format(self.model_name))
         print('    Note: assumption of quadratic limb darkening for RML computation')
         for key, value in self.arome_parameters.items():
             print(f"        {key}: {value}")
-
 
     def compute(self, parameter_values, dataset, x0_input=None):
         """
@@ -74,12 +75,6 @@ class RossiterMcLaughlin_Pyarome(AbstractModel, AbstractTransit):
 
         ld_par = self._limb_darkening_coefficients(parameter_values)
 
-        #NEW added in PyORBIT version 12
-        """ Small workaround to facilitate maintenance"""
-        self.arome_parameters['macroturbulence'] =  parameter_values['macroturbulence']
-        self.arome_parameters['instrumental_broadening'] =  parameter_values['instrumental_broadening']
-        self.arome_parameters['measured_ccf_width'] =  parameter_values['measured_ccf_width'] / constants.sigma2FWHM
-
         if x0_input is not None:
             x0 = x0_input
         else:
@@ -96,10 +91,10 @@ class RossiterMcLaughlin_Pyarome(AbstractModel, AbstractTransit):
                             1. * parameter_values['a_Rs'],
                             1. * ld_par[0],
                             1. * ld_par[1],
-                            1. * self.arome_parameters['instrumental_broadening'],
+                            1. * parameter_values['instrumental_broadening'],
                             1. * parameter_values['v_sini'],
-                            1. * self.arome_parameters['measured_ccf_width'],
-                            1. * self.arome_parameters['macroturbulence'],
+                            1. * parameter_values['measured_ccf_width']/ constants.sigma2FWHM,
+                            1. * parameter_values['macroturbulence'],
                             2,
                             1. * parameter_values['R_Rs'])
         except RuntimeError:

@@ -375,6 +375,10 @@ class ModelContainer(object):
                 parameter_values.update(
                     self.models[model_name].convert(theta, dataset_name))
 
+                #** NEW in PyORBIT version 12
+                # dataset independent calculation for the model
+                # The dataset is passed only for keywords such as reference time and so
+
                 #TODO: Added in PyORBIT version 12 beta
                 if getattr(self.models[model_name], 'accept_multiple_planets', False):
 
@@ -391,6 +395,9 @@ class ModelContainer(object):
                     except KeyError:
                         multiple_planets_models[parent_model] = [planet_ref]
                     continue
+                else:
+                    self.models[model_name].precompute(parameter_values, dataset)
+
 
                 """ compute the log-likelihood for those models using external datasets,
                     but only when multiple planets are not involved, otherwise the log-likelihood is computed at the parent model level"""
@@ -460,6 +467,8 @@ class ModelContainer(object):
             #TODO: Added in PyORBIT version 12 beta
             for parent_model in multiple_planets_models:
                 planet_list = multiple_planets_models[parent_model]
+
+                self.parent_models[parent_model].precompute(planet_list, dataset)
 
                 if getattr(self.parent_models[parent_model], 'external_dataset', False):
                     skip_loglikelihood = True
@@ -553,6 +562,12 @@ class ModelContainer(object):
         if np.isnan(log_priors) or np.isnan(log_likelihood):
             log_likelihood = -np.inf
             log_priors = -np.inf
+
+        for model_name in self.models:
+            self.models[model_name].reset_precompute()
+
+        for parent_model in multiple_planets_models:
+            self.parent_models[parent_model].reset_precompute()
 
         #if self.dynamical_model is not None:
         #    if not (dynamical_output['stable'] and dynamical_output['pass']):
