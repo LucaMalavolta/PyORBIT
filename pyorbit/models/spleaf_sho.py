@@ -44,7 +44,8 @@ class SPLEAF_SHO(AbstractModel, AbstractGaussianProcesses):
         self.use_gp_notation = False
 
 
-        self._jitter_mask = {}
+        self._sorted_jitter_mask = {}
+        self._unsort_jitter_mask = {}
         self._sorting_mask = {}
         self._n_jitter = {}
         self.D_spleaf = {}
@@ -76,7 +77,8 @@ class SPLEAF_SHO(AbstractModel, AbstractGaussianProcesses):
         self._sorting_mask[dataset.name_ref] = np.argsort(dataset.x0)
         temp_sorting = self._sorting_mask[dataset.name_ref]
 
-        self._jitter_mask[dataset.name_ref] = []
+        self._sorted_jitter_mask[dataset.name_ref] = []
+        self._unsort_jitter_mask[dataset.name_ref] = []
         self._n_jitter[dataset.name_ref] = 0
 
         temp_mask = np.arange(0, dataset.n, 1, dtype=int)
@@ -84,8 +86,10 @@ class SPLEAF_SHO(AbstractModel, AbstractGaussianProcesses):
             if dataset.variable_expanded[var] != 'jitter':
                 continue
             temp_jitmask = dataset.mask[var][temp_sorting]
+            orig_jitmask = dataset.mask[var]
 
-            self._jitter_mask[dataset.name_ref].append(temp_mask[temp_jitmask])
+            self._sorted_jitter_mask[dataset.name_ref].append(temp_mask[temp_jitmask])
+            self._unsort_jitter_mask[dataset.name_ref].append(orig_jitmask)
             self._n_jitter[dataset.name_ref] += 1
 
         parameter_values = {
@@ -131,7 +135,7 @@ class SPLEAF_SHO(AbstractModel, AbstractGaussianProcesses):
 
         jitter_values = np.zeros(self._n_jitter[dataset.name_ref])
         for n_jit in range(0, self._n_jitter[dataset.name_ref]):
-            jitter_values[n_jit] = dataset.jitter[self._jitter_mask[dataset.name_ref][n_jit]][0]
+            jitter_values[n_jit] = dataset.jitter[self._unsort_jitter_mask[dataset.name_ref][n_jit]][0]
 
         input_param = np.concatenate(([parameter_values['sho_sigma'],
                                     parameter_values['sho_scale'],
@@ -193,7 +197,7 @@ class SPLEAF_SHO(AbstractModel, AbstractGaussianProcesses):
                                     quality_factor)
         }
         for n_jit in range(0, self._n_jitter[dataset.name_ref]):
-            kwargs['jitter_'+repr(n_jit)] = spleaf_term.InstrumentJitter(self._jitter_mask[dataset.name_ref][n_jit],
-                                                                            dataset.jitter[self._jitter_mask[dataset.name_ref][n_jit]][0])
+            kwargs['jitter_'+repr(n_jit)] = spleaf_term.InstrumentJitter(self._sorted_jitter_mask[dataset.name_ref][n_jit],
+                                                                            dataset.jitter[self._unsort_jitter_mask[dataset.name_ref][n_jit]][0])
 
         self.D_spleaf[dataset.name_ref] = spleaf_cov.Cov(dataset.x0[argsorting], **kwargs)

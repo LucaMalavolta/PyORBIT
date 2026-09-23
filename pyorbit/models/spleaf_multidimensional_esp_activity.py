@@ -105,8 +105,7 @@ class SPLEAF_Multidimensional_ESP(AbstractModel, AbstractGaussianProcesses):
             return
 
         ## NEW Addded in PyORBIT v10.10
-        if (dataset.kind == 'RV' or dataset.kind == 'radial_velocity'):
-            #TODO remove option 'RV' in version PyORBIT version 12
+        if (dataset.kind == 'radial_velocity'):
             self._dataset_rvflag_dict[dataset.name_ref] = True
         else:
             self._dataset_rvflag_dict[dataset.name_ref] = False
