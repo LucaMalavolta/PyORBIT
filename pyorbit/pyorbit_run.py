@@ -49,6 +49,12 @@ def pyorbit_run():
         'nautilus': ['nautilus', 'Nautilus', 'NAUTILUS'],
     }
 
+    known_samplers = [alias for aliases in sampler_keyword.values() for alias in aliases]
+    if sampler not in known_samplers:
+        print('ERROR: unrecognized sampler "{0}"'.format(sampler))
+        print('Accepted sampler keywords: {0}'.format(', '.join(sorted(known_samplers))))
+        sys.exit(1)
+
     if sampler in sampler_keyword['pyde']:
         pyorbit.pyorbit_pyde(config_in)
 
