@@ -30,7 +30,7 @@ class SpectralRotation(AbstractModel):
         self.parametrization = 'Standard'
 
         self.list_pams_common = OrderedSet([
-            'line_contrast',
+            'natural_contrast',
             'line_fwhm',
             'v_sini',
         ])
@@ -55,7 +55,7 @@ class SpectralRotation(AbstractModel):
         if x0_input is None:
 
             sigma = parameter_values['line_fwhm']/constants.sigma2FWHM
-            solar_flux = - (parameter_values['line_contrast']/100.) \
+            solar_flux = - parameter_values['natural_contrast'] \
                 * np.exp(-(dataset.x - parameter_values['rv_center'])**2
                         / (2 * sigma**2))
 
@@ -107,7 +107,7 @@ class SubsetSpectralRotation(AbstractModel):
         self.parametrization = 'Standard'
 
         self.list_pams_common = OrderedSet([
-            'line_contrast',
+            'natural_contrast',
             'line_fwhm',
             'v_sini',
         ])
@@ -155,7 +155,7 @@ class SubsetSpectralRotation(AbstractModel):
                 par = 'rv_center_sub'+repr(i_sub)
                 sel_data = (dataset.submodel_id == i_sub)
 
-                solar_flux = -(parameter_values['line_contrast']/100.) \
+                solar_flux = -(parameter_values['natural_contrast']) \
                     * np.exp(-(dataset.x[sel_data] - parameter_values[par])**2 / (2 * sigma**2))
 
                 y_output[sel_data] = PyAstroFastRotBroad(wave_array[sel_data],
@@ -198,7 +198,7 @@ class SubsetSpectralRotationPolynomial(AbstractModel):
         self.parametrization = 'Standard'
 
         self.list_pams_common = OrderedSet([
-            'line_contrast',
+            'natural_contrast',
             'line_fwhm',
             'v_sini',
         ])
@@ -259,7 +259,7 @@ class SubsetSpectralRotationPolynomial(AbstractModel):
                 par = 'rv_center_sub'+repr(i_sub)
                 sel_data = (dataset.submodel_id == i_sub)
 
-                solar_flux = -(parameter_values['line_contrast']/100.) \
+                solar_flux = -(parameter_values['natural_contrast']) \
                     * np.exp(-(dataset.x[sel_data] - parameter_values[par])**2 / (2 * sigma**2))
 
                 y_output[sel_data] = PyAstroFastRotBroad(wave_array[sel_data],

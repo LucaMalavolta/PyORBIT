@@ -81,20 +81,20 @@ class CommonStarParameters(AbstractCommon):
                 'fixed' : 5777,
                 'unit': 'kelvin',
             },
-        'line_contrast':
+        'natural_contrast':
             {
-                'bounds': [0., 100.],
+                'bounds': [0., 1.],
                 'priors': ['Uniform', []],
                 'spaces': 'Linear',
-                'fixed' : 50,
-                'unit': 'percentual',
+                'fixed' : 0.5,
+                'unit': 'relative depth',
             },
-        'line_fwhm':
+        'natural_broadening':
             {
-                'bounds': [0., 12.],
+                'bounds': [0., 5.],
                 'priors': ['Uniform', []],
                 'spaces': 'Linear',
-                'fixed' : 6,
+                'fixed' : 1.5,
                 'unit': 'km/s',
             },
         'rv_center':

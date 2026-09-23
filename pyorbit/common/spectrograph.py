@@ -5,7 +5,7 @@ class CommonSpectrograph(AbstractCommon):
     ''' all the possible parameters that can be assigned to the spectrograph are listed here'''
 
     parameters_dictionary = {
-    'natural_broadening':
+    'line_broadening':
         {
             'bounds': [0.0, 5.0],
             'priors': ['Uniform', []],
@@ -13,7 +13,7 @@ class CommonSpectrograph(AbstractCommon):
             'fixed' : 1.5,
             'unit': 'km/s',
         },
-    'natural_contrast':
+    'line_contrast':
         {
             'bounds': [0.0, 1.0],
             'priors': ['Uniform', []],
@@ -21,7 +21,7 @@ class CommonSpectrograph(AbstractCommon):
             'fixed' : 0.5,
             'unit': 'relative depth',
         },
-    'instrumental_broadening':
+    'instrumental_broadening': # FWHM of the spectra line
         {
             'bounds': [0.0, 10.0],
             'priors': ['Uniform', []],

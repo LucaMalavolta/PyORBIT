@@ -32,6 +32,10 @@ class RossiterMcLaughlin_Pyarome(AbstractModel, AbstractTransit):
             'omega',  # argument of pericenter (in radians)
             'lambda', # Sky-projected angle between stellar rotation axis and normal of orbit plane [deg]
             'R_Rs',  # planet radius (in units of stellar radii)
+            #NEW Added in PyORBIT version 12
+            'macroturbulence',  # macroturbulence velocity (in km/s)
+            'instrumental_broadening',  # instrumental broadening (in km/s)
+            'measured_ccf_width',  # FWHM of the CCF (in km/s)
         ])
 
         self.arome_parameters = {}
@@ -43,17 +47,9 @@ class RossiterMcLaughlin_Pyarome(AbstractModel, AbstractTransit):
         self._prepare_star_parameters(mc, **kwargs)
         self._prepare_limb_darkening_coefficients(mc, **kwargs)
 
-
-        self.arome_parameters['macroturbulence'] =  kwargs.get('macroturbulence', 1.0)
-        self.arome_parameters['instrumental_broadening'] =  kwargs.get('instrumental_broadening', 1.0)
         self.arome_parameters['measurement_technique'] =  kwargs.get('measurement_technique', 'ccf')
         if self.arome_parameters['measurement_technique'] not in ['ccf', 'iodine']:
             raise ValueError('{0:s} error: measurement_technique must be either "ccf" or "iodine"'.format(self.model_name))
-
-        try:
-            self.arome_parameters['measured_ccf_width'] =  kwargs.get('measured_ccf_width') / constants.sigma2FWHM
-        except (KeyError, TypeError):
-            raise ValueError('{0:s} error: must provide measured_ccf_width (FWHM) in km/s'.format(self.model_name))
 
         print("*** {0:s} global parameters:".format(self.model_name))
         print('    Note: assumption of quadratic limb darkening for RML computation')
@@ -78,6 +74,11 @@ class RossiterMcLaughlin_Pyarome(AbstractModel, AbstractTransit):
 
         ld_par = self._limb_darkening_coefficients(parameter_values)
 
+        #NEW added in PyORBIT version 12
+        """ Small workaround to facilitate maintenance"""
+        self.arome_parameters['macroturbulence'] =  parameter_values['macroturbulence']
+        self.arome_parameters['instrumental_broadening'] =  parameter_values['instrumental_broadening']
+        self.arome_parameters['measured_ccf_width'] =  parameter_values['measured_ccf_width'] / constants.sigma2FWHM
 
         if x0_input is not None:
             x0 = x0_input
@@ -103,8 +104,6 @@ class RossiterMcLaughlin_Pyarome(AbstractModel, AbstractTransit):
                             1. * parameter_values['R_Rs'])
         except RuntimeError:
             return -np.inf
-
-        #print('RV model', rv_model[2], rv_model[0]*1000.)
 
         if rv_model[2]!=0:
             return -np.inf

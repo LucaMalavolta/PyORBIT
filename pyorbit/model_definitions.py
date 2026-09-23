@@ -133,8 +133,6 @@ from pyorbit.models.rossitermclaughlin_reloaded_faster import RossiterMcLaughlin
 from pyorbit.models.rossitermclaughlin_revolutions import RossiterMcLaughlin_Revolutions
 from pyorbit.models.rossitermclaughlin_revolutions_faster import RossiterMcLaughlin_Revolutions_Faster
 
-from pyorbit.models.rossitermclaughlin_pyarome_test import RossiterMcLaughlin_Pyarome_TEST
-
 
 from pyorbit.models.rossitermclaughlin_multiplanets_precise import RossiterMcLaughlin_MultiPlanets_Precise
 
@@ -283,7 +281,6 @@ define_type_to_class = {
     'spleaf_multidimensional_exponentialsineperiodic': SPLEAF_Multidimensional_ESP,
     'rossitermclaughlin_ohta': RossiterMcLaughlin_Ohta,
     'rossitermclaughlin_pyarome': RossiterMcLaughlin_Pyarome,
-    'rossitermclaughlin_pyarome_test': RossiterMcLaughlin_Pyarome_TEST,
     'rossitermclaughlin_arome': RossiterMcLaughlin_Pyarome,
     'rossitermclaughlin_precise': RossiterMcLaughlin_Precise,
     'rossitermclaughlin_reloaded': RossiterMcLaughlin_Reloaded,
@@ -313,7 +310,7 @@ define_type_to_class = {
 """
 
 model_requires_planets = ['radial_velocities', 'transit_times', 'transit', 'orbitize', 'gaia_astrometry_orbit',
-                                'transit_eclipse_phasecurve', 'rossiter_mclaughlin', 'rossiter_mclaughlin_test']
+                                'transit_eclipse_phasecurve', 'rossiter_mclaughlin']
 
 single_planet_model = ['Tc_planets', 'transit_times']
 transit_time_model = ['Tc_planets', 'transit_times']
@@ -323,10 +320,9 @@ model_requires_limb_darkening = ['transit',
                                 'spectral_rotation',
                                 'subset_spectral_rotation',
                                 'subset_spectral_rotation_polynomial',
-                                'rossiter_mclaughlin',
-                                'rossiter_mclaughlin_test']
+                                'rossiter_mclaughlin']
 
-model_requires_star = ['rossiter_mclaughlin','rossiter_mclaughlin_test', 'transit_times', 'gaussian_process', 
+model_requires_star = ['rossiter_mclaughlin','transit_times', 'gaussian_process', 
                        'multidimensional_gaussian_process', 'orbitize', 'gaia_astrometry_orbit', 'gaia_astrometry_baseline']
 #model_requires_multiple_planets = ['rossiter_mclaughlin']
 model_requires_multiple_planets = []
