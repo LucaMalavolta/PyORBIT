@@ -1,6 +1,6 @@
 from pyorbit.subroutines.common import np, OrderedSet
 from pyorbit.common.abstract_common import AbstractCommon
-from pyorbit.model_definitions import datatype_definition
+from pyorbit.datatype_definitions import datatype_definition
 
 from numpy.lib.recfunctions import append_fields, drop_fields
 
@@ -83,6 +83,7 @@ class Dataset(AbstractCommon):
         self.ancillary = None
 
         self.compute_plot = True
+        self.compute_model_plot = True
 
 
     def append_ancillary(self, input_file, input_array=False, input_array_str=False):
@@ -242,8 +243,7 @@ class Dataset(AbstractCommon):
         self._setup_systematic_mask('jitter', data_input[:, self.jitter_column])
         self._setup_systematic_mask('offset', data_input[:, self.offset_column])
 
-
-        if np.amax(data_input[:, self.subset_column]) > 0:
+        if np.amax(data_input[:, self.subset_column]) >= 0:
             sel = data_input[:, self.subset_column] >= -0.5
             self.submodel_minflag = np.int64(np.amin(data_input[sel, self.subset_column]))
             self.submodel_maxflag = np.int64(np.amax(data_input[:, self.subset_column])) + 1
@@ -359,7 +359,7 @@ class Dataset(AbstractCommon):
 
         #chi2 = -0.5 * (self.n * np.log(2 * np.pi) +
         #               np.sum(self.residuals ** 2 * env - np.log(env)))
-        #print('{0:25s} {1:12f} {2:12f} \n'.format(self.name_ref, chi2, np.std(self.residuals)))
+        #print('{0:25s} {1:12f} {2:12f}'.format(self.name_ref, chi2, np.std(self.residuals)), self.residuals)
 
         return -0.5 * (self.n * np.log(2 * np.pi) +
                        np.sum(self.residuals ** 2 * env - np.log(env)))
