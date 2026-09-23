@@ -1,3 +1,5 @@
+from typing import Any
+
 #from pyorbit.common.dataset import Dataset
 from pyorbit.common.planets import CommonPlanets
 from pyorbit.common.activity import CommonActivity
@@ -125,7 +127,6 @@ from pyorbit.models.spleaf_esp_activity import SPLEAF_ESP
 from pyorbit.models.spleaf_esp_activity_slow import SPLEAF_ESP_slow
 from pyorbit.models.spleaf_sho import SPLEAF_SHO
 
-from pyorbit.models.rossitermclaughlin_ohta import RossiterMcLaughlin_Ohta
 from pyorbit.models.rossitermclaughlin_pyarome import RossiterMcLaughlin_Pyarome
 from pyorbit.models.rossitermclaughlin_legacy import RossiterMcLaughlin_Legacy
 from pyorbit.models.rossitermclaughlin_reloaded import RossiterMcLaughlin_Reloaded
@@ -134,14 +135,14 @@ from pyorbit.models.rossitermclaughlin_revolutions import RossiterMcLaughlin_Rev
 from pyorbit.models.rossitermclaughlin_revolutions_faster import RossiterMcLaughlin_Revolutions_Faster
 
 
-from pyorbit.models.rossitermclaughlin_multiplanets_precise import RossiterMcLaughlin_MultiPlanets_Precise
+from pyorbit.models.rossitermclaughlin_multiplanets_legacy import RossiterMcLaughlin_MultiPlanets_Legacy
 
 from pyorbit.models.orbitize import Orbitize
 from pyorbit.models.gaiadr4_full import GaiaDR4AstrometricFull
 from pyorbit.models.gaiadr4_baseline import GaiaDR4AstrometricBaseline
 from pyorbit.models.gaiadr4_orbit import GaiaDR4AstrometricOrbit
 
-define_common_type_to_class = {
+define_common_type_to_class: dict[str, type[Any]] = {
     'planets': CommonPlanets,
     'activity': CommonActivity,
     'polynomial_trend': CommonPolynomialTrend,
@@ -168,7 +169,7 @@ define_common_type_to_class = {
     'detrending': CommonDetrending,
 }
 
-define_type_to_class = {
+define_type_to_class: dict[str, type[Any] | dict[str, type[Any]]] = {
     'planetary_velocities': {'circular': RVkeplerian,
                           'keplerian': RVkeplerian,
                           'apodized': ApodizedRVkeplerian,
@@ -279,7 +280,6 @@ define_type_to_class = {
     'spleaf_multidimensional_exponentialsineperiodic_slow': SPLEAF_Multidimensional_ESP_slow,
     'spleaf_multidimensional_esp': SPLEAF_Multidimensional_ESP,
     'spleaf_multidimensional_exponentialsineperiodic': SPLEAF_Multidimensional_ESP,
-    'rossitermclaughlin_ohta': RossiterMcLaughlin_Ohta,
     'rossitermclaughlin_pyarome': RossiterMcLaughlin_Pyarome,
     'rossitermclaughlin_arome': RossiterMcLaughlin_Pyarome,
     'rossitermclaughlin_legacy': RossiterMcLaughlin_Legacy,
