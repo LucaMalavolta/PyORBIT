@@ -212,9 +212,14 @@ class AbstractGaussianProcesses(object):
 
     def update_parameter_values(self,
                                 parameter_values,
-                                prepend='',
+                                input_prepend='',
                                 replace_rotation='Prot',
                                 replace_decay='Pdec'):
+
+        if input_prepend == '':
+            prepend = ''
+        else:
+            prepend = input_prepend + '__'
 
         if self.use_activity_Prot:
             parameter_values[replace_rotation] = parameter_values['Prot']

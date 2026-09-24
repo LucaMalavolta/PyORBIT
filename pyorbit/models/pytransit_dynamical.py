@@ -48,6 +48,8 @@ class PyTransit_Dynamical(AbstractModel, AbstractTransit, AbstractDynamical):
 
         self._prepare_limb_darkening_coefficients(mc, **kwargs)
 
+        self.Tref = mc.Tref
+
     def initialize_model_dataset(self, mc, dataset, **kwargs):
         self._prepare_dataset_options(mc, dataset, **kwargs)
 
@@ -79,7 +81,7 @@ class PyTransit_Dynamical(AbstractModel, AbstractTransit, AbstractDynamical):
         if x0_input is None:
             t = np.asarray(dataset.x) # for convenience
         else:
-            t = np.asarray(x0_input + dataset.Tref) # add the reference time to the input time
+            t = np.asarray(x0_input + self.Tref) # add the reference time to the input time
 
         f0 = np.zeros_like(t) # create a model at 0.0 for all time points
 
@@ -91,7 +93,7 @@ class PyTransit_Dynamical(AbstractModel, AbstractTransit, AbstractDynamical):
         n_tra = np.sum(tra_in_t)
 
 
-        self.update_parameter_values(parameter_values, dataset.Tref)
+        self.update_parameter_values(parameter_values)
 
         if parameter_values['i'] == 0.0:
             return f0

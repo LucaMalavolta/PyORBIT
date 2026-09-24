@@ -263,7 +263,7 @@ class RossiterMcLaughlin_Exomoon(AbstractModel, AbstractTransit):
         :param x0_input:
         :return:
         """
-        self.update_parameter_values(parameter_values, dataset.Tref)
+        self.update_parameter_values(parameter_values)
 
         for key, key_val in parameter_values.items():
             if np.isnan(key_val):
@@ -357,4 +357,3 @@ class RossiterMcLaughlin_Exomoon(AbstractModel, AbstractTransit):
                 except:
                     rv_rml[i_obs] = 0.00
         return rv_rml
-

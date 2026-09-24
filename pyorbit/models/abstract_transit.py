@@ -59,6 +59,8 @@ class AbstractTransit(object):
         except AttributeError:
             self.default_Omega = 0.00
 
+        self.Tref = mc.Tref
+
     def _prepare_star_parameters(self, mc, **kwargs):
         """ Additional stellar parameters
         """
@@ -258,8 +260,13 @@ class AbstractTransit(object):
 
     """ function for internal transformation of parameters """
 
-    def update_parameter_values(self, parameter_values, Tref, prepend=''):
+    def update_parameter_values(self, parameter_values, input_prepend=''):
 
+        if input_prepend == '':
+            prepend = ''
+        else:
+            prepend = input_prepend + '__'
+        
         parameter_values[prepend+'Omega'] = parameter_values.get(prepend+'Omega', self.default_Omega)
 
         #t1_start = process_time()

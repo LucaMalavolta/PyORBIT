@@ -134,8 +134,6 @@ class Orbitize(AbstractModel, AbstractAstrometry):
         n_param = len(this_system.labels)
         param_model = np.zeros(n_param) 
 
-        #self.update_parameter_values_for_astrometry(self.parameter_values, self.Tref)
-
         for i0_planet, planet_name in enumerate(planet_list):
             i_planet = i0_planet + 1 
             prepend = planet_name + '__'

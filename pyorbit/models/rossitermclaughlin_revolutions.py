@@ -105,7 +105,7 @@ class RossiterMcLaughlin_Revolutions(AbstractModel, AbstractTransit):
         :param x0_input:
         :return:
         """
-        self.update_parameter_values(parameter_values, dataset.Tref)
+        self.update_parameter_values(parameter_values)
         for key, key_val in parameter_values.items():
             if np.isnan(key_val):
                 return 0.
@@ -270,4 +270,3 @@ class RossiterMcLaughlin_Revolutions(AbstractModel, AbstractTransit):
 
         else:
             return matrix
-

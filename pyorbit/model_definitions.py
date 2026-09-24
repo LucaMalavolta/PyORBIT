@@ -333,7 +333,10 @@ model_requires_exomoon = ['rossiter_mclaughlin_exomoon']
 
 model_requires_star = ['rossiter_mclaughlin','transit_times', 'gaussian_process', 'rossiter_mclaughlin_exomoon'
                        'multidimensional_gaussian_process', 'orbitize', 'gaia_astrometry_orbit', 'gaia_astrometry_baseline']
+
+model_requires_secondary_star = ['radial_velocities_primary', 'radial_velocities_secondary', 'eclipsing_binary']
 #model_requires_multiple_planets = ['rossiter_mclaughlin']
+
 model_requires_multiple_planets = []
 
 #model_requires_spectrograph = ['rossiter_mclaughlin', 'rossitermclaughlin_pyarome', 'rossitermclaughlin_arome', 'rossitermclaughlin_pyarome_test']

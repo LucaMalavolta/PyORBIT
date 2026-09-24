@@ -367,7 +367,7 @@ class CommonExomoons(AbstractCommon):
         return False
 
 
-    def update_parameter_values_for_dynamical(self, parameter_values, Tref, input_prepend=''):
+    def update_parameter_values_for_dynamical(self, parameter_values, input_prepend=''):
 
         if input_prepend == '':
             prepend = ''
@@ -380,12 +380,12 @@ class CommonExomoons(AbstractCommon):
                 parameter_values[prepend+'em_mean_long'],
                 parameter_values[prepend+'em_e'],
                 parameter_values[prepend+'em_omega'],
-                parameter_values[prepend+'em_Omega']) + Tref
+                parameter_values[prepend+'em_Omega']) + self.Tref
 
         if self.compute_mean_longitude:
             parameter_values[prepend+'em_mean_long'] = kepler_exo.kepler_compute_meanlong_from_deltaTc(
                 parameter_values[prepend+'em_P'],
-                parameter_values[prepend+'em_Tc'] - Tref,
+                parameter_values[prepend+'em_Tc'] - self.Tref,
                 parameter_values[prepend+'em_e'],
                 parameter_values[prepend+'em_omega'],
                 parameter_values[prepend+'em_Omega'])

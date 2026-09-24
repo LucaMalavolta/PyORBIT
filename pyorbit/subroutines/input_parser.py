@@ -454,6 +454,7 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, reload_af
         except TypeError:
             temporary_model = define_type_to_class[model_type]['circular'](model_name, None)
 
+        #TODO here possible check for models requiring a binary companion
 
         #if model_type in model_requires_planets or model_type in single_planet_model:
 

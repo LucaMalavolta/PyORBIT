@@ -110,7 +110,7 @@ class RossiterMcLaughlin_Revolutions_Faster(AbstractModel, AbstractTransit):
         :param x0_input:
         :return:
         """
-        self.update_parameter_values(parameter_values, dataset.Tref)
+        self.update_parameter_values(parameter_values)
 
         for key, key_val in parameter_values.items():
             if np.isnan(key_val):
@@ -294,4 +294,3 @@ class RossiterMcLaughlin_Revolutions_Faster(AbstractModel, AbstractTransit):
         # gauss_2d = 1 - constrast_2d * np.exp(-rv_zero**2 / (2*sigma_2d**2) )
 
         return mean_vstar + conv_rvstar
-

@@ -357,20 +357,17 @@ class ModelContainer(object):
                     theta, dataset_name)
 
                 parameter_values = {}
+
                 for common_ref in self.models[model_name].common_ref:
                     parameter_values.update(
                         self.common_models[common_ref].convert(theta))
 
+                #TODO: here, possible check for models requiring a secondary star
+                if getattr(self.models[model_name], 'requires_secondary_star', False):
+                    binary_ref = self.models[model_name].binary_ref
+                    parameter_values.update(
+                        self.common_models[binary_ref].convert_with_name(theta, 'bin'))
 
-                #TODO: remove try-except starting from PyORBIT version 12 !!
-                #TODO: maybe remove multiple_planets at all becuase ot causes some discrepancies in the way 
-                #TODO: planetary parameters are dealt with 
-                #try:
-                #    for planet_name in self.models[model_name].multiple_planets:
-                #        parameter_values.update(
-                #            self.common_models[planet_name].convert_with_name(theta, planet_name))
-                #except TypeError:
-                #    pass
 
                 parameter_values.update(
                     self.models[model_name].convert(theta, dataset_name))

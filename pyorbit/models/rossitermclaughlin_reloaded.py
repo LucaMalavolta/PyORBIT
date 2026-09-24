@@ -62,7 +62,7 @@ class RossiterMcLaughlin_Reloaded(AbstractModel, AbstractTransit):
         :param x0_input:
         :return:
         """
-        self.update_parameter_values(parameter_values, dataset.Tref)
+        self.update_parameter_values(parameter_values)
 
         for key, key_val in parameter_values.items():
             if np.isnan(key_val):
@@ -214,4 +214,3 @@ class RossiterMcLaughlin_Reloaded(AbstractModel, AbstractTransit):
             mean_vstar[i_obs] = vstarI_sum/I_sum
 
         return mean_vstar
-

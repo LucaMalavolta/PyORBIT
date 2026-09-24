@@ -225,7 +225,7 @@ class RossiterMcLaughlin_MultiPlanets_Legacy(AbstractModel, AbstractTransit):
                 return 0.
 
         for planet_name in self.multiple_planets:
-            self.update_parameter_values(parameter_values, dataset.Tref, planet_name+'_' )
+            self.update_parameter_values(parameter_values, input_prepend=planet_name )
 
 
         if x0_input is None:

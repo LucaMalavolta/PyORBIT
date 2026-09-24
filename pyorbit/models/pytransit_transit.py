@@ -74,7 +74,7 @@ class PyTransit_Transit(AbstractModel, AbstractTransit):
         :return:
         """
 
-        self.update_parameter_values(parameter_values, dataset.Tref)
+        self.update_parameter_values(parameter_values)
 
         if parameter_values['i'] == 0.0:
             return 0.
