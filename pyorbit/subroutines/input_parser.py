@@ -296,39 +296,36 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, reload_af
         if not isinstance(model_name, str):
             model_name = repr(model_name)
 
-        if model_name == 'planets':
+        if model_name == 'planets' or model_name == 'exomoons':
 
-            for planet_name, planet_conf in model_conf.items():
+            for body_name, body_conf in model_conf.items():
 
-                print('Adding common model of planet: ', planet_name)
+                print('Adding common model of {0:s}:  {1:s}'.format(model_name, body_name))
 
-                if not isinstance(planet_name, str):
-                    planet_name = repr(planet_name)
+                if not isinstance(body_name, str):
+                    body_name = repr(body_name)
 
-                mc.common_models[planet_name] = define_common_type_to_class['planets'](
-                    planet_name)
+                mc.common_models[body_name] = define_common_type_to_class[model_name](
+                    body_name)
 
                 bounds_space_priors_starts_fixed(
-                    mc, mc.common_models[planet_name], planet_conf)
+                    mc, mc.common_models[body_name], body_conf)
 
                 try:
-                    if planet_conf['ordering'] >=0:
-                        ordering_dict[planet_name] = planet_conf['ordering']
+                    if body_conf['ordering'] >=0:
+                        ordering_dict[body_name] = body_conf['ordering']
                 except:
                     pass
 
-                mc.common_models[planet_name].orbit = planet_conf['orbit']
+                mc.common_models[body_name].orbit = body_conf['orbit']
 
-                mc.common_models[planet_name].model_conf = planet_conf.copy()
+                mc.common_models[body_name].model_conf = body_conf.copy()
 
                 # special case for dynamical integration
-                if planet_conf['orbit'] == 'dynamical':
-                    mc.dynamical_dict[planet_name] = True
+                if body_conf['orbit'] == 'dynamical':
+                    mc.dynamical_dict[body_name] = True
 
-                    print(' Dynamical model for planet {0:s} is enabled'.format(planet_name))
-                    #print(' Forcing the use of inclination for photodynamical modelling')
-                    #mc.common_models[planet_name].model_conf['use_inclination'] = True
-
+                    print('    Dynamical model for {0:s} is enabled'.format(body_name))
 
 
         elif model_name == 'star' or model_name=='stars':
@@ -482,7 +479,10 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, reload_af
 
             except:
                 try:
-                    planet_list = np.atleast_1d(model_conf['planets']).tolist()
+                    try:
+                        planet_list = np.atleast_1d(model_conf['planets']).tolist()
+                    except:
+                        planet_list = np.atleast_1d(model_conf['planet']).tolist()
                 except:
                     planet_list = np.atleast_1d(model_conf['common']).tolist()
                 #TODO changed in PyORBIT version 12 beta
@@ -576,7 +576,7 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, reload_af
                     mc.models[model_name_exp].common_ref.append(common_name)
 
 
-                """ Adding the star by default, even if the model is not listes in model_requires_star, 
+                """ Adding the star by default, even if the model is not listed in model_requires_star,
                 because some models may require the stellar parameters for internal computations"""
 
                 try:
@@ -598,6 +598,18 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, reload_af
                         model_name_exp, common_name))
                     mc.models[model_name_exp].common_ref.append(common_name)
                     mc.models[model_name_exp].spectrograph_ref = common_name
+
+                """ Adding the exomoon common model if required by the model class"""
+                if mc.models[model_name_exp].model_class in model_requires_exomoon:
+                    try:
+                        common_name = model_conf['exomoon']
+                    except:
+                        common_name = 'exomoon'
+                    print('  model: {0:s} is using {1:s} exomoon parameters'.format(
+                        model_name_exp, common_name))
+                    mc.models[model_name_exp].common_ref.append(common_name)
+                    mc.models[model_name_exp].exomoon_ref = common_name
+
 
 
                 """ New addition in 9.2: complex models requiring star, planet, and limb darkening,

@@ -142,8 +142,11 @@ from pyorbit.models.gaiadr4_full import GaiaDR4AstrometricFull
 from pyorbit.models.gaiadr4_baseline import GaiaDR4AstrometricBaseline
 from pyorbit.models.gaiadr4_orbit import GaiaDR4AstrometricOrbit
 
+from pyorbit.models.rossitermclaughlin_exomoon import RossiterMcLaughlin_Exomoon
+
 define_common_type_to_class: dict[str, type[Any]] = {
     'planets': CommonPlanets,
+    'exomoons': CommonExomoons,
     'activity': CommonActivity,
     'polynomial_trend': CommonPolynomialTrend,
     'common_offset': CommonOffset,
@@ -287,6 +290,8 @@ define_type_to_class: dict[str, type[Any] | dict[str, type[Any]]] = {
     'rossitermclaughlin_reloaded_faster': RossiterMcLaughlin_Reloaded_Faster,
     'rossitermclaughlin_revolutions': RossiterMcLaughlin_Revolutions,
     'rossitermclaughlin_multiplanets_legacy': RossiterMcLaughlin_MultiPlanets_Legacy,
+    'rossitermclaughlin_exomoon': RossiterMcLaughlin_Exomoon,
+    'rml_exomoon': RossiterMcLaughlin_Exomoon,
     'polynomial_detrending': PolynomialDetrending,
     'exponential_detrending': ExponentialDetrending,
     'detrending': FullDetrending,
@@ -312,7 +317,7 @@ define_type_to_class: dict[str, type[Any] | dict[str, type[Any]]] = {
 model_requires_planets = ['radial_velocities', 'transit_times', 'transit', 'orbitize', 'gaia_astrometry_orbit',
                                 'transit_eclipse_phasecurve', 'rossiter_mclaughlin']
 
-single_planet_model = ['Tc_planets', 'transit_times']
+single_planet_model = ['Tc_planets', 'transit_times', 'rossiter_mclaughlin_exomoon']
 transit_time_model = ['Tc_planets', 'transit_times']
 
 model_requires_limb_darkening = ['transit',
@@ -320,15 +325,18 @@ model_requires_limb_darkening = ['transit',
                                 'spectral_rotation',
                                 'subset_spectral_rotation',
                                 'subset_spectral_rotation_polynomial',
-                                'rossiter_mclaughlin']
+                                'rossiter_mclaughlin',
+                                'rossiter_mclaughlin_exomoon']
 
-model_requires_star = ['rossiter_mclaughlin','transit_times', 'gaussian_process', 
+model_requires_exomoon = ['rossiter_mclaughlin_exomoon']
+
+model_requires_star = ['rossiter_mclaughlin','transit_times', 'gaussian_process', 'rossiter_mclaughlin_exomoon'
                        'multidimensional_gaussian_process', 'orbitize', 'gaia_astrometry_orbit', 'gaia_astrometry_baseline']
 #model_requires_multiple_planets = ['rossiter_mclaughlin']
 model_requires_multiple_planets = []
 
 #model_requires_spectrograph = ['rossiter_mclaughlin', 'rossitermclaughlin_pyarome', 'rossitermclaughlin_arome', 'rossitermclaughlin_pyarome_test']
-model_requires_spectrograph = ['rossiter_mclaughlin_test']
+model_requires_spectrograph = ['rossiter_mclaughlin', 'rossiter_mclaughlin_exomoon' ]
 
 star_properties_list = ['limb_darkening', 'dilution_factor']
 
