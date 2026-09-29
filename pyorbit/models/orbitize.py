@@ -96,6 +96,7 @@ class Orbitize(AbstractModel, AbstractAstrometry):
             self.hgca_lnprob = None
 
         self.Tref = mc.Tref
+        self.bjd_offset = mc.bjd_offset
 
     def initialize_model_parameters(self, mc, **kwargs):
 
@@ -138,9 +139,8 @@ class Orbitize(AbstractModel, AbstractAstrometry):
             i_planet = i0_planet + 1 
             prepend = planet_name + '__'
 
-            Tperi_MJD =  self.parameter_values[prepend+'Tperi'] + self.Tref - 2400000.5
+            Tperi_MJD =  self.parameter_values[prepend+'Tperi'] + self.Tref + self.bjd_offset - 2400000.5
             tau = orbitize.basis.tp_to_tau(Tperi_MJD, orbitize_tref, self.parameter_values[prepend+'P'])
-
             param_model[this_system.param_idx['sma'+repr(i_planet)]] = self.parameter_values[prepend+'a_AU']
             param_model[this_system.param_idx['ecc'+repr(i_planet)]] = self.parameter_values[prepend+'e']
             param_model[this_system.param_idx['inc'+repr(i_planet)]] = self.parameter_values[prepend+'i'] * constants.deg2rad
@@ -148,6 +148,7 @@ class Orbitize(AbstractModel, AbstractAstrometry):
             param_model[this_system.param_idx['pan'+repr(i_planet)]] = self.parameter_values[prepend+'Omega'] * constants.deg2rad
             param_model[this_system.param_idx['tau'+repr(i_planet)]] = tau
             param_model[this_system.param_idx['m'+repr(i_planet)]] = self.parameter_values[prepend+'M_Me'] * constants.Mears
+        #    print(self.parameter_values[prepend+'M_Me'], self.parameter_values[prepend+'M_Me'] * constants.Mears)
 
         param_model[this_system.param_idx['plx']] = self.parameter_values['parallax']
         param_model[this_system.param_idx['m0']] =  self.parameter_values['mass']

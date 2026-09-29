@@ -442,6 +442,13 @@ def get_planet_parameters(mc, theta, verbose=False):
                                                                            parameter_values['omega'],
                                                                            parameter_values['Omega'])
 
+                    derived_parameters['Tperi'] = True
+                    parameter_values['Tperi'] = kepler_exo.kepler_compute_deltaTperi_from_deltaTc(
+                        parameter_values['P'],
+                        parameter_values['Tc'] - mc.Tref,
+                        parameter_values['e'],
+                        parameter_values['omega']) + mc.Tref
+
             elif 'mean_long' in parameter_values.keys():
                 derived_parameters['Tc'] = True
                 parameter_values['Tc'] = mc.Tref + kepler_exo.kepler_compute_deltaTc_from_meanlong(parameter_values['P'],
@@ -449,6 +456,16 @@ def get_planet_parameters(mc, theta, verbose=False):
                                                                                   parameter_values['e'],
                                                                                   parameter_values['omega'],
                                                                                   parameter_values['Omega'])
+
+                derived_parameters['Tperi'] = True
+                parameter_values['Tperi'] = kepler_exo.kepler_compute_deltaTperi_from_meanlong(
+                        parameter_values['P'],
+                        parameter_values['mean_long'],
+                        parameter_values['e'],
+                        parameter_values['omega'],
+                        parameter_values['Omega']) + mc.Tref
+
+
 
             if 'R_Rs' in parameter_values.keys() and 'radius' in stellar_parameters.keys():
                 parameter_values['R_Rj'] = parameter_values['R_Rs'] * \

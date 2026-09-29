@@ -835,6 +835,15 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, reload_af
         for dataset_name in mc.dataset_dict:
             mc.dataset_dict[dataset_name].common_Tref(mc.Tref)
 
+    if 'time_offset' in conf_parameters: 
+        mc.bjd_offset = np.asarray(conf_parameters['time_offset'])
+    else:
+        mc.bjd_offset = 0.0
+
+    if 'bjd_offset' in conf_parameters: 
+        mc.bjd_offset = np.asarray(conf_parameters['bjd_offset'])
+
+
     if 'star_mass' in conf_parameters:
         mc.star_mass = np.asarray(
             conf_parameters['star_mass'][:], dtype=np.double)
