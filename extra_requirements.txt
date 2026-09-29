@@ -10,6 +10,15 @@ pyerfa >=2.0
 jaxlib ==0.4.31
 jax ==0.4.31
 tinygp >=0.3.0
+orbitize >= 3.4.0
+celerite >= 0.4.1
+meepmeep == 0.8.0
+pytransit == 2.6.18
+celerite2 == 0.2.1
+george >= 0.4.0
+###### nested sampling
+dynesty >= 3.1.0
+ultranest >= 3.4.4
 uncertainties
 lmfit
 ###### Requirements without Version Specifiers ######
@@ -33,16 +42,10 @@ batman-package
 schwimmbad
 ###### pytransit
 arviz
-celerite >= 0.4.1
 corner
-meepmeep == 0.8.0
-pytransit == 2.6.18
+
 ###### GP regression
-celerite2 == 0.2.1
-george >= 0.4.0
-###### nested sampling
-dynesty == 2.1.5
-ultranest >= 3.4.4
+
 ###### RML
 pyastronomy
 #starry >= 1.2.0

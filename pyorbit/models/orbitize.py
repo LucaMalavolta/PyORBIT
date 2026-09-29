@@ -200,8 +200,9 @@ class Orbitize(AbstractModel, AbstractAstrometry):
             lnlikes_sum += custom_lnlike(param_model)
 
         if this_system.hipparcos_IAD is not None:
+
             # compute Ra/Dec predictions at the Hipparcos IAD epochs
-            raoff_model, deoff_model, _ = this_system.compute_all_orbits(
+            raoff_model, deoff_model, _, _ = this_system.compute_all_orbits(
                 param_model, epochs=this_system.hipparcos_IAD.epochs_mjd
             )
 
@@ -209,6 +210,7 @@ class Orbitize(AbstractModel, AbstractAstrometry):
                 raoff_model_hip_epoch,
                 deoff_model_hip_epoch,
                 _,
+                _
             ) = this_system.compute_all_orbits(
                 param_model, epochs=Time([1991.25], format="decimalyear").mjd
             )
@@ -234,7 +236,7 @@ class Orbitize(AbstractModel, AbstractAstrometry):
             ).mjd
 
             # compute Ra/Dec predictions at the Gaia epoch
-            raoff_model, deoff_model, _ = this_system.compute_all_orbits(
+            raoff_model, deoff_model, _, _ = this_system.compute_all_orbits(
                 param_model, epochs=gaiahip_epochs
             )
 
