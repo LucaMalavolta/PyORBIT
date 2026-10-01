@@ -67,30 +67,36 @@ class Orbitize(AbstractModel, AbstractAstrometry):
         self.accept_multiple_planets = True
         self.force_model_dataset_initialization = True
 
-
     def initialize_model(self, mc, **kwargs):
 
-
+        n_planets = kwargs.get('n_planets', 1)
         if kwargs.get('iad_filepath', False):
+
+            hipparcos_ID = kwargs.get('hipparcos_ID', False)
+            if not hipparcos_ID:
+                print("UNRECOVERABLE ERROR model {0:s} :".format(self.model_name))
+                print('To use IAD/HGCA fit, Hipparcos ID is required. Please provide the hipparcos_ID keyword')
+                raise ValueError()
+
             self.iad_filepath = kwargs.get('iad_filepath')
-            self.hipparcos_lnprob = hipparcos.HipparcosLogProb(self.iad_filepath, 4311, 1)
+            self.hipparcos_lnprob = hipparcos.HipparcosLogProb(self.iad_filepath, hipparcos_ID, n_planets)
         else:
             self.hipparcos_lnprob = None
 
         if kwargs.get('gost_filepath', False):
             if not kwargs.get('iad_filepath', False):
                 print("UNRECOVERABLE ERROR model {0:s} :".format(self.model_name))
-                print('To use HGCA fit, Hipparcos IAD data is required. Please provide the iad_filepath keyword')
+                print('To use IAD/HGCA fit, Hipparcos IAD data is required. Please provide the iad_filepath keyword')
                 raise ValueError()
 
             hipparcos_ID = kwargs.get('hipparcos_ID', False)
             if not hipparcos_ID:
                 print("UNRECOVERABLE ERROR model {0:s} :".format(self.model_name))
-                print('To use HGCA fit, Hipparcos ID is required. Please provide the hipparcos_ID keyword')
+                print('To use IAD/HGCA fit, Hipparcos ID is required. Please provide the hipparcos_ID keyword')
                 raise ValueError()
 
             self.gost_filepath = kwargs.get('gost_filepath')
-            self.hgca_lnprob = gaia.HGCALogProb(4311, self.hipparcos_lnprob, self.gost_filepath)
+            self.hgca_lnprob = gaia.HGCALogProb(hipparcos_ID, self.hipparcos_lnprob, self.gost_filepath)
             self.hipparcos_lnprob = None
         else:
             self.hgca_lnprob = None
@@ -138,8 +144,8 @@ class Orbitize(AbstractModel, AbstractAstrometry):
         for i0_planet, planet_name in enumerate(planet_list):
             i_planet = i0_planet + 1 
             prepend = planet_name + '__'
-
             Tperi_MJD =  self.parameter_values[prepend+'Tperi'] + self.Tref + self.bjd_offset - 2400000.5
+
             tau = orbitize.basis.tp_to_tau(Tperi_MJD, orbitize_tref, self.parameter_values[prepend+'P'])
             param_model[this_system.param_idx['sma'+repr(i_planet)]] = self.parameter_values[prepend+'a_AU']
             param_model[this_system.param_idx['ecc'+repr(i_planet)]] = self.parameter_values[prepend+'e']
