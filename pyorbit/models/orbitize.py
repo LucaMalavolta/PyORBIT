@@ -12,7 +12,7 @@ try:
         from orbitize import DATADIR, hipparcos, gaia
         import orbitize.kepler
         import orbitize.lnlike
-        from orbitize import read_input, system, priors
+        from orbitize import read_input, system, priors, sampler
 except ImportError:
         pass
 
@@ -132,6 +132,8 @@ class Orbitize(AbstractModel, AbstractAstrometry):
             self.data_table,
             self.parameter_values['mass'],
             self.parameter_values['parallax'],
+            mass_err=0.,
+            plx_err=0.,
             tau_ref_epoch=orbitize_tref,
             fit_secondary_mass=True,
             hipparcos_IAD = self.hipparcos_lnprob,
@@ -140,6 +142,8 @@ class Orbitize(AbstractModel, AbstractAstrometry):
 
         n_param = len(this_system.labels)
         param_model = np.zeros(n_param) 
+
+        #print(this_system.param_idx)
 
         for i0_planet, planet_name in enumerate(planet_list):
             i_planet = i0_planet + 1 
@@ -150,14 +154,39 @@ class Orbitize(AbstractModel, AbstractAstrometry):
             param_model[this_system.param_idx['sma'+repr(i_planet)]] = self.parameter_values[prepend+'a_AU']
             param_model[this_system.param_idx['ecc'+repr(i_planet)]] = self.parameter_values[prepend+'e']
             param_model[this_system.param_idx['inc'+repr(i_planet)]] = self.parameter_values[prepend+'i'] * constants.deg2rad
-            param_model[this_system.param_idx['aop'+repr(i_planet)]] = self.parameter_values[prepend+'omega'] * constants.deg2rad
+            param_model[this_system.param_idx['aop'+repr(i_planet)]] = self.parameter_values[prepend+'omega'] * constants.deg2rad + np.pi
             param_model[this_system.param_idx['pan'+repr(i_planet)]] = self.parameter_values[prepend+'Omega'] * constants.deg2rad
             param_model[this_system.param_idx['tau'+repr(i_planet)]] = tau
             param_model[this_system.param_idx['m'+repr(i_planet)]] = self.parameter_values[prepend+'M_Me'] * constants.Mears
-        #    print(self.parameter_values[prepend+'M_Me'], self.parameter_values[prepend+'M_Me'] * constants.Mears)
+            #print(self.parameter_values[prepend+'M_Me'], self.parameter_values[prepend+'M_Me'] * constants.Mears)
+
+            #print("param_model mi= ", param_model[this_system.param_idx['m'+repr(i_planet)]])
 
         param_model[this_system.param_idx['plx']] = self.parameter_values['parallax']
         param_model[this_system.param_idx['m0']] =  self.parameter_values['mass']
+            
+        #print("param_model m0= ", param_model[this_system.param_idx['m0']])
+        #quit()
+        # MCMC parameters
+        # for demonstration purposes only. You will need to increase these likely
+        n_temps = 2
+        n_walkers = 50
+        n_threads = 1
+        burn_steps = 1
+        total_orbits = 100 * n_walkers
+        
+        # create the sampler, run it, and save posteriors
+        this_sampler = sampler.MCMC(this_system, n_temps, n_walkers, n_threads)
+
+        #print(param_model)
+        
+        lnlikes = this_sampler._logl(param_model)
+        #print("lnlikes = ", lnlikes)
+        #quit()
+        return lnlikes
+
+    def deprecated_loglikelihood(self, planet_list, dataset):
+
 
         #print("param_model = ", param_model)
         #print("this_system.param_idx = ", this_system.param_idx)

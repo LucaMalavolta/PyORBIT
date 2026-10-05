@@ -68,7 +68,6 @@ class DynamicalIntegrator:
         self.dynamical_integrator = 'TRADES'
 
         self.dynamical_set = {}
-        self.rv_dataset_idbool = {}
         self.t0_planet_idflag = {}
         self.planet_idflag = {}
 
@@ -123,13 +122,7 @@ class DynamicalIntegrator:
             elif dataset.kind == 'transit_time':
                 int_buffer['t0_time'].extend(dataset.x.tolist())
 
-        """ Creating the flag array after all the RV epochs have been mixed
-        """
-        for dataset_name, dataset in mc.dataset_dict.items():
-            if dataset.dynamical is False: continue
-            if dataset.kind == 'radial_velocity':
-                self.rv_dataset_idbool[dataset_name] = \
-                    (np.asarray(int_buffer['rv_ref']) == int_buffer['key_ref'][dataset_name])
+        self.dataset_key_ref = int_buffer['key_ref']
 
         try:
             rv_minmax = [np.amin(int_buffer['rv_time']), np.amax(int_buffer['rv_time'])]
@@ -170,6 +163,7 @@ class DynamicalIntegrator:
 
         self.rv_epochs_argsort = np.argsort(int_buffer['rv_time'])
         self.rv_epochs = np.asarray(int_buffer['rv_time'], dtype=np.float64)[self.rv_epochs_argsort]
+        self.rv_epochs_reference = np.asarray(int_buffer['rv_ref'])
 
         pytrades.args_init(
             self.n_body, # mandatory
@@ -266,7 +260,7 @@ class DynamicalIntegrator:
 
             parameter_values = mc.common_models[planet_name].convert(theta)
             parameter_values.update(star_parameters)
-            mc.common_models[planet_name].update_parameter_values_for_dynamical(parameter_values, self.ti_ref)
+            mc.common_models[planet_name].update_parameter_values_for_dynamical(parameter_values)
 
             if self.tc_comparison_set[planet_name] is not None:
                 new_idx =  np.round((self.tc_comparison_set[planet_name][:,1] - parameter_values['Tc'])/parameter_values['P'])
@@ -382,7 +376,10 @@ class DynamicalIntegrator:
 
             if dataset.kind == 'radial_velocity':
                 if x_input is None:
-                    output[dataset_name] = rv_sorted[self.rv_dataset_idbool[dataset_name]]
+
+                    sel = (self.rv_epochs_reference == self.dataset_key_ref[dataset_name])
+
+                    output[dataset_name] = rv_sorted[sel]
                 else:
                     output[dataset_name] = rv_sorted
 

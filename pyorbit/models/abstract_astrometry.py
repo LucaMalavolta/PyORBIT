@@ -63,11 +63,11 @@ class AbstractAstrometry(object):
                 sin_i = abs(np.sin(parameter_values[prepend+"i"]*constants.deg2rad))
                 parameter_values[prepend+'M_Me'] = kepler_exo.kepler_get_planet_mass(
                     parameter_values[prepend+'P'],
-                    parameter_values[prepend+'K']/sin_i,
+                    parameter_values[prepend+'K'],
                     parameter_values[prepend+'e'],
                     parameter_values['mass'],
                     approximation_limit=10,
-                    verbose=False) * constants.Msear
+                    verbose=False) * constants.Msear / sin_i
 
             parameter_values[prepend+'a_AU']= convert_PMsMp_to_a(
                     parameter_values[prepend+'P'],
@@ -100,11 +100,11 @@ class AbstractAstrometry(object):
                 sin_i = abs(np.sin(parameter_values[prepend+"i"]*constants.deg2rad))
                 parameter_values[prepend+'M_Me'] = kepler_exo.kepler_get_planet_mass(
                     parameter_values[prepend+'P'],
-                    parameter_values[prepend+'K']/sin_i,
+                    parameter_values[prepend+'K'],
                     parameter_values[prepend+'e'],
                     parameter_values['mass'],
                     approximation_limit=10,
-                    verbose=False) * constants.Msear
+                    verbose=False) * constants.Msear / sin_i
 
         if self.compute_time_inferior_conjunction:
             parameter_values[prepend+'Tc']= kepler_exo.kepler_compute_deltaTc_from_meanlong(
