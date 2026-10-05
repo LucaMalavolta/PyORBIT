@@ -130,6 +130,10 @@ prepare_yaml
 running_pyorbit
 common_objects
 models
+detrending_models
+cheops_detrending
+astrometry
+rossiter_mclaughlin
 transit_models
 gaussian_process_regression
 multidimensional_gps
