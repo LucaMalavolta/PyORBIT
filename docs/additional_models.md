@@ -1,0 +1,23 @@
+(additional_models)=
+
+# Additional models
+
+These models will use a mixture of *common parameters* and *dataset-specific
+parameters* to model a dataset
+
+```{note}
+All the parameters are inherited from the *common models*, where the boundaries and other properties are defined. The distinction between *common parameter* and *dataset parameter* happen at this stage and can be changed for each model. A compact list of default boundaries, spaces, and priors is available in [Default boundaries, spaces, and priors](running_pyorbit/parameter_defaults.md).
+```
+
+```{toctree}
+:maxdepth: 1
+models/correlated_datasets
+models/common_offset
+models/common_jitter
+models/polynomial_trends
+models/harmonics
+models/sinusoid
+models/sinusoid_common_period
+models/sinusoid_polynomial_modulation
+models/local_correlated_jitter
+```
