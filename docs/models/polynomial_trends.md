@@ -25,7 +25,7 @@ correlations among its coefficients.
 By default, polynomial trends are additive. They can instead be applied as a
 normalization model by setting `normalization_model: True`.
 
-## Available models
+## Model definition and requirements
 
 The four implementations use the same polynomial expression but differ in how
 their parameters are shared:
@@ -43,6 +43,22 @@ The alias `polynomial_trend_subset` is also accepted for
 All four models use the `polynomial_trend` common object. PyORBIT creates this
 object automatically when it is not explicitly included in the `common`
 section.
+
+## Model parameters
+
+| Name | Scope | Models | Definition |
+| --- | --- | --- | --- |
+| `x_zero` | common | `polynomial_trend`, `shared_polynomial_trend` | Reference time $x_0$. |
+| `x_zero` | dataset | `local_polynomial_trend` | Dataset-specific reference time $x_0$. |
+| `x_zero_subN` | subset | `subset_polynomial_trend` | Reference time for subset `N`. |
+| `poly_cN` | common | `polynomial_trend`, `shared_polynomial_trend` | Coefficient $c_N$ of the shared polynomial. |
+| `poly_cN` | dataset | `local_polynomial_trend` | Dataset-specific coefficient $c_N$. |
+| `poly_subM_cN` | subset | `subset_polynomial_trend` | Coefficient $c_N$ for subset `M`. |
+| `poly_factor` | dataset | `shared_polynomial_trend` | Multiplicative amplitude of the shared polynomial. |
+| `x_offset` | dataset | `shared_polynomial_trend` | Dataset-specific time translation. |
+
+Default boundaries, spaces and priors are listed in
+[Boundaries, spaces, and priors](../running_pyorbit/parameter_defaults.md#polynomial-and-detrending-models).
 
 ## Keywords
 
@@ -248,19 +264,3 @@ models:
     order: 2
     time_interval: 1.0
 ```
-
-## Model parameters
-
-| Name | Scope | Models | Definition |
-| --- | --- | --- | --- |
-| `x_zero` | common | `polynomial_trend`, `shared_polynomial_trend` | Reference time $x_0$. |
-| `x_zero` | dataset | `local_polynomial_trend` | Dataset-specific reference time $x_0$. |
-| `x_zero_subN` | subset | `subset_polynomial_trend` | Reference time for subset `N`. |
-| `poly_cN` | common | `polynomial_trend`, `shared_polynomial_trend` | Coefficient $c_N$ of the shared polynomial. |
-| `poly_cN` | dataset | `local_polynomial_trend` | Dataset-specific coefficient $c_N$. |
-| `poly_subM_cN` | subset | `subset_polynomial_trend` | Coefficient $c_N$ for subset `M`. |
-| `poly_factor` | dataset | `shared_polynomial_trend` | Multiplicative amplitude of the shared polynomial. |
-| `x_offset` | dataset | `shared_polynomial_trend` | Dataset-specific time translation. |
-
-Default boundaries, spaces and priors are listed in
-[Boundaries, spaces, and priors](../running_pyorbit/parameter_defaults.md#polynomial-and-detrending-models).

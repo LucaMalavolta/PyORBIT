@@ -10,6 +10,19 @@ The `sinusoid` and `local_sinusoid` models add a single sinusoidal signal to a
 dataset. They use the parameters `sine_period`, `sine_amp` and `sine_phase`,
 with the phase expressed in degrees.
 
+See also [Sinusoid with a common period](sinusoid_common_period.md) and
+[Polynomially modulated sinusoid](sinusoid_polynomial_modulation.md).
+
+## Model definition and requirements
+
+- model names: `sinusoid` and `local_sinusoid`
+- both use the automatically associated `sinusoid` common object.
+
+Use `sinusoid` when exactly the same wave should be added to all attached datasets.
+Use `local_sinusoid` when every dataset needs independent parameters.
+
+## Model parameters
+
 The two models differ only in parameter scope:
 
 | Model | Period | Amplitude | Phase |
@@ -17,11 +30,14 @@ The two models differ only in parameter scope:
 | `sinusoid` | common | common | common |
 | `local_sinusoid` | dataset | dataset | dataset |
 
-Both use the automatically associated `sinusoid` common object. Use
-`sinusoid` when exactly the same wave should be added to all attached datasets.
-Use `local_sinusoid` when every dataset needs independent parameters.
+The default period boundaries are 0.4 to 100000 days and use a base-2 logarithmic sampling
+space; practical analyses should normally use narrower boundaries.
 
-## Example
+## Keywords
+
+There are no model-wide keywords. Use the `model` field to choose whether all parameters are common or dataset-specific.
+
+## Examples
 
 ```yaml
 inputs:
@@ -43,13 +59,8 @@ models:
       sine_phase: [0.0, 360.0]
 ```
 
-Changing `model` to `sinusoid` makes all three parameters common. The default
-period boundaries are 0.4 to 100000 days and use a base-2 logarithmic sampling
-space; practical analyses should normally use narrower boundaries.
+Changing `model` to `sinusoid` makes all three parameters common.
 
 No dedicated sinusoidal-model configuration is currently present in the
 [PyORBIT examples repository](https://github.com/LucaMalavolta/PyORBIT_examples);
 the snippet is a minimal configuration sketch following the same YAML layout.
-
-See also [Sinusoid with a common period](sinusoid_common_period.md) and
-[Polynomially modulated sinusoid](sinusoid_polynomial_modulation.md).

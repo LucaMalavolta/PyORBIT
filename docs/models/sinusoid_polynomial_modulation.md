@@ -17,25 +17,50 @@ f(t) = A\,\sin\!\left(\frac{t-T_\mathrm{ref}}{P}-\phi\right)
 \left(\frac{t-x_0-x_\mathrm{offset}}{\Delta t}\right)^k .
 ```
 
+## Model definition and requirements
+
+- model name: `sinusoid_polynomial_modulation`
+- uses the automatically associated `sinusoid` common object.
+
+## Model parameters
+
 The implementation uses `sine_period` directly in the sine argument. The
 polynomial coefficients `poly_cN`, `sine_period`, `sine_phase` and `x_zero`
 are common; `sine_amp` and the optional `x_offset` are dataset-specific.
 
+The constant coefficient `poly_c0` is fixed to one.
+
 ## Keywords
 
-| Keyword | Default | Meaning |
-| --- | --- | --- |
-| `order` | `1` | highest polynomial order |
-| `time_interval` | `1.0` | scale $\Delta t$ applied to the polynomial coordinate |
-| `time_offset` | `False` | enable the local `x_offset` parameter |
-| `reference_dataset` | none | dataset whose `x_offset` is fixed to zero |
-| `x_zero` | automatic | polynomial reference epoch |
+Model-wide keywords, with the default value in boldface.
 
-The constant coefficient `poly_c0` is fixed to one. If `x_zero` is omitted,
+**order**
+* accepted values: integer | **`1`**
+* highest polynomial order.
+
+**time_interval**
+* accepted values: number | **`1.0`**
+* scale $\Delta t$ applied to the polynomial coordinate.
+
+**time_offset**
+* accepted values: `True` | **`False`**
+* enable the local `x_offset` parameter.
+
+**reference_dataset**
+* accepted values: dataset name | **not set**
+* dataset whose `x_offset` is fixed to zero.
+
+**x_zero**
+* accepted values: epoch | **automatically selected**
+* polynomial reference epoch.
+
+
+
+If `x_zero` is omitted,
 PyORBIT selects `Tref` when it lies inside a dataset and otherwise uses an
 average epoch.
 
-## Example
+## Examples
 
 ```yaml
 models:

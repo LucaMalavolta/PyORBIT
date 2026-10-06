@@ -26,7 +26,6 @@ Whit a single dataset, the terms  $ \gamma^{(G,dG)}(t_i, t_j)$ and  $ \gamma^{(d
 
 This model can be useful when a single dataset needs a more flexible stellar-activity covariance than the standard quasi-periodic kernel, without switching to a multidimensional GP where the first derivative is usually employed.
 
-
 ## Model definition and requirements
 
 The fastest implementation relies on `tinyGP`, but it requires a few extra tricks in the configuration file and execution (see [Caveats on the use of `tinyGP`](../running_pyorbit/tinygp_caveats)). If you use this model, cite the [Zenodo repository](https://zenodo.org/records/19035246).
@@ -44,7 +43,6 @@ An independent implementation that relies only on basic packages is maintained f
 - required common object: `activity`
 - *direct* implementation relying only on `numpy` and `scipy`
 - independent covariance matrix for each dataset
-
 
 ## Model parameters
 
@@ -84,7 +82,7 @@ Model-wide keywords, with the default value in boldface.
 * accepted values: `True` | **`False`**
 * replaces `Pdec` with `activity_decay` from `star_parameters`.
 
-## Example
+## Examples
 
 ```yaml
 inputs:
@@ -110,5 +108,3 @@ models:
       Hamp: [0.0, 100.0]
       Camp: [0.0, 100.0]
 ```
-
-

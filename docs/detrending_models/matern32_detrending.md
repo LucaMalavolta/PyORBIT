@@ -11,23 +11,45 @@ model. It is an internal-likelihood Gaussian process whose input coordinates
 are the selected ancillary variables rather than observation time. The kernel
 is a multidimensional Matérn-3/2 kernel implemented with `george`.
 
-## Requirements and parameters
+## Model definition and requirements
 
+- model names: `matern32_detrending` and `detrending_matern32`
 - external package: `george`
-- required keyword: `detrending_variables`
+- uses a labelled ancillary file with the variables named in `detrending_variables`.
+
+Because this model supplies the dataset likelihood, do not attach another
+independent-likelihood GP to the same dataset without checking how the two
+likelihood components are combined.
+
+## Model parameters
+
 - amplitude: `det_m32_sigma`
 - one length scale per variable: `det_<variable>_m32_rho`
 
-By default the amplitude and length scales are dataset-specific. Set
-`local_model: False`, `use_common_parameters: True`, `common_parameters: True`,
-`use_common_model: True` or `common_model: True` to place them in the shared
-`detrending` common object.
+By default the amplitude and length scales are dataset-specific.
 
-`standardize: True` centers every ancillary coordinate and divides it by its
-standard deviation before constructing the kernel. When enabled, the inferred
-length scales refer to standardized units.
+The generic `det_m32_rho` properties are transferred to
+`det_airmass_m32_rho`, `det_fwhm_m32_rho` and
+`det_background_m32_rho`. They can also be overridden by their generated
+names.
 
-## Example
+## Keywords
+
+Model-wide keywords, with the default value in boldface where applicable.
+
+**detrending_variables**
+* accepted values: list of ancillary-variable names
+* required; selects the input coordinates of the GP.
+
+**standardize**
+* accepted values: `True` | **`False`**
+* centers and scales each ancillary coordinate to unit standard deviation; inferred length scales then use standardized units.
+
+**local_model**
+* accepted values: **`True`** | `False`
+* keeps the amplitude and length scales dataset-specific. Set it to `False` to share them through the `detrending` common object. The aliases `use_common_parameters`, `common_parameters`, `use_common_model`, and `common_model` can also select common parameters.
+
+## Examples
 
 ```yaml
 inputs:
@@ -52,14 +74,7 @@ models:
       det_m32_rho: [1.0e-3, 100.0]
 ```
 
-The generic `det_m32_rho` properties are transferred to
-`det_airmass_m32_rho`, `det_fwhm_m32_rho` and
-`det_background_m32_rho`. They can also be overridden by their generated
-names.
 
-Because this model supplies the dataset likelihood, do not attach another
-independent-likelihood GP to the same dataset without checking how the two
-likelihood components are combined.
 
 No dedicated ancillary Matérn-3/2 detrending file is currently present in the
 [PyORBIT examples repository](https://github.com/LucaMalavolta/PyORBIT_examples);

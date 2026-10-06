@@ -11,24 +11,42 @@
 multiplicative normalization component. The resulting diagnostic trend is
 multiplied by the dataset-specific `scale_factor`.
 
-## Time and roll-angle options
+## Model definition and requirements
 
-| Keyword | Default | Effect |
-| --- | --- | --- |
-| `fit_roll_angle` | `True` | include roll-angle harmonics through order 3 |
-| `fit_constant_trend` | `False` | omit `dfdt` and `d2fdt2` |
-| `fit_linear_trend` | `False` | include only `dfdt` |
+- model name: `cheops_factormodel`
+- uses the same CHEOPS diagnostic ancillary input as [`cheops_detrending`](cheops_detrending.md).
+
+The model recognizes `time`, `roll_angle`, `smear`, `deltaT`, `xoff`, `yoff`,
+`bg` and `contam` ancillary columns. Optional missing columns contribute zero.
+
+## Model parameters
+
+The default fixed value of `scale_factor` is one; it must be given boundaries
+or a prior if it is intended to vary.
+
+The diagnostic and roll-angle coefficients are dataset-specific, as in [`cheops_detrending`](cheops_detrending.md). The chosen time-trend mode adds `dfdt` and, when quadratic, `d2fdt2`.
+
+## Keywords
+
+Model-wide time and roll-angle keywords, with the default value in boldface.
+
+**fit_roll_angle**
+* accepted values: **`True`** | `False`
+* include roll-angle harmonics through order 3.
+
+**fit_constant_trend**
+* accepted values: `True` | **`False`**
+* omit `dfdt` and `d2fdt2`.
+
+**fit_linear_trend**
+* accepted values: `True` | **`False`**
+* include only `dfdt`.
 
 When neither time-trend keyword is enabled, the factor model includes both
 `dfdt` and `d2fdt2`. `fit_constant_trend` takes precedence over
 `fit_linear_trend`.
 
-The model recognizes `time`, `roll_angle`, `smear`, `deltaT`, `xoff`, `yoff`,
-`bg` and `contam` ancillary columns. Optional missing columns contribute zero.
-The default fixed value of `scale_factor` is one; it must be given boundaries
-or a prior if it is intended to vary.
-
-## Example
+## Examples
 
 ```yaml
 inputs:

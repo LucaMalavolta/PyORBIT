@@ -17,7 +17,9 @@ show the same four workflows described below: one file per transit, transit
 identifiers in a `subset` column, an external transit-time list, and ancillary
 columns carrying the transit identifiers.
 
-## Shared planet setup
+## Model definition and requirements
+
+### Shared planet setup
 
 TTV models force the planet to use inferior-conjunction times.  It is still good
 practice to state this explicitly in the planet common object:
@@ -34,11 +36,9 @@ The period `P` is still part of the planet common object.  It provides the
 linear ephemeris used to label or initialize transit events, while the observed
 mid-times are fitted as independent `Tc` parameters.
 
-The optional model keywords `Tc_boundaries`, `Tc_bounds` and `Tc_priors` can be
-used to override the default bounds or priors assigned to the fitted transit
-times.
 
-## Model families
+
+### Model families
 
 | Workflow | Batman model | PyTransit model | Transit-time parameters |
 | --- | --- | --- | --- |
@@ -52,11 +52,50 @@ The aliases `subset_batman_transit_ttv`, `subset_pytransit_transit_ttv`,
 `ancillary_batman_transit_ttv` and `ancillary_pytransit_transit_ttv` are also
 accepted.
 
-## Sharing transit times across datasets
+### Choosing the workflow
 
-By default, fitted TTV parameters can be local to each dataset/model instance.
-Set `use_shared_ttv: True` when the same transit time must be shared by multiple
-light curves, instruments or passbands.
+Use the one-dataset-per-transit models for small, already segmented light-curve
+sets.  Use `_subset` when a standard PyORBIT `subset` column already identifies
+the transit event.  Use `_tclist` when the event windows are easier to maintain
+outside the light-curve files, especially for multi-planet systems.  Use
+`_ancillary` when the transit IDs are already part of the data table or when
+different planets require different event labels in the same file.
+
+## Model parameters
+
+The planet common object supplies the period `P` and the usual transit-shape parameters: `R_Rs`, impact parameter or inclination, stellar density or `a_Rs`, eccentricity parametrization, and limb darkening. Each observed event receives an independently fitted `Tc`; its name and scope depend on the selected model family, as shown above.
+
+## Keywords
+
+Model-wide keywords and planet options:
+
+**planets**
+* accepted values: list of planet names
+* selects the planets included in the transit model.
+
+**limb_darkening**
+* accepted values: limb-darkening common-object name
+* selects the law used for the model light curve.
+
+**Tc_boundaries**, **Tc_bounds**, **Tc_priors**
+* accepted values: bounds or prior definitions
+* override the defaults assigned to fitted transit times.
+
+**use_shared_ttv**
+* accepted values: `True` | **`False`**
+* shares a fitted transit time across datasets when enabled; otherwise the parameters are local to each dataset/model instance.
+
+**minimum_number_of_observations**
+* accepted values: integer
+* skips listed transit windows with too few data points in `_tclist` models.
+
+**TTV_Tc_list**, **TTV_Tc_flag**
+* accepted values: transit-time list path or ancillary-column name, respectively
+* select the event list for `_tclist` models or the transit-ID column for `_ancillary` models in the planet common object.
+
+## Examples
+
+### Shared transit times across datasets
 
 ```yaml
 lc_model:
@@ -66,10 +105,12 @@ lc_model:
   use_shared_ttv: True
 ```
 
+
+
 This is especially useful for simultaneous multi-instrument observations and for
 multi-planet configurations where each planet has its own transit-time list.
 
-## One dataset per transit
+### One dataset per transit
 
 Use `batman_transit_ttv` or `pytransit_transit_ttv` when each input file contains
 one transit event.  This is the most explicit layout: every dataset gets its own
@@ -98,7 +139,7 @@ lc_model:
 Use this form when the light curves are already split by transit and no extra
 transit identifier column is needed.
 
-## TTVs from dataset subsets
+### TTVs from dataset subsets
 
 Use the `_subset` models when one file contains many transits and the dataset
 has a `subset` column identifying the event.  The example data in
@@ -129,7 +170,7 @@ lc_model_inst0:
 This layout is convenient when different instruments observe the same sequence
 of transits and the fitted `Tc_N` values must be common to all of them.
 
-## TTVs from an external transit-time list
+### TTVs from an external transit-time list
 
 Use the `_tclist` models when the expected transit windows are stored in a
 separate file.  The examples use a table with a planet label, transit
@@ -174,7 +215,7 @@ lc_model:
   use_shared_ttv: True
 ```
 
-## TTVs from ancillary transit flags
+### TTVs from ancillary transit flags
 
 Use the `_ancillary` models when the input file already includes one column that
 labels the transit number for each planet.  The two-planet examples use columns
@@ -203,12 +244,3 @@ lc_model:
 
 Rows with a negative flag are ignored; non-negative identifiers are mapped to
 the corresponding `Tc_N` parameter.
-
-## Choosing the workflow
-
-Use the one-dataset-per-transit models for small, already segmented light-curve
-sets.  Use `_subset` when a standard PyORBIT `subset` column already identifies
-the transit event.  Use `_tclist` when the event windows are easier to maintain
-outside the light-curve files, especially for multi-planet systems.  Use
-`_ancillary` when the transit IDs are already part of the data table or when
-different planets require different event labels in the same file.

@@ -11,7 +11,7 @@ absolute-astrometry products to the likelihood routines provided by
 [`orbitize!`](https://orbitize.readthedocs.io/). It can be combined with the
 PyORBIT radial-velocity likelihood and supports more than one planet.
 
-## Requirements
+## Model definition and requirements
 
 - external packages: `orbitize` and `astropy`
 - an external dataset in the input format accepted by `orbitize.read_input`
@@ -21,16 +21,31 @@ PyORBIT radial-velocity likelihood and supports more than one planet.
 
 The dataset must be declared with `external: True` and `kind: orbitize`.
 
-## Optional absolute astrometry
+## Model parameters
 
-| Keyword | Meaning |
-| --- | --- |
-| `iad_filepath` | Hipparcos intermediate astrometric data file |
-| `hipparcos_ID` | Hipparcos identifier; required with IAD or GOST data |
-| `gost_filepath` | Gaia Observation Forecast Tool file used for the HGCA likelihood; requires `iad_filepath` |
-| `n_planets` | number passed to the Hipparcos likelihood; default `1` |
+The model uses stellar `mass` (solar masses) and `parallax` (milliarcseconds), together with each planet's period `P`, eccentricity `e`, inclination `i`, argument of periastron `omega`, and longitude of the ascending node `Omega`. Planet mass and the chosen orbital phase parameter are also required by the orbitize fit. These are supplied through the `star` and `planets` common objects.
 
-## Example
+## Keywords
+
+Optional absolute-astrometry keywords, with defaults in boldface.
+
+**iad_filepath**
+* accepted values: path to a Hipparcos intermediate astrometric data file | **not set**
+* enables the Hipparcos IAD likelihood.
+
+**hipparcos_ID**
+* accepted values: Hipparcos identifier | **not set**
+* required when `iad_filepath` or `gost_filepath` is provided.
+
+**gost_filepath**
+* accepted values: path to a Gaia Observation Forecast Tool file | **not set**
+* enables the HGCA likelihood and requires `iad_filepath`.
+
+**n_planets**
+* accepted values: integer | **`1`**
+* number of planets passed to the Hipparcos likelihood.
+
+## Examples
 
 The following is adapted from
 [`astrometry/HD5388_test02.yaml`](https://github.com/LucaMalavolta/PyORBIT_examples/blob/main/astrometry/HD5388_test02.yaml):

@@ -10,7 +10,7 @@ The Gaia DR4 models predict an along-scan (AL) displacement in milliarcseconds.
 They project east and north sky offsets using the scan angle supplied for each
 epoch.
 
-## Available models and aliases
+## Model definition and requirements
 
 | Model | Components | Planets |
 | --- | --- | --- |
@@ -20,21 +20,10 @@ epoch.
 | `gaiadr4_astrometric_orbit` | alias of `gaiadr4_orbit` | one |
 | `gaiadr4_full` | baseline, parallax and reflex orbits | one or more |
 
-The baseline parameters are `offset_ra`, `offset_dec` in milliarcseconds,
-`pm_ra`, `pm_dec` in milliarcseconds per year, and `parallax` in
-milliarcseconds. Orbital models also use stellar mass and the planet's `P`,
-`M_Me`, `e`, `i`, `omega`, `Omega` and phase parameterization.
-
-## Required ancillary columns
+### Required ancillary columns
 
 - `scan_angle_deg` for all three model families
 - `parallax_factor_al` for `gaiadr4_baseline` and `gaiadr4_full`
-
-The default names can be changed with `scan_angle_column` and, for the
-baseline/full models, `parallax_factor_column`. The fixed scan convention is
-controlled by `scan_angle_sign` and `scan_angle_offset_deg`.
-`parallax_factor_sign` controls the parallax-factor convention in models that
-use that column. Signs default to positive and the angular offset to zero.
 
 For example:
 
@@ -45,7 +34,38 @@ For example:
 28.17   0.845
 ```
 
-## Full-model example
+## Model parameters
+
+The baseline parameters are `offset_ra`, `offset_dec` in milliarcseconds,
+`pm_ra`, `pm_dec` in milliarcseconds per year, and `parallax` in
+milliarcseconds. Orbital models also use stellar mass and the planet's `P`,
+`M_Me`, `e`, `i`, `omega`, `Omega` and phase parameterization.
+
+## Keywords
+
+Model-wide keywords, with defaults in boldface. The baseline and full models require a parallax-factor column; all models require a scan-angle column.
+
+**scan_angle_column**
+* accepted values: ancillary-column name | **`scan_angle_deg`**
+* selects the scan-angle values.
+
+**parallax_factor_column**
+* accepted values: ancillary-column name | **`parallax_factor_al`**
+* selects the parallax factors for `gaiadr4_baseline` and `gaiadr4_full`.
+
+**scan_angle_sign**
+* accepted values: number | **`1.0`**
+* sets the sign convention for the scan angle.
+
+**scan_angle_offset_deg**
+* accepted values: angle in degrees | **`0.0`**
+* adds an offset to the scan angle.
+
+**parallax_factor_sign**
+* accepted values: number | **`1.0`**
+* sets the parallax-factor sign convention in models that use that column.
+
+## Examples
 
 ```yaml
 inputs:

@@ -21,6 +21,14 @@ When `common_jitter` is applied to a dataset, the local jitter flags of that dat
 
 The jitter boundaries are estimated automatically from the formal uncertainties of the datasets using the model. If more than one dataset shares the same common jitter, the default boundary is expanded to include the uncertainty ranges of all of them.
 
+## Model parameters
+
+The following parameters will be inherited from the common model.
+
+| Name | Parameter | Common? | Definition | Notes |
+| :--- | :-------- | :------ | :--------- | :---- |
+| `jitter` | Extra white-noise term added in quadrature to the dataset errors | common | `common_jitter` | Same units as the dataset errors |
+
 ## Keywords
 
 There are no model-wide keywords.
@@ -83,11 +91,3 @@ common:
   common_jitter_Sindex:
     model: common_jitter
 ```
-
-## Model parameters
-
-The following parameters will be inherited from the common model.
-
-| Name | Parameter | Common? | Definition | Notes |
-| :--- | :-------- | :------ | :--------- | :---- |
-| `jitter` | Extra white-noise term added in quadrature to the dataset errors | common | `common_jitter` | Same units as the dataset errors |

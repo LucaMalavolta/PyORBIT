@@ -10,23 +10,42 @@
 constructs a CCF on a velocity grid and measures its displacement with a
 Gaussian fit. It predicts a classical radial-velocity anomaly for one planet.
 
-The implementation requires `lmfit`; `numba` is used when available. It also
-requires a `spectrograph` common object defining the CCF grid and broadening
-parameters.
+## Model definition and requirements
 
-## Model options
+- model name: `rossitermclaughlin_legacy`
+- requires `lmfit`, a spectrograph common object, and an input dataset with an
+  `exptime` ancillary column in seconds. `numba` is used when available.
 
-| Keyword | Default | Meaning |
-| --- | --- | --- |
-| `star_ngrid` | `101` | number of grid points along each stellar-disk axis |
-| `time_step` | `149` | integration step in seconds for finite exposures |
-| `limb_darkening` | `limb_darkening` | selected limb-darkening common object |
-| `spectrograph` | `spectrograph` | selected spectrograph common object |
+The spectrograph common object defines the CCF grid and broadening parameters.
 
-The input dataset needs an `exptime` ancillary column in seconds. Stellar-line
-mode uses the common `natural_contrast` and `natural_broadening`; an
-instrument-specific line instead uses `line_contrast` and `line_broadening`.
-The spectrograph also sets `rv_min`, `rv_max` and `rv_step` in km/s.
+## Model parameters
+
+The model uses the selected planet, stellar rotation and limb-darkening
+parameters. The spectrograph sets `rv_min`, `rv_max` and `rv_step` in km/s.
+Stellar-line mode uses `natural_contrast` and `natural_broadening`; an
+instrument-specific line uses `line_contrast` and `line_broadening`.
+
+## Keywords
+
+Model-wide keywords, with the default value in boldface.
+
+**star_ngrid**
+* accepted values: integer | **`101`**
+* number of grid points along each stellar-disk axis.
+
+**time_step**
+* accepted values: number in seconds | **`149`**
+* integration step for finite exposures.
+
+**limb_darkening**
+* accepted values: limb-darkening common-object name | **`limb_darkening`**
+* selects the limb-darkening common object.
+
+**spectrograph**
+* accepted values: spectrograph common-object name | **`spectrograph`**
+* selects the spectrograph common object.
+
+## Examples
 
 ```yaml
 common:

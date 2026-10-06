@@ -42,19 +42,22 @@ It is not possible to determine the value of the dilution factor from the datase
 
 In `PyORBIT`, the dilution factor will be added to the planetary transit model, where the baseline flux of the start (i.e., the out-of-transit flux) is assumed to be unitary. Hence, the complete *model* will have a baseline equal to $1. + d_{\mathrm{factor}}$.
 If you flattened your lightcurve with a filtering algorithm or divided it by a value to bring its average value around one, the higher baseline model due to the presence of the dilution factor will not match anymore the baseline flux of your observations. This difference must be absorbed by including a normalization factor, which will multiply the model in order to match the data. For example, if you have a dilution factor equal to $d=0.25$, the baseline of the model will be equal to $1.25$ (in units of target flux), the normalization factor will be equal to $1./1.25=0.80$, so that the combination of transit model plus dilution, all multiplied by the normalization facto, will match the value of the flattened lightcurve (ideally centered around 1.).
-In conclusion, **it is strongly advised to always use a normalization factor in combination with the dilution factor** 
+In conclusion, **it is strongly advised to always use a normalization factor in combination with the dilution factor**
 
 ## Model definition and requirements
 
 - model_name: ``dilution_factor`` or ``local_dilution_factor``
 - required common objects: ``dilution_factor``
 
+## Model parameters
+
+The dilution parameter `d_factor` is common in `dilution_factor` and dataset-specific in `local_dilution_factor`.
+
 The boundaries of the dilution factor are automatically set to `[0.0, 1.0]`. While the dilution factor must be positive, it may be necessary to expand the upper boundaries for extreme cases when the integrated flux of the contaminants is similar or higher to the one of the target star.
 
 ## Keywords
 
 This model does not require any keyword.
-
 
 ## Examples
 
@@ -138,4 +141,3 @@ models:
       d_factor: ['Gaussian', 0.2157, 0.0056]
   ...
 ```
-

@@ -29,7 +29,6 @@ If you use this model, cite the [Zenodo repository](https://zenodo.org/records/1
 
 ## Model definition and requirements
 
-
 **model name**: `tinygp_quasiperiodicsquaredexponential`
 - required common object: `activity`
 - implemented with `tinygp`
@@ -79,7 +78,7 @@ Model-wide keywords, with the default value in boldface.
 * accepted values: `True` | **`False`**
 * replaces `Pdec` with `activity_decay` from `star_parameters`.
 
-## Example
+## Examples
 
 ```yaml
 inputs:
@@ -105,5 +104,3 @@ models:
       Hamp: [0.0, 1.0]
       Camp: [0.0, 1.0]
 ```
-
-

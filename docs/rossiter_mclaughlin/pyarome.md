@@ -11,22 +11,36 @@ through the external `pyarome` package. `rossitermclaughlin_arome` is an alias
 for the same implementation.
 
 The model predicts the classical radial-velocity anomaly and assumes
-quadratic limb darkening. In addition to the orbital and transit geometry it
+quadratic limb darkening.
+
+## Model definition and requirements
+
+- model names: `rossitermclaughlin_pyarome` and alias `rossitermclaughlin_arome`
+- requires the external `pyarome` package, quadratic limb darkening, and planet and spectrograph common objects.
+
+## Model parameters
+
+In addition to the orbital and transit geometry it
 uses `lambda`, `R_Rs`, `v_sini`, `macroturbulence`,
 `instrumental_broadening` and `measured_ccf_width`.
 
 ## Keywords
 
-| Keyword | Default | Meaning |
-| --- | --- | --- |
-| `measurement_technique` | `ccf` | select the CCF expression |
-| `measurement_technique: iodine` | — | select the iodine-cell expression |
-| `limb_darkening` | `limb_darkening` | quadratic limb-darkening common object |
-| `spectrograph` | `spectrograph` | instrumental-parameter common object |
+Model-wide keywords, with the default value in boldface.
 
-Only `ccf` and `iodine` are accepted measurement techniques.
+**measurement_technique**
+* accepted values: **`ccf`** | `iodine`
+* selects the CCF or iodine-cell expression, respectively.
 
-## Minimal configuration
+**limb_darkening**
+* accepted values: quadratic limb-darkening common-object name | **`limb_darkening`**
+* selects the quadratic limb-darkening common object.
+
+**spectrograph**
+* accepted values: spectrograph common-object name | **`spectrograph`**
+* selects the instrumental-parameter common object.
+
+## Examples
 
 ```yaml
 inputs:

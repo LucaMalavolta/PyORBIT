@@ -7,7 +7,10 @@ transit and the occultation.
 
 The alias `batman_transit_secondary_phasecurve` is also accepted.
 
-## When to use it
+## Model definition and requirements
+
+- model name: `batman_transit_eclipse_phasecurve`
+- alias: `batman_transit_secondary_phasecurve`
 
 Use this model when the light curve contains the primary transit and enough
 out-of-transit orbital coverage to constrain the planet-to-star flux ratio.  The
@@ -18,7 +21,7 @@ For a pure transit model, use [Transit light-curve models](transit_lightcurves.m
 For independent mid-transit times, use
 [Transit models for TTV measurements](transit_ttv.md).
 
-## Parameters
+## Model parameters
 
 | Parameter | Scope | Meaning |
 | --- | --- | --- |
@@ -35,7 +38,7 @@ The model also uses the transit geometry prepared by the abstract transit
 machinery: `b` or `i`, and either `a_Rs` or the stellar density, depending on
 the common-object configuration.
 
-## Model keywords
+## Keywords
 
 | Keyword | Default | Meaning |
 | --- | --- | --- |
@@ -47,7 +50,7 @@ the common-object configuration.
 | `nightside_emission` | `True` | If false, `delta_occ` is removed and the occulted flux is tied to `phase_amp`. |
 | `phase_offset` | `True` | If false, `phase_off` is removed and the phase maximum is fixed to the default phase. |
 
-## Example
+## Examples
 
 ```yaml
 planet_b:

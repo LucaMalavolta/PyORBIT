@@ -11,7 +11,7 @@ a dataset model. They are commonly used to absorb a light-curve baseline that
 is close to, but not exactly, one. They are also recommended when a
 [dilution factor](dilution_factor.md) changes the model baseline.
 
-## Available models
+## Model definition and requirements
 
 | Model | Parameter scope |
 | --- | --- |
@@ -19,11 +19,33 @@ is close to, but not exactly, one. They are also recommended when a
 | `local_normalization_factor` | one `n_factor` for each dataset |
 | `subset_normalization_factor` | one `n_factor_subN` for each active subset in a dataset |
 
-All variants use the `normalization_factor` common object. The default
-parameter boundaries are very broad, so light-curve analyses should normally
+All variants use the `normalization_factor` common object.
+
+`subset_normalization_factor` requires subset flags in the sixth column of the
+standard input file. Subset identifiers must be consecutive integers starting
+at zero. Rows with an inactive subset flag are not assigned a subset
+normalization by this model.
+
+## Model parameters
+
+The shared and local variants use `n_factor`; the subset variant creates
+`n_factor_subN` for each active subset. The default parameter boundaries are
+very broad, so light-curve analyses should normally
 set physically meaningful boundaries around the expected baseline.
 
-## Common and local factors
+```{warning}
+A normalization factor may be degenerate with a free constant term in another
+multiplicative model. Avoid fitting two unconstrained baseline parameters to
+the same data unless informative priors make them identifiable.
+```
+
+## Keywords
+
+There are no model-wide keywords. Parameter boundaries can be supplied in the model definition.
+
+## Examples
+
+### Common and local factors
 
 The light-curve examples use a local normalization factor with boundaries
 between 0.8 and 1.2:
@@ -49,7 +71,7 @@ This pattern is used in the
 examples. Replace `local_normalization_factor` with `normalization_factor` to
 share one value among all datasets using the model.
 
-## Subset normalization factor
+### Subset normalization factor
 
 `subset_normalization_factor` uses the subset flags in the sixth column of the
 standard input file:
@@ -79,14 +101,4 @@ models:
     model: subset_normalization_factor
     boundaries:
       n_factor: [0.8, 1.2]
-```
-
-Subset identifiers must be consecutive integers starting at zero. Rows with
-an inactive subset flag are not assigned a subset normalization by this
-model.
-
-```{warning}
-A normalization factor may be degenerate with a free constant term in another
-multiplicative model. Avoid fitting two unconstrained baseline parameters to
-the same data unless informative priors make them identifiable.
 ```

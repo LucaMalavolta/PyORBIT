@@ -79,6 +79,18 @@ In `PyORBIT` unlimited number of additional datasets can be included for the sim
 - model name: ``gp_quasiperiodic``
 - required common objects : ``activity``
 
+## Model parameters
+
+The following parameters will be inherited from the common model (column *Common?: common*) or a different value will be assigned for each dataset (column *Common?: dataset*)
+
+| Name        | Parameter | Common?  | Definition  | Notes |
+| :---        | :-------- | :-------------  | :-----  | :---- |
+| Prot      | rotational period of the star $\theta$ | common | ``activity``     | |
+| Pdec      | Decay time scale of active regions $\lambda$ | common | ``activity``     | |
+| Oamp | Coherence scale $w$ | common | ``activity`` |   |
+| Hamp  | Amplitude of the kernel | dataset | ``activity``     | |
+| Camp  | Amplitude of the cosine part of the kernel | dataset | ``activity``     | |
+
 ## Keywords
 
 Model-wide keywords, with the default value in bold face.
@@ -90,7 +102,6 @@ Model-wide keywords, with the default value in bold face.
 **rotation_decay_condition**
 * accepted values: `True` | **`False`**
 * if activated, it ensures that the decay time scale of the activity regions $\lambda$ is at least twice the rotational period of the star $\theta$
-
 
 ## Examples
 
@@ -190,18 +201,3 @@ solver:
   recenter_bounds: True
 
 ```
-
-
-
-## Model parameters
-
-The following parameters will be inherited from the common model (column *Common?: common*) or a different value will be assigned for each dataset (column *Common?: dataset*)
-
-| Name        | Parameter | Common?  | Definition  | Notes |
-| :---        | :-------- | :-------------  | :-----  | :---- |
-| Prot      | rotational period of the star $\theta$ | common | ``activity``     | |
-| Pdec      | Decay time scale of active regions $\lambda$ | common | ``activity``     | |
-| Oamp | Coherence scale $w$ | common | ``activity`` |   |
-| Hamp  | Amplitude of the kernel | dataset | ``activity``     | |
-| Camp  | Amplitude of the cosine part of the kernel | dataset | ``activity``     | |
-

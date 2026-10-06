@@ -29,6 +29,8 @@ dataset-specific.
 - default cosine harmonic: 1
 - default period scope: common
 
+## Model parameters
+
 The current `harmonics` common object defines amplitudes and independent
 phases for harmonic orders 1 through 5. Selections should stay within this
 range unless the common-object implementation is extended accordingly.
@@ -38,7 +40,59 @@ Parameters are named `amp_S1`, `amp_S2`, ... for sine terms and `amp_C1`,
 independent phases are named `pha_S1`, `pha_C1`, and so on. Angles are in
 degrees and the period uses the same time unit as the input epochs.
 
-## Selecting the harmonic terms
+## Keywords
+
+Model-wide keywords, with the default value in boldface. Harmonic orders should
+stay within 1 through 5 unless the common-object implementation is extended.
+
+**sine_harmonics**
+* accepted values: non-negative integer | **`2`**
+* includes every sine harmonic from order 1 through the selected order.
+
+**cosine_harmonics**
+* accepted values: non-negative integer | **`1`**
+* includes every cosine harmonic from order 1 through the selected order.
+
+**sine_harmonics_selection**
+* accepted values: list of harmonic orders or `None` | **not set**
+* selects non-contiguous sine orders; `None` disables sine terms.
+
+**cosine_harmonics_selection**
+* accepted values: list of harmonic orders or `None` | **not set**
+* selects non-contiguous cosine orders; `None` disables cosine terms.
+
+Only one phase convention should be selected for a model. By default, `phase`
+is dataset-specific.
+
+**use_common_phase**
+* accepted values: `True` | **`False`**
+* when enabled, creates a common `phase` instead of a dataset-specific one.
+
+**use_T0**
+* accepted values: `True` | **`False`**
+* when enabled, creates a dataset-specific `T0` instead of `phase`.
+
+**use_common_T0**
+* accepted values: `True` | **`False`**
+* when enabled, creates a common `T0` instead of `phase`.
+
+**use_independent_phases**
+* accepted values: `True` | **`False`**
+* when enabled, creates a dataset-specific `pha_SN` or `pha_CN` for each selected term.
+
+**use_common_independent_phases**
+* accepted values: `True` | **`False`**
+* when enabled, creates a common `pha_SN` or `pha_CN` for each selected term.
+
+**use_common_period**
+* accepted values: **`True`** | `False`
+* shares `P` among datasets; set it to `False` to fit a different period for each dataset.
+
+Independent-phase modes are not compatible with the `T0` modes.
+
+## Examples
+
+### Selecting the harmonic terms
 
 Use `sine_harmonics` and `cosine_harmonics` to include every harmonic from 1
 through the requested order:
@@ -67,24 +121,7 @@ This configuration is taken from
 [`harmonics/model004_planet_harmonics.yaml`](https://github.com/LucaMalavolta/PyORBIT_examples/blob/main/harmonics/model004_planet_harmonics.yaml)
 in the PyORBIT examples repository.
 
-## Period and phase options
-
-Only one phase convention should be selected for a model.
-
-| Keyword | Parameters created | Scope |
-| --- | --- | --- |
-| no phase keyword | `phase` | dataset |
-| `use_common_phase: True` | `phase` | common |
-| `use_T0: True` | `T0` | dataset |
-| `use_common_T0: True` | `T0` | common |
-| `use_independent_phases: True` | one `pha_SN` or `pha_CN` per term | dataset |
-| `use_common_independent_phases: True` | one `pha_SN` or `pha_CN` per term | common |
-
-`use_common_period` defaults to `True`; set it to `False` to fit a different
-`P` for every dataset. Independent-phase modes are not compatible with the
-`T0` modes.
-
-## Complete example
+### Complete example
 
 The following excerpt follows the examples in the
 [`harmonics`](https://github.com/LucaMalavolta/PyORBIT_examples/tree/main/harmonics)

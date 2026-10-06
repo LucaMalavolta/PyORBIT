@@ -10,8 +10,33 @@
 ancillary variables in a single model. The names `detrending` and
 `lightcurve_detrending` are aliases for the same implementation.
 
-Instead of one `detrending_variables` mapping, the configuration contains a
-`polynomial_detrending` mapping and/or an `exponential_detrending` mapping:
+## Model definition and requirements
+
+The model accepts a `polynomial_detrending` mapping and/or an `exponential_detrending` mapping. A variable should appear in only one mapping.
+
+Each entry accepts either an integer order or a mapping with `order` and
+`x_zero`. Polynomial contributions are added directly. Each exponential
+variable is exponentiated separately, using base 10 by default or base $e$
+with `natural_base: True`, and then added to the model output.
+
+## Model parameters
+
+Generated coefficients follow the common `det_<variable>_cN` convention.
+
+## Keywords
+
+Model-wide keywords, with the default value in boldface.
+
+**natural_base**
+* accepted values: `True` | **`False`**
+* uses base $e$ instead of base 10 for exponential contributions.
+
+The model supports the same sharing and centering keywords as the separate
+deterministic detrending models: `local_model`, the common-parameter aliases,
+`use_median_xzero`, `x_zero`, `starting_order`, `include_zero_point`,
+`exclude_zero_point` and `baseline_value`.
+
+## Examples
 
 ```yaml
 inputs:
@@ -36,19 +61,6 @@ models:
         order: 2
         x_zero: 0.0
 ```
-
-Each entry accepts either an integer order or a mapping with `order` and
-`x_zero`. Polynomial contributions are added directly. Each exponential
-variable is exponentiated separately, using base 10 by default or base $e$
-with `natural_base: True`, and then added to the model output.
-
-The model supports the same sharing and centering keywords as the separate
-deterministic detrending models: `local_model`, the common-parameter aliases,
-`use_median_xzero`, `x_zero`, `starting_order`, `include_zero_point`,
-`exclude_zero_point` and `baseline_value`.
-
-Generated coefficients follow the common `det_<variable>_cN` convention. A
-variable should appear in only one of the two mappings.
 
 No dedicated full-detrending configuration is currently present in the
 [PyORBIT examples repository](https://github.com/LucaMalavolta/PyORBIT_examples);

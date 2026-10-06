@@ -10,7 +10,22 @@ ephemeris, or when the timing deviations are not part of the fit.  If each
 transit must have its own fitted mid-time, use the TTV models documented in
 [Transit models for TTV measurements](transit_ttv.md).
 
-## Planet setup
+## Model definition and requirements
+
+### Available models
+
+| Model name | Backend | Use case |
+| --- | --- | --- |
+| `batman_transit` | `batman` | Standard transit model with one linear ephemeris per planet. |
+| `pytransit_transit` | `PyTransit` | Standard transit model using the PyTransit backend. It uses the RoadRunner model by default when available. |
+| `batman_transit_rprs_subset` | `batman` | Same linear ephemeris, but with a different `R_Rs` value for each dataset subset. |
+| `pytransit_dynamical` | `PyTransit` | Dynamical transit model. Transit times are predicted by the dynamical model, not fitted as independent TTV parameters. |
+
+The alias `subset_batman_transit_rprs` is accepted for the subset radius-ratio
+model.  The transit, secondary-eclipse and phase-curve model is documented in
+[Secondary eclipse and phase curve](secondary_eclipse_phasecurve.md).
+
+### Planet setup
 
 For a standard transit fit, define the planet as a transiting planet by enabling
 the time of inferior conjunction:
@@ -27,6 +42,8 @@ With this option the planet common object exposes `Tc` as the epoch parameter.
 If it is not enabled, PyORBIT uses the orbital longitude parametrization and
 derives the inferior-conjunction time internally.
 
+## Model parameters
+
 The transit shape is controlled by the usual planet, stellar and
 limb-darkening parameters:
 
@@ -40,20 +57,7 @@ limb-darkening parameters:
 | `e`, `omega` | planet common | Eccentricity and argument of periastron, or the selected eccentricity parametrization. |
 | limb-darkening coefficients | limb-darkening common | Coefficients used by the selected limb-darkening law. |
 
-## Available models
-
-| Model name | Backend | Use case |
-| --- | --- | --- |
-| `batman_transit` | `batman` | Standard transit model with one linear ephemeris per planet. |
-| `pytransit_transit` | `PyTransit` | Standard transit model using the PyTransit backend. It uses the RoadRunner model by default when available. |
-| `batman_transit_rprs_subset` | `batman` | Same linear ephemeris, but with a different `R_Rs` value for each dataset subset. |
-| `pytransit_dynamical` | `PyTransit` | Dynamical transit model. Transit times are predicted by the dynamical model, not fitted as independent TTV parameters. |
-
-The alias `subset_batman_transit_rprs` is accepted for the subset radius-ratio
-model.  The transit, secondary-eclipse and phase-curve model is documented in
-[Secondary eclipse and phase curve](secondary_eclipse_phasecurve.md).
-
-## Shared model keywords
+## Keywords
 
 | Keyword | Models | Meaning |
 | --- | --- | --- |
@@ -64,7 +68,7 @@ model.  The transit, secondary-eclipse and phase-curve model is documented in
 | `nthreads` | `batman` models | Number of threads passed to the `batman` backend. |
 | `use_roadrunner` | `pytransit_transit` | Use the PyTransit RoadRunner implementation when possible. |
 
-## Minimal examples
+## Examples
 
 A standard `batman` transit model:
 
@@ -98,7 +102,7 @@ input:
       - lc_model
 ```
 
-## Radius-ratio subsets
+### Radius-ratio subsets
 
 Use `batman_transit_rprs_subset` when all subsets share the same ephemeris and
 orbital shape, but each subset needs its own radius ratio.  The input dataset

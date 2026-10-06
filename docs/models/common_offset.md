@@ -21,6 +21,14 @@ When `common_offset` is applied to a dataset, the local offset flags of that dat
 
 The offset boundaries are estimated automatically from the datasets using the model. If more than one dataset shares the same common offset, the default boundary is expanded to include the ranges of all of them.
 
+## Model parameters
+
+The following parameters will be inherited from the common model.
+
+| Name | Parameter | Common? | Definition | Notes |
+| :--- | :-------- | :------ | :--------- | :---- |
+| `offset` | Additive zero point of the dataset | common | `common_offset` | Same units as the dataset values |
+
 ## Keywords
 
 There are no model-wide keywords.
@@ -83,11 +91,3 @@ common:
   common_offset_Sindex:
     model: common_offset
 ```
-
-## Model parameters
-
-The following parameters will be inherited from the common model.
-
-| Name | Parameter | Common? | Definition | Notes |
-| :--- | :-------- | :------ | :--------- | :---- |
-| `offset` | Additive zero point of the dataset | common | `common_offset` | Same units as the dataset values |

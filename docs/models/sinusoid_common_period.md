@@ -11,13 +11,24 @@ periodicity with different amplitudes or phase lags. Only `sine_period` belongs
 to the common `sinusoid` object; `sine_amp` and `sine_phase` are created
 separately for every attached dataset.
 
+## Model definition and requirements
+
+- model name: `sinusoid_common_period`
+- uses the automatically associated `sinusoid` common object.
+
+## Model parameters
+
 | Parameter | Scope | Unit |
 | --- | --- | --- |
 | `sine_period` | common | days |
 | `sine_amp` | dataset | same as the modelled observable |
 | `sine_phase` | dataset | degrees |
 
-## Example
+## Keywords
+
+There are no model-wide keywords. Set parameter boundaries and priors in the model configuration.
+
+## Examples
 
 ```yaml
 inputs:

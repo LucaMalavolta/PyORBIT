@@ -15,14 +15,43 @@ The model numerically samples the planetary disk, includes finite-exposure
 integration and can use the stellar differential-rotation and convective
 velocity options exposed by `star_parameters`.
 
-## Data and keywords
+## Model definition and requirements
 
-- the input values are local surface velocities, not ordinary stellar RVs
-- the ancillary data must include `exptime` in seconds
-- `planet_ngrid` defaults to `21`
-- `time_step` defaults to `149` seconds
-- velocity measurements must use the same units as the stellar rotation
-  parameters used by this implementation, normally km/s
+- model name: `rossitermclaughlin_reloaded`
+- requires local surface-velocity measurements and an `exptime` ancillary
+  column in seconds.
+
+The optional `use_differential_rotation` and `convective_order` settings are
+declared in `common.star.star_parameters`.
+
+## Model parameters
+
+The model uses the usual planet geometry, limb-darkening coefficients and
+stellar rotation parameters, including `v_sini` or the selected rotation-based
+parametrization. Input velocities and stellar rotation parameters must use the
+same units, normally km/s.
+
+## Keywords
+
+Model-wide keywords, with the default value in boldface.
+
+**planet_ngrid**
+* accepted values: integer | **`21`**
+* number of grid points used to sample the occulting planetary disk.
+
+**time_step**
+* accepted values: number in seconds | **`149`**
+* integration step for finite exposures.
+
+**planets**
+* accepted values: list of planet names
+* selects the transiting planet or planets included in the model.
+
+**limb_darkening**
+* accepted values: limb-darkening common-object name
+* selects the limb-darkening object for the occulted surface.
+
+## Examples
 
 ```yaml
 inputs:
@@ -40,11 +69,6 @@ models:
     planet_ngrid: 31
     time_step: 60
 ```
-
-The usual planet geometry and the stellar parameters `v_sini` or the selected
-rotation-based parametrization are required. The optional
-`use_differential_rotation` and `convective_order` settings are normally
-declared in `common.star.star_parameters`.
 
 No dedicated reloaded-RM configuration is currently present in the
 [PyORBIT examples repository](https://github.com/LucaMalavolta/PyORBIT_examples);

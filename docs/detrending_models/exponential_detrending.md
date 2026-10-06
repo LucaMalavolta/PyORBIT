@@ -17,11 +17,34 @@ f(\boldsymbol{x}) = 10^{b + \sum_j\sum_{k=s}^{n_j}
 c_{j,k}(x_j-x_{0,j})^k}.
 ```
 
-Set `natural_base: True` to use the natural exponential instead. This form is
-useful for positive multiplicative systematics or for trends that are close to
-linear in logarithmic flux.
+## Model definition and requirements
 
-## Configuration
+- model name: `exponential_detrending`
+- requires a labelled ancillary file and a `detrending_variables` mapping, as in [polynomial detrending](polynomial_detrending.md).
+
+This form is useful for positive multiplicative systematics or for trends that
+are close to linear in logarithmic flux.
+
+## Model parameters
+
+The generated parameters are `det_<variable>_cN` and
+`x_zero_<variable>`. Parameters are local by default; common-parameter aliases
+can be used when several datasets share the same ancillary relation.
+
+## Keywords
+
+Model-wide keywords, with the default value in boldface.
+
+**natural_base**
+* accepted values: `True` | **`False`**
+* uses the natural exponential instead of base 10.
+
+The required `detrending_variables` mapping and the keywords `order`,
+`local_model`, `use_common_parameters`, `use_median_xzero`, `x_zero`,
+`starting_order`, `include_zero_point` and `baseline_value` behave as described
+for [polynomial detrending](polynomial_detrending.md).
+
+## Examples
 
 ```yaml
 inputs:
@@ -41,15 +64,6 @@ models:
       airmass: 1
       background: 2
 ```
-
-The required `detrending_variables` mapping and the keywords `order`,
-`local_model`, `use_common_parameters`, `use_median_xzero`, `x_zero`,
-`starting_order`, `include_zero_point` and `baseline_value` behave as described
-for [polynomial detrending](polynomial_detrending.md).
-
-The generated parameters are `det_<variable>_cN` and
-`x_zero_<variable>`. Parameters are local by default; common-parameter aliases
-can be used when several datasets share the same ancillary relation.
 
 No dedicated exponential-detrending configuration is currently present in
 the [PyORBIT examples repository](https://github.com/LucaMalavolta/PyORBIT_examples);

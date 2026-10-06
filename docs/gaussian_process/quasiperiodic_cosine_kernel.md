@@ -22,7 +22,6 @@ where $P_\mathrm{rot}$  is equivalent to the rotation period of the star, $O_\ma
 As for the quasi-periodic kernel, mind the possible presence of a factor 2 in the denominator of the aperiodic variation (i.e., $2 \lambda$ rather than $\lambda$)
 ```
 
-
 ## Model definition and requirements
 
 **model name**: `tinygp_quasiperiodic_cosine`
@@ -33,7 +32,6 @@ As for the quasi-periodic kernel, mind the possible presence of a factor 2 in th
 **model name**: `gp_quasiperiodic_cosine`
 - required common object: `activity`
 - *direct* implementation relying only on `scipy` and `numpy`
-
 
 ## Model parameters
 
@@ -46,7 +44,6 @@ The following parameters will be inherited from the common model (column *Common
 | Oamp | Coherence scale $w$ | common | ``activity`` |   |
 | Hamp  | Amplitude of the kernel | dataset | ``activity``     | |
 | Camp  | Amplitude of the cosine part of the kernel | dataset | ``activity``     | |
-
 
 ## Keywords
 
@@ -67,3 +64,30 @@ Model-wide keywords, with the default value in boldface.
 **use_stellar_activity_decay**
 * accepted values: `True` | **`False`**
 * if activated, the parameter `Pdec` from the `activity` *common model* will be replaced by the parameter `activity_decay` from the `star_parameters` *common model*.
+
+## Examples
+
+A minimal direct-implementation configuration uses the shared `activity` object for the timescales and dataset-specific boundaries for the two amplitudes:
+
+```yaml
+inputs:
+  RVdata:
+    file: datasets/RV_PyORBIT.dat
+    kind: RV
+    models: [gp_qp_cosine]
+
+common:
+  activity:
+    boundaries:
+      Prot: [10.0, 20.0]
+      Pdec: [20.0, 1000.0]
+      Oamp: [0.01, 1.0]
+
+models:
+  gp_qp_cosine:
+    model: gp_quasiperiodic_cosine
+    common: activity
+    boundaries:
+      Hamp: [0.0, 100.0]
+      Camp: [0.0, 100.0]
+```

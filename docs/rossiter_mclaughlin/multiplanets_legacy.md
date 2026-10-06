@@ -11,10 +11,42 @@ several planets. The stellar surface and CCF are evaluated after masking every
 planet listed in the model, allowing simultaneous or overlapping transits to
 be represented by one RM component.
 
-Its dependencies, ancillary `exptime` column, stellar and spectrograph
-parameters are the same as for
-[`rossitermclaughlin_legacy`](legacy.md). The multi-planet implementation uses
-a default `star_ngrid` of `301`; `time_step` defaults to 149 seconds.
+## Model definition and requirements
+
+- model name: `rossitermclaughlin_multiplanets_legacy`
+- requires the same dependencies, ancillary `exptime` column, stellar and spectrograph objects as [`rossitermclaughlin_legacy`](legacy.md).
+
+## Model parameters
+
+Each planet needs its own transit geometry and projected obliquity parameters
+in the `common.planets` section. The stellar rotation, limb darkening and CCF
+line properties remain shared.
+
+## Keywords
+
+Model-wide keywords, with the default value in boldface.
+
+**planets**
+* accepted values: list of planet names
+* required; includes every transiting planet whose occultation is modelled.
+
+**star_ngrid**
+* accepted values: integer | **`301`**
+* number of grid points along each stellar-disk axis.
+
+**time_step**
+* accepted values: number in seconds | **`149`**
+* integration step for finite exposures.
+
+**limb_darkening**
+* accepted values: limb-darkening common-object name | **`limb_darkening`**
+* selects the limb-darkening object.
+
+**spectrograph**
+* accepted values: spectrograph common-object name | **`spectrograph`**
+* selects the instrumental CCF parameters.
+
+## Examples
 
 ```yaml
 models:
@@ -29,10 +61,6 @@ models:
     star_ngrid: 301
     time_step: 120
 ```
-
-Each planet needs its own transit geometry and projected obliquity parameters
-in the `common.planets` section. The stellar rotation, limb darkening and CCF
-line properties remain shared.
 
 No dedicated multi-planet RM configuration is currently present in the
 [PyORBIT examples repository](https://github.com/LucaMalavolta/PyORBIT_examples);

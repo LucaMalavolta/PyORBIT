@@ -22,20 +22,43 @@ The model returns zero for reference epochs without a match. Since jitter is
 added in quadrature to the measurement uncertainty, the default coefficient
 boundaries are non-negative.
 
-## Required keywords
+## Model definition and requirements
 
-| Keyword | Default | Meaning |
-| --- | --- | --- |
-| `reference` | required | name of the dataset receiving the jitter model |
-| `associated` | required | name of the dataset supplying the correlated values |
-| `threshold` | `0.001` | maximum absolute epoch difference accepted as a match, in days |
-| `order` | `1` | polynomial order |
-| `x_zero` | automatic | reference value for the associated measurement |
+- model name: `local_correlated_jitter`
+- requires both the reference and associated datasets to be loaded with the same epoch convention.
+
+## Model parameters
 
 The parameters `x_zero` and `c1`, ..., `cN` are dataset-specific. If `x_zero`
 is omitted, it is fixed to the minimum of the matched associated values.
 
-## Minimal example
+The polynomial coefficients `c1`, ..., `cN` are dataset-specific and have non-negative default boundaries.
+
+## Keywords
+
+Model-wide keywords, with the default value in boldface where applicable.
+
+**reference**
+* accepted values: dataset name
+* required; names the dataset receiving the jitter model.
+
+**associated**
+* accepted values: dataset name
+* required; names the dataset supplying the correlated values.
+
+**threshold**
+* accepted values: number in days | **`0.001`**
+* maximum absolute epoch difference accepted as a match.
+
+**order**
+* accepted values: integer | **`1`**
+* polynomial order.
+
+**x_zero**
+* accepted values: number | **automatically selected**
+* reference value for the associated measurement.
+
+## Examples
 
 The associated dataset must be loaded by PyORBIT even when it contributes no
 deterministic model of its own. Attach the correlated-jitter model to the

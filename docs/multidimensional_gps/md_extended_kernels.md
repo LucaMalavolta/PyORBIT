@@ -29,6 +29,45 @@ These models are useful when the data show an activity signal that is not fully 
 
 All three models require `tinygp`; read [Caveats on the use of `tinyGP`](../running_pyorbit/tinygp_caveats) carefully.
 
+## Model parameters
+
+### Quasi-periodic plus cosine
+
+| Name | Parameter | Common? | Definition | Notes |
+| :--- | :-------- | :------ | :--------- | :---- |
+| `Prot` | Rotational period of the star | common | `activity` | |
+| `Pdec` | Decay timescale of active regions | common | `activity` | |
+| `Oamp` | Coherence scale | common | `activity` | |
+| `con_amp` | Coefficient of the quasi-periodic latent GP | dataset | `activity` | |
+| `rot_amp` | Coefficient of the quasi-periodic derivative | dataset | `activity` | Fixed to zero when `derivative_quasiperiodic: False` |
+| `cos_amp` | Coefficient of the cosine latent component | dataset | `activity` | |
+| `cos_der` | Coefficient of the derivative of the cosine component | dataset | `activity` | Fixed to zero when `derivative_cosine: False` |
+
+### Quasi-periodic plus squared-exponential
+
+| Name | Parameter | Common? | Definition | Notes |
+| :--- | :-------- | :------ | :--------- | :---- |
+| `Prot` | Rotational period of the star | common | `activity` | |
+| `Pdec` | Decay timescale of active regions | common | `activity` | |
+| `Pcyc` | Timescale of the squared-exponential component | common | `activity` | |
+| `Oamp` | Coherence scale | common | `activity` | |
+| `con_amp` | Coefficient of the quasi-periodic latent GP | dataset | `activity` | |
+| `rot_amp` | Coefficient of the quasi-periodic derivative | dataset | `activity` | Fixed to zero when `derivative_quasiperiodic: False` |
+| `cyc_amp` | Coefficient of the squared-exponential component | dataset | `activity` | |
+| `cyc_der` | Coefficient of the derivative of the squared-exponential component | dataset | `activity` | Fixed to zero when `derivative_squaredexponential: False` |
+
+### Multidimensional quasi-periodic plus trained squared-exponential
+
+| Name | Parameter | Common? | Definition | Notes |
+| :--- | :-------- | :------ | :--------- | :---- |
+| `Prot` | Rotational period of the star | common | `activity` | |
+| `Pdec` | Decay timescale of active regions | common | `activity` | |
+| `Pcyc` | Timescale of the trained squared-exponential component | common | `activity` | |
+| `Oamp` | Coherence scale | common | `activity` | |
+| `con_amp` | Coefficient of the quasi-periodic latent GP | dataset | `activity` | |
+| `rot_amp` | Coefficient of the quasi-periodic derivative | dataset | `activity` | Fixed to zero when `derivative_quasiperiodic: False` |
+| `cyc_amp` | Amplitude coefficient of the dataset-local squared-exponential component | dataset | `activity` | |
+
 ## Keywords
 
 Model-wide keywords, with the default value in boldface.
@@ -130,42 +169,3 @@ models:
         cyc_amp: [0.0, 20.0]
       derivative_quasiperiodic: True
 ```
-
-## Model parameters
-
-### Quasi-periodic plus cosine
-
-| Name | Parameter | Common? | Definition | Notes |
-| :--- | :-------- | :------ | :--------- | :---- |
-| `Prot` | Rotational period of the star | common | `activity` | |
-| `Pdec` | Decay timescale of active regions | common | `activity` | |
-| `Oamp` | Coherence scale | common | `activity` | |
-| `con_amp` | Coefficient of the quasi-periodic latent GP | dataset | `activity` | |
-| `rot_amp` | Coefficient of the quasi-periodic derivative | dataset | `activity` | Fixed to zero when `derivative_quasiperiodic: False` |
-| `cos_amp` | Coefficient of the cosine latent component | dataset | `activity` | |
-| `cos_der` | Coefficient of the derivative of the cosine component | dataset | `activity` | Fixed to zero when `derivative_cosine: False` |
-
-### Quasi-periodic plus squared-exponential
-
-| Name | Parameter | Common? | Definition | Notes |
-| :--- | :-------- | :------ | :--------- | :---- |
-| `Prot` | Rotational period of the star | common | `activity` | |
-| `Pdec` | Decay timescale of active regions | common | `activity` | |
-| `Pcyc` | Timescale of the squared-exponential component | common | `activity` | |
-| `Oamp` | Coherence scale | common | `activity` | |
-| `con_amp` | Coefficient of the quasi-periodic latent GP | dataset | `activity` | |
-| `rot_amp` | Coefficient of the quasi-periodic derivative | dataset | `activity` | Fixed to zero when `derivative_quasiperiodic: False` |
-| `cyc_amp` | Coefficient of the squared-exponential component | dataset | `activity` | |
-| `cyc_der` | Coefficient of the derivative of the squared-exponential component | dataset | `activity` | Fixed to zero when `derivative_squaredexponential: False` |
-
-### Multidimensional quasi-periodic plus trained squared-exponential
-
-| Name | Parameter | Common? | Definition | Notes |
-| :--- | :-------- | :------ | :--------- | :---- |
-| `Prot` | Rotational period of the star | common | `activity` | |
-| `Pdec` | Decay timescale of active regions | common | `activity` | |
-| `Pcyc` | Timescale of the trained squared-exponential component | common | `activity` | |
-| `Oamp` | Coherence scale | common | `activity` | |
-| `con_amp` | Coefficient of the quasi-periodic latent GP | dataset | `activity` | |
-| `rot_amp` | Coefficient of the quasi-periodic derivative | dataset | `activity` | Fixed to zero when `derivative_quasiperiodic: False` |
-| `cyc_amp` | Amplitude coefficient of the dataset-local squared-exponential component | dataset | `activity` | |

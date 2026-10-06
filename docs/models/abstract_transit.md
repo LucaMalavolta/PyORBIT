@@ -4,15 +4,21 @@
 
 Transit parameters and keywords are defined in an abstract class that is then inherited by all the different implementations of the transit model and transit-like modelling (phase curves, Rossiter-McLaughlin).
 
-Models relying on the Transit abstract model:
+## Model definition and requirements
+
+The abstract transit class is shared by these data-analysis models:
+
 - ``batman_transit``
 - ``pytransit_transit``
 - ``batman_transit_secondary_phasecurve``
 - ``batman_transit_ttv``
 - ``pytransit_transit_ttv``
 
+## Model parameters
 
-### Keywords
+The concrete transit model takes orbital and geometric parameters from the `planets` common object and, where applicable, limb-darkening parameters from its common object. The shared integration settings below determine how model fluxes are averaged over finite exposures.
+
+## Keywords
 
 **model**
 * accepted values: any of the models listed above
@@ -31,7 +37,7 @@ Exposure time of each data point in the lightcurve, expressed in seconds. The ke
 * default is 1, it shouldn't be modified
 * number of CPU used by ``batman`` in multiprocessing mode. It seems to cause a clash with ``emcee``, while the better performance of multiprocessing in nested sampling algorithms does not really require the usi of multiple cpu in the computation of the lightcurve model.
 
-### Example
+## Examples
 
 ```yaml
 models:

@@ -39,7 +39,7 @@ In `PyORBIT`, the alternative parametrisation implemented in `celerite2` has bee
 - $\tau$: the damping timescale of the process, defined as $\tau = 2\,Q / \omega_0$, and called ```sho_decay```
 - $sigma$: the standard deviation of the process, defined as $\sigma = \sqrt{S_0\,\omega_0\,Q} $, and called ```sho_sigma```
 
-If you use the SHO kernel, please cite [Foreman-Mackey et al. 2017](https://ui.adsabs.harvard.edu/abs/2017AJ....154..220F/abstract) 
+If you use the SHO kernel, please cite [Foreman-Mackey et al. 2017](https://ui.adsabs.harvard.edu/abs/2017AJ....154..220F/abstract)
 
 ## Model definition and requirements
 
@@ -83,7 +83,6 @@ If you use the SHO kernel, please cite [Foreman-Mackey et al. 2017](https://ui.a
 ```{tip}
 Some older result files may contain `matern32_rho`. The current models map it internally to `matern32_scale`.
 ```
-
 
 ## Keywords
 
@@ -173,5 +172,3 @@ models:
     boundaries:
       sho_sigma: [0.0, 1.0]
 ```
-
-

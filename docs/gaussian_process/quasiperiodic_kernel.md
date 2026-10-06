@@ -45,6 +45,50 @@ An independent implementation that relies only on basic packages is maintained f
 - required common object: `activity`
 - *direct* implementation relying only on `numpy` and `scipy`
 
+### Differences among various parametrizations
+
+`PyORBIT`, following [Rajpaul et al. 2015](https://ui.adsabs.harvard.edu/abs/2015MNRAS.452.2269R/abstract)
+
+```{math}
+:label: quasiperiodic_pyorbit
+
+G(t_i, t_j) = H_\mathrm{amp}^2  \exp{ \left \{-\frac{\sin^2{[\pi(t_i - t_j)/ P_\mathrm{rot}]}}{\mathbf{2} O_\mathrm{amp} ^2} - \frac{(t_i-t_j)^2}{\mathbf{2} P_\mathrm{dec}^2} \right \} }
+```
+
+
+- [Rajpaul et al. 2015](https://ui.adsabs.harvard.edu/abs/2015MNRAS.452.2269R/abstract)
+
+```{math}
+:label: quasiperiodic_rajpaul
+
+G(t_i, t_j) = \eta_1^2  \exp{ \left \{-\frac{\sin^2{[\pi(t_i - t_j)/P]}}{\mathbf{2} \lambda_p^2} - \frac{(t_i-t_j)^2}{\mathbf{2} \lambda_e^2} \right \} }
+```
+
+
+- [Haywood et al. 2014](https://ui.adsabs.harvard.edu/abs/2014MNRAS.443.2517H/abstract)
+
+```{math}
+:label: quasiperiodic_haywood
+
+G(t_i, t_j) = \eta_1^2  \exp{ \left \{-\frac{ \mathbf{2} \sin^2{[\pi(t_i - t_j)/\eta_3]}}{\eta_4^2} - \left ( \frac{t_i-t_j}{\mathbf{2} \eta_2} \right )^2 \right \} }
+```
+
+
+- [Grunblatt et al. 2015](https://ui.adsabs.harvard.edu/abs/2015ApJ...808..127G/abstract):
+
+```{math}
+:label: quasiperiodic_grunblatt
+
+G(t_i, t_j) = h^2  \exp{ \left \{-\frac{\sin^2{[\pi(t_i - t_j)/\theta]}}{\mathbf{2} w ^2} - \left ( \frac{t_i-t_j}{\lambda} \right )^2 \right \} }
+```
+
+- [Lopez-Morales et al. 2016](https://ui.adsabs.harvard.edu/abs/2016AJ....152..204L/abstract)
+
+```{math}
+:label: quasiperiodic_lopezmorales
+
+G(t_i, t_j) = \eta_1^2  \exp{ \left \{-\frac{ \sin^2{[\pi(t_i - t_j)/\eta_3]}}{\eta_4^2} - \left ( \frac{t_i-t_j}{\eta_2} \right )^2 \right \} }
+```
 
 ## Model parameters
 
@@ -56,7 +100,6 @@ The following parameters will be inherited from the common model (column *Common
 | Pdec      | Decay time scale of active regions | common | ``activity``     | |
 | Oamp | Coherence scale | common | ``activity`` |   |
 | Hamp  | Amplitude of the kernel | dataset | ``activity``     | |
-
 
 ## Keywords
 
@@ -284,50 +327,4 @@ models:
     rotation_decay_condition: True # It forces the decay timescale to be at least twice the rotational period
     boundaries:
       Hamp: [0.0, 100.0] # same range for all datasets
-```
-
-
-## Differences among various parametrizations
-
-`PyORBIT`, following [Rajpaul et al. 2015](https://ui.adsabs.harvard.edu/abs/2015MNRAS.452.2269R/abstract)
-
-```{math}
-:label: quasiperiodic_pyorbit
-
-G(t_i, t_j) = H_\mathrm{amp}^2  \exp{ \left \{-\frac{\sin^2{[\pi(t_i - t_j)/ P_\mathrm{rot}]}}{\mathbf{2} O_\mathrm{amp} ^2} - \frac{(t_i-t_j)^2}{\mathbf{2} P_\mathrm{dec}^2} \right \} }
-```
-
-
-- [Rajpaul et al. 2015](https://ui.adsabs.harvard.edu/abs/2015MNRAS.452.2269R/abstract)
-
-```{math}
-:label: quasiperiodic_rajpaul
-
-G(t_i, t_j) = \eta_1^2  \exp{ \left \{-\frac{\sin^2{[\pi(t_i - t_j)/P]}}{\mathbf{2} \lambda_p^2} - \frac{(t_i-t_j)^2}{\mathbf{2} \lambda_e^2} \right \} }
-```
-
-
-- [Haywood et al. 2014](https://ui.adsabs.harvard.edu/abs/2014MNRAS.443.2517H/abstract)
-
-```{math}
-:label: quasiperiodic_haywood
-
-G(t_i, t_j) = \eta_1^2  \exp{ \left \{-\frac{ \mathbf{2} \sin^2{[\pi(t_i - t_j)/\eta_3]}}{\eta_4^2} - \left ( \frac{t_i-t_j}{\mathbf{2} \eta_2} \right )^2 \right \} }
-```
-
-
-- [Grunblatt et al. 2015](https://ui.adsabs.harvard.edu/abs/2015ApJ...808..127G/abstract):
-
-```{math}
-:label: quasiperiodic_grunblatt
-
-G(t_i, t_j) = h^2  \exp{ \left \{-\frac{\sin^2{[\pi(t_i - t_j)/\theta]}}{\mathbf{2} w ^2} - \left ( \frac{t_i-t_j}{\lambda} \right )^2 \right \} }
-```
-
-- [Lopez-Morales et al. 2016](https://ui.adsabs.harvard.edu/abs/2016AJ....152..204L/abstract)
-
-```{math}
-:label: quasiperiodic_lopezmorales
-
-G(t_i, t_j) = \eta_1^2  \exp{ \left \{-\frac{ \sin^2{[\pi(t_i - t_j)/\eta_3]}}{\eta_4^2} - \left ( \frac{t_i-t_j}{\eta_2} \right )^2 \right \} }
 ```

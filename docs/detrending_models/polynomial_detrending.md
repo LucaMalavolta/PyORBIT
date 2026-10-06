@@ -15,11 +15,12 @@ ancillary variables. For every variable $x_j$ it adds
 f_j(x_j) = \sum_{k=s}^{n_j} c_{j,k}(x_j-x_{0,j})^k .
 ```
 
-The coefficient names are generated from the ancillary-column name. For
-example, a second-order trend in `airmass` creates `det_airmass_c1`,
-`det_airmass_c2` and a fixed or fitted `x_zero_airmass`.
+## Model definition and requirements
 
-## Ancillary data
+- model name: `polynomial_detrending`
+- requires labelled ancillary data for every variable in `detrending_variables`.
+
+### Ancillary data
 
 The first line of the ancillary file must name the columns used by the model:
 
@@ -29,6 +30,69 @@ The first line of the ancillary file must name the columns used by the model:
 59000.02  1.17  0.85
 59000.03  1.24  0.91
 ```
+
+## Model parameters
+
+The coefficient names are generated from the ancillary-column name. For
+example, a second-order trend in `airmass` creates `det_airmass_c1`,
+`det_airmass_c2` and a fixed or fitted `x_zero_airmass`.
+
+## Keywords
+
+Model-wide keywords, with the default value in boldface.
+
+**detrending_variables**
+* accepted values: mapping of ancillary-column names to orders or option mappings
+* required; selects the variables used for detrending.
+
+**order**
+* accepted values: integer | **`1`**
+* fallback polynomial order.
+
+**local_model**
+* accepted values: **`True`** | `False`
+* use dataset-specific coefficients.
+
+**use_common_parameters**
+* accepted values: `True` | **`False`**
+* alias for selecting common coefficients.
+
+**use_median_xzero**
+* accepted values: **`True`** | `False`
+* center each variable on its median.
+
+**x_zero**
+* accepted values: number | **`0.0`**
+* fallback center when median centering is disabled.
+
+**starting_order**
+* accepted values: integer | **`1`**
+* first included polynomial order.
+
+**include_zero_point**
+* accepted values: `True` | **`False`**
+* request a constant term.
+
+**baseline_value**
+* accepted values: number | **`0.0`**
+* additive baseline when no constant parameter is used.
+
+The aliases `common_parameters`, `use_common_model` and `common_model` also
+select common parameters. Common coefficients are stored in the automatically
+associated `detrending` common object.
+
+```{warning}
+A free zeroth-order coefficient can be degenerate with the dataset offset or
+another baseline model. Keep `starting_order: 1` unless a separate constant is
+required.
+```
+
+
+
+An integer selects the order directly; a mapping can set both `order` and
+`x_zero` for one variable.
+
+## Examples
 
 Reference it from the input dataset and list each detrending variable in the
 model:
@@ -53,32 +117,7 @@ models:
         x_zero: 0.85
 ```
 
-An integer selects the order directly; a mapping can set both `order` and
-`x_zero` for one variable.
 
-## Keywords
-
-| Keyword | Default | Meaning |
-| --- | --- | --- |
-| `detrending_variables` | required | mapping of ancillary-column names to orders or option mappings |
-| `order` | `1` | fallback polynomial order |
-| `local_model` | `True` | use dataset-specific coefficients |
-| `use_common_parameters` | `False` | alias for selecting common coefficients |
-| `use_median_xzero` | `True` | center each variable on its median |
-| `x_zero` | `0.0` | fallback center when median centering is disabled |
-| `starting_order` | `1` | first included polynomial order |
-| `include_zero_point` | `False` | request a constant term |
-| `baseline_value` | `0.0` | additive baseline when no constant parameter is used |
-
-The aliases `common_parameters`, `use_common_model` and `common_model` also
-select common parameters. Common coefficients are stored in the automatically
-associated `detrending` common object.
-
-```{warning}
-A free zeroth-order coefficient can be degenerate with the dataset offset or
-another baseline model. Keep `starting_order: 1` unless a separate constant is
-required.
-```
 
 No dedicated polynomial-detrending configuration is currently present in the
 [PyORBIT examples repository](https://github.com/LucaMalavolta/PyORBIT_examples);

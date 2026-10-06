@@ -22,6 +22,15 @@ $Z_\mathrm{ref}$ is a reference value that can be either specified in the config
 The common object ``correlation`` will be automatically grabbed by `PyORBIT`. Since there are no common parameters, there is no need to specify it in the ``common`` section
 ```
 
+## Model parameters
+
+The following parameters will be inherited from the common model (column *Common?: common*) or a different value will be assigned for each dataset (column *Common?: dataset*)
+
+| Name        | Parameter | Common?  | Definition  | Notes |
+| :---        | :-------- | :-------------  | :-----  | :---- |
+| x_zero      | Constant $Z_\mathrm{ref}$ as defined in Equation {eq} `polynomial_correlation` | dataset | ``correlation``     | |
+| corr_cN     | Coefficient of order N | dataset | ``correlation``     | |
+
 ## Keywords
 
 Model-wide keywords, with the default value in boldface.
@@ -63,6 +72,7 @@ It does the opposite of the keyword `include_zero_point`. It must be set to `Tru
 ```{warning}
 Not all the keywords have been implemented in version <= 9.1.12, check out if the output is consistent with your expectations.
 ```
+
 ## Examples
 
 The input dataset follows the standard structure described in [Prepare a dataset file](prepare_dataset).
@@ -188,12 +198,3 @@ solver:
     nlive: 4000
   recenter_bounds: True
 ```
-
-## Model parameters
-
-The following parameters will be inherited from the common model (column *Common?: common*) or a different value will be assigned for each dataset (column *Common?: dataset*)
-
-| Name        | Parameter | Common?  | Definition  | Notes |
-| :---        | :-------- | :-------------  | :-----  | :---- |
-| x_zero      | Constant $Z_\mathrm{ref}$ as defined in Equation {eq} `polynomial_correlation` | dataset | ``correlation``     | |
-| corr_cN     | Coefficient of order N | dataset | ``correlation``     | |

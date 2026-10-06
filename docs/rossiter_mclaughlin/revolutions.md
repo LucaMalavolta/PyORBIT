@@ -10,12 +10,15 @@
 the planet. Unlike the one-dimensional RM models, its input and output are
 matrices with one row per exposure and one column per velocity bin.
 
-The model requires `batman-package`, a limb-darkening object, the usual planet
-and stellar parameters, and an expanded two-dimensional PyORBIT dataset. See
-[Preparing an RM Revolutions dataset](revolutions_preparation.md) for the
-required pickle structure.
+## Model definition and requirements
 
-## Dataset-specific CCF parameters
+- model name: `rossitermclaughlin_revolutions`
+- requires `batman-package`, a limb-darkening object, planet and stellar
+  parameters, and an expanded two-dimensional PyORBIT dataset. See
+  [Preparing an RM Revolutions dataset](revolutions_preparation.md) for the
+  required pickle structure.
+
+## Model parameters
 
 | Parameter | Meaning |
 | --- | --- |
@@ -27,9 +30,19 @@ These parameters inherit defaults from the `ccf_parameters` common object.
 The stellar-surface calculation also supports differential rotation and a
 convective velocity polynomial through `star_parameters`.
 
-## Original and improved data models
+```{note}
+The velocity axis, stellar rotation parameters, FWHM parameters and
+`rv_offset` must use a consistent velocity unit. The reference example uses
+km/s for the CCF axis.
+```
 
-`use_improved_model` defaults to `True`.
+## Keywords
+
+Model-wide keywords, with the default value in boldface.
+
+**use_improved_model**
+* accepted values: **`True`** | `False`
+* selects the data representation and forward model:
 
 - With `False`, `data` contains the extracted local CCF residuals and the
   forward model returns the local CCF matrix directly.
@@ -39,9 +52,20 @@ convective velocity polynomial through `star_parameters`.
   the data.
 
 The improved approach needs only approximate transit limits to identify the
-out-of-transit spectra during dataset preparation.
+out-of-transit spectra during dataset preparation. Use the `_original.pkl`
+dataset when `use_improved_model: False` selects the residual-CCF formulation.
 
-## Configuration example
+**planet_ngrid**
+* accepted values: integer | **`21`**
+* number of grid points used to sample the occulting planet; increasing it
+  raises the computational cost.
+
+**time_step**
+* accepted values: number in seconds | **`149`**
+* integration step for finite exposures; decreasing it raises the
+  computational cost.
+
+## Examples
 
 This excerpt is adapted from
 [`example02_improved_TESSonly_RevolutionRML.yaml`](https://github.com/LucaMalavolta/RM_revolutions_example/blob/main/revolutions_RM/example02_improved_TESSonly_RevolutionRML.yaml):
@@ -65,15 +89,4 @@ models:
       rv_offset: [0.0, 0.0]
     boundaries:
       fwhm_q: [2.0, 10.0]
-```
-
-Set `use_improved_model: False` and use the `_original.pkl` dataset to follow
-the original residual-CCF formulation. `planet_ngrid` defaults to 21 and
-`time_step` to 149 seconds; increasing the former or decreasing the latter
-raises the computational cost.
-
-```{note}
-The velocity axis, stellar rotation parameters, FWHM parameters and
-`rv_offset` must use a consistent velocity unit. The reference example uses
-km/s for the CCF axis.
 ```

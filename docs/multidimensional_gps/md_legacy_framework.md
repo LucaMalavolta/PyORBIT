@@ -22,6 +22,31 @@ This model is mainly retained for reproducibility of older analyses. For new ana
 - multidimensional quasi-periodic model using the `pyaneti` backend
 - supports the same dataset coefficient notation as the newer multidimensional models
 
+## Model parameters
+
+### `gp_framework_quasiperiodic`
+
+| Name | Parameter | Common? | Definition | Notes |
+| :--- | :-------- | :------ | :--------- | :---- |
+| `Prot` | Rotational period of the star | common | `activity` | |
+| `Pdec` | Decay timescale of active regions | common | `activity` | |
+| `Oamp` | Coherence scale | common | `activity` | |
+| `Vc` | Coefficient of `G(t)` in the RV model | common | `activity` | |
+| `Vr` | Coefficient of `G'(t)` in the RV model | common | `activity` | |
+| `Lc` | Coefficient of `G(t)` in the chromospheric-index model | common | `activity` | |
+| `Bc` | Coefficient of `G(t)` in the BIS model | common | `activity` | |
+| `Br` | Coefficient of `G'(t)` in the BIS model | common | `activity` | |
+
+### `gp_pyaneti_quasiperiodic`
+
+| Name | Parameter | Common? | Definition | Notes |
+| :--- | :-------- | :------ | :--------- | :---- |
+| `Prot` | Rotational period of the star | common | `activity` | |
+| `Pdec` | Decay timescale of active regions | common | `activity` | |
+| `Oamp` | Coherence scale | common | `activity` | |
+| `con_amp` | Coefficient of the latent GP | dataset | `activity` | |
+| `rot_amp` | Coefficient of the first derivative of the latent GP | dataset | `activity` | Fixed to zero when `derivative: False` |
+
 ## Keywords
 
 Model-wide keywords, with the default value in boldface.
@@ -103,28 +128,3 @@ models:
         con_amp: [-1.0, 1.0]
       derivative: False
 ```
-
-## Model parameters
-
-### `gp_framework_quasiperiodic`
-
-| Name | Parameter | Common? | Definition | Notes |
-| :--- | :-------- | :------ | :--------- | :---- |
-| `Prot` | Rotational period of the star | common | `activity` | |
-| `Pdec` | Decay timescale of active regions | common | `activity` | |
-| `Oamp` | Coherence scale | common | `activity` | |
-| `Vc` | Coefficient of `G(t)` in the RV model | common | `activity` | |
-| `Vr` | Coefficient of `G'(t)` in the RV model | common | `activity` | |
-| `Lc` | Coefficient of `G(t)` in the chromospheric-index model | common | `activity` | |
-| `Bc` | Coefficient of `G(t)` in the BIS model | common | `activity` | |
-| `Br` | Coefficient of `G'(t)` in the BIS model | common | `activity` | |
-
-### `gp_pyaneti_quasiperiodic`
-
-| Name | Parameter | Common? | Definition | Notes |
-| :--- | :-------- | :------ | :--------- | :---- |
-| `Prot` | Rotational period of the star | common | `activity` | |
-| `Pdec` | Decay timescale of active regions | common | `activity` | |
-| `Oamp` | Coherence scale | common | `activity` | |
-| `con_amp` | Coefficient of the latent GP | dataset | `activity` | |
-| `rot_amp` | Coefficient of the first derivative of the latent GP | dataset | `activity` | Fixed to zero when `derivative: False` |

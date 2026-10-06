@@ -38,6 +38,18 @@ The coefficients $\alpha$ and $\beta$ introduced in the [`S+LEAF` multiGP exampl
 - ``spleaf_multidimensional_exponentialsineperiodic_slow``
 - ``spleaf_multidimensional_esp_devel``
 
+## Model parameters
+
+The following parameters will be inherited from the common model (column *Common?: common*) or a different value will be assigned for each dataset (column *Common?: dataset*)
+
+| Name        | Parameter | Common?  | Definition  | Notes |
+| :---        | :-------- | :-------------  | :-----  | :---- |
+| Prot      | rotational period of the star $\theta$ | common | ``activity``     | |
+| Pdec      | Decay time scale of active regions $\lambda$ | common | ``activity``     | |
+| Oamp | Coherence scale $w$ | common | ``activity`` |   |
+| con_amp    | coefficient of $G(t)$ component | dataset | ``activity``     | |
+| rot_amp    | coefficient of $G^\prime (t)$ component | dataset | ``activity``     | |
+
 ## Keywords
 
 Model-wide keywords, with the default value in bold face.
@@ -200,16 +212,3 @@ parameters:
 ...
 
 ```
-
-
-## Model parameters
-
-The following parameters will be inherited from the common model (column *Common?: common*) or a different value will be assigned for each dataset (column *Common?: dataset*)
-
-| Name        | Parameter | Common?  | Definition  | Notes |
-| :---        | :-------- | :-------------  | :-----  | :---- |
-| Prot      | rotational period of the star $\theta$ | common | ``activity``     | |
-| Pdec      | Decay time scale of active regions $\lambda$ | common | ``activity``     | |
-| Oamp | Coherence scale $w$ | common | ``activity`` |   |
-| con_amp    | coefficient of $G(t)$ component | dataset | ``activity``     | |
-| rot_amp    | coefficient of $G^\prime (t)$ component | dataset | ``activity``     | |

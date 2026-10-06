@@ -10,7 +10,12 @@
 vectors. Its coefficients are dataset-specific and are inherited from the
 automatically associated `cheops_modelling` common object.
 
-## Ancillary columns
+## Model definition and requirements
+
+- model name: `cheops_detrending`
+- requires CHEOPS diagnostic ancillary columns; `time` and `roll_angle` must be labelled.
+
+### Ancillary columns
 
 The ancillary file must contain a labelled `time` column and a labelled
 `roll_angle` column. The supported diagnostic columns are:
@@ -37,18 +42,30 @@ guide:
 9052.138846  1.000069  0.000258  0.447083  -1.553406  0.015485  0.023059  0.000012  0.648865  192.682123
 ```
 
+## Model parameters
+
+The model creates dataset-specific coefficients for the available diagnostics: `dfdbg`, `dfdcontam`, `dfdsmear`, `ramp`, `dfdx`, `dfdy`, `d2fdx2`, `d2fdxdy`, and `d2fdy2`. With roll-angle fitting it also creates sine and cosine coefficients through the third harmonic. `dfdt` and `d2fdt2` are added according to the selected time-trend keywords.
+
 ## Keywords
 
-| Keyword | Default | Effect |
-| --- | --- | --- |
-| `fit_roll_angle` | `True` | include sine/cosine harmonics through the third harmonic |
-| `fit_linear_trend` | `False` | include `dfdt` |
-| `fit_quadratic_trend` | `False` | include both `dfdt` and `d2fdt2` |
+Model-wide keywords, with the default value in boldface.
+
+**fit_roll_angle**
+* accepted values: **`True`** | `False`
+* include sine/cosine harmonics through the third harmonic.
+
+**fit_linear_trend**
+* accepted values: `True` | **`False`**
+* include `dfdt`.
+
+**fit_quadratic_trend**
+* accepted values: `True` | **`False`**
+* include both `dfdt` and `d2fdt2`.
 
 If both time-trend keywords are false, no time term is included. The
 quadratic choice takes precedence when both are true.
 
-## Example
+## Examples
 
 ```yaml
 inputs:

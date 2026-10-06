@@ -11,7 +11,6 @@ The kernel comprises:
 
 If you use this model, please cite the `celerite2` [Foreman-Mackey et al. 2017](https://ui.adsabs.harvard.edu/abs/2017AJ....154..220F/abstract) and [Foreman-Mackey 2018](https://ui.adsabs.harvard.edu/abs/2018RNAAS...2...31F/abstract)
 
-
 ## Model definition and requirements
 
 **model name**: `celerite2_rotation`
@@ -25,7 +24,6 @@ If you use this model, please cite the `celerite2` [Foreman-Mackey et al. 2017](
 **model name**: `celerite2_granulation_oscillation_rotation`
 - required common object: `activity`
 - configurable number of granulation and oscillation SHO terms plus one rotation term
-
 
 ## Model parameters
 
@@ -65,8 +63,6 @@ If you use this model, please cite the `celerite2` [Foreman-Mackey et al. 2017](
 | `osc_k*_period` | Timescale of each oscillation SHO term | common | `activity` | `*` is the kernel index, starting at 0 |
 | `osc_k*_Q0` | Quality factor of each oscillation SHO term | common | `activity` | |
 | `osc_k*_sigma` | Amplitude of each oscillation SHO term | dataset | `activity` | Common when `common_amplitudes: True` |
-
-
 
 ## Keywords
 

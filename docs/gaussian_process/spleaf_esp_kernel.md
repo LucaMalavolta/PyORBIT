@@ -27,7 +27,6 @@ If you use this model, please cite [Delisle et al. 2020](https://ui.adsabs.harva
 
 The `slow` implementation builds the `S+LEAF` covariance directly at each likelihood call. The default `spleaf_esp` implementation keeps a reusable covariance object and is normally preferred.
 
-
 ## Model parameters
 
 The following parameters will be inherited from the common model (column *Common?: common*) or a different value will be assigned for each dataset (column *Common?: dataset*).
@@ -38,8 +37,6 @@ The following parameters will be inherited from the common model (column *Common
 | `Pdec` | Decay timescale of active regions | common | `activity` | Replaced by `activity_decay` when `use_stellar_activity_decay: True` |
 | `Oamp` | Coherence scale | common | `activity` | |
 | `Hamp` | Amplitude of the kernel | dataset | `activity` | |
-
-
 
 ## Keywords
 
@@ -65,7 +62,7 @@ Model-wide keywords, with the default value in boldface.
 * accepted values: `True` | **`False`**
 * replaces `Pdec` with `activity_decay` from `star_parameters`.
 
-## Example
+## Examples
 
 ```yaml
 inputs:

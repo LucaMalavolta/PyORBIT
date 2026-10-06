@@ -17,6 +17,14 @@ This model is less physically tied to stellar rotation than the quasi-periodic m
 - implemented with `tinygp`
 - read [Caveats on the use of `tinyGP`](../running_pyorbit/tinygp_caveats) carefully
 
+## Model parameters
+
+| Name | Parameter | Common? | Definition | Notes |
+| :--- | :-------- | :------ | :--------- | :---- |
+| `matern32_scale` | Scale of the Matern-3/2 latent GP | common | `activity` | Older files may use `matern32_rho` |
+| `matern32_multigp_sigma` | Coefficient of the latent GP | dataset | `activity` | |
+| `matern32_multigp_sigma_deriv` | Coefficient of the first derivative of the latent GP | dataset | `activity` | Fixed to zero when `derivative: False` |
+
 ## Keywords
 
 Model-wide keywords, with the default value in boldface.
@@ -47,7 +55,7 @@ Model-wide keywords, with the default value in boldface.
 
 The replacement flags are mutually exclusive because the model has only one scale parameter.
 
-## Example
+## Examples
 
 ```yaml
 inputs:
@@ -79,11 +87,3 @@ models:
         matern32_multigp_sigma: [-20.0, 20.0]
       derivative: False
 ```
-
-## Model parameters
-
-| Name | Parameter | Common? | Definition | Notes |
-| :--- | :-------- | :------ | :--------- | :---- |
-| `matern32_scale` | Scale of the Matern-3/2 latent GP | common | `activity` | Older files may use `matern32_rho` |
-| `matern32_multigp_sigma` | Coefficient of the latent GP | dataset | `activity` | |
-| `matern32_multigp_sigma_deriv` | Coefficient of the first derivative of the latent GP | dataset | `activity` | Fixed to zero when `derivative: False` |
