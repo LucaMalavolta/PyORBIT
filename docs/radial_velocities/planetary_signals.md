@@ -1,6 +1,6 @@
 (radial_velocities)=
 
-# Planetary RV signal
+# Planetary signals
 
 A Keplerian model for non-interacting planets.
 The effect of each planet on the radial velocity of the host star are modelled as non-interacting Keplerians.
