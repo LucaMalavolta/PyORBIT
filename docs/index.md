@@ -132,16 +132,16 @@ running_pyorbit
 common_objects
 radial_velocities
 photometry
-additional_models
-detrending_models
-cheops_detrending
 astrometry
-rossiter_mclaughlin
 gaussian_process_regression
 multidimensional_gps
 dynamical_analysis
-subroutines
+rossiter_mclaughlin
+detrending_models
+cheops_detrending
+additional_models
 advanced_use
+subroutines
 GitHub Repository <https://github.com/LucaMalavolta/PyORBIT>
 ```
 

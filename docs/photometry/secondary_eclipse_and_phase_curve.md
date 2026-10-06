@@ -40,15 +40,35 @@ the common-object configuration.
 
 ## Keywords
 
-| Keyword | Default | Meaning |
-| --- | --- | --- |
-| `planets` | required | Planet common objects included in the model. |
-| `limb_darkening` | required | Limb-darkening common object. |
-| `supersample_factor` | `1` | Number of sub-exposures used to integrate finite exposure times. |
-| `exposure_time` | dataset cadence | Exposure time used with `supersample_factor`. |
-| `nthreads` | `1` | Number of threads passed to `batman`. |
-| `nightside_emission` | `True` | If false, `delta_occ` is removed and the occulted flux is tied to `phase_amp`. |
-| `phase_offset` | `True` | If false, `phase_off` is removed and the phase maximum is fixed to the default phase. |
+Model-wide keywords, with default values in boldface where applicable.
+
+**planets**
+* accepted values: list of planet common objects (required)
+* selects the planets included in the model.
+
+**limb_darkening**
+* accepted values: limb-darkening common-object name (required)
+* selects the limb-darkening common object.
+
+**supersample_factor**
+* accepted values: positive integer | **`1`**
+* sets the number of sub-exposures used to integrate finite exposure times.
+
+**exposure_time**
+* accepted values: exposure time in seconds | **`0.01`**
+* sets the exposure time used with `supersample_factor`; use the dataset cadence when it represents the exposure duration.
+
+**nthreads**
+* accepted values: positive integer | **`1`**
+* sets the number of threads passed to `batman`.
+
+**nightside_emission**
+* accepted values: **`True`** | `False`
+* if `False`, `delta_occ` is removed and the occulted flux is tied to `phase_amp`.
+
+**phase_offset**
+* accepted values: **`True`** | `False`
+* if `False`, `phase_off` is removed and the phase maximum is fixed to the default phase.
 
 ## Examples
 

@@ -59,14 +59,31 @@ limb-darkening parameters:
 
 ## Keywords
 
-| Keyword | Models | Meaning |
-| --- | --- | --- |
-| `planets` | all | List of planet common objects included in the light-curve model. |
-| `limb_darkening` | transit models | Limb-darkening common object used by the transit backend. |
-| `supersample_factor` | all | Number of sub-exposures used to integrate long-cadence observations. |
-| `exposure_time` | all | Exposure time used together with `supersample_factor`. |
-| `nthreads` | `batman` models | Number of threads passed to the `batman` backend. |
-| `use_roadrunner` | `pytransit_transit` | Use the PyTransit RoadRunner implementation when possible. |
+Model-wide keywords, with default values in boldface where applicable.
+
+**planets**
+* accepted values: list of planet common objects (required)
+* selects the planets included in the light-curve model; applies to all models.
+
+**limb_darkening**
+* accepted values: limb-darkening common-object name (required)
+* selects the common object used by the transit backend; applies to transit models.
+
+**supersample_factor**
+* accepted values: positive integer | **`1`**
+* sets the number of sub-exposures used to integrate long-cadence observations; applies to all models.
+
+**exposure_time**
+* accepted values: exposure time in seconds | **`0.01`**
+* sets the exposure time used with `supersample_factor`; applies to all models.
+
+**nthreads**
+* accepted values: positive integer | **`1`**
+* sets the number of threads passed to the `batman` backend; applies to `batman` models.
+
+**use_roadrunner**
+* accepted values: **`True`** | `False`
+* uses the PyTransit RoadRunner implementation when possible; applies to `pytransit_transit`.
 
 ## Examples
 

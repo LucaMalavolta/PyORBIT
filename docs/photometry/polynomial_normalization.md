@@ -61,13 +61,27 @@ for the broad built-in boundaries.
 
 ## Keywords
 
-| Keyword | Photometric setting |
-| --- | --- |
-| `normalization_model` | Set to `True` to multiply the light-curve model by the polynomial. |
-| `order` | Highest polynomial order; defaults to `1`. |
-| `starting_order` | Set to `0` to include `poly_c0`. This is selected automatically by `normalization_model: True` unless overridden. |
-| `time_interval` | Scales elapsed time before polynomial evaluation; defaults to `1.0`. For day-based times, `0.1` gives coefficients per 0.1 day, while `10.0` gives coefficients per 10 days. |
-| `x_zero` | Optional explicit reference time in the same time system as the dataset. |
+Model-wide keywords, with default values in boldface where applicable.
+
+**normalization_model**
+* accepted values: `True` | **`False`**
+* set to `True` to multiply the light-curve model by the polynomial.
+
+**order**
+* accepted values: integer | **`1`**
+* sets the highest polynomial order.
+
+**starting_order**
+* accepted values: non-negative integer | **`0`** when `normalization_model: True`
+* determines the lowest included coefficient; `0` includes `poly_c0` and is selected automatically for normalization unless overridden.
+
+**time_interval**
+* accepted values: positive number | **`1.0`**
+* scales elapsed time before polynomial evaluation. For day-based times, `0.1` gives coefficients per 0.1 day, while `10.0` gives coefficients per 10 days.
+
+**x_zero**
+* accepted values: reference time in the same time system as the dataset
+* optionally sets the reference time explicitly.
 
 Do not set `exclude_zero_point: True` or `starting_order: 1` when the
 polynomial must also determine the light-curve baseline: those settings remove
