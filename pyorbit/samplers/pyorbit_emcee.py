@@ -461,7 +461,6 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
             theta_dict = results_analysis.get_theta_dictionary(mc)
             emcee_save_to_cpickle(mc, starting_point, population,
                                   prob, state, sampler, theta_dict,
-                                  prior=prior,
                                   samples=sampled)
 
             flatchain = emcee_flatchain(
@@ -518,7 +517,6 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
         theta_dict = results_analysis.get_theta_dictionary(mc)
         emcee_save_to_cpickle(mc, starting_point, population,
                               prob, state, sampler, theta_dict,
-                              prior=prior,
                               samples=sampled)
 
         flatchain = emcee_flatchain(
