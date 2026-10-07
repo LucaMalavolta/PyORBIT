@@ -45,7 +45,7 @@ derives the inferior-conjunction time internally.
 ## Model parameters
 
 The transit shape is controlled by the usual planet, stellar and
-limb-darkening parameters:
+[limb-darkening](../common_objects/limb_darkening.md) parameters:
 
 | Parameter | Scope | Meaning |
 | --- | --- | --- |

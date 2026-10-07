@@ -47,7 +47,7 @@ In conclusion, **it is strongly advised to always use a normalization factor in 
 ## Model definition and requirements
 
 - model_name: ``dilution_factor`` or ``local_dilution_factor``
-- required common objects: ``dilution_factor``
+- required common object: [dilution_factor](../common_objects/dilution_factor.md)
 
 ## Model parameters
 

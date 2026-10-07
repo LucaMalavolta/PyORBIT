@@ -11,6 +11,8 @@ planet must have the same period if measured with either transits or radial velo
 As another example, the rotational period of a star and the decay time scale
 of active regions can be considered *common parameters*, while the amplitude
 of stellar activity will depend on the dataset under analysis as it changes with wavelength.
+Passband-dependent quantities such as limb darkening and dilution can also be
+shared by the models and datasets that use the same passband.
 
 ```{note}
 Not all the physical parameters defined in a *common object* will be employed in the modelling, but only those required by the models listed in the ``model`` section of the configuration file and recalled in the ``model`` subsection of each dataset under the input section
@@ -21,4 +23,6 @@ Not all the physical parameters defined in a *common object* will be employed in
 common_objects/planets
 common_objects/star
 common_objects/activity
+common_objects/limb_darkening
+common_objects/dilution_factor
 ```
