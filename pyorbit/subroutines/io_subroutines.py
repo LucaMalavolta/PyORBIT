@@ -103,8 +103,13 @@ def affine_load_from_cpickle(dir_output, prefix=''):
     sampler_acceptance_fraction = pickle.load(
         open(dir_output + add_prefix + "sampler_acceptance_fraction.p", "rb"))
 
+    try:
+        prior = pickle.load(open(dir_output + add_prefix + "prior.p", "rb"))
+    except FileNotFoundError:
+        prior = None 
+
     return mc, starting_point, population, prob, \
-        sampler_chain, sampler_lnprobability, sampler_acceptance_fraction, theta_dict
+        sampler_chain, sampler_lnprobability, sampler_acceptance_fraction, theta_dict, prior
 
 def affine_simpler_load_from_cpickle(dir_output, prefix=''):
     add_prefix = (prefix + '_' if prefix else '')
@@ -118,13 +123,7 @@ def affine_simpler_load_from_cpickle(dir_output, prefix=''):
     return state, sampler
 
 def emcee_load_from_cpickle(emcee_dir_output, prefix=''):
-    try:
-        add_prefix = (prefix + '_' if prefix else '')
-        prior = pickle.load(open(emcee_dir_output + add_prefix + "prior.p", "rb"))
-    except FileNotFoundError:
-        prior = None 
-
-    return affine_load_from_cpickle(emcee_dir_output, prefix), prior
+    return affine_load_from_cpickle(emcee_dir_output, prefix)
 
 def emcee_simpler_load_from_cpickle(emcee_dir_output, prefix=''):
     return affine_simpler_load_from_cpickle(emcee_dir_output, prefix)

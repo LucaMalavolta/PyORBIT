@@ -58,7 +58,7 @@ def pyorbit_emcee_mpi(config_in, input_datasets=None, return_output=None):
 
     try:
         mc, starting_point, population, prob, sampler_chain, \
-            sampler_lnprobability, _, theta_dict = \
+            sampler_lnprobability, _, theta_dict, prior = \
             emcee_load_from_cpickle(emcee_dir_output)
         #state, sampler = emcee_simpler_load_from_cpickle(emcee_dir_output)
         reloaded_emcee = True
