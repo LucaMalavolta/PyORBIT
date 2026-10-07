@@ -222,7 +222,7 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
         return log_priors + log_likelihood
 
     global log_priors_likelihood_blob
-    def log_priors_likelihood(theta):
+    def log_priors_likelihood_blob(theta):
 
         #start = time.time()
 
