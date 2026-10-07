@@ -209,7 +209,7 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
         os.system('mkdir -p ' + dir_output)
 
         mc, starting_point, population, prob, \
-            sampler_chain, sampler_lnprobability, sampler_acceptance_fraction, _ = \
+            sampler_chain, sampler_lnprobability, sampler_acceptance_fraction, _, prior = \
             emcee_load_from_cpickle(dir_input)
 
         if hasattr(mc.emcee_parameters, 'version'):
@@ -853,16 +853,23 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
 
     if mc.include_priors:
 
-        print()
-        print('Recomputing log-prior, it may take a while...')
-        if hasattr(mc, 'log_priors'):
-            flat_lnprior = np.asarray(_results_parallel_map(
-                mc, 'log_priors', flat_chain, results_cpu_threads,
-                results_mp_method, progress=True))
+        if prior is None:
+
+            print()
+            print('Recomputing log-prior, it may take a while...')
+            if hasattr(mc, 'log_priors'):
+                flat_lnprior = np.asarray(_results_parallel_map(
+                    mc, 'log_priors', flat_chain, results_cpu_threads,
+                    results_mp_method, progress=True))
+            else:
+                print('log-prior recomputation failed, using the average value')
+                flat_lnprior = np.ones_like(flat_lnprob) * med_ln_priors
         else:
-            print('log-prior recomputation failed, using the average value')
-            flat_lnprior = np.ones_like(flat_lnprob) * med_ln_priors
+            flat_lnprior, sampler_lnprior = emcee_flatlnprob(
+                prior, nburnin, nthin, population, nwalkers)
         lnprior_med = common.compute_value_sigma(flat_lnprior)
+
+            
     else:
         flat_lnprior = np.zeros_like(flat_lnprob)
         med_ln_priors = 0.
@@ -1255,6 +1262,18 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
     star_parameters_sampleMED = results_analysis.get_stellar_parameters(mc, chain_sampleMED, warnings=False)
 
     if plot_dictionary['lnprob_chain'] or plot_dictionary['chains']:
+
+        print('Plot PRIOR chain ')
+
+        fig = plt.figure(figsize=(12, 12))
+        plt.xlabel(r'$\ln \mathcal{L}$')
+        plt.plot(sampler_lnprior, '-', alpha=0.5)
+        plt.axhline(lnprior_med[0])
+        plt.axvline(nburnin / nthin, c='r')
+        plt.savefig(dir_output + 'LNprior_chain' +file_ext,
+                    bbox_inches='tight', dpi=300)
+        plt.close(fig)
+
 
         print('Plot FLAT chain ')
 

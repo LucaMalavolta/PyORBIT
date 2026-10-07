@@ -57,10 +57,13 @@ def emcee_write_dummy_file(mc, prefix=''):
     file_dummy.close()
 
 
-def emcee_save_to_cpickle(mc, starting_point, population, prob, state, sampler, theta_dict, samples=None, prefix=None):
+def emcee_save_to_cpickle(mc, starting_point, population, prob, state, sampler, theta_dict, samples=None, prior=None, prefix=None):
     if samples:
         mc.emcee_parameters['nsteps'] = samples
     add_prefix = (prefix + '_' if prefix else '')
+
+    if prior is not None:
+        pickle.dump(prior, open(mc.emcee_dir_output + add_prefix + "prior.p", "wb"))
 
     pickle.dump(theta_dict, open(mc.emcee_dir_output + add_prefix + "theta_dict.p", "wb"))
     pickle.dump(mc, open(mc.emcee_dir_output + add_prefix + "model_container.p", "wb"))
@@ -115,7 +118,13 @@ def affine_simpler_load_from_cpickle(dir_output, prefix=''):
     return state, sampler
 
 def emcee_load_from_cpickle(emcee_dir_output, prefix=''):
-    return affine_load_from_cpickle(emcee_dir_output, prefix)
+    try:
+        add_prefix = (prefix + '_' if prefix else '')
+        prior = pickle.load(open(emcee_dir_output + add_prefix + "prior.p", "rb"))
+    except FileNotFoundError:
+        prior = None 
+
+    return affine_load_from_cpickle(emcee_dir_output, prefix), prior
 
 def emcee_simpler_load_from_cpickle(emcee_dir_output, prefix=''):
     return affine_simpler_load_from_cpickle(emcee_dir_output, prefix)

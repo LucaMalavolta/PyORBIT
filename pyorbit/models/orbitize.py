@@ -80,6 +80,7 @@ class Orbitize(AbstractModel, AbstractAstrometry):
 
             self.iad_filepath = kwargs.get('iad_filepath')
             self.hipparcos_lnprob = hipparcos.HipparcosLogProb(self.iad_filepath, hipparcos_ID, n_planets)
+            print('STEP 1 complete: Hipparcos IAD data loaded and likelihood function initialized', self.hipparcos_lnprob)
         else:
             self.hipparcos_lnprob = None
 
@@ -97,7 +98,8 @@ class Orbitize(AbstractModel, AbstractAstrometry):
 
             self.gost_filepath = kwargs.get('gost_filepath')
             self.hgca_lnprob = gaia.HGCALogProb(hipparcos_ID, self.hipparcos_lnprob, self.gost_filepath)
-            self.hipparcos_lnprob = None
+            #self.hipparcos_lnprob = None
+            print('STEP 2 complete: HGCA GOST data loaded and likelihood function initialized', self.hgca_lnprob)
         else:
             self.hgca_lnprob = None
 
@@ -136,7 +138,6 @@ class Orbitize(AbstractModel, AbstractAstrometry):
             plx_err=0.,
             tau_ref_epoch=orbitize_tref,
             fit_secondary_mass=True,
-            hipparcos_IAD = self.hipparcos_lnprob,
             gaia=self.hgca_lnprob,
         )
 
@@ -148,13 +149,20 @@ class Orbitize(AbstractModel, AbstractAstrometry):
         for i0_planet, planet_name in enumerate(planet_list):
             i_planet = i0_planet + 1 
             prepend = planet_name + '__'
+
+
             Tperi_MJD =  self.parameter_values[prepend+'Tperi'] + self.Tref + self.bjd_offset - 2400000.5
 
-            tau = orbitize.basis.tp_to_tau(Tperi_MJD, orbitize_tref, self.parameter_values[prepend+'P'])
+            #tau = orbitize.basis.tp_to_tau(Tperi_MJD, orbitize_tref, self.parameter_values[prepend+'P'])
+            tau = (Tperi_MJD-orbitize_tref) / self.parameter_values[prepend+'P'] % 1.0
+            tau = (2458388.6 - 2400000.5 - orbitize_tref)/self.parameter_values[prepend+'P'] % 1.0
+
+            #print(self.parameter_values[prepend+'Tperi'], Tperi_MJD, tau)
+
             param_model[this_system.param_idx['sma'+repr(i_planet)]] = self.parameter_values[prepend+'a_AU']
             param_model[this_system.param_idx['ecc'+repr(i_planet)]] = self.parameter_values[prepend+'e']
-            param_model[this_system.param_idx['inc'+repr(i_planet)]] = self.parameter_values[prepend+'i'] * constants.deg2rad
-            param_model[this_system.param_idx['aop'+repr(i_planet)]] = self.parameter_values[prepend+'omega'] * constants.deg2rad + np.pi
+            param_model[this_system.param_idx['inc'+repr(i_planet)]] = self.parameter_values[prepend+'i'] * constants.deg2rad 
+            param_model[this_system.param_idx['aop'+repr(i_planet)]] = self.parameter_values[prepend+'omega'] * constants.deg2rad # + np.pi
             param_model[this_system.param_idx['pan'+repr(i_planet)]] = self.parameter_values[prepend+'Omega'] * constants.deg2rad
             param_model[this_system.param_idx['tau'+repr(i_planet)]] = tau
             param_model[this_system.param_idx['m'+repr(i_planet)]] = self.parameter_values[prepend+'M_Me'] * constants.Mears

@@ -203,6 +203,14 @@ def pyorbit_emcee_mpi(config_in, input_datasets=None, return_output=None):
         log_priors, log_likelihood = mc.log_priors_likelihood(theta)
         return log_priors + log_likelihood
 
+    global log_priors_likelihood_blob
+    def log_priors_likelihood_blob(theta):
+
+        log_priors, log_likelihood = mc.log_priors_likelihood(theta)
+        return log_priors + log_likelihood, log_priors
+
+
+
     if reloaded_emcee:
         state, sampler = emcee_simpler_load_from_cpickle(emcee_dir_output)
 
@@ -367,7 +375,7 @@ def pyorbit_emcee_mpi(config_in, input_datasets=None, return_output=None):
         print()
     else:
         sampler = emcee.EnsembleSampler(
-            mc.emcee_parameters['nwalkers'], mc.ndim, log_priors_likelihood)
+            mc.emcee_parameters['nwalkers'], mc.ndim, log_priors_likelihood_blob)
 
     if mc.emcee_parameters['nsave'] > 0:
         print('Saving temporary steps')
@@ -382,7 +390,7 @@ def pyorbit_emcee_mpi(config_in, input_datasets=None, return_output=None):
                     sys.exit(0)
 
                 sampler.pool = pool
-                population, prob, state = sampler.run_mcmc(
+                population, prob, state, prior = sampler.run_mcmc(
                     population,
                     int(mc.emcee_parameters['nsave']),
                     thin=mc.emcee_parameters['thin'],
@@ -394,6 +402,7 @@ def pyorbit_emcee_mpi(config_in, input_datasets=None, return_output=None):
             theta_dict = results_analysis.get_theta_dictionary(mc)
             emcee_save_to_cpickle(mc, starting_point, population,
                                     prob, state, sampler, theta_dict,
+                                    prior=prior,
                                     samples=sampled)
 
             flatchain = emcee_flatchain(
@@ -429,7 +438,7 @@ def pyorbit_emcee_mpi(config_in, input_datasets=None, return_output=None):
                 pool.wait()
                 sys.exit(0)
             sampler.pool = pool
-            population, prob, state = sampler.run_mcmc(
+            population, prob, state, prior = sampler.run_mcmc(
                 population,
                 nsteps_todo,
                 thin=mc.emcee_parameters['thin'],
@@ -442,6 +451,7 @@ def pyorbit_emcee_mpi(config_in, input_datasets=None, return_output=None):
         theta_dict = results_analysis.get_theta_dictionary(mc)
         emcee_save_to_cpickle(mc, starting_point, population,
                               prob, state, sampler, theta_dict,
+                              prior=prior,
                               samples=sampled)
 
         flatchain = emcee_flatchain(

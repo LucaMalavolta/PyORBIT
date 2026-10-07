@@ -21,6 +21,14 @@ __all__ = ["pars_input", "yaml_parser", "yaml_fix_nested"]
 
 
 def yaml_parser(file_conf):
+    """yaml_parser 
+    Load the input configuration file and return the configuration dictionary. If the output name is not specified, it will be generated from the input file name.
+
+    :param file_conf: Input configuration file name
+    :type file_conf: string
+    :return: Prepare configuration dictionary
+    :rtype: dict
+    """
     stream = open(file_conf, 'r')
 
     try:
@@ -44,6 +52,14 @@ def yaml_parser(file_conf):
     return config_in
 
 def yaml_fix_nested(config_in):
+    """
+    Fix the nested sampling compatibility of priors in the configuration.
+
+    :param config_in: Input configuration dictionary
+    :type config_in: dict
+    :return: Fixed configuration dictionary
+    :rtype: dict
+    """
 
     print()
     print('Internal reformatting for Nested Sampling compatibility of priors')

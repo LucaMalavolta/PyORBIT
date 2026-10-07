@@ -221,6 +221,19 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
 
         return log_priors + log_likelihood
 
+    global log_priors_likelihood_blob
+    def log_priors_likelihood(theta):
+
+        #start = time.time()
+
+        log_priors, log_likelihood = mc.log_priors_likelihood(theta)
+        #end = time.time()
+        #print("--------Computation took {0:.16f} seconds".format(end - start))
+
+        return log_priors + log_likelihood, log_priors
+
+
+
     if reloaded_emcee:
         state, sampler = emcee_simpler_load_from_cpickle(emcee_dir_output)
 
@@ -416,7 +429,7 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
         print()
     else:
         sampler = emcee.EnsembleSampler(
-            mc.emcee_parameters['nwalkers'], mc.ndim, log_priors_likelihood, moves=emcee_moves)
+            mc.emcee_parameters['nwalkers'], mc.ndim, log_priors_likelihood_blob, moves=emcee_moves)
 
     if mc.emcee_parameters['nsave'] > 0:
         print('Saving temporary steps')
@@ -428,7 +441,7 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
             if mc.emcee_parameters['use_threading_pool']:
                 with multiprocessing.Pool(num_threads) as pool:
                     sampler.pool = pool
-                    population, prob, state = sampler.run_mcmc(
+                    population, prob, state, prior = sampler.run_mcmc(
                         population,
                         int(mc.emcee_parameters['nsave']),
                         thin=mc.emcee_parameters['thin'],
@@ -436,7 +449,7 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
                         progress=progress_bar,
                         skip_initial_state_check=emcee_skip_check)
             else:
-                population, prob, state = sampler.run_mcmc(
+                population, prob, state, prior = sampler.run_mcmc(
                     population,
                     int(mc.emcee_parameters['nsave']),
                     thin=mc.emcee_parameters['thin'],
@@ -448,6 +461,7 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
             theta_dict = results_analysis.get_theta_dictionary(mc)
             emcee_save_to_cpickle(mc, starting_point, population,
                                   prob, state, sampler, theta_dict,
+                                  prior=prior,
                                   samples=sampled)
 
             flatchain = emcee_flatchain(
@@ -481,7 +495,7 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
         if mc.emcee_parameters['use_threading_pool']:
             with multiprocessing.Pool(num_threads) as pool:
                 sampler.pool = pool
-                population, prob, state = sampler.run_mcmc(
+                population, prob, state, prior = sampler.run_mcmc(
                     population,
                     nsteps_todo,
                     thin=mc.emcee_parameters['thin'],
@@ -491,7 +505,7 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
 
         else:
             print('Warning: NOT using threading, pool, performances will be slower')
-            population, prob, state = sampler.run_mcmc(
+            population, prob, state, prior = sampler.run_mcmc(
                 population,
                 nsteps_todo,
                 thin=mc.emcee_parameters['thin'],
@@ -504,6 +518,7 @@ def pyorbit_emcee(config_in, input_datasets=None, return_output=None):
         theta_dict = results_analysis.get_theta_dictionary(mc)
         emcee_save_to_cpickle(mc, starting_point, population,
                               prob, state, sampler, theta_dict,
+                              prior=prior,
                               samples=sampled)
 
         flatchain = emcee_flatchain(
