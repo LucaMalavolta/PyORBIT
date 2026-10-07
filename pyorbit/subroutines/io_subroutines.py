@@ -57,13 +57,13 @@ def emcee_write_dummy_file(mc, prefix=''):
     file_dummy.close()
 
 
-def emcee_save_to_cpickle(mc, starting_point, population, prob, state, sampler, theta_dict, samples=None, prior=None, prefix=None):
+def emcee_save_to_cpickle(mc, starting_point, population, prob, state, sampler, theta_dict, samples=None, prefix=None):
     if samples:
         mc.emcee_parameters['nsteps'] = samples
     add_prefix = (prefix + '_' if prefix else '')
 
     if prior is not None:
-        pickle.dump(prior, open(mc.emcee_dir_output + add_prefix + "prior.p", "wb"))
+        pickle.dump(sampler.blobs, open(mc.emcee_dir_output + add_prefix + "sampler_lnprior.p", "wb"))
 
     pickle.dump(theta_dict, open(mc.emcee_dir_output + add_prefix + "theta_dict.p", "wb"))
     pickle.dump(mc, open(mc.emcee_dir_output + add_prefix + "model_container.p", "wb"))
@@ -75,6 +75,7 @@ def emcee_save_to_cpickle(mc, starting_point, population, prob, state, sampler, 
     pickle.dump(sampler, open(mc.emcee_dir_output + add_prefix + "sampler.p", "wb"))
     pickle.dump(sampler.chain, open(mc.emcee_dir_output + add_prefix + "sampler_chain.p", "wb"))
     pickle.dump(sampler.lnprobability, open(mc.emcee_dir_output + add_prefix + "sampler_lnprobability.p", "wb"))
+
     pickle.dump(sampler.acceptance_fraction,
                 open(mc.emcee_dir_output + add_prefix + "sampler_acceptance_fraction.p", "wb"))
 
@@ -104,12 +105,12 @@ def affine_load_from_cpickle(dir_output, prefix=''):
         open(dir_output + add_prefix + "sampler_acceptance_fraction.p", "rb"))
 
     try:
-        prior = pickle.load(open(dir_output + add_prefix + "prior.p", "rb"))
+        sampler_lnprior = pickle.load(open(dir_output + add_prefix + "sampler_lnprior.p", "rb"))
     except FileNotFoundError:
-        prior = None 
+        sampler_lnprior = None 
 
     return mc, starting_point, population, prob, \
-        sampler_chain, sampler_lnprobability, sampler_acceptance_fraction, theta_dict, prior
+        sampler_chain, sampler_lnprobability, sampler_acceptance_fraction, theta_dict, sampler_lnprior
 
 def affine_simpler_load_from_cpickle(dir_output, prefix=''):
     add_prefix = (prefix + '_' if prefix else '')
@@ -238,6 +239,8 @@ def ultranest_sampler_load_from_cpickle(output_directory, prefix=''):
 def affine_burnin_check(chain, nburnin, nthin, nwalkers=False):
     nburn = int(nburnin / nthin)
     modified = False
+
+    print(np.shape(chain))
 
     if not nwalkers:
         _, d, _ = np.shape(chain)

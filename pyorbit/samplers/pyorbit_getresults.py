@@ -209,7 +209,7 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
         os.system('mkdir -p ' + dir_output)
 
         mc, starting_point, population, prob, \
-            sampler_chain, sampler_lnprobability, sampler_acceptance_fraction, _, prior = \
+            sampler_chain, sampler_lnprobability, sampler_acceptance_fraction, _, sampler_lnprior = \
             emcee_load_from_cpickle(dir_input)
 
         if hasattr(mc.emcee_parameters, 'version'):
@@ -866,7 +866,7 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
                 flat_lnprior = np.ones_like(flat_lnprob) * med_ln_priors
         else:
             flat_lnprior, sampler_lnprior = emcee_flatlnprob(
-                prior, nburnin, nthin, population, nwalkers)
+                sampler_lnprior, nburnin, nthin, population, nwalkers)
         lnprior_med = common.compute_value_sigma(flat_lnprior)
 
             
