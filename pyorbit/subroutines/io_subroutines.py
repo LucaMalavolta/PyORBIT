@@ -240,8 +240,6 @@ def affine_burnin_check(chain, nburnin, nthin, nwalkers=False):
     nburn = int(nburnin / nthin)
     modified = False
 
-    print(np.shape(chain))
-
     if not nwalkers:
         _, d, _ = np.shape(chain)
     else:
