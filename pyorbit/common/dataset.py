@@ -179,8 +179,6 @@ class Dataset(AbstractCommon):
             self.x = np.asarray(data_input[:, 1], dtype=np.double)
             self.e = np.asarray(data_input[:, 2], dtype=np.double)
 
-            print(self.n_transit, self.x, self.e)
-            print(self.y)
             """ check if the transit numbers are in increasing order"""
             for i_n in range(1, np.size(self.n_transit)):
                 if self.n_transit[i_n] <= self.n_transit[i_n-1]:

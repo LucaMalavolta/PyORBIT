@@ -62,8 +62,10 @@ def emcee_save_to_cpickle(mc, starting_point, population, prob, state, sampler, 
         mc.emcee_parameters['nsteps'] = samples
     add_prefix = (prefix + '_' if prefix else '')
 
-    if prior is not None:
+    try:
         pickle.dump(sampler.blobs, open(mc.emcee_dir_output + add_prefix + "sampler_lnprior.p", "wb"))
+    except:
+        pass
 
     pickle.dump(theta_dict, open(mc.emcee_dir_output + add_prefix + "theta_dict.p", "wb"))
     pickle.dump(mc, open(mc.emcee_dir_output + add_prefix + "model_container.p", "wb"))
