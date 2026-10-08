@@ -355,6 +355,7 @@ class Dataset(AbstractCommon):
         self.residuals = self.y - self.model
 
     def model_logchi2(self):
+
         env = 1.0 / (self.e ** 2.0 + self.jitter ** 2.0)
 
         #chi2 = -0.5 * (self.n * np.log(2 * np.pi) +
