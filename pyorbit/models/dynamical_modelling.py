@@ -29,15 +29,12 @@ class AbstractDynamical(object):
     # brainless workaround
     def _prepare_dynamical_parameters(self, mc, **kwargs):
 
-        print("*** {0:s} global parameters:".format(self.model_name))
-
         _prepare_planet_parametrization(self, mc, **kwargs)
         _prepare_planet_scaled_semimajor_axis(self, mc, **kwargs)
         _prepare_planet_mass(self, mc, **kwargs)
         _prepare_stellar_mass(self, mc, **kwargs)
         _prepare_planet_inclination(self, mc, **kwargs)
         _prepare_planet_time_inferior_conjunction(self, mc, **kwargs)
-
 
 class RVdynamical(AbstractModel, AbstractDynamical):
     model_class = 'radial_velocities'

@@ -36,6 +36,8 @@ class RossiterMcLaughlin_Pyarome(AbstractModel, AbstractTransit):
             'macroturbulence',  # macroturbulence velocity (in km/s)
             'instrumental_broadening',  # instrumental broadening (in km/s)
             'measured_ccf_width',  # FWHM of the CCF (in km/s)
+            'quadratic_ld_c1',  # quadratic limb darkening coefficient c1
+            'quadratic_ld_c2',  # quadratic limb darkening coefficient c2
         ])
 
         self.arome_parameters = {}
@@ -45,7 +47,7 @@ class RossiterMcLaughlin_Pyarome(AbstractModel, AbstractTransit):
 
         self._prepare_planet_parameters(mc, **kwargs)
         self._prepare_star_parameters(mc, **kwargs)
-        self._prepare_limb_darkening_coefficients(mc, **kwargs)
+        #self._prepare_limb_darkening_coefficients(mc, **kwargs)
 
         self.arome_parameters['measurement_technique'] =  kwargs.get('measurement_technique', 'ccf')
         if self.arome_parameters['measurement_technique'] not in ['ccf', 'iodine']:
@@ -57,6 +59,7 @@ class RossiterMcLaughlin_Pyarome(AbstractModel, AbstractTransit):
         print('    Note: assumption of quadratic limb darkening for RML computation')
         for key, value in self.arome_parameters.items():
             print(f"        {key}: {value}")
+        print()
 
     def compute(self, parameter_values, dataset, x0_input=None):
         """
@@ -73,8 +76,6 @@ class RossiterMcLaughlin_Pyarome(AbstractModel, AbstractTransit):
             if np.isnan(key_val):
                 return 0.
 
-        ld_par = self._limb_darkening_coefficients(parameter_values)
-
         if x0_input is not None:
             x0 = x0_input
         else:
@@ -89,8 +90,8 @@ class RossiterMcLaughlin_Pyarome(AbstractModel, AbstractTransit):
                             1. * parameter_values['omega'],
                             1. * parameter_values['Tc']-dataset.Tref,
                             1. * parameter_values['a_Rs'],
-                            1. * ld_par[0],
-                            1. * ld_par[1],
+                            1. * parameter_values['quadratic_ld_c1'],
+                            1. * parameter_values['quadratic_ld_c2'],
                             1. * parameter_values['instrumental_broadening'],
                             1. * parameter_values['v_sini'],
                             1. * parameter_values['measured_ccf_width']/ constants.sigma2FWHM,

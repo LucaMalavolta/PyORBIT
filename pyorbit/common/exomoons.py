@@ -13,7 +13,7 @@ class CommonExomoons(AbstractCommon):
     """
     Inherited class from AbstractCommon
     """
-    model_class = 'exomoon'
+    model_class = 'exomoons'
 
     """ choice to parametrize the eccentricity and argument of pericenter:
         Standard: $e$ and $\omega$
@@ -151,9 +151,9 @@ class CommonExomoons(AbstractCommon):
     recenter_pams = {'em_mean_long', 'em_omega', 'em_Omega'}
 
     def __init__(self, *args, **kwargs):
-        super(CommonPlanets, self).__init__(*args, **kwargs)
+        super(CommonExomoons, self).__init__(*args, **kwargs)
 
-        self.orbit = 'keplerian'
+        self.orbit = 'circular'
         self.parametrization = 'Standard'
 
         self.use_inclination = True
@@ -238,10 +238,10 @@ class CommonExomoons(AbstractCommon):
         if self.use_mass :
             print("    using exomoon mass - no alternatives: ", self.use_mass)
 
-        if self.compute_semimajor_axis_from_mass:
-            print("    planetary semi-major axis computed from planet/star masses: ", self.compute_semimajor_axis_from_mass)
-            print("       WARNING: this flag should be true only if you are fitting for planetary masses")
-            print("                and stellar density is not a free/fixed parameter (e.g. as in transit fitting)")
+        #if self.compute_semimajor_axis_from_mass:
+        #    print("    planetary semi-major axis computed from planet/star masses: ", self.compute_semimajor_axis_from_mass)
+        #    print("       WARNING: this flag should be true only if you are fitting for planetary masses")
+        #    print("                and stellar density is not a free/fixed parameter (e.g. as in transit fitting)")
 
         if self.use_longitude_of_nodes:
             print("    longitude of ascending node as a free parameter: ", self.use_longitude_of_nodes)

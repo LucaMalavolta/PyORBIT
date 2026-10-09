@@ -334,6 +334,7 @@ class CommonStarParameters(AbstractCommon):
 
         if self.convective_order > 0:
             print("    convective blueshift is modeled with order {0:d}".format(self.convective_order))
+        print()
 
 
     def define_derived_parameters(self):

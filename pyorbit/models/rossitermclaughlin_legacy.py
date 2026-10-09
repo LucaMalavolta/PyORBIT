@@ -77,6 +77,16 @@ class RossiterMcLaughlin_Legacy(AbstractModel, AbstractTransit):
         self.model_class = 'rossiter_mclaughlin'
 
 
+    def print_info(self):
+        print("*** model {0:s} parameters:".format(self.model_name))
+        print("    instrument: ", mc.common_models[ self.spectrograph_ref].common_ref)
+        print("    Note: assumption of quadratic limb darkening for RML computation")
+        for key, value in self.ccf_variables.items():
+            print(f"        {key}: {value}")
+        print(f"        {'n_grid'}: {self.star_grid['n_grid']}")
+        print(f"        {'time_step'}: {self.star_grid['time_step']}")
+        print()
+
     def initialize_model(self, mc, **kwargs):
 
         self._prepare_planet_parameters(mc, **kwargs)
@@ -153,13 +163,6 @@ class RossiterMcLaughlin_Legacy(AbstractModel, AbstractTransit):
         #                        supersample_factor=self.code_options[dataset.name_ref]['sample_factor'],
         #                        exp_time=self.code_options[dataset.name_ref]['exp_time'],
         #                        nthreads=self.code_options['nthreads'])
-    
-    def print_info(self):
-        print("*** model {0:s} parameters:".format(self.model_name))
-        for key, value in self.ccf_variables.items():
-            print(f"        {key}: {value}")
-        print(f"        {'n_grid'}: {self.star_grid['n_grid']}")
-        print(f"        {'time_step'}: {self.star_grid['time_step']}")
 
 
     def precompute(self, parameter_values, dataset):

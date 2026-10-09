@@ -46,6 +46,33 @@ class CommonSpectrograph(AbstractCommon):
             'fixed' : 1.6,
             'unit': 'km/s',
         },
+    'linear_ld': # FWHM
+        {
+                'bounds': [0.0, 1.0],
+                'priors': ['Uniform', []],
+                'spaces': 'Linear',
+                'fixed' : None,
+                'unit': 'adimensional',
+        },
+
+    'quadratic_ld_c1': # FWHM
+        {
+                'bounds': [0.0, 1.0],
+                'priors': ['Uniform', []],
+                'spaces': 'Linear',
+                'fixed' : None,
+                'unit': 'adimensional',
+        },
+
+    'quadratic_ld_c2': # FWHM
+        {
+                'bounds': [0.0, 1.0],
+                'priors': ['Uniform', []],
+                'spaces': 'Linear',
+                'fixed' : None,
+                'unit': 'adimensional',
+        },
+
     }
 
     recenter_pams = {}
@@ -72,9 +99,6 @@ class CommonSpectrograph(AbstractCommon):
 
     def print_info(self):
         print("*** spectrograph {0:s} global parameters:".format(self.common_ref))
-
         print("    Use stellar line parameters (in common for all instruments): ",self.use_stellar_lines)
-        print("    CCF RV starting value: {0:f.3}  km/s".format(self.rv_min))
-        print("    CCF RV end value:      {0:f.3}  km/s".format(self.rv_max))
-        print("    CCF RV step:      {0:f.3}  km/s".format(self.step))
         print("    Remember to put a prior or fix the instrumental_broadening")
+        print()

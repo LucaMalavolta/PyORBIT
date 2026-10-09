@@ -76,13 +76,13 @@ def results_summary(mc, theta,
         fixed_warning = True
 
 
-    print('====================================================================================================')
+    print('==============================================================================================================')
     if is_starting_point:
         print('     Starting point of the sample/optimization routines    ')
     else:
         print('     Statistics on the posterior of the sampler parameters     ')
 
-    print('====================================================================================================')
+    print('==============================================================================================================')
     print()
 
     dict_sampler_summary = {}
@@ -106,12 +106,13 @@ def results_summary(mc, theta,
         print_theta_bounds(model.sampler_parameters, theta, mc.bounds)
 
 
-    print('====================================================================================================')
+
+    print('==============================================================================================================')
     if is_starting_point:
         print('     Starting point projected onto the model parameter space     ')
     else:
         print('     Statistics on the model parameters obtained from the posteriors samples     ')
-    print('====================================================================================================')
+    print('==============================================================================================================')
     print()
 
     dict_parameters_summary = {}
@@ -148,21 +149,21 @@ def results_summary(mc, theta,
             dict_parameters_summary[model_name] = \
             print_dictionary(parameter_values, fixed_warning=fixed_warning)
 
-    print('====================================================================================================')
+    print('==============================================================================================================')
     if is_starting_point:
         print('     Derived parameters obtained from starting point     ')
     else:
         print('     Statistics on the derived parameters obtained from the posteriors samples     ')
-    print('====================================================================================================')
+    print('==============================================================================================================')
     print()
 
     returned_samples, dict_derived_summary = get_planet_parameters(mc, theta, verbose=True)
 
     if compute_lnprob:
         print()
-        print('====================================================================================================')
+        print('==============================================================================================================')
         print('     Statistics on the log-likelihood     ')
-        print('====================================================================================================')
+        print('==============================================================================================================')
         print()
 
         if len(np.shape(theta)) == 2:
@@ -178,9 +179,9 @@ def results_summary(mc, theta,
             print(' LN probability: %12f ' % (mc(theta)))
 
     print()
-    print('====================================================================================================')
-    print('     ------------------------------------------------------------------------------------------     ')
-    print('====================================================================================================')
+    print('==============================================================================================================')
+    print('     ----------------------------------------------------------------------------------------------------     ')
+    print('==============================================================================================================')
     print()
     print()
 
@@ -1104,9 +1105,9 @@ def print_theta_bounds(i_dict, theta, bounds):
 
 
 def print_analysis_info(i_dict, bounds, spaces, priors, additional_kind, additonal_pams, fixed_pams):
-    format_string_v1 = '{0:12s}  id:{1:4d}  s:{2:11s} b:[{3:12.4f}, {4:12.4f}]   p:{5:s}  '
-    format_string_v2 = '{0:12s}  derived (no id, space, bound) {1:25s} p:{2:s}  '
-    format_string_v3 = '{0:12s}  fixed (no id, space, bound) {1:27s} p:{2:s}  '
+    format_string_v1 = '{0:26s}  id:{1:4d}  s:{2:11s} b:[{3:12.4f}, {4:12.4f}]   p:{5:s}  '
+    format_string_v2 = '{0:26s}  derived (no id, space, bound) {1:25s} p:{2:s}  '
+    format_string_v3 = '{0:26s}  fixed (no id, space, bound) {1:27s} p:{2:s}  '
     dict_output = {}
 
     for par, i in i_dict.items():
