@@ -853,7 +853,7 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
 
     if mc.include_priors:
 
-        if prior is None:
+        if flat_lnprior is None:
 
             print()
             print('Recomputing log-prior, it may take a while...')
