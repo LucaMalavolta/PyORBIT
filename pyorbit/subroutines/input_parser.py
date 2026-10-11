@@ -344,8 +344,8 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, reload_af
 
                     # print('    Dynamical model for {0:s} is enabled'.format(body_name))
 
-
-        elif model_name == 'star' or model_name=='stars':
+        #TODO changed in PyORBIT version 12 beta
+        elif model_name in primary_model_names:
 
             star_dynamical_model = False
             """ Double check if there is planet using a dynamical model
@@ -359,7 +359,12 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, reload_af
                 pass
             """ stellar models can be gathered under a specific label"""
 
-            for conf_name, star_conf in model_conf.items():
+            if star_dynamical_model and model_name not in primary_model_names:
+                print("UNRECOVERABLE ERROR model {0:s} :".format(model_name))
+                print('    dynamical modelling is supperted only for planets around the primary star')
+                quit()
+
+            for iter_name, star_conf in model_conf.items():
                 if 'type' in star_conf:
                     model_type = star_conf['type']
                 elif 'kind' in star_conf:
@@ -367,8 +372,13 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, reload_af
                 elif 'model' in star_conf:
                     model_type = star_conf['model']
                 else:
-                    model_type = conf_name
+                    model_type = iter_name
 
+                if model_name in primary_model_names:
+                    conf_name = iter_name
+                else:
+                    conf_name = iter_name + '_' + model_name
+                
                 mc.common_models[conf_name] = define_common_type_to_class[model_type](conf_name)
                 bounds_space_priors_starts_fixed(mc, mc.common_models[conf_name], star_conf)
 
