@@ -86,6 +86,15 @@ class Dataset(AbstractCommon):
         self.compute_model_plot = True
 
 
+    def check_internal_consistency(self):
+        if np.abs(self.x-self.Tref).min() > 1e-6:
+            print("UNRECOVERABLE ERROR dataset {0:s} :".format(self.name_ref))
+            print('   The internal reference time is not consistent with the input time')
+            print('   Average dataset epoch: {0:.4f}'.format(np.mean(self.x)))
+            print('   Reference time:        {0:.4f}'.format(self.Tref))
+            print()
+            quit()
+
     def append_ancillary(self, input_file, input_array=False, input_array_str=False):
         """ Function to either read an ancillary file or pass the value of another
         dataset as ancillary
@@ -169,10 +178,10 @@ class Dataset(AbstractCommon):
 
         return data_input
 
-    def define_dataset_base(self, data_input, update=False,
+    def define_dataset_base(self, data_input, Tref, update=False,
                             flag_shutdown_jitter=False):
         # Add a flag to save internally the input dataset
-
+        self.Tref = Tref
         if self.kind == 'transit_time':
             """ Special input reading from T0 files """
             self.n_transit = np.asarray(data_input[:, 0], dtype=np.int16)
@@ -218,8 +227,6 @@ class Dataset(AbstractCommon):
         self.n_shape = np.shape(self.y)
 
         if not update:
-            if self.Tref is None:
-                self.Tref = np.mean(self.x, dtype=np.double)
 
             """ Default boundaries are defined according to the characteristic
                 of the dataset. They must be large enough to allow for most of
@@ -228,9 +235,9 @@ class Dataset(AbstractCommon):
             x_range = np.max(self.x) - np.min(self.x)
             y_range = np.max(self.y) - np.min(self.y)
             y_trend = np.abs(y_range/x_range)
-            y_diff = np.abs(np.mean(self.x)-self.Tref) * y_trend + 1000.
-            self.generic_default_bounds = {'offset': [np.min(self.y) - 10.*y_diff, np.max(self.y) + 10.*y_diff],
-                                           'jitter': [np.min(self.e)/100., 100 * np.max(self.e)]}
+            y_diff = np.abs(np.mean(self.x)-self.Tref) * y_trend + 10.
+            self.generic_default_bounds = {'offset': [np.min(self.y) - y_diff, np.max(self.y) + y_diff],
+                                           'jitter': [np.min(self.e)/100., 10 * np.max(self.e)]}
 
             if self.kind == 'Phot':
                 self.generic_default_bounds['offset'][0] = - \
@@ -314,11 +321,6 @@ class Dataset(AbstractCommon):
         self._delete_systematic_dictionaries_mask('offset')
         self.input_offset = None
 
-    def common_Tref(self, Tref_in):
-        self.Tref = Tref_in
-        self.x0 = self.x - self.Tref
-        return
-
     def model_reset(self):
         self.residuals = None
         self.model = None
@@ -357,11 +359,6 @@ class Dataset(AbstractCommon):
     def model_logchi2(self):
 
         env = 1.0 / (self.e ** 2.0 + self.jitter ** 2.0)
-
-        #chi2 = -0.5 * (self.n * np.log(2 * np.pi) +
-        #               np.sum(self.residuals ** 2 * env - np.log(env)))
-        #print('{0:25s} {1:12f} {2:12f}'.format(self.name_ref, chi2, np.std(self.residuals)), self.residuals)
-
         return -0.5 * (self.n * np.log(2 * np.pi) +
                        np.sum(self.residuals ** 2 * env - np.log(env)))
 

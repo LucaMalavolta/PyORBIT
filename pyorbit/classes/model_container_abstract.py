@@ -43,7 +43,7 @@ class ModelContainer(object):
         self.ndim = 0
         self.pam_names = ''
 
-        self.Tref = None
+        self.Tref = 2460000.000
 
         self.ordered_planets = {}
 
