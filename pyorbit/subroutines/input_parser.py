@@ -184,7 +184,7 @@ def associate_common_models(mc, model_name, model_conf):
         mc.models[model_name].common_ref.append(common_name)
         mc.models[model_name].exomoon_ref = common_name
 
-def associate_default_common(mc, model_name, model_conf, initialize=False):
+def associate_default_common(mc, model_name, model_type, model_conf, initialize=False):
 
     """Default model association, without including the star, spectrograph,
     limb darkening, exomoon models"""
@@ -651,7 +651,7 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, reload_af
 
                 #TODO: added in PyORBIT version 12 beta
                 associate_common_models(mc, model_name_exp, model_conf)
-                common_ref = associate_default_common(mc, model_name_exp, model_conf)
+                common_ref = associate_default_common(mc, model_name_exp, model_type, model_conf)
 
 
                 for dataset_name, dataset in mc.dataset_dict.items():
@@ -676,7 +676,7 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, reload_af
         else:
 
             #TODO added in PyORBIT version 12 beta
-            common_ref = associate_default_common(mc, model_name, model_conf)
+            common_ref = associate_default_common(mc, model_name, model_type, model_conf)
 
             mc.models[model_name] = define_type_to_class[model_type](model_name, common_ref)
             mc.models[model_name].print_warning()
