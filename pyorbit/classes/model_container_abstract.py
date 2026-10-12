@@ -567,6 +567,7 @@ class ModelContainer(object):
         #        log_likelihood = -np.inf
         #        log_priors = -np.inf
 
+
         if return_priors is False:
             return log_likelihood
         else:
