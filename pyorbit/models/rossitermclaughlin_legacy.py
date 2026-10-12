@@ -70,7 +70,9 @@ class RossiterMcLaughlin_Legacy(AbstractModel, AbstractTransit):
             'R_Rs',  # planet radius (in units of stellar radii)
             'natural_contrast',  # relative depth of the CCF
             'natural_broadening',  # natural broadening of the CCF (in km/s)
-            'instrumental_broadening',  # instrumental broadening of the CCF (
+            'instrumental_broadening',  # instrumental broadening of the CCF (km/s)
+            'quadratic_ld_c1',  # quadratic limb darkening coefficient c1
+            'quadratic_ld_c2',  # quadratic limb darkening coefficient c2
         ])
 
         self.star_grid = {}   # write an empty dictionary
@@ -91,7 +93,7 @@ class RossiterMcLaughlin_Legacy(AbstractModel, AbstractTransit):
 
         self._prepare_planet_parameters(mc, **kwargs)
         self._prepare_star_parameters(mc, **kwargs)
-        self._prepare_limb_darkening_coefficients(mc, **kwargs)
+        #self._prepare_limb_darkening_coefficients(mc, **kwargs)
 
         for common_ref in self.common_ref:
             if getattr(mc.common_models[common_ref], 'model_class', None) == 'spectrograph':
@@ -174,8 +176,8 @@ class RossiterMcLaughlin_Legacy(AbstractModel, AbstractTransit):
         if self.precomputed == True:
             pass
 
-        ld_par = self._limb_darkening_coefficients(parameter_values)
-
+        #ld_par = self._limb_darkening_coefficients(parameter_values)
+        ld_par = [parameter_values['quadratic_ld_c1'], parameter_values['quadratic_ld_c2']]
         lambda_rad = parameter_values['lambda'] * constants.deg2rad
 
 
