@@ -358,7 +358,14 @@ class Dataset(AbstractCommon):
 
     def model_logchi2(self):
 
+
         env = 1.0 / (self.e ** 2.0 + self.jitter ** 2.0)
+
+        chi2 = -0.5 * (self.n * np.log(2 * np.pi) +
+                       np.sum(self.residuals ** 2 * env - np.log(env)))
+
+        #print(self.name_ref, chi2, 'Y:', self.y[:5], 'M:', self.model[:5], 'R:', self.residuals[:5], 'E:', self.e[:5], 'J:', self.jitter[:5])
+
         return -0.5 * (self.n * np.log(2 * np.pi) +
                        np.sum(self.residuals ** 2 * env - np.log(env)))
 

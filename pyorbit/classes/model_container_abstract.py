@@ -151,8 +151,6 @@ class ModelContainer(object):
             self.ndim, output_lists = dataset.define_parameter_properties(
                 self.ndim, output_lists, dataset.list_pams)
 
-
-            print(model_name)
             for model_name in dataset.models:
                 self.ndim, output_lists = self.models[model_name].define_parameter_properties(
                     self.ndim, output_lists, dataset.name_ref)

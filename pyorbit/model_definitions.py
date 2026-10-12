@@ -314,7 +314,11 @@ define_type_to_class: dict[str, type[Any] | dict[str, type[Any]]] = {
 star_model_names = ['star', 'primary', 'secondary', 'tertiary', 'quaternary', 'quinary', 'senary']
 primary_model_names = ['primary',  'star']
 
-model_requires_planets = ['radial_velocities', 'transit_times', 'transit', 'orbitize', 'gaia_astrometry_orbit',
+
+
+dynamical_timing_models = ['transit_times', 'transit_durations']
+
+model_requires_planets = ['radial_velocities', 'transit_times', 'transit_durations', 'transit', 'orbitize', 'gaia_astrometry_orbit',
                                 'transit_eclipse_phasecurve', 'rossiter_mclaughlin', 'rossiter_mclaughlin_exomoon']
 
 model_requires_limb_darkening = ['transit',

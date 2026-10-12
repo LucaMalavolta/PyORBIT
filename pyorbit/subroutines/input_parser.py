@@ -546,7 +546,6 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, reload_af
         mc.dynamical_model = DynamicalIntegrator()
 
     for model_name, model_conf in conf_models.items():
-
         if model_name == 'dummy_model':
             continue
 
@@ -573,9 +572,7 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, reload_af
         In this approach, a copy of the model will be created for each planet in the system
 
         """
-
         if temporary_model.model_class in model_requires_planets:
-
 
             """ radial_velocities and transits are just wrappers for the planets to be actually included in the model, so we
                 substitute it with the individual planets in the list"""
@@ -606,14 +603,16 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, reload_af
             """ For each dataset we check if the current model is included in the list of models.
                 We then remove the generic model name  and include all the planet-specific  model names
             """
+
+
             for dataset_name, dataset in mc.dataset_dict.items():
+
                 if model_name in dataset.models:
                     dataset.models.remove(model_name)
                     dataset.models.extend(model_name_expanded)
 
                     if len(list(OrderedSet(planet_list) & OrderedSet(mc.dynamical_dict))) and not keplerian_approximation:
                         dataset.dynamical = True
-
 
             #TODO: changed in PyORBIT version 12 beta
             for model_name_org, model_name_exp, planet_name in zip(model_name_original, model_name_expanded, planet_list):
@@ -648,6 +647,17 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, reload_af
                         mc.models[model_name_exp].parent_model = model_name_org
                     #else:
                     #    mc.models[model_name_exp].print_warning()
+
+                if model_type in dynamical_timing_models:
+
+                    for dataset_name, dataset in mc.dataset_dict.items():
+
+                        if planet_name in mc.dynamical_dict and \
+                                model_name_exp in dataset.models and \
+                                not keplerian_approximation:
+                            dataset.planet_name = planet_name
+                            dataset.dynamical = True
+
 
                 #TODO: added in PyORBIT version 12 beta
                 associate_common_models(mc, model_name_exp, model_conf)
