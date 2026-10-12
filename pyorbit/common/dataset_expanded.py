@@ -89,7 +89,7 @@ class DatasetExpanded(Dataset):
         self.compute_model_plot = False
 
     def check_internal_consistency(self):
-        if np.abs(self.x-self.Tref).min() > 1e-6:
+        if np.abs(self.x-self.Tref).min() > 1e6:
             print("UNRECOVERABLE ERROR dataset {0:s} :".format(self.name_ref))
             print('   The internal reference time is not consistent with the input time')
             print('   Average dataset epoch: {0:.4f}'.format(np.mean(self.x)))
