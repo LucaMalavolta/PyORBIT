@@ -41,7 +41,7 @@ class RossiterMcLaughlin_Pyarome(AbstractModel, AbstractTransit):
         ])
 
         self.arome_parameters = {}
-        self.model_class = 'rossiter_mclaughlin'
+        self.model_class = 'rossiter_mclaughlin_nold'
 
     def initialize_model(self, mc, **kwargs):
 
