@@ -63,6 +63,10 @@ class DatasetExternal(Dataset):
         self.n = 0
 
 
+    def check_internal_consistency(self):
+        pass
+
+
     def append_ancillary(self, input_file, input_array=False, input_array_str=False):
         """ This method must do nothing, as ancillary data are not supported in orbitize datasets"""
         pass 
@@ -76,9 +80,10 @@ class DatasetExternal(Dataset):
 
         return None
 
-    def define_dataset_base(self, data_input, update=False,
+    def define_dataset_base(self, data_input, Tref, update=False,
                             flag_shutdown_jitter=False):
         # Add a flag to save internally the input dataset
+        self.Tref = Tref
         """This method does nothing as there no dataset parameters for orbitize."""
         self.model_reset()
 
@@ -102,9 +107,6 @@ class DatasetExternal(Dataset):
         """This method does nothing as offset is dealt by orbitize."""
         pass
 
-    def common_Tref(self, Tref_in):
-        self.Tref = Tref_in
-        return
 
     def model_reset(self):
         self.log_likelihood = 0.000

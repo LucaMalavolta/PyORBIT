@@ -2,6 +2,7 @@ from __future__ import print_function
 
 from pyorbit.model_definitions import *
 from pyorbit.datatype_definitions import *
+from pyorbit.keywords_definitions import *
 # Special import for Dataset, it had to be escluded from
 # model_definitons to avoid circular import
 from pyorbit.common.dataset import Dataset
@@ -51,6 +52,7 @@ def yaml_parser(file_conf):
 
     return config_in
 
+
 def yaml_fix_nested(config_in):
     """
     Fix the nested sampling compatibility of priors in the configuration.
@@ -64,30 +66,31 @@ def yaml_fix_nested(config_in):
     print()
     print('Internal reformatting for Nested Sampling compatibility of priors')
     common_conf = config_in['common']
-    if 'planets' in common_conf:
-        for planet_name in common_conf['planets']:
 
-            if common_conf['planets'][planet_name].get('orbit', 'keplerian') == 'circular':
+    for keyword in (k for k in ['planets', 'exomoons'] if k in common_conf):
+        for body_name in common_conf[keyword]:
+
+            if common_conf[keyword][body_name].get('orbit', 'keplerian') == 'circular':
                 continue
 
-            prev_parametrization = common_conf['planets'][planet_name].get('parametrization', 'Eastman2013')
-            use_time_inferior_conjunction = common_conf['planets'][planet_name].get('use_time_inferior_conjunction', False)
+            prev_parametrization = common_conf[keyword][body_name].get('parametrization', 'Eastman2013')
+            use_time_inferior_conjunction = common_conf[keyword][body_name].get('use_time_inferior_conjunction', False)
             if prev_parametrization[:5] == 'Stand':
                 continue
 
             change_parametrization = False
-            if common_conf['planets'][planet_name].get('priors', False):
-                if 'e' in common_conf['planets'][planet_name]['priors'] or \
-                    'omega' in common_conf['planets'][planet_name]['priors']:
+            if common_conf[keyword][body_name].get('priors', False):
+                if 'e' in common_conf[keyword][body_name]['priors'] or \
+                    'omega' in common_conf[keyword][body_name]['priors']:
                     change_parametrization = True
 
             if change_parametrization:
                 if prev_parametrization[-5:] == 'Tcent' or use_time_inferior_conjunction:
-                    common_conf['planets'][planet_name]['parametrization'] = 'Standard_Tcent'
+                    common_conf[keyword][body_name]['parametrization'] = 'Standard_Tcent'
                 else:
-                    common_conf['planets'][planet_name]['parametrization'] = 'Standard'
-                print('    planet {0:s} - parametrization changed from {1:s} to {2:s}'.format(planet_name,
-                 prev_parametrization, common_conf['planets'][planet_name]['parametrization']))
+                    common_conf[keyword][body_name]['parametrization'] = 'Standard'
+                print('    {0:s} {1:s} - parametrization changed from {2:s} to {3:s}'.format(keyword, body_name,
+                    prev_parametrization, common_conf[keyword][body_name]['parametrization']))
 
 
     if 'star' not in common_conf:
@@ -109,6 +112,117 @@ def yaml_fix_nested(config_in):
     return config_in
 
 
+def get_model_type(model_conf, model_name):
+    if 'type' in model_conf:
+        model_type = model_conf['type']
+    elif 'kind' in model_conf:
+        model_type = model_conf['kind']
+    elif 'model' in model_conf:
+        model_type = model_conf['model']
+    else:
+        model_type = model_name
+    return model_type
+
+def associate_models_to_stars(mc, star_name, common_name, model_name):
+    if star_name not in primary_model_names:
+        search_name = common_name + '_' + star_name
+        if search_name in mc.common_models:
+            return search_name
+        else:
+            print('    WARNING: common model {0:s} assoociated to model {1:s} '.format(common_name, model_name))
+            print('             does not seem to be associated with the star {0:s}'.format(star_name))
+            print('    Please check the configuration file and make sure that the common model is associated with the correct star')
+            print('    common model {0:s} will be used for this model, check if this what you had in mind'.format(common_name))
+            print()
+    return common_name
+
+def associate_common_models(mc, model_name, model_conf):
+    """ Check if the name of the star has been specified in the configuration modelling.
+    If not we assume that the star is the primary one.
+    If the name is different form those assigned to the primary star in model_definitions:primary_model_names
+    then it means that common models have been included under a star label and hence renamed"""
+    star_name = model_conf.get('star', 'star')
+
+    """ Associate limb darkening coefficients for those models that can have different parametrization """
+    if mc.models[model_name].model_class in model_requires_limb_darkening:
+
+        common_name = model_conf.get('limb_darkening', 'limb_darkening')
+        common_name = associate_models_to_stars(mc, star_name, common_name, model_name)
+
+        mc.models[model_name].model_conf['limb_darkening_model'] = \
+            mc.common_models[common_name].ld_type
+
+        mc.models[model_name].model_conf['limb_darkening_ncoeff'] = \
+            mc.common_models[common_name].ld_ncoeff
+
+        mc.models[model_name].common_ref.append(common_name)
+
+    """ Adding the star by default, even if the model is not listed in model_requires_star,
+    because some models may require the stellar parameters for internal computations"""
+    if mc.models[model_name].model_class in model_requires_star +  model_requires_planets:
+
+        common_name = model_conf.get('star_parameters', 'star_parameters')
+        common_name = associate_models_to_stars(mc, star_name, common_name, model_name)
+
+        mc.models[model_name].common_ref.append(common_name)
+        mc.models[model_name].stellar_ref = common_name
+
+    """ Adding the associated spectrograph common model if required by the model class"""
+    if mc.models[model_name].model_class in model_requires_spectrograph:
+        common_name = model_conf.get('spectrograph', 'spectrograph')
+        common_name = associate_models_to_stars(mc, star_name, common_name, model_name)
+
+        mc.models[model_name].common_ref.append(common_name)
+        mc.models[model_name].spectrograph_ref = common_name
+
+
+    """ Adding the associated exomoon common model if required by the model class"""
+    if mc.models[model_name].model_class in model_requires_exomoon:
+        common_name = model_conf.get('exomoon', 'exomoon')
+        common_name = associate_models_to_stars(mc, star_name, common_name, model_name)
+
+        mc.models[model_name].common_ref.append(common_name)
+        mc.models[model_name].exomoon_ref = common_name
+
+def associate_default_common(mc, model_name, model_type, model_conf, initialize=False):
+
+    """Default model association, without including the star, spectrograph,
+    limb darkening, exomoon models"""
+
+    if model_conf.get('common', False):
+        common_ref = model_conf['common']
+
+        """ This part should not be required, as all the common models listed
+        in the configuration file should have been already initialized in the previous loop
+
+        if inizialize:
+            mc.models[model_name].common_ref.append(common_ref)
+
+            if common_ref not in mc.common_models:
+                mc.common_models[common_ref] = define_common_type_to_class[common_type](common_ref)
+        """
+
+    elif hasattr(define_type_to_class[model_type], 'default_common'):
+
+        """ Some data-specific models may noy need a common model, e.g., local polynomial trends,
+            however the code requires that such common model is provided in order to have a fall-back for the
+            default priors, boundaries, spaces, and fixed parameters. Such common model is saved with the same
+            name of the data-specific model.
+            Default common model only works it has been defined in the model class as a Class attribute
+            There is no default star association to these models.
+        """
+        common_type = define_type_to_class[model_type].default_common
+        common_ref = model_name
+        mc.models[model_name].common_ref.append(common_ref)
+
+        if common_ref not in mc.common_models:
+            mc.common_models[common_ref] = define_common_type_to_class[common_type](common_ref)
+
+    else:
+        common_ref = None
+
+    return common_ref
+
 def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, reload_affine=False, shutdown_jitter=False):
 
     mc.output_name = config_in['output']
@@ -126,6 +240,12 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, reload_af
     ordering_dict = {}
     #TODO: Added in PyORBIT version 12 beta
     planets_in_model = {}
+
+    #TODO: Added in PyORBIT version 12 beta
+    """ First thing we do, we get the referecen time, that now is a global parameter, 
+    and we assign it to all the datasets."""
+    for key in keywords_reference_time:
+        mc.Tref = np.asarray(conf_parameters.get(key, mc.Tref))
 
     """ Beginning of snippet dedicated to the reloading of parameters that are not involved in the fit procedure"""
     if reload_emcee or reload_affine:
@@ -239,13 +359,10 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, reload_af
                 print('There was en error while processing input data')
                 quit()
 
-        mc.dataset_dict[dataset_name].define_dataset_base(
-            data_input, False, shutdown_jitter)
 
-        if mc.Tref:
-            mc.dataset_dict[dataset_name].common_Tref(mc.Tref)
-        else:
-            mc.Tref = mc.dataset_dict[dataset_name].Tref
+        mc.dataset_dict[dataset_name].define_dataset_base(
+            data_input, mc.Tref, False, shutdown_jitter)
+        mc.dataset_dict[dataset_name].check_internal_consistency()
 
         if 'boundaries' in dataset_conf:
             bound_conf = dataset_conf['boundaries']
@@ -296,10 +413,6 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, reload_af
             Differently from the standard pyorbit dataset, the first row must
             include the dataset names
          """
-        #if 'ancillary_name' in dataset_conf:
-        #    #mc.dataset_dict[dataset_name].ancillary = input_datasets[dataset_conf['ancillary_name']]
-        #    mc.dataset_dict[dataset_name].append_ancillary(input_datasets[dataset_conf['ancillary_name']], input_array=True)
-
         for ancillary in ['ancillary_file', 'ancillary', 'ancillary_data', 'ancillary_dataset']:
             if ancillary in dataset_conf:
                 mc.dataset_dict[dataset_name].append_ancillary(dataset_conf[ancillary])
@@ -316,7 +429,7 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, reload_af
 
             for body_name, body_conf in model_conf.items():
 
-                print('Adding common model of {0:s}:  {1:s}'.format(model_name, body_name))
+                # print('Adding common model of {0:s}:  {1:s}'.format(model_name, body_name))
 
                 if not isinstance(body_name, str):
                     body_name = repr(body_name)
@@ -341,10 +454,10 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, reload_af
                 if body_conf['orbit'] == 'dynamical':
                     mc.dynamical_dict[body_name] = True
 
-                    print('    Dynamical model for {0:s} is enabled'.format(body_name))
+                    # print('    Dynamical model for {0:s} is enabled'.format(body_name))
 
-
-        elif model_name == 'star' or model_name=='stars':
+        #TODO changed in PyORBIT version 12 beta
+        elif model_name in star_model_names:
 
             star_dynamical_model = False
             """ Double check if there is planet using a dynamical model
@@ -358,16 +471,19 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, reload_af
                 pass
             """ stellar models can be gathered under a specific label"""
 
-            for conf_name, star_conf in model_conf.items():
-                if 'type' in star_conf:
-                    model_type = star_conf['type']
-                elif 'kind' in star_conf:
-                    model_type = star_conf['kind']
-                elif 'model' in star_conf:
-                    model_type = star_conf['model']
-                else:
-                    model_type = conf_name
+            if star_dynamical_model and model_name not in primary_model_names:
+                print("UNRECOVERABLE ERROR model {0:s} :".format(model_name))
+                print('    dynamical modelling is supperted only for planets around the primary star')
+                quit()
 
+            for iter_name, star_conf in model_conf.items():
+                model_type = get_model_type(star_conf, iter_name)
+
+                if model_name in primary_model_names:
+                    conf_name = iter_name
+                else:
+                    conf_name = iter_name + '_' + model_name
+                
                 mc.common_models[conf_name] = define_common_type_to_class[model_type](conf_name)
                 bounds_space_priors_starts_fixed(mc, mc.common_models[conf_name], star_conf)
 
@@ -391,14 +507,7 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, reload_af
                 If the object type/kind has been specified, than the section name is treated just as a label.
                 Otherwise, it is assumed that the section name correspond to the object name
             """
-            if 'type' in model_conf:
-                model_type = model_conf['type']
-            elif 'kind' in model_conf:
-                model_type = model_conf['kind']
-            elif 'model' in model_conf:
-                model_type = model_conf['model']
-            else:
-                model_type = model_name
+            model_type = get_model_type(model_conf, model_name)
 
             mc.common_models[model_name] = define_common_type_to_class[model_type](
                 model_name)
@@ -429,11 +538,6 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, reload_af
                     except:
                         conf_models[model_name] = {'common': model_name}
 
-        # Add the stellar parameter class anyway
-        #if 'star_parameters' not in mc.common_models:
-        #    mc.common_models['star_parameters'] = define_common_type_to_class['star_parameters'](
-        #        'star_parameters')
-
     for model_name in mc.common_models:
         mc.common_models[model_name].print_warning()
 
@@ -442,7 +546,6 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, reload_af
         mc.dynamical_model = DynamicalIntegrator()
 
     for model_name, model_conf in conf_models.items():
-
         if model_name == 'dummy_model':
             continue
 
@@ -454,16 +557,9 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, reload_af
         keplerian_approximation = False
         if 'keplerian_approximation' in model_conf:
             keplerian_approximation = model_conf['keplerian_approximation']
-            print('Using Keplerian approximation')
+            # print('Using Keplerian approximation')
 
-        if 'type' in model_conf:
-            model_type = model_conf['type']
-        elif 'kind' in model_conf:
-            model_type = model_conf['kind']
-        elif 'model' in model_conf:
-            model_type = model_conf['model']
-        else:
-            model_type = model_name
+        model_type = get_model_type(model_conf, model_name)
 
         try:
             temporary_model = define_type_to_class[model_type](model_name, None)
@@ -472,15 +568,11 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, reload_af
 
         #TODO here possible check for models requiring a binary companion
 
-        #if model_type in model_requires_planets or model_type in single_planet_model:
-
         """ Some models require one or more planets, with some specific properties.
         In this approach, a copy of the model will be created for each planet in the system
 
         """
-
-        if temporary_model.model_class in model_requires_planets \
-            or temporary_model.model_class in single_planet_model:
+        if temporary_model.model_class in model_requires_planets:
 
             """ radial_velocities and transits are just wrappers for the planets to be actually included in the model, so we
                 substitute it with the individual planets in the list"""
@@ -502,25 +594,25 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, reload_af
                         planet_list = np.atleast_1d(model_conf['planet']).tolist()
                 except:
                     planet_list = np.atleast_1d(model_conf['common']).tolist()
+    
                 #TODO changed in PyORBIT version 12 beta
                 model_name_original = [model_name for pl_name in planet_list]
                 model_name_expanded = [model_name + '_' + pl_name for pl_name in planet_list]
                 planets_in_model[model_name] = planet_list
 
-            """ Let's avoid some dumb user using the planet names to name the models"""
+            """ For each dataset we check if the current model is included in the list of models.
+                We then remove the generic model name  and include all the planet-specific  model names
+            """
 
-            if temporary_model.model_class in model_requires_planets:
-                """ For each dataset we check if the current model is included in the list of models.
-                    We then remove the generic model name  and include all the planet-specific  model names
-                """
-                for dataset_name, dataset in mc.dataset_dict.items():
-                    if model_name in dataset.models:
-                        dataset.models.remove(model_name)
-                        dataset.models.extend(model_name_expanded)
 
-                        if len(list(OrderedSet(planet_list) & OrderedSet(mc.dynamical_dict))) and not keplerian_approximation:
-                            dataset.dynamical = True
+            for dataset_name, dataset in mc.dataset_dict.items():
 
+                if model_name in dataset.models:
+                    dataset.models.remove(model_name)
+                    dataset.models.extend(model_name_expanded)
+
+                    if len(list(OrderedSet(planet_list) & OrderedSet(mc.dynamical_dict))) and not keplerian_approximation:
+                        dataset.dynamical = True
 
             #TODO: changed in PyORBIT version 12 beta
             for model_name_org, model_name_exp, planet_name in zip(model_name_original, model_name_expanded, planet_list):
@@ -530,17 +622,12 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, reload_af
                         define_type_to_class[model_type][mc.common_models[planet_name].orbit](
                             model_name_exp, planet_name)
 
-                    # TODO
-                    # ! this part will stop working now that most definitions have been moved to
-                    # ! mc.common_models[conf_name].model_initialize
-
+                    #TODO: check if it still makes sense to have this check/flag here 
                     if keplerian_approximation:
                         """ override default model from input file, to apply keplerian approximation """
                         mc.models[model_name_exp] = \
                             define_type_to_class[model_type]['keplerian'](
                                 model_name_exp, planet_name)
-                        
-                    #mc.models[model_name_exp].print_warning()
 
                 except:
                     mc.models[model_name_exp] = \
@@ -561,7 +648,7 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, reload_af
                     #else:
                     #    mc.models[model_name_exp].print_warning()
 
-                if model_type in transit_time_model:
+                if model_type in dynamical_timing_models:
 
                     for dataset_name, dataset in mc.dataset_dict.items():
 
@@ -570,91 +657,11 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, reload_af
                                 not keplerian_approximation:
                             dataset.planet_name = planet_name
                             dataset.dynamical = True
-                            mc.dynamical_t0_dict[planet_name] = dataset_name
-
-                """ This snippet will work only for transit class"""
-                #TODO check in PyORBIT version 12 beta if the comment is still true
-                if mc.models[model_name_exp].model_class in model_requires_limb_darkening:
-
-                    try:
-                        common_name = mc.models[model_name_exp].model_conf['limb_darkening']
-                    except:
-                        common_name = 'limb_darkening'
-
-                    print('  LC model: {0:s} is using {1:s} LD parameters'.format(
-                        model_name_exp, common_name))
-
-                    mc.models[model_name_exp].model_conf['limb_darkening_model'] = \
-                        mc.common_models[common_name].ld_type
-
-                    mc.models[model_name_exp].model_conf['limb_darkening_ncoeff'] = \
-                        mc.common_models[common_name].ld_ncoeff
-
-                    mc.models[model_name_exp].common_ref.append(common_name)
 
 
-                """ Adding the star by default, even if the model is not listed in model_requires_star,
-                because some models may require the stellar parameters for internal computations"""
-
-                try:
-                    common_name = mc.models[model_name_exp].model_conf['star_parameters']
-                except:
-                    common_name = 'star_parameters'
-
-                mc.models[model_name_exp].common_ref.append(common_name)
-                mc.models[model_name_exp].stellar_ref = common_name
-
-
-                """ Adding the associated spectrograph common model if required by the model class"""
-                if mc.models[model_name_exp].model_class in model_requires_spectrograph:
-                    try:
-                        common_name = model_conf['spectrograph']
-                    except:
-                        common_name = 'spectrograph'
-                    print('  model: {0:s} is using {1:s} spectrograph parameters'.format(
-                        model_name_exp, common_name))
-                    mc.models[model_name_exp].common_ref.append(common_name)
-                    mc.models[model_name_exp].spectrograph_ref = common_name
-
-                """ Adding the exomoon common model if required by the model class"""
-                if mc.models[model_name_exp].model_class in model_requires_exomoon:
-                    try:
-                        common_name = model_conf['exomoon']
-                    except:
-                        common_name = 'exomoon'
-                    print('  model: {0:s} is using {1:s} exomoon parameters'.format(
-                        model_name_exp, common_name))
-                    mc.models[model_name_exp].common_ref.append(common_name)
-                    mc.models[model_name_exp].exomoon_ref = common_name
-
-
-
-                """ New addition in 9.2: complex models requiring star, planet, and limb darkening,
-                    now can have extra additional parameters in other common models  """
-                if model_conf.get('common', False):
-                    common_ref = model_conf['common']
-                    mc.models[model_name_exp].common_ref.append(common_ref)
-
-                    if common_ref not in mc.common_models:
-                        mc.common_models[common_ref] = define_common_type_to_class[common_type](common_ref)
-
-                elif hasattr(define_type_to_class[model_type], 'default_common'):
-
-                    """ New: some data-specific models may noy need a common model, e.g., local polynomial trends,
-                        however the code requires that such common model is provided in order to have a fall-back for the
-                        default priors, boundaries, spaces, and fixed parameters. Such common model is saved with the same
-                        name of the data-specific model.
-                        Default common model only works it has been defined in the model class as a Class attribute
-                    """
-                    common_type = define_type_to_class[model_type].default_common
-                    common_ref = model_name_exp
-                    mc.models[model_name_exp].common_ref.append(common_ref)
-
-                    if common_ref not in mc.common_models:
-                        mc.common_models[common_ref] = define_common_type_to_class[common_type](common_ref)
-
-                else:
-                    common_ref = None
+                #TODO: added in PyORBIT version 12 beta
+                associate_common_models(mc, model_name_exp, model_conf)
+                common_ref = associate_default_common(mc, model_name_exp, model_type, model_conf)
 
 
                 for dataset_name, dataset in mc.dataset_dict.items():
@@ -678,75 +685,15 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, reload_af
 
         else:
 
-            if model_conf.get('common', False):
-                common_ref = model_conf['common']
-            elif hasattr(define_type_to_class[model_type], 'default_common'):
-
-                """ New: some data-specific models may not need a common model, e.g., local polynomial trends,
-                    however the code requires that such common model is provided in order to have a fall-back for the
-                    default priors, boundaries, spaces, and fixed parameters. Such common model is saved with the same
-                    name of the data-specifc model.
-                    Default common model only works it has been defined in the model class as a Class attribute
-                """
-                common_type = define_type_to_class[model_type].default_common
-                common_ref = model_name
-
-                if common_ref not in mc.common_models:
-                    mc.common_models[common_ref] = define_common_type_to_class[common_type](common_ref)
-            else:
-                common_ref = None
+            #TODO added in PyORBIT version 12 beta
+            common_ref = associate_default_common(mc, model_name, model_type, model_conf)
 
             mc.models[model_name] = define_type_to_class[model_type](model_name, common_ref)
             mc.models[model_name].print_warning()
 
-            """ Check if we need to add the limb darkening parameters to the model"""
-            if mc.models[model_name].model_class in model_requires_limb_darkening:
+            #TODO added in PyORBIT version 12 beta
+            associate_common_models(mc, model_name, model_conf)
 
-                try:
-                    common_name = model_conf['limb_darkening']
-                except:
-                    common_name = 'limb_darkening'
-
-                print('  model: {0:s} is using {1:s} LD parameters'.format(
-                    model_name, common_name))
-
-                model_conf['limb_darkening_model'] = \
-                    mc.common_models[common_name].ld_type
-
-                model_conf['limb_darkening_ncoeff'] = \
-                    mc.common_models[common_name].ld_ncoeff
-
-                mc.models[model_name].common_ref.append(common_name)
-
-            """ Adding the stellar parameters common model by default """
-            if mc.models[model_name].model_class in model_requires_star:
-                try:
-                    common_name = model_conf['star_parameters']
-                except:
-                    common_name = 'star_parameters'
-                mc.models[model_name].common_ref.append(common_name)
-                mc.models[model_name].stellar_ref = common_name
-
-            """ Adding the associated spectrograph common model by default """
-            if mc.models[model_name].model_class in model_requires_spectrograph:
-                try:
-                    common_name = model_conf['spectrograph']
-                except:
-                    common_name = 'spectrograph'
-                print('  model: {0:s} is using {1:s} spectrograph parameters'.format(
-                    model_name, common_name))
-                mc.models[model_name].common_ref.append(common_name)
-                mc.models[model_name].spectrograph_ref = common_name
-
-            #TODO can be removed in PyORBIT version 12 beta
-            """ Adding the list of multiple planets"""
-            if mc.models[model_name].model_class in model_requires_multiple_planets:
-
-                planet_list = np.atleast_1d(model_conf['planets']).tolist()
-                mc.models[model_name].planet_ref = planet_list[0]
-                for planet in planet_list:
-                    mc.models[model_name].common_ref.append(planet)
-                mc.models[model_name].multiple_planets = planet_list
 
             """ A model can be exclusively unitary, additive, multiplicative, or acting as a normalization factor.
                 The differenze between
@@ -756,7 +703,7 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, reload_af
                 if model_conf['normalization_model'] is True:
                     mc.models[model_name].normalization_model = True
                     mc.models[model_name].unitary_model = False
-                    print('Model type: normalization')
+                    #print('Model type: normalization')
             except KeyError:
                 pass
 
@@ -765,7 +712,7 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, reload_af
                     mc.models[model_name].normalization_model = True
                     mc.models[model_name].unitary_model = False
                     mc.models[model_name].exclude_zero_point = True
-                    print('Model type: multiplicative')
+                    #print('Model type: multiplicative')
             except KeyError:
                 pass
 
@@ -774,7 +721,7 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, reload_af
                 if model_conf['unitary_model'] is True:
                     mc.models[model_name].unitary_model = True
                     mc.models[model_name].normalization_model = False
-                    print('Model type: unitary')
+                    #print('Model type: unitary')
             except KeyError:
                 pass
 
@@ -782,7 +729,7 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, reload_af
                 if model_conf['additive_model'] is True:
                     mc.models[model_name].unitary_model = False
                     mc.models[model_name].normalization_model = False
-                    print('Model type: additive')
+                    #print('Model type: additive')
             except KeyError:
                 pass
 
@@ -793,6 +740,8 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, reload_af
                     common_list = [common_ref]
                 else:
                     common_list = common_ref
+
+
                 for common_mod in common_list:
                     for key_list in ['boundaries', 'spaces', 'priors', 'starts', 'fixed']:
                         for key, val in mc.common_models[common_mod].model_conf.get(key_list, {}).items():
@@ -846,10 +795,10 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, reload_af
             for p_name in  mc.ordered_planets:
                 mc.ordered_planets[p_name] -=1
 
-    if 'Tref' in conf_parameters:
-        mc.Tref = np.asarray(conf_parameters['Tref'])
-        for dataset_name in mc.dataset_dict:
-            mc.dataset_dict[dataset_name].common_Tref(mc.Tref)
+    #if 'Tref' in conf_parameters:
+    #    mc.Tref = np.asarray(conf_parameters['Tref'])
+    #    for dataset_name in mc.dataset_dict:
+    #        mc.dataset_dict[dataset_name].common_Tref(mc.Tref)
 
     if 'time_offset' in conf_parameters: 
         mc.bjd_offset = np.asarray(conf_parameters['time_offset'])

@@ -88,6 +88,14 @@ class DatasetExpanded(Dataset):
         self.compute_plot = False
         self.compute_model_plot = False
 
+    def check_internal_consistency(self):
+        if np.abs(self.x-self.Tref).min() > 1e6:
+            print("UNRECOVERABLE ERROR dataset {0:s} :".format(self.name_ref))
+            print('   The internal reference time is not consistent with the input time')
+            print('   Average dataset epoch: {0:.4f}'.format(np.mean(self.x)))
+            print('   Reference time:        {0:.4f}'.format(self.Tref))
+            print()
+            quit()
 
     def append_ancillary(self, input_file, input_array=False, input_array_str=False):
         """ Function to either read an ancillary file or pass the value of another
@@ -146,9 +154,10 @@ class DatasetExpanded(Dataset):
 
         return data_dictionary
 
-    def define_dataset_base(self, data_dictionary, update=False,
+    def define_dataset_base(self, data_dictionary, Tref, update=False,
                             flag_shutdown_jitter=False):
         # Add a flag to save internally the input dataset
+        self.Tref = Tref
 
         if flag_shutdown_jitter:
             data_dictionary['jitter'] = -1
@@ -169,8 +178,6 @@ class DatasetExpanded(Dataset):
         self.n_shape = np.shape(self.y)
 
         if not update:
-            if self.Tref is None:
-                self.Tref = np.mean(self.x, dtype=np.double)
 
             """Default boundaries are defined according to the characteristic
                of the dataset. They must be large enough to allow for most of
@@ -180,7 +187,7 @@ class DatasetExpanded(Dataset):
 
             self.generic_default_bounds = {'offset': [np.min(self.y) - 10.*data_range,
                                                         np.max(self.y) + 10.*data_range],
-                                           'jitter': [0., 100 * np.max(self.e)]}
+                                           'jitter': [0., 10 * np.max(self.e)]}
 
             self._setup_systematic_dictionaries('jitter', data_dictionary['jitter'])
             self._setup_systematic_dictionaries('offset', data_dictionary['offset'])

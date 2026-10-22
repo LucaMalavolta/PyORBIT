@@ -1,3 +1,6 @@
+keywords_reference_time = {'Tref', 'T_ref', 'tref', 't_ref',
+    'reference_time', 'reference_time', 'reference_epoch', 'reference_epoch'}
+
 keywords_stellar_rotation = ['use_stellar_rotation',
                             'use_stellar_rotation_period',
                             'use_rotation_period',

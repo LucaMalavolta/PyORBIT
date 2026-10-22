@@ -141,6 +141,7 @@ class RossiterMcLaughlin_MultiPlanets_Legacy(AbstractModel, AbstractTransit):
             print(f"        {key}: {value}")
         print(f"        {'n_grid'}: {self.star_grid['n_grid']}")
         print(f"        {'time_step'}: {self.star_grid['time_step']}")
+        print()
 
     def precompute(self, planet_list, dataset):
         for key, key_val in self.parameter_values.items():

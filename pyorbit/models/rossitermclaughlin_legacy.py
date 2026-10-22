@@ -70,12 +70,21 @@ class RossiterMcLaughlin_Legacy(AbstractModel, AbstractTransit):
             'R_Rs',  # planet radius (in units of stellar radii)
             'natural_contrast',  # relative depth of the CCF
             'natural_broadening',  # natural broadening of the CCF (in km/s)
-            'instrumental_broadening',  # instrumental broadening of the CCF (
+            'instrumental_broadening',  # instrumental broadening of the CCF (km/s)
         ])
 
         self.star_grid = {}   # write an empty dictionary
         self.model_class = 'rossiter_mclaughlin'
 
+
+    def print_info(self):
+        print("*** model {0:s} parameters:".format(self.model_name))
+        print("    instrument: ", mc.common_models[ self.spectrograph_ref].common_ref)
+        for key, value in self.ccf_variables.items():
+            print(f"        {key}: {value}")
+        print(f"        {'n_grid'}: {self.star_grid['n_grid']}")
+        print(f"        {'time_step'}: {self.star_grid['time_step']}")
+        print()
 
     def initialize_model(self, mc, **kwargs):
 
@@ -153,13 +162,6 @@ class RossiterMcLaughlin_Legacy(AbstractModel, AbstractTransit):
         #                        supersample_factor=self.code_options[dataset.name_ref]['sample_factor'],
         #                        exp_time=self.code_options[dataset.name_ref]['exp_time'],
         #                        nthreads=self.code_options['nthreads'])
-    
-    def print_info(self):
-        print("*** model {0:s} parameters:".format(self.model_name))
-        for key, value in self.ccf_variables.items():
-            print(f"        {key}: {value}")
-        print(f"        {'n_grid'}: {self.star_grid['n_grid']}")
-        print(f"        {'time_step'}: {self.star_grid['time_step']}")
 
 
     def precompute(self, parameter_values, dataset):
@@ -172,7 +174,6 @@ class RossiterMcLaughlin_Legacy(AbstractModel, AbstractTransit):
             pass
 
         ld_par = self._limb_darkening_coefficients(parameter_values)
-
         lambda_rad = parameter_values['lambda'] * constants.deg2rad
 
 

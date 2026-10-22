@@ -285,7 +285,7 @@ class AbstractTransit(object):
                                                parameter_values[prepend+'mean_long'],
                                                parameter_values[prepend+'e'],
                                                parameter_values[prepend+'omega'],
-                                               parameter_values[prepend+'Omega']) + Tref
+                                               parameter_values[prepend+'Omega']) + self.Tref
 
 
     def _limb_darkening_coefficients(self, parameter_values):

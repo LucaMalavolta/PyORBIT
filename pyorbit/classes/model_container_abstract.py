@@ -17,7 +17,6 @@ class ModelContainer(object):
         # Since the individual contribution of each planet cannot be disentagled, the output of
         # the dynamical integration cannot be associated to a model.
         self.dynamical_dict = {}
-        self.dynamical_t0_dict = {}
         self.dynamical_model = None
 
         self.dataset_dict = {}
@@ -44,12 +43,9 @@ class ModelContainer(object):
         self.ndim = 0
         self.pam_names = ''
 
-        self.Tref = None
+        self.Tref = 2460000.000
 
         self.ordered_planets = {}
-
-
-
 
     def model_setup(self):
 
@@ -71,7 +67,6 @@ class ModelContainer(object):
             model.initialize_model(self, **model_conf)
 
         for model_name, model in self.models.items():
-            #print(' ****** Initializing model: ', model_name, ' ******')
 
             try:
                 model_conf = model.model_conf
@@ -165,6 +160,11 @@ class ModelContainer(object):
         self.priors = output_lists['priors']
         self.range = self.bounds[:, 1] - self.bounds[:, 0]
 
+        if any(self.range < 0.0):
+            print('UNRECOVERABLE ERROR from configuration file')
+            print('    Some parameter has lower bound greater than upper bound')
+            print()
+            quit()
 
     def initialize_logchi2(self):
 
@@ -301,6 +301,7 @@ class ModelContainer(object):
         """
         Constant term added either by dataset.model_logchi2() or gp.log_likelihood()
         """
+
         if not self.check_bounds(theta):
             if return_priors is False:
                 return -np.inf
@@ -311,6 +312,8 @@ class ModelContainer(object):
             """ check if any keyword ahas get the output model from the dynamical tool
             we must do it here because all the planet are involved"""
             dynamical_output = self.dynamical_model.compute(self, theta)
+
+            #print(dynamical_output['stable'], dynamical_output['pass'], dynamical_output['tc_check'])
 
             if not (dynamical_output['stable'] and dynamical_output['pass']):
                 if return_priors is False:
@@ -441,6 +444,9 @@ class ModelContainer(object):
                         parameter_values, dataset)
                     continue
 
+                #print('    Computing model: ', model_name, ' for dataset: ', dataset_name)
+                #print(dataset_name, dataset.kind, dataset.dynamical, self.models[model_name].dynamical_model)
+
                 if getattr(dataset, 'dynamical', False) and getattr(self.models[model_name], 'dynamical_model', False):
                     if dataset.kind == 'photometry' :
                         dataset.buffer_model = self.models[model_name].compute_dynamical(parameter_values, dataset, dynamical_output[dataset_name])
@@ -570,6 +576,7 @@ class ModelContainer(object):
         #    if not (dynamical_output['stable'] and dynamical_output['pass']):
         #        log_likelihood = -np.inf
         #        log_priors = -np.inf
+
 
         if return_priors is False:
             return log_likelihood
@@ -766,7 +773,6 @@ class ModelContainer(object):
                 elif data_are_rvs:
                     log_likelihood += self.models[logchi2_gp_model].lnlk_compute(
                         parameter_values, dataset)
-                    #print('data_are_rvs', data_are_rvs, log_likelihood)
 
                 if compute_gp_residuals:
                     dataset.residuals_for_regression -= self.models[logchi2_gp_model].sample_predict(parameter_values, dataset)
@@ -812,7 +818,6 @@ class ModelContainer(object):
         """ In case there is more than one GP model """
         for logchi2_gp_model in delayed_lnlk_computation:
             log_likelihood += self.models[logchi2_gp_model].lnlk_rvonly_compute()
-            #print(logchi2_gp_model, log_likelihood)
 
         return log_likelihood
 
