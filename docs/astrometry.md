@@ -13,6 +13,5 @@ along-scan measurements from their scanning geometry.
 
 ```{toctree}
 :maxdepth: 1
-astrometry/orbitize
 astrometry/gaia_dr4
 ```

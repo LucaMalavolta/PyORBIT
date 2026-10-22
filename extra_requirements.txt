@@ -10,7 +10,7 @@ pyerfa >=2.0
 jaxlib ==0.4.31
 jax ==0.4.31
 tinygp >=0.3.0
-orbitize >= 3.4.0
+#orbitize >= 3.4.0
 celerite >= 0.4.1
 meepmeep == 0.8.0
 pytransit == 2.6.18
@@ -23,7 +23,6 @@ uncertainties
 lmfit
 ###### Requirements without Version Specifiers ######
 packaging
-orbitize
 nautilus-sampler
 spleaf
 argparse

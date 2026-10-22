@@ -138,7 +138,7 @@ from pyorbit.models.rossitermclaughlin_revolutions_faster import RossiterMcLaugh
 
 from pyorbit.models.rossitermclaughlin_multiplanets_legacy import RossiterMcLaughlin_MultiPlanets_Legacy
 
-from pyorbit.models.orbitize import Orbitize
+#from pyorbit.models.orbitize import Orbitize
 from pyorbit.models.gaiadr4_full import GaiaDR4AstrometricFull
 from pyorbit.models.gaiadr4_baseline import GaiaDR4AstrometricBaseline
 from pyorbit.models.gaiadr4_orbit import GaiaDR4AstrometricOrbit
@@ -300,7 +300,7 @@ define_type_to_class: dict[str, type[Any] | dict[str, type[Any]]] = {
     'lightcurve_detrending': FullDetrending,
     'detrending_matern32': Detrending_Matern32,
     'matern32_detrending': Detrending_Matern32,
-    'orbitize': Orbitize,
+    #'orbitize': Orbitize,
     'gaiadr4_full': GaiaDR4AstrometricFull,
     'gaiadr4_baseline': GaiaDR4AstrometricBaseline,
     'gaiadr4_orbit': GaiaDR4AstrometricOrbit,
@@ -315,7 +315,7 @@ define_type_to_class: dict[str, type[Any] | dict[str, type[Any]]] = {
  single_planet_model: the model is associated to a specific planet, e.g., time of transits
 """
 
-model_requires_planets = ['radial_velocities', 'transit_times', 'transit', 'orbitize', 'gaia_astrometry_orbit',
+model_requires_planets = ['radial_velocities', 'transit_times', 'transit', 'gaia_astrometry_orbit',
                                 'transit_eclipse_phasecurve', 'rossiter_mclaughlin']
 
 single_planet_model = ['Tc_planets', 'transit_times', 'rossiter_mclaughlin_exomoon']
@@ -332,7 +332,7 @@ model_requires_limb_darkening = ['transit',
 model_requires_exomoon = ['rossiter_mclaughlin_exomoon']
 
 model_requires_star = ['rossiter_mclaughlin','transit_times', 'gaussian_process', 'rossiter_mclaughlin_exomoon'
-                       'multidimensional_gaussian_process', 'orbitize', 'gaia_astrometry_orbit', 'gaia_astrometry_baseline']
+                       'multidimensional_gaussian_process', 'gaia_astrometry_orbit', 'gaia_astrometry_baseline']
 
 model_requires_secondary_star = ['radial_velocities_primary', 'radial_velocities_secondary', 'eclipsing_binary']
 #model_requires_multiple_planets = ['rossiter_mclaughlin']

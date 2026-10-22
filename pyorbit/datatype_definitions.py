@@ -18,7 +18,7 @@ datatype_definition = {
               'log(R)', 'log(Rhk)', 'log(RHK)', 'log(R_hk)', 'log(R_HK)'],
     'S_index': ['S', 'S_index', 'Shk', 'SHK', 'S_HK', 'S_hk'],
     'CCF': ['CCF', 'CCFs', 'ccf', 'ccfs'],
-    'orbitize': ['orbitize', 'Orbitize', 'ORBITIZE'],
+    #'orbitize': ['orbitize', 'Orbitize', 'ORBITIZE'],
 }
 
 skip_plot = ['orbtize']
