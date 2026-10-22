@@ -258,7 +258,6 @@ class CommonStarParameters(AbstractCommon):
             as a free parameter.
         """
 
-
         if 'density' not in kwargs['priors'] and 'mass' in kwargs['priors'] and 'radius' in kwargs['priors']:
             self.compute_mass = False
             self.compute_radius = False

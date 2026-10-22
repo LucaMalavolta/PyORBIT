@@ -499,7 +499,8 @@ def pars_input(config_in, mc, input_datasets=None, reload_emcee=False, reload_af
                     Hence, we need to compute the density from mass and radius to avoid discrepancies
                 """
                 if star_dynamical_model:
-                    mc.common_models[conf_name].model_conf['compute_density'] = True
+                    if not any(k in  mc.common_models[conf_name].model_conf for k in ['compute_density', 'compute_mass', 'compute_radius']):
+                        mc.common_models[conf_name].model_conf['compute_density'] = True
 
         else:
 
