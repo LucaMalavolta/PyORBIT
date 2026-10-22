@@ -68,12 +68,12 @@ class DatasetExternal(Dataset):
 
 
     def append_ancillary(self, input_file, input_array=False, input_array_str=False):
-        """ This method must do nothing, as ancillary data are not supported in orbitize datasets"""
+        """ This method must do nothing, as ancillary data are not supported in external datasets"""
         pass 
 
 
     def convert_dataset_from_file(self, input_file):
-        """ This method must do nothing, as data files are read by orbitize internal functions"""
+        """ This method must do nothing, as data files are read by internal functions of external packages"""
 
         self.input_file = input_file
         
@@ -84,27 +84,27 @@ class DatasetExternal(Dataset):
                             flag_shutdown_jitter=False):
         # Add a flag to save internally the input dataset
         self.Tref = Tref
-        """This method does nothing as there no dataset parameters for orbitize."""
+        """This method does nothing as there no dataset parameters for external datasets."""
         self.model_reset()
 
     def _setup_systematic_dictionaries(self, var_generic, dataset_vals):
-        """This method does nothing as there no dataset parameters for orbitize."""
+        """This method does nothing as there no dataset parameters for external datasets."""
         pass
 
     def _setup_systematic_mask(self, var_generic, dataset_vals):
-        """This method does nothing as there no dataset parameters for orbitize."""
+        """This method does nothing as there no dataset parameters for external datasets."""
         pass
 
     def _delete_systematic_dictionaries_mask(self, var_generic):
-        """This method does nothing as there no dataset parameters for orbitize."""
+        """This method does nothing as there no dataset parameters for external datasets."""
         return 
 
     def shutdown_jitter(self):
-        """This method does nothing as jitter is dealt by orbitize."""
+        """This method does nothing as jitter is dealt by external packages."""
         pass
 
     def shutdown_offset(self):
-        """This method does nothing as offset is dealt by orbitize."""
+        """This method does nothing as offset is dealt by external packages."""
         pass
 
 
@@ -113,23 +113,23 @@ class DatasetExternal(Dataset):
         return
 
     def compute(self, variable_value):
-        """This method does nothing as internal parameters are dealt by orbitize."""
+        """This method does nothing as internal parameters are dealt by external packages."""
 
     def compute_model(self):
-        """This method does nothing as modelling is dealt by orbitize."""
+        """This method does nothing as modelling and log-likelihood calculation is dealt by external packages."""
 
     def compute_model_from_arbitrary_datasets(self, additive_model, unitary_model, normalization_model, external_model):
-        """This method does nothing as modelling is dealt by orbitize."""
+        """This method does nothing as modelling and log-likelihood calculation is dealt by external packages."""
         return None
 
     def compute_residuals(self):
-        """This method does nothing as modelling is dealt by orbitize."""
+        """This method does nothing as modelling and log-likelihood calculation is dealt by external packages."""
 
     def model_logchi2(self):
         return self.log_likelihood
 
     def update_bounds_spaces_priors_starts(self):
-        """This method does nothing as there are no internarl parameters in orbitize datasets."""
+        """This method does nothing as there are no internal parameters in external datasets."""
 
     def has_jitter(self):
         return False

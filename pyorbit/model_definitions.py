@@ -318,7 +318,7 @@ primary_model_names = ['primary',  'star']
 
 dynamical_timing_models = ['transit_times', 'transit_durations']
 
-model_requires_planets = ['radial_velocities', 'transit_times', 'transit_durations', 'transit', 'orbitize', 'gaia_astrometry_orbit',
+model_requires_planets = ['radial_velocities', 'transit_times', 'transit_durations', 'transit', 'gaia_astrometry_orbit',
                                 'transit_eclipse_phasecurve', 'rossiter_mclaughlin','rossiter_mclaughlin_nold', 'rossiter_mclaughlin_exomoon']
 
 model_requires_limb_darkening = ['transit',
@@ -332,7 +332,7 @@ model_requires_limb_darkening = ['transit',
 model_requires_exomoon = ['rossiter_mclaughlin_exomoon']
 
 model_requires_star = ['rossiter_mclaughlin','rossiter_mclaughlin_nold', 'rossiter_mclaughlin_exomoon', 'transit_times', 'gaussian_process',
-                        'multidimensional_gaussian_process', 'orbitize', 'gaia_astrometry_orbit', 'gaia_astrometry_baseline']
+                        'multidimensional_gaussian_process', 'gaia_astrometry_orbit', 'gaia_astrometry_baseline']
 
 model_requires_secondary_star = ['radial_velocities_primary', 'radial_velocities_secondary', 'eclipsing_binary']
 #model_requires_multiple_planets = ['rossiter_mclaughlin']
