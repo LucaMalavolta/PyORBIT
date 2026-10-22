@@ -52,7 +52,6 @@ class PyTransit_Dynamical(AbstractModel, AbstractTransit, AbstractDynamical):
 
     def initialize_model_dataset(self, mc, dataset, **kwargs):
         self._prepare_dataset_options(mc, dataset, **kwargs)
-
         if self.limb_darkening_model == 'power2':
             self.limb_darkening_model == 'power-2'
 
@@ -84,6 +83,8 @@ class PyTransit_Dynamical(AbstractModel, AbstractTransit, AbstractDynamical):
             t = np.asarray(x0_input + self.Tref) # add the reference time to the input time
 
         f0 = np.zeros_like(t) # create a model at 0.0 for all time points
+
+        #print(rp_rs, per, aRs, inc, ecc,w,transits, durations)
 
         """ compute half duration in days for all the transits of all the planets"""
         half_dur_d = durations * constants.min2day
