@@ -1,4 +1,5 @@
 from pyorbit.subroutines.common import np, OrderedSet
+from pyorbit.common import gpu_backend
 from pyorbit.common.abstract_common import AbstractCommon
 from pyorbit.datatype_definitions import datatype_definition
 
@@ -276,6 +277,7 @@ class Dataset(AbstractCommon):
         else:
             self.input_subset = None
         self.model_reset()
+        self._stage_device_arrays()
 
     def _setup_systematic_dictionaries(self, var_generic, dataset_vals):
         n_sys = np.max(dataset_vals.astype(np.int64)) + 1
@@ -321,9 +323,53 @@ class Dataset(AbstractCommon):
         self._delete_systematic_dictionaries_mask('offset')
         self.input_offset = None
 
+    def _stage_device_arrays(self):
+        """gpu: true -- stage the *constant* per-dataset arrays (times, data,
+        errors, and the jitter/offset boolean masks) on the JAX device exactly
+        once, so that the per-evaluation residual + chi2 reduction can run
+        fully on-device without re-shipping the big arrays every evaluation.
+
+        No-op for gpu: false (all attributes are left as None / {} and the
+        numpy path below is byte-for-byte unchanged)."""
+        self.x_dev = None
+        self.x0_dev = None
+        self.y_dev = None
+        self.e_dev = None
+        self.jitter_mask_dev = {}
+        self.offset_mask_dev = {}
+        if not gpu_backend.gpu_enabled():
+            return
+
+        import jax.numpy as jnp
+
+        self.x_dev = jnp.asarray(self.x, dtype=jnp.float64)
+        self.x0_dev = jnp.asarray(self.x0, dtype=jnp.float64)
+        self.y_dev = jnp.asarray(self.y, dtype=jnp.float64)
+        self.e_dev = jnp.asarray(self.e, dtype=jnp.float64)
+
+        for var, m in self.mask.items():
+            generic = self.variable_expanded.get(var)
+            if generic == 'jitter':
+                self.jitter_mask_dev[var] = jnp.asarray(m, dtype=jnp.float64)
+            elif generic == 'offset':
+                self.offset_mask_dev[var] = jnp.asarray(m, dtype=jnp.float64)
+
     def model_reset(self):
         self.residuals = None
         self.model = None
+        if gpu_backend.gpu_enabled():
+            """ Round 2 (speed): keep the per-evaluation accumulators on the
+            JAX device so the model outputs, residuals and the chi2 reduction
+            never leave the device. The numpy branch below is untouched for
+            gpu: false. """
+            import jax.numpy as jnp
+            self.additive_model = jnp.zeros(self.n_shape, dtype=jnp.float64)
+            self.unitary_model = jnp.zeros(self.n_shape, dtype=jnp.float64)
+            self.normalization_model = None
+            self.external_model = jnp.zeros(self.n_shape, dtype=jnp.float64)
+            self.buffer_model = np.zeros(self.n_shape, dtype=np.double)
+            self.jitter = jnp.zeros(self.n_shape, dtype=jnp.float64)
+            return
         self.additive_model = np.zeros(self.n_shape, dtype=np.double)
         self.unitary_model = np.zeros(self.n_shape, dtype=np.double)
         self.normalization_model = None
@@ -333,6 +379,23 @@ class Dataset(AbstractCommon):
         return
 
     def compute(self, variable_value):
+        if gpu_backend.gpu_enabled():
+            """ Rebuild the per-point jitter (and offset) on the device from the
+            staged boolean masks and the scalar free values. JAX arrays are
+            immutable and have no in-place fancy indexing, so we rebuild with
+            whole-array masked adds instead of `arr[mask] += value`. """
+            for var in self.list_pams:
+                generic = self.variable_expanded[var]
+                if generic == 'jitter':
+                    if var in self.jitter_mask_dev:
+                        self.jitter = self.jitter + \
+                            self.jitter_mask_dev[var] * variable_value[var]
+                elif generic == 'offset':
+                    if var in self.offset_mask_dev:
+                        self.additive_model = self.additive_model + \
+                            self.offset_mask_dev[var] * variable_value[var]
+            return
+
         for var in self.list_pams:
             if self.variable_expanded[var] == 'jitter':
                 self.jitter[self.mask[var]] += variable_value[var]
@@ -354,9 +417,25 @@ class Dataset(AbstractCommon):
             return additive_model + external_model + (1. + unitary_model)*normalization_model
 
     def compute_residuals(self):
+        if gpu_backend.gpu_enabled() and self.y_dev is not None:
+            """ Round 2 (speed): keep the residual on the device (y_dev - model);
+            it is consumed by the JAX model_logchi2 below. numpy path unchanged. """
+            self.residuals = self.y_dev - self.model
+            return
         self.residuals = self.y - self.model
 
     def model_logchi2(self):
+        if gpu_backend.gpu_enabled() and self.e_dev is not None:
+            """ Round 2 (speed): the whole chi2 reduction runs on the device and
+            returns a single Python float (the only host sync left per eval).
+            `self.residuals`, `self.jitter` are already on-device; `e_dev` was
+            staged once at setup. numpy path unchanged. """
+            import jax.numpy as jnp
+            env = 1.0 / (self.e_dev ** 2.0 + self.jitter ** 2.0)
+
+            return float(-0.5 * (self.n * np.log(2 * np.pi) +
+                                jnp.sum(self.residuals ** 2 * env - jnp.log(env))))
+
         env = 1.0 / (self.e ** 2.0 + self.jitter ** 2.0)
 
         return -0.5 * (self.n * np.log(2 * np.pi) +

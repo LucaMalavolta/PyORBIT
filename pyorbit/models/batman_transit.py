@@ -108,7 +108,14 @@ class Batman_Transit(AbstractModel, AbstractTransit):
         if gpu_backend.gpu_enabled():
             import jax.numpy as jnp
             from pyorbit.subroutines.transit_gpu import circular_transit
-            times = dataset.x0 if x0_input is None else x0_input
+            # Round 2 (speed): prefer the times staged on the device once at setup
+            # (x0_dev) so the big times array is not re-shipped host->device every
+            # eval. jnp.asarray() below is a no-op on an already-JAX array.
+            times = x0_input
+            if times is None:
+                times = getattr(dataset, 'x0_dev', None)
+            if times is None:
+                times = dataset.x0
             coeff = np.empty(len(self.ldvars))
             for name, index in self.ldvars.items():
                 coeff[index] = parameter_values[name]
