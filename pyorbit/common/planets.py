@@ -331,12 +331,19 @@ class CommonPlanets(AbstractCommon):
             if self.use_shared_ttvs:
                 break
 
-
+        """ list of expected transit times for a planet, to exclude the most obvious deviant solution and speed up PyDE optimization """ 
         for tc_list in keywords_tc_list:
             self.tc_list = kwargs.get(tc_list, None)
             if self.tc_list:
                 break
 
+        for tc_tols in keywords_tc_tolerance:
+            self.tc_tols = kwargs.get(tc_tols, None)
+            if self.tc_tols:
+                break
+
+        """ name of the column in the ancillary file associated to the a given planet
+        for the identification of a transit whem measuring TTVs"""
         for tc_flag in keywords_tc_flag:
             self.tc_flag = kwargs.get(tc_flag, None)
             if self.tc_flag:
