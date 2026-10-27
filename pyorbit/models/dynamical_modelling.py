@@ -284,10 +284,8 @@ class DynamicalIntegrator:
                 #print('   Planet %s: Within transit window = %s' % (planet_name, within_transit_window))
                 #print()
                 if not within_transit_window: 
-                    print('FALSE')
                     return {'stable': False, 'pass': False, 'tc_check': False}
-                else:
-                    print('TRUE')
+
 
             if 'R_Rs' in parameter_values:
                 """ Converting the radius from Stellar units to Solar units"""
