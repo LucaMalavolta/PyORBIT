@@ -165,7 +165,7 @@ class SharedPolynomialTrend(AbstractModel):
                 self.common_poly_ref = common_ref
                 break
 
-    def print_info():
+    def print_info(self):
 
         print("*** {0:s} global parameters:".format(self.model_name))
         print('    order: {0:3.0f}'.format(self.order))
