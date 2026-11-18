@@ -105,7 +105,7 @@ if ! env_exists "$GPU_ENV"; then
 fi
 
 info "verifying jax in '$GPU_ENV' sees the GPU (fail-loud gate)"
-run_env "$GPU_ENV" python -c 'import jax; ds=list(jax.devices()); assert any("gpu" in str(d).lower() for d in ds), "no GPU device visible to jax: %r" % (ds,); print("  jax devices:", ds)' \
+run_env "$GPU_ENV" python -c 'import jax; ds=list(jax.devices()); assert any(d.platform in ("cuda","rocm") for d in ds) or len(jax.devices("gpu"))>0, "no GPU device visible to jax: %r" % (ds,); print("  jax devices:", ds)' \
   || die "jax in '$GPU_ENV' cannot see the GPU.
 Fix: conda run -n $GPU_ENV pip install --upgrade 'jax[cuda12-pip]' 'jaxlib[cuda12-pip]'"
 

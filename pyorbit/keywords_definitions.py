@@ -76,6 +76,11 @@ keywords_detrending_common_parameters = ['use_common_parameters',
 keywords_tc_list = ['Tc_predictions', 'tc_predictions', 'Tc_prediction', 'tc_prediction', 'Tc_pred', 'tc_pred',
                     'tc_list', 'Tc_list', 'tclist', 'Tclist',
                     'ttv_tc_list', 'TTV_Tc_list', 'TTV_tc_list']
+
+keywords_tc_tolerance = ['Tc_tolerance', 'tc_tolerance', 'Tc_tol', 'tc_tol', 'Tc_tols', 'tc_tols', 
+                            'ttv_tc_tolerance', 'TTV_Tc_tolerance', 'TTV_tc_tolerance']
+
+
 keywords_tc_flag = ['tc_flag', 'Tc_flag', 'tcflag', 'Tcflag',
                     'ttv_tc_flag', 'TTV_Tc_flag', 'TTV_tc_flag']
 

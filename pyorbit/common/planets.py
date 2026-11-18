@@ -337,6 +337,11 @@ class CommonPlanets(AbstractCommon):
             if self.tc_list:
                 break
 
+        for tc_tols in keywords_tc_tolerance:
+            self.tc_tols = kwargs.get(tc_tols, None)
+            if self.tc_tols:
+                break
+
         for tc_flag in keywords_tc_flag:
             self.tc_flag = kwargs.get(tc_flag, None)
             if self.tc_flag:

@@ -199,13 +199,20 @@ class DynamicalIntegrator:
         for planet_name in mc.dynamical_dict:
             try:
                 self.tc_comparison_set[planet_name] = np.genfromtxt(mc.common_models[planet_name].tc_list)
-                err_sel = (self.tc_comparison_set[planet_name][:,2] < 0.1)
+                if mc.common_models[planet_name].tc_tols is None:
+                    tc_tols = 0.1
+                else:
+                    tc_tols = mc.common_models[planet_name].tc_tols
+
+                err_sel = (self.tc_comparison_set[planet_name][:,2] < tc_tols)
+
+                #print('   Planet %s: Using Tc predictions from file %s' % (planet_name, mc.common_models[planet_name].tc_list))
                 #if np.sum(err_sel) > 0:
-                #    print('   Planet %s: Using Tc predictions with error inflated to 0.1 days (2.4 hours)' % planet_name)
+                #    print('   Planet %s: Using Tc predictions with error inflated to %.3f days (%.2f hours)' % (planet_name, tc_tols, tc_tols*24.))
                 #else:
                 #    print('   Planet %s: Using Tc predictions' % planet_name)
-                
-                self.tc_comparison_set[planet_name][err_sel,2] = 0.1
+                #print()
+                self.tc_comparison_set[planet_name][err_sel,2] = tc_tols
             except:
                 self.tc_comparison_set[planet_name] = None
 

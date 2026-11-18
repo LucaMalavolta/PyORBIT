@@ -213,7 +213,12 @@ def associate_default_common(mc, model_name, model_type, model_conf, initialize=
         """
         common_type = define_type_to_class[model_type].default_common
         common_ref = model_name
-        mc.models[model_name].common_ref.append(common_ref)
+        try:
+            """ model has been already initialized, common_ref is added to the model"""
+            mc.models[model_name].common_ref.append(common_ref)
+        except:
+            """ Model has not bee initialized yet, it will be with the common_ref resulting from this fuction"""
+            pass
 
         if common_ref not in mc.common_models:
             mc.common_models[common_ref] = define_common_type_to_class[common_type](common_ref)

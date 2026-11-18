@@ -14,7 +14,7 @@ class Sinusoid(AbstractModel):
         self.model_class = 'sinusoid'
 
         self.list_pams_common = OrderedSet([
-            'sine_period'  # Period, log-uniform prior
+            'sine_period',  # Period, log-uniform prior
             'sine_amp',
             'sine_phase'
         ])
@@ -37,7 +37,7 @@ class LocalSinusoid(AbstractModel):
         self.model_class = 'sinusoid'
 
         self.list_pams_dataset = OrderedSet([
-            'sine_period'  # Period, log-uniform prior
+            'sine_period',  # Period, log-uniform prior
             'sine_amp',
             'sine_phase'
         ])

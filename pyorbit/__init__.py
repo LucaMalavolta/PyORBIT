@@ -15,10 +15,22 @@
 # parsed. When ``PYORBIT_GPU`` is unset (the default, i.e. ``gpu: false``) this
 # block does nothing and the CPU path is byte-for-byte unchanged.
 import os as _pyorbit_os
-if _pyorbit_os.environ.get('PYORBIT_GPU', '') not in ('', '0', 'false', 'False', 'no', 'off'):
-    _pyorbit_os.environ.setdefault('JAX_PLATFORMS', 'gpu')
-    _pyorbit_os.environ.setdefault('JAX_PLATFORM_NAME', 'gpu')
-    _pyorbit_os.environ.setdefault('JAX_ENABLE_X64', 'true')
+
+if _pyorbit_os.environ.get("PYORBIT_GPU", "") not in (
+    "",
+    "0",
+    "false",
+    "False",
+    "no",
+    "off",
+):
+    # Concrete 'cuda' key, not the 'gpu' alias: on jaxlib 0.6.x a pre-import
+    # 'JAX_PLATFORMS=gpu' resolves to the absent 'rocm' implementation and
+    # kills backend init. 'cuda' works on both the 0.4.x and 0.6.x stacks.
+    # (The runtime name stays 'gpu'; see gpu_backend.initialize().)
+    _pyorbit_os.environ.setdefault("JAX_PLATFORMS", "cuda")
+    _pyorbit_os.environ.setdefault("JAX_PLATFORM_NAME", "cuda")
+    _pyorbit_os.environ.setdefault("JAX_ENABLE_X64", "true")
 
 from .pyorbit_run import *
 from .pyorbit_results import *

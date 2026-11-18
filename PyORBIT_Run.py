@@ -22,13 +22,14 @@ def _preconfigure_gpu():
     if len(sys.argv) < 3:
         return
     conf = sys.argv[2]
-    if conf in ('-h', '--help'):
+    if conf in ("-h", "--help"):
         return
     if not os.path.exists(conf):
         return
     try:
         import yaml
-        with open(conf, 'r') as stream:
+
+        with open(conf, "r") as stream:
             data = yaml.safe_load(stream)
     except Exception:
         # Can't pre-read the config for some reason; fall back to the plain CPU
@@ -36,18 +37,23 @@ def _preconfigure_gpu():
         return
     if not isinstance(data, dict):
         return
-    params = data.get('parameters', {})
-    if not isinstance(params, dict) or not params.get('gpu', False):
+    params = data.get("parameters", {})
+    if not isinstance(params, dict) or not params.get("gpu", False):
         return
 
     # gpu: true -- advertise the GPU to jaxlib before it is imported.
-    os.environ['PYORBIT_GPU'] = '1'
-    os.environ.setdefault('JAX_PLATFORMS', 'gpu')
-    os.environ.setdefault('JAX_PLATFORM_NAME', 'gpu')
-    os.environ.setdefault('JAX_ENABLE_X64', 'true')
-    gpu_device = params.get('gpu_device', 0)
-    if gpu_device is not None and 'CUDA_VISIBLE_DEVICES' not in os.environ:
-        os.environ['CUDA_VISIBLE_DEVICES'] = str(gpu_device)
+    # NOTE: use the concrete 'cuda' key, not the 'gpu' alias. On jaxlib 0.6.x
+    # a pre-import 'JAX_PLATFORMS=gpu' resolves to the (absent) 'rocm'
+    # implementation and kills backend init; 'cuda' is correct on both the
+    # 0.4.x and 0.6.x stacks. The *runtime* name remains 'gpu'
+    # (default_backend() == 'gpu'), so gpu_backend.initialize() is unaffected.
+    os.environ["PYORBIT_GPU"] = "1"
+    os.environ.setdefault("JAX_PLATFORMS", "cuda")
+    os.environ.setdefault("JAX_PLATFORM_NAME", "cuda")
+    os.environ.setdefault("JAX_ENABLE_X64", "true")
+    gpu_device = params.get("gpu_device", 0)
+    if gpu_device is not None and "CUDA_VISIBLE_DEVICES" not in os.environ:
+        os.environ["CUDA_VISIBLE_DEVICES"] = str(gpu_device)
 
 
 _preconfigure_gpu()
@@ -55,6 +61,6 @@ import pyorbit  # noqa: E402  (must come after _preconfigure_gpu)
 import argparse  # noqa: F401
 
 
-if __name__ == '__main__':
-    #print(sys.__stderr__, sys.stderr)
+if __name__ == "__main__":
+    # print(sys.__stderr__, sys.stderr)
     pyorbit.pyorbit_run()

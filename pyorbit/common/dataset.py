@@ -5,8 +5,8 @@ from pyorbit.datatype_definitions import datatype_definition
 
 from numpy.lib.recfunctions import append_fields, drop_fields
 
-class Dataset(AbstractCommon):
 
+class Dataset(AbstractCommon):
     def __init__(self, model_name, kind, models):
         super(self.__class__, self).__init__(None)
 
@@ -23,25 +23,22 @@ class Dataset(AbstractCommon):
         self.dynamical = False
         self.planet_name = None
 
-        self.generic_list_pams = OrderedSet(['jitter', 'offset', 'subset'])
+        self.generic_list_pams = OrderedSet(["jitter", "offset", "subset"])
 
         self.generic_default_priors = {
-            'jitter': ['Uniform'  , []],
-            'offset': ['Uniform', []]}
+            "jitter": ["Uniform", []],
+            "offset": ["Uniform", []],
+        }
 
-        self.generic_default_spaces = {
-            'jitter': 'Linear',
-            'offset': 'Linear'}
+        self.generic_default_spaces = {"jitter": "Linear", "offset": "Linear"}
 
-        self.generic_default_fixed = {
-            'jitter': [0.00, 0.00],
-            'offset': [0.00, 0.00]}
+        self.generic_default_fixed = {"jitter": [0.00, 0.00], "offset": [0.00, 0.00]}
 
         """ transit_duration files have four data columns before flags and ancillary data
             For now, all the other datasets foresee three data columns before flags and ancillary data
         """
 
-        if self.kind == 'transit_duration':
+        if self.kind == "transit_duration":
             self.start_id_flag = 4
             self.standard_n_columns = 7
         else:
@@ -52,14 +49,14 @@ class Dataset(AbstractCommon):
         self.offset_column = self.start_id_flag + 1
         self.subset_column = self.start_id_flag + 2
 
-        if self.kind == 'transit_time' or self.kind == 'transit_duration':
-            self.generic_default_spaces['jitter'] = 'Logarithmic'
-            self.generic_default_priors['jitter'] = ['Uniform', []]
+        if self.kind == "transit_time" or self.kind == "transit_duration":
+            self.generic_default_spaces["jitter"] = "Logarithmic"
+            self.generic_default_priors["jitter"] = ["Uniform", []]
 
         self.variable_compressed = {}
         self.variable_expanded = {}
 
-        self.model_class = 'dataset'
+        self.model_class = "dataset"
         self.list_pams = OrderedSet()
         self.default_bounds = {}
         self.default_spaces = {}
@@ -86,18 +83,19 @@ class Dataset(AbstractCommon):
         self.compute_plot = True
         self.compute_model_plot = True
 
-
     def check_internal_consistency(self):
-        if np.abs(self.x-self.Tref).min() > 1e6:
+        if np.abs(self.x - self.Tref).min() > 1e6:
             print("UNRECOVERABLE ERROR dataset {0:s} :".format(self.name_ref))
-            print('   The internal reference time is not consistent with the input time')
-            print('   Average dataset epoch: {0:.4f}'.format(np.mean(self.x)))
-            print('   Reference time:        {0:.4f}'.format(self.Tref))
+            print(
+                "   The internal reference time is not consistent with the input time"
+            )
+            print("   Average dataset epoch: {0:.4f}".format(np.mean(self.x)))
+            print("   Reference time:        {0:.4f}".format(self.Tref))
             print()
             quit()
 
     def append_ancillary(self, input_file, input_array=False, input_array_str=False):
-        """ Function to either read an ancillary file or pass the value of another
+        """Function to either read an ancillary file or pass the value of another
         dataset as ancillary
 
         we define as ancillary every dataset required to
@@ -115,7 +113,7 @@ class Dataset(AbstractCommon):
             input_array = np.genfromtxt(input_file, names=True)
             #! reading as string if needed - the selection of columns to be
             #! considered as string must happen inside the model
-            input_array_str =np.genfromtxt(input_file, dtype=str)
+            input_array_str = np.genfromtxt(input_file, dtype=str)
 
         """ NOTE: string are only supported in ancillary data files
         """
@@ -128,18 +126,24 @@ class Dataset(AbstractCommon):
             for iname, name in enumerate(input_array.dtype.names):
                 try:
                     self.ancillary = drop_fields(self.ancillary, name)
-                    self.ancillary = append_fields(self.ancillary, name, input_array[name])
+                    self.ancillary = append_fields(
+                        self.ancillary, name, input_array[name]
+                    )
 
                 except ValueError:
-                    print('The ancillary input array is not a structured array')
-                    print('https://numpy.org/doc/stable/user/basics.rec.html')
+                    print("The ancillary input array is not a structured array")
+                    print("https://numpy.org/doc/stable/user/basics.rec.html")
                     quit()
 
                 try:
                     self.ancillary_str = drop_fields(self.ancillary_str, name)
-                    self.ancillary_str = append_fields(self.ancillary_str, name, input_array_str[:,iname])
+                    self.ancillary_str = append_fields(
+                        self.ancillary_str, name, input_array_str[:, iname]
+                    )
                 except:
-                    print('Ancillary file containing string must be provided as argument of append_Ancillary ')
+                    print(
+                        "Ancillary file containing string must be provided as argument of append_Ancillary "
+                    )
 
         else:
             self.ancillary = input_array.copy()
@@ -147,43 +151,47 @@ class Dataset(AbstractCommon):
 
             for iname, name in enumerate(input_array.dtype.names):
                 self.ancillary_str = drop_fields(self.ancillary_str, name)
-                self.ancillary_str = append_fields(self.ancillary_str, name, input_array_str[:,iname])
-
+                self.ancillary_str = append_fields(
+                    self.ancillary_str, name, input_array_str[:, iname]
+                )
 
     def convert_dataset_from_file(self, input_file):
-
-        """ Robust data reading, now encompassing the case of ancillary data
+        """Robust data reading, now encompassing the case of ancillary data
         columns embedded in the main file"""
 
         data0 = np.atleast_2d(np.loadtxt(input_file))
         data1 = np.genfromtxt(input_file, names=True)
 
-        data_input = np.zeros([np.size(data0, axis=0), self.standard_n_columns], dtype=np.double) - 1.
+        data_input = (
+            np.zeros([np.size(data0, axis=0), self.standard_n_columns], dtype=np.double)
+            - 1.0
+        )
 
         if np.shape(data0)[0] == np.shape(data1)[0]:
             for i_name, v_name in enumerate(data1.dtype.names):
-                if i_name<self.start_id_flag:
+                if i_name < self.start_id_flag:
                     data_input[:, i_name] = data1[v_name]
-                elif v_name == 'jit' or v_name=='jitter' or v_name=='jitter_flag':
+                elif v_name == "jit" or v_name == "jitter" or v_name == "jitter_flag":
                     data_input[:, self.jitter_column] = data1[v_name]
-                elif v_name == 'off' or v_name=='offset' or v_name=='offset_flag':
+                elif v_name == "off" or v_name == "offset" or v_name == "offset_flag":
                     data_input[:, self.offset_column] = data1[v_name]
-                elif v_name == 'sub' or v_name=='subset' or v_name=='subset_flag':
+                elif v_name == "sub" or v_name == "subset" or v_name == "subset_flag":
                     data_input[:, self.subset_column] = data1[v_name]
                 else:
                     self.ancillary = data1.copy()
                     self.ancillary_str = data1.copy()
         else:
             """ Fall back to previous behaviour of the code"""
-            data_input[:, :np.size(data0, axis=1)] = data0[:, :]
+            data_input[:, : np.size(data0, axis=1)] = data0[:, :]
 
         return data_input
 
-    def define_dataset_base(self, data_input, Tref, update=False,
-                            flag_shutdown_jitter=False):
+    def define_dataset_base(
+        self, data_input, Tref, update=False, flag_shutdown_jitter=False
+    ):
         # Add a flag to save internally the input dataset
         self.Tref = Tref
-        if self.kind == 'transit_time':
+        if self.kind == "transit_time":
             """ Special input reading from T0 files """
             self.n_transit = np.asarray(data_input[:, 0], dtype=np.int16)
             self.x = np.asarray(data_input[:, 1], dtype=np.double)
@@ -191,15 +199,17 @@ class Dataset(AbstractCommon):
 
             """ check if the transit numbers are in increasing order"""
             for i_n in range(1, np.size(self.n_transit)):
-                if self.n_transit[i_n] <= self.n_transit[i_n-1]:
-                    print('Transit numbers in the input file are not in increasing order')
-                    print('Please check the input file')
+                if self.n_transit[i_n] <= self.n_transit[i_n - 1]:
+                    print(
+                        "Transit numbers in the input file are not in increasing order"
+                    )
+                    print("Please check the input file")
                     quit()
 
             """ copy of self.y added for consistency with the rest of the code
             """
             self.y = self.x
-        elif self.kind == 'transit_duration':
+        elif self.kind == "transit_duration":
             """ Special input reading from transit_duration files """
             self.n_transit = np.asarray(data_input[:, 0], dtype=np.int16)
             self.x = np.asarray(data_input[:, 1], dtype=np.double)
@@ -208,9 +218,11 @@ class Dataset(AbstractCommon):
 
             """ check if the transit numbers are in increasing order"""
             for i_n in range(1, np.size(self.n_transit)):
-                if self.n_transit[i_n] <= self.n_transit[i_n-1]:
-                    print('Transit numbers in the input file are not in increasing order')
-                    print('Please check the input file')
+                if self.n_transit[i_n] <= self.n_transit[i_n - 1]:
+                    print(
+                        "Transit numbers in the input file are not in increasing order"
+                    )
+                    print("Please check the input file")
                     quit()
 
         else:
@@ -222,40 +234,50 @@ class Dataset(AbstractCommon):
             data_input[:, self.jitter_column] = -1
 
         if not self.models:
-            data_input[:, self.start_id_flag:] = -1
+            data_input[:, self.start_id_flag :] = -1
 
         self.n = np.size(self.x)
         self.n_shape = np.shape(self.y)
 
         if not update:
-
             """ Default boundaries are defined according to the characteristic
                 of the dataset. They must be large enough to allow for most of
                 the anomalous situations
             """
             x_range = np.max(self.x) - np.min(self.x)
             y_range = np.max(self.y) - np.min(self.y)
-            y_trend = np.abs(y_range/x_range)
-            y_diff = np.abs(np.mean(self.x)-self.Tref) * y_trend + 10.
-            self.generic_default_bounds = {'offset': [np.min(self.y) - y_diff, np.max(self.y) + y_diff],
-                                           'jitter': [np.min(self.e)/100., 10 * np.max(self.e)]}
+            y_trend = np.abs(y_range / x_range)
+            y_diff = np.abs(np.mean(self.x) - self.Tref) * y_trend + 10.0
+            self.generic_default_bounds = {
+                "offset": [np.min(self.y) - y_diff, np.max(self.y) + y_diff],
+                "jitter": [np.min(self.e) / 100.0, 10 * np.max(self.e)],
+            }
 
-            if self.kind == 'Phot':
-                self.generic_default_bounds['offset'][0] = - \
-                    1000.0 * np.max(self.e)
+            if self.kind == "Phot":
+                self.generic_default_bounds["offset"][0] = -1000.0 * np.max(self.e)
 
-            self._setup_systematic_dictionaries('jitter', data_input[:, self.jitter_column])
-            self._setup_systematic_dictionaries('offset', data_input[:, self.offset_column])
+            self._setup_systematic_dictionaries(
+                "jitter", data_input[:, self.jitter_column]
+            )
+            self._setup_systematic_dictionaries(
+                "offset", data_input[:, self.offset_column]
+            )
 
         self.x0 = self.x - self.Tref
-        self._setup_systematic_mask('jitter', data_input[:, self.jitter_column])
-        self._setup_systematic_mask('offset', data_input[:, self.offset_column])
+        self._setup_systematic_mask("jitter", data_input[:, self.jitter_column])
+        self._setup_systematic_mask("offset", data_input[:, self.offset_column])
 
         if np.amax(data_input[:, self.subset_column]) >= 0:
             sel = data_input[:, self.subset_column] >= -0.5
-            self.submodel_minflag = np.int64(np.amin(data_input[sel, self.subset_column]))
-            self.submodel_maxflag = np.int64(np.amax(data_input[:, self.subset_column])) + 1
-            self.submodel_flag = np.int64(np.amax(data_input[:, self.subset_column])) + 1
+            self.submodel_minflag = np.int64(
+                np.amin(data_input[sel, self.subset_column])
+            )
+            self.submodel_maxflag = (
+                np.int64(np.amax(data_input[:, self.subset_column])) + 1
+            )
+            self.submodel_flag = (
+                np.int64(np.amax(data_input[:, self.subset_column])) + 1
+            )
             self.submodel_id = data_input[:, self.subset_column]
         else:
             self.submodel_minflag = None
@@ -263,17 +285,23 @@ class Dataset(AbstractCommon):
             self.submodel_flag = None
 
         if np.amax(data_input[:, self.jitter_column]) > 0:
-            self.input_jitter = np.asarray(data_input[:, self.jitter_column], dtype=np.double)
+            self.input_jitter = np.asarray(
+                data_input[:, self.jitter_column], dtype=np.double
+            )
         else:
             self.input_jitter = None
 
         if np.amax(data_input[:, self.offset_column]) > 0:
-            self.input_offset = np.asarray(data_input[:, self.offset_column], dtype=np.double)
+            self.input_offset = np.asarray(
+                data_input[:, self.offset_column], dtype=np.double
+            )
         else:
             self.input_offset = None
 
         if np.amax(data_input[:, self.subset_column]) > 0:
-            self.input_subset = np.asarray(data_input[:, self.subset_column], dtype=np.double)
+            self.input_subset = np.asarray(
+                data_input[:, self.subset_column], dtype=np.double
+            )
         else:
             self.input_subset = None
         self.model_reset()
@@ -283,7 +311,7 @@ class Dataset(AbstractCommon):
         n_sys = np.max(dataset_vals.astype(np.int64)) + 1
         self.variable_compressed[var_generic] = {}
         for ii in range(0, n_sys):
-            var = var_generic + '_' + repr(ii)
+            var = var_generic + "_" + repr(ii)
             self.list_pams.update([var])
             self.default_bounds[var] = self.generic_default_bounds[var_generic]
             self.default_spaces[var] = self.generic_default_spaces[var_generic]
@@ -298,7 +326,7 @@ class Dataset(AbstractCommon):
             dataset_vals = np.zeros(self.n_shape, dtype=np.int64)
 
         for ii in range(0, n_sys):
-            var = var_generic + '_' + repr(ii)
+            var = var_generic + "_" + repr(ii)
             self.mask[var] = np.zeros(self.n_shape, dtype=bool)
             self.mask[var][(abs(dataset_vals - ii) < 0.1)] = True
 
@@ -316,11 +344,11 @@ class Dataset(AbstractCommon):
         self.variable_compressed[var_generic] = {}
 
     def shutdown_jitter(self):
-        self._delete_systematic_dictionaries_mask('jitter')
+        self._delete_systematic_dictionaries_mask("jitter")
         self.input_jitter = None
 
     def shutdown_offset(self):
-        self._delete_systematic_dictionaries_mask('offset')
+        self._delete_systematic_dictionaries_mask("offset")
         self.input_offset = None
 
     def _stage_device_arrays(self):
@@ -349,9 +377,9 @@ class Dataset(AbstractCommon):
 
         for var, m in self.mask.items():
             generic = self.variable_expanded.get(var)
-            if generic == 'jitter':
+            if generic == "jitter":
                 self.jitter_mask_dev[var] = jnp.asarray(m, dtype=jnp.float64)
-            elif generic == 'offset':
+            elif generic == "offset":
                 self.offset_mask_dev[var] = jnp.asarray(m, dtype=jnp.float64)
 
     def model_reset(self):
@@ -363,6 +391,7 @@ class Dataset(AbstractCommon):
             never leave the device. The numpy branch below is untouched for
             gpu: false. """
             import jax.numpy as jnp
+
             self.additive_model = jnp.zeros(self.n_shape, dtype=jnp.float64)
             self.unitary_model = jnp.zeros(self.n_shape, dtype=jnp.float64)
             self.normalization_model = None
@@ -386,35 +415,47 @@ class Dataset(AbstractCommon):
             whole-array masked adds instead of `arr[mask] += value`. """
             for var in self.list_pams:
                 generic = self.variable_expanded[var]
-                if generic == 'jitter':
+                if generic == "jitter":
                     if var in self.jitter_mask_dev:
-                        self.jitter = self.jitter + \
-                            self.jitter_mask_dev[var] * variable_value[var]
-                elif generic == 'offset':
+                        self.jitter = (
+                            self.jitter
+                            + self.jitter_mask_dev[var] * variable_value[var]
+                        )
+                elif generic == "offset":
                     if var in self.offset_mask_dev:
-                        self.additive_model = self.additive_model + \
-                            self.offset_mask_dev[var] * variable_value[var]
+                        self.additive_model = (
+                            self.additive_model
+                            + self.offset_mask_dev[var] * variable_value[var]
+                        )
             return
 
         for var in self.list_pams:
-            if self.variable_expanded[var] == 'jitter':
+            if self.variable_expanded[var] == "jitter":
                 self.jitter[self.mask[var]] += variable_value[var]
-            elif self.variable_expanded[var] == 'offset':
+            elif self.variable_expanded[var] == "offset":
                 self.additive_model[self.mask[var]] += variable_value[var]
 
     def compute_model(self):
         if self.normalization_model is None:
             self.model = self.additive_model + self.external_model
         else:
-            self.model = self.additive_model + \
-                self.external_model + \
-                (1. + self.unitary_model)*self.normalization_model
+            self.model = (
+                self.additive_model
+                + self.external_model
+                + (1.0 + self.unitary_model) * self.normalization_model
+            )
 
-    def compute_model_from_arbitrary_datasets(self, additive_model, unitary_model, normalization_model, external_model):
+    def compute_model_from_arbitrary_datasets(
+        self, additive_model, unitary_model, normalization_model, external_model
+    ):
         if normalization_model is None or unitary_model is None:
             return additive_model + external_model
         else:
-            return additive_model + external_model + (1. + unitary_model)*normalization_model
+            return (
+                additive_model
+                + external_model
+                + (1.0 + unitary_model) * normalization_model
+            )
 
     def compute_residuals(self):
         if gpu_backend.gpu_enabled() and self.y_dev is not None:
@@ -426,20 +467,26 @@ class Dataset(AbstractCommon):
 
     def model_logchi2(self):
         if gpu_backend.gpu_enabled() and self.e_dev is not None:
-            """ Round 2 (speed): the whole chi2 reduction runs on the device and
-            returns a single Python float (the only host sync left per eval).
-            `self.residuals`, `self.jitter` are already on-device; `e_dev` was
-            staged once at setup. numpy path unchanged. """
+            """ Round 2 (speed): the whole chi2 reduction runs on the device.
+            Fusion F1: returns the device-side scalar **without** the trailing
+            ``float(...)`` -- the chain keeps its result on the GPU and the
+            single host materialisation happens only when the consumer
+            extracts the final value (``float(mc(theta))`` / sampler-side
+            ``np.isnan`` / ``.item()``). numpy path unchanged. """
             import jax.numpy as jnp
-            env = 1.0 / (self.e_dev ** 2.0 + self.jitter ** 2.0)
 
-            return float(-0.5 * (self.n * np.log(2 * np.pi) +
-                                jnp.sum(self.residuals ** 2 * env - jnp.log(env))))
+            env = 1.0 / (self.e_dev**2.0 + self.jitter**2.0)
 
-        env = 1.0 / (self.e ** 2.0 + self.jitter ** 2.0)
+            return -0.5 * (
+                self.n * np.log(2 * np.pi)
+                + jnp.sum(self.residuals**2 * env - jnp.log(env))
+            )
 
-        return -0.5 * (self.n * np.log(2 * np.pi) +
-                       np.sum(self.residuals ** 2 * env - np.log(env)))
+        env = 1.0 / (self.e**2.0 + self.jitter**2.0)
+
+        return -0.5 * (
+            self.n * np.log(2 * np.pi) + np.sum(self.residuals**2 * env - np.log(env))
+        )
 
     def update_bounds_spaces_priors_starts(self):
 
@@ -447,7 +494,6 @@ class Dataset(AbstractCommon):
             for var in self.variable_compressed[var_generic]:
                 self.bounds[var] = self.bounds[var_generic]
             self.bounds.pop(var_generic, None)
-
 
         for var_generic in list(set(self.spaces) & set(self.variable_compressed)):
             for var in self.variable_compressed[var_generic]:
@@ -473,6 +519,6 @@ class Dataset(AbstractCommon):
 
     def has_jitter(self):
         for var in self.list_pams:
-            if self.variable_expanded[var] == 'jitter':
+            if self.variable_expanded[var] == "jitter":
                 return True
         return False

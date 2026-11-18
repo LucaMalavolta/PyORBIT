@@ -915,9 +915,25 @@ def get_model(mc, theta, bjd_dict, **kwargs):
 
                             x0_temp = x0_plot[id_start:id_end]
 
-                            x0_out[id_start:id_end], x0_var[id_start:id_end] = \
-                                mc.models[logchi2_gp_model].sample_predict(
-                                parameter_values, dataset, x0_temp, return_variance=compute_gp_variance)
+                            if compute_gp_variance:
+                                if internal_kernel:
+                                    x0_out[id_start:id_end], x0_var[id_start:id_end] = \
+                                        mc.models[logchi2_gp_model].sample_predict_internal(
+                                        dataset, x0_temp, return_variance=compute_gp_variance)
+                                else:
+                                    x0_out[id_start:id_end], x0_var[id_start:id_end] = \
+                                        mc.models[logchi2_gp_model].sample_predict(
+                                        parameter_values, dataset, x0_temp, return_variance=compute_gp_variance)
+                            else:
+
+                                if internal_kernel:
+                                    x0_out[id_start:id_end] = \
+                                        mc.models[logchi2_gp_model].sample_predict_internal(
+                                        dataset, x0_temp, return_variance=compute_gp_variance)
+                                else:
+                                    x0_out[id_start:id_end] = \
+                                        mc.models[logchi2_gp_model].sample_predict(
+                                        parameter_values, dataset, x0_temp, return_variance=compute_gp_variance)
 
                             if id_end < 0: break
 
