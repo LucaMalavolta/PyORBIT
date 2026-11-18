@@ -213,11 +213,11 @@ class DynamicalIntegrator:
                 #    print('   Planet %s: Using Tc predictions' % planet_name)
                 #print()
                 self.tc_comparison_set[planet_name][err_sel,2] = tc_tols
+
             except:
                 self.tc_comparison_set[planet_name] = None
 
         self.to_be_initialized = False
-
 
         return
 
@@ -268,12 +268,24 @@ class DynamicalIntegrator:
 
             if self.tc_comparison_set[planet_name] is not None:
                 new_idx =  np.round((self.tc_comparison_set[planet_name][:,1] - parameter_values['Tc'])/parameter_values['P'])
+
+                #print('   Planet %s: Checking the consistency of the predicted transit times with the provided list of transit times' % planet_name)
+                #print('   Planet %s: Predicted Tc = %.6f, P = %.6f' % (planet_name, parameter_values['Tc'], parameter_values['P']))
+                #print('   Planet %s: Provided transit times = %s' % (planet_name, self.tc_comparison_set[planet_name][:,1]))
+                #print('   Planet %s: Predicted transit times = %s' % (planet_name, parameter_values['Tc'] + new_idx * parameter_values['P']))
+                #print('   Planet %s: Provided transit time uncertainties = %s' % (planet_name, self.tc_comparison_set[planet_name][:,2]))
+                #print('   Planet %s: Predicted transit time differences = %s' % (planet_name, np.abs(self.tc_comparison_set[planet_name][:,1] - (parameter_values['Tc'] + new_idx * parameter_values['P']))))
+
+
                 new_t0 = parameter_values['Tc'] + new_idx * parameter_values['P']   
                 delta_time = np.abs(self.tc_comparison_set[planet_name][:,1] - new_t0)
-                within_transit_window = (delta_time < self.tc_comparison_set[planet_name][:,2]).all()   
+                within_transit_window = (delta_time < self.tc_comparison_set[planet_name][:,2]).all()  
+                #print('   Planet %s: Predicted transit time differences = %s' % (planet_name, delta_time))
+                #print('   Planet %s: Within transit window = %s' % (planet_name, within_transit_window))
+                #print()
                 if not within_transit_window: 
-                    #print('Tc check failed for planet', planet_name)
                     return {'stable': False, 'pass': False, 'tc_check': False}
+
 
             if 'R_Rs' in parameter_values:
                 """ Converting the radius from Stellar units to Solar units"""
@@ -299,6 +311,7 @@ class DynamicalIntegrator:
             self.dynamical_pams['mA'][n_plan-1] = (parameter_values['mean_long'] - parameter_values['omega'] - parameter_values['Omega']) % 360.0
 
             #TODO add the check here and return output['tc_check'] = False if failed
+
 
         #time_1 = time.time()
         #print('Dynamical parameters prepared in %.8f seconds' % (time_1 - time_0))
