@@ -50,3 +50,5 @@ docs/_build
 dist/
 pyorbit.egg-info/
 pyorbit_package.egg-info/
+# owner-local Claude Code guidance; excluded from the repo, kept on disk
+CLAUDE.md

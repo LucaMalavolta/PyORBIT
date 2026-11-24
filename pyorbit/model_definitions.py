@@ -1,6 +1,6 @@
 from typing import Any
 
-#from pyorbit.common.dataset import Dataset
+# from pyorbit.common.dataset import Dataset
 from pyorbit.common.planets import CommonPlanets
 from pyorbit.common.activity import CommonActivity
 
@@ -18,22 +18,35 @@ from pyorbit.common.star_parameters import CommonStarParameters
 
 from pyorbit.common.ccf_parameters import CommonCCFParameters
 
-from pyorbit.common.limb_darkening import LimbDarkening_Linear, \
-    LimbDarkening_Quadratic, \
-    LimbDarkening_SquareRoot, LimbDarkening_Logarithmic, \
-    LimbDarkening_Exponential, LimbDarkening_Power2, \
-    LimbDarkening_NonLinear
+from pyorbit.common.limb_darkening import (
+    LimbDarkening_Linear,
+    LimbDarkening_Quadratic,
+    LimbDarkening_SquareRoot,
+    LimbDarkening_Logarithmic,
+    LimbDarkening_Exponential,
+    LimbDarkening_Power2,
+    LimbDarkening_NonLinear,
+)
 
 from pyorbit.common.cheops_modelling import CommonCheopsModelling
 from pyorbit.common.correlation import CommonCorrelation, CommonComplexCorrelation
-#from pyorbit.common.lightcurve_detrending import CommonLightcurveDetrending
+
+# from pyorbit.common.lightcurve_detrending import CommonLightcurveDetrending
 from pyorbit.common.detrending import CommonDetrending
 
 from pyorbit.common.spectrograph import CommonSpectrograph
 from pyorbit.common.exomoons import CommonExomoons
 
-from pyorbit.models.keplerian_modelling import  ApodizedRVkeplerian, RVkeplerian, TransitTimeKeplerian
-from pyorbit.models.dynamical_modelling import  TransitTimeDynamical, RVdynamical, DynamicalIntegrator
+from pyorbit.models.keplerian_modelling import (
+    ApodizedRVkeplerian,
+    RVkeplerian,
+    TransitTimeKeplerian,
+)
+from pyorbit.models.dynamical_modelling import (
+    TransitTimeDynamical,
+    RVdynamical,
+    DynamicalIntegrator,
+)
 
 from pyorbit.models.harmonics import Harmonics
 from pyorbit.models.pytransit_transit import PyTransit_Transit
@@ -41,7 +54,9 @@ from pyorbit.models.pytransit_dynamical import PyTransit_Dynamical
 from pyorbit.models.pytransit_transit_ttv import PyTransit_Transit_TTV
 from pyorbit.models.pytransit_transit_ttv_subset import PyTransit_Transit_TTV_Subset
 from pyorbit.models.pytransit_transit_ttv_tclist import PyTransit_Transit_TTV_TClist
-from pyorbit.models.pytransit_transit_ttv_ancillary import PyTransit_Transit_TTV_Ancillary
+from pyorbit.models.pytransit_transit_ttv_ancillary import (
+    PyTransit_Transit_TTV_Ancillary,
+)
 
 from pyorbit.models.batman_transit import Batman_Transit
 from pyorbit.models.batman_transit_ttv import Batman_Transit_TTV
@@ -51,29 +66,39 @@ from pyorbit.models.batman_transit_ttv_ancillary import Batman_Transit_TTV_Ancil
 
 from pyorbit.models.batman_transit_rprs_subset import Batman_Transit_RpRs_Subset
 
-from pyorbit.models.batman_transit_secondary_phasecurve import Batman_Transit_Eclipse_PhaseCurve
+from pyorbit.models.batman_transit_secondary_phasecurve import (
+    Batman_Transit_Eclipse_PhaseCurve,
+)
 from pyorbit.models.spiderman_thermal import Spiderman_Thermal
 
-from pyorbit.models.gp_framework_quasiperiodic_activity import \
-    GP_Framework_QuasiPeriodicActivity
+from pyorbit.models.gp_framework_quasiperiodic_activity import (
+    GP_Framework_QuasiPeriodicActivity,
+)
 
-from pyorbit.models.gp_multidimensional_quasiperiodic_activity import \
-    GP_Multidimensional_QuasiPeriodicActivity
-from pyorbit.models.gp_multidimensional_quasiperiodic_activity_numba import \
-    GP_Multidimensional_QuasiPeriodicActivity_Numba
+from pyorbit.models.gp_multidimensional_quasiperiodic_activity import (
+    GP_Multidimensional_QuasiPeriodicActivity,
+)
+from pyorbit.models.gp_multidimensional_quasiperiodic_activity_numba import (
+    GP_Multidimensional_QuasiPeriodicActivity_Numba,
+)
 
-from pyorbit.models.gp_pyaneti_quasiperiodic_activity import \
-    GP_Pyaneti_QuasiPeriodicActivity
+from pyorbit.models.gp_pyaneti_quasiperiodic_activity import (
+    GP_Pyaneti_QuasiPeriodicActivity,
+)
 
-from pyorbit.models.gp_quasiperiodic_activity import \
-    GaussianProcess_QuasiPeriodicActivity
-from pyorbit.models.gp_quasiperiodic_activity_alternative import \
-    GaussianProcess_QuasiPeriodicActivity_Alternative
-from pyorbit.models.gp_quasiperiodic_cosine_activity import \
-    GaussianProcess_QuasiPeriodicCosineActivity
+from pyorbit.models.gp_quasiperiodic_activity import (
+    GaussianProcess_QuasiPeriodicActivity,
+)
+from pyorbit.models.gp_quasiperiodic_activity_alternative import (
+    GaussianProcess_QuasiPeriodicActivity_Alternative,
+)
+from pyorbit.models.gp_quasiperiodic_cosine_activity import (
+    GaussianProcess_QuasiPeriodicCosineActivity,
+)
 
-from pyorbit.models.gp_quasiperiodic_activity_derivative import \
-    GaussianProcess_QuasiPeriodicActivity_Derivative
+from pyorbit.models.gp_quasiperiodic_activity_derivative import (
+    GaussianProcess_QuasiPeriodicActivity_Derivative,
+)
 
 from pyorbit.models.celerite2_granulation_rotation import Celerite2_Granulation_Rotation
 from pyorbit.models.celerite2_rotation import Celerite2_Rotation
@@ -85,45 +110,94 @@ from pyorbit.models.correlated_jitter import LocalCorrelatedJitter
 from pyorbit.models.complex_correlation import ComplexCorrelation
 from pyorbit.models.common_offset import Offset
 from pyorbit.models.common_jitter import Jitter
-from pyorbit.models.sinusoid import Sinusoid, LocalSinusoid, SinusoidCommonPeriod, SinusoidPolynomialModulation
+from pyorbit.models.sinusoid import (
+    Sinusoid,
+    LocalSinusoid,
+    SinusoidCommonPeriod,
+    SinusoidPolynomialModulation,
+)
 from pyorbit.models.harmonics import Harmonics
 
 from pyorbit.models.dilution_factor import DilutionFactor, LocalDilutionFactor
-from pyorbit.models.normalization_factor import NormalizationFactor, LocalNormalizationFactor, SubsetNormalizationFactor
+from pyorbit.models.normalization_factor import (
+    NormalizationFactor,
+    LocalNormalizationFactor,
+    SubsetNormalizationFactor,
+)
 
 
-from pyorbit.models.polynomial_trend import PolynomialTrend, SharedPolynomialTrend, LocalPolynomialTrend, SubsetPolynomialTrend
+from pyorbit.models.polynomial_trend import (
+    PolynomialTrend,
+    SharedPolynomialTrend,
+    LocalPolynomialTrend,
+    SubsetPolynomialTrend,
+)
 
-from pyorbit.models.spectral_rotation import SpectralRotation, SubsetSpectralRotation, SubsetSpectralRotationPolynomial
+from pyorbit.models.spectral_rotation import (
+    SpectralRotation,
+    SubsetSpectralRotation,
+    SubsetSpectralRotationPolynomial,
+)
 
 from pyorbit.models.cheops_detrending import CheopsDetrending
 from pyorbit.models.cheops_factormodel import CheopsFactorModel
 
-#from pyorbit.models.lightcurve_linear_detrending import LightcurveLinearDetrending, LocalLightcurveLinearDetrending
-#from pyorbit.models.lightcurve_detrending import LightcurveDetrending, LocalLightcurveDetrending
-#from pyorbit.models.lightcurve_poly_detrending import LightcurvePolyDetrending, LocalLightcurvePolyDetrending
+# from pyorbit.models.lightcurve_linear_detrending import LightcurveLinearDetrending, LocalLightcurveLinearDetrending
+# from pyorbit.models.lightcurve_detrending import LightcurveDetrending, LocalLightcurveDetrending
+# from pyorbit.models.lightcurve_poly_detrending import LightcurvePolyDetrending, LocalLightcurvePolyDetrending
 
-from pyorbit.models.detrending import FullDetrending, PolynomialDetrending, ExponentialDetrending
-#from pyorbit.models.exponential_detrending import ExponentialDetrending
+from pyorbit.models.detrending import (
+    FullDetrending,
+    PolynomialDetrending,
+    ExponentialDetrending,
+)
+
+# from pyorbit.models.exponential_detrending import ExponentialDetrending
 from pyorbit.models.detrending_matern32 import Detrending_Matern32
 
-from pyorbit.models.celerite2_granulation_oscillation_rotation import Celerite2_Granulation_Oscillation_Rotation
-from pyorbit.models.tinygp_quasiperiodic_activity import TinyGaussianProcess_QuasiPeriodicActivity
-from pyorbit.models.tinygp_quasiperiodic_derivative_activity import TinyGaussianProcess_QuasiPeriodicDerivativeActivity
-from pyorbit.models.tinygp_quasiperiodicsquaredexponential_activity import TinyGaussianProcess_QuasiPeriodicSquaredExponentialActivity
-from pyorbit.models.tinygp_quasiperiodiccosine_activity import TinyGaussianProcess_QuasiPeriodicCosineActivity
+from pyorbit.models.celerite2_granulation_oscillation_rotation import (
+    Celerite2_Granulation_Oscillation_Rotation,
+)
+from pyorbit.models.tinygp_quasiperiodic_activity import (
+    TinyGaussianProcess_QuasiPeriodicActivity,
+)
+from pyorbit.models.tinygp_quasiperiodic_derivative_activity import (
+    TinyGaussianProcess_QuasiPeriodicDerivativeActivity,
+)
+from pyorbit.models.tinygp_quasiperiodicsquaredexponential_activity import (
+    TinyGaussianProcess_QuasiPeriodicSquaredExponentialActivity,
+)
+from pyorbit.models.tinygp_quasiperiodiccosine_activity import (
+    TinyGaussianProcess_QuasiPeriodicCosineActivity,
+)
 
 from pyorbit.models.tinygp_sho import TinyGaussianProcess_SHO
 from pyorbit.models.tinygp_matern32 import TinyGaussianProcess_Matern32
-from pyorbit.models.tinygp_multidimensional_quasiperiodic_activity import TinyGP_Multidimensional_QuasiPeriodicActivity
-from pyorbit.models.tinygp_multidimensional_quasiperiodiccosine_activity import TinyGP_Multidimensional_QuasiPeriodicCosineActivity
-from pyorbit.models.tinygp_multidimensional_matern32 import TinyGP_Multidimensional_Matern32
-from pyorbit.models.tinygp_multidimensional_quasiperiodicsquaredexponential_activity import TinyGP_Multidimensional_QuasiPeriodicSquaredExponentialActivity
-from pyorbit.models.tinygp_multiquasiperiodic_trainedsquaredexponential_activity import TinyGP_MultiQuasiPeriodic_TrainedSquaredExponential_Activity
+from pyorbit.models.tinygp_multidimensional_quasiperiodic_activity import (
+    TinyGP_Multidimensional_QuasiPeriodicActivity,
+)
+from pyorbit.models.tinygp_multidimensional_quasiperiodiccosine_activity import (
+    TinyGP_Multidimensional_QuasiPeriodicCosineActivity,
+)
+from pyorbit.models.tinygp_multidimensional_matern32 import (
+    TinyGP_Multidimensional_Matern32,
+)
+from pyorbit.models.tinygp_multidimensional_quasiperiodicsquaredexponential_activity import (
+    TinyGP_Multidimensional_QuasiPeriodicSquaredExponentialActivity,
+)
+from pyorbit.models.tinygp_multiquasiperiodic_trainedsquaredexponential_activity import (
+    TinyGP_MultiQuasiPeriodic_TrainedSquaredExponential_Activity,
+)
 
-from pyorbit.models.spleaf_multidimensional_esp_activity import SPLEAF_Multidimensional_ESP
-from pyorbit.models.spleaf_multidimensional_esp_activity_slow import SPLEAF_Multidimensional_ESP_slow
-from pyorbit.models.spleaf_multidimensional_esp_activity_devel import SPLEAF_Multidimensional_ESP_devel
+from pyorbit.models.spleaf_multidimensional_esp_activity import (
+    SPLEAF_Multidimensional_ESP,
+)
+from pyorbit.models.spleaf_multidimensional_esp_activity_slow import (
+    SPLEAF_Multidimensional_ESP_slow,
+)
+from pyorbit.models.spleaf_multidimensional_esp_activity_devel import (
+    SPLEAF_Multidimensional_ESP_devel,
+)
 from pyorbit.models.spleaf_esp_activity import SPLEAF_ESP
 from pyorbit.models.spleaf_esp_activity_slow import SPLEAF_ESP_slow
 from pyorbit.models.spleaf_sho import SPLEAF_SHO
@@ -131,14 +205,20 @@ from pyorbit.models.spleaf_sho import SPLEAF_SHO
 from pyorbit.models.rossitermclaughlin_pyarome import RossiterMcLaughlin_Pyarome
 from pyorbit.models.rossitermclaughlin_legacy import RossiterMcLaughlin_Legacy
 from pyorbit.models.rossitermclaughlin_reloaded import RossiterMcLaughlin_Reloaded
-from pyorbit.models.rossitermclaughlin_reloaded_faster import RossiterMcLaughlin_Reloaded_Faster
+from pyorbit.models.rossitermclaughlin_reloaded_faster import (
+    RossiterMcLaughlin_Reloaded_Faster,
+)
 from pyorbit.models.rossitermclaughlin_revolutions import RossiterMcLaughlin_Revolutions
-from pyorbit.models.rossitermclaughlin_revolutions_faster import RossiterMcLaughlin_Revolutions_Faster
+from pyorbit.models.rossitermclaughlin_revolutions_faster import (
+    RossiterMcLaughlin_Revolutions_Faster,
+)
 
 
-from pyorbit.models.rossitermclaughlin_multiplanets_legacy import RossiterMcLaughlin_MultiPlanets_Legacy
+from pyorbit.models.rossitermclaughlin_multiplanets_legacy import (
+    RossiterMcLaughlin_MultiPlanets_Legacy,
+)
 
-#from pyorbit.models.orbitize import Orbitize
+# from pyorbit.models.orbitize import Orbitize
 from pyorbit.models.gaiadr4_full import GaiaDR4AstrometricFull
 from pyorbit.models.gaiadr4_baseline import GaiaDR4AstrometricBaseline
 from pyorbit.models.gaiadr4_orbit import GaiaDR4AstrometricOrbit
@@ -146,163 +226,171 @@ from pyorbit.models.gaiadr4_orbit import GaiaDR4AstrometricOrbit
 from pyorbit.models.rossitermclaughlin_exomoon import RossiterMcLaughlin_Exomoon
 
 define_common_type_to_class: dict[str, type[Any]] = {
-    'planets': CommonPlanets,
-    'exomoons': CommonExomoons,
-    'activity': CommonActivity,
-    'polynomial_trend': CommonPolynomialTrend,
-    'common_offset': CommonOffset,
-    'common_jitter': CommonJitter,
-    'spectrograph': CommonSpectrograph,
-    'ccf_parameters': CommonCCFParameters,
-    'sinusoid': CommonSinusoid,
-    'harmonics': CommonHarmonics,
-    'ld_linear': LimbDarkening_Linear,
-    'ld_quadratic': LimbDarkening_Quadratic,
-    'ld_square-root': LimbDarkening_SquareRoot,
-    'ld_logarithmic': LimbDarkening_Logarithmic,
-    'ld_exponential': LimbDarkening_Exponential,
-    'ld_power2': LimbDarkening_Power2,
-    'ld_nonlinear': LimbDarkening_NonLinear,
-    'dilution_factor': CommonDilutionFactor,
-    'normalization_factor': CommonNormalizationFactor,
-    'star_parameters': CommonStarParameters,
-    'cheops_modelling': CommonCheopsModelling,
-    'correlation': CommonCorrelation,
-    'complex_correlation': CommonComplexCorrelation,
+    "planets": CommonPlanets,
+    "exomoons": CommonExomoons,
+    "activity": CommonActivity,
+    "polynomial_trend": CommonPolynomialTrend,
+    "common_offset": CommonOffset,
+    "common_jitter": CommonJitter,
+    "spectrograph": CommonSpectrograph,
+    "ccf_parameters": CommonCCFParameters,
+    "sinusoid": CommonSinusoid,
+    "harmonics": CommonHarmonics,
+    "ld_linear": LimbDarkening_Linear,
+    "ld_quadratic": LimbDarkening_Quadratic,
+    "ld_square-root": LimbDarkening_SquareRoot,
+    "ld_logarithmic": LimbDarkening_Logarithmic,
+    "ld_exponential": LimbDarkening_Exponential,
+    "ld_power2": LimbDarkening_Power2,
+    "ld_nonlinear": LimbDarkening_NonLinear,
+    "dilution_factor": CommonDilutionFactor,
+    "normalization_factor": CommonNormalizationFactor,
+    "star_parameters": CommonStarParameters,
+    "cheops_modelling": CommonCheopsModelling,
+    "correlation": CommonCorrelation,
+    "complex_correlation": CommonComplexCorrelation,
     #'lightcurve_detrending': CommonLightcurveDetrending,
-    'detrending': CommonDetrending,
+    "detrending": CommonDetrending,
 }
 
 define_type_to_class: dict[str, type[Any] | dict[str, type[Any]]] = {
-    'planetary_velocities': {'circular': RVkeplerian,
-                          'keplerian': RVkeplerian,
-                          'apodized': ApodizedRVkeplerian,
-                          'dynamical': RVdynamical},
-    'radial_velocities': {'circular': RVkeplerian,
-                          'keplerian': RVkeplerian,
-                          'apodized': ApodizedRVkeplerian,
-                          'dynamical': RVdynamical},
-    'rv_planets': {'circular': RVkeplerian,
-                   'keplerian': RVkeplerian,
-                   'apodized': ApodizedRVkeplerian,
-                   'dynamical': RVdynamical},
-    'transit_times': {'circular': TransitTimeKeplerian,
-                      'keplerian': TransitTimeKeplerian,
-                      'dynamical': TransitTimeDynamical},
-    'pytransit_transit': PyTransit_Transit,
-    'pytransit_dynamical': PyTransit_Dynamical,
-    'pytransit_transit_ttv': PyTransit_Transit_TTV,
-    'pytransit_transit_ttv_subset': PyTransit_Transit_TTV_Subset,
-    'subset_pytransit_transit_ttv': PyTransit_Transit_TTV_Subset,
-    'pytransit_transit_ttv_ancillary': PyTransit_Transit_TTV_Ancillary,
-    'ancillary_pytransit_transit_ttv': PyTransit_Transit_TTV_Ancillary,
-    'pytransit_transit_ttv_tclist': PyTransit_Transit_TTV_TClist,
-    'tclist_pytransit_transit_ttv': PyTransit_Transit_TTV_TClist,
-    'batman_transit': Batman_Transit,
-    'batman_transit_ttv_subset': Batman_Transit_TTV_Subset,
-    'subset_batman_transit_ttv': Batman_Transit_TTV_Subset,
-    'batman_transit_ttv_tclist': Batman_Transit_TTV_TClist,
-    'tclist_batman_transit_ttv': Batman_Transit_TTV_TClist,
-    'batman_transit_ttv_ancillary': Batman_Transit_TTV_Ancillary,
-    'ancillary_batman_transit_ttv': Batman_Transit_TTV_Ancillary,
-    'batman_transit_ttv': Batman_Transit_TTV,
-    'batman_transit_rprs_subset': Batman_Transit_RpRs_Subset,
-    'subset_batman_transit_rprs': Batman_Transit_RpRs_Subset,
-    'batman_transit_eclipse_phasecurve': Batman_Transit_Eclipse_PhaseCurve,
-    'spiderman_thermal': Spiderman_Thermal,
-    'gp_framework_quasiperiodic': GP_Framework_QuasiPeriodicActivity,
-    'gp_pyaneti_quasiperiodic': GP_Pyaneti_QuasiPeriodicActivity,
-    'gp_multidimensional_quasiperiodic': GP_Multidimensional_QuasiPeriodicActivity,
-    'gp_multidimensional_quasiperiodic_numba': GP_Multidimensional_QuasiPeriodicActivity_Numba,
-    'gp_quasiperiodic': GaussianProcess_QuasiPeriodicActivity,
-    'gp_quasiperiodic_alternative': GaussianProcess_QuasiPeriodicActivity_Alternative,
-    'gp_quasiperiodic_derivative': GaussianProcess_QuasiPeriodicActivity_Derivative,
-    'gp_quasiperiodic_cosine': GaussianProcess_QuasiPeriodicCosineActivity,
-    'celerite2_granulation_rotation': Celerite2_Granulation_Rotation,
-    'celerite2_granulation_oscillation_rotation': Celerite2_Granulation_Oscillation_Rotation,
-    'celerite2_rotation': Celerite2_Rotation,
-    'celerite2_matern32': Celerite2_Matern32,
-    'celerite2_sho': Celerite2_SHO,
-    'local_correlation': LocalCorrelation,
-    'correlation': LocalCorrelation,
-    'complex_correlation': ComplexCorrelation,
-    'polynomial_trend': PolynomialTrend,
-    'shared_polynomial_trend': SharedPolynomialTrend,
-    'local_polynomial_trend': LocalPolynomialTrend,
-    'subset_polynomial_trend': SubsetPolynomialTrend,
-    'polynomial_trend_subset': SubsetPolynomialTrend,
-    'common_offset': Offset,
-    'common_jitter': Jitter,
-    'harmonics': Harmonics,
-    'sinusoid': Sinusoid,
-    'local_sinusoid': LocalSinusoid,
-    'sinusoid_common_period': SinusoidCommonPeriod,
-    'sinusoid_polynomial_modulation': SinusoidPolynomialModulation,
-    'dilution_factor': DilutionFactor,
-    'local_dilution_factor': LocalDilutionFactor,
-    'normalization_factor': NormalizationFactor,
-    'local_normalization_factor': LocalNormalizationFactor,
-    'subset_normalization_factor': SubsetNormalizationFactor,
-    'local_correlated_jitter': LocalCorrelatedJitter,
-    'spectral_rotation': SpectralRotation,
-    'subset_spectral_rotation': SubsetSpectralRotation,
-    'subset_spectral_rotation_polynomial': SubsetSpectralRotationPolynomial,
-    'cheops_detrending': CheopsDetrending,
-    'cheops_factormodel': CheopsFactorModel,
+    "planetary_velocities": {
+        "circular": RVkeplerian,
+        "keplerian": RVkeplerian,
+        "apodized": ApodizedRVkeplerian,
+        "dynamical": RVdynamical,
+    },
+    "radial_velocities": {
+        "circular": RVkeplerian,
+        "keplerian": RVkeplerian,
+        "apodized": ApodizedRVkeplerian,
+        "dynamical": RVdynamical,
+    },
+    "rv_planets": {
+        "circular": RVkeplerian,
+        "keplerian": RVkeplerian,
+        "apodized": ApodizedRVkeplerian,
+        "dynamical": RVdynamical,
+    },
+    "transit_times": {
+        "circular": TransitTimeKeplerian,
+        "keplerian": TransitTimeKeplerian,
+        "dynamical": TransitTimeDynamical,
+    },
+    "pytransit_transit": PyTransit_Transit,
+    "pytransit_dynamical": PyTransit_Dynamical,
+    "pytransit_transit_ttv": PyTransit_Transit_TTV,
+    "pytransit_transit_ttv_subset": PyTransit_Transit_TTV_Subset,
+    "subset_pytransit_transit_ttv": PyTransit_Transit_TTV_Subset,
+    "pytransit_transit_ttv_ancillary": PyTransit_Transit_TTV_Ancillary,
+    "ancillary_pytransit_transit_ttv": PyTransit_Transit_TTV_Ancillary,
+    "pytransit_transit_ttv_tclist": PyTransit_Transit_TTV_TClist,
+    "tclist_pytransit_transit_ttv": PyTransit_Transit_TTV_TClist,
+    "batman_transit": Batman_Transit,
+    "batman_transit_ttv_subset": Batman_Transit_TTV_Subset,
+    "subset_batman_transit_ttv": Batman_Transit_TTV_Subset,
+    "batman_transit_ttv_tclist": Batman_Transit_TTV_TClist,
+    "tclist_batman_transit_ttv": Batman_Transit_TTV_TClist,
+    "batman_transit_ttv_ancillary": Batman_Transit_TTV_Ancillary,
+    "ancillary_batman_transit_ttv": Batman_Transit_TTV_Ancillary,
+    "batman_transit_ttv": Batman_Transit_TTV,
+    "batman_transit_rprs_subset": Batman_Transit_RpRs_Subset,
+    "subset_batman_transit_rprs": Batman_Transit_RpRs_Subset,
+    "batman_transit_eclipse_phasecurve": Batman_Transit_Eclipse_PhaseCurve,
+    "spiderman_thermal": Spiderman_Thermal,
+    "gp_framework_quasiperiodic": GP_Framework_QuasiPeriodicActivity,
+    "gp_pyaneti_quasiperiodic": GP_Pyaneti_QuasiPeriodicActivity,
+    "gp_multidimensional_quasiperiodic": GP_Multidimensional_QuasiPeriodicActivity,
+    "gp_multidimensional_quasiperiodic_numba": GP_Multidimensional_QuasiPeriodicActivity_Numba,
+    "gp_quasiperiodic": GaussianProcess_QuasiPeriodicActivity,
+    "gp_quasiperiodic_alternative": GaussianProcess_QuasiPeriodicActivity_Alternative,
+    "gp_quasiperiodic_derivative": GaussianProcess_QuasiPeriodicActivity_Derivative,
+    "gp_quasiperiodic_cosine": GaussianProcess_QuasiPeriodicCosineActivity,
+    "celerite2_granulation_rotation": Celerite2_Granulation_Rotation,
+    "celerite2_granulation_oscillation_rotation": Celerite2_Granulation_Oscillation_Rotation,
+    "celerite2_rotation": Celerite2_Rotation,
+    "celerite2_matern32": Celerite2_Matern32,
+    "celerite2_sho": Celerite2_SHO,
+    "local_correlation": LocalCorrelation,
+    "correlation": LocalCorrelation,
+    "complex_correlation": ComplexCorrelation,
+    "polynomial_trend": PolynomialTrend,
+    "shared_polynomial_trend": SharedPolynomialTrend,
+    "local_polynomial_trend": LocalPolynomialTrend,
+    "subset_polynomial_trend": SubsetPolynomialTrend,
+    "polynomial_trend_subset": SubsetPolynomialTrend,
+    "common_offset": Offset,
+    "common_jitter": Jitter,
+    "harmonics": Harmonics,
+    "sinusoid": Sinusoid,
+    "local_sinusoid": LocalSinusoid,
+    "sinusoid_common_period": SinusoidCommonPeriod,
+    "sinusoid_polynomial_modulation": SinusoidPolynomialModulation,
+    "dilution_factor": DilutionFactor,
+    "local_dilution_factor": LocalDilutionFactor,
+    "normalization_factor": NormalizationFactor,
+    "local_normalization_factor": LocalNormalizationFactor,
+    "subset_normalization_factor": SubsetNormalizationFactor,
+    "local_correlated_jitter": LocalCorrelatedJitter,
+    "spectral_rotation": SpectralRotation,
+    "subset_spectral_rotation": SubsetSpectralRotation,
+    "subset_spectral_rotation_polynomial": SubsetSpectralRotationPolynomial,
+    "cheops_detrending": CheopsDetrending,
+    "cheops_factormodel": CheopsFactorModel,
     #'lightcurve_linear_detrending': LightcurveLinearDetrending,
     #'local_lightcurve_detrending': LocalLightcurveLinearDetrending,
     #'lightcurve_detrending': LightcurveDetrending,
     #'local_lightcurve_detrending': LocalLightcurveDetrending,
     #'lightcurve_poly_detrending': LightcurvePolyDetrending,
     #'local_lightcurve_poly_detrending': LocalLightcurvePolyDetrending,
-    'tinygp_quasiperiodic': TinyGaussianProcess_QuasiPeriodicActivity,
-    'tinygp_quasiperiodicsquaredexponential': TinyGaussianProcess_QuasiPeriodicSquaredExponentialActivity,
-    'tinygp_quasiperiodic_squaredexponential': TinyGaussianProcess_QuasiPeriodicSquaredExponentialActivity,
-    'tinygp_quasiperiodiccosine': TinyGaussianProcess_QuasiPeriodicCosineActivity,
-    'tinygp_quasiperiodic_cosine': TinyGaussianProcess_QuasiPeriodicCosineActivity,
-    'tinygp_quasiperiodic_derivative': TinyGaussianProcess_QuasiPeriodicDerivativeActivity,
-    'tinygp_matern32': TinyGaussianProcess_Matern32,
-    'spleaf_esp': SPLEAF_ESP,
-    'spleaf_sho': SPLEAF_SHO,
-    'spleaf_exponentialsineperiodic': SPLEAF_ESP,
-    'spleaf_esp_slow': SPLEAF_ESP_slow,
-    'spleaf_exponentialsineperiodic_slow': SPLEAF_ESP_slow,
-    'tinygp_sho': TinyGaussianProcess_SHO,
-    'tinygp_multidimensional_quasiperiodic': TinyGP_Multidimensional_QuasiPeriodicActivity,
-    'tinygp_multidimensional_quasiperiodicsquaredexponential': TinyGP_Multidimensional_QuasiPeriodicSquaredExponentialActivity,
-    'tinygp_multidimensional_quasiperiodic_squaredexponential': TinyGP_Multidimensional_QuasiPeriodicSquaredExponentialActivity,
-    'tinygp_multidimensional_quasiperiodiccosine': TinyGP_Multidimensional_QuasiPeriodicCosineActivity,
-    'tinygp_multidimensional_quasiperiodic_cosine': TinyGP_Multidimensional_QuasiPeriodicCosineActivity,
-    'tinygp_multiquasiperiodic_trainedsquaredexponential': TinyGP_MultiQuasiPeriodic_TrainedSquaredExponential_Activity,
-    'tinygp_multiquasiperiodictrainedsquaredexponential': TinyGP_MultiQuasiPeriodic_TrainedSquaredExponential_Activity,
-    'tinygp_multidimensional_matern32': TinyGP_Multidimensional_Matern32,
-    'spleaf_multidimensional_esp_slow': SPLEAF_Multidimensional_ESP_slow,
-    'spleaf_multidimensional_esp_devel': SPLEAF_Multidimensional_ESP_devel,
-    'spleaf_multidimensional_exponentialsineperiodic_slow': SPLEAF_Multidimensional_ESP_slow,
-    'spleaf_multidimensional_esp': SPLEAF_Multidimensional_ESP,
-    'spleaf_multidimensional_exponentialsineperiodic': SPLEAF_Multidimensional_ESP,
-    'rossitermclaughlin_pyarome': RossiterMcLaughlin_Pyarome,
-    'rossitermclaughlin_arome': RossiterMcLaughlin_Pyarome,
-    'rossitermclaughlin_legacy': RossiterMcLaughlin_Legacy,
-    'rossitermclaughlin_reloaded': RossiterMcLaughlin_Reloaded,
-    'rossitermclaughlin_reloaded_faster': RossiterMcLaughlin_Reloaded_Faster,
-    'rossitermclaughlin_revolutions': RossiterMcLaughlin_Revolutions,
-    'rossitermclaughlin_multiplanets_legacy': RossiterMcLaughlin_MultiPlanets_Legacy,
-    'rossitermclaughlin_exomoon': RossiterMcLaughlin_Exomoon,
-    'rml_exomoon': RossiterMcLaughlin_Exomoon,
-    'polynomial_detrending': PolynomialDetrending,
-    'exponential_detrending': ExponentialDetrending,
-    'detrending': FullDetrending,
-    'full_detrending': FullDetrending,
-    'lightcurve_detrending': FullDetrending,
-    'detrending_matern32': Detrending_Matern32,
-    'matern32_detrending': Detrending_Matern32,
+    "tinygp_quasiperiodic": TinyGaussianProcess_QuasiPeriodicActivity,
+    "tinygp_quasiperiodicsquaredexponential": TinyGaussianProcess_QuasiPeriodicSquaredExponentialActivity,
+    "tinygp_quasiperiodic_squaredexponential": TinyGaussianProcess_QuasiPeriodicSquaredExponentialActivity,
+    "tinygp_quasiperiodiccosine": TinyGaussianProcess_QuasiPeriodicCosineActivity,
+    "tinygp_quasiperiodic_cosine": TinyGaussianProcess_QuasiPeriodicCosineActivity,
+    "tinygp_quasiperiodic_derivative": TinyGaussianProcess_QuasiPeriodicDerivativeActivity,
+    "tinygp_matern32": TinyGaussianProcess_Matern32,
+    "spleaf_esp": SPLEAF_ESP,
+    "spleaf_sho": SPLEAF_SHO,
+    "spleaf_exponentialsineperiodic": SPLEAF_ESP,
+    "spleaf_esp_slow": SPLEAF_ESP_slow,
+    "spleaf_exponentialsineperiodic_slow": SPLEAF_ESP_slow,
+    "tinygp_sho": TinyGaussianProcess_SHO,
+    "tinygp_multidimensional_quasiperiodic": TinyGP_Multidimensional_QuasiPeriodicActivity,
+    "tinygp_multidimensional_quasiperiodicsquaredexponential": TinyGP_Multidimensional_QuasiPeriodicSquaredExponentialActivity,
+    "tinygp_multidimensional_quasiperiodic_squaredexponential": TinyGP_Multidimensional_QuasiPeriodicSquaredExponentialActivity,
+    "tinygp_multidimensional_quasiperiodiccosine": TinyGP_Multidimensional_QuasiPeriodicCosineActivity,
+    "tinygp_multidimensional_quasiperiodic_cosine": TinyGP_Multidimensional_QuasiPeriodicCosineActivity,
+    "tinygp_multiquasiperiodic_trainedsquaredexponential": TinyGP_MultiQuasiPeriodic_TrainedSquaredExponential_Activity,
+    "tinygp_multiquasiperiodictrainedsquaredexponential": TinyGP_MultiQuasiPeriodic_TrainedSquaredExponential_Activity,
+    "tinygp_multidimensional_matern32": TinyGP_Multidimensional_Matern32,
+    "spleaf_multidimensional_esp_slow": SPLEAF_Multidimensional_ESP_slow,
+    "spleaf_multidimensional_esp_devel": SPLEAF_Multidimensional_ESP_devel,
+    "spleaf_multidimensional_exponentialsineperiodic_slow": SPLEAF_Multidimensional_ESP_slow,
+    "spleaf_multidimensional_esp": SPLEAF_Multidimensional_ESP,
+    "spleaf_multidimensional_exponentialsineperiodic": SPLEAF_Multidimensional_ESP,
+    "rossitermclaughlin_pyarome": RossiterMcLaughlin_Pyarome,
+    "rossitermclaughlin_arome": RossiterMcLaughlin_Pyarome,
+    "rossitermclaughlin_legacy": RossiterMcLaughlin_Legacy,
+    "rossitermclaughlin_reloaded": RossiterMcLaughlin_Reloaded,
+    "rossitermclaughlin_reloaded_faster": RossiterMcLaughlin_Reloaded_Faster,
+    "rossitermclaughlin_revolutions": RossiterMcLaughlin_Revolutions,
+    "rossitermclaughlin_multiplanets_legacy": RossiterMcLaughlin_MultiPlanets_Legacy,
+    "rossitermclaughlin_exomoon": RossiterMcLaughlin_Exomoon,
+    "rml_exomoon": RossiterMcLaughlin_Exomoon,
+    "polynomial_detrending": PolynomialDetrending,
+    "exponential_detrending": ExponentialDetrending,
+    "detrending": FullDetrending,
+    "full_detrending": FullDetrending,
+    "lightcurve_detrending": FullDetrending,
+    "detrending_matern32": Detrending_Matern32,
+    "matern32_detrending": Detrending_Matern32,
     #'orbitize': Orbitize,
-    'gaiadr4_full': GaiaDR4AstrometricFull,
-    'gaiadr4_baseline': GaiaDR4AstrometricBaseline,
-    'gaiadr4_orbit': GaiaDR4AstrometricOrbit,
-    'gaiadr4_astrometric_baseline': GaiaDR4AstrometricBaseline,
-    'gaiadr4_astrometric_orbit': GaiaDR4AstrometricOrbit,
+    "gaiadr4_full": GaiaDR4AstrometricFull,
+    "gaiadr4_baseline": GaiaDR4AstrometricBaseline,
+    "gaiadr4_orbit": GaiaDR4AstrometricOrbit,
+    "gaiadr4_astrometric_baseline": GaiaDR4AstrometricBaseline,
+    "gaiadr4_astrometric_orbit": GaiaDR4AstrometricOrbit,
 }
 
 
@@ -311,37 +399,215 @@ define_type_to_class: dict[str, type[Any] | dict[str, type[Any]]] = {
     this is the case for dataset that contains the signature of multiple planets, e.g., RVs or transit light curve
  single_planet_model: the model is associated to a specific planet, e.g., time of transits
 """
-star_model_names = ['star', 'primary', 'secondary', 'tertiary', 'quaternary', 'quinary', 'senary']
-primary_model_names = ['primary',  'star']
+star_model_names = [
+    "star",
+    "primary",
+    "secondary",
+    "tertiary",
+    "quaternary",
+    "quinary",
+    "senary",
+]
+primary_model_names = ["primary", "star"]
 
 
+dynamical_timing_models = ["transit_times", "transit_durations"]
 
-dynamical_timing_models = ['transit_times', 'transit_durations']
+model_requires_planets = [
+    "radial_velocities",
+    "transit_times",
+    "transit_durations",
+    "transit",
+    "gaia_astrometry_orbit",
+    "transit_eclipse_phasecurve",
+    "rossiter_mclaughlin",
+    "rossiter_mclaughlin_nold",
+    "rossiter_mclaughlin_exomoon",
+]
 
-model_requires_planets = ['radial_velocities', 'transit_times', 'transit_durations', 'transit', 'gaia_astrometry_orbit',
-                                'transit_eclipse_phasecurve', 'rossiter_mclaughlin','rossiter_mclaughlin_nold', 'rossiter_mclaughlin_exomoon']
+model_requires_limb_darkening = [
+    "transit",
+    "transit_eclipse_phasecurve",
+    "rossiter_mclaughlin",
+    "rossiter_mclaughlin_exomoon",
+    "spectral_rotation",
+    "subset_spectral_rotation",
+    "subset_spectral_rotation_polynomial",
+]
 
-model_requires_limb_darkening = ['transit',
-                                'transit_eclipse_phasecurve',
-                                'rossiter_mclaughlin',
-                                'rossiter_mclaughlin_exomoon',
-                                'spectral_rotation',
-                                'subset_spectral_rotation',
-                                'subset_spectral_rotation_polynomial']
+model_requires_exomoon = ["rossiter_mclaughlin_exomoon"]
 
-model_requires_exomoon = ['rossiter_mclaughlin_exomoon']
+model_requires_star = [
+    "rossiter_mclaughlin",
+    "rossiter_mclaughlin_nold",
+    "rossiter_mclaughlin_exomoon",
+    "transit_times",
+    "gaussian_process",
+    "multidimensional_gaussian_process",
+    "gaia_astrometry_orbit",
+    "gaia_astrometry_baseline",
+]
 
-model_requires_star = ['rossiter_mclaughlin','rossiter_mclaughlin_nold', 'rossiter_mclaughlin_exomoon', 'transit_times', 'gaussian_process',
-                        'multidimensional_gaussian_process', 'gaia_astrometry_orbit', 'gaia_astrometry_baseline']
-
-model_requires_secondary_star = ['radial_velocities_primary', 'radial_velocities_secondary', 'eclipsing_binary']
-#model_requires_multiple_planets = ['rossiter_mclaughlin']
+model_requires_secondary_star = [
+    "radial_velocities_primary",
+    "radial_velocities_secondary",
+    "eclipsing_binary",
+]
+# model_requires_multiple_planets = ['rossiter_mclaughlin']
 
 model_requires_multiple_planets = []
 
-model_requires_spectrograph = ['rossiter_mclaughlin', 'rossiter_mclaughlin_nold', 'rossiter_mclaughlin_exomoon' ]
+model_requires_spectrograph = [
+    "rossiter_mclaughlin",
+    "rossiter_mclaughlin_nold",
+    "rossiter_mclaughlin_exomoon",
+]
 
-star_properties_list = ['limb_darkening', 'dilution_factor']
+star_properties_list = ["limb_darkening", "dilution_factor"]
 
 
+# ---------------------------------------------------------------------------
+# GPU allowlists (Round 1)
+#
+# `gpu: true` is "gate + guide": only models that are genuinely JAX-native are
+# allowed to run on the GPU. Everything else is rejected up-front by
+# pyorbit.common.gpu_backend.gate() with a message naming the JAX equivalent to
+# use instead. `gpu: false` (the default) leaves this entirely untouched.
+#
+# These sets hold *classes* (not YAML keywords): the keys of
+# ModelContainer.models / .common_models are PyORBIT's internal model names, but
+# the class -- not the name -- is what actually determines the compute backend.
+# ---------------------------------------------------------------------------
 
+GPU_ALLOWED_MODELS = {
+    # Keplerian RV / transit-time (JAX port in pyorbit.subroutines.kepler_exo_jax)
+    RVkeplerian,
+    ApodizedRVkeplerian,
+    TransitTimeKeplerian,
+    # Explicit CUDA/JAX implementations; PyTransit defaults are CPU/Numba.
+    Batman_Transit,
+    SPLEAF_ESP,
+    SPLEAF_Multidimensional_ESP,
+    # tinygp Gaussian processes (already JAX-native)
+    TinyGaussianProcess_QuasiPeriodicActivity,
+    TinyGaussianProcess_QuasiPeriodicDerivativeActivity,
+    TinyGaussianProcess_QuasiPeriodicSquaredExponentialActivity,
+    TinyGaussianProcess_QuasiPeriodicCosineActivity,
+    TinyGaussianProcess_SHO,
+    TinyGaussianProcess_Matern32,
+    TinyGP_Multidimensional_QuasiPeriodicActivity,
+    TinyGP_Multidimensional_QuasiPeriodicCosineActivity,
+    TinyGP_Multidimensional_Matern32,
+    TinyGP_Multidimensional_QuasiPeriodicSquaredExponentialActivity,
+    TinyGP_MultiQuasiPeriodic_TrainedSquaredExponential_Activity,
+    # Polynomial trend (JAX-native Horner evaluation; see pyorbit.models.polynomial_trend)
+    PolynomialTrend,
+    # Trivial arithmetic per-dataset models (JAX-safe scalars)
+    Offset,
+    Jitter,
+    DilutionFactor,
+    LocalDilutionFactor,
+    NormalizationFactor,
+    LocalNormalizationFactor,
+    SubsetNormalizationFactor,
+}
+
+# Common objects are shared *parameter holders* (planets, star, limb darkening,
+# activity, etc.); none of them drives the GPU/CPU backend, so all of them are
+# allowed and the gate stays focused on the per-sample compute models above.
+GPU_ALLOWED_COMMON = {
+    CommonPlanets,
+    CommonActivity,
+    CommonPolynomialTrend,
+    CommonOffset,
+    CommonJitter,
+    CommonHarmonics,
+    CommonSinusoid,
+    CommonDilutionFactor,
+    CommonNormalizationFactor,
+    CommonStarParameters,
+    CommonCCFParameters,
+    CommonCheopsModelling,
+    CommonCorrelation,
+    CommonComplexCorrelation,
+    CommonDetrending,
+    LimbDarkening_Linear,
+    LimbDarkening_Quadratic,
+    LimbDarkening_SquareRoot,
+    LimbDarkening_Logarithmic,
+    LimbDarkening_Exponential,
+    LimbDarkening_Power2,
+    LimbDarkening_NonLinear,
+}
+
+# Friendly "use this JAX model instead" messages, keyed by the gated class, for
+# the classes rejected under `gpu: true`. (Classes absent from this dict still
+# get a sensible fallback message from gpu_backend._redirect_message.)
+GPU_REDIRECT = {
+    # george-based GPs -> tinygp
+    GaussianProcess_QuasiPeriodicActivity: "use TinyGaussianProcess_QuasiPeriodicActivity (tinygp) instead",
+    GaussianProcess_QuasiPeriodicActivity_Alternative: "use TinyGaussianProcess_QuasiPeriodicActivity (tinygp) instead",
+    GaussianProcess_QuasiPeriodicActivity_Derivative: "use TinyGaussianProcess_QuasiPeriodicDerivativeActivity (tinygp) instead",
+    GaussianProcess_QuasiPeriodicCosineActivity: "use TinyGaussianProcess_QuasiPeriodicCosineActivity (tinygp) instead",
+    GP_Framework_QuasiPeriodicActivity: "use TinyGaussianProcess_QuasiPeriodicActivity (tinygp) instead",
+    GP_Pyaneti_QuasiPeriodicActivity: "use TinyGaussianProcess_QuasiPeriodicActivity (tinygp) instead",
+    GP_Multidimensional_QuasiPeriodicActivity: "use TinyGP_Multidimensional_QuasiPeriodicActivity (tinygp) instead",
+    GP_Multidimensional_QuasiPeriodicActivity_Numba: "use TinyGP_Multidimensional_QuasiPeriodicActivity (tinygp) instead",
+    # celerite2 GPs -> tinygp
+    Celerite2_Granulation_Rotation: "use TinyGaussianProcess_QuasiPeriodicActivity (tinygp) instead",
+    Celerite2_Granulation_Oscillation_Rotation: "use TinyGaussianProcess_QuasiPeriodicActivity (tinygp) instead",
+    Celerite2_Rotation: "use TinyGaussianProcess_QuasiPeriodicActivity (tinygp) instead",
+    Celerite2_Matern32: "use TinyGaussianProcess_Matern32 (tinygp) instead",
+    Celerite2_SHO: "use TinyGaussianProcess_SHO (tinygp) instead",
+    # S+LEAF GPs -> tinygp
+    SPLEAF_ESP: "the allowlisted GPU ESP backend in this fork is SPLEAF_ESP (already permitted on gpu: true)",
+    SPLEAF_ESP_slow: "no GPU backend in this fork; run with gpu: false",
+    SPLEAF_SHO: "use TinyGaussianProcess_SHO (tinygp) instead",
+    SPLEAF_Multidimensional_ESP: "the allowlisted GPU ESP backend in this fork is SPLEAF_Multidimensional_ESP (already permitted on gpu: true)",
+    SPLEAF_Multidimensional_ESP_slow: "no GPU backend in this fork; run with gpu: false",
+    SPLEAF_Multidimensional_ESP_devel: "no GPU backend in this fork; run with gpu: false",
+    # batman transits -> pytransit
+    Batman_Transit: "in this fork the GPU transit backend is Batman_Transit (already permitted on gpu: true)",
+    Batman_Transit_TTV: "no GPU backend in this fork; run with gpu: false",
+    Batman_Transit_TTV_Subset: "no GPU backend in this fork; run with gpu: false",
+    Batman_Transit_TTV_TClist: "no GPU backend in this fork; run with gpu: false",
+    Batman_Transit_TTV_Ancillary: "no GPU backend in this fork; run with gpu: false",
+    Batman_Transit_RpRs_Subset: "no GPU backend in this fork; run with gpu: false",
+    Batman_Transit_Eclipse_PhaseCurve: "no GPU backend in this fork; run with gpu: false",
+    # RML (numba / PyAstronomy / pyarome) -- no JAX backend in Round 1
+    RossiterMcLaughlin_Pyarome: "no GPU backend in this fork; run with gpu: false",
+    RossiterMcLaughlin_Legacy: "no GPU backend in this fork; run with gpu: false",
+    RossiterMcLaughlin_Reloaded: "no GPU backend in this fork; run with gpu: false",
+    RossiterMcLaughlin_Reloaded_Faster: "no GPU backend in this fork; run with gpu: false",
+    RossiterMcLaughlin_Revolutions: "no GPU backend in this fork; run with gpu: false",
+    RossiterMcLaughlin_Revolutions_Faster: "no GPU backend in this fork; run with gpu: false",
+    RossiterMcLaughlin_MultiPlanets_Legacy: "no GPU backend in this fork; run with gpu: false",
+    RossiterMcLaughlin_Exomoon: "no GPU backend in this fork; run with gpu: false",
+    # starry-based thermal phase curve -- no JAX backend in Round 1
+    Spiderman_Thermal: "no GPU backend in this fork; run with gpu: false",
+    # TRADES N-body integrator -- not JAX-portable in this fork (Round 1)
+    RVdynamical: "no GPU backend in this fork; run with gpu: false",
+    TransitTimeDynamical: "no GPU backend in this fork; run with gpu: false",
+    DynamicalIntegrator: "no GPU backend in this fork; run with gpu: false",
+    # numpy/scipy trends, sinusoids, correlation and related -- CPU-only in Round 1
+    SharedPolynomialTrend: "no GPU backend in this fork; run with gpu: false",
+    LocalPolynomialTrend: "no GPU backend in this fork; run with gpu: false",
+    SubsetPolynomialTrend: "no GPU backend in this fork; run with gpu: false",
+    Sinusoid: "no GPU backend in this fork; run with gpu: false",
+    LocalSinusoid: "no GPU backend in this fork; run with gpu: false",
+    SinusoidCommonPeriod: "no GPU backend in this fork; run with gpu: false",
+    SinusoidPolynomialModulation: "no GPU backend in this fork; run with gpu: false",
+    Harmonics: "no GPU backend in this fork; run with gpu: false",
+    LocalCorrelation: "no GPU backend in this fork; run with gpu: false",
+    LocalCorrelatedJitter: "no GPU backend in this fork; run with gpu: false",
+    ComplexCorrelation: "no GPU backend in this fork; run with gpu: false",
+    FullDetrending: "no GPU backend in this fork; run with gpu: false",
+    PolynomialDetrending: "no GPU backend in this fork; run with gpu: false",
+    ExponentialDetrending: "no GPU backend in this fork; run with gpu: false",
+    Detrending_Matern32: "use TinyGaussianProcess_Matern32 (tinygp) instead",
+    SpectralRotation: "no GPU backend in this fork; run with gpu: false",
+    SubsetSpectralRotation: "no GPU backend in this fork; run with gpu: false",
+    SubsetSpectralRotationPolynomial: "no GPU backend in this fork; run with gpu: false",
+    CheopsDetrending: "no GPU backend in this fork; run with gpu: false",
+    CheopsFactorModel: "no GPU backend in this fork; run with gpu: false",
+}

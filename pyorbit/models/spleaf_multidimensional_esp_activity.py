@@ -4,7 +4,8 @@ from pyorbit.models.abstract_gaussian_processes import AbstractGaussianProcesses
 from pyorbit.keywords_definitions import *
 
 from scipy.linalg import cho_factor, cho_solve, lapack, LinAlgError
-from scipy import matrix, spatial
+from numpy import matrix
+from scipy import spatial
 import sys
 
 __all__ = ['SPLEAF_Multidimensional_ESP']
@@ -185,6 +186,21 @@ class SPLEAF_Multidimensional_ESP(AbstractModel, AbstractGaussianProcesses):
 
         if not pass_conditions:
             return -np.inf
+
+        from pyorbit.common import gpu_backend
+        if gpu_backend.gpu_enabled():
+            from pyorbit.subroutines.esp_gpu import esp_loglike
+            variance = self.spleaf_err**2
+            alpha = np.empty_like(self.spleaf_time)
+            beta = np.empty_like(self.spleaf_time)
+            for index, selection in enumerate(self.spleaf_series_index):
+                alpha[selection] = self.internal_coeff_prime[index]
+                beta[selection] = self.internal_coeff_deriv[index]
+            for index, selection in enumerate(self._jitter_mask):
+                variance[selection] += self.internal_jitter[index]**2
+            return esp_loglike(self.spleaf_time, self.spleaf_res, variance,
+                self.internal_parameter_values['Prot'], self.internal_parameter_values['Pdec'],
+                self.internal_parameter_values['Oamp'], alpha, beta, self.n_harmonics)
 
         """
         Randomly reset the kernel with a probability of 0.1%

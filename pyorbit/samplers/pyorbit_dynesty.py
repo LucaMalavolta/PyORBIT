@@ -17,7 +17,37 @@ import multiprocessing
 import matplotlib.pyplot as plt
 from pyorbit.subroutines.common import np, nested_sampling_prior_compute
 
+import pyorbit.common.gpu_backend as gpu_backend
+import pyorbit.samplers.dynesty_pool as dynesty_pool
+from contextlib import contextmanager
+
 __all__ = ["pyorbit_dynesty"]
+
+
+@contextmanager
+def _gpu_pool_ctx(gpu_workers, config_in, input_datasets, mc, vram_fraction=None):
+    """Spawn K dynesty workers that share the GPU (each VRAM-capped) so the
+    sampler's independent live points are evaluated concurrently.
+
+    dynesty's pool uses ``mp.get_context('spawn')`` -- each worker is a fresh
+    interpreter that builds its own CUDA context (no fork-after-CUDA). The
+    per-process VRAM cap is set *before* the workers spawn (they inherit the
+    environment), and the master is told to reuse its already-built container
+    for the in-master prior transform so it does not open a second JAX context.
+    """
+    os.environ['XLA_PYTHON_CLIENT_PREALLOCATE'] = 'false'
+    if vram_fraction is None:
+        vram_fraction = min(0.30, max(0.05, 0.90 / (gpu_workers + 1)))
+    os.environ['XLA_PYTHON_CLIENT_MEM_FRACTION'] = str(vram_fraction)
+    dynesty_pool.set_master_mc(mc)
+    import dynesty
+    pool = dynesty.pool.Pool(gpu_workers,
+                             dynesty_pool.pool_loglike,
+                             dynesty_pool.pool_priors,
+                             logl_args=(config_in, input_datasets),
+                             ptform_args=(config_in, input_datasets))
+    with pool:
+        yield pool
 
 """
 def show(filepath):
@@ -127,14 +157,42 @@ def pyorbit_dynesty(config_in, input_datasets=None, return_output=None, run_nest
 
 
     dlogz = mc.nested_sampling_parameters.get('dlogz', 0.01)
+    maxcall = mc.nested_sampling_parameters.get('maxcall', None)
     use_threading_pool = mc.nested_sampling_parameters.get('use_threading_pool', True)
+
+    # Step 2: fill the GPU with K concurrent workers. ``gpu_workers > 1``
+    # enables dynesty's spawn-based pool (CUDA-safe: fresh interpreter per
+    # worker, each builds its own CUDA context -- no fork-after-CUDA), so the
+    # sampler's independent live points are evaluated concurrently and the GPU
+    # / VRAM stay busy instead of idling between per-point round-trips.
+    # Default 1 = unchanged single-process behaviour.
+    gpu_workers = int(config_in['parameters'].get('gpu_workers', 1))
+    gpu_vram_fraction = config_in['parameters'].get('gpu_vram_fraction', None)
+    use_worker_pool = gpu_workers > 1
+
+    if gpu_backend.gpu_enabled() and use_threading_pool and not use_worker_pool:
+        # Forking a worker after the parent has used CUDA is unsafe, and the
+        # spawn pool is not requested here, so fall back to the single-process
+        # path (both 'use_threading_pool' branches below take the no-pool route).
+        print('GPU enabled: single-process (use_threading_pool is ignored).')
+        print()
+        use_threading_pool = False
+
+    # Precedence: spawn worker pool (K processes) > CPU fork pool > single-process.
+    if use_worker_pool:
+        use_threading_pool = False
+
     pfrac_value = mc.nested_sampling_parameters.get('pfrac', 0.000)
     use_default = (mc.nested_sampling_parameters.get('default', False) | mc.nested_sampling_parameters.get('use_default', False))
 
     if use_default:
         pfrac_value = 0.80
 
-    print('Using threading pool for dynesty:', use_threading_pool)
+    if use_worker_pool:
+        print('Using {0}-worker dynesty pool (per-worker VRAM fraction {1})'.format(
+            gpu_workers, gpu_vram_fraction if gpu_vram_fraction is not None else 'auto'))
+    else:
+        print('Using threading pool for dynesty:', use_threading_pool)
 
     if not run_nested:
         print()
@@ -193,7 +251,43 @@ def pyorbit_dynesty(config_in, input_datasets=None, return_output=None, run_nest
         print('Setting up the Dynamic Nested Sampling, posterior/evidence split = {0:4.3f}'.format(pfrac_value))
         print()
 
-        if use_threading_pool:
+        if use_worker_pool:
+
+            with _gpu_pool_ctx(gpu_workers, config_in, input_datasets, mc, gpu_vram_fraction) as pool:
+
+                # "Dynamic" nested sampling.
+
+                try:
+                    dsampler_maxevidence = dynesty.DynamicNestedSampler.restore(save_checkpoint_maxevidence, pool=pool)
+                    print('Restoring Dynamic Nested Sampling')
+                except Exception as err:
+                    if os.path.exists(save_checkpoint_maxevidence):
+                        corrupt_checkpoint = save_checkpoint_maxevidence + '.corrupt'
+                        os.replace(save_checkpoint_maxevidence, corrupt_checkpoint)
+                        print('WARNING: could not restore checkpoint {0} ({1}); moved aside to {2} and starting a fresh run'.format(save_checkpoint_maxevidence, err, corrupt_checkpoint))
+
+                    dsampler_maxevidence = dynesty.DynamicNestedSampler(pool.loglike,
+                                                            pool.prior_transform,
+                                                            mc.ndim,
+                                                            nlive=nlive,
+                                                            pool=pool,
+                                                            queue_size=gpu_workers,
+                                                            bound= mc.nested_sampling_parameters['bound'],
+                                                            sample= mc.nested_sampling_parameters['sample'],
+                                                            use_pool={
+                                                                'prior_transform': False},
+                                                            )
+                    print('Running Dynamic Nested Sampling')
+                    dsampler_maxevidence.run_nested(checkpoint_file=save_checkpoint_maxevidence, dlogz_init=dlogz, maxcall=maxcall, wt_kwargs={'pfrac': pfrac_value})
+                    print()
+                else:
+                    results_maxevidence = dsampler_maxevidence.results
+                    dynesty_results_maxevidence_save_to_cpickle(mc.output_directory, results_maxevidence)
+                    dsampler_maxevidence.run_nested(resume=True)
+
+
+
+        elif use_threading_pool:
 
 
             with multiprocessing.Pool(num_threads) as pool:
@@ -221,7 +315,7 @@ def pyorbit_dynesty(config_in, input_datasets=None, return_output=None, run_nest
                                                                 'prior_transform': False},
                                                             )
                     print('Running Dynamic Nested Sampling')
-                    dsampler_maxevidence.run_nested(checkpoint_file=save_checkpoint_maxevidence, dlogz_init=dlogz, wt_kwargs={'pfrac': pfrac_value})
+                    dsampler_maxevidence.run_nested(checkpoint_file=save_checkpoint_maxevidence, dlogz_init=dlogz, maxcall=maxcall, wt_kwargs={'pfrac': pfrac_value})
                     print()
                 else:
                     results_maxevidence = dsampler_maxevidence.results
@@ -249,7 +343,7 @@ def pyorbit_dynesty(config_in, input_datasets=None, return_output=None, run_nest
                                                         sample= mc.nested_sampling_parameters['sample'],
                                                         )
                 print('Running Dynamic Nested Sampling')
-                dsampler_maxevidence.run_nested(checkpoint_file=save_checkpoint_maxevidence, dlogz_init=dlogz, wt_kwargs={'pfrac': pfrac_value})
+                dsampler_maxevidence.run_nested(checkpoint_file=save_checkpoint_maxevidence, dlogz_init=dlogz, maxcall=maxcall, wt_kwargs={'pfrac': pfrac_value})
                 print()
             else:
                 results_maxevidence = dsampler_maxevidence.results
@@ -292,7 +386,43 @@ def pyorbit_dynesty(config_in, input_datasets=None, return_output=None, run_nest
         print('                                        sample = ', mc.nested_sampling_parameters['sample'])
         print()
 
-    if use_threading_pool:
+    if use_worker_pool:
+
+        with _gpu_pool_ctx(gpu_workers, config_in, input_datasets, mc, gpu_vram_fraction) as pool:
+
+            try:
+                dsampler = dynesty.DynamicNestedSampler.restore(save_checkpoint, pool=pool)
+                print('Restoring Dynamic Nested Sampling')
+            except Exception as err:
+                if os.path.exists(save_checkpoint):
+                    corrupt_checkpoint = save_checkpoint + '.corrupt'
+                    os.replace(save_checkpoint, corrupt_checkpoint)
+                    print('WARNING: could not restore checkpoint {0} ({1}); moved aside to {2} and starting a fresh run'.format(save_checkpoint, err, corrupt_checkpoint))
+
+                dsampler = dynesty.DynamicNestedSampler(pool.loglike,
+                                                        pool.prior_transform,
+                                                        mc.ndim,
+                                                        nlive=nlive,
+                                                        pool=pool,
+                                                        queue_size=gpu_workers,
+                                                        bound= mc.nested_sampling_parameters['bound'],
+                                                        sample= mc.nested_sampling_parameters['sample'],
+                                                        use_pool={
+                                                            'prior_transform': False},
+                                                        )
+
+                print('Running Dynamic Nested Sampling')
+                if use_default:
+                    dsampler.run_nested(checkpoint_file=save_checkpoint, maxcall=maxcall)
+                else:
+                    dsampler.run_nested(checkpoint_file=save_checkpoint, dlogz_init=dlogz, maxcall=maxcall, wt_kwargs={'pfrac': pfrac_value})
+                print()
+            else:
+                results = dsampler.results
+                dynesty_results_save_to_cpickle(mc.output_directory, results)
+                dsampler.run_nested(resume=True)
+
+    elif use_threading_pool:
 
         with multiprocessing.Pool(num_threads) as pool:
 
@@ -319,9 +449,9 @@ def pyorbit_dynesty(config_in, input_datasets=None, return_output=None, run_nest
 
                 print('Running Dynamic Nested Sampling')
                 if use_default:
-                    dsampler.run_nested(checkpoint_file=save_checkpoint)
+                    dsampler.run_nested(checkpoint_file=save_checkpoint, maxcall=maxcall)
                 else:
-                    dsampler.run_nested(checkpoint_file=save_checkpoint, dlogz_init=dlogz, wt_kwargs={'pfrac': pfrac_value})
+                    dsampler.run_nested(checkpoint_file=save_checkpoint, dlogz_init=dlogz, maxcall=maxcall, wt_kwargs={'pfrac': pfrac_value})
                 print()
             else:
                 results = dsampler.results
@@ -346,9 +476,9 @@ def pyorbit_dynesty(config_in, input_datasets=None, return_output=None, run_nest
 
             print('Running Dynamic Nested Sampling without parallelization')
             if use_default:
-                dsampler.run_nested(checkpoint_file=save_checkpoint)
+                dsampler.run_nested(checkpoint_file=save_checkpoint, maxcall=maxcall)
             else:
-                dsampler.run_nested(checkpoint_file=save_checkpoint, dlogz_init=dlogz, wt_kwargs={'pfrac': pfrac_value})
+                dsampler.run_nested(checkpoint_file=save_checkpoint, dlogz_init=dlogz, maxcall=maxcall, wt_kwargs={'pfrac': pfrac_value})
             print()
         else:
             results = dsampler.results

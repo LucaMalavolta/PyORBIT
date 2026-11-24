@@ -25,6 +25,7 @@ import os
 import matplotlib as mpl
 import sys
 import multiprocessing
+import threading
 
 from tqdm import tqdm
 
@@ -32,6 +33,37 @@ from tqdm import tqdm
 _results_worker_mc = None
 _results_worker_operation = None
 _results_worker_payload = None
+
+
+# Bounded-wait budget (seconds) for the parallel results path. A pool worker
+# that dies (e.g. cannot re-init JAX/CUDA in the child, OOM) or deadlocks must
+# never block the parent indefinitely: once these budgets are exhausted the
+# caller emits an explicit WARNING, tears the pool down and retries serially.
+# Tunable via environment for CI (shorter) or slow machines (longer).
+def _results_budget_seconds(name, default):
+    """Read an optional timeout override; a bad value must never break import.
+
+    Mirrors this module's own pattern for ``results_cpu_threads`` (invalid
+    value -> WARNING + default), so a mistyped ``PYORBIT_RESULTS_*TIMEOUT``
+    degrades loudly instead of raising ``ValueError`` while ``pyorbit`` is
+    imported (this module is imported from the package ``__init__``).
+    """
+    value = os.environ.get(name, default)
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        print(
+            "WARNING: invalid {0} value {1!r}; using {2:.0f}s default".format(
+                name, value, default
+            )
+        )
+        return float(default)
+
+
+_RESULTS_WORKER_INIT_TIMEOUT = _results_budget_seconds(
+    "PYORBIT_RESULTS_INIT_TIMEOUT", 300.0
+)
+_RESULTS_ITEM_TIMEOUT = _results_budget_seconds("PYORBIT_RESULTS_ITEM_TIMEOUT", 60.0)
 
 
 def _results_worker_initialize(mc, operation, payload=None):
@@ -44,35 +76,403 @@ def _results_worker_initialize(mc, operation, payload=None):
 
 def _results_worker_evaluate(item):
     """Evaluate one independent item in an isolated worker process."""
-    if _results_worker_operation == 'nautilus':
+    if _results_worker_operation == "nautilus":
         return _results_worker_mc.nautilus_call(item)
-    if _results_worker_operation == 'ultranest':
+    if _results_worker_operation == "ultranest":
         return _results_worker_mc.ultranest_call(item)
-    if _results_worker_operation == 'rv_log_likelihood':
+    if _results_worker_operation == "rv_log_likelihood":
         return _results_worker_mc.rv_log_likelihood(item)
-    if _results_worker_operation == 'log_priors':
+    if _results_worker_operation == "log_priors":
         return _results_worker_mc.log_priors(item)
-    if _results_worker_operation == 'get_model':
+    if _results_worker_operation == "get_model":
         result_name, theta = item
         return result_name, results_analysis.get_model(
-            _results_worker_mc, theta, _results_worker_payload['bjd_plot'],
-            **_results_worker_payload['plot_parameters'])
-    if _results_worker_operation == 'gelman_rubin':
+            _results_worker_mc,
+            theta,
+            _results_worker_payload["bjd_plot"],
+            **_results_worker_payload["plot_parameters"],
+        )
+    if _results_worker_operation == "gelman_rubin":
         theta_name, theta_id = item
-        sampler_chain = _results_worker_payload['sampler_chain']
-        step_sampling = _results_worker_payload['step_sampling']
-        rhat = np.asarray([
-            GelmanRubin_v2(sampler_chain[:, :steps, theta_id])
-            for steps in step_sampling
-        ])
+        sampler_chain = _results_worker_payload["sampler_chain"]
+        step_sampling = _results_worker_payload["step_sampling"]
+        rhat = np.asarray(
+            [
+                GelmanRubin_v2(sampler_chain[:, :steps, theta_id])
+                for steps in step_sampling
+            ]
+        )
         return theta_name, theta_id, rhat
-    raise ValueError('Unknown results worker operation: {0}'.format(
-        _results_worker_operation))
+    raise ValueError(
+        "Unknown results worker operation: {0}".format(_results_worker_operation)
+    )
 
 
-def _results_parallel_map(mc, operation, items, num_processes, mp_method,
-                          progress=False, payload=None):
-    """Map work with one model-container copy per process and a serial fallback."""
+def _results_gpu_in_use():
+    """True once this process retargeted JAX to a GPU.
+
+    Importing ``pyorbit.common.gpu_backend`` is side-effect free (JAX is only
+    imported inside its functions), so this is safe to ask in a CPU-only
+    process. Once the GPU path has evaluated any likelihood, JAX's multithreaded
+    C thread pools and a live CUDA context exist in this process, and
+    ``os.fork()`` from here can deadlock or kill the forked children.
+    """
+    try:
+        from pyorbit.common import gpu_backend
+
+        return bool(gpu_backend.gpu_enabled())
+    except Exception:
+        return False
+
+
+def _results_jax_loaded():
+    """True once JAX has been imported into this process.
+
+    The fork hazard is not limited to the GPU: JAX's XLA runtime runs
+    multithreaded C thread pools that are invisible to
+    ``threading.active_count()``, so a forked child can inherit a locked
+    runtime and deadlock -- even on a pure CPU device. PyORBIT loads JAX for
+    the tinygp GPs even in ``gpu: false`` runs, and the posterior tables
+    (MAP/median) have already evaluated JAX in-process by the time the
+    parallel model phase starts, so this fires there too.
+    """
+    return "jax" in sys.modules
+
+
+def _results_serial_evaluate(mc, operation, items, progress=False, payload=None):
+    """Serial correctness path: same evaluator, in-process, exact results.
+
+    This is what the parallel step falls back to on any failure; it must
+    keep producing exactly the numbers of the plain in-process computation,
+    so the results step stays best-effort for the main fit.
+    """
+    _results_worker_initialize(mc, operation, payload)
+    try:
+        item_count = len(items)
+    except TypeError:
+        items = list(items)
+        item_count = len(items)
+    iterator = map(_results_worker_evaluate, items)
+    if progress:
+        iterator = tqdm(iterator, total=item_count)
+    return list(iterator)
+
+
+def _results_worker_preflight(context, mc, operation, payload):
+    """Run the pool initializer once, in a fresh child process, with a bound.
+
+    Returns ``None`` on success, otherwise a human-readable failure reason.
+
+    A spawn worker that dies while unpickling its initargs (or OOMs while
+    re-initializing JAX/CUDA in the child) used to be invisible to the parent:
+    the pool silently kept respawning dead workers while ``pool.imap`` waited
+    forever for results, so the serial fallback never fired. Running the same
+    unpickle + initializer once in a child we own and join (bounded) turns
+    that death into a fast, deterministic signal. Only this process's own
+    child is touched here; the parent never blocks unboundedly.
+    """
+    proc = context.Process(
+        target=_results_worker_initialize,
+        args=(mc, operation, payload),
+        daemon=True,
+    )
+    try:
+        proc.start()
+    except Exception as exc:
+        return "could not start results worker: {0}".format(exc)
+    proc.join(_RESULTS_WORKER_INIT_TIMEOUT)
+    if proc.is_alive():
+        proc.terminate()
+        proc.join(10.0)
+        if proc.is_alive():
+            proc.kill()
+            proc.join(10.0)
+        return (
+            "results worker did not finish initializing within {0:.0f}s; "
+            "worker terminated".format(_RESULTS_WORKER_INIT_TIMEOUT)
+        )
+    if proc.exitcode != 0:
+        return (
+            "results worker exited with status {0} while executing the pool "
+            "initializer (check the worker traceback above)".format(proc.exitcode)
+        )
+    return None
+
+
+def _results_map_bounded(pool, items, item_count, progress=False, item_timeout=None):
+    """Consume ``pool.imap`` with a bounded wait per result item.
+
+    A worker that dies mid-task leaves its result slot unfilled forever, so a
+    plain ``list(pool.imap(...))`` blocks the parent indefinitely. Here the
+    timed iterator (``IMapIterator.next(timeout)``) raises ``TimeoutError``
+    instead, so worker death/hang surfaces as an ordinary exception and the
+    caller can warn and fall back to serial evaluation.
+    """
+    if item_timeout is None:
+        item_timeout = _RESULTS_ITEM_TIMEOUT
+
+    # chunksize=1 so each item is one timed ``next()`` wait (the pool's
+    # chunked ``imap`` wrapper exposes no per-item wait).
+    iterator = pool.imap(_results_worker_evaluate, items, chunksize=1)
+
+    if not hasattr(iterator, "next"):
+        # Pool build without a timed iterator: the preflight above already
+        # rejected initializer deaths, and the caller's except branch still
+        # warns and falls back to serial on any failure.
+        if progress:
+            iterator = tqdm(iterator, total=item_count)
+        return list(iterator)
+
+    # NOTE: this stdlib's pool raises ``multiprocessing.context.TimeoutError``
+    # (a ProcessError) from the timed wait -- it is NOT a subclass of the
+    # builtin TimeoutError -- so both must be caught to turn the timeout into
+    # a descriptive failure.
+    timeout_errors = (TimeoutError, multiprocessing.TimeoutError)
+
+    results = []
+    bar = tqdm(total=item_count) if progress else None
+    try:
+        for _ in range(item_count):
+            try:
+                results.append(iterator.next(item_timeout))
+            except timeout_errors as exc:
+                raise TimeoutError(
+                    "a results worker did not deliver its result within "
+                    "{0:.0f}s (worker death or hang)".format(item_timeout)
+                ) from exc
+            if bar is not None:
+                bar.update(1)
+    finally:
+        if bar is not None:
+            bar.close()
+    return results
+
+
+def _results_pool_shutdown(pool, normal=False, reap_timeout=10.0):
+    """Tear down the results pool without waiting unboundedly.
+
+    On success, ``close() + join()`` lets the idle workers drain normally.
+
+    On failure, order matters (verified against this stdlib). A worker that
+    is waiting for work in ``Pool`` holds the inqueue reader lock (``get``
+    of the pool's ``SimpleQueue`` holds ``_rlock`` across its blocking pipe
+    read), so such a worker must be *unwoken*, not killed, before the
+    pool's own finalizer runs -- the finalizer (``_terminate_pool`` ->
+    ``_help_stuff_finish``) re-acquires that lock without a timeout, and
+    ``Pool.terminate()`` also ends in a *timeoutless* ``p.join()`` over the
+    workers. Meanwhile the pool's respawn thread (``Pool._handle_workers``)
+    keeps replacing dead workers with the *same* initializer (re-running
+    whatever installed a SIGTERM trap, in that failure mode). So the
+    failure branch:
+
+      1. pre-stops the respawn loop (bounded, best effort) so it cannot add
+         fresh -- possibly SIGTERM-trapping -- children to ``pool._pool``;
+      2. sends one ``None`` sentinel per worker to the inqueue and waits a
+         short bounded grace, so a worker blocked waiting for work exits its
+         loop and releases the reader lock;
+      3. reaps the workers the sentinel did not wake -- i.e. workers stuck
+         inside a task, including one that traps SIGTERM -- in up to two
+         bounded passes: SIGTERM -> ``join(reap_timeout)`` -> SIGKILL if
+         still alive -> ``join(reap_timeout)``. SIGKILL cannot be trapped,
+         so a SIGTERM-ignoring worker is forcibly killed here by the reap;
+      4. only then calls ``pool.terminate()`` to flip the pool state and
+         drain its internals; every killable worker is already dead and no
+         further respawn is possible, so the internal joins should return.
+         The call still runs on a daemon thread with a bounded wait, so the
+         parent never blocks unboundedly even if the finalizer itself gets
+         stuck on a semantically orphaned lock or a dead internal handler.
+
+    Documented corner, not solvable from userspace (not overclaimed): a
+    worker stuck in uninterruptible kernel wait (D state) outlives both
+    SIGTERM and SIGKILL; the bounded joins then time out and we abandon it
+    (the parent is not blocked by it, the fallback result is already
+    computed). The only remaining backstop for such a worker is the
+    driver-level ``timeout -k 10`` wrapping real PyORBIT runs; this teardown
+    explicitly does not claim to kill a D-state worker from userspace.
+
+    Only this process's own children are ever signaled; no foreign process
+    is touched.
+    """
+    if pool is None:
+        return
+    if normal:
+        try:
+            pool.close()
+            pool.join()
+            return
+        except Exception as exc:
+            print(
+                "WARNING: problem closing the results pool: {0}; terminating it".format(
+                    exc
+                )
+            )
+
+    # 1) Pre-stop the pool's worker-respawn loop (bounded, best effort), so
+    # it cannot add fresh -- possibly SIGTERM-trapping -- children to
+    # ``pool._pool`` while we kill the workers. The loop exits once its
+    # thread state is TERMINATE (the pool's own finalizer sets exactly this:
+    # see ``Pool._handle_workers`` / ``Pool._terminate_pool``); the
+    # ``_change_notifier`` sentinel unblocks its ``_wait_for_updates``.
+    worker_handler = getattr(pool, "_worker_handler", None)
+    if worker_handler is not None:
+        try:
+            worker_handler._state = "TERMINATE"
+        except (AttributeError, TypeError):
+            pass
+        change_notifier = getattr(pool, "_change_notifier", None)
+        if change_notifier is not None:
+            try:
+                change_notifier.put(None)
+            except (ValueError, OSError, EOFError):
+                pass
+        is_alive = getattr(worker_handler, "is_alive", None)
+        if callable(is_alive) and is_alive():
+            try:
+                worker_handler.join(reap_timeout)
+            except (OSError, ValueError, multiprocessing.TimeoutError):
+                pass
+        is_alive = getattr(worker_handler, "is_alive", None)
+        if callable(is_alive) and is_alive():
+            print(
+                "WARNING: results pool respawn thread still running after "
+                "{0:.0f}s; continuing the bounded teardown".format(reap_timeout)
+            )
+
+    # Also stop the task-delivery thread (best effort; it is a daemon and is
+    # intentionally not joined) so no new task is enqueued behind the
+    # sentinels sent in the next step.
+    task_handler = getattr(pool, "_task_handler", None)
+    if task_handler is not None:
+        try:
+            task_handler._state = "TERMINATE"
+        except (AttributeError, TypeError):
+            pass
+
+    # 2) Wake every idle worker by sending one ``None`` sentinel to the
+    # pool's inqueue, then give the workers a short bounded grace to exit. A
+    # worker waiting for work holds the inqueue reader lock in this stdlib
+    # (``get`` holds ``_rlock`` across its blocking pipe read), so such a
+    # worker must be unwoken -- not killed -- to release that cross-process
+    # lock before the pool's own finalizer re-acquires it; reading the
+    # sentinel makes the worker exit its loop and release the lock.
+    workers = list(getattr(pool, "_pool", ()) or ())
+    inqueue = getattr(pool, "_inqueue", None)
+    if inqueue is not None:
+        for _ in workers:
+            try:
+                inqueue.put(None)
+            except (ValueError, OSError, EOFError):
+                pass
+    grace = min(reap_timeout, 2.0)
+    for worker in workers:
+        is_alive = getattr(worker, "is_alive", None)
+        if callable(is_alive) and is_alive():
+            try:
+                worker.join(grace)
+            except (OSError, ValueError, multiprocessing.TimeoutError):
+                pass
+
+    # 3) Bounded reap of the workers the sentinel did not wake -- i.e.
+    # workers stuck inside a task, including one that traps SIGTERM:
+    # SIGTERM, a bounded wait, then SIGKILL if still alive. SIGKILL cannot
+    # be trapped, so a SIGTERM-ignoring worker is forcibly killed here. A
+    # stuck-in-task worker is not holding the inqueue reader lock (workers
+    # hold it only while waiting for work), so the kill is safe for step 4.
+    # Two passes absorb children the respawn loop added in the split second
+    # before step 1 took effect.
+    for _pass in range(2):
+        live = [
+            worker
+            for worker in list(getattr(pool, "_pool", ()) or ())
+            if callable(getattr(worker, "is_alive", None)) and worker.is_alive()
+        ]
+        if not live:
+            break
+        for worker in live:
+            try:
+                worker.terminate()
+                worker.join(reap_timeout)
+                if worker.is_alive():
+                    worker.kill()
+                    worker.join(reap_timeout)
+            except (OSError, ValueError, multiprocessing.TimeoutError):
+                pass
+    survivors = [
+        worker.pid
+        for worker in list(getattr(pool, "_pool", ()) or ())
+        if callable(getattr(worker, "is_alive", None)) and worker.is_alive()
+    ]
+
+    # 4) Only now flip the pool state and drain its internals with
+    # ``pool.terminate()`` (in this stdlib this runs the pool finalizer
+    # synchronously on the calling thread, ending in timeoutless joins).
+    # Every killable worker is already dead and the respawn loop is stopped,
+    # so this should finish promptly; but running it on a daemon thread with
+    # a bounded wait guarantees the parent never blocks unboundedly even if
+    # the finalizer itself sticks (orphaned reader lock, dead internal
+    # handler, ...). Running it also consumes the pool's finalizer -- it is
+    # deregistered before its callback runs -- so it cannot re-run, and
+    # re-hang, process exit.
+    _terminated = []
+
+    def _terminate_results_pool():
+        try:
+            pool.terminate()
+        except Exception as exc:  # noqa: BLE001 - bounded fallback already in hand
+            print("WARNING: problem terminating the results pool: {0}".format(exc))
+        finally:
+            _terminated.append(True)
+
+    terminator = threading.Thread(
+        target=_terminate_results_pool, name="pyorbit-results-pool-terminator"
+    )
+    terminator.daemon = True
+    terminator.start()
+    terminator.join(reap_timeout)
+    if not _terminated:
+        print(
+            "WARNING: results pool terminate() did not finish within "
+            "{0:.0f}s (abandoning its internal drain on a background "
+            "thread); the parent continues".format(reap_timeout)
+        )
+    if survivors:
+        # Documented corner, not solvable from userspace (not overclaimed):
+        # a worker stuck in uninterruptible kernel wait (D state) outlives
+        # both SIGTERM and SIGKILL. The parent is not blocked by it (the
+        # fallback result is already computed); the only remaining backstop
+        # is the driver-level ``timeout -k 10`` wrapping real PyORBIT runs.
+        print(
+            "WARNING: results pool worker(s) {0} still alive after SIGKILL "
+            "(uninterruptible/D-state corner) -- abandoning them; the "
+            "driver-level 'timeout -k' is the last backstop".format(survivors)
+        )
+
+
+def _results_failure_text(exc):
+    """Human-readable text for a failure; never empty.
+
+    Some stdlib pool failures carry no message (e.g. a bare
+    ``multiprocessing.context.TimeoutError`` or an empty ``OSError``); for
+    those, the exception type name is what the operator can actually act on.
+    """
+    text = str(exc)
+    if not text:
+        text = type(exc).__name__
+    return text
+
+
+def _results_parallel_map(
+    mc, operation, items, num_processes, mp_method, progress=False, payload=None
+):
+    """Map work with one model-container copy per process and a serial fallback.
+
+    Every pool failure mode (worker death, deadlocking/crashing initializer,
+    hung worker) is designed to: wait for a bounded time (
+    ``_RESULTS_WORKER_INIT_TIMEOUT`` / ``_RESULTS_ITEM_TIMEOUT``), emit an
+    explicit WARNING, and fall back to serial evaluation, which yields exactly
+    the same numbers as the in-process computation. The results step itself
+    stays best-effort for the main fit.
+    """
     try:
         item_count = len(items)
     except TypeError:
@@ -80,218 +480,282 @@ def _results_parallel_map(mc, operation, items, num_processes, mp_method,
         item_count = len(items)
 
     if num_processes <= 1 or item_count <= 1:
-        _results_worker_initialize(mc, operation, payload)
-        iterator = map(_results_worker_evaluate, items)
-        if progress:
-            iterator = tqdm(iterator, total=item_count)
-        return list(iterator)
+        return _results_serial_evaluate(
+            mc, operation, items, progress=progress, payload=payload
+        )
 
     workers = min(num_processes, item_count)
-    chunksize = max(1, item_count // (workers * 4))
+
+    # os.fork() after JAX init is a classic deadlock: JAX/XLA runs multithreaded
+    # C thread pools (invisible to threading.active_count()), and a live CUDA
+    # context cannot be inherited by forked children. pyorbit_getresults has
+    # already evaluated JAX likelihoods in-process for the posterior tables
+    # (MAP/median) -- even in `gpu: false` runs, because the tinygp GPs are
+    # JAX-native -- so forking here would hang the pool. 'spawn' workers start
+    # fresh interpreters and rebuild their state from the pickled
+    # `mc`/payload (initargs); the preflight + try/except below still fall
+    # back to serial evaluation if the pool cannot be used.
+    if (
+        mp_method == "fork"
+        and "spawn" in multiprocessing.get_all_start_methods()
+        and (
+            threading.active_count() > 1
+            or _results_gpu_in_use()
+            or _results_jax_loaded()
+        )
+    ):
+        print(
+            "NOTE: this process is multithreaded, has used a GPU, or has "
+            "loaded JAX; 'fork' results workers would deadlock, using "
+            "'spawn' instead of 'fork'"
+        )
+        mp_method = "spawn"
+
     context = multiprocessing.get_context(mp_method)
 
-    try:
-        with context.Pool(
-                workers,
-                initializer=_results_worker_initialize,
-                initargs=(mc, operation, payload)) as pool:
-            iterator = pool.imap(
-                _results_worker_evaluate, items, chunksize=chunksize)
-            if progress:
-                iterator = tqdm(iterator, total=item_count)
-            return list(iterator)
-    except Exception as exc:
-        print('WARNING: parallel {0} failed ({1}); retrying serially'.format(
-            operation, exc))
-        _results_worker_initialize(mc, operation, payload)
-        iterator = map(_results_worker_evaluate, items)
-        if progress:
-            iterator = tqdm(iterator, total=item_count)
-        return list(iterator)
+    # Bounded preflight: prove before committing to the pool that a fresh
+    # worker process can rebuild its state (unpickle mc/payload + run the
+    # initializer) with the same start method. A worker that dies there --
+    # the reported hang: unpickling the first payload failed in the child
+    # ("unable to create StreamExecutor for CUDA:0 ... CUDA_ERROR_OUT_OF_MEMORY")
+    # -- is caught within the init budget here, instead of surfacing as an
+    # unbounded `pool.imap` wait from which the fallback warning never came.
+    preflight_error = _results_worker_preflight(context, mc, operation, payload)
+    if preflight_error is not None:
+        print(
+            "WARNING: parallel {0} failed ({1}); retrying serially".format(
+                operation, preflight_error
+            )
+        )
+        return _results_serial_evaluate(
+            mc, operation, items, progress=progress, payload=payload
+        )
 
+    pool = None
+    success = False
+    try:
+        pool = context.Pool(
+            workers,
+            initializer=_results_worker_initialize,
+            initargs=(mc, operation, payload),
+        )
+        result = _results_map_bounded(pool, items, item_count, progress=progress)
+        success = True
+        return result
+    except Exception as exc:
+        print(
+            "WARNING: parallel {0} failed ({1}); retrying serially".format(
+                operation, _results_failure_text(exc)
+            )
+        )
+        return _results_serial_evaluate(
+            mc, operation, items, progress=progress, payload=payload
+        )
+    finally:
+        _results_pool_shutdown(pool, normal=success)
 
 
 __all__ = ["pyorbit_getresults"]
 
-#from packaging.version import Version
+# from packaging.version import Version
 # if Version(mc.pyorbit_version) <= Version("11.1.0"):
 
 
 def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
     default_mpl_backend = mpl.get_backend()
 
-    mpl.use('Agg')
+    mpl.use("Agg")
 
-    print('LaTeX disabled by default')
+    print("LaTeX disabled by default")
     print()
     use_tex = False
-    plt.rc('text', usetex=use_tex)
+    plt.rc("text", usetex=use_tex)
 
     try:
-        plot_config_parameters = config_in['plot_parameters']
+        plot_config_parameters = config_in["plot_parameters"]
     except:
-        plot_config_parameters = config_in['parameters']
+        plot_config_parameters = config_in["parameters"]
 
     available_mp_methods = multiprocessing.get_all_start_methods()
-    default_mp_method = 'fork' if 'fork' in available_mp_methods else 'spawn'
+    default_mp_method = "fork" if "fork" in available_mp_methods else "spawn"
     results_mp_method = plot_config_parameters.get(
-        'results_mp_method',
-        config_in['parameters'].get('mp_method', default_mp_method))
+        "results_mp_method", config_in["parameters"].get("mp_method", default_mp_method)
+    )
     if results_mp_method not in available_mp_methods:
-        print("WARNING: multiprocessing method '{0}' is unavailable; using '{1}'".format(
-            results_mp_method, default_mp_method))
+        print(
+            "WARNING: multiprocessing method '{0}' is unavailable; using '{1}'".format(
+                results_mp_method, default_mp_method
+            )
+        )
         results_mp_method = default_mp_method
 
     try:
-        results_cpu_threads = int(plot_config_parameters.get(
-            'results_cpu_threads',
+        results_cpu_threads = int(
             plot_config_parameters.get(
-                'cpu_threads', config_in['parameters'].get('cpu_threads', 1))))
+                "results_cpu_threads",
+                plot_config_parameters.get(
+                    "cpu_threads", config_in["parameters"].get("cpu_threads", 1)
+                ),
+            )
+        )
     except (TypeError, ValueError):
-        print('WARNING: invalid results_cpu_threads value; using one process')
+        print("WARNING: invalid results_cpu_threads value; using one process")
         results_cpu_threads = 1
-    results_cpu_threads = max(
-        1, min(results_cpu_threads, multiprocessing.cpu_count()))
+    results_cpu_threads = max(1, min(results_cpu_threads, multiprocessing.cpu_count()))
 
-    print('Number of processes for results calculations:', results_cpu_threads)
-    print('Multiprocessing method for results calculations:', results_mp_method)
+    print("Number of processes for results calculations:", results_cpu_threads)
+    print("Multiprocessing method for results calculations:", results_mp_method)
     print()
 
-
-    if plot_config_parameters.get('save_pdf', False ):
-        file_ext = '.pdf'
+    if plot_config_parameters.get("save_pdf", False):
+        file_ext = ".pdf"
     else:
-        file_ext = '.png'
+        file_ext = ".png"
 
-    font_label = plot_config_parameters.get('font_label', 9)
+    font_label = plot_config_parameters.get("font_label", 9)
 
-    plt.rcParams['font.family'] = 'Arial'
-    #plt.rcParams['font.family'] = 'DeJavu Serif'
-    #plt.rcParams['font.serif'] = ['Times New Roman']
-    mpl.rcParams.update({'font.size': font_label})
-    mpl.rcParams.update({'figure.figsize':(10, 10)})
-    mpl.rcParams.update({'xtick.minor.visible': True})
-    mpl.rcParams.update({'ytick.minor.visible': True})
+    plt.rcParams["font.family"] = "Arial"
+    # plt.rcParams['font.family'] = 'DeJavu Serif'
+    # plt.rcParams['font.serif'] = ['Times New Roman']
+    mpl.rcParams.update({"font.size": font_label})
+    mpl.rcParams.update({"figure.figsize": (10, 10)})
+    mpl.rcParams.update({"xtick.minor.visible": True})
+    mpl.rcParams.update({"ytick.minor.visible": True})
 
-    if plot_config_parameters.get('correlation_plot', None) == 'getdist':
-        plot_dictionary['use_getdist'] = True
-        plot_dictionary['use_corner'] = False
-    if plot_config_parameters.get('correlation_plot', None) == 'corner':
-        plot_dictionary['use_getdist'] = False
-        plot_dictionary['use_corner'] = True
+    if plot_config_parameters.get("correlation_plot", None) == "getdist":
+        plot_dictionary["use_getdist"] = True
+        plot_dictionary["use_corner"] = False
+    if plot_config_parameters.get("correlation_plot", None) == "corner":
+        plot_dictionary["use_getdist"] = False
+        plot_dictionary["use_corner"] = True
 
-    if plot_dictionary['use_corner']:
+    if plot_dictionary["use_corner"]:
         import corner
 
-    if plot_dictionary['use_getdist']:
+    if plot_dictionary["use_getdist"]:
         from getdist import plots, MCSamples
 
     # plt.rc('font', **{'family': 'serif', 'serif': ['Computer Modern Roman']})
     # plt.rcParams["font.family"] = "Times New Roman"
 
-    oversampled_models = plot_dictionary['oversampled_models']
-    transit_oversampled_models = plot_dictionary['transit_oversampled_models']
-    eclipse_oversampled_models = plot_dictionary['eclipse_oversampled_models']
-    skip_rv_like = not plot_dictionary['compute_rv_like']
+    oversampled_models = plot_dictionary["oversampled_models"]
+    transit_oversampled_models = plot_dictionary["transit_oversampled_models"]
+    eclipse_oversampled_models = plot_dictionary["eclipse_oversampled_models"]
+    skip_rv_like = not plot_dictionary["compute_rv_like"]
 
-
-    if sampler_name[:5] == 'emcee':
-        if sampler_name == 'emcee_legacy':
-            dir_input = './' + config_in['output'] + '/emcee_legacy/'
-            dir_output = './' + config_in['output'] + '/emcee_legacy_plot/'
-        elif sampler_name == 'emcee_warmstart':
-            dir_input = './' + config_in['output'] + '/emcee_warmup/'
-            dir_output = './' + config_in['output'] + '/emcee_warmup_plot/'
+    if sampler_name[:5] == "emcee":
+        if sampler_name == "emcee_legacy":
+            dir_input = "./" + config_in["output"] + "/emcee_legacy/"
+            dir_output = "./" + config_in["output"] + "/emcee_legacy_plot/"
+        elif sampler_name == "emcee_warmstart":
+            dir_input = "./" + config_in["output"] + "/emcee_warmup/"
+            dir_output = "./" + config_in["output"] + "/emcee_warmup_plot/"
         else:
-            dir_input = './' + config_in['output'] + '/emcee/'
-            dir_output = './' + config_in['output'] + '/emcee_plot/'
+            dir_input = "./" + config_in["output"] + "/emcee/"
+            dir_output = "./" + config_in["output"] + "/emcee_plot/"
 
-        os.system('mkdir -p ' + dir_output)
+        os.system("mkdir -p " + dir_output)
 
-        mc, starting_point, population, prob, \
-            sampler_chain, sampler_lnprobability, sampler_acceptance_fraction, _, sampler_lnprior = \
-            emcee_load_from_cpickle(dir_input)
+        (
+            mc,
+            starting_point,
+            population,
+            prob,
+            sampler_chain,
+            sampler_lnprobability,
+            sampler_acceptance_fraction,
+            _,
+            sampler_lnprior,
+        ) = emcee_load_from_cpickle(dir_input)
 
-        if hasattr(mc.emcee_parameters, 'version'):
-            emcee_version = mc.emcee_parameters['version'][0]
+        if hasattr(mc.emcee_parameters, "version"):
+            emcee_version = mc.emcee_parameters["version"][0]
         else:
             import emcee
+
             emcee_version = emcee.__version__[0]
 
         pars_input(config_in, mc, reload_emcee=True)
 
-        if hasattr(mc.emcee_parameters, 'version'):
-            emcee_version = mc.emcee_parameters['version'][0]
+        if hasattr(mc.emcee_parameters, "version"):
+            emcee_version = mc.emcee_parameters["version"][0]
         else:
             import emcee
+
             emcee_version = emcee.__version__[0]
 
         mc.model_setup()
         mc.print_model_info()
         theta_dictionary = results_analysis.get_theta_dictionary(mc)
 
-        nburnin = int(mc.emcee_parameters['nburn'])
-        nthin = int(mc.emcee_parameters['thin'])
+        nburnin = int(mc.emcee_parameters["nburn"])
+        nthin = int(mc.emcee_parameters["thin"])
         nsteps = int(sampler_chain.shape[1] * nthin)
-        nwalkers = mc.emcee_parameters['nwalkers']
+        nwalkers = mc.emcee_parameters["nwalkers"]
 
         """ Computing a new burn-in if the computation has been interrupted suddenly"""
         nburn, modified = emcee_burnin_check(sampler_chain, nburnin, nthin)
 
         if modified:
             print()
-            print('WARNING: burn-in value is >= 0.99*length of the chains, resized to 1/4 of the chain length')
-            print('new burn-in will be used for statistical analysis, but kept in the plots as a reminder of your mistake')
-            print('original burn-in value: {}'.format(mc.emcee_parameters['nburn']))
-            print('modified burn-in value: {}'.format(nburn*nthin))
+            print(
+                "WARNING: burn-in value is >= 0.99*length of the chains, resized to 1/4 of the chain length"
+            )
+            print(
+                "new burn-in will be used for statistical analysis, but kept in the plots as a reminder of your mistake"
+            )
+            print("original burn-in value: {}".format(mc.emcee_parameters["nburn"]))
+            print("modified burn-in value: {}".format(nburn * nthin))
 
         flat_chain = emcee_flatchain(sampler_chain, nburnin, nthin)
         flat_lnprob, sampler_lnprob = emcee_flatlnprob(
-            sampler_lnprobability, nburnin, nthin, population, nwalkers)
+            sampler_lnprobability, nburnin, nthin, population, nwalkers
+        )
 
         flat_BiC = -2 * flat_lnprob + mc.ndim * np.log(mc.ndata)
 
         lnprob_med = common.compute_value_sigma(flat_lnprob)
         chain_med = common.compute_value_sigma(flat_chain)
 
-        chain_MAP, lnprob_MAP = common.pick_MAP_parameters(
-            flat_chain, flat_lnprob)
+        chain_MAP, lnprob_MAP = common.pick_MAP_parameters(flat_chain, flat_lnprob)
 
         chain_sampleMED, lnprob_sampleMED = common.pick_sampleMED_parameters(
-            flat_chain, flat_lnprob)
+            flat_chain, flat_lnprob
+        )
 
         n_samplings, n_pams = np.shape(flat_chain)
 
         print()
         try:
-            print('### PyORBIT version used in the analysis: ', mc.pyorbit_version)
+            print("### PyORBIT version used in the analysis: ", mc.pyorbit_version)
         except:
-            print('### You must have used a very outdated version of PyORBIT to run the analysis!')
-            print('### Please update to the latest version of PyORBIT')
+            print(
+                "### You must have used a very outdated version of PyORBIT to run the analysis!"
+            )
+            print("### Please update to the latest version of PyORBIT")
 
         print()
         try:
-            print(' emcee version: ', emcee.__version__)
-            if mc.emcee_parameters['version'] == '2':
-                print('WARNING: upgrading to version 3 is strongly advised')
+            print(" emcee version: ", emcee.__version__)
+            if mc.emcee_parameters["version"] == "2":
+                print("WARNING: upgrading to version 3 is strongly advised")
         except:
             pass
         print()
-        print(' Reference Time Tref: {}'.format(mc.Tref))
+        print(" Reference Time Tref: {}".format(mc.Tref))
         print()
-        print(' Data points:{}'.format(mc.ndata))
-        print(' Dimensions: {}'.format(mc.ndim))
-        print(' Nwalkers:   {}'.format(mc.emcee_parameters['nwalkers']))
-        print(' Steps:      {}'.format(nsteps))
-        print(' Burn-in:    {}'.format(nburnin))
-        print(' Thin:       {}'.format(nthin))
+        print(" Data points:{}".format(mc.ndata))
+        print(" Dimensions: {}".format(mc.ndim))
+        print(" Nwalkers:   {}".format(mc.emcee_parameters["nwalkers"]))
+        print(" Steps:      {}".format(nsteps))
+        print(" Burn-in:    {}".format(nburnin))
+        print(" Thin:       {}".format(nthin))
         print()
 
-    if sampler_name == 'multinest':
-
-        dir_input = './' + config_in['output'] + '/multinest/'
-        dir_output = './' + config_in['output'] + '/multinest_plot/'
-        os.system('mkdir -p ' + dir_output)
+    if sampler_name == "multinest":
+        dir_input = "./" + config_in["output"] + "/multinest/"
+        dir_output = "./" + config_in["output"] + "/multinest_plot/"
+        os.system("mkdir -p " + dir_output)
 
         mc = nested_sampling_load_from_cpickle(dir_input)
 
@@ -302,7 +766,7 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
 
         theta_dictionary = results_analysis.get_theta_dictionary(mc)
 
-        data_in = np.genfromtxt(dir_input + 'post_equal_weights.dat')
+        data_in = np.genfromtxt(dir_input + "post_equal_weights.dat")
         flat_lnprob = data_in[:, -1]
         flat_chain = data_in[:, :-1]
         # nsample = np.size(flat_lnprob)
@@ -311,31 +775,32 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
         lnprob_med = common.compute_value_sigma(flat_lnprob)
         chain_med = common.compute_value_sigma(flat_chain)
 
-        chain_MAP, lnprob_MAP = common.pick_MAP_parameters(
-            flat_chain, flat_lnprob)
+        chain_MAP, lnprob_MAP = common.pick_MAP_parameters(flat_chain, flat_lnprob)
 
         chain_sampleMED, lnprob_sampleMED = common.pick_sampleMED_parameters(
-            flat_chain, flat_lnprob)
+            flat_chain, flat_lnprob
+        )
 
         print()
         try:
-            print('### PyORBIT version used in the analysis: ', mc.pyorbit_version)
+            print("### PyORBIT version used in the analysis: ", mc.pyorbit_version)
         except:
-            print('### You must have used a very outdated version of PyORBIT to run the analysis!')
-            print('### Please update to the latest version of PyORBIT')
+            print(
+                "### You must have used a very outdated version of PyORBIT to run the analysis!"
+            )
+            print("### Please update to the latest version of PyORBIT")
 
         print()
-        print(' Reference Time Tref: {}'.format(mc.Tref))
+        print(" Reference Time Tref: {}".format(mc.Tref))
         print()
-        print(' Data points:{}'.format(mc.ndata))
-        print(' Dimensions: {}'.format(mc.ndim))
-        print(' Samples:    {}'.format(n_samplings))
+        print(" Data points:{}".format(mc.ndata))
+        print(" Dimensions: {}".format(mc.ndim))
+        print(" Samples:    {}".format(n_samplings))
 
-    if sampler_name == 'polychord':
-
-        dir_input = './' + config_in['output'] + '/polychord/'
-        dir_output = './' + config_in['output'] + '/polychord_plot/'
-        os.system('mkdir -p ' + dir_output)
+    if sampler_name == "polychord":
+        dir_input = "./" + config_in["output"] + "/polychord/"
+        dir_output = "./" + config_in["output"] + "/polychord_plot/"
+        os.system("mkdir -p " + dir_output)
 
         mc = nested_sampling_load_from_cpickle(dir_input)
 
@@ -348,7 +813,7 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
 
         theta_dictionary = results_analysis.get_theta_dictionary(mc)
 
-        data_in = np.genfromtxt(dir_input + 'pyorbit_equal_weights.txt')
+        data_in = np.genfromtxt(dir_input + "pyorbit_equal_weights.txt")
         flat_lnprob = data_in[:, 1]
         flat_chain = data_in[:, 2:]
         # nsample = np.size(flat_lnprob)
@@ -358,46 +823,51 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
         lnprob_med = common.compute_value_sigma(flat_lnprob)
         chain_med = common.compute_value_sigma(flat_chain)
 
-        chain_MAP, lnprob_MAP = common.pick_MAP_parameters(
-            flat_chain, flat_lnprob)
+        chain_MAP, lnprob_MAP = common.pick_MAP_parameters(flat_chain, flat_lnprob)
 
         chain_sampleMED, lnprob_sampleMED = common.pick_sampleMED_parameters(
-            flat_chain, flat_lnprob)
+            flat_chain, flat_lnprob
+        )
 
         print()
         try:
-            print('### PyORBIT version used in the analysis: ', mc.pyorbit_version)
+            print("### PyORBIT version used in the analysis: ", mc.pyorbit_version)
         except:
-            print('### You must have used a very outdated version of PyORBIT to run the analysis!')
-            print('### Please update to the latest version of PyORBIT')
+            print(
+                "### You must have used a very outdated version of PyORBIT to run the analysis!"
+            )
+            print("### Please update to the latest version of PyORBIT")
 
         print()
-        print(' Reference Time Tref: {}'.format(mc.Tref))
+        print(" Reference Time Tref: {}".format(mc.Tref))
         print()
-        print(' Data points:{}'.format(mc.ndata))
-        print(' Dimensions: {}'.format(mc.ndim))
-        print(' Samples:    {}'.format(n_samplings))
+        print(" Data points:{}".format(mc.ndata))
+        print(" Dimensions: {}".format(mc.ndim))
+        print(" Samples:    {}".format(n_samplings))
 
-
-    if sampler_name in ['dynesty', 'dynesty_legacy', 'dynesty_static', 'dynesty_restore']:
-
+    if sampler_name in [
+        "dynesty",
+        "dynesty_legacy",
+        "dynesty_static",
+        "dynesty_restore",
+    ]:
         from dynesty import utils as dyfunc
         from dynesty import plotting as dyplot
 
-        if sampler_name == 'dynesty_legacy':
-            dir_input = './' + config_in['output'] + '/dynesty_legacy/'
-            dir_output = './' + config_in['output'] + '/dynesty_legacy_plot/'
-        elif sampler_name == 'dynesty_static':
-            dir_input = './' + config_in['output'] + '/dynesty_static/'
-            dir_output = './' + config_in['output'] + '/dynesty_static_plot/'
+        if sampler_name == "dynesty_legacy":
+            dir_input = "./" + config_in["output"] + "/dynesty_legacy/"
+            dir_output = "./" + config_in["output"] + "/dynesty_legacy_plot/"
+        elif sampler_name == "dynesty_static":
+            dir_input = "./" + config_in["output"] + "/dynesty_static/"
+            dir_output = "./" + config_in["output"] + "/dynesty_static_plot/"
         else:
-            dir_input = './' + config_in['output'] + '/dynesty/'
-            dir_output = './' + config_in['output'] + '/dynesty_plot/'
+            dir_input = "./" + config_in["output"] + "/dynesty/"
+            dir_output = "./" + config_in["output"] + "/dynesty_plot/"
 
-        save_checkpoint = dir_input + 'dynesty.save'
-        save_checkpoint_maxevidence = dir_input + 'dynesty_maxevidence.save'
+        save_checkpoint = dir_input + "dynesty.save"
+        save_checkpoint_maxevidence = dir_input + "dynesty_maxevidence.save"
 
-        os.system('mkdir -p ' + dir_output)
+        os.system("mkdir -p " + dir_output)
 
         mc = nested_sampling_load_from_cpickle(dir_input)
 
@@ -408,55 +878,80 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
 
         theta_dictionary = results_analysis.get_theta_dictionary(mc)
 
-        pfrac = mc.nested_sampling_parameters['pfrac']
-
+        pfrac = mc.nested_sampling_parameters["pfrac"]
 
         print()
         try:
-            print('### PyORBIT version used in the analysis: ', mc.pyorbit_version)
+            print("### PyORBIT version used in the analysis: ", mc.pyorbit_version)
         except:
-            print('### You must have used a very outdated version of PyORBIT to run the analysis!')
-            print('### Please update to the latest version of PyORBIT')
+            print(
+                "### You must have used a very outdated version of PyORBIT to run the analysis!"
+            )
+            print("### Please update to the latest version of PyORBIT")
 
         try:
             results = dynesty_results_maxevidence_load_from_cpickle(dir_input)
             pfrac = 0.000
             print()
-            print('Model evidence from dynesty run with posterior/evidence split = {0:4.3f}'.format(pfrac))
+            print(
+                "Model evidence from dynesty run with posterior/evidence split = {0:4.3f}".format(
+                    pfrac
+                )
+            )
 
             labels_array = [None] * len(theta_dictionary)
             for key_name, key_value in theta_dictionary.items():
-                labels_array[key_value] = re.sub('_', '-', key_name)
+                labels_array[key_value] = re.sub("_", "-", key_name)
 
-            if plot_dictionary['dynesty_default_plots']:
+            if plot_dictionary["dynesty_default_plots"]:
                 print()
 
                 # Plot a summary of the run.
                 try:
-                    print('Plot a summary of the run.')
+                    print("Plot a summary of the run.")
                     rfig, raxes = dyplot.runplot(results)
-                    rfig.savefig(dir_output + 'dynesty_results_maxevidence_summary'+file_ext, bbox_inches='tight', dpi=300)
+                    rfig.savefig(
+                        dir_output + "dynesty_results_maxevidence_summary" + file_ext,
+                        bbox_inches="tight",
+                        dpi=300,
+                    )
                     plt.close(rfig)
                 except:
-                    print('Unable to plot a summary of the run using the internal dynesty routine - skipped')
+                    print(
+                        "Unable to plot a summary of the run using the internal dynesty routine - skipped"
+                    )
 
                 # Plot traces and 1-D marginalized posteriors.
                 try:
-                    print('Plot traces and 1-D marginalized posteriors.')
+                    print("Plot traces and 1-D marginalized posteriors.")
                     tfig, taxes = dyplot.traceplot(results, labels=labels_array)
-                    tfig.savefig(dir_output + 'dynesty_results_maxevidence_traceplot'+file_ext, bbox_inches='tight', dpi=300)
+                    tfig.savefig(
+                        dir_output + "dynesty_results_maxevidence_traceplot" + file_ext,
+                        bbox_inches="tight",
+                        dpi=300,
+                    )
                     plt.close(tfig)
                 except:
-                    print('Unable to plot traces and 1-D marginalized posteriors using the internal dynesty routine - skipped')
+                    print(
+                        "Unable to plot traces and 1-D marginalized posteriors using the internal dynesty routine - skipped"
+                    )
 
                 # Plot the 2-D marginalized posteriors.
                 try:
-                    print('Plot the 2-D marginalized posteriors.')
+                    print("Plot the 2-D marginalized posteriors.")
                     cfig, caxes = dyplot.cornerplot(results, labels=labels_array)
-                    cfig.savefig(dir_output + 'dynesty_results_maxevidence_cornerplot'+file_ext, bbox_inches='tight', dpi=300)
+                    cfig.savefig(
+                        dir_output
+                        + "dynesty_results_maxevidence_cornerplot"
+                        + file_ext,
+                        bbox_inches="tight",
+                        dpi=300,
+                    )
                     plt.close(cfig)
                 except:
-                    print('Unable to plot the 2-D marginalized posteriors using the internal dynesty routine - skipped')
+                    print(
+                        "Unable to plot the 2-D marginalized posteriors using the internal dynesty routine - skipped"
+                    )
 
             pfrac = 1.00
 
@@ -464,72 +959,106 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
             pass
 
         results = dynesty_results_load_from_cpickle(dir_input)
-        print('Posteriors analysis from dynesty run with posterior/evidence split = {0:4.3f}'.format(pfrac))
+        print(
+            "Posteriors analysis from dynesty run with posterior/evidence split = {0:4.3f}".format(
+                pfrac
+            )
+        )
 
-
-        #taken from dynesty/dynesty/results.py  but without the nlive point causing an error
-        res = ("niter: {:d}\n"
-                "ncall: {:d}\n"
-                "eff(%): {:6.3f}\n"
-                "logz: {:6.3f} +/- {:6.3f}"
-                .format(results.niter, sum(results.ncall),
-                        results.eff, results.logz[-1], results.logzerr[-1]))
+        # taken from dynesty/dynesty/results.py  but without the nlive point causing an error
+        res = (
+            "niter: {:d}\n"
+            "ncall: {:d}\n"
+            "eff(%): {:6.3f}\n"
+            "logz: {:6.3f} +/- {:6.3f}".format(
+                results.niter,
+                sum(results.ncall),
+                results.eff,
+                results.logz[-1],
+                results.logzerr[-1],
+            )
+        )
 
         print()
-        print('Summary - \n=======\n'+res)
+        print("Summary - \n=======\n" + res)
 
         try:
             # Generate a new set of results with statistical+sampling uncertainties.
             results_sim = dyfunc.simulate_run(results)
-            res = ("niter: {:d}\n"
-                    "ncall: {:d}\n"
-                    "eff(%): {:6.3f}\n"
-                    "logz: {:6.3f} +/- {:6.3f}"
-                    .format(results_sim.niter, sum(results_sim.ncall),
-                            results_sim.eff, results_sim.logz[-1], results_sim.logzerr[-1]))
+            res = (
+                "niter: {:d}\n"
+                "ncall: {:d}\n"
+                "eff(%): {:6.3f}\n"
+                "logz: {:6.3f} +/- {:6.3f}".format(
+                    results_sim.niter,
+                    sum(results_sim.ncall),
+                    results_sim.eff,
+                    results_sim.logz[-1],
+                    results_sim.logzerr[-1],
+                )
+            )
 
             print()
-            print('Summary - statistical+sampling errors - \n=======\n'+res)
+            print("Summary - statistical+sampling errors - \n=======\n" + res)
         except AttributeError:
             print()
-            print('Computation of statistical+sampling errors skipped - workaround after dynesty>1.2 update')
-
+            print(
+                "Computation of statistical+sampling errors skipped - workaround after dynesty>1.2 update"
+            )
 
         labels_array = [None] * len(theta_dictionary)
         for key_name, key_value in theta_dictionary.items():
-            labels_array[key_value] = re.sub('_', '-', key_name)
+            labels_array[key_value] = re.sub("_", "-", key_name)
 
-        if plot_dictionary['dynesty_default_plots']:
+        if plot_dictionary["dynesty_default_plots"]:
             print()
 
             # Plot a summary of the run.
             try:
-                print('Plot a summary of the run.')
-                #span= [(0.0, 2100.0), (0.0, 1.05), (0.0, 0.10444691225380567), (0.0, 1000)]
-                #rfig, raxes = dyplot.runplot(results, span=span)
+                print("Plot a summary of the run.")
+                # span= [(0.0, 2100.0), (0.0, 1.05), (0.0, 0.10444691225380567), (0.0, 1000)]
+                # rfig, raxes = dyplot.runplot(results, span=span)
                 rfig, raxes = dyplot.runplot(results)
-                rfig.savefig(dir_output + 'dynesty_results_summary'+file_ext, bbox_inches='tight', dpi=300)
+                rfig.savefig(
+                    dir_output + "dynesty_results_summary" + file_ext,
+                    bbox_inches="tight",
+                    dpi=300,
+                )
                 plt.close(rfig)
             except:
-                print('Unable to plot a summary of the run using the internal dynesty routine - skipped')
+                print(
+                    "Unable to plot a summary of the run using the internal dynesty routine - skipped"
+                )
 
             # Plot traces and 1-D marginalized posteriors.
             try:
-                print('Plot traces and 1-D marginalized posteriors.')
+                print("Plot traces and 1-D marginalized posteriors.")
                 tfig, taxes = dyplot.traceplot(results, labels=labels_array)
-                tfig.savefig(dir_output + 'dynesty_results_traceplot'+file_ext, bbox_inches='tight', dpi=300)
+                tfig.savefig(
+                    dir_output + "dynesty_results_traceplot" + file_ext,
+                    bbox_inches="tight",
+                    dpi=300,
+                )
                 plt.close(tfig)
             except:
-                print('Unable to plot traces and 1-D marginalized posteriors using the internal dynesty routine - skipped')
+                print(
+                    "Unable to plot traces and 1-D marginalized posteriors using the internal dynesty routine - skipped"
+                )
 
             # Plot the 2-D marginalized posteriors.
             try:
-                print('Plot the 2-D marginalized posteriors.')
+                print("Plot the 2-D marginalized posteriors.")
                 cfig, caxes = dyplot.cornerplot(results, labels=labels_array)
-                cfig.savefig(dir_output + 'dynesty_results_cornerplot'+file_ext, bbox_inches='tight', dpi=300)
+                cfig.savefig(
+                    dir_output + "dynesty_results_cornerplot" + file_ext,
+                    bbox_inches="tight",
+                    dpi=300,
+                )
                 plt.close(cfig)
             except:
-                print('Unable to plot the 2-D marginalized posteriors using the internal dynesty routine - skipped')
+                print(
+                    "Unable to plot the 2-D marginalized posteriors using the internal dynesty routine - skipped"
+                )
 
         # Extract sampling results.
         samples = results.samples  # samples
@@ -543,12 +1072,15 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
         # Compute weighted mean and covariance.
         mean, cov = dyfunc.mean_and_cov(samples, weights)
         print()
-        print('Weighted mean and convariance from original samplings')
+        print("Weighted mean and convariance from original samplings")
         for key_name, key_value in theta_dictionary.items():
-            print('  {0:s}  {1:15.6f} +- {2:15.6f}'.format(key_name, mean[key_value], cov[key_value, key_value]))
+            print(
+                "  {0:s}  {1:15.6f} +- {2:15.6f}".format(
+                    key_name, mean[key_value], cov[key_value, key_value]
+                )
+            )
         print()
-        print('From now on, all results are from weighted samples')
-
+        print("From now on, all results are from weighted samples")
 
         # Resample weighted samples.
         flat_chain = dyfunc.resample_equal(samples, weights)
@@ -559,40 +1091,36 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
         lnprob_med = common.compute_value_sigma(flat_lnprob)
         chain_med = common.compute_value_sigma(flat_chain)
 
-        chain_MAP, lnprob_MAP = common.pick_MAP_parameters(
-            flat_chain, flat_lnprob)
+        chain_MAP, lnprob_MAP = common.pick_MAP_parameters(flat_chain, flat_lnprob)
 
         chain_sampleMED, lnprob_sampleMED = common.pick_sampleMED_parameters(
-            flat_chain, flat_lnprob)
+            flat_chain, flat_lnprob
+        )
 
-        #data_in = np.genfromtxt(dir_input + 'post_equal_weights.dat')
-        #flat_lnprob = data_in[:, -1]
-        #flat_chain = data_in[:, :-1]
+        # data_in = np.genfromtxt(dir_input + 'post_equal_weights.dat')
+        # flat_lnprob = data_in[:, -1]
+        # flat_chain = data_in[:, :-1]
         # nsample = np.size(flat_lnprob)
-        #n_samplings, n_pams = np.shape(flat_chain)
+        # n_samplings, n_pams = np.shape(flat_chain)
 
-        #lnprob_med = common.compute_value_sigma(flat_lnprob)
-        #chain_med = common.compute_value_sigma(flat_chain)
+        # lnprob_med = common.compute_value_sigma(flat_lnprob)
+        # chain_med = common.compute_value_sigma(flat_chain)
         # chain_MAP, lnprob_MAP = common.pick_MAP_parameters(
         #    flat_chain, flat_lnprob)
 
         print()
-        print(' Reference Time Tref: {}'.format(mc.Tref))
+        print(" Reference Time Tref: {}".format(mc.Tref))
         print()
-        print(' Data points:{}'.format(mc.ndata))
-        print(' Dimensions: {}'.format(mc.ndim))
-        print(' Samples:    {}'.format(n_samplings))
+        print(" Data points:{}".format(mc.ndata))
+        print(" Dimensions: {}".format(mc.ndim))
+        print(" Samples:    {}".format(n_samplings))
 
-
-    if sampler_name[:9] == 'nautilus':
-
+    if sampler_name[:9] == "nautilus":
         import json
 
-
-        dir_input = './' + config_in['output'] + '/' + sampler_name +'/'
-        dir_output = './' + config_in['output'] + '/' + sampler_name +'_plot/'
-        os.system('mkdir -p ' + dir_output)
-
+        dir_input = "./" + config_in["output"] + "/" + sampler_name + "/"
+        dir_output = "./" + config_in["output"] + "/" + sampler_name + "_plot/"
+        os.system("mkdir -p " + dir_output)
 
         mc = nested_sampling_load_from_cpickle(dir_input)
 
@@ -602,73 +1130,72 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
 
         print()
         try:
-            print('### PyORBIT version used in the analysis: ', mc.pyorbit_version)
+            print("### PyORBIT version used in the analysis: ", mc.pyorbit_version)
         except:
-            print('### You must have used a very outdated version of PyORBIT to run the analysis!')
-            print('### Please update to the latest version of PyORBIT')
-
+            print(
+                "### You must have used a very outdated version of PyORBIT to run the analysis!"
+            )
+            print("### Please update to the latest version of PyORBIT")
 
         results = nautilus_results_load_from_cpickle(mc.output_directory)
 
-        res = ("success: {:}\n"
-           "effective_sample_size: {:f}\n"
-            "logz: {:6.3f}"
-            .format(results['success'], results['effective_sample_size'], results['log_z']))
+        res = "success: {:}\neffective_sample_size: {:f}\nlogz: {:6.3f}".format(
+            results["success"], results["effective_sample_size"], results["log_z"]
+        )
 
         print()
-        print('Summary - \n=======\n'+res)
+        print("Summary - \n=======\n" + res)
 
-
-        flat_chain = results['points']
+        flat_chain = results["points"]
         n_samplings, n_pams = np.shape(flat_chain)
 
         """ Filling the lnprob array the hard way """
-        flat_lnprob = np.asarray(_results_parallel_map(
-            mc, 'nautilus', flat_chain, results_cpu_threads,
-            results_mp_method, progress=True))
+        flat_lnprob = np.asarray(
+            _results_parallel_map(
+                mc,
+                "nautilus",
+                flat_chain,
+                results_cpu_threads,
+                results_mp_method,
+                progress=True,
+            )
+        )
 
         lnprob_med = common.compute_value_sigma(flat_lnprob)
         chain_med = common.compute_value_sigma(flat_chain)
 
-        chain_MAP, lnprob_MAP = common.pick_MAP_parameters(
-            flat_chain, flat_lnprob)
+        chain_MAP, lnprob_MAP = common.pick_MAP_parameters(flat_chain, flat_lnprob)
 
         chain_sampleMED, lnprob_sampleMED = common.pick_sampleMED_parameters(
-            flat_chain, flat_lnprob)
+            flat_chain, flat_lnprob
+        )
 
-        print('From now on, all results are from weighted samples')
+        print("From now on, all results are from weighted samples")
 
-
-        #data_in = np.genfromtxt(dir_input + 'post_equal_weights.dat')
-        #flat_lnprob = data_in[:, -1]
-        #flat_chain = data_in[:, :-1]
+        # data_in = np.genfromtxt(dir_input + 'post_equal_weights.dat')
+        # flat_lnprob = data_in[:, -1]
+        # flat_chain = data_in[:, :-1]
         # nsample = np.size(flat_lnprob)
-        #n_samplings, n_pams = np.shape(flat_chain)
+        # n_samplings, n_pams = np.shape(flat_chain)
 
-        #lnprob_med = common.compute_value_sigma(flat_lnprob)
-        #chain_med = common.compute_value_sigma(flat_chain)
+        # lnprob_med = common.compute_value_sigma(flat_lnprob)
+        # chain_med = common.compute_value_sigma(flat_chain)
         # chain_MAP, lnprob_MAP = common.pick_MAP_parameters(
         #    flat_chain, flat_lnprob)
 
         print()
-        print(' Reference Time Tref: {}'.format(mc.Tref))
+        print(" Reference Time Tref: {}".format(mc.Tref))
         print()
-        print(' Data points:{}'.format(mc.ndata))
-        print(' Dimensions: {}'.format(mc.ndim))
-        print(' Samples:    {}'.format(n_samplings))
+        print(" Data points:{}".format(mc.ndata))
+        print(" Dimensions: {}".format(mc.ndim))
+        print(" Samples:    {}".format(n_samplings))
 
-
-
-
-    if sampler_name[:9] == 'ultranest':
-
+    if sampler_name[:9] == "ultranest":
         import json
 
-
-        dir_input = './' + config_in['output'] + '/' + sampler_name +'/'
-        dir_output = './' + config_in['output'] + '/' + sampler_name +'_plot/'
-        os.system('mkdir -p ' + dir_output)
-
+        dir_input = "./" + config_in["output"] + "/" + sampler_name + "/"
+        dir_output = "./" + config_in["output"] + "/" + sampler_name + "_plot/"
+        os.system("mkdir -p " + dir_output)
 
         mc = nested_sampling_load_from_cpickle(dir_input)
 
@@ -678,135 +1205,179 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
 
         print()
         try:
-            print('### PyORBIT version used in the analysis: ', mc.pyorbit_version)
+            print("### PyORBIT version used in the analysis: ", mc.pyorbit_version)
         except:
-            print('### You must have used a very outdated version of PyORBIT to run the analysis!')
-            print('### Please update to the latest version of PyORBIT')
+            print(
+                "### You must have used a very outdated version of PyORBIT to run the analysis!"
+            )
+            print("### Please update to the latest version of PyORBIT")
 
-
-        with open(dir_input + 'info/results.json') as f:
+        with open(dir_input + "info/results.json") as f:
             results = json.load(f)
 
         theta_dictionary = results_analysis.get_theta_dictionary(mc)
 
-        res = ("niter: {:d}\n"
-                "ncall: {:d}\n"
-                "logz: {:6.3f} +/- {:6.3f}"
-                .format(results['niter'], results['ncall'],
-                        results['logz'], results['logzerr']))
+        res = "niter: {:d}\nncall: {:d}\nlogz: {:6.3f} +/- {:6.3f}".format(
+            results["niter"], results["ncall"], results["logz"], results["logzerr"]
+        )
 
         print()
-        print('Summary - \n=======\n'+res)
+        print("Summary - \n=======\n" + res)
 
         """ Copy the plots from default output directory of ultranest in
         ultranest_plots"""
-        os.system(' cp '+ dir_input + 'plots/corner.pdf ' + dir_output + 'ultranest_corner' +file_ext)
-        os.system(' cp '+ dir_input + 'plots/run.pdf ' + dir_output + 'ultranest_run' +file_ext)
-        os.system(' cp '+ dir_input + 'plots/trace.pdf ' + dir_output + 'ultranest_trace' +file_ext)
+        os.system(
+            " cp "
+            + dir_input
+            + "plots/corner.pdf "
+            + dir_output
+            + "ultranest_corner"
+            + file_ext
+        )
+        os.system(
+            " cp "
+            + dir_input
+            + "plots/run.pdf "
+            + dir_output
+            + "ultranest_run"
+            + file_ext
+        )
+        os.system(
+            " cp "
+            + dir_input
+            + "plots/trace.pdf "
+            + dir_output
+            + "ultranest_trace"
+            + file_ext
+        )
 
-        #labels_array = [None] * len(theta_dictionary)
-        #for key_name, key_value in theta_dictionary.items():
+        # labels_array = [None] * len(theta_dictionary)
+        # for key_name, key_value in theta_dictionary.items():
         #    labels_array[key_value] = re.sub('_', '-', key_name)
 
-
-        flat_chain = np.genfromtxt(dir_input + 'chains/equal_weighted_post.txt', skip_header=1)
+        flat_chain = np.genfromtxt(
+            dir_input + "chains/equal_weighted_post.txt", skip_header=1
+        )
         n_samplings, n_pams = np.shape(flat_chain)
 
         """ Filling the lnprob array the hard way """
-        flat_lnprob = np.asarray(_results_parallel_map(
-            mc, 'ultranest', flat_chain, results_cpu_threads,
-            results_mp_method, progress=True))
-
+        flat_lnprob = np.asarray(
+            _results_parallel_map(
+                mc,
+                "ultranest",
+                flat_chain,
+                results_cpu_threads,
+                results_mp_method,
+                progress=True,
+            )
+        )
 
         lnprob_med = common.compute_value_sigma(flat_lnprob)
         chain_med = common.compute_value_sigma(flat_chain)
 
-        chain_MAP, lnprob_MAP = common.pick_MAP_parameters(
-            flat_chain, flat_lnprob)
+        chain_MAP, lnprob_MAP = common.pick_MAP_parameters(flat_chain, flat_lnprob)
 
         chain_sampleMED, lnprob_sampleMED = common.pick_sampleMED_parameters(
-            flat_chain, flat_lnprob)
+            flat_chain, flat_lnprob
+        )
 
-        un_lnprob_MAP = results['maximum_likelihood']['logl']
-        un_chain_MAP = results['maximum_likelihood']['point']
+        un_lnprob_MAP = results["maximum_likelihood"]["logl"]
+        un_chain_MAP = results["maximum_likelihood"]["point"]
 
         """ Weighted mean and standard deviation from original distribution """
         print()
-        print('Weighted median, mean and convariance from original samplings, internal MAP and ultranest MAP')
+        print(
+            "Weighted median, mean and convariance from original samplings, internal MAP and ultranest MAP"
+        )
         for key_name, key_value in theta_dictionary.items():
-            print('  {0:15s} {1:15.6f}, {2:15.6f} +- {3:15.6f}, {4:15.6f} {5:15.6f} '.format(key_name,
-                                                           results['posterior']['median'][key_value],
-                                                           results['posterior']['mean'][key_value],
-                                                           results['posterior']['stdev'][key_value],
-                                                           chain_MAP[key_value],
-                                                           un_chain_MAP[key_value]))
+            print(
+                "  {0:15s} {1:15.6f}, {2:15.6f} +- {3:15.6f}, {4:15.6f} {5:15.6f} ".format(
+                    key_name,
+                    results["posterior"]["median"][key_value],
+                    results["posterior"]["mean"][key_value],
+                    results["posterior"]["stdev"][key_value],
+                    chain_MAP[key_value],
+                    un_chain_MAP[key_value],
+                )
+            )
 
-        print('From now on, all results are from weighted samples')
+        print("From now on, all results are from weighted samples")
 
-
-        #data_in = np.genfromtxt(dir_input + 'post_equal_weights.dat')
-        #flat_lnprob = data_in[:, -1]
-        #flat_chain = data_in[:, :-1]
+        # data_in = np.genfromtxt(dir_input + 'post_equal_weights.dat')
+        # flat_lnprob = data_in[:, -1]
+        # flat_chain = data_in[:, :-1]
         # nsample = np.size(flat_lnprob)
-        #n_samplings, n_pams = np.shape(flat_chain)
+        # n_samplings, n_pams = np.shape(flat_chain)
 
-        #lnprob_med = common.compute_value_sigma(flat_lnprob)
-        #chain_med = common.compute_value_sigma(flat_chain)
+        # lnprob_med = common.compute_value_sigma(flat_lnprob)
+        # chain_med = common.compute_value_sigma(flat_chain)
         # chain_MAP, lnprob_MAP = common.pick_MAP_parameters(
         #    flat_chain, flat_lnprob)
 
         print()
-        print(' Reference Time Tref: {}'.format(mc.Tref))
+        print(" Reference Time Tref: {}".format(mc.Tref))
         print()
-        print(' Data points:{}'.format(mc.ndata))
-        print(' Dimensions: {}'.format(mc.ndim))
-        print(' Samples:    {}'.format(n_samplings))
+        print(" Data points:{}".format(mc.ndata))
+        print(" Dimensions: {}".format(mc.ndim))
+        print(" Samples:    {}".format(n_samplings))
 
-
-    dir_dictionaries = dir_output + 'dictionaries/'
-    os.system('mkdir -p ' + dir_dictionaries)
-
+    dir_dictionaries = dir_output + "dictionaries/"
+    os.system("mkdir -p " + dir_dictionaries)
 
     dict_sampler_posteriors = {}
     theta_tree = {}
     for dataset_name, dataset in mc.dataset_dict.items():
-        dict_sampler_posteriors[dataset_name] = {'dataset_variables': {}}
+        dict_sampler_posteriors[dataset_name] = {"dataset_variables": {}}
         for pam_name, pam_dict in dataset.sampler_parameters.items():
-            theta_name = dataset_name + '_' + pam_name
+            theta_name = dataset_name + "_" + pam_name
             theta_id = theta_dictionary[theta_name]
             theta_tree[theta_name] = [dataset_name, pam_name]
-            dict_sampler_posteriors[dataset_name]['dataset_variables'][pam_name] = flat_chain[:,theta_id]
+            dict_sampler_posteriors[dataset_name]["dataset_variables"][pam_name] = (
+                flat_chain[:, theta_id]
+            )
 
         for model_name in dataset.models:
             dict_sampler_posteriors[dataset_name][model_name] = {}
-            for pam_name, pam_dict in mc.models[model_name].sampler_parameters[dataset_name].items():
-                theta_name = dataset_name + '_' + model_name + '_' + pam_name
+            for pam_name, pam_dict in (
+                mc.models[model_name].sampler_parameters[dataset_name].items()
+            ):
+                theta_name = dataset_name + "_" + model_name + "_" + pam_name
                 theta_id = theta_dictionary[theta_name]
                 theta_tree[theta_name] = [dataset_name, model_name, pam_name]
-                dict_sampler_posteriors[dataset_name][model_name][pam_name] = flat_chain[:,theta_id]
+                dict_sampler_posteriors[dataset_name][model_name][pam_name] = (
+                    flat_chain[:, theta_id]
+                )
 
     for model_name, model in mc.common_models.items():
         dict_sampler_posteriors[model_name] = {}
         for pam_name, pam_dict in model.sampler_parameters.items():
-            theta_name =  model_name + '_' + pam_name
+            theta_name = model_name + "_" + pam_name
             theta_id = theta_dictionary[theta_name]
             theta_tree[theta_name] = [model_name, pam_name]
-            dict_sampler_posteriors[model_name][pam_name] = flat_chain[:,theta_id]
-
+            dict_sampler_posteriors[model_name][pam_name] = flat_chain[:, theta_id]
 
     med_ln_priors, med_ln_likelihood = mc.log_priors_likelihood(chain_med[:, 0])
 
     print()
-    print('Number of samplings:',  n_samplings)
+    print("Number of samplings:", n_samplings)
 
+    rv_like_samplings = config_in["parameters"].get("rv_loglike_samplings", n_samplings)
+    rv_like_samplings = config_in["parameters"].get(
+        "rv_lnlike_samplings", rv_like_samplings
+    )
+    rv_like_samplings = config_in["parameters"].get(
+        "rv_like_samplings", rv_like_samplings
+    )
 
-    rv_like_samplings = config_in['parameters'].get('rv_loglike_samplings', n_samplings)
-    rv_like_samplings = config_in['parameters'].get('rv_lnlike_samplings', rv_like_samplings)
-    rv_like_samplings = config_in['parameters'].get('rv_like_samplings', rv_like_samplings)
-
-    rv_like_samplings = plot_config_parameters.get('rv_loglike_samplings', rv_like_samplings)
-    rv_like_samplings = plot_config_parameters.get('rv_lnlike_samplings', rv_like_samplings)
-    rv_like_samplings = plot_config_parameters.get('rv_like_samplings', rv_like_samplings)
+    rv_like_samplings = plot_config_parameters.get(
+        "rv_loglike_samplings", rv_like_samplings
+    )
+    rv_like_samplings = plot_config_parameters.get(
+        "rv_lnlike_samplings", rv_like_samplings
+    )
+    rv_like_samplings = plot_config_parameters.get(
+        "rv_like_samplings", rv_like_samplings
+    )
 
     flat_rv_lnlike = np.zeros(rv_like_samplings)
     med_rv_ln_likelihood = med_ln_likelihood * 0.0
@@ -818,61 +1389,80 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
 
     data_are_rvs = False
     for dataset_name, dataset in mc.dataset_dict.items():
-        #TODO remove option 'RV' in PyORBIT version 12
-        data_are_rvs = (dataset.kind == 'RV' or dataset.kind == 'radial_velocity')
+        # TODO remove option 'RV' in PyORBIT version 12
+        data_are_rvs = dataset.kind == "RV" or dataset.kind == "radial_velocity"
         if data_are_rvs:
             break
     if not data_are_rvs:
         skip_rv_like = True
 
     if not skip_rv_like:
-        if hasattr(mc, 'rv_log_likelihood'):
+        if hasattr(mc, "rv_log_likelihood"):
             print()
-            print('Number of samplings for RV-loglikelihood calculation [rv_lnlike_samplings keyword]:', rv_like_samplings)
-            print('Recomputing RV-loglikelihood, it may take a while...')
+            print(
+                "Number of samplings for RV-loglikelihood calculation [rv_lnlike_samplings keyword]:",
+                rv_like_samplings,
+            )
+            print("Recomputing RV-loglikelihood, it may take a while...")
 
             if n_samplings == rv_like_samplings:
-                selection = np.arange(0,n_samplings, dtype=int)
+                selection = np.arange(0, n_samplings, dtype=int)
             else:
                 select = np.random.default_rng()
-                selection = select.choice(n_samplings, size=rv_like_samplings, replace=False)
+                selection = select.choice(
+                    n_samplings, size=rv_like_samplings, replace=False
+                )
 
-            flat_rv_lnlike = np.asarray(_results_parallel_map(
-                mc, 'rv_log_likelihood', flat_chain[selection, :],
-                results_cpu_threads, results_mp_method, progress=True))
+            flat_rv_lnlike = np.asarray(
+                _results_parallel_map(
+                    mc,
+                    "rv_log_likelihood",
+                    flat_chain[selection, :],
+                    results_cpu_threads,
+                    results_mp_method,
+                    progress=True,
+                )
+            )
 
             med_rv_ln_likelihood = mc.rv_log_likelihood(chain_med[:, 0])
             MAP_rv_ln_likelihood = mc.rv_log_likelihood(chain_MAP)
             rv_ln_likelihood_success = True
         else:
             print()
-            print('Analysis ran using PyORBIT version < 10.10, RV-only log_likelihood not available')
+            print(
+                "Analysis ran using PyORBIT version < 10.10, RV-only log_likelihood not available"
+            )
 
-    #print(' OUTCOME: ', rv_ln_likelihood_success)
-    #print(' some values:', flat_rv_lnlike)
+    # print(' OUTCOME: ', rv_ln_likelihood_success)
+    # print(' some values:', flat_rv_lnlike)
 
     if mc.include_priors:
-
         if sampler_lnprior is None:
-
             print()
-            print('Recomputing log-prior, it may take a while...')
-            if hasattr(mc, 'log_priors'):
-                flat_lnprior = np.asarray(_results_parallel_map(
-                    mc, 'log_priors', flat_chain, results_cpu_threads,
-                    results_mp_method, progress=True))
+            print("Recomputing log-prior, it may take a while...")
+            if hasattr(mc, "log_priors"):
+                flat_lnprior = np.asarray(
+                    _results_parallel_map(
+                        mc,
+                        "log_priors",
+                        flat_chain,
+                        results_cpu_threads,
+                        results_mp_method,
+                        progress=True,
+                    )
+                )
             else:
-                print('log-prior recomputation failed, using the average value')
+                print("log-prior recomputation failed, using the average value")
                 flat_lnprior = np.ones_like(flat_lnprob) * med_ln_priors
         else:
             flat_lnprior, sampler_lnprior = emcee_flatlnprob(
-                sampler_lnprior, nburnin, nthin, population, nwalkers)
+                sampler_lnprior, nburnin, nthin, population, nwalkers
+            )
         lnprior_med = common.compute_value_sigma(flat_lnprior)
 
-            
     else:
         flat_lnprior = np.zeros_like(flat_lnprob)
-        med_ln_priors = 0.
+        med_ln_priors = 0.0
         lnprior_med = [0.0, 0.0, 0.0]
 
     flat_lnlike = flat_lnprob - flat_lnprior
@@ -881,136 +1471,178 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
 
     lnlike_med = common.compute_value_sigma(flat_lnlike)
 
-
     """ not sure what would happen if the rv_lnlike is all zeros """
     try:
         rv_lnlike_med = common.compute_value_sigma(flat_rv_lnlike)
     except:
         rv_lnlike_med = np.zeros_like(lnlike_med)
 
-    generic_save_to_cpickle(dir_dictionaries, 'theta_dictionary', theta_dictionary)
-    generic_save_to_cpickle(dir_dictionaries, 'theta_tree', theta_tree)
+    generic_save_to_cpickle(dir_dictionaries, "theta_dictionary", theta_dictionary)
+    generic_save_to_cpickle(dir_dictionaries, "theta_tree", theta_tree)
 
-    dict_sampler_posteriors['lnprob'] = flat_lnprob
-    dict_sampler_posteriors['lnprior'] = flat_lnprior
-    dict_sampler_posteriors['lnlike'] = flat_lnlike
-    dict_sampler_posteriors['lnlike_rv'] = flat_rv_lnlike
-    dict_sampler_posteriors['lnlike_rv_index'] = selection
+    dict_sampler_posteriors["lnprob"] = flat_lnprob
+    dict_sampler_posteriors["lnprior"] = flat_lnprior
+    dict_sampler_posteriors["lnlike"] = flat_lnlike
+    dict_sampler_posteriors["lnlike_rv"] = flat_rv_lnlike
+    dict_sampler_posteriors["lnlike_rv_index"] = selection
 
-    generic_save_to_cpickle(dir_dictionaries, 'sampler_posteriors', dict_sampler_posteriors)
-    generic_save_to_cpickle(dir_dictionaries, 'theta_dictionary', theta_dictionary)
-    generic_save_to_cpickle(dir_dictionaries, 'theta_tree', theta_tree)
+    generic_save_to_cpickle(
+        dir_dictionaries, "sampler_posteriors", dict_sampler_posteriors
+    )
+    generic_save_to_cpickle(dir_dictionaries, "theta_dictionary", theta_dictionary)
+    generic_save_to_cpickle(dir_dictionaries, "theta_tree", theta_tree)
 
     del dict_sampler_posteriors
 
     check_isifinite = np.isfinite(flat_lnprob)
     if np.sum(~check_isifinite) > 0:
         print()
-        print('WARNING: Some ln-probability values are not finite, replacing with lowest-value')
+        print(
+            "WARNING: Some ln-probability values are not finite, replacing with lowest-value"
+        )
         flat_lnprob[~check_isifinite] = np.amin(flat_lnprob[check_isifinite])
 
     check_isifinite = np.isfinite(flat_lnprior)
     if np.sum(~check_isifinite) > 0:
         print()
-        print('WARNING: Some ln-prior values are not finite, replacing with lowest-value')
+        print(
+            "WARNING: Some ln-prior values are not finite, replacing with lowest-value"
+        )
         flat_lnprior[~check_isifinite] = np.amin(flat_lnprior[check_isifinite])
 
     check_isifinite = np.isfinite(flat_lnlike)
     if np.sum(~check_isifinite) > 0:
         print()
-        print('WARNING: Some ln-likelihood values are not finite, replacing with lowest-value')
+        print(
+            "WARNING: Some ln-likelihood values are not finite, replacing with lowest-value"
+        )
         flat_lnlike[~check_isifinite] = np.amin(flat_lnlike[check_isifinite])
 
     check_isifinite = np.isfinite(flat_rv_lnlike)
     if np.sum(~check_isifinite) > 0:
         print()
-        print('WARNING: Some rv ln-likelihood values are not finite, replacing with lowest-value')
+        print(
+            "WARNING: Some rv ln-likelihood values are not finite, replacing with lowest-value"
+        )
         flat_rv_lnlike[~check_isifinite] = np.amin(flat_rv_lnlike[check_isifinite])
 
-
     print()
-    print('ln-probability   distribution: {0:9.2f}   {1:9.2f} {2:9.2f} (15-84 p) '.format(
-        lnprob_med[0], lnprob_med[2], lnprob_med[1]))
-    print('ln-prior         distribution: {0:9.2f}   {1:9.2f} {2:9.2f} (15-84 p) '.format(
-        lnprior_med[0], lnprior_med[2], lnprior_med[1]))
-    print('ln-likelihood    distribution: {0:9.2f}   {1:9.2f} {2:9.2f} (15-84 p) '.format(
-        lnlike_med[0], lnlike_med[2], lnlike_med[1]))
+    print(
+        "ln-probability   distribution: {0:9.2f}   {1:9.2f} {2:9.2f} (15-84 p) ".format(
+            lnprob_med[0], lnprob_med[2], lnprob_med[1]
+        )
+    )
+    print(
+        "ln-prior         distribution: {0:9.2f}   {1:9.2f} {2:9.2f} (15-84 p) ".format(
+            lnprior_med[0], lnprior_med[2], lnprior_med[1]
+        )
+    )
+    print(
+        "ln-likelihood    distribution: {0:9.2f}   {1:9.2f} {2:9.2f} (15-84 p) ".format(
+            lnlike_med[0], lnlike_med[2], lnlike_med[1]
+        )
+    )
     if rv_ln_likelihood_success:
-        print('RV ln-likelihood distribution: {0:9.2f}   {1:9.2f} {2:9.2f} (15-84 p) '.format(
-            rv_lnlike_med[0], rv_lnlike_med[2], rv_lnlike_med[1]))
-
+        print(
+            "RV ln-likelihood distribution: {0:9.2f}   {1:9.2f} {2:9.2f} (15-84 p) ".format(
+                rv_lnlike_med[0], rv_lnlike_med[2], rv_lnlike_med[1]
+            )
+        )
 
     if mc.ndata <= (mc.ndim + 1.0):
         print()
         print()
-        print('WARNING: NDATA ( {0:.0f} ) < NDIM ( {1:.0f} ) + 1'.format(mc.ndata, mc.ndim))
-        print('Unable to compute statistical criteria. The analysis is likely to be unreliable.')
-        print('This condition may cause unexpected errors along the way')
+        print(
+            "WARNING: NDATA ( {0:.0f} ) < NDIM ( {1:.0f} ) + 1".format(
+                mc.ndata, mc.ndim
+            )
+        )
+        print(
+            "Unable to compute statistical criteria. The analysis is likely to be unreliable."
+        )
+        print("This condition may cause unexpected errors along the way")
         print()
         print()
 
     else:
-
         dict_basic_statistics = {}
 
-        dict_basic_statistics['ndata'] = mc.ndata
-        dict_basic_statistics['ndim'] = mc.ndim
+        dict_basic_statistics["ndata"] = mc.ndata
+        dict_basic_statistics["ndim"] = mc.ndim
 
         print()
         print()
-        print('*** Information criteria using the likelihood distribution')
+        print("*** Information criteria using the likelihood distribution")
 
         BIC = -2.0 * lnlike_med[0] + np.log(mc.ndata) * mc.ndim
         AIC = -2.0 * lnlike_med[0] + 2.0 * mc.ndim
         AICc = AIC + (2.0 + 2.0 * mc.ndim) * mc.ndim / (mc.ndata - mc.ndim - 1.0)
-        ICs_err = [-2*lnlike_med[1], -2*lnlike_med[2]]
+        ICs_err = [-2 * lnlike_med[1], -2 * lnlike_med[2]]
 
-        dict_basic_statistics['distribution_ln_priors'] = lnprior_med
-        dict_basic_statistics['distribution_ln_likelihood'] = lnlike_med
-        dict_basic_statistics['distribution_ln_posterior'] = lnprob_med
+        dict_basic_statistics["distribution_ln_priors"] = lnprior_med
+        dict_basic_statistics["distribution_ln_likelihood"] = lnlike_med
+        dict_basic_statistics["distribution_ln_posterior"] = lnprob_med
 
-        dict_basic_statistics['distribution_BIC'] = BIC
-        dict_basic_statistics['distribution_AIC'] = AIC
-        dict_basic_statistics['distribution_AICc'] = AICc
-        dict_basic_statistics['distribution_ICs_error'] = ICs_err
+        dict_basic_statistics["distribution_BIC"] = BIC
+        dict_basic_statistics["distribution_AIC"] = AIC
+        dict_basic_statistics["distribution_AICc"] = AICc
+        dict_basic_statistics["distribution_ICs_error"] = ICs_err
 
-        dict_basic_statistics['full_distribution_BIC'] = -2.0 * flat_lnlike + np.log(mc.ndata) * mc.ndim
-        dict_basic_statistics['full_distribution_AIC'] = -2.0 * flat_lnlike + 2.0 * mc.ndim
-        dict_basic_statistics['full_distribution_AICc'] = dict_basic_statistics['full_distribution_AIC'] + (2.0 + 2.0 * mc.ndim) * mc.ndim / (mc.ndata - mc.ndim - 1.0)
+        dict_basic_statistics["full_distribution_BIC"] = (
+            -2.0 * flat_lnlike + np.log(mc.ndata) * mc.ndim
+        )
+        dict_basic_statistics["full_distribution_AIC"] = (
+            -2.0 * flat_lnlike + 2.0 * mc.ndim
+        )
+        dict_basic_statistics["full_distribution_AICc"] = dict_basic_statistics[
+            "full_distribution_AIC"
+        ] + (2.0 + 2.0 * mc.ndim) * mc.ndim / (mc.ndata - mc.ndim - 1.0)
 
         print()
-        print(' BIC from distribution  (using likelihood)  = {0:9.2f}   {1:7.2f} {2:7.2f} (15-84 p)'.format(BIC,ICs_err[0], ICs_err[1]))
-        print(' AIC from distribution  (using likelihood)  = {0:9.2f}   {1:7.2f} {2:7.2f} (15-84 p)'.format(AIC,ICs_err[0], ICs_err[1]))
-        print(' AICc from distribution (using likelihood)  = {0:9.2f}   {1:7.2f} {2:7.2f} (15-84 p)'.format(AICc,ICs_err[0], ICs_err[1]))
+        print(
+            " BIC from distribution  (using likelihood)  = {0:9.2f}   {1:7.2f} {2:7.2f} (15-84 p)".format(
+                BIC, ICs_err[0], ICs_err[1]
+            )
+        )
+        print(
+            " AIC from distribution  (using likelihood)  = {0:9.2f}   {1:7.2f} {2:7.2f} (15-84 p)".format(
+                AIC, ICs_err[0], ICs_err[1]
+            )
+        )
+        print(
+            " AICc from distribution (using likelihood)  = {0:9.2f}   {1:7.2f} {2:7.2f} (15-84 p)".format(
+                AICc, ICs_err[0], ICs_err[1]
+            )
+        )
 
         print()
         print()
-        print('*** Information criteria using the median parameter set')
+        print("*** Information criteria using the median parameter set")
 
         BIC = -2.0 * med_ln_likelihood + np.log(mc.ndata) * mc.ndim
         AIC = -2.0 * med_ln_likelihood + 2.0 * mc.ndim
         AICc = AIC + (2.0 + 2.0 * mc.ndim) * mc.ndim / (mc.ndata - mc.ndim - 1.0)
 
         # AICc for small sample
-        dict_basic_statistics['median_ln_priors'] = med_ln_priors
-        dict_basic_statistics['median_ln_likelihood'] = med_ln_likelihood
-        dict_basic_statistics['median_ln_posterior'] = med_ln_posterior
-        dict_basic_statistics['median_BIC_likelihood'] = BIC
-        dict_basic_statistics['median_AIC_likelihood'] = AIC
-        dict_basic_statistics['median_AICc_likelihood'] = AICc
+        dict_basic_statistics["median_ln_priors"] = med_ln_priors
+        dict_basic_statistics["median_ln_likelihood"] = med_ln_likelihood
+        dict_basic_statistics["median_ln_posterior"] = med_ln_posterior
+        dict_basic_statistics["median_BIC_likelihood"] = BIC
+        dict_basic_statistics["median_AIC_likelihood"] = AIC
+        dict_basic_statistics["median_AICc_likelihood"] = AICc
 
         print()
-        print(' ln_probability of Median solution = {0:9.2f}'.format(med_ln_posterior))
-        print(' ln_priors of Median solution      = {0:9.2f}'.format(med_ln_priors))
-        print(' ln_likelihood of Median solution  = {0:9.2f}'.format(med_ln_likelihood))
+        print(" ln_probability of Median solution = {0:9.2f}".format(med_ln_posterior))
+        print(" ln_priors of Median solution      = {0:9.2f}".format(med_ln_priors))
+        print(" ln_likelihood of Median solution  = {0:9.2f}".format(med_ln_likelihood))
         print()
-        print(' Median BIC  (using likelihood) = {0:9.2f}'.format(BIC))
-        print(' Median AIC  (using likelihood) = {0:9.2f}'.format(AIC))
-        print(' Median AICc (using likelihood) = {0:9.2f}'.format(AICc))
+        print(" Median BIC  (using likelihood) = {0:9.2f}".format(BIC))
+        print(" Median AIC  (using likelihood) = {0:9.2f}".format(AIC))
+        print(" Median AICc (using likelihood) = {0:9.2f}".format(AICc))
 
         print()
         print()
-        print('*** Information criteria using the MAP parameter set')
+        print("*** Information criteria using the MAP parameter set")
 
         MAP_ln_priors, MAP_ln_likelihood = mc.log_priors_likelihood(chain_MAP)
         MAP_ln_posterior = MAP_ln_likelihood + MAP_ln_priors
@@ -1019,179 +1651,237 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
         AICc = AIC + (2.0 + 2.0 * mc.ndim) * mc.ndim / (mc.ndata - mc.ndim - 1.0)
         # AICc for small sample
 
-        dict_basic_statistics['MAP_ln_priors'] = MAP_ln_priors
-        dict_basic_statistics['MAP_ln_likelihood'] = MAP_ln_likelihood
-        dict_basic_statistics['MAP_ln_posterior'] = MAP_ln_posterior
-        dict_basic_statistics['MAP_BIC_likelihood'] = BIC
-        dict_basic_statistics['MAP_AIC_likelihood'] = AIC
-        dict_basic_statistics['MAP_AICc_likelihood'] = AICc
+        dict_basic_statistics["MAP_ln_priors"] = MAP_ln_priors
+        dict_basic_statistics["MAP_ln_likelihood"] = MAP_ln_likelihood
+        dict_basic_statistics["MAP_ln_posterior"] = MAP_ln_posterior
+        dict_basic_statistics["MAP_BIC_likelihood"] = BIC
+        dict_basic_statistics["MAP_AIC_likelihood"] = AIC
+        dict_basic_statistics["MAP_AICc_likelihood"] = AICc
 
         print()
-        print(' ln_probability of MAP solution = {0:9.2f}'.format(MAP_ln_posterior))
-        print(' ln_priors of MAP solution      = {0:9.2f}'.format(MAP_ln_priors))
-        print(' ln_likelihood of MAP solution  = {0:9.2f}'.format(MAP_ln_likelihood))
+        print(" ln_probability of MAP solution = {0:9.2f}".format(MAP_ln_posterior))
+        print(" ln_priors of MAP solution      = {0:9.2f}".format(MAP_ln_priors))
+        print(" ln_likelihood of MAP solution  = {0:9.2f}".format(MAP_ln_likelihood))
         print()
-        print(' MAP BIC  (using likelihood)    = {0:9.2f}'.format(BIC))
-        print(' MAP AIC  (using likelihood)    = {0:9.2f}'.format(AIC))
-        print(' MAP AICc (using likelihood)    = {0:9.2f}'.format(AICc))
+        print(" MAP BIC  (using likelihood)    = {0:9.2f}".format(BIC))
+        print(" MAP AIC  (using likelihood)    = {0:9.2f}".format(AIC))
+        print(" MAP AICc (using likelihood)    = {0:9.2f}".format(AICc))
 
         if mc.ndata < 40 * mc.ndim:
             print()
             print(
-                ' AICc suggested over AIC because NDATA ( {0:.0f} ) < 40 * NDIM ( {1:.0f} )'.format(mc.ndata, mc.ndim))
-            dict_basic_statistics['suggested_AIC_criterion'] = 'AICc'
+                " AICc suggested over AIC because NDATA ( {0:.0f} ) < 40 * NDIM ( {1:.0f} )".format(
+                    mc.ndata, mc.ndim
+                )
+            )
+            dict_basic_statistics["suggested_AIC_criterion"] = "AICc"
 
         else:
             print()
             print(
-                ' AIC suggested over AICs because NDATA ( {0:.0f} ) > 40 * NDIM ( {1:.0f} )'.format(mc.ndata, mc.ndim))
-            dict_basic_statistics['suggested_AIC_criterion'] = 'AIC'
+                " AIC suggested over AICs because NDATA ( {0:.0f} ) > 40 * NDIM ( {1:.0f} )".format(
+                    mc.ndata, mc.ndim
+                )
+            )
+            dict_basic_statistics["suggested_AIC_criterion"] = "AIC"
 
-
-        generic_save_to_cpickle(dir_dictionaries, 'basic_statistics', dict_basic_statistics)
+        generic_save_to_cpickle(
+            dir_dictionaries, "basic_statistics", dict_basic_statistics
+        )
         del dict_basic_statistics
 
         if rv_ln_likelihood_success:
             print()
             print()
-            print('### Information criteria using the RV ln_likelihood -- EXPERIMENTAL')
+            print("### Information criteria using the RV ln_likelihood -- EXPERIMENTAL")
 
             rv_ndata, rv_ndim, theta_flag = mc.rv_count_ndata_ndim()
 
             dict_basic_statistics_rvonly = {}
 
-            dict_basic_statistics_rvonly['ndata'] = rv_ndata
-            dict_basic_statistics_rvonly['ndim'] = rv_ndim
+            dict_basic_statistics_rvonly["ndata"] = rv_ndata
+            dict_basic_statistics_rvonly["ndim"] = rv_ndim
 
             BIC = -2.0 * rv_lnlike_med[0] + np.log(rv_ndata) * rv_ndim
             AIC = -2.0 * rv_lnlike_med[0] + 2.0 * rv_ndim
             AICc = AIC + (2.0 + 2.0 * rv_ndim) * rv_ndim / (rv_ndata - rv_ndim - 1.0)
-            ICs_err = [-2*rv_lnlike_med[1], -2*rv_lnlike_med[2]]
+            ICs_err = [-2 * rv_lnlike_med[1], -2 * rv_lnlike_med[2]]
 
-            dict_basic_statistics_rvonly['distribution_ln_likelihood'] = rv_lnlike_med
+            dict_basic_statistics_rvonly["distribution_ln_likelihood"] = rv_lnlike_med
 
-            dict_basic_statistics_rvonly['distribution_BIC'] = BIC
-            dict_basic_statistics_rvonly['distribution_AIC'] = AIC
-            dict_basic_statistics_rvonly['distribution_AICc'] = AICc
-            dict_basic_statistics_rvonly['distribution_ICs_error'] = ICs_err
+            dict_basic_statistics_rvonly["distribution_BIC"] = BIC
+            dict_basic_statistics_rvonly["distribution_AIC"] = AIC
+            dict_basic_statistics_rvonly["distribution_AICc"] = AICc
+            dict_basic_statistics_rvonly["distribution_ICs_error"] = ICs_err
 
-            dict_basic_statistics_rvonly['full_distribution_BIC'] = -2.0 * flat_rv_lnlike + np.log(rv_ndata) * rv_ndim
-            dict_basic_statistics_rvonly['full_distribution_AIC'] = -2.0 * flat_rv_lnlike + 2.0 * rv_ndim
-            dict_basic_statistics_rvonly['full_distribution_AICc'] = dict_basic_statistics_rvonly['full_distribution_AIC'] + (2.0 + 2.0 * rv_ndim) * rv_ndim / (rv_ndata - rv_ndim - 1.0)
+            dict_basic_statistics_rvonly["full_distribution_BIC"] = (
+                -2.0 * flat_rv_lnlike + np.log(rv_ndata) * rv_ndim
+            )
+            dict_basic_statistics_rvonly["full_distribution_AIC"] = (
+                -2.0 * flat_rv_lnlike + 2.0 * rv_ndim
+            )
+            dict_basic_statistics_rvonly["full_distribution_AICc"] = (
+                dict_basic_statistics_rvonly["full_distribution_AIC"]
+                + (2.0 + 2.0 * rv_ndim) * rv_ndim / (rv_ndata - rv_ndim - 1.0)
+            )
 
             print()
-            print(' RV ln-likelihood distribution: {0:9.2f}   {1:9.2f} {2:9.2f} (15-84 p) '.format(
-            rv_lnlike_med[0], rv_lnlike_med[2], rv_lnlike_med[1]))
+            print(
+                " RV ln-likelihood distribution: {0:9.2f}   {1:9.2f} {2:9.2f} (15-84 p) ".format(
+                    rv_lnlike_med[0], rv_lnlike_med[2], rv_lnlike_med[1]
+                )
+            )
             print()
-            print(' BIC from distribution  (using RV likelihood)  = {0:9.2f}   {1:7.2f} {2:7.2f} (15-84 p)'.format(BIC,ICs_err[0], ICs_err[1]))
-            print(' AIC from distribution  (using RV likelihood)  = {0:9.2f}   {1:7.2f} {2:7.2f} (15-84 p)'.format(AIC,ICs_err[0], ICs_err[1]))
-            print(' AICc from distribution (using RV likelihood)  = {0:9.2f}   {1:7.2f} {2:7.2f} (15-84 p)'.format(AICc,ICs_err[0], ICs_err[1]))
+            print(
+                " BIC from distribution  (using RV likelihood)  = {0:9.2f}   {1:7.2f} {2:7.2f} (15-84 p)".format(
+                    BIC, ICs_err[0], ICs_err[1]
+                )
+            )
+            print(
+                " AIC from distribution  (using RV likelihood)  = {0:9.2f}   {1:7.2f} {2:7.2f} (15-84 p)".format(
+                    AIC, ICs_err[0], ICs_err[1]
+                )
+            )
+            print(
+                " AICc from distribution (using RV likelihood)  = {0:9.2f}   {1:7.2f} {2:7.2f} (15-84 p)".format(
+                    AICc, ICs_err[0], ICs_err[1]
+                )
+            )
 
             print()
             print()
-            print('### Information criteria using the median parameter set')
+            print("### Information criteria using the median parameter set")
 
             BIC = -2.0 * med_rv_ln_likelihood + np.log(rv_ndata) * rv_ndim
             AIC = -2.0 * med_rv_ln_likelihood + 2.0 * rv_ndim
             AICc = AIC + (2.0 + 2.0 * rv_ndim) * rv_ndim / (rv_ndata - rv_ndim - 1.0)
 
             # AICc for small sample
-            dict_basic_statistics_rvonly['median_ln_likelihood'] = med_rv_ln_likelihood
-            dict_basic_statistics_rvonly['median_BIC_likelihood'] = BIC
-            dict_basic_statistics_rvonly['median_AIC_likelihood'] = AIC
-            dict_basic_statistics_rvonly['median_AICc_likelihood'] = AICc
+            dict_basic_statistics_rvonly["median_ln_likelihood"] = med_rv_ln_likelihood
+            dict_basic_statistics_rvonly["median_BIC_likelihood"] = BIC
+            dict_basic_statistics_rvonly["median_AIC_likelihood"] = AIC
+            dict_basic_statistics_rvonly["median_AICc_likelihood"] = AICc
 
             print()
-            print(' RV ln_likelihood of Median solution  = {0:9.2f}'.format(med_rv_ln_likelihood))
+            print(
+                " RV ln_likelihood of Median solution  = {0:9.2f}".format(
+                    med_rv_ln_likelihood
+                )
+            )
 
             print()
-            print(' Median BIC  (using RV likelihood) = {0:9.2f}'.format(BIC))
-            print(' Median AIC  (using RV likelihood) = {0:9.2f}'.format(AIC))
-            print(' Median AICc (using RV likelihood) = {0:9.2f}'.format(AICc))
+            print(" Median BIC  (using RV likelihood) = {0:9.2f}".format(BIC))
+            print(" Median AIC  (using RV likelihood) = {0:9.2f}".format(AIC))
+            print(" Median AICc (using RV likelihood) = {0:9.2f}".format(AICc))
 
             print()
             print()
-            print('### Information criteria using the MAP parameter set')
+            print("### Information criteria using the MAP parameter set")
 
             BIC = -2.0 * MAP_rv_ln_likelihood + np.log(rv_ndata) * rv_ndim
             AIC = -2.0 * MAP_rv_ln_likelihood + 2.0 * rv_ndim
             AICc = AIC + (2.0 + 2.0 * rv_ndim) * rv_ndim / (rv_ndata - rv_ndim - 1.0)
             # AICc for small sample
 
-            dict_basic_statistics_rvonly['MAP_ln_likelihood'] = MAP_rv_ln_likelihood
-            dict_basic_statistics_rvonly['MAP_BIC_likelihood'] = BIC
-            dict_basic_statistics_rvonly['MAP_AIC_likelihood'] = AIC
-            dict_basic_statistics_rvonly['MAP_AICc_likelihood'] = AICc
+            dict_basic_statistics_rvonly["MAP_ln_likelihood"] = MAP_rv_ln_likelihood
+            dict_basic_statistics_rvonly["MAP_BIC_likelihood"] = BIC
+            dict_basic_statistics_rvonly["MAP_AIC_likelihood"] = AIC
+            dict_basic_statistics_rvonly["MAP_AICc_likelihood"] = AICc
 
             print()
-            print(' RV ln_likelihood of MAP solution = {0:9.2f}'.format(MAP_rv_ln_likelihood))
+            print(
+                " RV ln_likelihood of MAP solution = {0:9.2f}".format(
+                    MAP_rv_ln_likelihood
+                )
+            )
             print()
-            print(' MAP BIC  (using RV likelihood)    = {0:9.2f}'.format(BIC))
-            print(' MAP AIC  (using RV likelihood)    = {0:9.2f}'.format(AIC))
-            print(' MAP AICc (using RV likelihood)    = {0:9.2f}'.format(AICc))
-
+            print(" MAP BIC  (using RV likelihood)    = {0:9.2f}".format(BIC))
+            print(" MAP AIC  (using RV likelihood)    = {0:9.2f}".format(AIC))
+            print(" MAP AICc (using RV likelihood)    = {0:9.2f}".format(AICc))
 
             if rv_ndata < 40 * rv_ndim:
                 print()
                 print(
-                    ' AICc suggested over AIC because NDATA ( {0:.0f} ) < 40 * NDIM ( {1:.0f} )'.format(rv_ndata, rv_ndim))
-                dict_basic_statistics_rvonly['suggested_AIC_criterion'] = 'AICc'
+                    " AICc suggested over AIC because NDATA ( {0:.0f} ) < 40 * NDIM ( {1:.0f} )".format(
+                        rv_ndata, rv_ndim
+                    )
+                )
+                dict_basic_statistics_rvonly["suggested_AIC_criterion"] = "AICc"
 
             else:
                 print()
                 print(
-                    ' AIC suggested over AICs because NDATA ( {0:.0f} ) > 40 * NDIM ( {1:.0f} )'.format(rv_ndata, rv_ndim))
-                dict_basic_statistics_rvonly['suggested_AIC_criterion'] = 'AIC'
+                    " AIC suggested over AICs because NDATA ( {0:.0f} ) > 40 * NDIM ( {1:.0f} )".format(
+                        rv_ndata, rv_ndim
+                    )
+                )
+                dict_basic_statistics_rvonly["suggested_AIC_criterion"] = "AIC"
 
-            generic_save_to_cpickle(dir_dictionaries, 'basic_statistics_rvonly', dict_basic_statistics_rvonly)
+            generic_save_to_cpickle(
+                dir_dictionaries,
+                "basic_statistics_rvonly",
+                dict_basic_statistics_rvonly,
+            )
             del dict_basic_statistics_rvonly
 
-
     print()
-    print('****************************************************************************************************')
+    print(
+        "****************************************************************************************************"
+    )
     print()
 
+    if plot_dictionary["print_acf"]:
+        i_sampler, acf_trace, acf_diff, converged, dict_acf = (
+            results_analysis.print_integrated_ACF(
+                sampler_chain, theta_dictionary, nthin
+            )
+        )
 
-
-    if plot_dictionary['print_acf']:
-
-        i_sampler, acf_trace, acf_diff, converged, dict_acf = \
-        results_analysis.print_integrated_ACF(
-            sampler_chain, theta_dictionary, nthin)
-
-        generic_save_to_cpickle(dir_dictionaries, 'sampler_acf', dict_acf)
+        generic_save_to_cpickle(dir_dictionaries, "sampler_acf", dict_acf)
 
         if i_sampler is None:
-            print('WARNING: ACF computation failed, no plot will be generated ')
+            print("WARNING: ACF computation failed, no plot will be generated ")
             print()
 
+        if i_sampler is not None and plot_dictionary["plot_acf"]:
+            print("Plotting the ACF... ")
 
-        if i_sampler is not None and plot_dictionary['plot_acf']:
-
-            print('Plotting the ACF... ')
-
-            os.system('mkdir -p ' + dir_output + 'acf')
+            os.system("mkdir -p " + dir_output + "acf")
             for theta_name, ii in theta_dictionary.items():
-                file_name = dir_output + 'acf/' + \
-                    repr(ii) + '_' + theta_name + '_values' +file_ext
+                file_name = (
+                    dir_output
+                    + "acf/"
+                    + repr(ii)
+                    + "_"
+                    + theta_name
+                    + "_values"
+                    + file_ext
+                )
                 fig = plt.figure(figsize=(12, 12))
-                plt.scatter(i_sampler, acf_trace[:,ii] , s=5, c='C0')
-                plt.axvline(nburnin / nthin, c='C1', label='burn-in')
-                plt.axvline(converged[ii] / nthin, c='C2', label='convergence')
+                plt.scatter(i_sampler, acf_trace[:, ii], s=5, c="C0")
+                plt.axvline(nburnin / nthin, c="C1", label="burn-in")
+                plt.axvline(converged[ii] / nthin, c="C2", label="convergence")
                 plt.legend()
-                plt.savefig(file_name, bbox_inches='tight', dpi=300)
+                plt.savefig(file_name, bbox_inches="tight", dpi=300)
                 plt.close(fig)
 
-                file_name = dir_output + 'acf/' + \
-                    repr(ii) + '_' + theta_name + '_variation' +file_ext
+                file_name = (
+                    dir_output
+                    + "acf/"
+                    + repr(ii)
+                    + "_"
+                    + theta_name
+                    + "_variation"
+                    + file_ext
+                )
                 fig = plt.figure(figsize=(12, 12))
-                plt.scatter(i_sampler, acf_diff[:,ii], s=5, c='C0')
-                plt.axhline(0.01, c='C3', label='var. threshold')
-                plt.axvline(nburnin / nthin, c='C1', label='burn-in')
-                plt.axvline(converged[ii] /nthin, c='C2', label='convergence')
-                plt.yscale('log')
+                plt.scatter(i_sampler, acf_diff[:, ii], s=5, c="C0")
+                plt.axhline(0.01, c="C3", label="var. threshold")
+                plt.axvline(nburnin / nthin, c="C1", label="burn-in")
+                plt.axvline(converged[ii] / nthin, c="C2", label="convergence")
+                plt.yscale("log")
                 plt.legend()
-                plt.savefig(file_name, bbox_inches='tight', dpi=300)
+                plt.savefig(file_name, bbox_inches="tight", dpi=300)
                 plt.close(fig)
 
             print()
@@ -1200,271 +1890,361 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
         del i_sampler, acf_trace, acf_diff, converged, dict_acf
 
     dict_bayesian_info = results_analysis.print_bayesian_info(mc)
-    generic_save_to_cpickle(dir_dictionaries, 'sampler_bayesian_info', dict_bayesian_info)
+    generic_save_to_cpickle(
+        dir_dictionaries, "sampler_bayesian_info", dict_bayesian_info
+    )
     print()
 
-    print('****************************************************************************************************')
-    print('****************************************************************************************************')
+    print(
+        "****************************************************************************************************"
+    )
+    print(
+        "****************************************************************************************************"
+    )
     print()
-    print('Confidence intervals (median value, 34.135th percentile from the median on the left and right side)')
-    print()
-
-    planet_parameters, dict_sampler_summary, dict_parameters_summary, dict_derived_summary = results_analysis.results_summary(
-        mc, flat_chain, chain_med=chain_MAP, return_samples=True)
-
-    generic_save_to_cpickle(dir_dictionaries, 'planet_parameters', planet_parameters)
-
-    generic_save_to_cpickle(dir_dictionaries, 'summary_percentiles_sampler', dict_sampler_summary)
-    generic_save_to_cpickle(dir_dictionaries, 'summary_percentiles_parameters', dict_parameters_summary)
-    generic_save_to_cpickle(dir_dictionaries, 'summary_percentiles_derived', dict_derived_summary)
-
-    print()
-    print('****************************************************************************************************')
-    print()
-    print('Parameters corresponding to the Maximum a Posteriori probability ( {} )'.format(lnprob_MAP))
+    print(
+        "Confidence intervals (median value, 34.135th percentile from the median on the left and right side)"
+    )
     print()
 
+    (
+        planet_parameters,
+        dict_sampler_summary,
+        dict_parameters_summary,
+        dict_derived_summary,
+    ) = results_analysis.results_summary(
+        mc, flat_chain, chain_med=chain_MAP, return_samples=True
+    )
 
-    _, dict_sampler_summary, dict_parameters_summary, dict_derived_summary = results_analysis.results_summary(mc, chain_MAP,return_samples=True, is_MAP=True)
-    generic_save_to_cpickle(dir_dictionaries, 'summary_MAP_sampler', dict_sampler_summary)
-    generic_save_to_cpickle(dir_dictionaries, 'summary_MAP_parameters', dict_parameters_summary)
-    generic_save_to_cpickle(dir_dictionaries, 'summary_MAP_derived', dict_derived_summary)
+    generic_save_to_cpickle(dir_dictionaries, "planet_parameters", planet_parameters)
+
+    generic_save_to_cpickle(
+        dir_dictionaries, "summary_percentiles_sampler", dict_sampler_summary
+    )
+    generic_save_to_cpickle(
+        dir_dictionaries, "summary_percentiles_parameters", dict_parameters_summary
+    )
+    generic_save_to_cpickle(
+        dir_dictionaries, "summary_percentiles_derived", dict_derived_summary
+    )
 
     print()
-    print('****************************************************************************************************')
+    print(
+        "****************************************************************************************************"
+    )
     print()
-    print('Parameters corresponding to the sample closest to the median values ( {} )'.format(lnprob_sampleMED))
-    print()
-
-    _, dict_sampler_summary, dict_parameters_summary, dict_derived_summary = results_analysis.results_summary(mc, chain_sampleMED,return_samples=True, is_MAP=True)
-    generic_save_to_cpickle(dir_dictionaries, 'summary_sampleMED_sampler', dict_sampler_summary)
-    generic_save_to_cpickle(dir_dictionaries, 'summary_sampleMED_parameters', dict_parameters_summary)
-    generic_save_to_cpickle(dir_dictionaries, 'summary_sampleMED_derived', dict_derived_summary)
-
-    print()
-    print('****************************************************************************************************')
+    print(
+        "Parameters corresponding to the Maximum a Posteriori probability ( {} )".format(
+            lnprob_MAP
+        )
+    )
     print()
 
+    _, dict_sampler_summary, dict_parameters_summary, dict_derived_summary = (
+        results_analysis.results_summary(
+            mc, chain_MAP, return_samples=True, is_MAP=True
+        )
+    )
+    generic_save_to_cpickle(
+        dir_dictionaries, "summary_MAP_sampler", dict_sampler_summary
+    )
+    generic_save_to_cpickle(
+        dir_dictionaries, "summary_MAP_parameters", dict_parameters_summary
+    )
+    generic_save_to_cpickle(
+        dir_dictionaries, "summary_MAP_derived", dict_derived_summary
+    )
+
+    print()
+    print(
+        "****************************************************************************************************"
+    )
+    print()
+    print(
+        "Parameters corresponding to the sample closest to the median values ( {} )".format(
+            lnprob_sampleMED
+        )
+    )
+    print()
+
+    _, dict_sampler_summary, dict_parameters_summary, dict_derived_summary = (
+        results_analysis.results_summary(
+            mc, chain_sampleMED, return_samples=True, is_MAP=True
+        )
+    )
+    generic_save_to_cpickle(
+        dir_dictionaries, "summary_sampleMED_sampler", dict_sampler_summary
+    )
+    generic_save_to_cpickle(
+        dir_dictionaries, "summary_sampleMED_parameters", dict_parameters_summary
+    )
+    generic_save_to_cpickle(
+        dir_dictionaries, "summary_sampleMED_derived", dict_derived_summary
+    )
+
+    print()
+    print(
+        "****************************************************************************************************"
+    )
+    print()
 
     sys.stdout.flush()
 
-
     # Computation of all the planetary parameters
-    planet_parameters_med = results_analysis.get_planet_parameters(
-        mc, chain_med[:, 0])
-    star_parameters_med = results_analysis.get_stellar_parameters(
-        mc, chain_med[:, 0])
+    planet_parameters_med = results_analysis.get_planet_parameters(mc, chain_med[:, 0])
+    star_parameters_med = results_analysis.get_stellar_parameters(mc, chain_med[:, 0])
 
     planet_parameters_MAP = results_analysis.get_planet_parameters(mc, chain_MAP)
-    star_parameters_MAP = results_analysis.get_stellar_parameters(mc, chain_MAP, warnings=False)
+    star_parameters_MAP = results_analysis.get_stellar_parameters(
+        mc, chain_MAP, warnings=False
+    )
 
-    planet_parameters_sampleMED = results_analysis.get_planet_parameters(mc, chain_sampleMED)
-    star_parameters_sampleMED = results_analysis.get_stellar_parameters(mc, chain_sampleMED, warnings=False)
+    planet_parameters_sampleMED = results_analysis.get_planet_parameters(
+        mc, chain_sampleMED
+    )
+    star_parameters_sampleMED = results_analysis.get_stellar_parameters(
+        mc, chain_sampleMED, warnings=False
+    )
 
-    if plot_dictionary['lnprob_chain'] or plot_dictionary['chains']:
-
-        print('Plot PRIOR chain ')
+    if plot_dictionary["lnprob_chain"] or plot_dictionary["chains"]:
+        print("Plot PRIOR chain ")
 
         fig = plt.figure(figsize=(12, 12))
-        plt.xlabel(r'$\ln \mathcal{L}$')
-        plt.plot(sampler_lnprior, '-', alpha=0.5)
+        plt.xlabel(r"$\ln \mathcal{L}$")
+        plt.plot(sampler_lnprior, "-", alpha=0.5)
         plt.axhline(lnprior_med[0])
-        plt.axvline(nburnin / nthin, c='r')
-        plt.savefig(dir_output + 'LNprior_chain' +file_ext,
-                    bbox_inches='tight', dpi=300)
+        plt.axvline(nburnin / nthin, c="r")
+        plt.savefig(
+            dir_output + "LNprior_chain" + file_ext, bbox_inches="tight", dpi=300
+        )
         plt.close(fig)
 
-
-        print('Plot FLAT chain ')
+        print("Plot FLAT chain ")
 
         fig = plt.figure(figsize=(12, 12))
-        plt.xlabel(r'$\ln \mathcal{L}$')
-        plt.plot(sampler_lnprob, '-', alpha=0.5)
+        plt.xlabel(r"$\ln \mathcal{L}$")
+        plt.plot(sampler_lnprob, "-", alpha=0.5)
         plt.axhline(lnprob_med[0])
-        plt.axvline(nburnin / nthin, c='r')
-        plt.savefig(dir_output + 'LNprob_chain' +file_ext,
-                    bbox_inches='tight', dpi=300)
+        plt.axvline(nburnin / nthin, c="r")
+        plt.savefig(
+            dir_output + "LNprob_chain" + file_ext, bbox_inches="tight", dpi=300
+        )
         plt.close(fig)
 
         print()
-        print('****************************************************************************************************')
+        print(
+            "****************************************************************************************************"
+        )
         print()
         sys.stdout.flush()
 
-    if mc.ndim > 30 and not plot_config_parameters.get('force_full_correlation_plot', False):
-        plot_dictionary['full_correlation']=False
+    if mc.ndim > 30 and not plot_config_parameters.get(
+        "force_full_correlation_plot", False
+    ):
+        plot_dictionary["full_correlation"] = False
 
-        print('WARNING: Skipping full correlation plot due to the high number of parameters')
-        print('To avoid this behaviour, set the keyword parameters:force_full_correlation_plot to True')
+        print(
+            "WARNING: Skipping full correlation plot due to the high number of parameters"
+        )
+        print(
+            "To avoid this behaviour, set the keyword parameters:force_full_correlation_plot to True"
+        )
         print()
-        print('****************************************************************************************************')
+        print(
+            "****************************************************************************************************"
+        )
         print()
 
-    if plot_dictionary['full_correlation']:
-
+    if plot_dictionary["full_correlation"]:
         try:
             corner_plot = {
-                'samples': np.zeros([np.size(flat_chain, axis=0), np.size(flat_chain, axis=1) + 1]),
-                'labels': [],
-                'truths': []
+                "samples": np.zeros(
+                    [np.size(flat_chain, axis=0), np.size(flat_chain, axis=1) + 1]
+                ),
+                "labels": [],
+                "truths": [],
             }
 
             i_corner = 0
             for par, par_dict in theta_dictionary.items():
-                corner_plot['samples'][:, i_corner] = flat_chain[:, par_dict]
+                corner_plot["samples"][:, i_corner] = flat_chain[:, par_dict]
                 if len(theta_dictionary) > 10:
-                    corner_plot['labels'].append(repr(par_dict))
+                    corner_plot["labels"].append(repr(par_dict))
                 else:
-                    corner_plot['labels'].append(re.sub('_', '-', par))
-                corner_plot['truths'].append(chain_med[par_dict, 0])
+                    corner_plot["labels"].append(re.sub("_", "-", par))
+                corner_plot["truths"].append(chain_med[par_dict, 0])
                 i_corner += 1
 
-            corner_plot['samples'][:, -1] = flat_lnprob[:]
-            corner_plot['labels'].append('ln-prob')
-            corner_plot['truths'].append(lnprob_med[0])
+            corner_plot["samples"][:, -1] = flat_lnprob[:]
+            corner_plot["labels"].append("ln-prob")
+            corner_plot["truths"].append(lnprob_med[0])
 
-            if plot_dictionary['use_getdist']:
+            if plot_dictionary["use_getdist"]:
                 try:
-                    print('Plotting full_correlation plot with GetDist')
+                    print("Plotting full_correlation plot with GetDist")
                     print()
-                    print('    Ignore the no burn in error warning from getdist')
-                    print('    since burn in has been already removed from the chains')
+                    print("    Ignore the no burn in error warning from getdist")
+                    print("    since burn in has been already removed from the chains")
 
-                    samples = MCSamples(samples=corner_plot['samples'], names=corner_plot['labels'],
-                                        labels=corner_plot['labels'])
+                    samples = MCSamples(
+                        samples=corner_plot["samples"],
+                        names=corner_plot["labels"],
+                        labels=corner_plot["labels"],
+                    )
 
                     g = plots.getSubplotPlotter()
                     g.settings.num_plot_contours = 6
                     g.triangle_plot(samples, filled=True)
-                    g.export(dir_output + "all_internal_parameters_corner_getdist" +file_ext)
+                    g.export(
+                        dir_output + "all_internal_parameters_corner_getdist" + file_ext
+                    )
 
                 except AttributeError:
-                    print('WARNING: Something went wrong when plotting the coner plot with GetDist')
-                    print('Please Run PyORBIT_GetResults.py with without corner plot flag to get an alternative corner plot')
+                    print(
+                        "WARNING: Something went wrong when plotting the coner plot with GetDist"
+                    )
+                    print(
+                        "Please Run PyORBIT_GetResults.py with without corner plot flag to get an alternative corner plot"
+                    )
 
                 print()
 
-            elif plot_dictionary['use_corner']:
+            elif plot_dictionary["use_corner"]:
                 # plotting mega-corner plot
-                print('Plotting full_correlation plot with Corner')
+                print("Plotting full_correlation plot with Corner")
                 fig = corner.corner(
-                    corner_plot['samples'], labels=corner_plot['labels'], truths=corner_plot['truths'])
-                fig.savefig(dir_output + "all_internal_parameters_corner_dfm" +file_ext,
-                            bbox_inches='tight', dpi=300)
+                    corner_plot["samples"],
+                    labels=corner_plot["labels"],
+                    truths=corner_plot["truths"],
+                )
+                fig.savefig(
+                    dir_output + "all_internal_parameters_corner_dfm" + file_ext,
+                    bbox_inches="tight",
+                    dpi=300,
+                )
                 plt.close(fig)
 
             else:
-                print('Plotting full_correlation plot with pygtc')
+                print("Plotting full_correlation plot with pygtc")
 
-                GTC = pygtc.plotGTC(chains=corner_plot['samples'],
-                                    paramNames=corner_plot['labels'],
-                                    truths=corner_plot['truths'],
-                                    figureSize=20.,
-                                    plotName=dir_output + "all_internal_parameters_corner_pygtc" +file_ext)
+                GTC = pygtc.plotGTC(
+                    chains=corner_plot["samples"],
+                    paramNames=corner_plot["labels"],
+                    truths=corner_plot["truths"],
+                    figureSize=20.0,
+                    plotName=dir_output
+                    + "all_internal_parameters_corner_pygtc"
+                    + file_ext,
+                )
                 GTC = None
                 plt.close()
             print()
-            print('****************************************************************************************************')
+            print(
+                "****************************************************************************************************"
+            )
             print()
             sys.stdout.flush()
             corner_plot = None
         except (AssertionError, IndexError):
-            print('WARNING: Something went wrong when plotting the corner plot')
+            print("WARNING: Something went wrong when plotting the corner plot")
             print()
-            print('****************************************************************************************************')
+            print(
+                "****************************************************************************************************"
+            )
             print()
             sys.stdout.flush()
 
-    if plot_dictionary['chains']:
+    if plot_dictionary["chains"]:
+        print("Plotting the chains... ")
 
-        print('Plotting the chains... ')
-
-        os.system('mkdir -p ' + dir_output + 'chains')
-        os.system('mkdir -p ' + dir_output + 'chains_points')
+        os.system("mkdir -p " + dir_output + "chains")
+        os.system("mkdir -p " + dir_output + "chains_points")
         for theta_name, ii in theta_dictionary.items():
-            file_name = dir_output + 'chains/' + \
-                repr(ii) + '_' + theta_name +file_ext
+            file_name = dir_output + "chains/" + repr(ii) + "_" + theta_name + file_ext
             fig = plt.figure(figsize=(12, 12))
-            plt.plot(sampler_chain[:, :, ii].T, '-', alpha=0.5)
-            plt.axvline(nburnin / nthin, c='r')
-            plt.savefig(file_name, bbox_inches='tight', dpi=300)
+            plt.plot(sampler_chain[:, :, ii].T, "-", alpha=0.5)
+            plt.axvline(nburnin / nthin, c="r")
+            plt.savefig(file_name, bbox_inches="tight", dpi=300)
             plt.close(fig)
-
 
             plot_x_length = len(sampler_chain[0, :, ii])
             plot_x_nwalkers = len(sampler_chain[:, 0, ii])
-            x_range = np.arange(0, plot_x_length, 1.)
-            file_name = dir_output + 'chains_points/' + \
-                repr(ii) + '_' + theta_name + file_ext
+            x_range = np.arange(0, plot_x_length, 1.0)
+            file_name = (
+                dir_output + "chains_points/" + repr(ii) + "_" + theta_name + file_ext
+            )
 
             fig = plt.figure(figsize=(12, 12))
             for xw in range(0, plot_x_nwalkers):
-                plt.scatter(x_range, sampler_chain[xw, :, ii], s=2, alpha=0.2, c='k')
-            plt.axvline(nburnin / nthin, c='r')
-            plt.savefig(file_name, bbox_inches='tight', dpi=300)
+                plt.scatter(x_range, sampler_chain[xw, :, ii], s=2, alpha=0.2, c="k")
+            plt.axvline(nburnin / nthin, c="r")
+            plt.savefig(file_name, bbox_inches="tight", dpi=300)
             plt.close(fig)
 
-
-
         print()
-        print('****************************************************************************************************')
+        print(
+            "****************************************************************************************************"
+        )
         print()
         sys.stdout.flush()
 
-    if plot_dictionary['traces']:
-
-        print('Plotting the Gelman-Rubin traces... ')
+    if plot_dictionary["traces"]:
+        print("Plotting the Gelman-Rubin traces... ")
         print()
         """
         Gelman-Rubin traces are stored in the dedicated folder iniside the _plot folder
         Note that the GR statistics is not robust because the wlakers are not independent
         """
-        os.system('mkdir -p ' + dir_output + 'gr_traces')
+        os.system("mkdir -p " + dir_output + "gr_traces")
 
         step_sampling = np.arange(nburn, nsteps / nthin, 1, dtype=int)
 
         gr_payload = {
-            'sampler_chain': sampler_chain,
-            'step_sampling': step_sampling,
+            "sampler_chain": sampler_chain,
+            "step_sampling": step_sampling,
         }
         gr_results = _results_parallel_map(
-            mc, 'gelman_rubin', theta_dictionary.items(),
-            results_cpu_threads, results_mp_method, payload=gr_payload)
+            mc,
+            "gelman_rubin",
+            theta_dictionary.items(),
+            results_cpu_threads,
+            results_mp_method,
+            payload=gr_payload,
+        )
 
         for theta_name, th, rhat in gr_results:
             print(
-                '    Gelman-Rubin: {0:5d} {1:12f} {2:s} '.format(th, rhat[-1], theta_name))
-            file_name = dir_output + 'gr_traces/v2_' + \
-                repr(th) + '_' + theta_name + '.png'
+                "    Gelman-Rubin: {0:5d} {1:12f} {2:s} ".format(
+                    th, rhat[-1], theta_name
+                )
+            )
+            file_name = (
+                dir_output + "gr_traces/v2_" + repr(th) + "_" + theta_name + ".png"
+            )
             fig = plt.figure(figsize=(12, 12))
-            plt.plot(step_sampling, rhat[:], '-', color='k')
-            plt.axhline(1.01, c='C0')
-            plt.savefig(file_name, bbox_inches='tight', dpi=300)
+            plt.plot(step_sampling, rhat[:], "-", color="k")
+            plt.axhline(1.01, c="C0")
+            plt.savefig(file_name, bbox_inches="tight", dpi=300)
             plt.close(fig)
 
         print()
-        print('****************************************************************************************************')
+        print(
+            "****************************************************************************************************"
+        )
         print()
         sys.stdout.flush()
 
-    if plot_dictionary['common_corner']:
-
-        print('Plotting the common models corner plots')
+    if plot_dictionary["common_corner"]:
+        print("Plotting the common models corner plots")
 
         for common_name, common_model in mc.common_models.items():
+            print("    Common model: ", common_name)
 
-            print('    Common model: ', common_name)
-
-            corner_plot = {
-                'par_list': [],
-                'samples': [],
-                'labels': [],
-                'truths': []
-            }
+            corner_plot = {"par_list": [], "samples": [], "labels": [], "truths": []}
             parameter_values = common_model.convert(flat_chain)
             parameter_median = common_model.convert(chain_med[:, 0])
 
-            if len(parameter_median) < 1.:
+            if len(parameter_median) < 1.0:
                 continue
 
             """
@@ -1473,255 +2253,327 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
             """
             for par in parameter_values.keys():
                 if np.size(parameter_values[par]) == 1:
-                    parameter_values[par] = parameter_values[par] * \
-                        np.ones(n_samplings)
+                    parameter_values[par] = parameter_values[par] * np.ones(n_samplings)
                 else:
-                    corner_plot['par_list'].append(par)
+                    corner_plot["par_list"].append(par)
 
-            corner_plot['samples'] = []
-            corner_plot['labels'] = []
-            corner_plot['truths'] = []
-            for par_i, par in enumerate(corner_plot['par_list']):
-                corner_plot['samples'].extend([parameter_values[par]])
-                corner_plot['labels'].append(par)
-                corner_plot['truths'].append(parameter_median[par])
+            corner_plot["samples"] = []
+            corner_plot["labels"] = []
+            corner_plot["truths"] = []
+            for par_i, par in enumerate(corner_plot["par_list"]):
+                corner_plot["samples"].extend([parameter_values[par]])
+                corner_plot["labels"].append(par)
+                corner_plot["truths"].append(parameter_median[par])
 
             """ Check if the semi-amplitude K is among the parameters that
                 have been fitted. If so, it computes the corresponding
                 planetary mass with uncertainty """
 
             try:
-                if plot_dictionary['use_corner']:
-                    fig = corner.corner(np.asarray(corner_plot['samples']).T,
-                                        labels=corner_plot['labels'],
-                                        truths=corner_plot['truths'])
-                    fig.savefig(dir_output + 'corner_' + common_name + file_ext,
-                                bbox_inches='tight', dpi=300)
+                if plot_dictionary["use_corner"]:
+                    fig = corner.corner(
+                        np.asarray(corner_plot["samples"]).T,
+                        labels=corner_plot["labels"],
+                        truths=corner_plot["truths"],
+                    )
+                    fig.savefig(
+                        dir_output + "corner_" + common_name + file_ext,
+                        bbox_inches="tight",
+                        dpi=300,
+                    )
                     plt.close(fig)
                 else:
-                    GTC = pygtc.plotGTC(chains=np.asarray(corner_plot['samples']).T,
-                                        paramNames=corner_plot['labels'],
-                                        truths=corner_plot['truths'],
-                                        figureSize=10.,
-                                        plotName=dir_output + 'corner_' + common_name +file_ext)
+                    GTC = pygtc.plotGTC(
+                        chains=np.asarray(corner_plot["samples"]).T,
+                        paramNames=corner_plot["labels"],
+                        truths=corner_plot["truths"],
+                        figureSize=10.0,
+                        plotName=dir_output + "corner_" + common_name + file_ext,
+                    )
 
                     GTC = None
                     plt.close()
 
             except (AssertionError, IndexError):
-                print('WARNING: Something went wrong, plot skipped ')
+                print("WARNING: Something went wrong, plot skipped ")
                 print()
 
             corner_plot = None
             sys.stdout.flush()
 
         print()
-        print('****************************************************************************************************')
+        print(
+            "****************************************************************************************************"
+        )
         print()
         sys.stdout.flush()
 
-    if plot_dictionary['dataset_corner']:
-
-        print('Plotting the dataset + models corner plots ')
+    if plot_dictionary["dataset_corner"]:
+        print("Plotting the dataset + models corner plots ")
         print()
 
         for dataset_name, dataset in mc.dataset_dict.items():
-
             for model_name in dataset.models:
+                corner_plot = {"samples": [], "labels": [], "truths": []}
 
-                corner_plot = {
-                    'samples': [],
-                    'labels': [],
-                    'truths': []
-                }
-
-
-                print('    Dataset: ', dataset_name, '    model: ',
-                      model_name, ' corner plot  starting ')
+                print(
+                    "    Dataset: ",
+                    dataset_name,
+                    "    model: ",
+                    model_name,
+                    " corner plot  starting ",
+                )
 
                 parameter_values = dataset.convert(flat_chain)
                 parameter_median = dataset.convert(chain_med[:, 0])
 
                 for common_ref in mc.models[model_name].common_ref:
                     parameter_values.update(
-                        mc.common_models[common_ref].convert(flat_chain))
+                        mc.common_models[common_ref].convert(flat_chain)
+                    )
                     parameter_median.update(
-                        mc.common_models[common_ref].convert(chain_med[:, 0]))
+                        mc.common_models[common_ref].convert(chain_med[:, 0])
+                    )
 
                 parameter_values.update(
-                    mc.models[model_name].convert(flat_chain, dataset_name))
-                parameter_median.update(mc.models[model_name].convert(
-                    chain_med[:, 0], dataset_name))
+                    mc.models[model_name].convert(flat_chain, dataset_name)
+                )
+                parameter_median.update(
+                    mc.models[model_name].convert(chain_med[:, 0], dataset_name)
+                )
 
                 for par_i, par in enumerate(parameter_values):
                     if np.size(parameter_values[par]) <= 1:
                         continue
-                    corner_plot['samples'].extend([parameter_values[par]])
-                    corner_plot['labels'].append(par)
-                    corner_plot['truths'].append(parameter_median[par])
-
+                    corner_plot["samples"].extend([parameter_values[par]])
+                    corner_plot["labels"].append(par)
+                    corner_plot["truths"].append(parameter_median[par])
 
                 try:
-                    if plot_dictionary['use_corner']:
-                        fig = corner.corner(np.asarray(corner_plot['samples']).T,
-                                            labels=corner_plot['labels'], truths=corner_plot['truths'])
-                        fig.savefig(dir_output + 'corner_dataset_' + dataset_name + '_' + model_name + file_ext, bbox_inches='tight', dpi=300)
+                    if plot_dictionary["use_corner"]:
+                        fig = corner.corner(
+                            np.asarray(corner_plot["samples"]).T,
+                            labels=corner_plot["labels"],
+                            truths=corner_plot["truths"],
+                        )
+                        fig.savefig(
+                            dir_output
+                            + "corner_dataset_"
+                            + dataset_name
+                            + "_"
+                            + model_name
+                            + file_ext,
+                            bbox_inches="tight",
+                            dpi=300,
+                        )
                         plt.close(fig)
                         fig = None
                     else:
-                        GTC = pygtc.plotGTC(chains=np.asarray(corner_plot['samples']).T,
-                                            paramNames=corner_plot['labels'],
-                                            truths=corner_plot['truths'],
-                                            figureSize=10.,
-                                            plotName=dir_output + 'corner_dataset_' + dataset_name + '_' + model_name +file_ext)
+                        GTC = pygtc.plotGTC(
+                            chains=np.asarray(corner_plot["samples"]).T,
+                            paramNames=corner_plot["labels"],
+                            truths=corner_plot["truths"],
+                            figureSize=10.0,
+                            plotName=dir_output
+                            + "corner_dataset_"
+                            + dataset_name
+                            + "_"
+                            + model_name
+                            + file_ext,
+                        )
                         GTC = None
                         plt.close()
                 except AssertionError:
-                    print('WARNING: Something went wrong, plot skipped ')
+                    print("WARNING: Something went wrong, plot skipped ")
                     print()
 
-                print('    Dataset: ', dataset_name, '    model: ',
-                      model_name, ' corner plot  done ')
+                print(
+                    "    Dataset: ",
+                    dataset_name,
+                    "    model: ",
+                    model_name,
+                    " corner plot  done ",
+                )
                 corner_plot = None
                 sys.stdout.flush()
 
         print()
-        print('****************************************************************************************************')
+        print(
+            "****************************************************************************************************"
+        )
         print()
         sys.stdout.flush()
 
-    if plot_dictionary['write_planet_samples']:
+    if plot_dictionary["write_planet_samples"]:
+        print("Saving the planet parameter samplings to files (with plots)")
 
-        print('Saving the planet parameter samplings to files (with plots)')
-
-        samples_dir = dir_output + '/planet_samples/'
-        os.system('mkdir -p ' + samples_dir)
+        samples_dir = dir_output + "/planet_samples/"
+        os.system("mkdir -p " + samples_dir)
         sys.stdout.flush()
 
         for common_ref, parameter_values in planet_parameters.items():
             for parameter_name, parameter in parameter_values.items():
-
-                rad_filename = samples_dir + common_ref + '_' + parameter_name
-                np.savetxt(rad_filename + '.dat', np.asarray(parameter),
-                           fmt='%.12f')
+                rad_filename = samples_dir + common_ref + "_" + parameter_name
+                np.savetxt(rad_filename + ".dat", np.asarray(parameter), fmt="%.12f")
 
                 try:
                     fig = plt.figure(figsize=(10, 10))
-                    plt.hist(parameter, bins=50, color='C0',
-                             alpha=0.75, zorder=0)
+                    plt.hist(parameter, bins=50, color="C0", alpha=0.75, zorder=0)
 
                     perc0, perc1, perc2 = np.percentile(
-                        parameter, [15.865, 50, 84.135], axis=0)
+                        parameter, [15.865, 50, 84.135], axis=0
+                    )
 
-                    plt.axvline(planet_parameters_med[common_ref][parameter_name], color='C1', zorder=1,
-                                label='Median-corresponding value')
-                    plt.axvline(planet_parameters_MAP[common_ref][parameter_name], color='C2', zorder=1,
-                                label='MAP-corresponding value')
-                    plt.axvline(planet_parameters_sampleMED[common_ref][parameter_name], color='C5', zorder=1,
-                                label='sampleMED-corresponding value')
-                    plt.axvline(perc1, color='C3', zorder=2,
-                                label='Median of the distribution')
-                    plt.axvline(perc0, color='C4', zorder=2,
-                                label='15.865th and 84.135th percentile')
-                    plt.axvline(perc2, color='C4', zorder=2)
-                    plt.xlabel(
-                        re.sub('_', '-', parameter_name + '_' + common_ref))
+                    plt.axvline(
+                        planet_parameters_med[common_ref][parameter_name],
+                        color="C1",
+                        zorder=1,
+                        label="Median-corresponding value",
+                    )
+                    plt.axvline(
+                        planet_parameters_MAP[common_ref][parameter_name],
+                        color="C2",
+                        zorder=1,
+                        label="MAP-corresponding value",
+                    )
+                    plt.axvline(
+                        planet_parameters_sampleMED[common_ref][parameter_name],
+                        color="C5",
+                        zorder=1,
+                        label="sampleMED-corresponding value",
+                    )
+                    plt.axvline(
+                        perc1, color="C3", zorder=2, label="Median of the distribution"
+                    )
+                    plt.axvline(
+                        perc0,
+                        color="C4",
+                        zorder=2,
+                        label="15.865th and 84.135th percentile",
+                    )
+                    plt.axvline(perc2, color="C4", zorder=2)
+                    plt.xlabel(re.sub("_", "-", parameter_name + "_" + common_ref))
                     plt.legend()
                     plt.ticklabel_format(useOffset=False)
-                    plt.savefig(rad_filename + file_ext,
-                                bbox_inches='tight', dpi=300)
+                    plt.savefig(rad_filename + file_ext, bbox_inches="tight", dpi=300)
                     plt.close(fig)
                 except:
                     print(
-                        '   Error while producing the histogram plot for parameter ', parameter_name)
+                        "   Error while producing the histogram plot for parameter ",
+                        parameter_name,
+                    )
 
         print()
-        print('****************************************************************************************************')
+        print(
+            "****************************************************************************************************"
+        )
         print()
         sys.stdout.flush()
 
-    if plot_dictionary['write_all_samples']:
+    if plot_dictionary["write_all_samples"]:
+        print("Saving all the parameter samplings to files (with plots)")
 
-        print('Saving all the parameter samplings to files (with plots)')
+        samples_dir = dir_output + "/all_samples/"
+        os.system("mkdir -p " + samples_dir)
 
-        samples_dir = dir_output + '/all_samples/'
-        os.system('mkdir -p ' + samples_dir)
-
-        rad_filename = samples_dir + 'log_likelihood'
-        np.savetxt(rad_filename + '.dat', flat_lnprob, fmt='%.12f')
+        rad_filename = samples_dir + "log_likelihood"
+        np.savetxt(rad_filename + ".dat", flat_lnprob, fmt="%.12f")
 
         for theta_name, th in theta_dictionary.items():
-
-            rad_filename = samples_dir + repr(th) + '_' + theta_name
-            np.savetxt(rad_filename + '.dat', flat_chain[:, th], fmt='%.12f')
+            rad_filename = samples_dir + repr(th) + "_" + theta_name
+            np.savetxt(rad_filename + ".dat", flat_chain[:, th], fmt="%.12f")
 
             try:
                 fig = plt.figure(figsize=(10, 10))
-                plt.hist(flat_chain[:, th], bins=50,
-                         color='C0', alpha=0.75, zorder=0)
+                plt.hist(flat_chain[:, th], bins=50, color="C0", alpha=0.75, zorder=0)
 
                 perc0, perc1, perc2 = np.percentile(
-                    flat_chain[:, th], [15.865, 50, 84.135], axis=0)
+                    flat_chain[:, th], [15.865, 50, 84.135], axis=0
+                )
 
-                plt.axvline(chain_med[th, 0], color='C1', zorder=1,
-                            label='Median-corresponding value')
-                plt.axvline(chain_MAP[th], color='C2', zorder=1,
-                            label='MAP-corresponding value')
-                plt.axvline(chain_sampleMED[th], color='C5', zorder=1,
-                            label='sampleMED-corresponding value')
-                plt.axvline(perc1, color='C3', zorder=2,
-                            label='Median of the distribution')
-                plt.axvline(perc0, color='C4', zorder=2,
-                            label='15.865th and 84.135th percentile')
-                plt.axvline(perc2, color='C4', zorder=2)
-                plt.xlabel(re.sub('_', '-', 'theta: ' +
-                                  repr(th) + ' parameter: ' + theta_name))
+                plt.axvline(
+                    chain_med[th, 0],
+                    color="C1",
+                    zorder=1,
+                    label="Median-corresponding value",
+                )
+                plt.axvline(
+                    chain_MAP[th], color="C2", zorder=1, label="MAP-corresponding value"
+                )
+                plt.axvline(
+                    chain_sampleMED[th],
+                    color="C5",
+                    zorder=1,
+                    label="sampleMED-corresponding value",
+                )
+                plt.axvline(
+                    perc1, color="C3", zorder=2, label="Median of the distribution"
+                )
+                plt.axvline(
+                    perc0,
+                    color="C4",
+                    zorder=2,
+                    label="15.865th and 84.135th percentile",
+                )
+                plt.axvline(perc2, color="C4", zorder=2)
+                plt.xlabel(
+                    re.sub("_", "-", "theta: " + repr(th) + " parameter: " + theta_name)
+                )
                 plt.legend()
                 plt.ticklabel_format(useOffset=False)
-                plt.savefig(rad_filename +file_ext,
-                            bbox_inches='tight', dpi=300)
+                plt.savefig(rad_filename + file_ext, bbox_inches="tight", dpi=300)
                 plt.close(fig)
             except:
-                print('   Error while producing the histogram plot for sample parameter {0:s} (id: {1:5.0f})'.format(
-                    theta_name, th))
+                print(
+                    "   Error while producing the histogram plot for sample parameter {0:s} (id: {1:5.0f})".format(
+                        theta_name, th
+                    )
+                )
 
         print()
-        print('****************************************************************************************************')
+        print(
+            "****************************************************************************************************"
+        )
         print()
         sys.stdout.flush()
 
-    if plot_dictionary['plot_models'] or plot_dictionary['write_models']:
-
-        print('Computing the models for plot/data writing')
+    if plot_dictionary["plot_models"] or plot_dictionary["write_models"]:
+        print("Computing the models for plot/data writing")
         print()
 
         for dataset_name, dataset in mc.dataset_dict.items():
-            if dataset.kind in skip_plot or not getattr(dataset, 'compute_plot', True):
-                print('No model plot will be generated for dataset {0:s} (type: {1:s}) '.format(dataset_name, dataset.kind))
+            if dataset.kind in skip_plot or not getattr(dataset, "compute_plot", True):
+                print(
+                    "No model plot will be generated for dataset {0:s} (type: {1:s}) ".format(
+                        dataset_name, dataset.kind
+                    )
+                )
                 dataset.compute_plot = False
                 continue
 
-            if dataset.kind in skip_model_plot or not getattr(dataset, 'compute_model_plot', True):
-                print('No model plot will be generated for dataset {0:s} (type: {1:s}) '.format(dataset_name, dataset.kind))
+            if dataset.kind in skip_model_plot or not getattr(
+                dataset, "compute_model_plot", True
+            ):
+                print(
+                    "No model plot will be generated for dataset {0:s} (type: {1:s}) ".format(
+                        dataset_name, dataset.kind
+                    )
+                )
                 dataset.compute_model_plot = False
                 continue
 
         """ BJD array for combined datasets, e.g., radial velocities datasets"""
-        bjd_plot = {
-            'combined': {}
-        }
+        bjd_plot = {"combined": {}}
 
         kinds = {}
 
-        #TODO Check if we want to keep this"""
+        # TODO Check if we want to keep this"""
         P_minimum = 2.0  # this temporal range will be divided in 20 subsets
         for key_name, key_val in planet_parameters_med.items():
-            P_minimum = max(key_val.get('P', 2.0), P_minimum)
-
+            P_minimum = max(key_val.get("P", 2.0), P_minimum)
 
         for dataset_name, dataset in mc.dataset_dict.items():
-
-            if not getattr(dataset, 'compute_plot', True):
+            if not getattr(dataset, "compute_plot", True):
                 continue
 
             if dataset.kind in kinds.keys():
@@ -1729,21 +2581,20 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
             else:
                 kinds[dataset.kind] = [dataset_name]
 
-            if not getattr(dataset, 'compute_model_plot', True):
+            if not getattr(dataset, "compute_model_plot", True):
                 bjd_plot[dataset_name] = {
-                    'start': np.amin(dataset.x),
-                    'end': np.amax(dataset.x),
-                    'range': np.amax(dataset.x) - np.amin(dataset.x),
-                    'x0_plot': dataset.x - mc.Tref,
-                    'x_plot': dataset.x,
+                    "start": np.amin(dataset.x),
+                    "end": np.amax(dataset.x),
+                    "range": np.amax(dataset.x) - np.amin(dataset.x),
+                    "x0_plot": dataset.x - mc.Tref,
+                    "x_plot": dataset.x,
                 }
                 continue
 
-
             bjd_plot[dataset_name] = {
-                'start': np.amin(dataset.x),
-                'end': np.amax(dataset.x),
-                'range': np.amax(dataset.x) - np.amin(dataset.x),
+                "start": np.amin(dataset.x),
+                "end": np.amax(dataset.x),
+                "range": np.amax(dataset.x) - np.amin(dataset.x),
             }
 
             """ compute the minimum step size in the dataset to properly sample the model plot, 
@@ -1751,35 +2602,33 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
             excluding points with the same time stamp """
             try:
                 diff_sorted = np.diff(np.sort(dataset.x))
-                minimum_positive_diff = np.min(diff_sorted[diff_sorted>0.00]) / 2
+                minimum_positive_diff = np.min(diff_sorted[diff_sorted > 0.00]) / 2
             except:
-                minimum_positive_diff = 5.  / (24 * 60)
+                minimum_positive_diff = 5.0 / (24 * 60)
 
             """Allow for a minimum range of 0.1 days to avoid too few points for the model plot 
             in case of very short datasets"""
-            #TODO do we need to keep this? 
-            if bjd_plot[dataset_name]['range'] < 0.1:
-                bjd_plot[dataset_name]['range'] = 0.1
+            # TODO do we need to keep this?
+            if bjd_plot[dataset_name]["range"] < 0.1:
+                bjd_plot[dataset_name]["range"] = 0.1
 
             """Extend the dataset by a 10% range to avoid cutting the model plot at the edges of the data"""
-            bjd_plot[dataset_name]['start'] -= bjd_plot[dataset_name]['range'] * 0.10
-            bjd_plot[dataset_name]['end'] += bjd_plot[dataset_name]['range'] * 0.10
+            bjd_plot[dataset_name]["start"] -= bjd_plot[dataset_name]["range"] * 0.10
+            bjd_plot[dataset_name]["end"] += bjd_plot[dataset_name]["range"] * 0.10
 
-            #TODO remove the 'Phot' options in PyORBIT version 12
-            if dataset.kind == 'photometry':
-
+            # TODO remove the 'Phot' options in PyORBIT version 12
+            if dataset.kind == "photometry":
                 """ If the range of the dataset is longer than three times the shortest orbital period,
                 likely we are analysing a long-term photometric dataset. In this case, we can afford to
                 increase the step size for the model plot to avoid too many points and long computation time.
                 Otherwise, we keep a small step size to properly sample the transits in the model plot"""
 
-                if bjd_plot[dataset_name]['range'] > 3*P_minimum:
+                if bjd_plot[dataset_name]["range"] > 3 * P_minimum:
                     # more than one transit:
-                    step_size = 5.  / (24 * 60) #five minute stepsize
+                    step_size = 5.0 / (24 * 60)  # five minute stepsize
                 else:
-                    step_size = 1*minimum_positive_diff
+                    step_size = 1 * minimum_positive_diff
             else:
-
                 """ For generic datasets, we set the step size to use the smallest value among
                     -  1/20 of the shortest orbital period
                     -  half of the smallest time difference in the dataset
@@ -1787,129 +2636,187 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
                     This allows to properly sample the model without producing too many points for long-term datasets
                 """
                 try:
-                    step_size =  np.asarray(min(P_minimum / 20.,
-                                        minimum_positive_diff,
-                                        bjd_plot[dataset_name]['range'] / dataset.n / 10.))[0]
+                    step_size = np.asarray(
+                        min(
+                            P_minimum / 20.0,
+                            minimum_positive_diff,
+                            bjd_plot[dataset_name]["range"] / dataset.n / 10.0,
+                        )
+                    )[0]
                 except:
+                    step_size = np.asarray(
+                        min(
+                            P_minimum / 20.0,
+                            minimum_positive_diff,
+                            bjd_plot[dataset_name]["range"] / dataset.n / 10.0,
+                        )
+                    )
 
-                    step_size =  np.asarray(min(P_minimum / 20.,
-                                        minimum_positive_diff,
-                                        bjd_plot[dataset_name]['range'] / dataset.n / 10.))
-            
-            input_step_size = plot_config_parameters.get('model_step_size', None)
+            input_step_size = plot_config_parameters.get("model_step_size", None)
             if input_step_size is not None:
-                if dataset.kind in activity_datatype or dataset.kind == 'radial_velocity':
-                    input_step_size = plot_config_parameters['model_step_size'].get('activity', input_step_size)                
-                if dataset.kind == 'radial_velocity':
-                    input_step_size = plot_config_parameters['model_step_size'].get('radial_velocity', input_step_size)                
-                if dataset.kind == 'photometry':
-                    input_step_size = plot_config_parameters['model_step_size'].get('photometry', input_step_size)     
-                input_step_size = plot_config_parameters['model_step_size'].get(dataset_name, input_step_size)
+                if (
+                    dataset.kind in activity_datatype
+                    or dataset.kind == "radial_velocity"
+                ):
+                    input_step_size = plot_config_parameters["model_step_size"].get(
+                        "activity", input_step_size
+                    )
+                if dataset.kind == "radial_velocity":
+                    input_step_size = plot_config_parameters["model_step_size"].get(
+                        "radial_velocity", input_step_size
+                    )
+                if dataset.kind == "photometry":
+                    input_step_size = plot_config_parameters["model_step_size"].get(
+                        "photometry", input_step_size
+                    )
+                input_step_size = plot_config_parameters["model_step_size"].get(
+                    dataset_name, input_step_size
+                )
 
             if type(input_step_size) == int or type(input_step_size) == float:
-                step_size = input_step_size / (24 * 60) # convert minutes to days
+                step_size = input_step_size / (24 * 60)  # convert minutes to days
 
-            bjd_plot[dataset_name]['step_size'] = step_size
+            bjd_plot[dataset_name]["step_size"] = step_size
 
-            bjd_plot[dataset_name]['x_plot'] = \
-                np.arange(bjd_plot[dataset_name]['start'],
-                            bjd_plot[dataset_name]['end'], 
-                            bjd_plot[dataset_name]['step_size'])
-            bjd_plot[dataset_name]['x0_plot'] = bjd_plot[dataset_name]['x_plot'] - mc.Tref
+            bjd_plot[dataset_name]["x_plot"] = np.arange(
+                bjd_plot[dataset_name]["start"],
+                bjd_plot[dataset_name]["end"],
+                bjd_plot[dataset_name]["step_size"],
+            )
+            bjd_plot[dataset_name]["x0_plot"] = (
+                bjd_plot[dataset_name]["x_plot"] - mc.Tref
+            )
 
-            print('    Dataset: {0:20s} step size for model plot: {1:.5f} days ({2:.2f} minutes), # points: {3:d}'.format(
-                dataset_name, step_size, step_size*60*24, len(bjd_plot[dataset_name]['x0_plot'])))
+            print(
+                "    Dataset: {0:20s} step size for model plot: {1:.5f} days ({2:.2f} minutes), # points: {3:d}".format(
+                    dataset_name,
+                    step_size,
+                    step_size * 60 * 24,
+                    len(bjd_plot[dataset_name]["x0_plot"]),
+                )
+            )
 
             """ Photometric datasets are excluded from the construction of the combined BJD array"""
-            if dataset.kind == 'photometry':
+            if dataset.kind == "photometry":
                 continue
 
             """ Combined range where the same physical effect is observed through different instruments
               over different temporal ranges, e.g., radial velocity datasets. This allows to plot the same model 
               for all the datasets of similar kind, even if they do not cover the same temporal range"""
             try:
-                bjd_plot['combined']['start'] = min(
-                    bjd_plot['combined']['start'], bjd_plot[dataset_name]['start'])
-                bjd_plot['combined']['end'] = max(
-                    bjd_plot['combined']['end'], bjd_plot[dataset_name]['end'])
-                bjd_plot['combined']['step_size'] = min(
-                    bjd_plot['combined']['step_size'], step_size)
+                bjd_plot["combined"]["start"] = min(
+                    bjd_plot["combined"]["start"], bjd_plot[dataset_name]["start"]
+                )
+                bjd_plot["combined"]["end"] = max(
+                    bjd_plot["combined"]["end"], bjd_plot[dataset_name]["end"]
+                )
+                bjd_plot["combined"]["step_size"] = min(
+                    bjd_plot["combined"]["step_size"], step_size
+                )
             except KeyError:
-                bjd_plot['combined']['start'] = bjd_plot[dataset_name]['start'].copy()
-                bjd_plot['combined']['end'] = bjd_plot[dataset_name]['end'].copy()
-                bjd_plot['combined']['step_size'] = 1*step_size
+                bjd_plot["combined"]["start"] = bjd_plot[dataset_name]["start"].copy()
+                bjd_plot["combined"]["end"] = bjd_plot[dataset_name]["end"].copy()
+                bjd_plot["combined"]["step_size"] = 1 * step_size
 
         print()
 
         try:
             """Building the combined array"""
-            bjd_plot['combined']['range'] = bjd_plot['combined']['end'] - bjd_plot['combined']['start']
-            bjd_plot['combined']['x_plot'] = np.arange(
-                bjd_plot['combined']['start'], bjd_plot['combined']['end'], bjd_plot['combined']['step_size'])
-            bjd_plot['combined']['x0_plot'] = bjd_plot['combined']['x_plot'] - mc.Tref
+            bjd_plot["combined"]["range"] = (
+                bjd_plot["combined"]["end"] - bjd_plot["combined"]["start"]
+            )
+            bjd_plot["combined"]["x_plot"] = np.arange(
+                bjd_plot["combined"]["start"],
+                bjd_plot["combined"]["end"],
+                bjd_plot["combined"]["step_size"],
+            )
+            bjd_plot["combined"]["x0_plot"] = bjd_plot["combined"]["x_plot"] - mc.Tref
 
-            print('Combined BJD array built with {0:d} data points'.format(len(bjd_plot['combined']['x0_plot'])))
+            print(
+                "Combined BJD array built with {0:d} data points".format(
+                    len(bjd_plot["combined"]["x0_plot"])
+                )
+            )
 
         except KeyError:
-            print('WARNING: No combined BJD array built, likely because there are no datasets that can be combined, e.g., only photometric datasets')
+            print(
+                "WARNING: No combined BJD array built, likely because there are no datasets that can be combined, e.g., only photometric datasets"
+            )
             """ No combined array built, likely because there are no datasets that can be combined, e.g., only photometric datasets"""
             pass
 
-        
         """ By default we want to use the same BJD array for all the datasets of the same kind, e.g., radial velocity datasets.
         For transit time datasets, there is no point in plotting intermediate values """
         for dataset_name, dataset in mc.dataset_dict.items():
-            if not getattr(dataset, 'compute_model_plot', True):
+            if not getattr(dataset, "compute_model_plot", True):
                 continue
 
-            if dataset.kind == 'radial_velocity' and plot_config_parameters.get('use_shared_axis_for_rv', True):
-                bjd_plot[dataset_name] = bjd_plot['combined']
-                print('    Dataset {0:20s} combined BJD array built with {1:d} data points'.format(dataset_name, len(bjd_plot['combined']['x0_plot'])))
+            if dataset.kind == "radial_velocity" and plot_config_parameters.get(
+                "use_shared_axis_for_rv", True
+            ):
+                bjd_plot[dataset_name] = bjd_plot["combined"]
+                print(
+                    "    Dataset {0:20s} combined BJD array built with {1:d} data points".format(
+                        dataset_name, len(bjd_plot["combined"]["x0_plot"])
+                    )
+                )
 
-            if dataset.kind in activity_datatype and plot_config_parameters.get('use_shared_axis_for_activity', True):
-                bjd_plot[dataset_name] = bjd_plot['combined']
-                print('    Dataset {0:20s} combined BJD array built with {1:d} data points'.format(dataset_name, len(bjd_plot['combined']['x0_plot'])))
+            if dataset.kind in activity_datatype and plot_config_parameters.get(
+                "use_shared_axis_for_activity", True
+            ):
+                bjd_plot[dataset_name] = bjd_plot["combined"]
+                print(
+                    "    Dataset {0:20s} combined BJD array built with {1:d} data points".format(
+                        dataset_name, len(bjd_plot["combined"]["x0_plot"])
+                    )
+                )
 
-            if dataset.kind == 'transit_time':
-                bjd_plot[dataset_name]['x_plot'] = dataset.x
-                bjd_plot[dataset_name]['x0_plot'] = dataset.x
+            if dataset.kind == "transit_time":
+                bjd_plot[dataset_name]["x_plot"] = dataset.x
+                bjd_plot[dataset_name]["x0_plot"] = dataset.x
 
         print()
 
         model_jobs = [
-            ('', chain_med[:, 0]),
-            ('MAP_', chain_MAP),
-            ('sampleMED_', chain_sampleMED),
+            ("", chain_med[:, 0]),
+            ("MAP_", chain_MAP),
+            ("sampleMED_", chain_sampleMED),
         ]
         model_plot_parameters = dict(plot_config_parameters)
         if results_cpu_threads > 1:
-            model_plot_parameters['progress_bar'] = False
+            model_plot_parameters["progress_bar"] = False
         model_payload = {
-            'bjd_plot': bjd_plot,
-            'plot_parameters': model_plot_parameters,
+            "bjd_plot": bjd_plot,
+            "plot_parameters": model_plot_parameters,
         }
         model_results = _results_parallel_map(
-            mc, 'get_model', model_jobs, min(results_cpu_threads, 3),
-            results_mp_method, payload=model_payload)
+            mc,
+            "get_model",
+            model_jobs,
+            min(results_cpu_threads, 3),
+            results_mp_method,
+            payload=model_payload,
+        )
         for model_prefix, (model_out, model_x) in model_results:
-            bjd_plot[model_prefix + 'model_out'] = model_out
-            bjd_plot[model_prefix + 'model_x'] = model_x
+            bjd_plot[model_prefix + "model_out"] = model_out
+            bjd_plot[model_prefix + "model_x"] = model_x
 
-        if plot_dictionary['plot_models']:
-            print('Writing the plots ')
+        if plot_dictionary["plot_models"]:
+            print("Writing the plots ")
 
             for kind_name, kind in kinds.items():
                 for dataset_name in kind:
-
                     if len(mc.dataset_dict[dataset_name].n_shape) > 1:
                         continue
 
                     if mc.dataset_dict[dataset_name].compute_plot is False:
-                        continue 
+                        continue
 
                     try:
-                        error_bars = np.sqrt(mc.dataset_dict[dataset_name].e**2
-                                                + bjd_plot['model_out'][dataset_name]['jitter']**2)
+                        error_bars = np.sqrt(
+                            mc.dataset_dict[dataset_name].e ** 2
+                            + bjd_plot["model_out"][dataset_name]["jitter"] ** 2
+                        )
                     except (ValueError, KeyError):
                         error_bars = mc.dataset_dict[dataset_name].e
 
@@ -1919,8 +2826,14 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
                     # http://www.sc.eso.org/~bdias/pycoffee/codes/20160407/gridspec_demo.html
                     gs = gridspec.GridSpec(2, 1, height_ratios=[3.0, 1.0])
                     # Also make sure the margins and spacing are apropriate
-                    gs.update(left=0.3, right=0.95, bottom=0.08,
-                                top=0.93, wspace=0.15, hspace=0.05)
+                    gs.update(
+                        left=0.3,
+                        right=0.95,
+                        bottom=0.08,
+                        top=0.93,
+                        wspace=0.15,
+                        hspace=0.05,
+                    )
 
                     ax_0 = plt.subplot(gs[0])
                     ax_1 = plt.subplot(gs[1], sharex=ax_0)
@@ -1934,244 +2847,382 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
                     ax_0.ticklabel_format(useOffset=False)
                     ax_1.ticklabel_format(useOffset=False)
 
-                    ax_0.scatter(mc.dataset_dict[dataset_name].x,
-                                 mc.dataset_dict[dataset_name].y
-                                 - bjd_plot['model_out'][dataset_name]['systematics']
-                                 - bjd_plot['model_out'][dataset_name]['time_independent'],
-                                 color='C0', zorder=20, s=16)
-                    ax_0.errorbar(mc.dataset_dict[dataset_name].x,
-                                  mc.dataset_dict[dataset_name].y
-                                  - bjd_plot['model_out'][dataset_name]['systematics']
-                                  - bjd_plot['model_out'][dataset_name]['time_independent'],
-                                  yerr=error_bars,
-                                  color='C0', fmt='o', ms=0, zorder=19, alpha=0.5)
+                    ax_0.scatter(
+                        mc.dataset_dict[dataset_name].x,
+                        mc.dataset_dict[dataset_name].y
+                        - bjd_plot["model_out"][dataset_name]["systematics"]
+                        - bjd_plot["model_out"][dataset_name]["time_independent"],
+                        color="C0",
+                        zorder=20,
+                        s=16,
+                    )
+                    ax_0.errorbar(
+                        mc.dataset_dict[dataset_name].x,
+                        mc.dataset_dict[dataset_name].y
+                        - bjd_plot["model_out"][dataset_name]["systematics"]
+                        - bjd_plot["model_out"][dataset_name]["time_independent"],
+                        yerr=error_bars,
+                        color="C0",
+                        fmt="o",
+                        ms=0,
+                        zorder=19,
+                        alpha=0.5,
+                    )
 
-                    if getattr(dataset, 'compute_model_plot', True):
-                        ax_0.plot(bjd_plot[dataset_name]['x_plot'], bjd_plot['model_x'][dataset_name]['complete'],
-                                label='Median-corresponding model',
-                                color='C1', zorder=10)
-                        ax_0.plot(bjd_plot[dataset_name]['x_plot'], bjd_plot['MAP_model_x'][dataset_name]['complete'],
-                                label='MAP-corresponding model',
-                                color='C2', zorder=9)
-                        ax_0.plot(bjd_plot[dataset_name]['x_plot'], bjd_plot['sampleMED_model_x'][dataset_name]['complete'],
-                                label='sampleMED-corresponding model',
-                                color='C5', zorder=8)
+                    if getattr(dataset, "compute_model_plot", True):
+                        ax_0.plot(
+                            bjd_plot[dataset_name]["x_plot"],
+                            bjd_plot["model_x"][dataset_name]["complete"],
+                            label="Median-corresponding model",
+                            color="C1",
+                            zorder=10,
+                        )
+                        ax_0.plot(
+                            bjd_plot[dataset_name]["x_plot"],
+                            bjd_plot["MAP_model_x"][dataset_name]["complete"],
+                            label="MAP-corresponding model",
+                            color="C2",
+                            zorder=9,
+                        )
+                        ax_0.plot(
+                            bjd_plot[dataset_name]["x_plot"],
+                            bjd_plot["sampleMED_model_x"][dataset_name]["complete"],
+                            label="sampleMED-corresponding model",
+                            color="C5",
+                            zorder=8,
+                        )
 
-                    ax_0.set_ylabel('Same as input data')
+                    ax_0.set_ylabel("Same as input data")
                     ax_0.legend()
 
-                    ax_1.scatter(mc.dataset_dict[dataset_name].x,
-                                 mc.dataset_dict[dataset_name].y -
-                                 bjd_plot['model_out'][dataset_name]['complete'],
-                                 color='C1', zorder=10, s=16, label='Median residuals')
-                    ax_1.errorbar(mc.dataset_dict[dataset_name].x,
-                                  mc.dataset_dict[dataset_name].y -
-                                  bjd_plot['model_out'][dataset_name]['complete'],
-                                  yerr=error_bars,
-                                  color='C1', fmt='o', ms=0, zorder=7, alpha=0.5)
+                    ax_1.scatter(
+                        mc.dataset_dict[dataset_name].x,
+                        mc.dataset_dict[dataset_name].y
+                        - bjd_plot["model_out"][dataset_name]["complete"],
+                        color="C1",
+                        zorder=10,
+                        s=16,
+                        label="Median residuals",
+                    )
+                    ax_1.errorbar(
+                        mc.dataset_dict[dataset_name].x,
+                        mc.dataset_dict[dataset_name].y
+                        - bjd_plot["model_out"][dataset_name]["complete"],
+                        yerr=error_bars,
+                        color="C1",
+                        fmt="o",
+                        ms=0,
+                        zorder=7,
+                        alpha=0.5,
+                    )
 
-                    ax_1.scatter(mc.dataset_dict[dataset_name].x,
-                                 mc.dataset_dict[dataset_name].y -
-                                 bjd_plot['MAP_model_out'][dataset_name]['complete'],
-                                 color='C2', zorder=9, s=16, label='MAP residuals')
-                    ax_1.errorbar(mc.dataset_dict[dataset_name].x,
-                                  mc.dataset_dict[dataset_name].y -
-                                  bjd_plot['MAP_model_out'][dataset_name]['complete'],
-                                  yerr=error_bars,
-                                  color='C2', fmt='o', ms=0, zorder=6, alpha=0.5)
+                    ax_1.scatter(
+                        mc.dataset_dict[dataset_name].x,
+                        mc.dataset_dict[dataset_name].y
+                        - bjd_plot["MAP_model_out"][dataset_name]["complete"],
+                        color="C2",
+                        zorder=9,
+                        s=16,
+                        label="MAP residuals",
+                    )
+                    ax_1.errorbar(
+                        mc.dataset_dict[dataset_name].x,
+                        mc.dataset_dict[dataset_name].y
+                        - bjd_plot["MAP_model_out"][dataset_name]["complete"],
+                        yerr=error_bars,
+                        color="C2",
+                        fmt="o",
+                        ms=0,
+                        zorder=6,
+                        alpha=0.5,
+                    )
 
-                    ax_1.scatter(mc.dataset_dict[dataset_name].x,
-                                 mc.dataset_dict[dataset_name].y -
-                                 bjd_plot['sampleMED_model_out'][dataset_name]['complete'],
-                                 color='C5', zorder=8, s=16, label='sampleMED residuals')
-                    ax_1.errorbar(mc.dataset_dict[dataset_name].x,
-                                  mc.dataset_dict[dataset_name].y -
-                                  bjd_plot['sampleMED_model_out'][dataset_name]['complete'],
-                                  yerr=error_bars,
-                                  color='C5', fmt='o', ms=0, zorder=5, alpha=0.5)
-                    ax_1.axhline(0.0, color='k', alpha=0.5, zorder=0)
+                    ax_1.scatter(
+                        mc.dataset_dict[dataset_name].x,
+                        mc.dataset_dict[dataset_name].y
+                        - bjd_plot["sampleMED_model_out"][dataset_name]["complete"],
+                        color="C5",
+                        zorder=8,
+                        s=16,
+                        label="sampleMED residuals",
+                    )
+                    ax_1.errorbar(
+                        mc.dataset_dict[dataset_name].x,
+                        mc.dataset_dict[dataset_name].y
+                        - bjd_plot["sampleMED_model_out"][dataset_name]["complete"],
+                        yerr=error_bars,
+                        color="C5",
+                        fmt="o",
+                        ms=0,
+                        zorder=5,
+                        alpha=0.5,
+                    )
+                    ax_1.axhline(0.0, color="k", alpha=0.5, zorder=0)
 
-                    ax_1.set_xlabel('Time [d] (offset as the input data)')
-                    ax_1.set_ylabel('Residuals (wrt median model)')
+                    ax_1.set_xlabel("Time [d] (offset as the input data)")
+                    ax_1.set_ylabel("Residuals (wrt median model)")
 
-                    plt.savefig(dir_output + 'model_' + kind_name + '_' + dataset_name + file_ext, bbox_inches='tight',
-                                dpi=300)
+                    plt.savefig(
+                        dir_output
+                        + "model_"
+                        + kind_name
+                        + "_"
+                        + dataset_name
+                        + file_ext,
+                        bbox_inches="tight",
+                        dpi=300,
+                    )
                     plt.close(fig)
 
-        if plot_dictionary['write_models']:
+        if plot_dictionary["write_models"]:
+            for prepend_keyword in ["", "MAP_", "sampleMED_"]:
+                print("Writing the ", prepend_keyword, "data files ")
 
-            for prepend_keyword in ['', 'MAP_', 'sampleMED_']:
+                plot_out_keyword = prepend_keyword + "model_out"
+                plot_x_keyword = prepend_keyword + "model_x"
+                file_keyword = prepend_keyword + "model_files"
 
-                print('Writing the ', prepend_keyword, 'data files ')
-
-                plot_out_keyword = prepend_keyword + 'model_out'
-                plot_x_keyword = prepend_keyword + 'model_x'
-                file_keyword = prepend_keyword + 'model_files'
-
-                if prepend_keyword == '':
+                if prepend_keyword == "":
                     planet_pams = planet_parameters_med
                     # star_vars = star_parameters # leaving here, it could be useful for the future
                     chain_ref = chain_med[:, 0]
-                elif prepend_keyword == 'MAP_':
+                elif prepend_keyword == "MAP_":
                     planet_pams = planet_parameters_MAP
                     # star_vars = star_parameters_MAP
                     chain_ref = chain_MAP
-                elif prepend_keyword == 'sampleMED_':
+                elif prepend_keyword == "sampleMED_":
                     planet_pams = planet_parameters_sampleMED
                     # star_vars = star_parameters_MAP
                     chain_ref = chain_sampleMED
 
-
-                dir_models = dir_output + file_keyword + '/'
-                os.system('mkdir -p ' + dir_models)
+                dir_models = dir_output + file_keyword + "/"
+                os.system("mkdir -p " + dir_models)
 
                 for dataset_name, dataset in mc.dataset_dict.items():
-
-                    if not getattr(dataset, 'compute_plot', True):
+                    if not getattr(dataset, "compute_plot", True):
                         continue
 
                     if len(dataset.n_shape) > 1:
                         continue
 
-
                     for model_name in dataset.models:
-
-                        if getattr(mc.models[model_name], 'systematic_model', False):
+                        if getattr(mc.models[model_name], "systematic_model", False):
                             continue
 
-                        fileout = open(dir_models + dataset_name +
-                                       '_' + model_name + '.dat', 'w')
+                        fileout = open(
+                            dir_models + dataset_name + "_" + model_name + ".dat", "w"
+                        )
 
                         phase = np.zeros(dataset.n)
                         tc_folded = np.zeros(dataset.n)
-                        phase_plot = np.zeros(
-                            np.size(bjd_plot[dataset_name]['x_plot']))
+                        phase_plot = np.zeros(np.size(bjd_plot[dataset_name]["x_plot"]))
                         tc_folded_plot = np.zeros(
-                            np.size(bjd_plot[dataset_name]['x_plot']))
+                            np.size(bjd_plot[dataset_name]["x_plot"])
+                        )
 
                         for common_ref in mc.models[model_name].common_ref:
                             if common_ref in planet_pams:
-                                if 'P' in planet_pams[common_ref]:
-                                    phase = (dataset.x0 /
-                                             planet_pams[common_ref]['P']) % 1
-                                    phase_plot = ((bjd_plot[dataset_name]['x_plot'] - mc.Tref) /
-                                                  planet_pams[common_ref]['P']) % 1
-                                    if 'Tc' in planet_pams[common_ref]:
-                                        tc_folded = (dataset.x - planet_pams[common_ref]['Tc']
-                                                     + planet_pams[common_ref]['P'] / 2.) \
-                                            % planet_pams[common_ref]['P'] \
-                                            - planet_pams[common_ref]['P'] / 2.
-                                        tc_folded_plot = (bjd_plot[dataset_name]['x_plot'] - planet_pams[common_ref][
-                                            'Tc']
-                                            + planet_pams[common_ref]['P'] / 2.) \
-                                            % planet_pams[common_ref]['P'] \
-                                            - planet_pams[common_ref]['P'] / 2.
+                                if "P" in planet_pams[common_ref]:
+                                    phase = (
+                                        dataset.x0 / planet_pams[common_ref]["P"]
+                                    ) % 1
+                                    phase_plot = (
+                                        (bjd_plot[dataset_name]["x_plot"] - mc.Tref)
+                                        / planet_pams[common_ref]["P"]
+                                    ) % 1
+                                    if "Tc" in planet_pams[common_ref]:
+                                        tc_folded = (
+                                            dataset.x
+                                            - planet_pams[common_ref]["Tc"]
+                                            + planet_pams[common_ref]["P"] / 2.0
+                                        ) % planet_pams[common_ref]["P"] - planet_pams[
+                                            common_ref
+                                        ]["P"] / 2.0
+                                        tc_folded_plot = (
+                                            bjd_plot[dataset_name]["x_plot"]
+                                            - planet_pams[common_ref]["Tc"]
+                                            + planet_pams[common_ref]["P"] / 2.0
+                                        ) % planet_pams[common_ref]["P"] - planet_pams[
+                                            common_ref
+                                        ]["P"] / 2.0
                                     else:
-                                        tc_folded = dataset.x0 % planet_pams[common_ref]['P']
-                                        tc_folded_plot = (bjd_plot[dataset_name]['x_plot'] - mc.Tref) % \
-                                            planet_pams[common_ref]['P']
+                                        tc_folded = (
+                                            dataset.x0 % planet_pams[common_ref]["P"]
+                                        )
+                                        tc_folded_plot = (
+                                            bjd_plot[dataset_name]["x_plot"] - mc.Tref
+                                        ) % planet_pams[common_ref]["P"]
 
-                        if plot_dictionary.get('veuz_compatibility', False):
+                        if plot_dictionary.get("veuz_compatibility", False):
                             fileout.write(
-                                'descriptor BJD Tc_folded pha val,+- sys mod full val_compare,+- res,+- jit jit_flag off_flag sub_flag \n')
+                                "descriptor BJD Tc_folded pha val,+- sys mod full val_compare,+- res,+- jit jit_flag off_flag sub_flag \n"
+                            )
                         else:
                             fileout.write(
-                                '# time Tc_folded Tref_folded value value_err offset model full_model val_compare val_compare_err residuals residuals_err jitter jitter_flag offset_flag subset_flag \n')
+                                "# time Tc_folded Tref_folded value value_err offset model full_model val_compare val_compare_err residuals residuals_err jitter jitter_flag offset_flag subset_flag \n"
+                            )
 
                         try:
-                            len(bjd_plot[plot_out_keyword]
-                                [dataset_name][model_name])
+                            len(bjd_plot[plot_out_keyword][dataset_name][model_name])
                         except:
-                            bjd_plot[plot_out_keyword][dataset_name][model_name] = \
-                                bjd_plot[plot_out_keyword][dataset_name][model_name] * \
-                                np.ones(dataset.n)
+                            bjd_plot[plot_out_keyword][dataset_name][model_name] = (
+                                bjd_plot[plot_out_keyword][dataset_name][model_name]
+                                * np.ones(dataset.n)
+                            )
 
-                            bjd_plot[plot_x_keyword][dataset_name][model_name] = \
-                                bjd_plot[plot_x_keyword][dataset_name][model_name] * \
-                                np.ones_like(bjd_plot[dataset_name]['x_plot'])
+                            bjd_plot[plot_x_keyword][dataset_name][model_name] = (
+                                bjd_plot[plot_x_keyword][dataset_name][model_name]
+                                * np.ones_like(bjd_plot[dataset_name]["x_plot"])
+                            )
 
-                        #print(getattr(dataset, 'input_jitter', False))
+                        # print(getattr(dataset, 'input_jitter', False))
                         try:
-                            if getattr(dataset, 'input_jitter', False).any():
+                            if getattr(dataset, "input_jitter", False).any():
                                 jitter_flag = dataset.input_jitter
                             else:
-                                jitter_flag = np.zeros_like(dataset.x) - 1.
+                                jitter_flag = np.zeros_like(dataset.x) - 1.0
                         except:
-                            jitter_flag = np.zeros_like(dataset.x) - 1.
+                            jitter_flag = np.zeros_like(dataset.x) - 1.0
 
                         try:
-                            if getattr(dataset, 'input_offset', False).any():
+                            if getattr(dataset, "input_offset", False).any():
                                 offset_flag = dataset.input_offset
                             else:
-                                offset_flag = np.zeros_like(dataset.x) - 1.
+                                offset_flag = np.zeros_like(dataset.x) - 1.0
                         except:
-                            offset_flag = np.zeros_like(dataset.x) - 1.
+                            offset_flag = np.zeros_like(dataset.x) - 1.0
 
                         try:
-                            if getattr(dataset, 'input_subset', False).any():
+                            if getattr(dataset, "input_subset", False).any():
                                 subset_flag = dataset.input_subset
                             else:
-                                subset_flag = np.zeros_like(dataset.x) - 1.
+                                subset_flag = np.zeros_like(dataset.x) - 1.0
                         except:
-                            subset_flag = np.zeros_like(dataset.x) - 1.
+                            subset_flag = np.zeros_like(dataset.x) - 1.0
 
-                        for x, tcf, pha, y, e, sys_val, mod, com, obs_mod, res, jit, jflag, oflag, sflag in zip(
-                                dataset.x, tc_folded, phase, dataset.y, dataset.e,
-                                bjd_plot[plot_out_keyword][dataset_name]['systematics'],
-                                bjd_plot[plot_out_keyword][dataset_name][model_name],
-                                bjd_plot[plot_out_keyword][dataset_name]['complete'],
-                                dataset.y - bjd_plot[plot_out_keyword][dataset_name]['complete'] +
-                                bjd_plot[plot_out_keyword][dataset_name][model_name],
-                                dataset.y -
-                            bjd_plot[plot_out_keyword][dataset_name]['complete'],
-                                bjd_plot[plot_out_keyword][dataset_name]['jitter'],
-                                jitter_flag, offset_flag, subset_flag):
-                            fileout.write('{0:f} {1:f} {2:f} {3:f} {4:f} {5:f} {6:1f} {7:f} {8:f} {9:f} {10:f} {11:f} {12:f} {13:3.0f} {14:3.0f} {15:3.0f} '
-                                            '\n'.format(x, tcf, pha, y, e, sys_val, mod, com, obs_mod, e, res, e, jit, jflag, oflag, sflag))
+                        for (
+                            x,
+                            tcf,
+                            pha,
+                            y,
+                            e,
+                            sys_val,
+                            mod,
+                            com,
+                            obs_mod,
+                            res,
+                            jit,
+                            jflag,
+                            oflag,
+                            sflag,
+                        ) in zip(
+                            dataset.x,
+                            tc_folded,
+                            phase,
+                            dataset.y,
+                            dataset.e,
+                            bjd_plot[plot_out_keyword][dataset_name]["systematics"],
+                            bjd_plot[plot_out_keyword][dataset_name][model_name],
+                            bjd_plot[plot_out_keyword][dataset_name]["complete"],
+                            dataset.y
+                            - bjd_plot[plot_out_keyword][dataset_name]["complete"]
+                            + bjd_plot[plot_out_keyword][dataset_name][model_name],
+                            dataset.y
+                            - bjd_plot[plot_out_keyword][dataset_name]["complete"],
+                            bjd_plot[plot_out_keyword][dataset_name]["jitter"],
+                            jitter_flag,
+                            offset_flag,
+                            subset_flag,
+                        ):
+                            fileout.write(
+                                "{0:f} {1:f} {2:f} {3:f} {4:f} {5:f} {6:1f} {7:f} {8:f} {9:f} {10:f} {11:f} {12:f} {13:3.0f} {14:3.0f} {15:3.0f} "
+                                "\n".format(
+                                    x,
+                                    tcf,
+                                    pha,
+                                    y,
+                                    e,
+                                    sys_val,
+                                    mod,
+                                    com,
+                                    obs_mod,
+                                    e,
+                                    res,
+                                    e,
+                                    jit,
+                                    jflag,
+                                    oflag,
+                                    sflag,
+                                )
+                            )
                         fileout.close()
 
-                        if getattr(mc.models[model_name], 'systematic_model', False):
+                        if getattr(mc.models[model_name], "systematic_model", False):
                             continue
 
-                        if getattr(mc.models[model_name], 'jitter_model', False):
+                        if getattr(mc.models[model_name], "jitter_model", False):
                             continue
 
-                        fileout = open(dir_models + dataset_name + '_' + model_name + '_full.dat', 'w')
+                        fileout = open(
+                            dir_models + dataset_name + "_" + model_name + "_full.dat",
+                            "w",
+                        )
 
-                        if model_name + '_std' in bjd_plot[plot_x_keyword][dataset_name]:
-
-                            if plot_dictionary.get('veuz_compatibility', False):
-                                fileout.write('descriptor BJD Tc_folded phase_folded mod,+- \n')
+                        if (
+                            model_name + "_std"
+                            in bjd_plot[plot_x_keyword][dataset_name]
+                        ):
+                            if plot_dictionary.get("veuz_compatibility", False):
+                                fileout.write(
+                                    "descriptor BJD Tc_folded phase_folded mod,+- \n"
+                                )
                             else:
-                                fileout.write('# time Tc_folded Tref_folded model model_err \n')
+                                fileout.write(
+                                    "# time Tc_folded Tref_folded model model_err \n"
+                                )
 
                             for x, tfc, pha, mod, std in zip(
-                                    bjd_plot[dataset_name]['x_plot'],
-                                    tc_folded_plot,
-                                    phase_plot,
-                                    bjd_plot[plot_x_keyword][dataset_name][model_name],
-                                    bjd_plot[plot_x_keyword][dataset_name][model_name + '_std']):
-                                fileout.write('{0:f} {1:f} {2:f} {3:12f} {4:12f} \n'.format(
-                                    x, tcf, pha, mod, std))
+                                bjd_plot[dataset_name]["x_plot"],
+                                tc_folded_plot,
+                                phase_plot,
+                                bjd_plot[plot_x_keyword][dataset_name][model_name],
+                                bjd_plot[plot_x_keyword][dataset_name][
+                                    model_name + "_std"
+                                ],
+                            ):
+                                fileout.write(
+                                    "{0:f} {1:f} {2:f} {3:12f} {4:12f} \n".format(
+                                        x, tcf, pha, mod, std
+                                    )
+                                )
                             fileout.close()
                         else:
-
-                            if plot_dictionary.get('veuz_compatibility', False):
-                                fileout.write('descriptor BJD Tc_folded phase_folded mod\n')
+                            if plot_dictionary.get("veuz_compatibility", False):
+                                fileout.write(
+                                    "descriptor BJD Tc_folded phase_folded mod\n"
+                                )
                             else:
-                                fileout.write('# time Tc_folded Tref_folded model \n')
+                                fileout.write("# time Tc_folded Tref_folded model \n")
 
                             # print('****** ****** ', dataset_name, ' ', model_name, '',  len(bjd_plot[dataset_name]['x_plot']), len(bjd_plot[plot_x_keyword][dataset_name][model_name]))
 
-                            for x, tcf, pha, mod in zip(bjd_plot[dataset_name]['x_plot'],
-                                                        tc_folded_plot,
-                                                        phase_plot,
-                                                        bjd_plot[plot_x_keyword][dataset_name][model_name]):
+                            for x, tcf, pha, mod in zip(
+                                bjd_plot[dataset_name]["x_plot"],
+                                tc_folded_plot,
+                                phase_plot,
+                                bjd_plot[plot_x_keyword][dataset_name][model_name],
+                            ):
                                 fileout.write(
-                                    '{0:f} {1:f} {2:f} {3:12f}\n'.format(x, tcf, pha, mod))
+                                    "{0:f} {1:f} {2:f} {3:12f}\n".format(
+                                        x, tcf, pha, mod
+                                    )
+                                )
                             fileout.close()
 
-                        if getattr(mc.models[model_name], 'model_class', False) in oversampled_models:
+                        if (
+                            getattr(mc.models[model_name], "model_class", False)
+                            in oversampled_models
+                        ):
                             """
                             Additional output to deal with under-sampled lightcurves, i.e. when folding
                             the light curve from the model file is not good enough. Something similar is performed later
@@ -2182,9 +3233,11 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
                             parameter_values = {}
                             for common_ref in mc.models[model_name].common_ref:
                                 parameter_values.update(
-                                    mc.common_models[common_ref].convert(chain_ref))
+                                    mc.common_models[common_ref].convert(chain_ref)
+                                )
                             parameter_values.update(
-                                mc.models[model_name].convert(chain_ref, dataset_name))
+                                mc.models[model_name].convert(chain_ref, dataset_name)
+                            )
 
                             fileout = open(
                                 dir_models + dataset_name + '_' + model_name + '_oversampled.dat', 'w')
@@ -2194,140 +3247,186 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
                                 x_range = np.linspace(
                                     -parameter_values['P']/parameter_values['a_Rs'],
                                     parameter_values['P']/parameter_values['a_Rs'], 5000, endpoint=True)
-                            elif getattr(mc.models[model_name], 'model_class', False) in eclipse_oversampled_models:
-                                mc.models[model_name].update_parameter_values(parameter_values)
-                                x_range = np.linspace(
-                                    -parameter_values['P']/parameter_values['a_Rs'],
-                                    parameter_values['P']/parameter_values['a_Rs'], 5000, endpoint=True) + 0.5
+                            #elif getattr(mc.models[model_name], 'model_class', False) in eclipse_oversampled_models:
+                            #    mc.models[model_name].update_parameter_values(parameter_values)
+                            #    x_range = np.linspace(
+                            #        -parameter_values["P"] / parameter_values["a_Rs"],
+                            #        parameter_values["P"] / parameter_values["a_Rs"],
+                            #        5000,
+                            #        endpoint=True,
+                            #    )
+                            elif (
+                                getattr(mc.models[model_name], "model_class", False)
+                                in eclipse_oversampled_models
+                            ):
+                                mc.models[model_name].update_parameter_values(
+                                    parameter_values
+                                )
+                                x_range = (
+                                    np.linspace(
+                                        -parameter_values["P"]
+                                        / parameter_values["a_Rs"],
+                                        parameter_values["P"]
+                                        / parameter_values["a_Rs"],
+                                        5000,
+                                        endpoint=True,
+                                    )
+                                    + 0.5
+                                )
                             else:
-                                x_range = np.arange(-parameter_values['P']/2., parameter_values['P']/2., 0.001)
+                                x_range = np.arange(
+                                    -parameter_values["P"] / 2.0,
+                                    parameter_values["P"] / 2.0,
+                                    0.001,
+                                )
 
-                            p_range = x_range/parameter_values['P']
+                            p_range = x_range / parameter_values["P"]
 
-                            for i_sub in range(0,1000):
-                                if 'Tc_'+repr(i_sub) in parameter_values and 'Tc' not in parameter_values:
-                                    parameter_values['Tc'] = dataset.Tref
+                            for i_sub in range(0, 1000):
+                                if (
+                                    "Tc_" + repr(i_sub) in parameter_values
+                                    and "Tc" not in parameter_values
+                                ):
+                                    parameter_values["Tc"] = dataset.Tref
                                     break
 
                             try:
-                                delta_T = parameter_values['Tc']-dataset.Tref
+                                delta_T = parameter_values["Tc"] - dataset.Tref
                             except KeyError:
-                                delta_T = kepler_exo.kepler_compute_deltaTc_from_meanlong(parameter_values['P'],
-                                                                          parameter_values['mean_long'],
-                                                                          parameter_values['e'],
-                                                                          parameter_values['omega'],
-                                                                          parameter_values['Omega'])
+                                delta_T = (
+                                    kepler_exo.kepler_compute_deltaTc_from_meanlong(
+                                        parameter_values["P"],
+                                        parameter_values["mean_long"],
+                                        parameter_values["e"],
+                                        parameter_values["omega"],
+                                        parameter_values["Omega"],
+                                    )
+                                )
 
                             y_plot = mc.models[model_name].compute(
-                                parameter_values, dataset, x_range+delta_T)
+                                parameter_values, dataset, x_range + delta_T
+                            )
 
-                            if plot_dictionary.get('veuz_compatibility', False):
-                                fileout.write('descriptor Tc_folded  mod \n')
+                            if plot_dictionary.get("veuz_compatibility", False):
+                                fileout.write("descriptor Tc_folded  mod \n")
                             else:
-                                fileout.write('# time model phase\n')
+                                fileout.write("# time model phase\n")
 
                             for x, mod, phase in zip(x_range, y_plot, p_range):
-                                fileout.write('{0:f} {1:f} {2:f}\n'.format(x, mod, phase))
+                                fileout.write(
+                                    "{0:f} {1:f} {2:f}\n".format(x, mod, phase)
+                                )
                             fileout.close()
 
-                    fileout = open(dir_models + dataset_name +  '_full.dat', 'w')
+                    fileout = open(dir_models + dataset_name + "_full.dat", "w")
 
-                    if plot_dictionary.get('veuz_compatibility', False):
-                        fileout.write('descriptor BJD mod \n')
+                    if plot_dictionary.get("veuz_compatibility", False):
+                        fileout.write("descriptor BJD mod \n")
                     else:
-                        fileout.write( '# time model \n')
+                        fileout.write("# time model \n")
 
-                    for x, mod in zip(bjd_plot[dataset_name]['x_plot'],
-                                      bjd_plot[plot_x_keyword][dataset_name]['complete']):
-                        fileout.write('{0:f} {1:f} \n'.format(x, mod))
+                    for x, mod in zip(
+                        bjd_plot[dataset_name]["x_plot"],
+                        bjd_plot[plot_x_keyword][dataset_name]["complete"],
+                    ):
+                        fileout.write("{0:f} {1:f} \n".format(x, mod))
                     fileout.close()
 
                 for model in planet_pams:
                     try:
-
-                        RV_out = kepler_exo.kepler_compute_rv_deltabjd(bjd_plot['combined']['x_plot']-mc.Tref,
-                                                            planet_pams[model]['K'],
-                                                            planet_pams[model]['P'],
-                                                            planet_pams[model]['mean_long'],
-                                                            planet_pams[model]['e'],
-                                                            planet_pams[model]['omega'],
-                                                            planet_pams[model]['Omega'])
+                        RV_out = kepler_exo.kepler_compute_rv_deltabjd(
+                            bjd_plot["combined"]["x_plot"] - mc.Tref,
+                            planet_pams[model]["K"],
+                            planet_pams[model]["P"],
+                            planet_pams[model]["mean_long"],
+                            planet_pams[model]["e"],
+                            planet_pams[model]["omega"],
+                            planet_pams[model]["Omega"],
+                        )
                         fileout = open(
-                            dir_models + 'RV_planet_' + model + '_kep.dat', 'w')
+                            dir_models + "RV_planet_" + model + "_kep.dat", "w"
+                        )
 
-
-                        if plot_dictionary.get('veuz_compatibility', False):
-                            fileout.write('descriptor x_range  m_kepler \n')
+                        if plot_dictionary.get("veuz_compatibility", False):
+                            fileout.write("descriptor x_range  m_kepler \n")
                         else:
-                            fileout.write('# time model \n')
+                            fileout.write("# time model \n")
 
-                        for x, y in zip(bjd_plot['combined']['x_plot'], RV_out):
-                            fileout.write('{0:f} {1:f} \n'.format(x, y))
+                        for x, y in zip(bjd_plot["combined"]["x_plot"], RV_out):
+                            fileout.write("{0:f} {1:f} \n".format(x, y))
                         fileout.close()
 
                         x_range = np.arange(-1.50, 1.50, 0.001)
-                        RV_out = kepler_exo.kepler_compute_rv_deltabjd(x_range * planet_pams[model]['P'],
-                                                          planet_pams[model]['K'],
-                                                          planet_pams[model]['P'],
-                                                          planet_pams[model]['mean_long'],
-                                                          planet_pams[model]['e'],
-                                                          planet_pams[model]['omega'],
-                                                          planet_pams[model]['Omega'])
+                        RV_out = kepler_exo.kepler_compute_rv_deltabjd(
+                            x_range * planet_pams[model]["P"],
+                            planet_pams[model]["K"],
+                            planet_pams[model]["P"],
+                            planet_pams[model]["mean_long"],
+                            planet_pams[model]["e"],
+                            planet_pams[model]["omega"],
+                            planet_pams[model]["Omega"],
+                        )
                         fileout = open(
-                            dir_models + 'RV_planet_' + model + '_pha.dat', 'w')
+                            dir_models + "RV_planet_" + model + "_pha.dat", "w"
+                        )
 
-                        if plot_dictionary.get('veuz_compatibility', False):
-                            fileout.write('descriptor x_phase m_phase \n')
+                        if plot_dictionary.get("veuz_compatibility", False):
+                            fileout.write("descriptor x_phase m_phase \n")
                         else:
-                            fileout.write('# Tref_folded model \n')
+                            fileout.write("# Tref_folded model \n")
 
                         for x, y in zip(x_range, RV_out):
-                            fileout.write('{0:f} {1:f} \n'.format(x, y))
+                            fileout.write("{0:f} {1:f} \n".format(x, y))
                         fileout.close()
 
                         x_range = np.arange(-1.50, 1.50, 0.001)
-                        if 'Tc' in planet_pams[model]:
-                            Tc_range = x_range * \
-                                planet_pams[model]['P'] + \
-                                planet_pams[model]['Tc'] - mc.Tref
-                            RV_out = kepler_exo.kepler_compute_rv_deltabjd(Tc_range,
-                                                              planet_pams[model]['K'],
-                                                              planet_pams[model]['P'],
-                                                              planet_pams[model]['mean_long'],
-                                                              planet_pams[model]['e'],
-                                                              planet_pams[model]['omega'],
-                                                              planet_pams[model]['Omega'])
+                        if "Tc" in planet_pams[model]:
+                            Tc_range = (
+                                x_range * planet_pams[model]["P"]
+                                + planet_pams[model]["Tc"]
+                                - mc.Tref
+                            )
+                            RV_out = kepler_exo.kepler_compute_rv_deltabjd(
+                                Tc_range,
+                                planet_pams[model]["K"],
+                                planet_pams[model]["P"],
+                                planet_pams[model]["mean_long"],
+                                planet_pams[model]["e"],
+                                planet_pams[model]["omega"],
+                                planet_pams[model]["Omega"],
+                            )
                             fileout = open(
-                                dir_models + 'RV_planet_' + model + '_Tcf.dat', 'w')
+                                dir_models + "RV_planet_" + model + "_Tcf.dat", "w"
+                            )
 
-
-                            if plot_dictionary.get('veuz_compatibility', False):
-                                fileout.write('descriptor Tc_phase m_phase \n')
+                            if plot_dictionary.get("veuz_compatibility", False):
+                                fileout.write("descriptor Tc_phase m_phase \n")
                             else:
-                                fileout.write('# Tc_folded model \n')
+                                fileout.write("# Tc_folded model \n")
 
                             for x, y in zip(x_range, RV_out):
-                                fileout.write('{0:f} {1:f} \n'.format(x, y))
+                                fileout.write("{0:f} {1:f} \n".format(x, y))
                             fileout.close()
 
                     except:
                         pass
 
         print()
-        print('****************************************************************************************************')
+        print(
+            "****************************************************************************************************"
+        )
         print()
         sys.stdout.flush()
 
-    if plot_dictionary['veuz_corner_files']:
-
+    if plot_dictionary["veuz_corner_files"]:
         import csv
 
-        print(' Writing Veusz-compatible files for personalized corner plots')
+        print(" Writing Veusz-compatible files for personalized corner plots")
 
         # Transit times are too lenghty for the 'tiny' corner plot, so we apply a reduction to their value
         parameter_with_offset = {}
 
-        veusz_dir = dir_output + '/Veuz_plot/'
+        veusz_dir = dir_output + "/Veuz_plot/"
         if not os.path.exists(veusz_dir):
             os.makedirs(veusz_dir)
 
@@ -2336,72 +3435,71 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
             parameter_values = dataset.convert(flat_chain)
 
             for parameter_name, parameter in parameter_values.items():
-                all_parameters_list[dataset_name +
-                                   '_' + parameter_name] = parameter
+                all_parameters_list[dataset_name + "_" + parameter_name] = parameter
 
             for model_name in dataset.models:
                 parameter_values = mc.models[model_name].convert(
-                    flat_chain, dataset_name)
+                    flat_chain, dataset_name
+                )
                 for parameter_name, parameter in parameter_values.items():
-                    all_parameters_list[dataset_name + '_' +
-                                       model_name + '_' + parameter_name] = parameter
+                    all_parameters_list[
+                        dataset_name + "_" + model_name + "_" + parameter_name
+                    ] = parameter
 
         for model_name, model in mc.common_models.items():
             parameter_values = model.convert(flat_chain)
 
             for parameter_name, parameter in parameter_values.items():
-
-                all_parameters_list[model.common_ref +
-                                   '_' + parameter_name] = parameter
-                #print(parameter_name, parameter)
+                all_parameters_list[model.common_ref + "_" + parameter_name] = parameter
+                # print(parameter_name, parameter)
                 # Special treatment for transit time, since ti can be very long but yet very precise, making
                 # the axis of corner plot quite messy
-                if parameter_name == 'Tc':
+                if parameter_name == "Tc":
                     offset = np.median(parameter)
-                    parameter_with_offset[model.common_ref +
-                                         '_' + parameter_name] = offset
-                    all_parameters_list[model.common_ref +
-                                       '_' + parameter_name] -= offset
+                    parameter_with_offset[model.common_ref + "_" + parameter_name] = (
+                        offset
+                    )
+                    all_parameters_list[model.common_ref + "_" + parameter_name] -= (
+                        offset
+                    )
 
                 # Let's save omega in degrees, in the range 0-360
-                if parameter_name == 'o':
+                if parameter_name == "o":
                     odeg = parameter * 180 / np.pi
                     try:
-                        sel = (odeg < 0.000)
+                        sel = odeg < 0.000
                         odeg[sel] += 360.00
                     except TypeError:
                         if odeg < 0.000:
                             odeg += 360.00
-                    all_parameters_list[model.common_ref +
-                                       '_' + parameter_name + 'deg'] = odeg
+                    all_parameters_list[
+                        model.common_ref + "_" + parameter_name + "deg"
+                    ] = odeg
 
         for common_ref, parameter_values in planet_parameters.items():
             for parameter_name, parameter in parameter_values.items():
-
                 # Skipping the parameters that have been already included in all_parameters_list
-                if common_ref + '_' + parameter_name in all_parameters_list:
+                if common_ref + "_" + parameter_name in all_parameters_list:
                     continue
 
-                all_parameters_list[common_ref + '_' + parameter_name] = parameter
+                all_parameters_list[common_ref + "_" + parameter_name] = parameter
 
-                if parameter_name == 'Tc':
+                if parameter_name == "Tc":
                     offset = np.median(parameter)
-                    parameter_with_offset[common_ref +
-                                         '_' + parameter_name] = offset
-                    all_parameters_list[common_ref +
-                                       '_' + parameter_name] -= offset
+                    parameter_with_offset[common_ref + "_" + parameter_name] = offset
+                    all_parameters_list[common_ref + "_" + parameter_name] -= offset
 
-                if parameter_name == 'o':
+                if parameter_name == "o":
                     odeg = parameter * 180 / np.pi
-                    sel = (odeg < 0.000)
+                    sel = odeg < 0.000
                     odeg[sel] += 360.00
-                    all_parameters_list[common_ref + '_' +
-                                       parameter_name + 'deg'] = odeg
+                    all_parameters_list[common_ref + "_" + parameter_name + "deg"] = (
+                        odeg
+                    )
 
         text_file = open(veusz_dir + "veusz_offsets.txt", "w")
         for parameter_name, offset_value in parameter_with_offset.items():
-            text_file.write('{0:s} {1:16.9f}'.format(
-                parameter_name, offset_value))
+            text_file.write("{0:s} {1:16.9f}".format(parameter_name, offset_value))
         text_file.close()
 
         n_int = len(all_parameters_list)
@@ -2411,11 +3509,10 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
             output_plan[:, par_index] = all_parameters_list[parameter_name]
             output_names.extend([parameter_name])
 
-        plot_truths = np.percentile(
-            output_plan[:, :], [15.865, 50, 84.135], axis=0)
+        plot_truths = np.percentile(output_plan[:, :], [15.865, 50, 84.135], axis=0)
         n_bins = 30 + 1
 
-        h5f = h5py.File(veusz_dir + '_hist1d.hdf5', "w")
+        h5f = h5py.File(veusz_dir + "_hist1d.hdf5", "w")
         data_grp = h5f.create_group("hist1d")
 
         data_lim = np.zeros([n_int, 2], dtype=np.double)
@@ -2427,36 +3524,37 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
         median_vals = plot_truths[1, :]
 
         for ii in range(0, n_int):
-
-            if sigma_minus[ii] == 0. and sigma_plus[ii] == 0.:
+            if sigma_minus[ii] == 0.0 and sigma_plus[ii] == 0.0:
                 data_skip[ii] = True
                 continue
 
-            sigma5_selection = (output_plan[:, ii] > median_vals[ii] - 5 * sigma_minus[ii]) & \
-                               (output_plan[:, ii] <
-                                median_vals[ii] + 5 * sigma_plus[ii])
+            sigma5_selection = (
+                output_plan[:, ii] > median_vals[ii] - 5 * sigma_minus[ii]
+            ) & (output_plan[:, ii] < median_vals[ii] + 5 * sigma_plus[ii])
 
             try:
-                data_lim[ii, :] = [np.amin(output_plan[sigma5_selection, ii]), np.amax(
-                    output_plan[sigma5_selection, ii])]
+                data_lim[ii, :] = [
+                    np.amin(output_plan[sigma5_selection, ii]),
+                    np.amax(output_plan[sigma5_selection, ii]),
+                ]
             except:
                 continue
 
             if data_lim[ii, 0] == data_lim[ii, 1]:
                 data_lim[ii, :] = [
-                    np.amin(output_plan[:, ii]), np.amax(output_plan[:, ii])]
+                    np.amin(output_plan[:, ii]),
+                    np.amax(output_plan[:, ii]),
+                ]
             if data_lim[ii, 0] == data_lim[ii, 1]:
                 data_skip[ii] = True
                 continue
 
-            data_edg[ii, :] = np.linspace(
-                data_lim[ii, 0], data_lim[ii, 1], n_bins)
+            data_edg[ii, :] = np.linspace(data_lim[ii, 0], data_lim[ii, 1], n_bins)
 
-        veusz_workaround_descriptor = 'descriptor'
-        veusz_workaround_values = ''
+        veusz_workaround_descriptor = "descriptor"
+        veusz_workaround_values = ""
 
         for ii in range(0, n_int):
-
             if data_skip[ii]:
                 continue
 
@@ -2464,81 +3562,87 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
             x_edges = data_edg[ii, :]
 
             for jj in range(ii + 1, n_int):
-
                 if data_skip[jj]:
                     continue
 
                 y_data = output_plan[:, jj]
                 y_edges = data_edg[jj, :]
 
-                hist2d = np.histogram2d(
-                    x_data, y_data, bins=[x_edges, y_edges])[0]
+                hist2d = np.histogram2d(x_data, y_data, bins=[x_edges, y_edges])[0]
                 histogram_maximum = np.amax(hist2d)
 
-                for x_id, y_id, histogram in (
-                        (ii, jj, hist2d.T),
-                        (jj, ii, hist2d)):
-                    x_edges_1d = (
-                        data_edg[x_id, 1:] + data_edg[x_id, :-1]) / 2
-                    y_edges_1d = (
-                        data_edg[y_id, 1:] + data_edg[y_id, :-1]) / 2
+                for x_id, y_id, histogram in ((ii, jj, hist2d.T), (jj, ii, hist2d)):
+                    x_edges_1d = (data_edg[x_id, 1:] + data_edg[x_id, :-1]) / 2
+                    y_edges_1d = (data_edg[y_id, 1:] + data_edg[y_id, :-1]) / 2
                     h2d_out = np.zeros([n_bins, n_bins])
                     h2d_out[0, 1:] = x_edges_1d
                     h2d_out[1:, 0] = y_edges_1d
                     h2d_out[1:, 1:] = histogram / histogram_maximum
 
                     h2d_list = h2d_out.tolist()
-                    h2d_list[0][0] = ''
-                    csvfile = veusz_dir + '_hist2d___' + \
-                        output_names[x_id] + '___' + output_names[y_id] + '.csv'
+                    h2d_list[0][0] = ""
+                    csvfile = (
+                        veusz_dir
+                        + "_hist2d___"
+                        + output_names[x_id]
+                        + "___"
+                        + output_names[y_id]
+                        + ".csv"
+                    )
                     with open(csvfile, "w") as output:
-                        writer = csv.writer(output, lineterminator='\n')
+                        writer = csv.writer(output, lineterminator="\n")
                         writer.writerows(h2d_list)
 
             hist1d = np.histogram(x_data, bins=x_edges)
-            hist1d_norm = hist1d[0] * 1. / n_samplings
+            hist1d_norm = hist1d[0] * 1.0 / n_samplings
             x_edges_1d = (x_edges[1:] + x_edges[:-1]) / 2
             data_grp.create_dataset(
-                output_names[ii] + '_x', data=x_edges_1d, compression="gzip")
+                output_names[ii] + "_x", data=x_edges_1d, compression="gzip"
+            )
             data_grp.create_dataset(
-                output_names[ii] + '_y', data=hist1d_norm, compression="gzip")
+                output_names[ii] + "_y", data=hist1d_norm, compression="gzip"
+            )
 
             # data_grp.create_dataset(output_names[ii]+'_val', data=median_vals[ii])
             # data_grp.create_dataset(output_names[ii]+'_val_-', data=sigma_minus[ii])
             # data_grp.create_dataset(output_names[ii]+'_val_+', data=sigma_plus[ii])
             # data_grp.attrs[output_names[ii]+'_val'] = median_vals[ii]
 
-            veusz_workaround_descriptor += ' ' + output_names[ii] + ',+,-'
-            veusz_workaround_values += ' ' + repr(median_vals[ii]) + ' ' + repr(sigma_plus[ii]) + ' ' + repr(
-                sigma_minus[ii])
+            veusz_workaround_descriptor += " " + output_names[ii] + ",+,-"
+            veusz_workaround_values += (
+                " "
+                + repr(median_vals[ii])
+                + " "
+                + repr(sigma_plus[ii])
+                + " "
+                + repr(sigma_minus[ii])
+            )
 
         h5f.close()
 
         text_file = open(veusz_dir + "veusz_median_sigmas.txt", "w")
-        text_file.write('%s \n' % veusz_workaround_descriptor)
-        text_file.write('%s \n' % veusz_workaround_values)
+        text_file.write("%s \n" % veusz_workaround_descriptor)
+        text_file.write("%s \n" % veusz_workaround_values)
         text_file.close()
 
         print()
-        print('****************************************************************************************************')
+        print(
+            "****************************************************************************************************"
+        )
         print()
 
-    if plot_dictionary['P_versus_lnprob']:
-
+    if plot_dictionary["P_versus_lnprob"]:
         fig = plt.figure(figsize=(10, 10))
 
         ii = 0
         for common_ref, parameter_values in planet_parameters.items():
-            if 'P' in parameter_values:
-
-                plt.scatter(parameter_values['P'],
-                            flat_lnprob, s=2, c='C'+repr(ii))
+            if "P" in parameter_values:
+                plt.scatter(parameter_values["P"], flat_lnprob, s=2, c="C" + repr(ii))
                 ii += 1
 
-        rad_filename = dir_output + 'P_versus_lnprob'
+        rad_filename = dir_output + "P_versus_lnprob"
 
-        plt.savefig(rad_filename + file_ext, bbox_inches='tight', dpi=300)
+        plt.savefig(rad_filename + file_ext, bbox_inches="tight", dpi=300)
         plt.close(fig)
-
 
     mpl.use(default_mpl_backend)

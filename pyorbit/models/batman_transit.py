@@ -40,6 +40,12 @@ class Batman_Transit(AbstractModel, AbstractTransit):
         self._prepare_planet_parameters(mc, **kwargs)
         self._prepare_limb_darkening_coefficients(mc, **kwargs)
 
+        from pyorbit.common import gpu_backend
+        if gpu_backend.gpu_enabled():
+            if mc.common_models[self.planet_ref].orbit != 'circular' or kwargs['limb_darkening_model'] != 'quadratic':
+                raise gpu_backend.GPUSupportedModelError(
+                    'GPU batman replacement currently supports circular orbits and quadratic limb darkening only.')
+
         self.code_options['nthreads'] = kwargs.get('nthreads', 1)
         try:
             import multiprocessing
@@ -97,6 +103,27 @@ class Batman_Transit(AbstractModel, AbstractTransit):
         for key, key_val in parameter_values.items():
             if np.isnan(key_val):
                 return 0.
+
+        from pyorbit.common import gpu_backend
+        if gpu_backend.gpu_enabled():
+            import jax.numpy as jnp
+            from pyorbit.subroutines.transit_gpu import circular_transit
+            # Round 2 (speed): prefer the times staged on the device once at setup
+            # (x0_dev) so the big times array is not re-shipped host->device every
+            # eval. jnp.asarray() below is a no-op on an already-JAX array.
+            times = x0_input
+            if times is None:
+                times = getattr(dataset, 'x0_dev', None)
+            if times is None:
+                times = dataset.x0
+            coeff = np.empty(len(self.ldvars))
+            for name, index in self.ldvars.items():
+                coeff[index] = parameter_values[name]
+            options = self.code_options[dataset.name_ref]
+            return circular_transit(jnp.asarray(times), parameter_values['P'],
+                parameter_values['Tc'] - dataset.Tref, parameter_values['R_Rs'],
+                parameter_values['a_Rs'], parameter_values['i']*np.pi/180.,
+                jnp.asarray(coeff), options['exp_time'], samples=options['sample_factor'])
 
         self.batman_params.a = parameter_values['a_Rs']
         self.batman_params.inc = parameter_values['i']

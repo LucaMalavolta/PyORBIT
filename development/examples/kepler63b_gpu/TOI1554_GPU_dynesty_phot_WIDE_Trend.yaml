@@ -1,0 +1,194 @@
+# ============================================================================
+# TOI1554 (Kepler-63 b)  --  WIDE-BOUNDARY nested-sampling fit (GPU leg)
+#  with a LOW-ORDER POLYNOMIAL TREND on the Kepler + TESS light curves.
+#
+#  WHY A TREND (not a QP activity GP) on the LCs:
+#   The transit depth was "off" in the bare-batman WIDE fit because the two
+#   light curves are dominated by a slow stellar-activity baseline (~+/-0.03
+#   around 1.0) while the transit is only ~1% deep, so the activity drift
+#   biased the fitted depth.  The natural fix is to detrend the activity off
+#   the light curves.  A quasi-periodic GP is the "textbook" activity model,
+#   but the multi-dataset QP GP pools ALL datasets into one N x N kernel:
+#   here N = 56,191 (Kepler) + 6,484 (TESS) + 183 = 62,858 points, so the
+#   kernel alone is ~29 GiB in float64 and ~59 GiB with the QP kernel's two
+#   jax.grad derivative passes + the Cholesky -- larger than the 32 GiB RTX
+#   PRO 4500 (instant OOM) AND an O(N^3) ~2.5e14-flop Cholesky per evaluation
+#   that is infeasibly slow on CPU.  A low-order polynomial trend removes the
+#   same slow drift at O(N) memory / O(N) cost, so it runs on the GPU and
+#   isolates the transit depth -- which is the goal.  (The QP activity GP is
+#   kept on the tiny RV / Halpha / EW indicators, where it is affordable.)
+#
+#  ALL free / internal parameters are given WIDE (broadly non-informative)
+#  boundaries + priors, so the DATA -- not tight priors -- sets the result.
+#  * R_Rs widened to [0.01, 0.30] so the fit can land on the true depth.
+#  * Informative Gaussians (Prot, stellar density, Kepler/TESS limb darkening)
+#    relaxed to WIDE UNIFORM priors so the limb darkening settles where the
+#    light curve wants it.
+#  * A per-LC quadratic trend (poly_c1, poly_c2) removes the activity drift.
+#
+#   TOI1554_CPU_dynesty_phot_WIDE_Trend.yaml : gpu: false   (CPU leg;  batman transit)
+#   TOI1554_GPU_dynesty_phot_WIDE_Trend.yaml : gpu: true    (GPU leg;  jaxoplanet)
+# The two files are byte-for-byte identical EXCEPT the `parameters.gpu:` flag.
+#
+# Photometric model:
+#   batman_transit (transit, free depth R_Rs)  +  polynomial_trend (activity detrend)
+#   -> GPU uses JAX-native circular_transit (jaxoplanet), CPU uses numba `batman`.
+#   Circular orbit + quadratic limb darkening (satisfied).
+# ============================================================================
+inputs:
+  RV_data:
+    file: RVS_PyORBIT.txt
+    kind: RV
+    models:
+      - activity_gp
+      - radial_velocities
+  Halpha_data:
+    file: Halpha_PyORBIT.txt
+    kind: Halpha
+    models:
+      - activity_gp
+  EW_data:
+    file: EW_PyORBIT.txt
+    kind: EW
+    models:
+      - activity_gp
+  LCdata_KEPLER:
+    file: KEPLER63_KEPLER.DAT
+    kind: Phot
+    models:
+      - lc_model_kepler
+      - trend_kepler          # NEW: slow-activity detrend on the Kepler LC
+  LCdata_TESS:
+    file: KEPLER63_TESS.DAT
+    kind: Phot
+    models:
+      - lc_model_tess
+      - trend_tess            # NEW: slow-activity detrend on the TESS LC
+common:
+  planets:
+    b:
+      orbit: circular
+      use_time_inferior_conjunction: True
+      boundaries:                     # ---- WIDE ----
+        P: [9.0, 10.0]                # was [9.35, 9.55]
+        Tc: [2458690.0, 2458690.5]    # was [2458690.1, 2458690.3]
+        K: [0.0, 100.0]               # was [0.0, 20.0]
+        R_Rs: [0.01, 0.30]            # was [0.01, 0.10]  <-- KEY: free transit depth
+      spaces:
+        P: Linear
+        K: Linear
+  activity:
+    boundaries:                       # ---- WIDE ----
+      Prot: [4.0, 8.0]                # was [5.2, 5.5]
+      Pdec: [1.0, 5000.0]             # was [3.0, 1000.0]
+    priors:
+      Prot: ['Uniform']           # was Gaussian(5.4, 0.2) -> wide Uniform [4,8]
+  star:
+    star_parameters:
+      priors:
+        # ---- WIDE: all three now broad Uniform priors (was tight Gaussian) ----
+        # density is the FREE star param (mass/radius are derived from it + planet)
+        radius: ['Uniform']
+        mass: ['Uniform']
+        density: ['Uniform']      # wide Uniform, class bounds [0,5]
+    limb_darkening_kepler:
+      model: ld_quadratic
+      parametrization: Standard
+      priors:
+        # ---- WIDE: informative Gaussians -> wide Uniform (ld_c1 [0,1], ld_c2 [-1,1]) ----
+        ld_c1: ['Uniform']
+        ld_c2: ['Uniform']
+    limb_darkening_tess:
+      model: ld_quadratic
+      parametrization: Standard
+      priors:
+        # ---- WIDE: informative Gaussians -> wide Uniform (ld_c1 [0,1], ld_c2 [-1,1]) ----
+        ld_c1: ['Uniform']
+        ld_c2: ['Uniform']
+  # ---- NEW: independent quadratic detrend per light curve ----
+  # The two LCs have non-overlapping baselines (Kepler 2455002-2456424, TESS
+  # 2458683-2460533), so each gets its OWN trend with its OWN x_zero (auto-set:
+  # Kepler -> mean of its times, TESS -> Tref).  No constant term (the LCs are
+  # normalized to ~1.0 and carry no free offset); poly_c1 = slope, poly_c2 = curvature.
+  poly_trend_kepler:
+    model: polynomial_trend
+    boundaries:
+      poly_c1: [-0.01, 0.01]         # relative-flux slope per day (true ~ 1e-5)
+      poly_c2: [-0.01, 0.01]         # relative-flux curvature per day^2 (true ~ 1e-8)
+  poly_trend_tess:
+    model: polynomial_trend
+    boundaries:
+      poly_c1: [-0.01, 0.01]
+      poly_c2: [-0.01, 0.01]
+models:
+  radial_velocities:
+    planets:
+      - b
+  activity_gp:
+    model: tinygp_multidimensional_quasiperiodic
+    common: activity
+    hyperparameters_condition: True
+    rotation_decay_condition: True
+    RV_data:
+      boundaries:
+        rot_amp: [0.0, 500.0]         # was [0.0, 100.0]
+        con_amp: [-500.0, 500.0]      # was [-100.0, 100.0]
+      derivative: True
+    Halpha_data:
+      boundaries:
+        rot_amp: [-10.0, 10.0]        # was [-1.0, 1.0]
+        con_amp: [-10.0, 10.0]        # was [-1.0, 1.0]
+      derivative: False
+    EW_data:
+      boundaries:
+        rot_amp: [-500.0, 500.0]      # was [-100., 100.]
+        con_amp: [-500.0, 500.0]      # was [-100., 100.]
+      derivative: True
+  # ---- NEW: per-LC activity detrend (quadratic, no constant) ----
+  trend_kepler:
+    model: polynomial_trend
+    order: 2
+    common: poly_trend_kepler
+  trend_tess:
+    model: polynomial_trend
+    order: 2
+    common: poly_trend_tess
+  lc_model_kepler:
+    kind: batman_transit
+    limb_darkening: limb_darkening_kepler
+    planets:
+      - b
+    LCdata_KEPLER:
+      supersample_factor: 1
+      exposure_time: 58.9
+  lc_model_tess:
+    kind: batman_transit
+    limb_darkening: limb_darkening_tess
+    planets:
+      - b
+    LCdata_TESS:
+      supersample_factor: 1
+      exposure_time: 120.0
+parameters:
+  Tref: 2460000.00
+  cpu_threads: 16
+  # ---------------- GPU selection (ONLY difference vs the GPU leg) ---------
+  gpu: true
+  gpu_device: 0
+  gpu_verbose: true
+  # ---------------- GPU worker pool (fills the GPU + VRAM) ----------------
+  # K concurrent spawn workers (each VRAM-capped) evaluate dynesty's independent
+  # live points so the per-point transit/GP likelihood keeps the GPU busy.
+  # (Inert on the CPU leg: gpu: false -> single-process reference.)
+  gpu_workers: 8
+  gpu_vram_fraction: 0.1
+solver:
+  nested_sampling:
+    nlive: 200
+    bound: multi
+    sample: rwalk
+    dlogz: 0.01
+    pfrac: 0.0
+    maxcall: 40000
+    use_threading_pool: False
+  recenter_bounds: True

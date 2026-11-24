@@ -125,6 +125,7 @@ Feel free to submit your retrofitting acronym!
 ```{toctree}
 :maxdepth: 2
 installation
+gpu_usage
 quickstart
 prepare_datasets
 prepare_yaml

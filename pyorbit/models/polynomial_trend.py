@@ -76,13 +76,36 @@ class PolynomialTrend(AbstractModel):
             par = 'poly_c'+repr(i_order)
             coeff[i_order] = parameter_values[par]
 
+        if x0_input is None:
+            x_in = (dataset.x-parameter_values['x_zero'])/self.time_interval
+        else:
+            x_in = (x0_input+dataset.Tref-parameter_values['x_zero'])/self.time_interval
+
+        """ gpu: true -- evaluate the same polynomial (coeff[i] * x**i, i increasing)
+        with Horner so it compiles on the GPU, mirroring the JAX branch in
+        pyorbit.models.batman_transit.compute. The numpy path below is untouched
+        for gpu: false. """
+        from pyorbit.common import gpu_backend
+        if gpu_backend.gpu_enabled():
+            import jax.numpy as jnp
+            # Round 2 (speed): when the times are the dataset's own x, build the
+            # normalized time base on the device from the staged x0_dev (= x - Tref)
+            # so the big array is not re-shipped host->device every eval. The
+            # explicit-times (x0_input) path and the CPU path are unchanged.
+            if x0_input is None and getattr(dataset, 'x0_dev', None) is not None:
+                x = (dataset.x0_dev + dataset.Tref
+                     - jnp.asarray(parameter_values['x_zero']))/self.time_interval
+            else:
+                x = jnp.asarray(x_in)
+            c = jnp.asarray(coeff)
+            y = c[self.order]
+            for i_order in range(self.order-1, -1, -1):
+                y = y*x + c[i_order]
+            return y
+
         """ In our array, coefficient are sorted from the lowest degree to the higher
         Numpy Polynomials requires the inverse order (from high to small) as input"""
-
-        if x0_input is None:
-            return polynomial.polyval((dataset.x-parameter_values['x_zero'])/self.time_interval, coeff)
-        else:
-            return polynomial.polyval((x0_input+dataset.Tref-parameter_values['x_zero'])/self.time_interval, coeff)
+        return polynomial.polyval(x_in, coeff)
 
 
 class SharedPolynomialTrend(AbstractModel):

@@ -4,7 +4,8 @@ from pyorbit.models.abstract_gaussian_processes import AbstractGaussianProcesses
 from pyorbit.keywords_definitions import *
 
 from scipy.linalg import cho_factor, cho_solve, lapack, LinAlgError
-from scipy import matrix, spatial
+from numpy import matrix
+from scipy import spatial
 
 class GP_Multidimensional_QuasiPeriodicActivity(AbstractModel, AbstractGaussianProcesses):
     ''' Three parameters out of four are the same for all the datasets, since they are related to

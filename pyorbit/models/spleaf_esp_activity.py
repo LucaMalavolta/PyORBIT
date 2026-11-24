@@ -4,7 +4,8 @@ from pyorbit.models.abstract_gaussian_processes import AbstractGaussianProcesses
 from pyorbit.keywords_definitions import *
 
 from scipy.linalg import cho_factor, cho_solve, lapack, LinAlgError
-from scipy import matrix, spatial
+from numpy import matrix
+from scipy import spatial
 import sys
 
 __all__ = ['SPLEAF_ESP']
@@ -117,6 +118,15 @@ class SPLEAF_ESP(AbstractModel, AbstractGaussianProcesses):
         pass_conditions = self.check_hyperparameter_values(parameter_values)
         if not pass_conditions:
             return -np.inf
+
+        from pyorbit.common import gpu_backend
+        if gpu_backend.gpu_enabled():
+            from pyorbit.subroutines.esp_gpu import esp_loglike
+            order = self._sorting_mask[dataset.name_ref]
+            return esp_loglike(dataset.x0[order], np.asarray(dataset.residuals)[order],
+                (dataset.e**2 + dataset.jitter**2)[order], parameter_values['Prot'],
+                parameter_values['Pdec'], parameter_values['Oamp'],
+                alpha=parameter_values['Hamp'], nharm=self.n_harmonics)
 
         try:
             temp_sorting = self._sorting_mask[dataset.name_ref]

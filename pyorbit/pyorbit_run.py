@@ -29,6 +29,16 @@ def pyorbit_run():
 
     config_in = pyorbit.subroutines.input_parser.yaml_parser(file_conf)
 
+    # GPU enablement (Round 1): decide, once, from the config whether this run
+    # targets a GPU. With the default `gpu: false` this is a strict no-op (JAX is
+    # never touched). With `gpu: true` it forces float64, retargets JAX's default
+    # backend to the GPU, and raises an actionable GPUSupportedModelError if a
+    # GPU is not actually reachable. It runs here -- after the config is parsed
+    # and before any sampler ever evaluates mc(theta) -- so that every JAX op
+    # created afterwards (tinygp/pytransit kernels, the JAX Keplerian solver)
+    # inherits the GPU as its default device.
+    pyorbit.common.gpu_backend.initialize(config_in.get('parameters', {}))
+
     sampler_keyword = {
         'pyde': ['pyde', 'PyDE', 'pyDE', 'global', 'global_solution', 'global_optimization'],
         'multinest':['multinest', 'MultiNest', 'multi'],
