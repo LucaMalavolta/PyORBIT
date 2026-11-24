@@ -3240,27 +3240,21 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
                             )
 
                             fileout = open(
-                                dir_models
-                                + dataset_name
-                                + "_"
-                                + model_name
-                                + "_oversampled.dat",
-                                "w",
-                            )
+                                dir_models + dataset_name + '_' + model_name + '_oversampled.dat', 'w')
 
-                            if (
-                                getattr(mc.models[model_name], "model_class", False)
-                                in transit_oversampled_models
-                            ):
-                                mc.models[model_name].update_parameter_values(
-                                    parameter_values
-                                )
+                            if getattr(mc.models[model_name], 'model_class', False) in transit_oversampled_models:
+                                mc.models[model_name].update_parameter_values(parameter_values)
                                 x_range = np.linspace(
-                                    -parameter_values["P"] / parameter_values["a_Rs"],
-                                    parameter_values["P"] / parameter_values["a_Rs"],
-                                    5000,
-                                    endpoint=True,
-                                )
+                                    -parameter_values['P']/parameter_values['a_Rs'],
+                                    parameter_values['P']/parameter_values['a_Rs'], 5000, endpoint=True)
+                            #elif getattr(mc.models[model_name], 'model_class', False) in eclipse_oversampled_models:
+                            #    mc.models[model_name].update_parameter_values(parameter_values)
+                            #    x_range = np.linspace(
+                            #        -parameter_values["P"] / parameter_values["a_Rs"],
+                            #        parameter_values["P"] / parameter_values["a_Rs"],
+                            #        5000,
+                            #        endpoint=True,
+                            #    )
                             elif (
                                 getattr(mc.models[model_name], "model_class", False)
                                 in eclipse_oversampled_models
