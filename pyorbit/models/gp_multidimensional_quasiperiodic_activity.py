@@ -5,7 +5,6 @@ from pyorbit.keywords_definitions import *
 
 from scipy.linalg import cho_factor, cho_solve, lapack, LinAlgError
 from numpy import matrix
-from scipy import spatial
 
 class GP_Multidimensional_QuasiPeriodicActivity(AbstractModel, AbstractGaussianProcesses):
     ''' Three parameters out of four are the same for all the datasets, since they are related to
@@ -130,15 +129,6 @@ class GP_Multidimensional_QuasiPeriodicActivity(AbstractModel, AbstractGaussianP
         self._dataset_res[d_nstart:d_nend] = dataset.residuals
 
         self.internal_coefficients[d_ind] = [parameter_values['con_amp'], parameter_values['rot_amp']]
-
-    def _compute_distance(self, bjd0, bjd1):
-        X0 = np.array([bjd0]).T
-        X1 = np.array([bjd1]).T
-        return spatial.distance.cdist(X0, X1, lambda u, v: u-v), \
-            spatial.distance.cdist(X0, X1, 'sqeuclidean')
-        # Change after Rajpaul, Barragàn,  priv. comm.
-        #return spatial.distance.cdist(X0, X1, lambda u, v: v-u), \
-        #    spatial.distance.cdist(X0, X1, 'sqeuclidean')
 
     def _compute_submatrix(self, dist_t1, dist_t2, Prot, Prot2, Pdec2, Oamp2):
         phi = 2. * np.pi * dist_t1 / Prot

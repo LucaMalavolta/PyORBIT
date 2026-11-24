@@ -5,7 +5,6 @@ from pyorbit.keywords_definitions import *
 
 from scipy.linalg import cho_factor, cho_solve, lapack, LinAlgError
 from numpy import matrix
-from scipy import spatial
 
 
 class GP_Framework_QuasiPeriodicActivity(AbstractModel, AbstractGaussianProcesses):
@@ -171,15 +170,6 @@ class GP_Framework_QuasiPeriodicActivity(AbstractModel, AbstractGaussianProcesse
                                               ** 2 + dataset.jitter**2.0)
             self._3res[2 * self._nx0:] = dataset.residuals
 
-
-    def _compute_distance(self, bjd0, bjd1):
-        X0 = np.array([bjd0]).T
-        X1 = np.array([bjd1]).T
-        return spatial.distance.cdist(X0, X1, lambda u, v: u-v), \
-            spatial.distance.cdist(X0, X1, 'sqeuclidean')
-        # Change after Rajpaul, Barragàn,  priv. comm.
-        #return spatial.distance.cdist(X0, X1, lambda u, v: v-u), \
-        #    spatial.distance.cdist(X0, X1, 'sqeuclidean')
 
     def _compute_cov_matrix(self, add_diagonal_errors=False, bjd0=None, bjd1=None, return_diag=False):
 

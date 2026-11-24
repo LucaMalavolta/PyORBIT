@@ -54,14 +54,16 @@ Note that the name is `pyorbit-package` and not `pyorbit`, as the former was alr
  python -c "import pyorbit"
 ```
 
-`PyORBIT` only comes with the basic packages; to exploit its full potential, follow the instructions in the section [Requirements](requirements). For the impatient, just do:
-```{code} bash
-wget https://raw.githubusercontent.com/LucaMalavolta/PyORBIT/main/extra_requirements.txt
-pip install -r extra_requirements.txt
-```
+PyORBIT installs its PyPI dependencies automatically. The full installation from a local checkout also installs the BATMAN, PyDE, and TRADES forks listed in `extra_requirements.txt`.
 
-```{tip}
-The requirement file has weaker constraints on package versioning (see below), so remember to install `PyORBIT` first  to avoid version incompatibilities
+### Full installation from a local checkout
+
+In the Python 3.14 environment, run the following command from the root of the
+development checkout to install PyORBIT together with the dependencies in
+`extra_requirements.txt`.
+
+```{code} bash
+python -m pip install -r requirements.txt
 ```
 
 ## ARoME and PyARoME installation 
@@ -319,24 +321,11 @@ Basic analysis can be performed using the `scipy.optimize` package, however to f
 - `pyDE`: global optimization package ([PyDE home page])
 - `emcee`: ensemble sampling toolkit for affine-invariant MCMC ([emcee home page]).
 
-`emcee` is already included in the requirements, `pyDE` needs to be installed separately as the GitHub version supports multiprocessing:
+`emcee` and the alternative ensemble slice sampler `zeus` ([zeus home page]) are installed automatically. Install the PyDE fork using the full checkout installation above, or run the following command from the checkout after installing PyORBIT.
 
 ```{code} bash
- pip install git+https://github.com/hpparvi/PyDE.git
+python -m pip install -r extra_requirements.txt
 ```
-
-THe alternative ensemble slice sampler `zeus` is supported as well ([zeus home page]).
-
-````{tip}
- `pyDE` and all the additional requirements can be installed by locating the `extra_requirements.txt` file in the [PyORBIT repository] or by downloading it directly [from here](https://raw.githubusercontent.com/LucaMalavolta/PyORBIT/main/extra_requirements.txt) and then running from a terminal:
-
- ```{code} bash
- pip install -r extra_requirements.txt
- ```
-
-````
-
-[extra_requirements.txt]: https://github.com/LucaMalavolta/PyORBIT/blob/main/extra_requirements.txt
 
 ## Additional requirements
 

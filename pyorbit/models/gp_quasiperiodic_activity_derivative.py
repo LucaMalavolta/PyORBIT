@@ -6,7 +6,6 @@ from pyorbit.keywords_definitions import *
 
 from scipy.linalg import cho_factor, cho_solve, lapack, LinAlgError
 from numpy import matrix
-from scipy import spatial
 
 
 class GaussianProcess_QuasiPeriodicActivity_Derivative(AbstractModel, AbstractGaussianProcesses):
@@ -47,15 +46,6 @@ class GaussianProcess_QuasiPeriodicActivity_Derivative(AbstractModel, AbstractGa
         self._dist_t1 = {}
         self._dist_t2 = {}
         self.inds_cache = {}
-
-    def _compute_distance(self, bjd0, bjd1):
-        X0 = np.array([bjd0]).T
-        X1 = np.array([bjd1]).T
-        return spatial.distance.cdist(X0, X1, lambda u, v: u-v), \
-            spatial.distance.cdist(X0, X1, 'sqeuclidean')
-        # Change after Rajpaul, Barragàn,  priv. comm.
-        #return spatial.distance.cdist(X0, X1, lambda u, v: v-u), \
-        #    spatial.distance.cdist(X0, X1, 'sqeuclidean')
 
     def _compute_cov_matrix(self, parameter_values, dist_t1, dist_t2, diagonal_env=None):
 

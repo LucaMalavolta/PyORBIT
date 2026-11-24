@@ -1927,6 +1927,11 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
     generic_save_to_cpickle(
         dir_dictionaries, "summary_percentiles_derived", dict_derived_summary
     )
+    posterior_summary = (
+        dict_sampler_summary,
+        dict_parameters_summary,
+        dict_derived_summary,
+    )
 
     print()
     print(
@@ -1938,11 +1943,16 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
             lnprob_MAP
         )
     )
+    print(
+        "For the MAP and closest-to-median samples, the two offsets are the "
+        "posterior 15.865th and 84.135th percentiles minus the displayed value."
+    )
     print()
 
     _, dict_sampler_summary, dict_parameters_summary, dict_derived_summary = (
         results_analysis.results_summary(
-            mc, chain_MAP, return_samples=True, is_MAP=True
+            mc, chain_MAP, return_samples=True, is_MAP=True,
+            posterior_summary=posterior_summary,
         )
     )
     generic_save_to_cpickle(
@@ -1969,7 +1979,8 @@ def pyorbit_getresults(config_in, sampler_name, plot_dictionary):
 
     _, dict_sampler_summary, dict_parameters_summary, dict_derived_summary = (
         results_analysis.results_summary(
-            mc, chain_sampleMED, return_samples=True, is_MAP=True
+            mc, chain_sampleMED, return_samples=True, is_MAP=True,
+            posterior_summary=posterior_summary,
         )
     )
     generic_save_to_cpickle(

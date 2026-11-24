@@ -24,6 +24,13 @@ class AbstractGaussianProcesses(object):
         self.model_class = 'gaussian_process'
 
 
+    def _compute_distance(self, bjd0, bjd1):
+        """Return signed and squared pairwise time differences."""
+        delta = np.subtract.outer(
+            np.asarray(bjd0, dtype=float), np.asarray(bjd1, dtype=float)
+        )
+        return delta, np.square(delta)
+
     def _abstract_print_info(self):
 
         if self.hyper_condition_flag:

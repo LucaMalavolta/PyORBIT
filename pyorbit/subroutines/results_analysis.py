@@ -65,10 +65,14 @@ def results_summary(mc, theta,
                     chain_med=False,
                     return_samples=False,
                     is_starting_point=False,
-                    is_MAP=False):
+                    is_MAP=False,
+                    posterior_summary=None):
     # Function with two goals:
     # * Unfold and print out the output from theta
     # * give back a parameter name associated to each value in the result array
+
+    sampler_percentiles, parameter_percentiles, derived_percentiles = (
+        posterior_summary or ({}, {}, {}))
 
     if is_starting_point or is_MAP:
         fixed_warning = False
@@ -90,20 +94,23 @@ def results_summary(mc, theta,
     for dataset_name, dataset in mc.dataset_dict.items():
 
         print('----- dataset: ', dataset_name)
+        dataset_percentiles = sampler_percentiles.get(dataset_name, {})
         dict_sampler_summary[dataset_name] = {}
-        dict_sampler_summary[dataset_name]['dataset_variables'] = print_theta_bounds(dataset.sampler_parameters,
-                                                                                    theta,
-                                                                                    mc.bounds)
+        dict_sampler_summary[dataset_name]['dataset_variables'] = print_theta_bounds(
+            dataset.sampler_parameters, theta, mc.bounds,
+            posterior_percentiles=dataset_percentiles.get('dataset_variables'))
         for model_name in dataset.models:
             if len(mc.models[model_name].sampler_parameters[dataset_name])==0: continue
             print('----- dataset: {0:25s} ----- model: {1:30s}'.format(dataset_name,model_name))
-            dict_sampler_summary[dataset_name][model_name] = \
-            print_theta_bounds(mc.models[model_name].sampler_parameters[dataset_name], theta, mc.bounds)
+            dict_sampler_summary[dataset_name][model_name] = print_theta_bounds(
+                mc.models[model_name].sampler_parameters[dataset_name], theta, mc.bounds,
+                posterior_percentiles=dataset_percentiles.get(model_name))
 
     for model_name, model in mc.common_models.items():
         print('----- common model: ', model_name)
-        dict_sampler_summary[model_name] = \
-        print_theta_bounds(model.sampler_parameters, theta, mc.bounds)
+        dict_sampler_summary[model_name] = print_theta_bounds(
+            model.sampler_parameters, theta, mc.bounds,
+            posterior_percentiles=sampler_percentiles.get(model_name))
 
 
 
@@ -119,10 +126,13 @@ def results_summary(mc, theta,
 
     for dataset_name, dataset in mc.dataset_dict.items():
         dict_parameters_summary[dataset_name] = {}
+        dataset_percentiles = parameter_percentiles.get(dataset_name, {})
 
         print('----- dataset: ', dataset_name)
         parameter_values = dataset.convert(theta)
-        dict_parameters_summary[dataset_name]['dataset_variables'] = print_dictionary(parameter_values, fixed_warning=fixed_warning)
+        dict_parameters_summary[dataset_name]['dataset_variables'] = print_dictionary(
+            parameter_values, fixed_warning=fixed_warning,
+            posterior_percentiles=dataset_percentiles.get('dataset_variables'))
 
         print()
         for model_name in dataset.models:
@@ -130,7 +140,9 @@ def results_summary(mc, theta,
                 theta, dataset_name)
             if len(parameter_values)==0: continue
             print('----- dataset: {0:25s} ----- model: {1:30s}'.format(dataset_name,model_name))
-            dict_parameters_summary[dataset_name][model_name] = print_dictionary(parameter_values, fixed_warning=fixed_warning)
+            dict_parameters_summary[dataset_name][model_name] = print_dictionary(
+                parameter_values, fixed_warning=fixed_warning,
+                posterior_percentiles=dataset_percentiles.get(model_name))
 
     for model_name, model in mc.common_models.items():
         print('----- common model: ', model_name)
@@ -146,8 +158,9 @@ def results_summary(mc, theta,
             print_dictionary(parameter_values, recenter=recenter_pams, fixed_warning=fixed_warning)
 
         else:
-            dict_parameters_summary[model_name] = \
-            print_dictionary(parameter_values, fixed_warning=fixed_warning)
+            dict_parameters_summary[model_name] = print_dictionary(
+                parameter_values, fixed_warning=fixed_warning,
+                posterior_percentiles=parameter_percentiles.get(model_name))
 
     print('==============================================================================================================')
     if is_starting_point:
@@ -157,7 +170,8 @@ def results_summary(mc, theta,
     print('==============================================================================================================')
     print()
 
-    returned_samples, dict_derived_summary = get_planet_parameters(mc, theta, verbose=True)
+    returned_samples, dict_derived_summary = get_planet_parameters(
+        mc, theta, verbose=True, posterior_percentiles=derived_percentiles)
 
     if compute_lnprob:
         print()
@@ -309,7 +323,7 @@ def results_derived(mc, theta):
     _, _ = get_planet_parameters(mc, theta, verbose=True)
 
 
-def get_planet_parameters(mc, theta, verbose=False):
+def get_planet_parameters(mc, theta, verbose=False, posterior_percentiles=None):
     """
     Derived parameters from the Common Models are listed
 
@@ -324,6 +338,7 @@ def get_planet_parameters(mc, theta, verbose=False):
 
     planet_parameters = {}
     derived_percentiles = {}
+    posterior_percentiles = posterior_percentiles or {}
 
     for common_name, common_model in mc.common_models.items():
 
@@ -533,8 +548,9 @@ def get_planet_parameters(mc, theta, verbose=False):
                     del parameter_values[par]
 
             if verbose:
-                derived_percentiles[common_name] = \
-                print_dictionary(parameter_values, fixed_warning=False)
+                derived_percentiles[common_name] = print_dictionary(
+                    parameter_values, fixed_warning=False,
+                    posterior_percentiles=posterior_percentiles.get(common_name))
 
     if verbose:
         return planet_parameters, derived_percentiles
@@ -1097,25 +1113,29 @@ def get_model(mc, theta, bjd_dict, **kwargs):
         return model_out, model_x0
 
 
-def print_theta_bounds(i_dict, theta, bounds):
+def print_theta_bounds(i_dict, theta, bounds, posterior_percentiles=None):
     format_string = '{0:12s}  {1:4d}  {2:12f} [{3:10.4f}, {4:10.4f}]'
 
     dict_out = {}
+    posterior_percentiles = posterior_percentiles or {}
 
     for par, i in i_dict.items():
         if len(np.shape(theta)) == 2:
-
-            dict_out[par] = compute_percentiles(theta[:, i])
-            theta_med = compute_value_sigma(theta[:, i])
-            s0, s1 = return_significant_figures(theta_med[0], theta_med[2], theta_med[1])
-            format_string_long = '{0:12s}  {1:4d}  {2:12.'+repr(max(s0,s1))+'f} {3:12.'+repr(s0)+'f} {4:12.'+repr(s1)+'f}   (15-84 p)   [{5:10.4f}, {6:10.4f}]'
-
-            print(
-                format_string_long.format(par, i, theta_med[0], theta_med[2], theta_med[1], bounds[i, 0], bounds[i, 1]))
+            percentiles = dict_out[par] = compute_percentiles(theta[:, i])
+            value = percentiles[3]
         else:
-            dict_out[par] = theta[i]
-            print(format_string.format(
-                par, i, theta[i], bounds[i, 0], bounds[i, 1]))
+            value = dict_out[par] = theta[i]
+            percentiles = posterior_percentiles.get(par)
+            if percentiles is None:
+                print(format_string.format(par, i, value, bounds[i, 0], bounds[i, 1]))
+                continue
+
+        lower_offset = percentiles[2] - value
+        upper_offset = percentiles[4] - value
+        s0, s1 = return_significant_figures(value, lower_offset, upper_offset)
+        format_string_long = '{0:12s}  {1:4d}  {2:12.'+repr(max(s0,s1))+'f} {3:12.'+repr(s0)+'f} {4:12.'+repr(s1)+'f}   (15-84 p)   [{5:10.4f}, {6:10.4f}]'
+        print(format_string_long.format(
+            par, i, value, lower_offset, upper_offset, bounds[i, 0], bounds[i, 1]))
     print()
     return dict_out
 
@@ -1223,12 +1243,19 @@ def return_significant_figures(perc0, perc1=None, perc2=None, are_percentiles=Fa
 
             return sig_minus, sig_plus
 
-def print_dictionary(parameter_values, recenter=[], fixed_warning=True):
+def print_dictionary(parameter_values, recenter=[], fixed_warning=True, posterior_percentiles=None):
     format_boundary = 0.00001
     dict_out = {}
+    posterior_percentiles = posterior_percentiles or {}
     for par_names, par_vals in parameter_values.items():
-        if np.size(par_vals) > 1:
-            if par_names in recenter:
+        is_distribution = np.size(par_vals) > 1
+        percentiles = posterior_percentiles.get(par_names)
+        if is_distribution or np.size(percentiles) > 1:
+            if not is_distribution:
+                dict_out[par_names] = par_vals
+                perc0, perc1, perc2 = (
+                    percentiles[2], np.asarray(par_vals).item(), percentiles[4])
+            elif par_names in recenter:
                 move_back = (
                     par_vals > recenter[par_names][0] + recenter[par_names][1] / 2.)
                 move_forw = (
@@ -1359,7 +1386,7 @@ def print_integrated_ACF(sampler_chain, theta_dict, nthin):
         i_sampler = np.arange(acf_len*3, n_sam, acf_len, dtype=np.int64)
 
         acf_trace = np.zeros([len(i_sampler), n_dim])
-        acf_diff = np.zeros([len(i_sampler), n_dim])
+        acf_diff = np.full(acf_trace.shape, np.inf)
 
         for id_sam, i_sam in enumerate(i_sampler):
 
@@ -1379,7 +1406,15 @@ def print_integrated_ACF(sampler_chain, theta_dict, nthin):
                 acf_current[i_dim] = taus[window]
 
             acf_trace[id_sam, :] = acf_current * 1.
-            acf_diff[id_sam, :] = np.abs(acf_current-acf_previous)/acf_current
+            # Only compare positive, finite autocorrelation times.
+            valid_acf = (
+                np.isfinite(acf_current) & (acf_current > 0.0)
+                & np.isfinite(acf_previous) & (acf_previous > 0.0)
+            )
+            acf_diff[id_sam, valid_acf] = (
+                np.abs(acf_current[valid_acf] - acf_previous[valid_acf])
+                / acf_current[valid_acf]
+            )
 
             converged = (i_sam > integrated_ACF*tolerance) \
                 & (acf_diff[id_sam, :] < 0.01) \

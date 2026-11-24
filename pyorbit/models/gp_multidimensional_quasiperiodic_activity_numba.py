@@ -5,7 +5,6 @@ from pyorbit.keywords_definitions import *
 
 from scipy.linalg import cho_factor, cho_solve, lapack, LinAlgError
 from numpy import matrix
-from scipy import spatial
 
 #from numba.experimental import jitclass
 
@@ -186,15 +185,6 @@ class GP_Multidimensional_QuasiPeriodicActivity_Numba(AbstractModel, AbstractGau
         self._dataset_res[d_nstart:d_nend] = dataset.residuals
 
         self.internal_coefficients[d_ind] = [parameter_values['con_amp'], parameter_values['rot_amp']]
-
-    def _compute_distance(self, bjd0, bjd1):
-        X0 = np.array([bjd0]).T
-        X1 = np.array([bjd1]).T
-        return spatial.distance.cdist(X0, X1, lambda u, v: u-v), \
-            spatial.distance.cdist(X0, X1, 'sqeuclidean')
-        # Change after Rajpaul, Barragàn,  priv. comm.
-        #return spatial.distance.cdist(X0, X1, lambda u, v: v-u), \
-        #    spatial.distance.cdist(X0, X1, 'sqeuclidean')
 
     def _compute_cov_matrix(self):
 
