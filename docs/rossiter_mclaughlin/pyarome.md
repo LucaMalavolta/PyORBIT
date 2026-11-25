@@ -16,7 +16,7 @@ quadratic limb darkening.
 ## Model definition and requirements
 
 - model names: `rossitermclaughlin_pyarome` and alias `rossitermclaughlin_arome`
-- requires the external `pyarome` package, quadratic limb darkening, and planet and spectrograph common objects.
+- requires the external `pyarome` package, quadratic limb darkening, and planet and spectrograph common objects. See the {ref}`PyARoME installation instructions <install-pyarome>`.
 
 ## Model parameters
 

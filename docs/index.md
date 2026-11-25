@@ -7,7 +7,7 @@
 --->
 
 [![GitHub][github-badge]][github-link]
-[![PyPI version fury.io](https://badge.fury.io/py/pyorbit-package.svg)](https://pypi.python.org/pypi/pyprbot-package/)
+[![PyPI version fury.io](https://badge.fury.io/py/pyorbit-package.svg)](https://pypi.org/project/pyorbit-package/)
 
 
 ``PyORBIT`` is a robust, versatile framework for characterising planetary systems.
@@ -45,7 +45,7 @@ For nostalgic people, `PyORBIT` 10 is available as a downloadable package from t
 :::{admonition} Keep `PyORBIT` updated!
 :class: tip
 
-Current version of `PyORBIT` is [![PyPI version fury.io](https://badge.fury.io/py/pyorbit-package.svg)](https://pypi.python.org/pypi/#pyprbot-package/), keep the software updated for improved performances and new models by running `pip install --upgrade pyorbit-package` on your terminal
+For Python 3.14, follow the {ref}`installation guide <installation>` to install or update PyORBIT from the development checkout.
 :::
 
 ## Relevant updates in previous versions 

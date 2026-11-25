@@ -2,110 +2,39 @@
 
 # Integration with TRADES
 
-`PyORBIT` and `TRADES` rely on different versions of `numpy` due to some requirements set by the Fortran compiler, therefore is not possible to use `TRADES` on  a standard installation of `PyORBIT`.
-
-The best way to proceed is  preparing a new Python environment specifically dedicated to running PyORBIT with the TRADES integration.
-
-
-## Installing PyORBIT on a dedicated environment
-
-First, install PyORBIT using the instructions in <project:../installation.md> minding to use a different name for the environment, such as **pyorbit_trades**
-
-```{code} bash
-conda create --name pyorbit_trades python=3.10 
-conda activate pyorbit_trades
-pip install pyorbit-package
-```
-
-Remember to install the extra dependencies from the `PyORBIT` repository:
-
-```{code} bash
-wget https://raw.githubusercontent.com/LucaMalavolta/PyORBIT/main/extra_requirements.txt
-pip install -r extra_requirements.txt
-```
+Install TRADES from the [LucaMalavolta/trades repository](https://github.com/LucaMalavolta/trades) in the same Python 3.14 environment as PyORBIT. Follow the {ref}`PyORBIT installation guide <installation>` to set up the environment first.
 
 ## Installing TRADES
 
-`TRADES` is freely available on [this GitHub repository](https://github.com/lucaborsato/trades) by Luca Borsato; however, it is not pip-installable due to the Fortran compilation.
-
-The following installation instructions come from the official `TRADES` repository, but they have been adapted and shortened to take into account the packages already installed by `PyORBIT`.
-
-First of all, be sure you have a Fortran 90 compiler installed on your Linux box, for example, by executing the command `gfortran --version`. If it isn't already preinstalled on your Linux distribution, it can usually be installed with a single command via your distribution's repository manager.
-
-
+On Ubuntu or WSL, install the tools needed to build the Fortran extension.
 
 ```{code} bash
-gfortran --version
-> GNU Fortran (Ubuntu 11.4.0-1ubuntu1\~22.04.2) 11.4.0
-> Copyright (C) 2021 Free Software Foundation, Inc.
+sudo apt install gcc gfortran make git
 ```
 
-In your `pyorbit_trades` environment, install the following packages with the corresponding version specifiers:
+Activate the PyORBIT environment, clone the TRADES repository and install it from the repository root. Pip resolves the Python dependencies and compiles the Fortran extension for the active interpreter.
 
 ```{code} bash
-pip install  pybind11  numpy==1.23.5 setuptools==65.6.3 numba==0.60.0 jax==0.4.30 jaxlib==0.4.30
-``` 
-
-You will get the following warning:
-
-```{code} bash 
-ERROR: pip's dependency resolver does not currently take into account all the packages that are installed. This behaviour is the source of the following dependency conflicts.
-pyorbit-package 11.2.0 requires jax==0.4.31, but you have jax 0.4.30 which is incompatible.
-pyorbit-package 11.2.0 requires jaxlib==0.4.31, but you have jaxlib 0.4.30 which is incompatible.
-pyorbit-package 11.2.0 requires numpy==1.24.3, but you have numpy 1.23.5 which is incompatible.
+conda activate pyorbit
+git clone https://github.com/LucaMalavolta/trades.git
+cd trades
+python -m pip install .
 ```
 
-However, `PyORBIT` will work fine even with these older versions of the codes.
-
-%```{tip}
-%Remember to run the command above every time you update `PyORBIT` in the `pyorbit_trades` environment.
-%```
-
-Download the `TRADES` repository in a folder of your choice:
-
-```{code} bash
-git clone https://github.com/lucaborsato/trades.git
-```
-
-Enter the `src` directory inside the repository and execute the installation command to
-
-```{code} bash
-cd trades/src
-make cleanall
-make full_parallel_release
-```
-
-Ignore the following warning if you get it:
-
-```{code} bash
-WARN: Could not locate executable armflang
-```
-
-Finally, you need to install the Python wrapper of the code:
+Run the import check from outside the TRADES checkout to load the installed extension.
 
 ```{code} bash
 cd ..
-pip install .
+python -c "from pytrades import pytrades_lib; print(pytrades_lib.__file__)"
 ```
 
 ## Updating TRADES or PyORBIT
 
-To update `TRADES`, just follow the previous steps until the last one, where you have to specify the `--upgrade` flag:
+Run the following commands from the TRADES checkout in the PyORBIT environment to pull changes and rebuild the extension.
 
 ```{code} bash
-cd ..
-pip install --upgrade .
+git pull --ff-only
+python -m pip install .
 ```
 
-To update `PyORBIT`, you have to disable the check on dependencies:
-
-```{code} bash
-cd ..
-pip install --upgrade --no-dependencies pyorbit-package
-```
-
-A major release is usually characterised by the introduction of several new models, in that case the best way to proceed is to start over by following the instructions on this page.
-The existing `pyorbit_trades` environment wil be overwritten by the `conda create` command. 
-
-That's all!
-
+To update PyORBIT, pull the changes in its development checkout and repeat the {ref}`checkout installation <full-checkout-installation>` from its root.

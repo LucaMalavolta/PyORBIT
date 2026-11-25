@@ -12,19 +12,13 @@ Rather than trying to fix `PyORBIT` or Python on Windows, I usually suggest [set
 
 ## Setting up an environment
 
-Before proceeding with the installation, I suggest creating an environment dedicated to `PyORBIT` using **Python 3.10**. This is the version I'm currently use to test the code.
-
-With conda/anaconda:
+Create a dedicated **Python 3.14** environment for PyORBIT with Conda.
 
 ```{code} bash
-conda create --name pyorbit python=3.10
+conda create --name pyorbit python=3.14 pip
 ```
 
-If you are using a Mac with ARM architecture, the following command should force conda to install x86_64 versions of Python and all packages (many thanks to Jinglin Zhao for the tip):
-
-```{code} bash
-CONDA_SUBDIR=osx-64 conda create -n pyorbit python=3.10
-```
+On Apple silicon, use a native ARM64 Conda installation.
 
 To list the available environments do:
 
@@ -40,113 +34,64 @@ To activate the `pyorbit` environment:
 conda activate pyorbit
 ```
 
-## Install using pip
+(install-using-pip)=
 
-You can then install `PyORBIT` by using `pip`:
+## Install from the repository
 
-```{code} bash
- pip install pyorbit-package
-```
-
-Note that the name is `pyorbit-package` and not `pyorbit`, as the former was already taken by another package in PyPI (although not installable). The name for package importation will still be `pyorbit`:
-
-```{code} bash
- python -c "import pyorbit"
-```
-
-PyORBIT installs its PyPI dependencies automatically. The full installation from a local checkout also installs the BATMAN, PyDE, and TRADES forks listed in `extra_requirements.txt`.
+(full-checkout-installation)=
 
 ### Full installation from a local checkout
 
-In the Python 3.14 environment, run the following command from the root of the
-development checkout to install PyORBIT together with the dependencies in
-`extra_requirements.txt`.
+For Python 3.14, use a PyORBIT development checkout that includes the updated `requirements.txt`. Run the following commands from its root in the active `pyorbit` environment. [PyORBIT repository]
 
 ```{code} bash
 python -m pip install -r requirements.txt
+python -c "import pyorbit"
 ```
 
-## ARoME and PyARoME installation 
+This installs PyORBIT and the BATMAN and PyDE forks listed in `extra_requirements.txt`. For dynamical or photodynamical modelling, see the {ref}`TRADES installation guide <pyorbit_trades_integration>`.
 
-Starting from vwersion 11.3 of `PyORBIT`, it is possible to fit the Rossiter-McLaughlin effect using the analytical expressions by [Boué et al. 2013](https://ui.adsabs.harvard.edu/abs/2013A%26A...550A..53B/abstract). The code, called `ARoME`, and the instructions to install it, can be downloaded form the [official web page](https://www.astro.up.pt/resources/arome/). 
+To update the development checkout, pull the changes and run the same installation command again.
 
-The following instruction have been tested on Ubuntu 22.04 and 24.04 using `bash` as default terminal, for different versions aand architecture may not work. Contact your local expert if something is not working.
+Keep in mind that you can still run PyORBIT by specifying the full path of the code. For example, if you cloned the repository in the folder ``~/CODE/PyORBIT``, you can run the analysis and explore the results with these scripts:
+
+```{code} bash
+python ~/CODE/PyORBIT/PyORBIT_Run.py emcee configuration_file.yaml
+python ~/CODE/PyORBIT/PyORBIT_Results.py emcee configuration_file.yaml -all
+```
+
+## ARoME and PyARoME installation
+
+PyORBIT uses PyARoME, Andres Jordan's Python interface to the C library ARoME, to model the Rossiter–McLaughlin effect. [Boué et al. 2013](https://ui.adsabs.harvard.edu/abs/2013A%26A...550A..53B/abstract)
 
 ### Install the ARoME library
 
-First of all, download and compile the `arome` library. 
+On Ubuntu or WSL, build and install the native library first so the Python extension can find its header and shared library.
 
 ```{code} bash
+sudo apt install build-essential gfortran git wget
 wget https://www.astro.up.pt/resources/arome/files/arome-1.0.0.tar.gz
-tar -xvf arome-1.0.0.tar.gz
+tar -xzf arome-1.0.0.tar.gz
 cd arome-1.0.0
 ./configure
-make 
+make
 sudo make install
+sudo ldconfig
 ```
 
-If you have *root* privileges on your machine, you can install the library with the following commandf.
+The default installation puts `arome.h` in `/usr/local/include` and the library in `/usr/local/lib`. If you install ARoME under a custom prefix, see the [PyARoME instructions for passing the include and library paths](https://github.com/LucaMalavolta/PyARoME#installation).
 
-```{code} bash
-sudo make install
-```
-
-You will get a message stating where the libraries have been installed (the actual path may be different in your system):
-
-```{code} bash
-Libraries have been installed in:
-   /usr/local/lib
-```
-
-In order for `PyARoME` to work, the path to the `arome` library must be included in your `LD_LIBRARY_PATH` system variable. First check if the path is present:
-
-```{code} bash
- echo $LD_LIBRARY_PATH
->> /usr/local/lib/:
-```
-
-If the installation path of the library is not present, edit the `.bashrc` file in your home directory and add the following line:
-
-```{code} bash
-export LD_LIBRARY_PATH=/usr/local/lib/:$LD_LIBRARY_PATH
-```
-
-Finally, you have to apply the changes by either closing and reopening the terminal, or by running
-```{code} bash
-source ~/.bashrc
-```
-
-Note that the last command may activate your default `conda` environment.
+(install-pyarome)=
 
 ### Install the PyARoME package
 
-
-The original code is written in `C`. The Python interface used in `PyORBIT` is `PyARoME` ([GitHub](https://github.com/andres-jordan/PyARoME/)) by Andres Jordan. To install the package, you will need to downgrade the version of `distutils` to version 64 (version 65 will not work). 
-For this reason, I suggest to install `PyARoME` as the last package of the `PyORBIT` environment. 
+Use the same Python 3.14 environment as PyORBIT. Pip builds the Python extension against the installed ARoME library.
 
 ```{code} bash
-pip install setuptools==64
-git clone https://github.com/andres-jordan/PyARoME.git
-cd PyARoME
-python setup.py install
+conda activate pyorbit
+python -m pip install "PyARoME @ git+https://github.com/LucaMalavolta/PyARoME.git"
+python -c "import pyarome; print(pyarome.__file__)"
 ```
-
-
-If the path is not listed, you have to open the `.bashrc` file inyour home 
-
-
-
-If you ever happen to want to link against installed libraries
-in a given directory, LIBDIR, you must either use libtool, and
-specify the full pathname of the library, or use the `-LLIBDIR'
-flag during linking and do at least one of the following:
-   - add LIBDIR to the `LD_LIBRARY_PATH' environment variable
-     during execution
-   - add LIBDIR to the `LD_RUN_PATH' environment variable
-     during linking
-   - use the `-Wl,-rpath -Wl,LIBDIR' linker flag
-   - have your system administrator add LIBDIR to `/etc/ld.so.conf'
-
 
 ## Annoying `findfont` problem **updated**
 
@@ -259,45 +204,13 @@ If you get an error relative to `g++`, it means that something went wrong during
 -->
 
 
-## Install from the repository
+## Install an older release from PyPI
 
-Download the latest version from the GitHub repository:
-
-```{code} bash
- git clone https://github.com/LucaMalavolta/PyORBIT.git
-```
-
-If you are downloading the code from GitHub, most likely it's because you want to try the *development* version
+Older PyORBIT releases are available as `pyorbit-package` on PyPI. To use an older release, activate a Python environment compatible with that release and specify its version. [PyORBIT on PyPI](https://pypi.org/project/pyorbit-package/)
 
 ```{code} bash
- cd PyORBIT
- git checkout development
+python -m pip install pyorbit-package==10.0.0
 ```
-
-```{note}
-The development version may not be available at all times.
-```
-
-You can then install `PyORBIT` by using `pip` inside the code repository:
-
-```{code} bash
- pip install .
-```
-
-Keep in mind that you can still run PyORBIT by specifying the full path of the code. For example, if you cloned the repository in the folder ``~/CODE/PyORBIT``, you can run the analysis and explore the results with these scripts:
-
-```{code} bash
-python ~/CODE/PyORBIT/PyORBIT_Run.py emcee configuration_file.yaml
-python ~/CODE/PyORBIT/PyORBIT_Results.py emcee configuration_file.yaml -all
-```
-
-Again, I suggest to install the extra requirements following the instructions given above
-
-If you repent and you want to go back to a previous version of  `PyORBIT`, just install the desired version with pip:
-
-```{code} bash
- pip install pyorbit-package==10.0.0
- ```
 
 ## Requirements
 
